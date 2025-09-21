@@ -55,37 +55,32 @@ When Allsky starts it checks a few things then executes a program to take the pi
 That program is either <code>capture_ZWO</code>
 or <code>capture_RPi</code>,
 depending on your camera type.
-The appropriate capture program first looks at many of the settings in the WebUI
-to determine how to expose pictures, how long to wait between pictures,
+The appropriate capture program uses the settings in the WebUI
+to determine how to expose pictures, how long to wait between them,
 when to switch between daytime and nighttime, and many other things.
-It then begins taking pictures.
-<code>capture_ZWO</code> uses a ZWO library to control the
-camera directly and get feedback from it.
-<code>capture_RPi</code> calls another program called
-<code>libcamera-still</code> to actually take a picture
-passing it the exposure time and other settings including the name of
-the file to save the picture to.
+<br><code>capture_ZWO</code> uses software provided by ZWO to control the camera.
+<br><code>capture_RPi</code> calls the
+<code>rpicam-still</code> program to actually take pictures,
+passing it the exposure times and other settings it needs to properly take a picture.
+Regarless of which program actually takes an image,
+if the image isn't too dark or too bright, it's temporarily
+saved in the <span class="fileName">~/allsky/tmp/current_images/</span>
+directory on the Pi.
 </p>
 <p>
-After the picture is saved, usually to a file called
-<span class="fileName">~/allsky/tmp/image.jpg</span>,
+After the picture is initially saved
 the capture program calls the <code>saveImage.sh</code>
-program to process the image while the
-capture program checks if a night-to-day transitioned occurred;
+program to process the image in the background,
+then checks if a night-to-day transitioned occurred;
 if so, the capture program calls <code>endOfNight.sh</code>
-to create startrails, keograms, and a timelapse video as specified in the settings.
+to create startrails, keograms, and a timelapse video as specified your the settings.
 Either way, the capture program then sleeps until it is time to take the next image.
 </p>
 
 <h4>Image processing</h4>
 <p>
-The <code>saveImage.sh</code> program first checks if
-the image is corrupt and then checks the settings in the WebUI to determine
-if the image is too dark or too bright.
-If any of those checks fail the image is deleted and
-<code>saveImage.sh</code> exits.
-If the image is good, it's optionally resized, cropped,
-and/or stretched per the settings, and an optional overlay is added.
+The <code>saveImage.sh</code> program optionally resizes, crops,
+stretches, and adds an overlay to the image per your settings.
 If the image is to be uploaded, <code>saveImage.sh</code>
 checks if it should first be resized,
 then calls <code>upload.sh</code> to upload it.
@@ -96,7 +91,7 @@ if so, it is created and optionally resized and uploaded.
 If not, the image is added to the list of images for the next mini-timelapse. 
 </p>
 <p>
-Finally, if the image is to be saved a copy of it with a name
+Finally, if the image is to be permanently saved a copy of it with a name like
 <span class="fileName">image-YYYYMMDDHHMMSS.jpg</span>
 is added the the current day's folder in  <span class="fileName">~/allsk/images</span>.
 </p>
@@ -106,7 +101,7 @@ is added the the current day's folder in  <span class="fileName">~/allsk/images<
 The <code>endOfNight.sh</code> program checks the
 settings to see whether or not a startrails, keogram,
 and/or timelapse video is to be created; if so they are created.
-If the items are to be uploaded they are.
+If those items are to be uploaded, they are.
 Either way, <code>endOfNight.sh</code> then exits.
 </p>
 

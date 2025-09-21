@@ -862,14 +862,8 @@ if (numTokens > 1) Log(5, ", inCamera=%s, inControlCaps=%s, inLibcamera=%s\n", y
 
 				strncpy(p->Sensor, sensor, SENSOR_SIZE);
 				RPiCameras[thisIndex].CameraInfo = &ASICameraInfoArray[actualIndex];
-// TODO: remove after testing
-// There are TWO entries in ControlCapsArray[] for every
-// entry in ASICameraInfoArray[].
-// The first of each pair is for libcamera, the second is for NEW_SOFTWARE.
-// We need to return the index into ControlCapsArray[].
 				Log(4, "Saving sensor [%s] from ASICameraInfoArray[%d] to RPiCameras[%d],",
 					sensor, actualIndex, thisIndex);
-//	actualIndex = (actualIndex * 2) + (CG.isLibcamera ? 0 : 1);
 				RPiCameras[thisIndex].ControlCaps = &ControlCapsArray[actualIndex][0];
 				Log(4, " ControlCapsArray[%d]", actualIndex);
 

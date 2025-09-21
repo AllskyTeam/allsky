@@ -6,7 +6,7 @@ if (! is_dir(ALLSKY_SUPPORT_DIR)) {
 	$cmd = "{ sudo mkdir " .  ALLSKY_SUPPORT_DIR . " &&";
 	$cmd .= " sudo chown " . ALLSKY_OWNER . ":" . WEBSERVER_GROUP . " " . ALLSKY_SUPPORT_DIR . " &&";
 	$cmd .= " sudo chmod 775 " . ALLSKY_SUPPORT_DIR . "; } 2>&1";
-	echo "<script>console.log('Excuting: $cmd');</script>";
+	echo "<script>console.log(`Excuting: $cmd`);</script>";
 	$x = exec($cmd, $result, $ret_value);
 	if ($x === false || $ret_value !== 0) {
 		echo "<p class='errorMsg'>Failed running $cmd: " . implode("<br>", $result) . ".</p>";

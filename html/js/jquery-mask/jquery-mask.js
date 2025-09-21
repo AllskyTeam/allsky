@@ -6,7 +6,7 @@
 			dirty: false,
 			id: 'mask',
 			modalId: 'allsky-mask-drawingModal',
-			image: '/current/tmp/image.jpg',
+			image: '/current/image.jpg',
 			saveURL: 'includes/overlayutil.php?request=Base64Image',
 			onComplete: function (latlon) { }
 		}

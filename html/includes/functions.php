@@ -726,10 +726,9 @@ function runCommand($cmd, $onSuccessMessage, $messageColor, $addMsg=true, $onFai
 
 	$result = null;
 	exec("$cmd 2>&1", $result, $return_val);
-	$dq = '"';
 	$script = "";
 	echo "<script>";
-		echo "console.log(${dq}[$cmd] returned $return_val";
+		echo "console.log(`[$cmd] returned $return_val";
 		if ($result === null) {
 			$modifiedResult = $result;
 		} else {
@@ -745,12 +744,11 @@ function runCommand($cmd, $onSuccessMessage, $messageColor, $addMsg=true, $onFai
 						echo ", result=";
 					}
 					$modifiedResult[] = $res;
-					echo str_replace('"', "'", $res);
 					echo "   ";
 				}
 			}
 		}
-		echo "${dq});";
+		echo "`);";
 	echo "</script>\n";
 	if ($script !== "") {
 		echo "\n<!-- from $cmd -->$script\n";
@@ -847,8 +845,8 @@ function updateFile($file, $contents, $fileName, $toConsole, $silent=false) {
 		if (! $silent) {
 			// $toConsole tells us whether or not to use console.log() or just echo.
 			if ($toConsole) {
-				$cl1 = '<script>console.log("';
-				$cl2 = '");</script>';
+				$cl1 = '<script>console.log(`';
+				$cl2 = '`);</script>';
 			} else {
 				$cl1 = "<br>";
 				$cl2 = "";
@@ -1105,7 +1103,7 @@ function getNewestAllskyVersion(&$changed=null)
 		}
 
 		$msg = "[$cmd] returned $return_val, version_array=" . json_encode($newestVersion) . ", changed=$changed";
-		echo "<script>console.log('$msg');</script>";
+		echo "<script>console.log(`$msg`);</script>";
 
 		// Save new info.
 		@file_put_contents($versionFile, json_encode($version_array, JSON_PRETTY_PRINT));

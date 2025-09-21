@@ -14,6 +14,8 @@ from allsky_base import ALLSKYMODULEBASE
 import cv2
 import os
 import sys
+import numpy as np
+from typing import Literal
 
 class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 
@@ -21,6 +23,7 @@ class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 		"name": "Star Count",
 		"description": "Counts stars in an image",
 		"events": [
+			"day",
 			"night"
 		],
 		"experimental": "true",
@@ -124,7 +127,10 @@ class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 					"sample": "",                
 					"group": "Image Data",
 					"description": "STAR COUNT",
-					"type": "number"
+					"type": "number",
+					"database": {
+						"include" : "true"
+					}     
 				}
 			}
 		},     
@@ -133,13 +139,35 @@ class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 			"scalefactor": "0.5",
 			"mask": "",
 			"debugimage": "",
-			"useclearsky": "False"
+			"useclearsky": "False",
+			"minsize": "6"
 		},
 		"argumentdetails": {    
+			"useclearsky" : {
+				"required": "false",
+				"description": "Use Clear Sky",
+				"help": "If available, use the results of the Clear Sky Alarm module. If the sky is not clear star detection will be skipped",         
+				"type": {
+					"fieldtype": "checkbox"
+				}          
+			},
+   
+			"method" : {
+				"required": "false",
+				"description": "Detection Method",
+				"help": "The detection method, Fast is quicker but may miss some stars, Slow is more accurate but takes longer",
+				"tab": "Method",
+				"type": {
+					"fieldtype": "select",
+					"values": "Fast,Slow",
+					"default": "Fast"
+				}
+			},
 			"mask" : {
 				"required": "false",
 				"description": "Mask Path",
-				"help": "The name of the image mask. This mask is applied when counting stars but not visible in the final image. <span class=\"text-danger\">NOTE: It is highly recommened you create a mask to improve the detection performance</span>",
+				"help": "The name of the image mask. <span class=\"text-danger\">NOTE: It is highly recommened you create a mask to improve the detection performance</span>",
+				"tab": "Method",
 				"type": {
 					"fieldtype": "image"
 				}                
@@ -148,21 +176,40 @@ class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 				"required": "false",
 				"description": "Scale Factor",
 				"help": "Amount to scale the captured image by before attempting meteor detection",
+				"tab": "Method",    
 				"type": {
 					"fieldtype": "spinner",
 					"min": ".25",
 					"max": "1",
 					"step": "0.05"
-				}     
+				},
+				"filters": {
+					"filter": "method",
+					"filtertype": "show",
+					"values": [
+						"Fast"
+					]
+				}    
 			}, 
-			"useclearsky" : {
+			"minsize" : {
 				"required": "false",
-				"description": "Use Clear Sky",
-				"help": "If available, use the results of the Clear Sky Alarm module. If the sky is not clear star detection will be skipped",         
+				"description": "Min star size (px)",
+				"help": "The mnimum size of a star in pixels. Smaller stars will be ignored",
+				"tab": "Method",    
 				"type": {
-					"fieldtype": "checkbox"
-				}          
-			},              
+					"fieldtype": "spinner",
+					"min": "1",
+					"max": "10",
+					"step": "1"
+				},
+				"filters": {
+					"filter": "method",
+					"filtertype": "show",
+					"values": [
+						"Fast"
+					]
+				}         
+			}, 
 			"annotate" : {
 				"required": "false",
 				"description": "Annotate Stars",
@@ -213,30 +260,72 @@ class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 
 		return resized
 
+	def _process_image(
+    	self, image: np.ndarray | None, 
+      	is_debug_image: bool = False
+    ) -> np.ndarray | None:
+     
+		detection_method = self.get_param('method', 'Fast', str)
+		mask_file_name = self.get_param('mask', '', str)
+		annotate_image = self.get_param('annotate', False, bool)
+		scale = self.get_param('scalefactor', 0.5, float)
+                 
+		image_copy = image.copy()
+     
+		if mask_file_name:
+			image_copy = allsky_shared.mask_image(image_copy, mask_file_name)
+
+		if detection_method == "Fast":
+			min_size = self.get_param('minsize', 6, int)
+
+			self.log(f'INFO: Using fast detection method')
+			sources = allsky_shared.fast_star_count(
+				image_copy,
+				min_d_px = min_size,    # ~star core diameter in pixels (5–8)
+				scale = scale,          # downscale for speed (0.5 good for 1080p)
+				corr_thresh = 0.78,     # template match threshold (0..1)
+				min_peak_contrast = 12, # center minus local ring (uint8)
+				anisotropy_min = 0.45,  # 0..1 (λ_min/λ_max) – low => edge-like
+				mask_bottom_frac = 0.12 # ignore lowest X% (horizon glow)
+			)
+		else:
+			self.log(f'INFO: Using slow detection method')
+			sources, _ = allsky_shared.count_starts_in_image(image_copy)
+
+		if annotate_image:
+			if sources is not None:
+				for i, row in enumerate(sources):
+					x = round(float(row[0])) * 1
+					y = round(float(row[1])) * 1
+					cv2.circle(image, (x, y), 10, (0, 0, 255), 1)
+
+			if is_debug_image:
+				save_name = allsky_shared.get_environment_variable("ALLSKY_CURRENT_DIR")
+				save_name = f"{save_name}/debug_starcount.png"
+				cv2.imwrite(save_name, image)  
+   
+		return image, sources
+
 	def run(self):
 		
 		try:
 			result = ''
+			debug_image_path = self.get_param('debugimage', None, str)
 
-			annotate_image = self.get_param('annotate', False, bool)
-			mask_file_name = self.get_param('mask', '', str)
-			scale = self.get_param('scalefactor', 0.5, float)
-
-			source_image = allsky_shared.image
-			image = self._resize_image(source_image, scale)
-
-			sources, image = allsky_shared.count_starts_in_image(image, mask_file_name)
-
+			if debug_image_path is not None and debug_image_path != '':
+				if allsky_shared.is_file_readable(debug_image_path):
+					self.log(f'INFO: Using debug image {debug_image_path}')
+					debug_image = cv2.imread(debug_image_path)
+					debug_image, sources = self._process_image(debug_image, True)
+			else:
+				source_image = allsky_shared.image
+				source_image, sources = self._process_image(source_image, False)
+    
 			if sources is not None:
 				result = f"Number of stars detected: {len(sources)}"
 				self.log(f'INFO: {result}')
 
-				if sources is not None and annotate_image:
-					for i, row in enumerate(sources):
-						x = round(float(row['xcentroid']))
-						y = round(float(row['ycentroid']))
-
-						cv2.circle(source_image, (x, y), 20, (0, 0, 255), 2)
+				if not debug_image_path:
 					allsky_shared.image = source_image
 			
 				extra_data = {}

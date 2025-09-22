@@ -151,6 +151,8 @@ class MODULESEDITOR {
 					let id = $(event.currentTarget).data('module')
 					$('#modules-available').prepend($('#'+id));
 					this.#removeModule($('#'+id))
+					this.#dirty = true;
+					this.#updateToolbar()
                 });
 
                 $(document).off('click', '.module-delete-button')				
@@ -1459,20 +1461,31 @@ class MODULESEDITOR {
             experimental = '<span class="module-experimental module-experimental-header"> - Experimental. Please use with caution</span>';
         }
 
-        let testButton = '\
-        	<div class="hidden as-module-test">\
-                <div class="pull-left hidden as-module-test" id="module-settings-dialog-test-wrapper">\
-                    <button type="button" class="btn btn-success form-control" id="module-settings-dialog-test">Test Module</button>\
-                </div>\
-                <div class="pull-left hidden ml-3 as-module-test" id="module-settings-dialog-test-wrapper">\
-                    <div class="switch-field boxShadow as-module-test-option-wrapper">\
-                        <input id="switch_no_as-module-test-option" class="form-control" type="radio" name="as-module-test-option" value="day" checked />\
-                        <label style="margin-bottom: 0px;" for="switch_no_as-module-test-option">Day</label>\
-                        <input id="switch_yes_as-module-test-option" class="form-control" type="radio" name="as-module-test-option" value="night" />\
-                        <label style="margin-bottom: 0px;" for="switch_yes_as-module-test-option">Night</label>\
-                    </div>\
-                </div>\
-            </div>'
+		let testDisabled = ''
+		let testTitle = 'Run a test of the module using current settings'
+		let delay = 2000
+		if (!moduleData.enabled) {
+			testDisabled = ' disabled="disabled" '
+			testTitle = 'You must enable the module before you can test it'
+			delay = 200
+		}
+		let popover = 'data-toggle="popover" data-delay=\'{"show": ' + delay + ', "hide": 200}\' data-placement="top" data-trigger="hover" title="' +  testTitle + '"'
+
+
+        let testButton = `
+        	<div class="hidden as-module-test">
+                <div class="pull-left hidden as-module-test" id="module-settings-dialog-test-wrapper" ${popover}>\
+                    <button type="button" class="btn btn-success form-control" id="module-settings-dialog-test" ${testDisabled}>Test Module</button>
+                </div>
+                <div class="pull-left hidden ml-3 as-module-test" id="module-settings-dialog-test-wrapper">
+                    <div class="switch-field boxShadow as-module-test-option-wrapper">
+                        <input id="switch_no_as-module-test-option" class="form-control" type="radio" name="as-module-test-option" value="day" checked  ${testDisabled}/>
+                        <label style="margin-bottom: 0px;" for="switch_no_as-module-test-option">Day</label>
+                        <input id="switch_yes_as-module-test-option" class="form-control" type="radio" name="as-module-test-option" value="night"  ${testDisabled}/>
+                        <label style="margin-bottom: 0px;" for="switch_yes_as-module-test-option">Night</label>
+                    </div>
+                </div>
+            </div>`
 
 		let errorHTML = ''
 		if (this.#errors[module] !== undefined) {
@@ -1516,6 +1529,9 @@ class MODULESEDITOR {
 
         $('#module-settings-dialog').remove();
         $(document.body).append(dialogTemplate);
+
+					$('[data-toggle="popover"]').popover('destroy')
+					$('[data-toggle="popover"]').popover()
 
 		if (moduleData.metadata.testable !== undefined) {
 			if (moduleData.metadata.testable === 'true') {

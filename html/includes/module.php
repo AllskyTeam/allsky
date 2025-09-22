@@ -94,7 +94,7 @@ function DisplayModule()
                         <li class="btn">
                             <form id="oe-item-list-edit-dialog-form" class="form-horizontal">
                                 <div class="form-group">
-                                    <div class="tooltip-wrapper disabled" data-toggle="tooltip" data-container="body" data-placement="top" title="Sselect the Flow to manage">
+                                    <div class="tooltip-wrapper disabled" data-toggle="tooltip" data-container="body" data-placement="top" title="Select the Flow to manage">
                                         <select class="form-control navbar-form" id="module-editor-config" name="module-editor-config" width="200px">
                                             <option value="day">Daytime Configuration</option>
                                             <option value="night">Nighttime Configuration</option>

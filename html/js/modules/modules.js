@@ -313,6 +313,12 @@ class MODULESEDITOR {
 
 				this.#checkDependencies()
             });
+
+			$(document).on('hidden.bs.modal', '.modal', function () {
+				if ($('.modal:visible').length) {
+					$('body').addClass('modal-open');
+				}
+			});			
         }).always(() => {
             $.LoadingOverlay('hide');
         });

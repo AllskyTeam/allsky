@@ -62,7 +62,7 @@ function usage_and_exit()
 	echo "      encoders"
 	echo "      pix_fmts"
 
-	echo "      config_timelapse"
+	echo "      compare_timelapse"
 	echo "      compare_startrails [see --help for arguments]"
 	echo "      compare_stretches [see --help for arguments]"
 
@@ -363,7 +363,7 @@ compare_stretches()
 
 #####
 # Help determine some timelapse settings.
-config_timelapse()
+compare_timelapse()
 {
 	if [[ ${ON_TTY} == "false" ]]; then
 		W_ "${ME} ${ME_F} must run from a terminal." >&2
@@ -371,7 +371,7 @@ config_timelapse()
 	fi
 
 	# shellcheck disable=SC2068
-	configTimelapse.sh "${@}"
+	compareTimelapse.sh "${@}"
 }
 
 
@@ -696,7 +696,7 @@ if [[ -z ${FUNCTION_TO_EXECUTE} ]]; then
 # TODO: Not sure if I like it better with, or without this phrase:
 X="with different settings"
 X="                       "
-	((N++));	C="config_timelapse"
+	((N++));	C="compare_timelapse"
 	CMDS+=("${C}"	"$( L "Create multiple timelapse videos ${X} (${C})" )")
 
 	((N++));	C="compare_startrails"

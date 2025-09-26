@@ -31,8 +31,8 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 			"chart1": {
 				"icon": "fas fa-chart-line",
 				"title": "Camera",
-				"group": "Camera",    
-				"main": "true",    
+				"group": "Camera",
+				"main": "true",
 				"config": {
 					"tooltip": "true",
 					"chart": {
@@ -57,16 +57,16 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 						}
 					},
 					"yAxis": [
-						{ 
+						{
 							"title": {
 								"text": "Exposure"
-							} 
+							}
 						},
-						{ 
+						{
 							"title": {
 								"text": "Gain"
 							},
-							"opposite": "true" 
+							"opposite": "true"
 						}
 					],
 					"lang": {
@@ -84,20 +84,20 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 					"exposure": {
 						"name": "Exposure",
 						"yAxis": 0,
-						"variable": "AS_CAMERAEXPOSURE|AS_CAMERAIMAGEURL"                  
+						"variable": "AS_CAMERAEXPOSURE|AS_CAMERAIMAGEURL"
 					},
 					"gain": {
 						"name": "Gain",
 						"yAxis": 1,
 						"variable": "AS_CAMERAGAIN"
-					}               
+					}
 				}
 			},
 			"temp": {
 				"icon": "fas fa-chart-line",
 				"title": "Camera Temperature",
-				"group": "Camera",    
-				"main": "true",    
+				"group": "Camera",
+				"main": "true",
 				"config": {
 					"tooltip": "true",
 					"chart": {
@@ -122,10 +122,10 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 						}
 					},
 					"yAxis": [
-						{ 
+						{
 							"title": {
 								"text": "Temperature"
-							} 
+							}
 						}
 					],
 					"lang": {
@@ -143,8 +143,8 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 					"exposure": {
 						"name": "Temperature",
 						"yAxis": 0,
-						"variable": "AS_CAMERATEMPERATURE|AS_CAMERAIMAGEURL"                  
-					}              
+						"variable": "AS_CAMERATEMPERATURE|AS_CAMERAIMAGEURL"
+					}
 				}
 			}
         },
@@ -159,31 +159,71 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 				"AS_CAMERAIMAGE": {
 					"name": "${CAMERAIMAGE}",
 					"format": "",
-					"sample": "",                
+					"sample": "",
 					"group": "Camera",
 					"description": "Current Image",
 					"type": "string"
 				},
-				"AS_CAMERAIMAGEPATH": {
-					"name": "${CAMERAIMAGEPATH}",
+				"DAY_NIGHT": {
+					"name": "${DAY_OR_NIGHT}",
 					"format": "",
-					"sample": "",                
+					"sample": "",
 					"group": "Camera",
-					"description": "Current Image Path",
+					"description": "Day / night flag",
 					"type": "string"
+				},
+				"MEAN": {
+					"name": "${MEAN}",
+					"format": "",
+					"sample": "",
+					"group": "Camera",
+					"description": "Mean brightness of image",
+					"type": "float"
+				},
+				"AUTOEXPOSURE": {
+					"name": "${AUTOEXPOSURE}",
+					"format": "",
+					"sample": "",
+					"group": "Camera",
+					"description": "Autoexposure enabled?",
+					"type": "bool"
+				},
+				"AUTOGAIN": {
+					"name": "${AUTOGAIN}",
+					"format": "",
+					"sample": "",
+					"group": "Camera",
+					"description": "Autogain enabled?",
+					"type": "bool"
+				},
+				"RESOLUTION_X": {
+					"name": "${RESOLUTION_X}",
+					"format": "",
+					"sample": "",
+					"group": "Camera",
+					"description": "Width of image in pixels",
+					"type": "int"
+				},
+				"RESOLUTION_Y": {
+					"name": "${RESOLUTION_Y}",
+					"format": "",
+					"sample": "",
+					"group": "Camera",
+					"description": "Height of image in pixels",
+					"type": "int"
 				},
 				"AS_CAMERAIMAGEURL": {
 					"name": "${CAMERAIMAGEURL}",
 					"format": "",
-					"sample": "",                
+					"sample": "",
 					"group": "Camera",
 					"description": "Current Image URL",
 					"type": "string"
 				},
-				"AS_CAMERAEXPOSURE": {
-					"name": "${CAMERAEXPOSURE}",
+				"AS_CAMERAEXPOSURE_US": {
+					"name": "${CAMERAEXPOSURE_US}",
 					"format": "",
-					"sample": "",                
+					"sample": "",
 					"group": "Camera",
 					"description": "Exposure",
 					"type": "number"
@@ -191,7 +231,7 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 				"AS_CAMERAGAIN": {
 					"name": "${CAMERAGAIN}",
 					"format": "",
-					"sample": "",                
+					"sample": "",
 					"group": "Camera",
 					"description": "Exposure",
 					"type": "number"
@@ -199,14 +239,14 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 				"AS_CAMERATEMPERATURE": {
 					"name": "${CAMERATEMPERATURE}",
 					"format": "",
-					"sample": "",                
+					"sample": "",
 					"group": "Camera",
 					"description": "Exposure",
 					"type": "temperature"
-				} 
-			}                         
-		}          
-	}    
+				}
+			}
+		}
+	}
 
 	def _cleanup_module_data(arg):
 		allsky_shared.log(4,'INFO: Cleanup module data')
@@ -214,7 +254,7 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 
 	def _dump_debug_data(self):
 		debug_filename = os.path.join(allsky_shared.ALLSKY_TMP, 'overlaydebug.txt')
-  
+
 		allsky_shared.create_file_web_server_access(debug_filename)
 		env = {}
 		for var in os.environ:
@@ -233,8 +273,8 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 			allsky_shared.log(4, f"INFO: Debug information written to {debug_filename}")
 		except Exception as e:
 			eType, eObject, eTraceback = sys.exc_info()
-			allsky_shared.log(0, f'ERROR: Unable to access {debug_filename} in allsky_loadimage.py on line {eTraceback.tb_lineno} - {e}')     
-     
+			allsky_shared.log(0, f'ERROR: Unable to access {debug_filename} in allsky_loadimage.py on line {eTraceback.tb_lineno} - {e}')
+
 	def run(self):
 		result = f'Image {allsky_shared.CURRENTIMAGEPATH} Loaded'
 			
@@ -248,12 +288,17 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 		filename = os.path.basename(allsky_shared.CURRENTIMAGEPATH)
 		date = filename[6:14]
 		url = f'/images/{date}/thumbnails/{filename}'
-    
+
 		extra_data = {}
 		extra_data['AS_CAMERAIMAGE'] = filename
-		extra_data['AS_CAMERAIMAGEPATH'] = allsky_shared.CURRENTIMAGEPATH
+		extra_data['DAY_NIGHT'] = allsky_shared.get_environment_variable('DAY_OR_NIGHT')
+		extra_data['MEAN'] = float(allsky_shared.get_environment_variable('AS_MEAN'))
+		extra_data['AUTOEXPOSURE'] = bool(allsky_shared.get_environment_variable('AS_AUTOEXPOSURE'))
+		extra_data['AUTOGAIN'] = bool(allsky_shared.get_environment_variable('AS_AUTOGAIN'))
+		extra_data['RESOLUTION_X'] = int(allsky_shared.get_environment_variable('AS_RESOLUTION_X'))
+		extra_data['RESOLUTION_Y'] = int(allsky_shared.get_environment_variable('AS_RESOLUTION_Y'))
 		extra_data['AS_CAMERAIMAGEURL'] = url
-		extra_data['AS_CAMERAEXPOSURE'] = int(allsky_shared.get_environment_variable('AS_EXPOSURE_US'))
+		extra_data['AS_CAMERAEXPOSURE_US'] = int(allsky_shared.get_environment_variable('AS_EXPOSURE_US'))
 		extra_data['AS_CAMERAGAIN'] = allsky_shared.get_camera_gain()
 		extra_data['AS_CAMERATEMPERATURE'] = allsky_shared.get_sensor_temperature()
 
@@ -264,15 +309,15 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 		except Exception as e:
 			eType, eObject, eTraceback = sys.exc_info()
 			result = f'Cannot cleanup extra module data in allsky_loadimage.py on line {eTraceback.tb_lineno} - {e}'
-			allsky_shared.log(0,f'ERROR: {result}')  
+			allsky_shared.log(0,f'ERROR: {result}')
 
 		self._dump_debug_data()
-  
+
 		allsky_shared.log(4, f'INFO: {result}')
-		return result        
+		return result
 
 def loadimage(params, event):
 	allsky_load_image = ALLSKYLOADIMAGE(params, event)
 	result = allsky_load_image.run()
 
-	return result  
+	return result

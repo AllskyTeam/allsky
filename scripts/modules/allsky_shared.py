@@ -1159,7 +1159,7 @@ def saveExtraData(file_name, extra_data, source: str = '', structure: dict = {},
         `log(0, ...)`; the function does not re-raise.
 
     Notes:
-        - Uses an atomic `shutil.move()` from ALLSKY_TMP → ALLSKY_EXTRA to
+        - Uses an atomic `shutil.move()` from ALLSKY_TMP -> ALLSKY_EXTRA to
           avoid readers seeing partial files.
         - Final mode is set to `0o770`; ownership is delegated to
           `set_permissions()`.
@@ -1359,7 +1359,7 @@ def cleanup_extra_data_file(file_name, delete_age=600):
             log(4, f'INFO: Deleting extra data file {file_name} as its older than {delete_age} seconds')
             delete_extra_data(file_name)
         else:
-            log(4, f'INFO: Not deleteing {file_name} as its {file_age} seconds old, threshhold is {delete_age}')
+            log(4, f'INFO: Not deleting {file_name} as its {file_age} seconds old, threshhold is {delete_age}')
     else:
         log(4, f'ERROR: Cannot check extra data file {file_name} as it is not writeable')
             
@@ -1751,7 +1751,7 @@ def fast_star_count(
     scale: float = 0.5,            # downscale for speed (0.5 good for 1080p)
     corr_thresh: float = 0.78,     # template match threshold (0..1)
     min_peak_contrast: float = 12, # center minus local ring (uint8)
-    anisotropy_min: float = 0.45,  # 0..1 (λ_min/λ_max) – low => edge-like
+    anisotropy_min: float = 0.45,  # 0..1 (lamda_min/lamda_max) – low => edge-like
     mask_bottom_frac: float = 0.12 # ignore lowest X% (horizon glow)
 ) -> List[Tuple[float, float]]:
     import cv2
@@ -1780,7 +1780,7 @@ def fast_star_count(
 
 
     # ---- Gaussian matched filter (template correlation) ----
-    # Patch size ~ 2–2.5× diameter; sigma ≈ diameter / 3
+    # Patch size ~ 2–2.5× diameter; sigma ~~ diameter / 3
     patch = max(7, builtins.int(round(min_d_px * scale * 2.5)))
     if patch % 2 == 0: patch += 1
     yy, xx = np.mgrid[:patch, :patch]

@@ -54,12 +54,13 @@ def getEnvironmentVariable(name, fatal=False, debug=False, try_allsky_debug_file
     result = None
 
     if not debug:
-        try:
-            result = os.environ[name]
-        except KeyError:       
-            result = None
+        result = read_environment_variable(name)
+        if result == None:    
             if try_allsky_debug_file:
                 result = get_value_from_debug_data(name)
+            else:
+                setup_for_command_line()
+                result = read_environment_variable(name)
                 
             if result == None and fatal:
                 log(0, f"ERROR: Environment variable '{name}' not found.", exitCode=98)
@@ -81,6 +82,15 @@ def getEnvironmentVariable(name, fatal=False, debug=False, try_allsky_debug_file
         if name in DBDEBUGDATA['os']:
             result = DBDEBUGDATA['os'][name]
 
+    return result
+
+def read_environment_variable(name):
+    result = None
+    try:
+        result = os.environ[name]
+    except KeyError:
+        result = None        
+    
     return result
 
 # These must exist and are used in several places.

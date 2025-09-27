@@ -542,28 +542,36 @@ class ALLSKYMODULE:
             else:
                 self._log(False, f"ERROR: _post_install -> Module {self.name} Post install routines failed. {text}")
                 result = False            
-                    
+        else:
+            self._log(False, f"INFO: {self.name} requires no post installation")
+                                     
         return result
     
     def _cleanup_module(self) -> bool:        
         result = True
-        
-        if str(self._installed_info["path"]) != str(self._module_paths["module"]):
-            try:
-                if self._installed_info is not None:
-                    if self._installed_info["path"]:
-                        installed_file_path = os.path.join(self._installed_info["path"], self.name + ".py")
-                        shared.remove_path(installed_file_path)
-                    
-                        dependencies_path = os.path.join(self._installed_info["path"],'dependencies', self.name)
-                        info_path = os.path.join(self._installed_info["path"],'info', self.name)
 
-                        shared.remove_path(dependencies_path)
-                        shared.remove_path(info_path)
+        do_cleanup = False
+        if self._installed_info:
+            if str(self._installed_info["path"]) != str(self._module_paths["module"]):
+                do_cleanup = True
+
+        if do_cleanup:
+            try:
+                self._log(False, f"INFO: {self.name} cleanup required")                
+                installed_file_path = os.path.join(self._installed_info["path"], self.name + ".py")
+                shared.remove_path(installed_file_path)
+            
+                dependencies_path = os.path.join(self._installed_info["path"],'dependencies', self.name)
+                info_path = os.path.join(self._installed_info["path"],'info', self.name)
+
+                shared.remove_path(dependencies_path)
+                shared.remove_path(info_path)
             except Exception as e:
                 self._log(False, f"ERROR: _cleanup_module -> Module {self.name} failed to remove - {e}")
                 result = False
-            
+        else:
+            self._log(False, f"INFO: {self.name} no cleanup required")
+                            
         return result
     
     @ensure_valid     

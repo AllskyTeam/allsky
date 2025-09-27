@@ -172,9 +172,9 @@ class ALLSKYHISTOGRAM(ALLSKYMODULEBASE):
             result = f'Histogram drawn at x={x}, y={y}, width={width}, height={height}'
         except Exception as e:
             result = f'Failed to draw histogram: {e}'
-            allsky_shared.log(0, f'ERROR: {result}')
+            self.log(0, f'ERROR: {result}')
         else:
-            allsky_shared.log(4, f'INFO: {result}')
+            self.log(4, f'INFO: {result}')
         
         return result        
 

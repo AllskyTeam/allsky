@@ -66,16 +66,16 @@ class ALLSKYSAVEINTERMMEDIATEIMAGE(ALLSKYMODULEBASE):
 				path = os.path.join(path, os.path.basename(allsky_shared.CURRENTIMAGEPATH))
 				if not self.__write_image(allsky_shared.image, path, quality):
 					result = f'Failed to save image {path}'
-					allsky_shared.log(0, f'ERROR: {result}')
+					self.log(0, f'ERROR: {result}')
 				else:
 					result = f'Image {path} Saved'
-					allsky_shared.log(1, f'INFO: {result}')
+					self.log(1, f'INFO: {result}')
 			else:
 				result = f'Invalid path {save_path}'
-				allsky_shared.log(0, f'ERROR: {result}')
+				self.log(0, f'ERROR: {result}')
 		else:
 			result = 'Cannot determine the image quality. Intermediate image NOT saved.'
-			allsky_shared.log(0, f'ERROR: {result}')
+			self.log(0, f'ERROR: {result}')
 
 		return result
 

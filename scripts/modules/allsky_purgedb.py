@@ -216,7 +216,7 @@ class ALLSKYPURGEDB(ALLSKYMODULEBASE):
 
             result = f'Will run in {hours}h {minutes}m {secs}s'
 
-            allsky_shared.log(1, f'INFO: {result}')
+            self.log(1, f'INFO: {result}')
         
         return result
 

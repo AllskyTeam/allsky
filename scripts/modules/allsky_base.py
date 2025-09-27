@@ -59,14 +59,14 @@ class ALLSKYMODULEBASE:
 
 		return result
 
-	def log(self, message, debug=False):
-		if debug:
-			allsky_shared.log(0, f'{message}')
+	def log(self, level, message, preventNewline = False, exitCode=None, sendToAllsky=False):
+		if self.debug_mode:
+			print(message)
 		else:
-			allsky_shared.log(4, f'{message}')
+			allsky_shared.log(level, message, preventNewline = preventNewline, exitCode=exitCode, sendToAllsky=sendToAllsky)
   
 	def debug_log(self, message):
-		if self._debugmode:
+		if self.debug_mode:
 			print(message)
 
 	def get_database_config(self):

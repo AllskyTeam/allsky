@@ -222,17 +222,17 @@ class ALLSKYCLEARSKY(ALLSKYMODULEBASE):
 
 			if roi_str.strip():
 				roi_x, roi_y, roi_w, roi_h = map(int, roi_str.split(','))
-				self.log(f'INFO: Using roi of {roi_x},{roi_y},{roi_w},{roi_h}')
+				self.log(4, f'INFO: Using roi of {roi_x},{roi_y},{roi_w},{roi_h}')
 			else:
 				roi_w = int(width * roi_percent)
 				roi_h = int(height * roi_percent)
 				roi_x = (width - roi_w) // 2
 				roi_y = (height - roi_h) // 2
-				self.log(f'INFO: Using roi % of {roi_percent} and roi of {roi_x},{roi_y},{roi_w},{roi_h}')
+				self.log(4, f'INFO: Using roi % of {roi_percent} and roi of {roi_x},{roi_y},{roi_w},{roi_h}')
 
 			if image.ndim == 3:
 				gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-				self.log('INFO: Converted image to grayscale')
+				self.log(4, 'INFO: Converted image to grayscale')
 			else:
 				gray = image
 
@@ -243,18 +243,18 @@ class ALLSKYCLEARSKY(ALLSKYMODULEBASE):
 
 			if sources is not None:
 				found_stars = len(sources)
-				self.log(f'INFO: Number of stars detected in ROI: {len(sources)}')
+				self.log(4, f'INFO: Number of stars detected in ROI: {len(sources)}')
 
 				if annotate_image:
 					for i, row in enumerate(sources):
-						x = int(row['xcentroid'] + roi_x)
-						y = int(row['ycentroid'] + roi_y)
+						x = int(row[0] + roi_x)
+						y = int(row[1] + roi_y)
 
-						self.log(f'INFO: star {i}, x={x}, y={y}')
+						self.log(4, f'INFO: star {i}, x={x}, y={y}')
 
 						cv2.circle(allsky_shared.image, (x, y), 20, (0, 0, 255), 2)
 			else:
-				self.log(f'INFO: No stars detected in ROI')
+				self.log(4, f'INFO: No stars detected in ROI')
 
 			if annotate_image:
 				cv2.rectangle(allsky_shared.image, (roi_x, roi_y), (roi_x + roi_w, roi_y + roi_h), (255, 255, 0), 2)
@@ -269,11 +269,11 @@ class ALLSKYCLEARSKY(ALLSKYMODULEBASE):
 			allsky_shared.saveExtraData(self.meta_data["extradatafilename"], extra_data, self.meta_data['module'], self.meta_data['extradata'])
 
 			result = f'Sky is {sky_state} with {found_stars} stars detected in the ROI'
-			self.log(f'INFO: {result}')
+			self.log(4, f'INFO: {result}')
 		except Exception as e:
 			eType, eObject, eTraceback = sys.exc_info()
 			result = f'Module Clear Sky Alarm failed on line {eTraceback.tb_lineno} - {e}'
-			allsky_shared.log(0,f'ERROR: {result}')
+			self.log(0, f'ERROR: {result}')
    
 		return result
 

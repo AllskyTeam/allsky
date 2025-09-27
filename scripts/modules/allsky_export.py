@@ -70,13 +70,13 @@ class ALLSKYEXPORT(ALLSKYMODULEBASE):
 					json.dump(export_data, out_file, indent=4)
      
 				result = f'Data exported to {save_path}'
-				allsky_shared.log(4, f'INFO: {result}')
+				self.log(4, f'INFO: {result}')
 			else:
 				result = f'No extra variables defined for export'
-				allsky_shared.log(0, f'ERROR: {result}')
+				self.log(0, f'ERROR: {result}')
 		else:
 			result = f'Invalid save path {save_path_raw}'
-			allsky_shared.log(0, f'ERROR: {result}')
+			self.log(0, f'ERROR: {result}')
           
 		return result
 

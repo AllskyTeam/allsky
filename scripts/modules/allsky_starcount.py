@@ -140,7 +140,8 @@ class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 			"mask": "",
 			"debugimage": "",
 			"useclearsky": "False",
-			"minsize": "6"
+			"minsize": "6",
+			"method": "Fast"
 		},
 		"argumentdetails": {    
 			"useclearsky" : {
@@ -347,7 +348,7 @@ class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 		except Exception as e:
 			eType, eObject, eTraceback = sys.exc_info()
 			result = f'Module Star Count failed on line {eTraceback.tb_lineno} - {e}'
-			allsky_shared.log(0,f'ERROR: {result}')
+			self.log(0,f'ERROR: {result}')
 
 		return result
 

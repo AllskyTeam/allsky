@@ -920,11 +920,15 @@ def update_database(structure, extra_data, event):
     save_daytime = get_setting('savedaytimeimages')
     save_nighttime = get_setting('savenighttimeimages')
 
-    tod = get_environment_variable('DAY_OR_NIGHT').lower()
+    tod = get_environment_variable('DAY_OR_NIGHT')
     if tod is None:
-        tod = get_environment_variable('DAY_OR_NIGHT', debug=True).lower()
-        if tod is None:
+        tod = get_environment_variable('DAY_OR_NIGHT', debug=True)
+        if tod is not None:
+            tod = tod.lower()
+        else:
             tod = 'night'
+    else:
+        tod = tod.lower()
 
     update_database_flag = False
 
@@ -976,7 +980,7 @@ def update_database(structure, extra_data, event):
                 else:
                     message = (
                         "INFO: Not saving to database as save daytime images is "
-                        "disabled for the time_of_day_save {event} and it is daytime"
+                        f"disabled for the time_of_day_save {event} and it is daytime"
                     )
                     
             if tod == 'night':
@@ -985,7 +989,7 @@ def update_database(structure, extra_data, event):
                 else:
                     message = (
                         "INFO: Not saving to database as save nighttime images is "
-                        "disabled for the time_of_day_save {event} and it is daytime"
+                        f"disabled for the time_of_day_save {event} and it is nighttime"
                     )
 
         if mode == 'never':
@@ -1287,7 +1291,7 @@ def saveExtraData(file_name: str = '', extra_data: dict = {}, source: str = '', 
     except Exception as e:
         me = os.path.basename(__file__)
         eType, eObject, eTraceback = sys.exc_info()
-        log(0, f'ERROR: saveExtraData failed on line {eTraceback.tb_lineno} in {me} - {e}')
+        log(0, f'ERROR: saveExtraData failed on line {eTraceback.tb_next.tb_lineno} {eTraceback.tb_lineno} in {me} - {e}')
 
 def format_extra_data_json(extra_data, structure, source):
     result = extra_data

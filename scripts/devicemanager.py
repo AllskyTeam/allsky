@@ -2,6 +2,7 @@
 
 import os
 import sys
+import requests
 
 # Ensure the script is running in the correct Python environment
 allsky_home = os.environ['ALLSKY_HOME']
@@ -124,13 +125,31 @@ def get_serial_devices():
     ports = serial.tools.list_ports.comports()
     return [try_serial_probe(port) for port in ports]
 
+def get_gpio_status():
+    url = "http://localhost:8090/gpio/all"
+
+    try:
+        resp = requests.get(url, timeout=5)
+        resp.raise_for_status()
+        data = resp.json()
+    except requests.exceptions.ConnectionError as e:
+        data = False        
+    except requests.exceptions.RequestException as e:
+        data = []
+    except ValueError as e:
+        data = []
+    
+    return data
+
+
 def main():
     family_codes = load_family_codes()
 
     output = {
         "i2c": get_all_i2c_devices(),
         "onewire": get_onewire_devices(family_codes),
-        "serial": get_serial_devices()
+        "serial": get_serial_devices(),
+        "gpio": get_gpio_status()
     }
 
     print(json.dumps(output, indent=2))

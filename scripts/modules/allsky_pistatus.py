@@ -352,12 +352,11 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
  
 	def run(self):
 		result = ''
-		self.debugmode = self.get_param('ALLSKYTESTMODE', False, bool) 
 		period = self.get_param('period', 60, int) 
 			
 		shouldRun, diff = allsky_shared.shouldRun('pistatus', period)
 				
-		if shouldRun or self.debugmode:
+		if shouldRun or self.debug_mode:
 			extra_data = {}
 			usage = shutil.disk_usage("/")
 			size = usage[0]
@@ -368,7 +367,7 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 			extra_data['AS_DISKUSAGE'] = used
 			extra_data['AS_DISKFREE'] = free
 
-			allsky_shared.log(4, f'INFO: Disk Size {size}, Disk Used {used}, Disk Free {free}')
+			self.log(4, f'INFO: Disk Size {size}, Disk Used {used}, Disk Free {free}')
 			vcgm = Vcgencmd()
 			temp = CPUTemperature().temperature
 			temp = round(temp,1)
@@ -379,7 +378,7 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 			Device.ensure_pin_factory()
 			board_info = Device.pin_factory.board_info
 			extra_data['AS_PIMODEL'] = board_info.model
-			allsky_shared.log(4, f'INFO: Pi Model {board_info.model}')
+			self.log(4, f'INFO: Pi Model {board_info.model}')
 
 			throttled = vcgm.get_throttled()
 			text = []
@@ -411,7 +410,7 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 		if extra_data:
 			allsky_shared.saveExtraData(self.meta_data["extradatafilename"], extra_data, self.meta_data['module'], self.meta_data['extradata'])
 		
-		allsky_shared.log(4, f'INFO: {result}')
+		self.log(4, f'INFO: {result}')
 		return result
 
 def pistatus(params, event):

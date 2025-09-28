@@ -146,8 +146,7 @@ Would you like to review and install the available modules now?\
             if ref.name != "origin/HEAD"
         ]
 
-    def _select_git_branch(self, args: argparse.Namespace, force:bool = False) -> None:
-        
+    def _select_git_branch(self, args: argparse.Namespace, force: bool = False) -> None:
         if args.branch or force:
             wt = Whiptail(title="Select Branch", backtitle=f"Allsky Module Installer. Using branch {self._branch}")
             menu_items = [(branch, "") for branch in self._branches]
@@ -155,12 +154,28 @@ Would you like to review and install the available modules now?\
             branch, exit_code = wt.menu("Choose a branch:", menu_items)
             if exit_code == 0:
                 self._branch = branch
-        
+
         if args.setbranch and not force:
+            self._log(True, f"INFO: Setting branch to {args.setbranch}")
             self._branch = args.setbranch
 
         repo = Repo(self._module_repo_path)
+
+        # checkout the branch (force to ensure working tree is updated)
         repo.git.checkout(self._branch, force=True)
+
+        # try to pull latest changes
+        try:
+            if "origin" in repo.remotes:
+                origin = repo.remotes.origin
+                self._log(True, f"INFO: Pulling latest changes for branch {self._branch} from origin…")
+                origin.fetch(prune=True)
+                origin.pull(self._branch)
+                self._log(True, f"INFO: Branch {self._branch} is now up-to-date.")
+            else:
+                self._log(True, "WARNING: No remote named 'origin', skipping pull.")
+        except GitCommandError as e:
+            self._log(True, f"ERROR: Git pull failed: {e}")
 
     def _get_checkedout_branch(self) -> str:
         branch = "Unknown"
@@ -192,28 +207,93 @@ Would you like to review and install the available modules now?\
         return found_module
     
     def _display_install_dialog(self):
-        module_list = []
-        modules_to_install = None
+        import shutil, textwrap
+
+        def _wrap_items(triples, box_width=70, min_desc_width=30, pad=4):
+            """
+            triples: [(tag, description, state_str), ...]
+            Returns same shape but with descriptions wrapped with '\n' so whiptail won't overflow.
+            """
+            max_length = 0
+            max_tag = max((len(tag) for tag, _, _ in triples), default=0)
+            # whiptail draws "[ ] " plus some padding next to the tag; reserve ~6 chars
+            tag_col = max_tag + 6
+            desc_width = max(min_desc_width, box_width - tag_col - pad)
+
+            wrapped = []
+            for tag, desc, state in triples:
+                d = (desc or "").replace("\t", " ")
+                d = textwrap.fill(d, width=desc_width, break_long_words=True, break_on_hyphens=False)
+                wrapped.append((tag, d, state))
+                if len(tag) > max_length:
+                    max_length = len(tag)
+
+            return wrapped, max_length
+
+        module_triples = []
+        module_xref = []        
+        modules_to_install = []
+
+        # Build list with status + descriptions
         for module in self._module_list:
             try:
-                status = ""
-                if module.installed:
-                    status = "Installed"
-                    if module.is_new_version_available():
-                        status = "Update Available"
-                        
-                module_list.append((module.name, status,  ""))
-            except (ModuleError, NoVersionError) as e:
-                pass
+                if not module.deprecated:
+                    if module.installed and getattr(module, "is_new_version_available", None) and module.is_new_version_available():
+                        status = " (Update Available) "
+                    elif module.installed:
+                        status = " (Installed) "
+                    else:
+                        status = ""
+                    # Whiptail expects triples: (tag, description, "ON"/"OFF")
+                    description = f"{status}{module.description}"
+                    module_triples.append((description, "", "OFF"))
+                    module_xref.append((module, description))
+            except (ModuleError, NoVersionError):
+                # Skip modules that can't report status cleanly
+                continue
             except Exception as e:
                 tb = e.__traceback__
-                print(f"Error {module.name} on line {tb.tb_lineno}: {e}")
+                print(f"Error {getattr(module, 'name', '?')} on line {tb.tb_lineno}: {e}")
                 sys.exit(1)
-            
-        if len(module_list) > 0:                            
-            w = Whiptail(title="Select Modules", backtitle=f"Allsky Module Installer. Using branch {self._branch}", height=20, width=60)
-            modules_to_install = w.checklist('Select the Modules To Install', module_list)[0]
 
+        if not module_triples:
+            return modules_to_install
+
+        # Respect terminal width; keep within screen to avoid overflow
+        cols, _rows = shutil.get_terminal_size(fallback=(120, 30))
+        desired_width = min(180, max(80, cols - 10))  # clamp to terminal; ≥80 for readability
+
+        # Wrap descriptions to fit the checklist column
+        module_triples, max_length = _wrap_items(module_triples, box_width=desired_width)
+
+        if max_length < desired_width:
+            desired_width = max_length + 20  # + tag column + padding
+            
+        # Show dialog
+        w = Whiptail(
+            title=f"Select Modules",
+            backtitle=f"Allsky Module Installer. Using branch {self._branch}",
+            width=desired_width,
+        )
+
+        # python-whiptail / whiptail-dialogs both support triples and return (selected, rc)
+        selected, rc = w.checklist(
+            "Select the Modules To Install",
+            module_triples,
+            prefix=" "  # avoid leading "- " before descriptions
+        )
+
+        if rc != 0 or not selected:
+            return []
+
+        modules_to_install = []
+        for description in selected:
+            for module, desc in module_xref:
+                if desc == description:
+                    modules_to_install.append(module.name)
+                    break
+
+        # Run installs
         for module_name in modules_to_install:
             module = self._find_module(module_name)
             try:
@@ -221,12 +301,12 @@ Would you like to review and install the available modules now?\
             except Exception as e:
                 print(e)
 
-        if len(modules_to_install) > 0:
+        if modules_to_install:
             print("\n\nInstallation complete")
             input("\nPress Enter to continue...")
-            
+
         return modules_to_install
-    
+
     def auto_upgrade_modules(self, args):
         self._log(False, f"Auto upgrade modules started")
         self._log(False, f"============================\n")
@@ -332,26 +412,29 @@ Would you like to review and install the available modules now?\
 
     def welcome_message(self):
 
-        w = Whiptail(title="Welcome", backtitle=self._back_title, height=25, width=80)
+        w = Whiptail(title=f"Module Manager Welcome", backtitle=f"Allsky Module Manager. Using branch {self._branch}", height=25, width=80)
         result = w.yesno(self._welcome_message)        
         return result
                             
     def run(self, args: argparse.Namespace) -> None:
         
+        self._ensure_cloned_repo(self._module_repo, self._module_repo_path)
+        self._branches = self._get_remote_branches(self._module_repo_path)
+        
+        if args.branch or args.setbranch:
+            self._select_git_branch(args)
+    
+        self._read_modules()
+                    
+        go_for_it = False
         if args.welcome:
-            go_for_it = self.welcome_message()
+            if self.welcome_message():
+                self._display_install_dialog()
+                sys.exit(0)
         else:
             go_for_it = True
             
         if go_for_it:
-            self._ensure_cloned_repo(self._module_repo, self._module_repo_path)
-            self._branches = self._get_remote_branches(self._module_repo_path)
-            
-            if args.branch or args.setbranch:
-                self._select_git_branch(args)
-        
-            self._read_modules()
-
             done = False
             while not done:
                 w = Whiptail(title="Main Menu", backtitle=f"Allsky Module Manager. Using branch {self._branch}", height=20, width=40)

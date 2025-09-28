@@ -243,9 +243,17 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 					"group": "Camera",
 					"description": "Exposure",
 					"type": "temperature"
-				}
-			}
-		}
+				},
+				"AS_MEAN": {
+					"name": "${MEAN}",
+					"format": "",
+					"sample": "",                
+					"group": "Camera",
+					"description": "Current Mean Pixel Value",
+					"type": "number"
+				},    
+			}                         
+		}          
 	}
 
 	def _cleanup_module_data(arg):
@@ -270,10 +278,10 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 					varValue = env[var]
 					debug_file.write(var + varValue + os.linesep)
 
-			allsky_shared.log(4, f"INFO: Debug information written to {debug_filename}")
+			self.log(4, f"INFO: Debug information written to {debug_filename}")
 		except Exception as e:
 			eType, eObject, eTraceback = sys.exc_info()
-			allsky_shared.log(0, f'ERROR: Unable to access {debug_filename} in allsky_loadimage.py on line {eTraceback.tb_lineno} - {e}')
+			self.log(0, f'ERROR: Unable to access {debug_filename} in allsky_loadimage.py on line {eTraceback.tb_lineno} - {e}')     
 
 	def run(self):
 		result = f'Image {allsky_shared.CURRENTIMAGEPATH} Loaded'
@@ -281,9 +289,9 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 		try:
 			allsky_shared.image = cv2.imread(allsky_shared.CURRENTIMAGEPATH)
 			if allsky_shared.image is None:
-				allsky_shared.log(0, f'ERROR: Cannot read {allsky_shared.CURRENTIMAGEPATH}...', exitCode=1)
+				self.log(0, f'ERROR: Cannot read {allsky_shared.CURRENTIMAGEPATH}...', exitCode=1)
 		except Exception as e:
-			allsky_shared.log(0, f'ERROR: Cannot load {allsky_shared.CURRENTIMAGEPATH}: {e}', exitCode=1)
+			self.log(0, f'ERROR: Cannot load {allsky_shared.CURRENTIMAGEPATH}: {e}', exitCode=1)
 
 		filename = os.path.basename(allsky_shared.CURRENTIMAGEPATH)
 		date = filename[6:14]
@@ -301,6 +309,7 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 		extra_data['AS_CAMERAEXPOSURE_US'] = int(allsky_shared.get_environment_variable('AS_EXPOSURE_US'))
 		extra_data['AS_CAMERAGAIN'] = allsky_shared.get_camera_gain()
 		extra_data['AS_CAMERATEMPERATURE'] = allsky_shared.get_sensor_temperature()
+		extra_data['AS_MEAN'] = float(allsky_shared.get_environment_variable('AS_MEAN'))
 
 		allsky_shared.save_extra_data(self.meta_data['extradatafilename'], extra_data, self.meta_data['module'], self.meta_data['extradata'])
 
@@ -309,12 +318,12 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 		except Exception as e:
 			eType, eObject, eTraceback = sys.exc_info()
 			result = f'Cannot cleanup extra module data in allsky_loadimage.py on line {eTraceback.tb_lineno} - {e}'
-			allsky_shared.log(0,f'ERROR: {result}')
+			self.log(0,f'ERROR: {result}')  
 
 		self._dump_debug_data()
-
-		allsky_shared.log(4, f'INFO: {result}')
-		return result
+  
+		self.log(4, f'INFO: {result}')
+		return result        
 
 def loadimage(params, event):
 	allsky_load_image = ALLSKYLOADIMAGE(params, event)

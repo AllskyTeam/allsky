@@ -48,12 +48,12 @@ class ALLSKYSAVEIMAGE(ALLSKYMODULEBASE):
 
 			if not self._write_image(allsky_shared.image, allsky_shared.CURRENTIMAGEPATH, quality):
 				result = f'Failed to save {allsky_shared.CURRENTIMAGEPATH}'
-				allsky_shared.log(0, f'ERROR: {result}', exitCode=1)
+				self.log(0, f'ERROR: {result}', exitCode=1)
 			else:
-				allsky_shared.log(4, f'INFO: {result}')
+				self.log(4, f'INFO: {result}')
 		else:
 			result = 'Cannot determine the image quality. Image NOT saved'
-			allsky_shared.log(0, f'ERROR: {result}')
+			self.log(0, f'ERROR: {result}')
 
 		return result
 

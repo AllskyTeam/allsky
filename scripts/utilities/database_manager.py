@@ -144,9 +144,7 @@ class ALLSKYDATABASEMANAGER:
         Detected Raspberry Pi version number (e.g., 3, 4, 5).
     """
 
-    _welcome = "Allsky allows data be stored in a local database for various functions, such as graphs and other analytics.\
-        This feature is optional. Would you like to enable this feature?\
-        "
+    _welcome = "Allsky utilises a database to store information about images, settings, and other data.\n\n Would you like to use the recommended configuration. (If you are unsure then please select 'Yes').\n\nSelecting 'No' will allow you to manually configure the database"
     _low_performance = "\nSince you are running on a PI with reduced CPU and RAM it is recommended that you use sqlite"
     _high_performance = "\nSince you are running a PI with sufficient CPU and RAM it is recommended that you use MySQL (MariaDB) although you may select sqlite if you wish"
     _enable_database = "\n\nWould you like to enable this feature? If you select No then you can rerun this script at any time and enable the database"
@@ -360,13 +358,6 @@ class ALLSKYDATABASEMANAGER:
             True if user selected "Yes".
         """
         _message = self._welcome
-        
-        if self.is_fast_pi:
-            _message += self._low_performance
-        else:
-            _message += self._high_performance
-        
-        _message += self._enable_database
         
         w = Whiptail(title="Welcome", backtitle="Allsky Database Manager", height=20, width=60)
         result = w.yesno(_message)
@@ -1372,26 +1363,29 @@ class ALLSKYDATABASEMANAGER:
         """
         if not self.is_database_configured:
             if self._display_welcome():
+                database_to_use = "sqlite"
+            else:
                 database_to_use = self._select_database_server()
-                if database_to_use == "mysql" and not self._mysql_installed:
-                    if self._show_mysql_warning_message():
-                        if not self._install_database_server(database_to_use):
-                            # TODO: install failed handling
-                            pass
-                    else:
-                        sys.exit(1)
-                    
-                if database_to_use == "mysql":
-                    action, user_name, password = self._select_mysql_database_user()
-                    if action == "create" or action == "select":
-                        database_name = self._database_config["databasedatabase"] if "databasedatabase" in self._database_config else ""
-                        result, db_name = self._select_mysql_database("localhost", user_name, password, database_name)
-                        if result:
-                            result = self._set_allsky_options("mysql", "localhost", user_name, password, db_name)
-                            self._mysql_installed, self._mysql_type = self._mysql_service_installed()
+                
+            if database_to_use == "mysql" and not self._mysql_installed:
+                if self._show_mysql_warning_message():
+                    if not self._install_database_server(database_to_use):
+                        # TODO: install failed handling
+                        pass
+                else:
+                    sys.exit(1)
+                
+            if database_to_use == "mysql":
+                action, user_name, password = self._select_mysql_database_user()
+                if action == "create" or action == "select":
+                    database_name = self._database_config["databasedatabase"] if "databasedatabase" in self._database_config else ""
+                    result, db_name = self._select_mysql_database("localhost", user_name, password, database_name)
+                    if result:
+                        result = self._set_allsky_options("mysql", "localhost", user_name, password, db_name)
+                        self._mysql_installed, self._mysql_type = self._mysql_service_installed()
 
-                if database_to_use == "sqlite":
-                    result = self._set_allsky_options("sqlite", "", "", "", "")
+            if database_to_use == "sqlite":
+                result = self._set_allsky_options("sqlite", "", "", "", "allsky")
                     
     def run(self):
         """

@@ -68,12 +68,12 @@ class ALLSKYMASKIMAGE(ALLSKYMODULEBASE):
 				result = 'Mask applied'
 			else:
 				result = 'No mask defined'
-				allsky_shared.log(0, f'ERROR: {result}')
+				self.log(0, f'ERROR: {result}')
 
 		except Exception as e:
 			eType, eObject, eTraceback = sys.exc_info()
 			result = f'Module Mask Image failed on line {eTraceback.tb_lineno} - {e}'
-			allsky_shared.log(0, f'ERROR: {result}')
+			self.log(0, f'ERROR: {result}')
            
 		return result
 

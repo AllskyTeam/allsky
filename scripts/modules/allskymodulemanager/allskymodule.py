@@ -82,17 +82,34 @@ class ALLSKYMODULE:
     def _log(self, debug_only, message):
 
         if debug_only and self._debug_mode or not debug_only:
-            print(message)
+            print(f"\033[0;32m{message}")
     
     
     @property
     def name(self) -> str:
         return self._module_name
-
+    
     @name.setter
     def name(self, value:str):
         self._module_name = value
 
+    @property
+    def description(self) -> str:
+        return self._description
+
+    @description.setter
+    def description(self, value:str):
+        self._description = value
+
+
+    @property
+    def deprecated(self) -> str:
+        return self._deprecated
+
+    @deprecated.setter
+    def deprecated(self, value:str):
+        self._deprecated = value
+            
     @property
     def name_for_flow(self) -> str:
         prefix = "allsky_"
@@ -239,6 +256,13 @@ class ALLSKYMODULE:
                         
         meta_data = self._get_meta_data_from_file(installed_file_path)
 
+        if meta_data is not None:
+            self.deprecated = False
+            self.description = meta_data.get("description", self.name)
+            if "deprecation" in meta_data:
+                if "deprecated" in meta_data["deprecation"]:
+                    self.deprecated = shared.to_bool(meta_data["deprecation"]["deprecated"])
+                    
         if meta_data is None:
             status["valid"] = False
             status["message"].append('No valid meta data found')
@@ -305,7 +329,6 @@ class ALLSKYMODULE:
             for flow, flow_data in flows.items():
                 flow_module_data = flow_data[self.name_for_flow]["metadata"]["argumentdetails"]
                 code_module_data = self._get_meta_data_from_file(self._installed_info["full_path"])
-                print(self._installed_info["full_path"])
                 code_module_data = code_module_data["argumentdetails"]
                 
                 if shared.compare_flow_and_module(flow_module_data, code_module_data):
@@ -519,28 +542,36 @@ class ALLSKYMODULE:
             else:
                 self._log(False, f"ERROR: _post_install -> Module {self.name} Post install routines failed. {text}")
                 result = False            
-                    
+        else:
+            self._log(False, f"INFO: {self.name} requires no post installation")
+                                     
         return result
     
     def _cleanup_module(self) -> bool:        
         result = True
-        
-        if str(self._installed_info["path"]) != str(self._module_paths["module"]):
-            try:
-                if self._installed_info is not None:
-                    if self._installed_info["path"]:
-                        installed_file_path = os.path.join(self._installed_info["path"], self.name + ".py")
-                        shared.remove_path(installed_file_path)
-                    
-                        dependencies_path = os.path.join(self._installed_info["path"],'dependencies', self.name)
-                        info_path = os.path.join(self._installed_info["path"],'info', self.name)
 
-                        shared.remove_path(dependencies_path)
-                        shared.remove_path(info_path)
+        do_cleanup = False
+        if self._installed_info:
+            if str(self._installed_info["path"]) != str(self._module_paths["module"]):
+                do_cleanup = True
+
+        if do_cleanup:
+            try:
+                self._log(False, f"INFO: {self.name} cleanup required")                
+                installed_file_path = os.path.join(self._installed_info["path"], self.name + ".py")
+                shared.remove_path(installed_file_path)
+            
+                dependencies_path = os.path.join(self._installed_info["path"],'dependencies', self.name)
+                info_path = os.path.join(self._installed_info["path"],'info', self.name)
+
+                shared.remove_path(dependencies_path)
+                shared.remove_path(info_path)
             except Exception as e:
                 self._log(False, f"ERROR: _cleanup_module -> Module {self.name} failed to remove - {e}")
                 result = False
-            
+        else:
+            self._log(False, f"INFO: {self.name} no cleanup required")
+                            
         return result
     
     @ensure_valid     

@@ -7,29 +7,31 @@
         if (!$('#deviceManagerModal').length) {
             $('body').append(`
                 <div id="deviceManagerModal" class="modal fade" tabindex="-1" role="dialog">
-                <div class="modal-dialog modal-lg">
-                    <div class="modal-content">
-                    <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal">&times;</button>
-                        <h4 class="modal-title">Connected Devices</h4>
-                    </div>
-                    <div class="modal-body">
-                        <ul class="nav nav-tabs" role="tablist">
-                        <li class="active"><a href="#dm-tab-i2c" role="tab" data-toggle="tab">I2C Devices</a></li>
-                        <li><a href="#dm-tab-1wire" role="tab" data-toggle="tab">1-Wire Devices</a></li>
-                        <li><a href="#dm-tab-serial" role="tab" data-toggle="tab">Serial Devices</a></li>
-                        </ul>
-                        <div class="tab-content" style="margin-top:15px;">
-                        <div class="tab-pane active" id="dm-tab-i2c">Loading I2C devices...</div>
-                        <div class="tab-pane" id="dm-tab-1wire">Loading 1-Wire devices...</div>
-                        <div class="tab-pane" id="dm-tab-serial">Loading Serial devices...</div>
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">Connected Devices</h4>
+                            </div>
+                            <div class="modal-body">
+                                <ul class="nav nav-tabs" role="tablist">
+                                    <li class="active"><a href="#dm-tab-i2c" role="tab" data-toggle="tab">I2C Devices</a></li>
+                                    <li><a href="#dm-tab-1wire" role="tab" data-toggle="tab">1-Wire Devices</a></li>
+                                    <li><a href="#dm-tab-serial" role="tab" data-toggle="tab">Serial Devices</a></li>
+                                    <li><a href="#dm-tab-gpio" role="tab" data-toggle="tab">GPIO Status</a></li>
+                                </ul>
+                                <div class="tab-content" style="margin-top:15px;">
+                                <div class="tab-pane active" id="dm-tab-i2c">Loading I2C devices...</div>
+                                <div class="tab-pane" id="dm-tab-1wire">Loading 1-Wire devices...</div>
+                                <div class="tab-pane" id="dm-tab-serial">Loading Serial devices...</div>
+                                <div class="tab-pane" id="dm-tab-gpio">Loading GPIO status...</div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button class="btn btn-default" data-dismiss="modal">Close</button>
+                            </div>
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button class="btn btn-default" data-dismiss="modal">Close</button>
-                    </div>
-                    </div>
-                </div>
                 </div>
             `);
         }
@@ -37,11 +39,15 @@
         $('#deviceManagerModal')
             .off('shown.bs.modal')
             .on('shown.bs.modal', function () {
+                $('#dm-tab-i2c').html('Loading...');
+                $('#dm-tab-1wire').html('Loading...');
+                $('#dm-tab-serial').html('Loading...');
+                $('#dm-tab-gpio').html('Loading...');
                 let loadingTimer = setTimeout(() => {
                     $.LoadingOverlay('show', {
-                        text: 'Sorry this is taking longer than expected ...'
+                        text: 'Loading Device Manager ...'
                     });
-                }, 1000);
+                }, 50);
 
                 $.getJSON(settings.url, function (data) {
                     clearTimeout(loadingTimer);
@@ -134,6 +140,43 @@
 
                         return html;
                     });
+
+                    updateTabFormatted('#dm-tab-gpio', data.gpio, function (items) {
+
+                        if (items === false) {
+                            return '<div class="alert alert-danger">GPIO status not available. The GPIO server is not running. Please check the Allsky documentation</div>';
+                        } else {
+                            const grid = $('<div>');
+
+                            const header = $('<div class="row">')
+                                .append('<div class="col-xs-2"><strong>Pin</strong></div>')
+                                .append('<div class="col-xs-2"><strong>Type</strong></div>')
+                                .append('<div class="col-xs-2"><strong>State</strong></div>')
+                                .append('<div class="col-xs-3"><strong>Duty Cycle</strong></div>')
+                                .append('<div class="col-xs-3"><strong>Frequency</strong></div>');
+                            grid.append(header);
+
+                            $.each(items, function (pin, cfg) {
+                                if (!cfg.mode || cfg.mode === "unused") return;
+
+                                const type = cfg.mode.toLowerCase().includes("pwm") ? "PWM" : "Digital I/O";
+                                const state = (type === "Digital I/O") ? (cfg.value || "") : "-";
+                                const duty = (type === "PWM") ? (cfg.duty || "") : "-";
+                                const freq = (type === "PWM") ? (cfg.frequency || "") : "-";
+
+                                const row = $('<div class="row" style="padding:8px 0;">')
+                                    .append(`<div class="col-xs-2">${pin}</div>`)
+                                    .append(`<div class="col-xs-2">${type}</div>`)
+                                    .append(`<div class="col-xs-2">${state}</div>`)
+                                    .append(`<div class="col-xs-3">${duty}</div>`)
+                                    .append(`<div class="col-xs-3">${freq}</div>`);
+
+                                grid.append(row);
+                            });
+                            return grid.html();                            
+                        }
+                    });
+
                 }).fail(function (xhr, status, error) {
                     clearTimeout(loadingTimer);
                     $.LoadingOverlay('hide');
@@ -147,17 +190,33 @@
 
         $('#deviceManagerModal').modal('show');
 
+        function sizeOf(value) {
+            if (Array.isArray(value)) {
+                return value.length;
+            } else if (typeof value === "string") {
+                return value.length;
+            } else if (value !== null && typeof value === "object") {
+                return Object.keys(value).length;
+            } else {
+                return 0;
+            }
+        }
+
         function updateTabFormatted(selector, items, formatter) {
             let html = '';
-            if (items.length > 0) {
-                if (selector === '#dm-tab-i2c') {
-                    items.forEach(function (item) {
-                        html += formatter(item);
-                    });
+            if (sizeOf(items) > 0 || items === false) {
+                if (selector === '#dm-tab-gpio') {
+                    html += formatter(items);
                 } else {
-                    items.forEach(function (item) {
-                        html += formatter(item);
-                    });
+                    if (selector === '#dm-tab-i2c') {
+                        items.forEach(function (item) {
+                            html += formatter(item);
+                        });
+                    } else {
+                        items.forEach(function (item) {
+                            html += formatter(item);
+                        });
+                    }
                 }
             } else {
                 html = '<p>No devices found.</p>';

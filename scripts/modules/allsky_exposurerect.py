@@ -51,16 +51,16 @@ class ALLSKYEXPOSURERECT(ALLSKYMODULEBASE):
                 width_px, height_px, left_pct, top_pct = map(int, histogram_box.split())
                 try:
                     self._draw_exposure_rect(width_px, height_px, left_pct, top_pct)
-                    allsky_shared.log(4, f'INFO: {result}')                    
+                    self.log(4, f'INFO: {result}')                    
                 except Exception as e:
                     result = f'Failed to draew exposure rectangle: {e}'
-                    allsky_shared.log(0, f'ERROR: {result}')
+                    self.log(0, f'ERROR: {result}')
             except ValueError:
                 result = 'Invalid histogram box settings. Please check the camera settings page.'
-                allsky_shared.log(0, f'ERROR: {result}')
+                self.log(0, f'ERROR: {result}')
         else:
             result = 'Histogram box not set. Please set the histogram box in the camera settings page.'
-            allsky_shared.log(0, f'ERROR: {result}')
+            self.log(0, f'ERROR: {result}')
             
         return result        
 

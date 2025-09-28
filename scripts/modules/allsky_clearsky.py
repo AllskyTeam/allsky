@@ -266,7 +266,7 @@ class ALLSKYCLEARSKY(ALLSKYMODULEBASE):
 			extra_data['AS_CLEARSKYSTATE'] = sky_state
 			extra_data['AS_CLEARSKYSTATESTARS'] = found_stars
 			extra_data['AS_CLEARSKYSTATEFLAG'] = 1 if sky_state.strip().lower() == "clear" else 0
-			allsky_shared.saveExtraData(self.meta_data["extradatafilename"], extra_data, self.meta_data['module'], self.meta_data['extradata'])
+			allsky_shared.saveExtraData(self.meta_data["extradatafilename"], extra_data, self.meta_data['module'], self.meta_data['extradata'], event=self.event)
 
 			result = f'Sky is {sky_state} with {found_stars} stars detected in the ROI'
 			self.log(4, f'INFO: {result}')

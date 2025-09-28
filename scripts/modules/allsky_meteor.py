@@ -451,7 +451,7 @@ class ALLSKYMETEOR(ALLSKYMODULEBASE):
 			extra_data['AS_METEORIMAGEPATH'] = allsky_shared.CURRENTIMAGEPATH
 			extra_data['AS_METEORIMAGEURL'] = url
 			extra_data['AS_METEORCOUNT'] = len(streaks)
-			allsky_shared.saveExtraData(self.meta_data["extradatafilename"], extra_data, self.meta_data['module'], self.meta_data['extradata'])
+			allsky_shared.saveExtraData(self.meta_data["extradatafilename"], extra_data, self.meta_data['module'], self.meta_data['extradata'], event=self.event)
    
 		else:
 			allsky_shared.delete_extra_data(self.meta_data['extradatafilename'])

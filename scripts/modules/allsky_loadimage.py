@@ -153,7 +153,14 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 				"enabled": "True",
 				"table": "allsky_camera",
 				"row_type": "int",
-    			"include_all": "true"
+    			"include_all": "true",
+       			"time_of_day_save": {
+					"day": "enabled",
+					"night": "enabled",
+					"nightday": "never",
+					"daynight": "never",
+					"periodic": "never"
+				}
 			},
 			"values": {
 				"AS_CAMERAIMAGE": {
@@ -303,7 +310,7 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 		extra_data['AS_CAMERATEMPERATURE'] = allsky_shared.get_sensor_temperature()
 		extra_data['AS_MEAN'] = float(allsky_shared.get_environment_variable('AS_MEAN'))
 
-		allsky_shared.save_extra_data(self.meta_data['extradatafilename'], extra_data, self.meta_data['module'], self.meta_data['extradata'])
+		allsky_shared.save_extra_data(self.meta_data['extradatafilename'], extra_data, self.meta_data['module'], self.meta_data['extradata'], event=self.event)
 
 		try:
 			self._cleanup_module_data()

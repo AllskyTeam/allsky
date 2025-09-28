@@ -279,7 +279,7 @@ class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 		if detection_method == "Fast":
 			min_size = self.get_param('minsize', 6, int)
 
-			self.log(f'INFO: Using fast detection method')
+			self.log(4, f'INFO: Using fast detection method')
 			sources = allsky_shared.fast_star_count(
 				image_copy,
 				min_d_px = min_size,    # ~star core diameter in pixels (5–8)
@@ -290,7 +290,7 @@ class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 				mask_bottom_frac = 0.12 # ignore lowest X% (horizon glow)
 			)
 		else:
-			self.log(f'INFO: Using slow detection method')
+			self.log(4, f'INFO: Using slow detection method')
 			sources, _ = allsky_shared.count_starts_in_image(image_copy)
 
 		if annotate_image:
@@ -315,7 +315,7 @@ class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 
 			if debug_image_path is not None and debug_image_path != '':
 				if allsky_shared.is_file_readable(debug_image_path):
-					self.log(f'INFO: Using debug image {debug_image_path}')
+					self.log(4,f'INFO: Using debug image {debug_image_path}')
 					debug_image = cv2.imread(debug_image_path)
 					debug_image, sources = self._process_image(debug_image, True)
 			else:
@@ -324,7 +324,7 @@ class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
     
 			if sources is not None:
 				result = f"Number of stars detected: {len(sources)}"
-				self.log(f'INFO: {result}')
+				self.log(1, f'INFO: {result}')
 
 				if not debug_image_path:
 					allsky_shared.image = source_image
@@ -339,11 +339,11 @@ class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 				extra_data['AS_STARIMAGEPATH'] = allsky_shared.CURRENTIMAGEPATH
 				extra_data['AS_STARIMAGEURL'] = url
 				extra_data['AS_STARCOUNT'] = len(sources)
-				allsky_shared.saveExtraData(self.meta_data["extradatafilename"], extra_data, self.meta_data['module'], self.meta_data['extradata'])
+				allsky_shared.saveExtraData(self.meta_data["extradatafilename"], extra_data, self.meta_data['module'], self.meta_data['extradata'], event=self.event)
 			else:
 				allsky_shared.delete_extra_data(self.meta_data['extradatafilename'])
 				result = 'No stars detected.'
-				self.log(f'INFO: {result}')
+				self.log(1, f'INFO: {result}')
 
 		except Exception as e:
 			eType, eObject, eTraceback = sys.exc_info()

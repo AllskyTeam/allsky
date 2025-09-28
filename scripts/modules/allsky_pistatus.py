@@ -408,7 +408,7 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 			result = 'Will run in ' + str(period - diff) + ' seconds'
 			
 		if extra_data:
-			allsky_shared.saveExtraData(self.meta_data["extradatafilename"], extra_data, self.meta_data['module'], self.meta_data['extradata'])
+			allsky_shared.saveExtraData(self.meta_data["extradatafilename"], extra_data, self.meta_data['module'], self.meta_data['extradata'], event=self.event)
 		
 		self.log(4, f'INFO: {result}')
 		return result

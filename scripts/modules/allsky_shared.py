@@ -916,23 +916,108 @@ def get_database_config():
     
     return secret_data
 
-def update_database(structure, extra_data):
-    secret_data = get_database_config()
+def update_database(structure, extra_data, event):
+    save_daytime = get_setting('savedaytimeimages')
+    save_nighttime = get_setting('savenighttimeimages')
 
-    if secret_data['databaseenabled']:
-        if not re.fullmatch(r'[a-zA-Z_][a-zA-Z0-9_]*', secret_data['databasedatabase']):
-            log(0, f"ERROR: Database table name {secret_data['databasedatabase']} is invalid")
-            return
-          
-        if secret_data['databasetype'] == 'mysql':
-            if check_mysql_connection(secret_data['databasehost'],secret_data['databaseuser'],secret_data['databasepassword'], secret_data['databasedatabase']):
-                update_mysql_database(structure, extra_data)
-            else:
-                log(0, f"ERROR: Failed to connect to MySQL database. Please run the database manager utility.")
+    tod = get_environment_variable('DAY_OR_NIGHT').lower()
+    if tod is None:
+        tod = get_environment_variable('DAY_OR_NIGHT', debug=True).lower()
+        if tod is None:
+            tod = 'night'
+
+    update_database_flag = False
+
+    if event == 'postcapture':
+        if tod == 'day':
+            mode = structure.get('database',{}).get('time_of_day_save', {}).get('day', 'enabled')
+            if mode == 'enabled':
+                if save_daytime:
+                    update_database_flag = True
+                else:
+                    message = (
+                        "INFO: Not saving to database as save daytime images is "
+                        "disabled and it is daytime"
+                    )
+                    
+            if mode == 'never':
+                message = "INFO: Not saving to database as database time_of_day_save day is set to never"
+                
+            if mode == 'always':
+                update_database_flag = True
+
+        if tod == 'night':
+            mode = structure.get('database',{}).get('time_of_day_save', {}).get('night', 'enabled')
+            if mode == 'enabled':        
+                if save_nighttime:
+                    update_database_flag = True
+                else:
+                    message = (
+                        "INFO: Not saving to database as save nighttime images is "
+                        "disabled and it is nighttime"
+                    )
+
+            if mode == 'never':
+                message = "INFO: Not saving to database as database todsave night is set to never"
+                
+            if mode == 'always':
+                update_database_flag = True
+       
+    if event in ('daynight', 'nightday', 'periodic'):
+        mode = structure.get('database',{}).get('time_of_day_save', {}).get(event, 'always')
         
-        if secret_data['databasetype'] == 'sqlite':
-            update_sqlite_database(structure, extra_data)
+        if mode == 'always':
+            update_database_flag = True
+        
+        if mode == 'enabled':
+            if tod == 'day':
+                if save_daytime:
+                    update_database_flag = True
+                else:
+                    message = (
+                        "INFO: Not saving to database as save daytime images is "
+                        "disabled for the time_of_day_save {event} and it is daytime"
+                    )
+                    
+            if tod == 'night':
+                if save_nighttime:
+                    update_database_flag = True
+                else:
+                    message = (
+                        "INFO: Not saving to database as save nighttime images is "
+                        "disabled for the time_of_day_save {event} and it is daytime"
+                    )
 
+        if mode == 'never':
+            message = f"INFO: Not saving to database as database time_of_day_save {event} is set to never"
+        
+    if update_database_flag:
+        secret_data = get_database_config()
+
+        if secret_data['databaseenabled']:
+            if not re.fullmatch(r'[a-zA-Z_][a-zA-Z0-9_]*', secret_data['databasedatabase']):
+                log(0, f"ERROR: Database table name {secret_data['databasedatabase']} is invalid")
+                return
+
+            if secret_data['databasetype'] == 'mysql':
+                if check_mysql_connection(
+                    secret_data['databasehost'],
+                    secret_data['databaseuser'],
+                    secret_data['databasepassword'],
+                    secret_data['databasedatabase']
+                ):
+                    update_mysql_database(structure, extra_data)
+                else:
+                    log(0, "ERROR: Failed to connect to MySQL database. "
+                           "Please run the database manager utility.")
+
+            if secret_data['databasetype'] == 'sqlite':
+                update_sqlite_database(structure, extra_data)
+
+            log(4, f"INFO: Saved data to {secret_data['databasetype']} database")
+    else:
+        log(4, message)
+        
 def obfuscate_password(password: str) -> str:
     if not password:
         return ""
@@ -1116,9 +1201,9 @@ def update_mysql_database(structure, extra_data):
         eType, eObject, eTraceback = sys.exc_info()            
         log(0, f'ERROR: update_mysql_database failed on line {eTraceback.tb_lineno} in {me} - {e}')
 
-def save_extra_data(file_name, extra_data, source='', structure={}, custom_fields={}):
-    saveExtraData(file_name, extra_data, source, structure, custom_fields)
-def saveExtraData(file_name, extra_data, source: str = '', structure: dict = {}, custom_fields: dict = {}):
+def save_extra_data(file_name: str = '', extra_data: dict = {}, source: str = '', structure: dict = {}, custom_fields: dict = {}, event: str = 'postcapture'):
+    saveExtraData(file_name, extra_data, source, structure, custom_fields, event)
+def saveExtraData(file_name: str = '', extra_data: dict = {}, source: str = '', structure: dict = {}, custom_fields: dict = {}, event: str = 'postcapture'):
     """
     Persist "extra data" for use by Allsky overlay modules.
 
@@ -1198,7 +1283,7 @@ def saveExtraData(file_name, extra_data, source: str = '', structure: dict = {},
             set_permissions(extra_data_filename)
 
             if 'database' in structure:
-                update_database(structure, extra_data)
+                update_database(structure, extra_data, event)
     except Exception as e:
         me = os.path.basename(__file__)
         eType, eObject, eTraceback = sys.exc_info()

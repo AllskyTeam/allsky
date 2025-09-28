@@ -164,7 +164,7 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 					"description": "Current Image",
 					"type": "string"
 				},
-				"DAY_NIGHT": {
+				"AS_DAY_NIGHT": {
 					"name": "${DAY_OR_NIGHT}",
 					"format": "",
 					"sample": "",
@@ -172,15 +172,7 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 					"description": "Day / night flag",
 					"type": "string"
 				},
-				"MEAN": {
-					"name": "${MEAN}",
-					"format": "",
-					"sample": "",
-					"group": "Camera",
-					"description": "Mean brightness of image",
-					"type": "float"
-				},
-				"AUTOEXPOSURE": {
+				"AS_AUTOEXPOSURE": {
 					"name": "${AUTOEXPOSURE}",
 					"format": "",
 					"sample": "",
@@ -188,7 +180,7 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 					"description": "Autoexposure enabled?",
 					"type": "bool"
 				},
-				"AUTOGAIN": {
+				"AS_AUTOGAIN": {
 					"name": "${AUTOGAIN}",
 					"format": "",
 					"sample": "",
@@ -196,7 +188,7 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 					"description": "Autogain enabled?",
 					"type": "bool"
 				},
-				"RESOLUTION_X": {
+				"AS_RESOLUTION_X": {
 					"name": "${RESOLUTION_X}",
 					"format": "",
 					"sample": "",
@@ -204,7 +196,7 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 					"description": "Width of image in pixels",
 					"type": "int"
 				},
-				"RESOLUTION_Y": {
+				"AS_RESOLUTION_Y": {
 					"name": "${RESOLUTION_Y}",
 					"format": "",
 					"sample": "",
@@ -251,7 +243,7 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 					"group": "Camera",
 					"description": "Current Mean Pixel Value",
 					"type": "number"
-				},    
+				}  
 			}                         
 		}          
 	}
@@ -299,12 +291,12 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 
 		extra_data = {}
 		extra_data['AS_CAMERAIMAGE'] = filename
-		extra_data['DAY_NIGHT'] = allsky_shared.get_environment_variable('DAY_OR_NIGHT')
-		extra_data['MEAN'] = float(allsky_shared.get_environment_variable('AS_MEAN'))
-		extra_data['AUTOEXPOSURE'] = bool(allsky_shared.get_environment_variable('AS_AUTOEXPOSURE'))
-		extra_data['AUTOGAIN'] = bool(allsky_shared.get_environment_variable('AS_AUTOGAIN'))
-		extra_data['RESOLUTION_X'] = int(allsky_shared.get_environment_variable('AS_RESOLUTION_X'))
-		extra_data['RESOLUTION_Y'] = int(allsky_shared.get_environment_variable('AS_RESOLUTION_Y'))
+		extra_data['AS_DAY_NIGHT'] = allsky_shared.get_environment_variable('DAY_OR_NIGHT')
+		extra_data['AS_MEAN'] = float(allsky_shared.get_environment_variable('AS_MEAN'))
+		extra_data['AS_AUTOEXPOSURE'] = bool(allsky_shared.get_environment_variable('AS_AUTOEXPOSURE'))
+		extra_data['AS_AUTOGAIN'] = bool(allsky_shared.get_environment_variable('AS_AUTOGAIN'))
+		extra_data['AS_RESOLUTION_X'] = int(allsky_shared.get_environment_variable('AS_RESOLUTION_X'))
+		extra_data['AS_RESOLUTION_Y'] = int(allsky_shared.get_environment_variable('AS_RESOLUTION_Y'))
 		extra_data['AS_CAMERAIMAGEURL'] = url
 		extra_data['AS_CAMERAEXPOSURE_US'] = int(allsky_shared.get_environment_variable('AS_EXPOSURE_US'))
 		extra_data['AS_CAMERAGAIN'] = allsky_shared.get_camera_gain()

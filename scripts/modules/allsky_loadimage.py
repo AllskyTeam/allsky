@@ -153,14 +153,7 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 				"enabled": "True",
 				"table": "allsky_camera",
 				"row_type": "int",
-    			"include_all": "true",
-       			"time_of_day_save": {
-					"day": "enabled",
-					"night": "enabled",
-					"nightday": "never",
-					"daynight": "never",
-					"periodic": "never"
-				}
+    			"include_all": "true"
 			},
 			"values": {
 				"AS_CAMERAIMAGE": {

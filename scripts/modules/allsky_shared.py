@@ -968,7 +968,7 @@ def update_database(structure, extra_data, event):
                 update_database_flag = True
        
     if event in ('daynight', 'nightday', 'periodic'):
-        mode = structure.get('database',{}).get('time_of_day_save', {}).get(event, 'always')
+        mode = structure.get('database',{}).get('time_of_day_save', {}).get(event, 'enabled')
         
         if mode == 'always':
             update_database_flag = True

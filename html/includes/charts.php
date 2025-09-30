@@ -1,59 +1,62 @@
 <?php
 
-function DisplayCharts() {
-	global $pageHeaderTitle, $pageIcon;
-}
-
+function DisplayCharts()
+{
+  global $pageHeaderTitle, $pageIcon;
 ?>
-<script src="/js/highcharts/code/highcharts.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-<script src="/js/highcharts/code/highcharts-more.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-<script src="/js/highcharts/code/modules/series-label.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-<script src="/js/highcharts/code/modules/solid-gauge.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-<script src="/js/highcharts/code/modules/no-data-to-display.js"></script> 
-<script src="js/charts.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-<link rel="stylesheet" href="/css/charts.css?c=<?php echo ALLSKY_VERSION; ?>" />
+  <script src="/js/highcharts/code/highcharts.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+  <script src="/js/highcharts/code/highcharts-more.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+  <script src="/js/highcharts/code/modules/series-label.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+  <script src="/js/highcharts/code/modules/solid-gauge.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+  <script src="/js/highcharts/code/modules/no-data-to-display.js"></script>
 
-<div id="allsky-charts-sidebar" class="panel-group">
-  <div id="allsky-charts-sidebar-title">
-    <i class="fa fa-bar-chart"></i> Available Graphs
-  </div>
-</div>
+  <script src="/js/jquery-chart/jquery-chart.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
-<div class="panel panel-allsky">
-<div class="panel-heading"><i class="<?php echo $pageIcon ?>"></i> <?php echo $pageHeaderTitle ?></div>
+  <script src="/js/charts.js?c=<?php echo ALLSKY_VERSION; ?>"></script>  
+  <link rel="stylesheet" href="/css/charts.css?c=<?php echo ALLSKY_VERSION; ?>" />
 
-<nav class="navbar navbar-default allsky-charts-navbar">              
-  <div class="collapse navbar-collapse" id="oe-module-editor-navbar">
-      <ul class="nav navbar-nav">
-          <li>
-            <button id="allsky-charts-chart-list-toggle" type="button" class="btn btn-primary navbar-btn fix-toggle-btn">
-              <span class="label label-default" id="allsky-charts-chart-list-toggle-label">OFF</span> Charts
-            </button>
-          </li>            
-          <li>
-              <div class="btn navbar-btn ml-1" id="allsky-charts-lock" data-toggle="tooltip" data-placement="top" data-container="body" title="lock/unlock drag and drop">
-                <i class="fa-solid fa-lock-open" id="allsky-charts-chart-toggle-lock"></i>
-              </div>
-          </li>
+  <div class="panel panel-allsky">
+    <div class="panel-heading clearfix">
+      <!-- Left: icon + title -->
+      <div class="pull-left">
+        <i class="<?php echo $pageIcon ?>"></i> <?php echo $pageHeaderTitle ?>
+      </div>
+
+      <!-- Right: burger menu -->
+      <div class="pull-right">
+        <button type="button" id="as-charts-menu" class="btn btn-default btn-xs">
+          <i class="fa fa-bars"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="panel-body">
+
+      <ul class="nav nav-tabs" id="as-gm-tablist">
+        <li class="active">
+          <a href="#as-gm-tab-1" data-toggle="tab">
+            <span class="tab-title">Home</span>
+          </a>
+        </li>
+        <li id="as-gm-add-tab">
+          <a href="javascript:void(0);"><span class="fa fa-plus"></span></a>
+        </li>
       </ul>
-      <ul class="nav navbar-nav navbar-right">
-      </ul> 
+
+      <div class="tab-content" id="as-gm-tablist-content">
+        <div class="tab-pane fade in active as-gm-tab" id="as-gm-tab-1">
+        </div>
+      </div>
+
+
+
+    </div>
   </div>
-</nav>
 
-<ul class="nav nav-tabs mt-3" id="allsky-charts-tabbar">
-  <li class="custom-tab active">
-    <a href="#tab1" data-toggle="tab">
-      <span class="tab-title" contenteditable="false">Tab 1</span>
-    </a>
-  </li>
-  <li id="add-tab-btn"><a href="#"><i class="fa-solid fa-square-plus"></i></a></li>
-</ul>
+  <script>
+    let chartManager = new ASCHARTMANAGER();
+  </script>
 
-<div class="tab-content" id="allsky-charts-main">
-  <div id="tab1" class="tab-pane fade in active"></div>
-</div>
-<div id="container"></div>
-<div id="allsky-charts-main"></div>
-
-</div><!-- panel -->
+<?php
+}
+?>

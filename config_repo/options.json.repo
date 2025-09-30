@@ -814,9 +814,19 @@
 "action" : "reload"
 },
 {
+"name" : "focusmode",
+"default" : false,
+"description" : "Enable to have images created and displayed as fast as possible, to aid in focusing. Other than adding the focus metric to the images, no other processing is done on them.",
+"label" : "Focus Mode",
+"type" : "boolean",
+"usage" : "capture",
+"checkchanges" : true,
+"action" : "reload"
+},
+{
 "name" : "determinefocus",
 "default" : false,
-"description" : "Enable to have the image focus determined and output via the 'FOCUS' variable.",
+"description" : "Enable to have the image focus determined and output via the 'FOCUS' variable.  Automatically enabled if <span class='WebUISetting'>Focus Mode</span> is enabled.",
 "label" : "Record Focus",
 "type" : "boolean",
 "usage" : "capture",

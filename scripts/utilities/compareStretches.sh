@@ -225,23 +225,9 @@ if [[ -n ${ERRORS} ]]; then
 	} >&2
 fi
 
-# Determine resolution of image so we can write text to it.
-# image.jpg JPEG 4056x3040 4056x3040+0+0 8-bit sRGB 1.8263MiB 0.000u 0:00.000
-RESOLUTION="$( identify "${IMAGE}" | gawk '{ print $3; }' )"
-WIDTH="${RESOLUTION%x*}"
-HEIGHT="${RESOLUTION##*x}"
-# Put text in bottom left.
-POINT_SIZE="$( echo "${WIDTH} / 33" | bc )"
-X="20"		# just need a little from left side
-Y=$(( HEIGHT - (POINT_SIZE * 2) ))
-# echo "POINT_SIZE=$POINT_SIZE, X=$X, Y=$Y"
-
 # Create the stretches.
 
 HOW="-sigmoidal-contrast"	# the way to stretch
-FONT="${ALLSKY_OVERLAY}/system_fonts/Courier_New_Bold.ttf"
-STROKE="black"
-FILL="yellow"
 
 function doImage()
 {
@@ -256,10 +242,7 @@ function doImage()
 		   TEXT="Stretch Amount: ${A}"
 		TEXT+="\nMid Point:      ${M}"
 	fi
-	convert "${HOW}" "${A}x${M}" -font "${FONT}" -pointsize "${POINT_SIZE}" \
-		-fill "${FILL}" -stroke "${STROKE}" -strokewidth 3 \
-		-annotate "+${X}+${Y}" "${TEXT}" \
-		"${FROM_FILE}" "${TO_FILE}" 2>&1
+	addTextToImage --extra-args "${HOW} ${A}x${M}" "${FROM_FILE}" "${TO_FILE}" "${TEXT}" 2>&1
 }
 
 if [[ ${CREATE_NO_STRETCH_IMAGE} == "true" ]]; then

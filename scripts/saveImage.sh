@@ -52,6 +52,18 @@ fi
 WORKING_DIR=$( dirname "${CURRENT_IMAGE}" )		# the directory the image is currently in
 WEBSITE_FILE="${WORKING_DIR}/${ALLSKY_FULL_FILENAME}"	# The file name the websites look for
 
+if [[ ${1} == "--focus-mode" ]]; then
+	# Add the metric to the image, rename it, and exit.
+	FOCUS_METRIC="${2}"
+	TEXT="Focus Mode, metric = ${FOCUS_METRIC}"
+	TEXT+="\n$(echo "${CURRENT_IMAGE}" | sed -e "s/.*${ALLSKY_FILENAME}-//" -e "s/.${ALLSKY_EXTENSION}//" )"
+	# Use defaults for everything but Y location - put near top.
+	addTextToImage --y 100 "${CURRENT_IMAGE}" "${CURRENT_IMAGE}" "${TEXT}"
+	mv "${CURRENT_IMAGE}" "${WEBSITE_FILE}"
+	exit $?
+fi
+
+
 # Make sure only one save happens at once.
 # Multiple concurrent saves (which can happen if the delay is short or post-processing
 # is long) causes read and write errors.

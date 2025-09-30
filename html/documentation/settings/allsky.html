@@ -12,7 +12,7 @@
 	<style>
 		#pageTitle::before {
 			content: "Allsky Settings";
-		} 
+		}
 	</style>
 	<link href="../css/documentation.css" rel="stylesheet">
 	<link href="../css/custom.css" rel="stylesheet">
@@ -107,7 +107,7 @@ A typical page is below.
 	<br>
 	The time between the start of one image and the start of the next images will be
 	the <span class="WebUISetting">Manual Exposure + Delay</span>,
-	regardless of the status of 
+	regardless of the status of
 	<span class="WebUISetting">Consistent Delays Between Images</span>.
 	</td>
 </tr>
@@ -125,7 +125,7 @@ A typical page is below.
 		this specifies how close (plus or minus) the target brightness should be to the
 		<span class="WebUISetting">Mean Target</span>.
 		<br>For example, if <span class="WebUISetting">Mean Target</span> is
-		<code>0.4</code> and 
+		<code>0.4</code> and
 		<span class="WebUISetting">Mean Threshold</span> is <code>0.1</code>
 		then the target brightness ranges from <code>0.3</code> to <code>0.5</code>
 	</td>
@@ -425,10 +425,25 @@ A typical page is below.
 	<td>No flip</td>
 	<td>How to flip the image (No flip, Horizontal, Vertical, or Both).</td>
 </tr>
-	
+
+<tr><td id="focusmode"><span class="WebUISetting">Focus Mode</span></td>
+	<td>No</td>
+	<td>Enable to have images created and displayed as fast as possible,
+		to aid in focusing.
+		Other than adding the focus metric (see next setting) to each image,
+		no other post-processing is performed - no resizing,
+		no overlay or other modules are run, images aren't permanently saved or uploaded,
+		and there is no delay between images - as soon as an image is available and
+		the focus metric added, the next image is taken.
+		<br>The WebUI's <span class="WebUILink">Live View</span>
+		refreshes the image every second or so.
+		Because this happens so quickly, it's possible the Live View page will try to
+		read the image as it's being updated, so you may see occassional "glitches".
+	</td>
+</tr>
 <tr><td id="determinefocus"><span class="WebUISetting">Record Focus</span></td>
 	<td>No</td>
-	<td>Enable to have the overall focus of the image determined and output via the 'FOCUS' variable, which can then be used in an overlay.</td>
+	<td>Enable to have the overall focus of the image determined and output via the 'FOCUS' variable, which can then be used in an overlay.  Unless you are focusing in "Focus Mode" (in which case this setting is enabled), it's not all that useful to see the metric since it can change depending on image brightness and other factors.</td>
 </tr>
 <tr><td id="consistentdelays"><span class="WebUISetting">Consistent Delays Between Images</span></td>
 	<td>Yes</td>
@@ -787,7 +802,7 @@ A typical page is below.
 	For example, every 5 frames a new mini-timelapse is created using the most recent 15 images.
 	<p>
 	<blockquote class="warning">
-	Be <strong>very</strong> careful when setting the 
+	Be <strong>very</strong> careful when setting the
 	<span class="WebUISetting">Number Of Images</span> and
 	<span class="WebUISetting">Frequency</span> settings.
 	If either or both numbers are too high,
@@ -1060,7 +1075,7 @@ A typical page is below.
 			uses (insecure) File Transfer Protocol (FTP) to upload to a remote server.
 			<blockquote class="warning">
 				<code>ftp</code> is unsecure;
-				please use 
+				please use
 				<code>ftps</code> or
 				<code>sftp</code> instead.
 			</blockquote>

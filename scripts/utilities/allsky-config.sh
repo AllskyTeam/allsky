@@ -551,8 +551,9 @@ function prompt()
 # If all that doesn't fit in the terminal windows, whiptail does NOT scroll.
 	local LINES=$(( 4 + NUM_OPTIONS + 2 + 1 + 2 ))
 	if [[ ${LINES} -ge ${WT_LINES} ]]; then
-		echo "Please resize you window to at least $(( LINES + 1 )) lines."
+		echo "Please resize your window to at least $(( LINES + 1 )) lines."
 		echo "It is only ${WT_LINES} lines now."
+		return 1
 	fi >&2
 
 	local OPT="$( whiptail --title "${TITLE}" --notags --menu "${PROMPT}" \
@@ -693,17 +694,14 @@ if [[ -z ${FUNCTION_TO_EXECUTE} ]]; then
 #####
 	CMDS+=("header"	      "Commands to Create Test Images or Videos" )
 
-# TODO: Not sure if I like it better with, or without this phrase:
-X="with different settings"
-X="                       "
 	((N++));	C="compare_timelapse"
-	CMDS+=("${C}"	"$( L "Create multiple timelapse videos ${X} (${C})" )")
+	CMDS+=("${C}"	"$( L "Create multiple timelapse videos      (${C})" )")
 
 	((N++));	C="compare_startrails"
-	CMDS+=("${C}"	"$( L "Create multiple startrails ${X}       (${C})" )")
+	CMDS+=("${C}"	"$( L "Create multiple startrails            (${C})" )")
 
 	((N++));	C="compare_stretches"
-	CMDS+=("${C}"	"$( L "Create multiple stretched images ${X} (${C})" )")
+	CMDS+=("${C}"	"$( L "Create multiple stretched images      (${C})" )")
 
 
 #####

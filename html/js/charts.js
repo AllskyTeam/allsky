@@ -231,6 +231,81 @@ $pane.asHighchartFromConfig({
   },
   grid: { enabled: true, size: { x: 24, y: 24 }, snap: 'end' }
 });
+
+$pane.asHighchartFromConfig({
+  config: {
+    title: 'Camera Events',
+    type: 'column',
+    // optional: hc: { xAxis: { categories: ['Mon','Tue','Wed'] } }
+    series: {
+      events: { name: 'Events', data: [5, 9, 3] }  // or { variable: 'AS_EVENTS' }
+    }
+  },
+  grid: { enabled: true, size: { x: 24, y: 24 }, snap: 'end' }
+});
+
+// Ensure you loaded: highcharts.js, highcharts-more.js, highcharts-3d.js
+$pane.asHighchartFromConfig({
+  config: {
+    title: '3D Column — Events per Hour',
+    type: 'column3d',
+    hc: {
+      xAxis: { categories: ['00:00','01:00','02:00','03:00','04:00','05:00'] },
+      chart: {
+        options3d: { alpha: 12, beta: 18, depth: 60, viewDistance: 22 } // optional tweaks
+      }
+    },
+    series: {
+      events: { name: 'Events', data: [5, 9, 3, 7, 4, 8] }
+    }
+  },
+  grid: { enabled: true, size: { x: 24, y: 24 }, snap: 'end' }
+});
+
+$pane.asHighchartFromConfig({
+  config: {
+    title: '3D Area — Throughput',
+    type: 'area3d',
+    // Optional Highcharts overrides:
+    hc: {
+      xAxis: { categories: ['00:00','01:00','02:00','03:00','04:00','05:00'] },
+      chart: {
+        options3d: { enabled: true, alpha: 12, beta: 18, depth: 60, viewDistance: 22 }
+      },
+      plotOptions: {
+        area: { depth: 50 } // thickness of the 3D surface
+      }
+    },
+    series: {
+      in:  { name: 'Inbound',  data: [5, 7, 8, 6, 9, 12] },
+      out: { name: 'Outbound', data: [3, 4, 6, 5, 7,  9] }
+    }
+  },
+  grid: { enabled: true, size: { x: 24, y: 24 }, snap: 'end' }
+});
+
+$pane.asHighchartFromConfig({
+  config: {
+    title: 'Storage Breakdown',
+    type: 'pie',
+    // For donut, uncomment the innerSize below
+    hc: {
+      // plotOptions: { pie: { innerSize: '50%' } }
+    },
+    series: {
+      disk: {
+        name: 'Usage',
+        data: [
+          { name: 'Images', y: 45 },
+          { name: 'Videos', y: 25 },
+          { name: 'Logs',   y: 15 },
+          { name: 'Other',  y: 15 }
+        ]
+      }
+    }
+  }
+});
+
         });
     }
 }

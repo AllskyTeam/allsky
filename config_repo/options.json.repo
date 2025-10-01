@@ -2180,7 +2180,7 @@
 },
 {
 "name" : "databasesubheader",
-"label" : "*** Only change these settings if you know what you are doing. ***",
+"label" : "<div class='panel panel-danger' style='margin-bottom: 0'><div class='panel-heading'>*** Only change these settings if you know what you are doing. ***</div></div>",
 "type" : "header-sub"
 },
 {

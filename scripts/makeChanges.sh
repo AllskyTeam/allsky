@@ -1011,6 +1011,14 @@ do
 			fi
 			;;
 
+		"enabledatabase")
+			if [[ ${NEW_VALUE} == "false" ]]; then
+				W="WARNING: "
+				W+="Disabling ${WSNs}${LABEL}${WSNe} will cause many new features not to work properly."
+				wW_ "${W}"
+			fi
+			;;
+
 		"uselogin")
 			if [[ ${NEW_VALUE} == "false" ]]; then
 				W="WARNING: "

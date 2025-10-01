@@ -12,6 +12,8 @@ source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
 source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"
+#shellcheck source-path=scripts
+source "${ALLSKY_SCRIPTS}/checkFunctions.sh"			|| exit "${EXIT_ERROR_STOP}"
 
 # Default may be 700 (HOME) or 750 (ALLSKY_HOME) so web server can't read it
 chmod 755 "${HOME}" "${ALLSKY_HOME}"					|| exit "${EXIT_ERROR_STOP}"

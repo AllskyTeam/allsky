@@ -1349,7 +1349,7 @@ aws configure
 	For example, if you are using a camera with no infrared filter (a "NoIR" camera).
 	</td></tr>
 
-<tr><td id=webusconfiguration" class="settingsHeader" colspan="3">WebUI Configuration</td></tr>
+<tr><td id=webuiconfiguration" class="settingsHeader" colspan="3">WebUI Configuration</td></tr>
 <tr><td id="imagessortorder"><span class="WebUISetting">Images Sort Order</span></td>
 	<td>Ascending</td>
 	<td>Determines how the images for a day in the
@@ -1378,6 +1378,54 @@ aws configure
 	See <a allsky="true" external="true" href="/documentation/explanations/SystemPageAdditions.html">
 		System Page Additions</a>
 	for more information and an example of this setting.
+	</td></tr>
+
+<tr><td id=database" class="settingsHeader" colspan="3">Allsky Database Settings</td></tr>
+<tr><td></td><td colspan="2">
+	<blockquote class="warning">
+	Only change the database settings if you know what you are doing.
+	</blockquote>
+	</td></tr>
+<tr><td id="imagessortorder"><span class="WebUISetting">Enable Database</span></td>
+	<td>Yes</td>
+	<td>Enables the Allsky database, which keeps information on images taken
+		like exposure time and a day/night flag.
+		Some Allsky modules update these records, for example, the meteor detection module
+		adds the number of meteors to each image's database record.
+		<br>
+		The database allows capabilities like using only nighttime images in startrails.
+		<br>
+		Disabling the database will keep many new features from working properly.
+	</td></tr>
+<tr><td id="imagessortorder"><span class="WebUISetting">Database</span></td>
+	<td>allsky</td>
+	<td>The name of the database.
+	</td></tr>
+<tr><td id="imagessortorder"><span class="WebUISetting">Database Type</span></td>
+	<td>SQLite</td>
+	<td>The type of database.
+		MySQL has more features but uses a lot more CPU and memory than SQLite.
+		It would typically only be used if you already have a MySQL database on your Pi,
+		which is extremely rare.
+	</td></tr>
+<tr><td id="imagessortorder"><span class="WebUISetting">Database Host</span></td>
+	<td></td>
+	<td>(MySQL only) The IP address or hostname of the server running the database.
+		By default the database runs on your Pi.
+	</td></tr>
+<tr><td id="imagessortorder"><span class="WebUISetting">Database User</span></td>
+	<td></td>
+	<td>(MySQL only) The username used to connect to the database.
+		Suggest using the same as your Pi login so you have one less thing to remember.
+	</td></tr>
+<tr><td id="imagessortorder"><span class="WebUISetting">User Password</span></td>
+	<td></td>
+	<td>(MySQL only) The password used to connect to the database.
+		<blockquote>
+		Keep track of the User and Password - if the
+		<span class="fileName">~/allsky/env.json</span> file is accidently removed you'll
+		need to enter the User and Password in order for the database to work.
+		</blockquote>
 	</td></tr>
 
 <tr><td class="settingsHeader" colspan="3">Camera</td></tr>

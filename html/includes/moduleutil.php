@@ -20,10 +20,12 @@ class MODULEUTIL
     private $allskySettings = null;
     private $allsky_home = null;
     private $allsky_scripts = null;
+    private $allskyMyFiles = null;
 
     function __construct() {
         $this->allskyModules = ALLSKY_SCRIPTS . '/modules';
         $this->userModules = ALLSKY_MODULE_LOCATION . '/modules';
+		$this->allskyMyFiles = ALLSKY_MYFILES_DIR;        
 		$this->myFiles = ALLSKY_MYFILES_DIR . '/modules';
 		$this->myFilesData = ALLSKY_MYFILES_DIR . '/modules/moduledata';        
         $this->allsky_home = ALLSKY_HOME;
@@ -163,6 +165,7 @@ class MODULEUTIL
 
     private function getModuleMetaData($modulelName) {
         $fileName = $this->myFiles . '/' . $modulelName;
+
         $metaData = $this->getMetaDataFromFile($fileName);
         if ($metaData == "") {
             $fileName = $this->userModules . '/' . $modulelName;
@@ -984,10 +987,17 @@ class MODULEUTIL
 	}
 
     /**
-     * Start Graph Code
+     * Start Chart Code
      */
-    private function make_pdo(): PDO {
-        // TODO: sudo apt-get install -y php-mysql
+
+
+
+
+    /**
+     * Database helper: create PDO connection
+     */
+    private function makePdo(): PDO 
+    {
         $secretData = getDatabaseConfig();
 
         if ($secretData['databasetype'] === 'mysql') {
@@ -1010,249 +1020,291 @@ class MODULEUTIL
         throw new RuntimeException('Unsupported datasource type');
     }
 
-    private function parse_variables($v): array {
-        if ($v === null) return [];
-        $s = is_string($v) ? $v : strval($v);
-        $parts = array_map('trim', explode('|', $s));
-        return array_values(array_filter($parts, fn($x) => $x !== ''));
-    }
-
-    private function fetch_time_series(PDO $pdo, array $entities, string $table='allsky_camera'): array {
-        if (!$entities) return [];   
-        $in  = implode(',', array_fill(0, count($entities), '?'));
-        $sql = "SELECT `timestamp`,`entity`,`value` FROM `$table` WHERE `entity` IN ($in) ORDER BY `timestamp` ASC";
-        $st = $pdo->prepare($sql);
-        $st->execute($entities);
-
-        $byEntity = [];
-        while ($r = $st->fetch()) {
-            $ts = (int)$r['timestamp'];
-            $en = (string)$r['entity'];
-            $val = $r['value'];
-            $byEntity[$en][$ts] = $val;
-        }
-        if (count($entities) === 1) {
-            $out = [];
-            foreach ($byEntity[$entities[0]] ?? [] as $ts => $val) {
-                if (is_numeric($val)) $out[] = [ $ts * 1000, (float)$val ];
-            }
-            return $out;
-        }
-
-        [$primary, $aux] = $entities;
-        $out = [];
-        foreach ($byEntity[$primary] ?? [] as $ts => $val) {
-            if (!is_numeric($val)) continue;
-            $pt = ['x' => $ts * 1000, 'y' => (float)$val];
-            if (isset($byEntity[$aux][$ts])) $pt['url'] = $byEntity[$aux][$ts];
-            $out[] = $pt;
-        }
-    
-        return $out;
-    }
-
-    private function fetch_gauge_value(PDO $pdo, string $entity, string $table='allsky_camera'): array {
-        $st = $pdo->prepare("SELECT `value` FROM `$table` WHERE `entity` = ? ORDER BY `timestamp` DESC LIMIT 1");
-        $st->execute([$entity]);
-        $v = $st->fetchColumn();
-        return is_numeric($v) ? [ (float)$v ] : [];
-    }
-
-    /* string "true"/"false" -> bool */
-    private function to_boolish($v) {
-        if ($v === true || $v === false) return $v;
-        if (is_string($v)) {
-            $s = strtolower(trim($v));
-            if ($s === 'true')  return true;
-            if ($s === 'false') return false;
-        }
-        return $v;
-    }
-
-    /* deep convert any "true"/"false" strings */
-    private function deep_boolify($node) {
-        if (is_array($node)) {
-            foreach ($node as $k => $v) $node[$k] = $this->deep_boolify($v);
-            return $node;
-        }
-        if (is_object($node)) {
-            foreach (get_object_vars($node) as $k => $v) $node->$k = $this->deep_boolify($v);
-            return $node;
-        }
-        return $this->to_boolish($node);
-    }
-
-    /* convert series stdClass map -> array */
-    function series_object_to_array($series) {
-        if (is_array($series)) return $series;
-        if (is_object($series)) return array_values(get_object_vars($series));
-        return [];
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-    public function postGraphData() {
-        $chartData = null;
-        $module = $_POST["module"];
-        $chartKey = $_POST["chartkey"];
-        if (substr($module, -3) !== '.py') {
-            $module .= '.py';
-        }
-
-        $metaData = $this->getModuleMetaData($module);
-
-        if ($metaData !== "") {
-            $metaData = json_decode($metaData);
-
-            if (isset($metaData->graphs)) {
-                if (isset($metaData->extradata)) {
-                    if (isset($metaData->extradata->database)) {
-                        if (isset($metaData->extradata->database->table)) {
-                            $table = $metaData->extradata->database->table;
-                            $graphs = $metaData->graphs;
-                            foreach($graphs as $key=>$chart) {
-                                if ($key === $chartKey) {
-                                    $pdo = $this->make_pdo();
-
-
-                                    // Ensure booleans are real
-                                    $chart = $this->deep_boolify($chart);
-
-                                    // Determine chart type
-                                    $type = 'line';
-                                    if (isset($chart->config->chart->type)) {
-                                        $type = strtolower((string)$chart->config->chart->type);
-                                    }
-
-                                    // Ensure series exists
-                                    if (!isset($chart->series)) {
-                                        $chart->series = new stdClass();
-                                    }
-
-                                    // If series is an object (exposure, gain, ...), iterate its properties
-                                    if (is_object($chart->series)) {
-                                        foreach (get_object_vars($chart->series) as $sName => $sObj) {
-                                            if (!is_object($sObj)) continue;
-                                            $vars = isset($sObj->variable) ? $this->parse_variables($sObj->variable) : [];
-
-                                            if ($type === 'gauge') {
-                                                $sObj->data = $vars ? $this->fetch_gauge_value($pdo, $vars[0], $table) : [];
-                                            } else {
-                                                $sObj->data = $this->fetch_time_series($pdo, $vars, $table);
-                                                if ($sObj->data && is_array($sObj->data[0]) && array_key_exists('url', $sObj->data[0])) {
-                                                    $sObj->hasUrl = true;
-                                                }
-                                            }
-                                        }
-                                    } elseif (is_array($chart->series)) {
-                                        // already an array of series (rare in your case)
-                                        foreach ($chart->series as &$sObj) {
-                                            if (!is_object($sObj)) continue;
-                                            $vars = isset($sObj->variable) ? $this->parse_variables($sObj->variable) : [];
-                                            if ($type === 'gauge') {
-                                                $sObj->data = $vars ? $this->fetch_gauge_value($pdo, $vars[0]) : [];
-                                            } else {
-                                                $sObj->data = $this->fetch_time_series($pdo, $vars);
-                                            }
-                                        }
-                                        unset($sObj);
-                                    }
-
-                                    // series must be an ARRAY
-                                    $seriesArr = $this->series_object_to_array($chart->series);
-
-                                    // options = {...config, series: [...]}
-                                    $options = [];
-                                    if (isset($chart->config) && is_object($chart->config)) {
-                                        $options = json_decode(json_encode($chart->config), true); // stdClass -> array
-                                    }
-                                    $options['series'] = $seriesArr;
-
-                                    // clean edge cases
-                                    if (isset($options['tooltip']) && $options['tooltip'] === true) {
-                                        // let Highcharts use default tooltip
-                                        unset($options['tooltip']);
-                                    }
-                                    if (!empty($options['yAxis']) && is_array($options['yAxis'])) {
-                                        foreach ($options['yAxis'] as &$ax) {
-                                            if (isset($ax['opposite'])) $ax['opposite'] = $this->to_boolish($ax['opposite']);
-                                        }
-                                        unset($ax);
-                                    }
-                                    if (isset($options['plotOptions']['series']['animation'])) {
-                                        $options['plotOptions']['series']['animation'] =
-                                            $this->to_boolish($options['plotOptions']['series']['animation']);
-                                    }
-
-                                    $this->sendResponse(json_encode($options));
-                                    die();    
-
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        $this->sendResponse(json_encode(""));
-    }
-
-    public function getAvailableGraphs() {
-        $graphList = [];
-        $coreModules = $this->readModuleData($this->allskyModules, "system", null);
-        $userModules = $this->readModuleData($this->userModules, "user", null);
-        $myModules = $this->readModuleData($this->myFiles, "user", null);        
-
-        $allModules = array_merge($coreModules, $userModules, $myModules);
-        foreach ($allModules as $key=>$moduleData) {
-            if (isset($moduleData['metadata'])) {
-                if (isset($moduleData['metadata']->graphs)) {
-                    foreach ($moduleData['metadata']->graphs as $graphKey=>$graphData) {
-                        $icon = 'fa-chart-line';
-                        if (isset($graphData->icon)) {
-                            $icon = $graphData->icon;
-                        }
-                        $title = ucfirst(str_replace('allsky_', '', $moduleData['metadata']->module));
-                        if (isset($graphData->title)) {
-                            $title = $graphData->title;
-                        }
-                        
-                        $module = $moduleData['metadata']->module;
-                        if (isset($graphData->group)) {
-                            $key = $graphData->group;
-                        } else {
-                            $key = 'Unknown';
-                        }
-                        if (!isset($graphList[$key])) {
-                            $graphList[$key] = [];
-                        }
-                        $graphList[$key][] = [
-                            'module'=>$module,
-                            'key'=>$graphKey,
-                            'icon'=>$icon,
-                            'title'=>$title,
-                            'table'=>$moduleData['metadata']->extradata->database->table,
-                            'config'=>$graphData->config
-                        ];
-                    }
-                }
-            }
-        }
-        asort($graphList);
-        $this->sendResponse(json_encode($graphList));
+    /**
+     * Timestamp column resolver
+     */
+    private function resolveTimestampColumn(string $table): string
+    {
+        return (strtolower($table) === 'allsky_camera') ? 'row_key' : 'timestamp';
     }
 
     /**
-     * End Graph Code
+     * Convert DB timestamp (int or string) into JS ms epoch
+     */
+    private function toMsTimestamp($dbTs): int
+    {
+        $unit = 1000;
+        if (is_numeric($dbTs)) return (int)$dbTs * $unit;
+        $t = strtotime((string)$dbTs);
+        return $t !== false ? $t * $unit : 0;
+    }
+
+    /**
+     * Fetch full series of values
+     * Returns: ['VAR' => [[ms,value], ...], ...]
+     */
+    private function fetchSeriesData(PDO $pdo, string $table, array $variables): array
+    {
+        if (!$variables) return [];
+        $tsCol = $this->resolveTimestampColumn($table);
+        $placeholders = implode(',', array_fill(0, count($variables), '?'));
+
+        $sql = "SELECT {$tsCol} AS ts, entity, value
+                FROM {$table}
+                WHERE entity IN ({$placeholders})
+                ORDER BY {$tsCol}, entity ASC";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute(array_values($variables));
+
+        $out = [];
+        while ($row = $stmt->fetch()) {
+            if ($row['entity'] == "AS_CAMERAEXPOSURE_US") {
+                $row['value'] = $row['value'] / 1000;
+            }
+            $out[(string)$row['entity']][] = [
+                $this->toMsTimestamp($row['ts']),
+                is_numeric($row['value']) ? 0 + $row['value'] : (float)$row['value'],
+            ];
+        }
+      
+        return $out;
+    }
+
+    /**
+     * Fetch latest value for each variable
+     * Returns: ['VAR' => ['ts_ms'=>int,'value'=>float], ...]
+     */
+    private function fetchLatestValues(PDO $pdo, string $table, array $variables): array
+    {
+        if (!$variables) return [];
+        $tsCol = $this->resolveTimestampColumn($table);
+        $placeholders = implode(',', array_fill(0, count($variables), '?'));
+
+        $sql = "WITH latest AS (
+                    SELECT entity, MAX({$tsCol}) AS max_ts
+                    FROM {$table}
+                    WHERE entity IN ({$placeholders})
+                    GROUP BY entity
+                )
+                SELECT t.entity, t.{$tsCol} AS ts, t.value
+                FROM {$table} t
+                JOIN latest l ON l.entity = t.entity AND l.max_ts = t.{$tsCol}";
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute(array_values($variables));
+
+        $out = [];
+        while ($row = $stmt->fetch()) {
+            $out[(string)$row['entity']] = [
+                'ts_ms' => $this->toMsTimestamp($row['ts']),
+                'value' => is_numeric($row['value']) ? 0 + $row['value'] : (float)$row['value'],
+            ];
+        }
+        return $out;
+    }
+
+
+    /**
+     * Read config JSON file and build chart data
+     */
+    function getGraphData(): array
+    {
+        $configPath = $_GET['filename'];
+        /* Sanitize filename */
+        $pdo = $this->makePdo();
+
+        if (!is_file($configPath) || !is_readable($configPath)) {
+            throw new RuntimeException("Config file not found or unreadable: {$configPath}");
+        }
+        $raw = file_get_contents($configPath);
+        $config = json_decode($raw, true);
+        if (!is_array($config)) {
+            throw new RuntimeException("Invalid JSON in {$configPath}: " . json_last_error_msg());
+        }
+
+        $table = $config['table'] ?? '';
+        $series = $config['series'] ?? null;
+        if (!$table || !is_array($series)) {
+            throw new InvalidArgumentException('Config must include "table" and "series".');
+        }
+
+        $type = strtolower(trim((string)($config['type'] ?? 'line')));
+        $isGauge = in_array($type, ['gauge', 'guage'], true);
+
+        // Collect variables we need to fetch
+        $variables = [];
+        $keyToVar = [];
+        foreach ($series as $key => $def) {
+            if (isset($def['variable'])) {
+                $var = (string)$def['variable'];
+                $variables[] = $var;
+                $keyToVar[$key] = $var;
+            }
+        }
+
+        if ($isGauge) {
+            // latest-only
+            $latestByVar = $this->fetchLatestValues($pdo, $table, $variables);
+            foreach ($keyToVar as $key => $var) {
+                $latest = $latestByVar[$var] ?? null;
+                // Replace variable with gauge data (single number). Keep other fields.
+                unset($config['series'][$key]['variable']);
+                $config['series'][$key]['data'] = $latest ? [ $latest['value'] ] : [];
+            }
+        } else {
+            // full series
+            $dataByVar = $this->fetchSeriesData($pdo, $table, $variables);
+            foreach ($keyToVar as $key => $var) {
+                unset($config['series'][$key]['variable']);
+                $config['series'][$key]['data'] = $dataByVar[$var] ?? [];
+            }
+        }
+
+        
+        $this->sendResponse(json_encode($config));        
+    }
+
+    /**
+     * Scan a base charts directory for module subfolders, read any *.json chart
+     * definitions inside them, and append normalized entries into $chartList
+     * grouped by their "group" field from the JSON.
+     *
+     * @param array  $chartList Existing grouped chart list to add to.
+     * @param string $baseDir   Root directory containing module subfolders.
+     * @return array            Updated $chartList grouped by group name.
+     */
+    private function buildChartList(array $chartList, string $baseDir): array
+    {
+        // If the base directory doesn't exist, nothing to add—return existing list.
+        if (!is_dir($baseDir)) {
+            return $chartList;
+        }
+
+        // Iterate immediate children of $baseDir (modules expected to be subfolders).
+        $dir = new DirectoryIterator($baseDir);
+        foreach ($dir as $entry) {
+            // Skip "." and ".." and any non-directory entries.
+            if ($entry->isDot() || !$entry->isDir()) {
+                continue;
+            }
+
+            // Module name is the subfolder name; use it and its absolute path.
+            $module     = $entry->getFilename();
+            $modulePath = $entry->getPathname();
+
+            // Look for any JSON chart definition files directly within the module folder.
+            foreach (glob($modulePath . '/*.json') as $jsonFile) {
+                // Read the raw file; suppress warnings (e.g., unreadable file) and skip on failure.
+                $raw = @file_get_contents($jsonFile);
+                if ($raw === false) {
+                    continue;
+                }
+
+                // Decode JSON into associative array; skip invalid JSON.
+                $data = json_decode($raw, true);
+                if (!is_array($data)) {
+                    continue;
+                }
+
+                // The "group" key determines how charts are grouped; skip if missing/empty.
+                $group = $data['group'] ?? null;
+                if (!$group) {
+                    continue;
+                }
+
+                // Optional metadata with sensible fallbacks.
+                $icon  = $data['icon']  ?? null;
+
+                // Title prefers 'title' from JSON; otherwise uses the filename (without .json).
+                $title = $data['title'] ?? basename($jsonFile, '.json');
+
+                // Append a normalized chart entry under its group.
+                $chartList[$group][] = [
+                    'module'   => $module,                       // Module (subfolder) the chart came from
+                    'filename' => $jsonFile,                     // Full path to the source JSON file
+                    'icon'     => $icon !== null ? (string)$icon : null, // Icon if present
+                    'title'    => (string)$title,                // Human-friendly title
+                ];
+            }
+        }
+
+        return $chartList;
+    }
+
+    /**
+     * Build a grouped list of available charts from both core and user locations
+     * and return it as JSON.
+     */
+    public function getAvailableGraphs()
+    {
+        // Start with an empty grouped list.
+        $chartList = [];
+
+        // Core (shipped) charts live here.
+        $coreModules = $this->allsky_config . '/modules/charts';
+
+        // User (custom) charts live here; these are merged in after core.
+        $userModules = $this->myFilesData . '/charts';
+
+        // Populate from core and then user paths (user charts can add more groups/items).
+        $chartList = $this->buildChartList($chartList, $coreModules);
+        $chartList = $this->buildChartList($chartList, $userModules);
+
+        // Sort groups by their keys in ascending order to make output stable/readable.
+        // Note: asort() preserves keys and sorts by value; since $chartList is an
+        // array of arrays, PHP will compare arrays—this still produces a deterministic
+        // order but if you prefer alphabetical by group name, consider ksort() instead.
+        asort($chartList);
+
+        // Emit the grouped chart list as JSON to the client.
+        $this->sendResponse(json_encode($chartList));
+    }
+
+
+    public function postSaveCharts() {
+
+        // Get raw POST body (because contentType is JSON, not form data)
+        $jsonData = file_get_contents("php://input");
+
+        // Decode JSON to array
+        $data = json_decode($jsonData, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            $this->send500();
+        }
+
+        $stateFile = $this->allskyMyFiles . '/state.json';
+        if (file_put_contents($stateFile, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)) === false) {
+            $this->send500('Failed to save JSON');
+        }
+        
+        $this->sendResponse('');
+    }
+
+    public function getSaveCharts() {
+        $stateFile = $this->allskyMyFiles . '/state.json';
+        $jsonString = @file_get_contents($stateFile);
+
+        if ($jsonString === false) {
+            $jsonString = "[]";
+        }
+
+
+        // Decode & re-encode to ensure valid JSON output
+        $data = json_decode($jsonString, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            $this->send500('Invalid JSON');
+        }
+
+        $this->sendResponse(json_encode($data));
+
+
+
+    }
+
+    /**
+     * End Chart Code
      */
 
     public function postHassSensors() {

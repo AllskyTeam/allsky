@@ -160,8 +160,8 @@ li:hover .as-gm-tab-tools {
   position: absolute;
   right: 0;
   bottom: 0;
-  width: 22px;
-  height: 22px;
+  width: 15px;
+  height: 15px;
   cursor: se-resize;
   background: linear-gradient(
     135deg,

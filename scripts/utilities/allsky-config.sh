@@ -695,13 +695,13 @@ if [[ -z ${FUNCTION_TO_EXECUTE} ]]; then
 	CMDS+=("header"	      "Commands to Create Test Images or Videos" )
 
 	((N++));	C="compare_timelapse"
-	CMDS+=("${C}"	"$( L "Create multiple timelapse videos      (${C})" )")
+	CMDS+=("${C}"	"$( L "Create multiple timelapse videos                         (${C})" )")
 
 	((N++));	C="compare_startrails"
-	CMDS+=("${C}"	"$( L "Create multiple startrails            (${C})" )")
+	CMDS+=("${C}"	"$( L "Create multiple startrails                               (${C})" )")
 
 	((N++));	C="compare_stretches"
-	CMDS+=("${C}"	"$( L "Create multiple stretched images      (${C})" )")
+	CMDS+=("${C}"	"$( L "Create multiple stretched images                         (${C})" )")
 
 
 #####

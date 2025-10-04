@@ -23,23 +23,13 @@ class ALLSKYDATABASEMANAGER:
       - Upsert compatibility (MySQL, MariaDB, SQLite)
     """
 
-    def __init__(
-        self,
-        driver: str,
-        *,
-        db_path: Optional[str] = None,
-        timeout: float = 10.0,
-        host: Optional[str] = None,
-        user: Optional[str] = None,
-        password: Optional[str] = None,
-        database: Optional[str] = None,
-        log_queries: bool = False,
-        logger: Optional[logging.Logger] = None,
-        retry_attempts: int = 5,
-        retry_backoff: float = 0.15,
-    ):
+    def __init__(self, driver: str, *, db_path: str | None = None, timeout: float = 10.0,
+                host: str | None = None, user: str | None = None, password: str | None = None,
+                database: str | None = None, log_queries: bool = False,
+                logger: logging.Logger | None = None, retry_attempts: int = 5,
+                retry_backoff: float = 0.15, autocommit: bool = True):
         self.driver = driver.lower()
-        self.conn: ConnType = None
+        self.conn = None
         self._sqlite_db_path = db_path
         self._sqlite_timeout = timeout
         self._mysql_host = host
@@ -47,24 +37,26 @@ class ALLSKYDATABASEMANAGER:
         self._mysql_password = password
         self._mysql_database = database
         self.log_queries = log_queries
-        self.logger = logger or logging.getLogger(__name__)
+        self.logger = logger or logging.getLogger("ALLSKYDATABASEMANAGER")
         self.retry_attempts = retry_attempts
         self.retry_backoff = retry_backoff
+        self.autocommit = autocommit
 
     # -------------------------------------------------------------------
     # CONNECTIONS
     # -------------------------------------------------------------------
     def connect(self) -> ConnType:
-        """Establish and return the connection."""
         if self.conn:
             return self.conn
 
         if self.driver == "sqlite":
-            if not self._sqlite_db_path:
-                raise ValueError("SQLite requires db_path")
-            self.conn = sqlite3.connect(self._sqlite_db_path, timeout=self._sqlite_timeout)
+            # autocommit when isolation_level=None
+            self.conn = sqlite3.connect(
+                self._sqlite_db_path,
+                timeout=self._sqlite_timeout,
+                isolation_level=None if self.autocommit else "",  # "" enables explicit transactions
+            )
             self.conn.row_factory = sqlite3.Row
-
         elif self.driver == "mysql":
             if mysql is None:
                 raise ImportError("mysql.connector not installed")
@@ -74,7 +66,11 @@ class ALLSKYDATABASEMANAGER:
                 password=self._mysql_password,
                 database=self._mysql_database,
             )
-            self.conn.autocommit = True 
+            try:
+                self.conn.autocommit = bool(self.autocommit)
+            except Exception:
+                # very old connectors: ignore if not supported
+                pass
         else:
             raise ValueError(f"Unsupported driver: {self.driver}")
 

@@ -16,7 +16,7 @@
 
   /* ======================= THEMES ======================= */
   var darkTheme = {
-    colors: ['#8087E8','#A3EDBA','#F19E53','#6699A1','#E1D369','#87B4E7','#DA6D85','#BBBAC5'],
+    colors: ['#8087E8', '#A3EDBA', '#F19E53', '#6699A1', '#E1D369', '#87B4E7', '#DA6D85', '#BBBAC5'],
     chart: {
       backgroundColor: '#272727',
       style: { fontFamily: 'IBM Plex Sans, sans-serif' },
@@ -67,53 +67,53 @@
       enabled: true,
       buttonOptions: {
         theme: {
-          fill: '#46465C','stroke-width':1,stroke:'#BBBAC5',r:2,
-          style:{color:'#fff'},
-          states:{
-            hover:{fill:'#000','stroke-width':1,stroke:'#f0f0f0',style:{color:'#fff'}},
-            select:{fill:'#000','stroke-width':1,stroke:'#f0f0f0',style:{color:'#fff'}}
+          fill: '#46465C', 'stroke-width': 1, stroke: '#BBBAC5', r: 2,
+          style: { color: '#fff' },
+          states: {
+            hover: { fill: '#000', 'stroke-width': 1, stroke: '#f0f0f0', style: { color: '#fff' } },
+            select: { fill: '#000', 'stroke-width': 1, stroke: '#f0f0f0', style: { color: '#fff' } }
           }
         }
       }
     },
     rangeSelector: {
       buttonTheme: {
-        fill:'#46465C',stroke:'#BBBAC5','stroke-width':1,style:{color:'#fff'},
-        states:{
-          hover:{fill:'#1f1836',style:{color:'#fff'},'stroke-width':1,stroke:'white'},
-          select:{fill:'#1f1836',style:{color:'#fff'},'stroke-width':1,stroke:'white'}
+        fill: '#46465C', stroke: '#BBBAC5', 'stroke-width': 1, style: { color: '#fff' },
+        states: {
+          hover: { fill: '#1f1836', style: { color: '#fff' }, 'stroke-width': 1, stroke: 'white' },
+          select: { fill: '#1f1836', style: { color: '#fff' }, 'stroke-width': 1, stroke: 'white' }
         }
       },
-      inputBoxBorderColor:'#BBBAC5',
-      inputStyle:{backgroundColor:'#2F2B38',color:'#fff'},
-      labelStyle:{color:'#fff'}
+      inputBoxBorderColor: '#BBBAC5',
+      inputStyle: { backgroundColor: '#2F2B38', color: '#fff' },
+      labelStyle: { color: '#fff' }
     },
     navigator: {
-      handles:{backgroundColor:'#BBBAC5',borderColor:'#2F2B38'},
-      outlineColor:'#CCC', maskFill:'rgba(255,255,255,0.1)',
-      series:{color:'#A3EDBA',lineColor:'#A3EDBA'},
-      xAxis:{gridLineColor:'#505053'}
+      handles: { backgroundColor: '#BBBAC5', borderColor: '#2F2B38' },
+      outlineColor: '#CCC', maskFill: 'rgba(255,255,255,0.1)',
+      series: { color: '#A3EDBA', lineColor: '#A3EDBA' },
+      xAxis: { gridLineColor: '#505053' }
     },
     scrollbar: {
-      barBackgroundColor:'#BBBAC5',barBorderColor:'#808083',
-      buttonArrowColor:'#2F2B38',buttonBackgroundColor:'#BBBAC5',buttonBorderColor:'#2F2B38',
-      rifleColor:'#2F2B38',trackBackgroundColor:'#78758C',trackBorderColor:'#2F2B38'
+      barBackgroundColor: '#BBBAC5', barBorderColor: '#808083',
+      buttonArrowColor: '#2F2B38', buttonBackgroundColor: '#BBBAC5', buttonBorderColor: '#2F2B38',
+      rifleColor: '#2F2B38', trackBackgroundColor: '#78758C', trackBorderColor: '#2F2B38'
     }
   };
 
   var lightTheme = {
     chart: {
-      backgroundColor:'#FFFFFF',
-      style:{ fontFamily:'Lucida Grande, Lucida Sans Unicode, Verdana, Arial, Helvetica, sans-serif' },
-      borderColor:'#e6e6e6', borderWidth:1,
-      plotBorderColor:'#eaeaea', plotBorderWidth:1
+      backgroundColor: '#FFFFFF',
+      style: { fontFamily: 'Lucida Grande, Lucida Sans Unicode, Verdana, Arial, Helvetica, sans-serif' },
+      borderColor: '#e6e6e6', borderWidth: 1,
+      plotBorderColor: '#eaeaea', plotBorderWidth: 1
     },
-    title: { style: { color:'#333333', fontSize:'18px' } },
-    xAxis: { labels: { style: { color:'#666666' } } },
-    yAxis: { labels: { style: { color:'#666666' } } },
-    legend: { itemStyle:{color:'#333333'}, itemHoverStyle:{color:'#000000'} },
-    tooltip: { backgroundColor:'rgba(255, 255, 255, 0.85)', style:{color:'#333333'} },
-    colors: ['#7cb5ec','#434348','#90ed7d','#f7a35c','#8085e9','#f15c80','#e4d354','#2b908f','#f45b5b','#91e8e1']
+    title: { style: { color: '#333333', fontSize: '18px' } },
+    xAxis: { labels: { style: { color: '#666666' } } },
+    yAxis: { labels: { style: { color: '#666666' } } },
+    legend: { itemStyle: { color: '#333333' }, itemHoverStyle: { color: '#000000' } },
+    tooltip: { backgroundColor: 'rgba(255, 255, 255, 0.85)', style: { color: '#333333' } },
+    colors: ['#7cb5ec', '#434348', '#90ed7d', '#f7a35c', '#8085e9', '#f15c80', '#e4d354', '#2b908f', '#f45b5b', '#91e8e1']
   };
 
   function isDarkMode() { return document.body.classList.contains('dark'); }
@@ -200,7 +200,7 @@
         else if (typeof pt.data !== 'undefined') out.custom = pt.data;
 
         // copy other safe fields
-        ['color','id','selected','sliced','marker','dataLabels','name'].forEach(function (k) {
+        ['color', 'id', 'selected', 'sliced', 'marker', 'dataLabels', 'name'].forEach(function (k) {
           if (typeof pt[k] !== 'undefined' && typeof out[k] === 'undefined') out[k] = pt[k];
         });
         return out;
@@ -241,26 +241,26 @@
         options3d: {
           enabled: true, alpha: 10, beta: 15, depth: 50, viewDistance: 25,
           frame: {
-            bottom: { size: 1, color:'rgba(0,0,0,0.05)' },
-            back:   { size: 1, color:'rgba(0,0,0,0.03)' },
-            side:   { size: 1, color:'rgba(0,0,0,0.03)' }
+            bottom: { size: 1, color: 'rgba(0,0,0,0.05)' },
+            back: { size: 1, color: 'rgba(0,0,0,0.03)' },
+            side: { size: 1, color: 'rgba(0,0,0,0.03)' }
           }
         }
       },
       plotOptions: { column: { depth: 40, pointPadding: 0.05, groupPadding: 0.05, borderWidth: 0 } },
-      xAxis: { type:'category' },
+      xAxis: { type: 'category' },
       yAxis: [{ title: { text: null } }]
     },
     gauge: {
-      chart: { type:'gauge', spacingBottom:28 },
-      pane: { startAngle:-90, endAngle:90, center:['50%','75%'], size:'110%', background:null },
+      chart: { type: 'gauge', spacingBottom: 28 },
+      pane: { startAngle: -90, endAngle: 90, center: ['50%', '75%'], size: '110%', background: null },
       yAxis: [{
-        min:0, max:100, tickInterval:10, tickPosition:'inside', lineWidth:0,
-        labels:{ distance:20, style:{ fontSize:'12px' } },
+        min: 0, max: 100, tickInterval: 10, tickPosition: 'inside', lineWidth: 0,
+        labels: { distance: 20, style: { fontSize: '12px' } },
         plotBands: [
-          { from:0,to:70,color:'#55BF3B',thickness:30 },
-          { from:70,to:85,color:'#DDDF0D',thickness:30 },
-          { from:85,to:100,color:'#DF5353',thickness:30 }
+          { from: 0, to: 70, color: '#55BF3B', thickness: 30 },
+          { from: 70, to: 85, color: '#DDDF0D', thickness: 30 },
+          { from: 85, to: 100, color: '#DF5353', thickness: 30 }
         ]
       }]
     },
@@ -268,42 +268,42 @@
       chart: {
         type: 'area',
         options3d: {
-          enabled:true, alpha:15, beta:15, depth:70, viewDistance:25,
+          enabled: true, alpha: 15, beta: 15, depth: 70, viewDistance: 25,
           frame: {
-            bottom:{ size:1, color:'rgba(0,0,0,0.05)' },
-            back:  { size:1, color:'rgba(0,0,0,0.03)' },
-            side:  { size:1, color:'rgba(0,0,0,0.03)' }
+            bottom: { size: 1, color: 'rgba(0,0,0,0.05)' },
+            back: { size: 1, color: 'rgba(0,0,0,0.03)' },
+            side: { size: 1, color: 'rgba(0,0,0,0.03)' }
           }
         }
       },
       plotOptions: {
-        area: { depth:50, marker:{enabled:false}, enableMouseTracking:true },
-        series: { animation:true }
+        area: { depth: 50, marker: { enabled: false }, enableMouseTracking: true },
+        series: { animation: true }
       },
-      xAxis: { type:'category' },
+      xAxis: { type: 'category' },
       yAxis: [{ title: { text: null } }],
-      zAxis: { visible:false }
+      zAxis: { visible: false }
     },
     pie: {
-      chart: { type:'pie' },
-      tooltip: { pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>', shared:false },
+      chart: { type: 'pie' },
+      tooltip: { pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>', shared: false },
       plotOptions: {
         pie: {
-          allowPointSelect:true, cursor:'pointer', showInLegend:true,
-          dataLabels:{ enabled:true, format:'<b>{point.name}</b>: {point.percentage:.1f} %' }
+          allowPointSelect: true, cursor: 'pointer', showInLegend: true,
+          dataLabels: { enabled: true, format: '<b>{point.name}</b>: {point.percentage:.1f} %' }
         }
       },
-      legend: { enabled:true }
+      legend: { enabled: true }
     }
   };
 
   var SERIES_DEFAULTS = {
     line: {}, column: {}, column3d: {},
     gauge: {
-      tooltip: { valueSuffix:' %' },
-      dataLabels: { format:'{y} %', borderWidth:0, style:{ fontSize:'14px' } },
-      dial:  { radius:'80%', backgroundColor:'#666', baseWidth:16, baseLength:'0%', rearLength:'0%' },
-      pivot: { backgroundColor:'#666', radius:8 }
+      tooltip: { valueSuffix: ' %' },
+      dataLabels: { format: '{y} %', borderWidth: 0, style: { fontSize: '14px' } },
+      dial: { radius: '80%', backgroundColor: '#666', baseWidth: 16, baseLength: '0%', rearLength: '0%' },
+      pivot: { backgroundColor: '#666', radius: 8 }
     },
     area3d: {}, pie: {}
   };
@@ -343,13 +343,20 @@
     // Toolbar
     showToolbar: true,
     showRefreshButton: true,
-    refreshLabel: 'Refresh',
+    refreshLabel: '',
     showDeleteButton: true,
-    deleteLabel: 'Delete',
+    deleteLabel: '',
     confirmDelete: true,
 
+    // NEW: Tooltip toggle button labels
+    tooltipToggle: {
+      show: true,
+      labelOn: 'On',
+      labelOff: 'Off'
+    },
+
     // Auto refresh
-    autoRefresh: { enabled: true, options: [0,10,20,30,60,120], defaultSeconds: 0 },
+    autoRefresh: { enabled: true, options: [0, 10, 20, 30, 60, 120], defaultSeconds: 0 },
 
     // Snap-to-grid
     grid: { enabled: false, size: { x: 24, y: 24 }, snap: 'end', threshold: 0 },
@@ -373,19 +380,23 @@
     this.filename = this.opts.filename || null;
 
     this.$wrapper = null;
-    this.$header  = null;
-    this.$title   = null;
-    this.$tools   = null;
-    this.$body    = null;
-    this.$inner   = null;
+    this.$header = null;
+    this.$title = null;
+    this.$tools = null;
+    this.$body = null;
+    this.$inner = null;
     this.$resizer = null;
     this.$refreshBtn = null;
     this.$progress = null;
     this.$progressBar = null;
 
+    // NEW: tooltip toggle state & button
+    this._tooltipsEnabled = true;
+    this.$tooltipBtn = null;
+
     this._resizeObserver = null;
-    this._innerObserver  = null;
-    this._themeObserver  = null;
+    this._innerObserver = null;
+    this._themeObserver = null;
     this._autoTimer = null;
     this._autoSeconds = (this.opts.autoRefresh && this.opts.autoRefresh.defaultSeconds) || 0;
 
@@ -521,25 +532,29 @@
     var themedOptions = deepMerge({}, theme, base, (cfg.hc || {}));
     themedOptions.title = { text: null }; // title in header
 
-  themedOptions.tooltip = deepMerge({}, themedOptions.tooltip, {
-    useHTML: true,
-    shared: false,
-formatter: function () {
-  const p = this.point;
-  const thumbUrl = (p && (p.custom || (p.options && p.options.custom))) || null;
+    // Respect instance tooltip enabled state, add HTML image with click-through to full image
+    themedOptions.tooltip = deepMerge({}, themedOptions.tooltip, {
+      enabled: this._tooltipsEnabled,
+      useHTML: true,
+      stickOnContact: true,
+      hideDelay: 250,
+      shared: false,
+      formatter: function () {
+        const p = this.point;
+        const thumbUrl = (p && (p.custom || (p.options && p.options.custom))) || null;
 
-  const dt = Highcharts.dateFormat('%Y-%m-%d %H:%M:%S', this.x);
-  let html = `
+        const dt = Highcharts.dateFormat('%Y-%m-%d %H:%M:%S', this.x);
+        let html = `
     <div style="min-width:160px;max-width:260px">
       <div><strong>${this.series.name}</strong></div>
       <div>${dt}</div>
       <div>Value: ${Highcharts.numberFormat(this.y, 2)}</div>
   `;
 
-  if (thumbUrl) {
-    // derive full image by stripping "thumbnails/"
-    const fullUrl = thumbUrl.replace("thumbnails/", "");
-    html += `
+        if (thumbUrl) {
+          // derive full image by stripping "thumbnails/"
+          const fullUrl = thumbUrl.replace("thumbnails/", "");
+          html += `
       <div style="margin-top:6px">
         <a href="${fullUrl}" target="_blank" rel="noopener">
           <img src="${thumbUrl}" alt="preview" width="200" height="200"
@@ -547,12 +562,12 @@ formatter: function () {
         </a>
       </div>
     `;
-  }
+        }
 
-  html += `</div>`;
-  return html;
-}
-  });
+        html += `</div>`;
+        return html;
+      }
+    });
 
     if (type === 'pie' && (!cfg.hc || !cfg.hc.tooltip || typeof cfg.hc.tooltip.shared === 'undefined')) {
       themedOptions.tooltip = deepMerge({}, themedOptions.tooltip, { shared: false });
@@ -567,7 +582,7 @@ formatter: function () {
     var keys = Object.keys(seriesObj);
     if (!keys.length) return $.Deferred().resolve([]).promise();
 
-    var rawType  = (cfg.type || 'line').toLowerCase();
+    var rawType = (cfg.type || 'line').toLowerCase();
     var normType = normalizeType(cfg.type);
 
     var promises = keys.map(function (key) {
@@ -637,7 +652,7 @@ formatter: function () {
         boxShadow: isDarkMode() ? '0 2px 10px rgba(0,0,0,.35)' : '0 2px 8px rgba(0,0,0,.15)'
       }));
     }
-    if (this.$body)  this.$body.css($.extend({}, bb, { backgroundColor: bg }));
+    if (this.$body) this.$body.css($.extend({}, bb, { backgroundColor: bg }));
     if (this.$inner) this.$inner.css($.extend({}, bb, { backgroundColor: bg }));
 
     if (this.$progressBar) {
@@ -810,13 +825,13 @@ formatter: function () {
     if (!g || !g.enabled) return { left: left, top: top };
     var gx = Math.max(1, (g.size && g.size.x) || 24);
     var gy = Math.max(1, (g.size && g.size.y) || 24);
-    function roundTo(v, s){ return Math.round(v / s) * s; }
+    function roundTo(v, s) { return Math.round(v / s) * s; }
 
     if (g.threshold && g.threshold > 0) {
       var ls = roundTo(left, gx), ts = roundTo(top, gy);
       if (Math.abs(ls - left) <= g.threshold) left = ls;
-      if (Math.abs(ts - top)  <= g.threshold) top  = ts;
-      return { left:left, top:top };
+      if (Math.abs(ts - top) <= g.threshold) top = ts;
+      return { left: left, top: top };
     }
     return { left: roundTo(left, gx), top: roundTo(top, gy) };
   };
@@ -843,14 +858,14 @@ formatter: function () {
     var payload = this._boundsPayload();
     if (!payload) return;
     if (typeof this.opts.onBoundsChange === 'function') {
-      try { this.opts.onBoundsChange(payload, this); } catch (e) {}
+      try { this.opts.onBoundsChange(payload, this); } catch (e) { }
     }
     this.$host.trigger(this.opts.boundsEventName, [payload, this]);
   };
   Plugin.prototype._notifyDelete = function () {
     var payload = this._boundsPayload() || { filename: this.filename || null };
     if (typeof this.opts.onDelete === 'function') {
-      try { this.opts.onDelete(payload, this); } catch (e) {}
+      try { this.opts.onDelete(payload, this); } catch (e) { }
     }
     this.$host.trigger(this.opts.deleteEventName, [payload, this]);
   };
@@ -859,24 +874,24 @@ formatter: function () {
   Plugin.prototype._bindDrag = function () {
     var self = this;
     var $handle = self.$header;
-    var $scope  = self.$host;
+    var $scope = self.$host;
     var $contain = (self.opts.containment === 'host') ? self.$host
-                 : (self.opts.containment === 'window') ? $(window)
-                 : $(self.opts.containment);
+      : (self.opts.containment === 'window') ? $(window)
+        : $(self.opts.containment);
 
-    var dragging = false, start = { x:0, y:0, left:0, top:0 };
+    var dragging = false, start = { x: 0, y: 0, left: 0, top: 0 };
 
-    $handle.css('touch-action','none')
-      .on('selectstart.'+PLUGIN,function(e){
+    $handle.css('touch-action', 'none')
+      .on('selectstart.' + PLUGIN, function (e) {
         if ($(e.target).closest('.as-hc-tools, button, select, input, textarea, a, [contenteditable]').length) return;
         e.preventDefault();
       })
-      .on('dragstart.'+PLUGIN,function(e){
+      .on('dragstart.' + PLUGIN, function (e) {
         if ($(e.target).closest('.as-hc-tools, button, select, input, textarea, a, [contenteditable]').length) return;
         e.preventDefault();
       });
 
-    $handle.on('pointerdown.'+PLUGIN,function(e){
+    $handle.on('pointerdown.' + PLUGIN, function (e) {
       if ($(e.target).closest('.as-hc-tools, button, select, input, textarea, a, [contenteditable]').length) return;
       if (e.button !== 0 && e.buttons !== 1) return;
 
@@ -886,32 +901,32 @@ formatter: function () {
 
       start.x = e.pageX; start.y = e.pageY;
       start.left = parseFloat(self.$wrapper.css('left')) || 0;
-      start.top  = parseFloat(self.$wrapper.css('top'))  || 0;
+      start.top = parseFloat(self.$wrapper.css('top')) || 0;
 
       $('html,body').addClass('as-hc-noselect');
       e.preventDefault(); e.stopPropagation();
 
-      $scope.on('pointermove.'+PLUGIN, onMove);
-      $scope.on('pointerup.'  +PLUGIN, onUp);
+      $scope.on('pointermove.' + PLUGIN, onMove);
+      $scope.on('pointerup.' + PLUGIN, onUp);
     });
 
-    function onMove(e){
+    function onMove(e) {
       if (!dragging) return;
       var dx = e.pageX - start.x;
       var dy = e.pageY - start.y;
       var newLeft = start.left + dx;
-      var newTop  = start.top  + dy;
+      var newTop = start.top + dy;
 
       if ($contain && $contain.length && $contain[0] !== window) {
-        var maxLeft = $contain.innerWidth()  - self.$wrapper.outerWidth();
-        var maxTop  = $contain.innerHeight() - self.$wrapper.outerHeight();
+        var maxLeft = $contain.innerWidth() - self.$wrapper.outerWidth();
+        var maxTop = $contain.innerHeight() - self.$wrapper.outerHeight();
         newLeft = Math.max(0, Math.min(newLeft, maxLeft));
-        newTop  = Math.max(0, Math.min(newTop,  maxTop));
+        newTop = Math.max(0, Math.min(newTop, maxTop));
       } else if (self.opts.containment === 'window') {
-        var maxLeftW = $(window).width()  - self.$wrapper.outerWidth();
-        var maxTopW  = $(window).height() - self.$wrapper.outerHeight();
+        var maxLeftW = $(window).width() - self.$wrapper.outerWidth();
+        var maxTopW = $(window).height() - self.$wrapper.outerHeight();
         newLeft = Math.max(0, Math.min(newLeft, maxLeftW));
-        newTop  = Math.max(0, Math.min(newTop,  maxTopW));
+        newTop = Math.max(0, Math.min(newTop, maxTopW));
       }
 
       if (self.opts.grid && self.opts.grid.enabled && self.opts.grid.snap === 'move') {
@@ -919,33 +934,33 @@ formatter: function () {
         newLeft = snap.left; newTop = snap.top;
       }
 
-      self.$wrapper.css({ left:newLeft + 'px', top:newTop + 'px' });
+      self.$wrapper.css({ left: newLeft + 'px', top: newTop + 'px' });
       e.preventDefault();
     }
-    function onUp(e){
+    function onUp(e) {
       if (!dragging) return;
       dragging = false;
       $('html,body').removeClass('as-hc-noselect');
-      $scope.off('pointermove.'+PLUGIN, onMove);
-      $scope.off('pointerup.'  +PLUGIN, onUp);
+      $scope.off('pointermove.' + PLUGIN, onMove);
+      $scope.off('pointerup.' + PLUGIN, onUp);
 
       if (self.opts.grid && self.opts.grid.enabled && self.opts.grid.snap !== 'move') {
         var curLeft = parseFloat(self.$wrapper.css('left')) || 0;
-        var curTop  = parseFloat(self.$wrapper.css('top'))  || 0;
+        var curTop = parseFloat(self.$wrapper.css('top')) || 0;
         var snap = self._snapPosition(curLeft, curTop);
 
         if ($contain && $contain.length && $contain[0] !== window) {
-          var maxLeft = $contain.innerWidth()  - self.$wrapper.outerWidth();
-          var maxTop  = $contain.innerHeight() - self.$wrapper.outerHeight();
+          var maxLeft = $contain.innerWidth() - self.$wrapper.outerWidth();
+          var maxTop = $contain.innerHeight() - self.$wrapper.outerHeight();
           snap.left = Math.max(0, Math.min(snap.left, maxLeft));
-          snap.top  = Math.max(0, Math.min(snap.top,  maxTop));
+          snap.top = Math.max(0, Math.min(snap.top, maxTop));
         } else if (self.opts.containment === 'window') {
-          var maxLeftW = $(window).width()  - self.$wrapper.outerWidth();
-          var maxTopW  = $(window).height() - self.$wrapper.outerHeight();
+          var maxLeftW = $(window).width() - self.$wrapper.outerWidth();
+          var maxTopW = $(window).height() - self.$wrapper.outerHeight();
           snap.left = Math.max(0, Math.min(snap.left, maxLeftW));
-          snap.top  = Math.max(0, Math.min(snap.top,  maxTopW));
+          snap.top = Math.max(0, Math.min(snap.top, maxTopW));
         }
-        self.$wrapper.css({ left:snap.left + 'px', top:snap.top + 'px' });
+        self.$wrapper.css({ left: snap.left + 'px', top: snap.top + 'px' });
       }
 
       // notify host of new position
@@ -963,13 +978,13 @@ formatter: function () {
       $handle = self.$resizer = $('<div class="as-hc-resize" aria-hidden="true"></div>').appendTo(self.$wrapper);
     }
     $handle.css({
-      position:'absolute', right:'6px', bottom:'6px',
-      width:self.opts.resizerSize + 'px', height:self.opts.resizerSize + 'px',
-      cursor:'nwse-resize', zIndex:2
+      position: 'absolute', right: '6px', bottom: '6px',
+      width: self.opts.resizerSize + 'px', height: self.opts.resizerSize + 'px',
+      cursor: 'nwse-resize', zIndex: 2
     });
 
     var $scope = self.$host;
-    var start = { x:0, y:0, w:0, h:0 }, resizing = false;
+    var start = { x: 0, y: 0, w: 0, h: 0 }, resizing = false;
 
     $handle.off('.' + PLUGIN);
     $handle.on('pointerdown.' + PLUGIN, function (e) {
@@ -982,10 +997,10 @@ formatter: function () {
       $('html,body').addClass('as-hc-noselect');
       e.preventDefault(); e.stopPropagation();
       $scope.on('pointermove.' + PLUGIN, onMove);
-      $scope.on('pointerup.'   + PLUGIN, onUp);
+      $scope.on('pointerup.' + PLUGIN, onUp);
     });
 
-    function onMove(e){
+    function onMove(e) {
       if (!resizing) return;
       var w = Math.max(minW, start.w + (e.pageX - start.x));
       var h = Math.max(minH, start.h + (e.pageY - start.y));
@@ -993,18 +1008,18 @@ formatter: function () {
       var maxH = self.$host.innerHeight();
       if (maxW) w = Math.min(w, maxW);
       if (maxH) h = Math.min(h, maxH);
-      self.$wrapper.css({ width:w + 'px', height:h + 'px' });
+      self.$wrapper.css({ width: w + 'px', height: h + 'px' });
 
       self._sizeToInner();
       e.preventDefault();
     }
-    function onUp(e){
+    function onUp(e) {
       if (!resizing) return;
       resizing = false;
       this.releasePointerCapture && this.releasePointerCapture(e.pointerId);
       $('html,body').removeClass('as-hc-noselect');
       $scope.off('pointermove.' + PLUGIN, onMove);
-      $scope.off('pointerup.'   + PLUGIN, onUp);
+      $scope.off('pointerup.' + PLUGIN, onUp);
       self._sizeToInner();
       if (self.chart) self.chart.reflow();
 
@@ -1018,8 +1033,8 @@ formatter: function () {
     if (this._autoTimer) { clearInterval(this._autoTimer); this._autoTimer = null; }
     this._stopProgress();
     if (this._resizeObserver) { this._resizeObserver.disconnect(); this._resizeObserver = null; }
-    if (this._innerObserver)  { this._innerObserver.disconnect();  this._innerObserver  = null; }
-    if (this._themeObserver)  { this._themeObserver.disconnect();  this._themeObserver  = null; }
+    if (this._innerObserver) { this._innerObserver.disconnect(); this._innerObserver = null; }
+    if (this._themeObserver) { this._themeObserver.disconnect(); this._themeObserver = null; }
     if (this.chart && this.chart.destroy) this.chart.destroy();
     this.chart = null;
     if (this.$wrapper) { this.$wrapper.off('.' + PLUGIN).remove(); this.$wrapper = null; }
@@ -1046,7 +1061,7 @@ formatter: function () {
       ? { width: this.opts.width, height: this.opts.height }
       : (this.opts.initialSize || {});
 
-    var havePos  = (posOpt && posOpt.top != null && posOpt.left != null);
+    var havePos = (posOpt && posOpt.top != null && posOpt.left != null);
     var haveSize = (sizeOpt && sizeOpt.width != null && sizeOpt.height != null);
 
     var countExisting = this.$host.children('.as-hc-wrapper').length;
@@ -1055,16 +1070,16 @@ formatter: function () {
     var theme = getActiveTheme();
     var bg = (theme.chart && theme.chart.backgroundColor) || '#ffffff';
 
-    var initTop  = havePos
-      ? toNum(posOpt.top,  this.opts.startPos.top)
-      : (this.opts.startPos.top  + offset);
+    var initTop = havePos
+      ? toNum(posOpt.top, this.opts.startPos.top)
+      : (this.opts.startPos.top + offset);
 
     var initLeft = havePos
       ? toNum(posOpt.left, this.opts.startPos.left)
       : (this.opts.startPos.left + offset);
 
     var initW = haveSize
-      ? Math.max(this.opts.minSize.width,  toNum(sizeOpt.width,  this.opts.minSize.width))
+      ? Math.max(this.opts.minSize.width, toNum(sizeOpt.width, this.opts.minSize.width))
       : Math.max(480, this.opts.minSize.width);
 
     var initH = haveSize
@@ -1074,19 +1089,19 @@ formatter: function () {
     var hostW = this.$host.innerWidth(), hostH = this.$host.innerHeight();
     if (hostW && hostH) {
       initLeft = Math.max(0, Math.min(initLeft, Math.max(0, hostW - initW)));
-      initTop  = Math.max(0, Math.min(initTop,  Math.max(0, hostH - initH)));
+      initTop = Math.max(0, Math.min(initTop, Math.max(0, hostH - initH)));
     }
 
     var bb = { boxSizing: 'border-box' };
 
     this.$wrapper = $('<div class="as-hc-wrapper"></div>').css($.extend({}, bb, {
-      position:'absolute',
-      top:initTop, left:initLeft, width:initW, height:initH,
-      display:'flex', flexDirection:'column',
-      background:bg,
-      boxShadow: isDarkMode()? '0 2px 10px rgba(0,0,0,.35)' : '0 2px 8px rgba(0,0,0,.15)',
-      border:'1px solid ' + (isDarkMode()? '#3a3a3a' : '#ddd'),
-      overflow:'hidden'
+      position: 'absolute',
+      top: initTop, left: initLeft, width: initW, height: initH,
+      display: 'flex', flexDirection: 'column',
+      background: bg,
+      boxShadow: isDarkMode() ? '0 2px 10px rgba(0,0,0,.35)' : '0 2px 8px rgba(0,0,0,.15)',
+      border: '1px solid ' + (isDarkMode() ? '#3a3a3a' : '#ddd'),
+      overflow: 'hidden'
     }));
     this.$wrapper.on('pointerdown', (e) => {
       if ($(e.target).closest('.as-hc-tools, button, select, input, textarea, a, [contenteditable]').length) return;
@@ -1094,18 +1109,24 @@ formatter: function () {
     });
 
     this.$header = $('<div class="as-hc-header"></div>').css($.extend({}, bb, {
-      position:'relative', display:'flex', alignItems:'center', justifyContent:'space-between',
-      padding:'6px 8px', gap:'8px', userSelect:'none', cursor:'move'
+      position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      padding: '6px 8px', gap: '8px', userSelect: 'none', cursor: 'move'
     }));
     var titleText = this.opts.headerTitle != null ? this.opts.headerTitle : (cfg && cfg.title) || '';
     this.$title = $('<div class="as-hc-title"></div>').text(titleText).css({
-      fontWeight:'600', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', paddingRight:'8px'
+      fontWeight: '600', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', paddingRight: '8px'
     });
-    this.$tools = $('<div class="as-hc-tools"></div>').css({ display:'flex', alignItems:'center', gap:'6px', cursor:'default' });
+    this.$tools = $('<div class="as-hc-tools"></div>').css({ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'default' });
 
     if (this.opts.showToolbar && this.opts.showRefreshButton) {
-      this.$refreshBtn = $('<button type="button" class="as-hc-btn as-hc-refresh-btn" title="'+this.opts.refreshLabel+'"><i class="fa fa-refresh" aria-hidden="true"></i><span>'+this.opts.refreshLabel+'</span></button>')
-        .css({ display:'inline-flex', alignItems:'center', gap:'6px', padding:'4px 8px', cursor:'pointer' })
+
+      this.$refreshBtn = $('<button>', {
+        type: 'button',
+        class: 'as-hc-btn as-hc-refresh-btn',
+        title: (this.opts.refreshLabel || 'Refresh')
+      })
+        .append($('<i>', { class: 'fa fa-refresh', 'aria-hidden': 'true' }))
+        .css({ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 8px', cursor: 'pointer' })
         .on('click', (e) => {
           e.preventDefault(); e.stopPropagation();
           this._setLoading(true);
@@ -1115,16 +1136,16 @@ formatter: function () {
     }
 
     if (this.opts.showToolbar && this.opts.autoRefresh && this.opts.autoRefresh.enabled) {
-      var options = this.opts.autoRefresh.options || [0,10,20,30,60,120];
+      var options = this.opts.autoRefresh.options || [0, 10, 20, 30, 60, 120];
       var $sel = $('<select class="as-hc-autorefresh" title="Auto refresh interval"></select>')
-        .css({ padding:'3px 6px' });
+        .css({ padding: '3px 6px' });
       options.forEach((sec) => {
         var label = sec === 0 ? 'None' : (sec + 's');
         var $opt = $('<option></option>').val(String(sec)).text(label);
         if (sec === this._autoSeconds) $opt.attr('selected', 'selected');
         $sel.append($opt);
       });
-      $sel.on('click', (e)=> e.stopPropagation());
+      $sel.on('click', (e) => e.stopPropagation());
       $sel.on('change', () => {
         var secs = parseInt($sel.val(), 10) || 0;
         this.setAutoRefresh(secs);
@@ -1132,23 +1153,52 @@ formatter: function () {
       this.$tools.append($sel);
     }
 
-    if (this.opts.showToolbar && this.opts.showDeleteButton) {
-      var $btnDelete = $('<button type="button" class="as-hc-btn as-hc-delete-btn" title="'+this.opts.deleteLabel+'"><i class="fa fa-trash" aria-hidden="true"></i><span>'+this.opts.deleteLabel+'</span></button>')
-        .css({ display:'inline-flex', alignItems:'center', gap:'6px', padding:'4px 8px', cursor:'pointer' })
+
+    if (this.opts.tooltipToggle && this.opts.tooltipToggle.show) {
+      this._tooltipsEnabled = (this.chart ? this.chart.options.tooltip.enabled !== false : true);
+      var label = this._tooltipsEnabled ? (this.opts.tooltipToggle.labelOn || 'On')
+        : (this.opts.tooltipToggle.labelOff || 'Off');
+
+      this.$tooltipBtn = $('<button>', {
+        type: 'button',
+        class: 'as-hc-btn as-hc-tooltips-btn',
+        title: 'Toggle tooltips'
+      })
+        .append($('<i>', { class: 'fa fa-comment', 'aria-hidden': 'true' }))
+        .append($('<span>').text(label))
+        .css({ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 8px', cursor: 'pointer' })
         .on('click', (e) => {
           e.preventDefault(); e.stopPropagation();
-          if (!this.opts.confirmDelete || window.confirm('Remove this chart?')) {
-            // notify host BEFORE we tear down, so bounds are readable
-            this._notifyDelete();
-            this.destroy();
-
-            // remove from host instance list
-            var list = this.$host.data(INST_KEY) || [];
-            this.$host.data(INST_KEY, list.filter((i) => i !== this));
+          this._tooltipsEnabled = !this._tooltipsEnabled;
+          if (this.chart) {
+            this.chart.update({ tooltip: { enabled: this._tooltipsEnabled } }, false);
+            this.chart.redraw(false);
           }
+          this.$tooltipBtn.find('span').text(this._tooltipsEnabled
+            ? (this.opts.tooltipToggle.labelOn || 'On')
+            : (this.opts.tooltipToggle.labelOff || 'Off'));
         });
-      this.$tools.append($btnDelete);
+
+      this.$tools.append(this.$tooltipBtn);
     }
+
+    var $btnDelete = $('<button>', {
+      type: 'button',
+      class: 'as-hc-btn as-hc-delete-btn',
+      title: (this.opts.deleteLabel || 'Delete')
+    })
+      .append($('<i>', { class: 'fa fa-trash', 'aria-hidden': 'true' }))
+      .css({ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 8px', cursor: 'pointer' })
+      .on('click', (e) => {
+        e.preventDefault(); e.stopPropagation();
+        if (!this.opts.confirmDelete || window.confirm('Remove this chart?')) {
+          this._notifyDelete();
+          this.destroy();
+          var list = this.$host.data(INST_KEY) || [];
+          this.$host.data(INST_KEY, list.filter((i) => i !== this));
+        }
+      });
+    this.$tools.append($btnDelete);
 
     this.$header.append(this.$title, this.$tools);
 
@@ -1156,19 +1206,19 @@ formatter: function () {
     this._ensureProgressEls();
 
     // Body (relative) + inner (absolute fill)
-    this.$body  = $('<div class="as-hc-body"></div>').css($.extend({}, bb, {
-      position:'relative', backgroundColor:bg, flex:'1 1 auto', minHeight:0, overflow:'hidden'
+    this.$body = $('<div class="as-hc-body"></div>').css($.extend({}, bb, {
+      position: 'relative', backgroundColor: bg, flex: '1 1 auto', minHeight: 0, overflow: 'hidden'
     }));
     this.$inner = $('<div class="as-hc-inner"></div>').css($.extend({}, bb, {
-      position:'absolute', left:0, top:0, right:0, bottom:0, width:'100%', height:'100%', overflow:'hidden'
+      position: 'absolute', left: 0, top: 0, right: 0, bottom: 0, width: '100%', height: '100%', overflow: 'hidden'
     }));
     this.$body.append(this.$inner);
 
     // single resizer handle
     this.$resizer = $('<div class="as-hc-resize" aria-hidden="true"></div>').css({
-      position:'absolute', right:'6px', bottom:'6px',
-      width:this.opts.resizerSize + 'px', height:this.opts.resizerSize + 'px',
-      cursor:'nwse-resize', zIndex:2
+      position: 'absolute', right: '6px', bottom: '6px',
+      width: this.opts.resizerSize + 'px', height: this.opts.resizerSize + 'px',
+      cursor: 'nwse-resize', zIndex: 2
     });
 
     this.$wrapper.append(this.$header, this.$body, this.$resizer);
@@ -1215,6 +1265,15 @@ formatter: function () {
         this.config = cfg;
         if ('main' in cfg) cfg.main = boolish(cfg.main);
 
+        // NEW: initialize tooltip enabled state from config (defaults to true)
+        var cfgTooltipEnabled = true;
+        if (cfg && cfg.hc && cfg.hc.tooltip && typeof cfg.hc.tooltip.enabled !== 'undefined') {
+          cfgTooltipEnabled = !!cfg.hc.tooltip.enabled;
+        } else if (cfg && cfg.tooltip && typeof cfg.tooltip.enabled !== 'undefined') {
+          cfgTooltipEnabled = !!cfg.tooltip.enabled;
+        }
+        this._tooltipsEnabled = cfgTooltipEnabled;
+
         var t = this.opts.headerTitle != null ? this.opts.headerTitle : (cfg && cfg.title) || '';
         this.$title && this.$title.text(t);
 
@@ -1226,7 +1285,7 @@ formatter: function () {
             // ok — config already set
           } else if (need > 0) {
             options.yAxis = [];
-            for (var i=0;i<need;i++) options.yAxis.push({ title:{text:null}, opposite:(i%2===1) });
+            for (var i = 0; i < need; i++) options.yAxis.push({ title: { text: null }, opposite: (i % 2 === 1) });
           }
           options.series = seriesArr;
           this._render(options, cfg);

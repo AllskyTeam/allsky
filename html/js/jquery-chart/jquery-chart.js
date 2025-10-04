@@ -141,6 +141,75 @@
   function boolish(v) { return (typeof v === 'string') ? v.toLowerCase() === 'true' : !!v; }
   function isNumber(x) { return typeof x === 'number' && !isNaN(x); }
 
+  // ---- NEW: robust point normalization (fixes x,y,data) ----
+  function toNumericX(x) {
+    if (typeof x === 'number') return x;
+    if (typeof x === 'string') {
+      var t = Date.parse(x);
+      return isNaN(t) ? x : t; // keep category strings, convert date strings
+    }
+    return x;
+  }
+
+  function normalizePointsForType(type, data) {
+    var t = normalizeType(type);
+
+    // Gauge: single number
+    if (t === 'gauge') {
+      if (isNumber(data)) return [data];
+      if (Array.isArray(data)) {
+        var n = Number(data[0]);
+        return [isNaN(n) ? 0 : n];
+      }
+      return [0];
+    }
+
+    // Pie accepts {name,y} or [name, y]
+    var isPie = (t === 'pie');
+
+    if (!Array.isArray(data)) return [];
+    return data.map(function (pt) {
+      // number-only points (valid for line/column)
+      if (typeof pt === 'number') return pt;
+
+      // array points
+      if (Array.isArray(pt)) {
+        // Treat as [x, y] normally; for pie, treat as [name, y]
+        if (isPie) {
+          var pname = (pt[0] != null) ? String(pt[0]) : '';
+          return [pname, pt[1]];
+        }
+        return [toNumericX(pt[0]), pt[1]];
+      }
+
+      // object points
+      if (pt && typeof pt === 'object') {
+        var out = {};
+        // support {x, y} (line/column) and {name, y} or {x: 'cat', y} for pie
+        if (isPie) {
+          if (typeof pt.name !== 'undefined') out.name = pt.name;
+          else if (typeof pt.x === 'string') out.name = pt.x; // x-as-category
+          if (typeof pt.y !== 'undefined') out.y = pt.y;
+        } else {
+          if (typeof pt.x !== 'undefined') out.x = toNumericX(pt.x);
+          if (typeof pt.y !== 'undefined') out.y = pt.y;
+        }
+
+        // move meta to custom
+        if (typeof pt.custom !== 'undefined') out.custom = pt.custom;
+        else if (typeof pt.data !== 'undefined') out.custom = pt.data;
+
+        // copy other safe fields
+        ['color','id','selected','sliced','marker','dataLabels','name'].forEach(function (k) {
+          if (typeof pt[k] !== 'undefined' && typeof out[k] === 'undefined') out[k] = pt[k];
+        });
+        return out;
+      }
+
+      return pt;
+    });
+  }
+
   /* ======================= Defaults ======================= */
   var TYPE_DEFAULTS = {
     common: {
@@ -361,6 +430,7 @@
 
   /* ======================= Series coercion helpers ======================= */
   function coerceSeriesDataForType(type, payload) {
+    // accept { data: [...] } or [...] or number (gauge)
     if (!Array.isArray(payload) && typeof payload === 'object' && payload) {
       if (Array.isArray(payload.data)) payload = payload.data;
       else if (payload.series) {
@@ -380,11 +450,18 @@
     return Array.isArray(payload) ? payload : [];
   }
 
+  // ---- UPDATED: returns normalized array of points for the given chart type
+  function normalizeSeriesPayload(type, payload) {
+    var coerced = coerceSeriesDataForType(normalizeType(type), payload);
+    return normalizePointsForType(type, coerced);
+  }
+
+  // Build series array from NEW CONFIG on refresh
   Plugin.prototype._seriesFromNewConfig = function (newCfg) {
     var self = this;
     var curCfg = self.config || {};
-    var type   = (curCfg.type || 'line').toLowerCase();
-    var norm   = (type === 'area3d') ? 'area' : (type === 'column3d' ? 'column' : type);
+    var baseType = normalizeType(curCfg.type || 'line');
+    var norm = (baseType === 'area3d') ? 'area' : (baseType === 'column3d' ? 'column' : baseType);
 
     var out = [];
     var curSeries = curCfg.series || {};
@@ -409,24 +486,26 @@
 
     keys.forEach(function (key) {
       var sCur = curSeries[key] || {};
-      var sType = (type === 'area3d') ? 'area' : (type === 'column3d' ? 'column' : (type === 'pie' ? 'pie' : norm));
+      var sType = (baseType === 'area3d') ? 'area' : (baseType === 'column3d' ? 'column' : (baseType === 'pie' ? 'pie' : norm));
       var newData = readNewSeriesDataByKey(key);
 
       if (typeof newData === 'undefined' && self.chart) {
         var live = self.chart.series.find(function (sr) { return sr.name === (sCur.name || key); });
         if (live) newData = (live.options && live.options.data);
       }
-      var coerced = coerceSeriesDataForType(norm, newData);
+
+      var normalizedData = normalizeSeriesPayload(norm, newData);
       var built = $.extend(true, {},
-        (SERIES_DEFAULTS[type] || SERIES_DEFAULTS[norm] || {}),
+        (SERIES_DEFAULTS[baseType] || SERIES_DEFAULTS[norm] || {}),
         sCur.options || {},
-        { name: sCur.name || key, type: sType, data: coerced }
+        { name: sCur.name || key, type: sType, data: normalizedData }
       );
       if (norm !== 'gauge' && norm !== 'pie' && typeof sCur.yAxis === 'number') built.yAxis = sCur.yAxis;
       out.push(built);
     });
 
-    return out;
+    // Also return possible new yAxis config
+    return { series: out, yAxis: Array.isArray(newCfg.yAxis) ? newCfg.yAxis : undefined };
   };
 
   /* ======================= Options builder ======================= */
@@ -441,6 +520,39 @@
     var theme = getActiveTheme();
     var themedOptions = deepMerge({}, theme, base, (cfg.hc || {}));
     themedOptions.title = { text: null }; // title in header
+
+  themedOptions.tooltip = deepMerge({}, themedOptions.tooltip, {
+    useHTML: true,
+    shared: false,
+formatter: function () {
+  const p = this.point;
+  const thumbUrl = (p && (p.custom || (p.options && p.options.custom))) || null;
+
+  const dt = Highcharts.dateFormat('%Y-%m-%d %H:%M:%S', this.x);
+  let html = `
+    <div style="min-width:160px;max-width:260px">
+      <div><strong>${this.series.name}</strong></div>
+      <div>${dt}</div>
+      <div>Value: ${Highcharts.numberFormat(this.y, 2)}</div>
+  `;
+
+  if (thumbUrl) {
+    // derive full image by stripping "thumbnails/"
+    const fullUrl = thumbUrl.replace("thumbnails/", "");
+    html += `
+      <div style="margin-top:6px">
+        <a href="${fullUrl}" target="_blank" rel="noopener">
+          <img src="${thumbUrl}" alt="preview" width="200" height="200"
+               style="display:block;object-fit:cover;border-radius:4px"/>
+        </a>
+      </div>
+    `;
+  }
+
+  html += `</div>`;
+  return html;
+}
+  });
 
     if (type === 'pie' && (!cfg.hc || !cfg.hc.tooltip || typeof cfg.hc.tooltip.shared === 'undefined')) {
       themedOptions.tooltip = deepMerge({}, themedOptions.tooltip, { shared: false });
@@ -467,9 +579,12 @@
       else dataPromise = $.Deferred().resolve([]).promise();
 
       return dataPromise.then(function (data) {
+        // Normalize points (fix x,y,data meta)
+        var normalized = normalizeSeriesPayload(normType, data);
+
         if (normType === 'gauge') {
-          if (isNumber(data)) data = [data];
-          if (Array.isArray(data) && data.length > 1 && isNumber(data[0])) data = [data[0]];
+          if (isNumber(normalized)) normalized = [normalized];
+          if (Array.isArray(normalized) && normalized.length > 1 && isNumber(normalized[0])) normalized = [normalized[0]];
         }
         var yIdx = (normType === 'gauge' || normType === 'pie') ? undefined : (typeof s.yAxis === 'number' ? s.yAxis : 0);
         var seriesType = (rawType === 'area3d') ? 'area' : (rawType === 'column3d') ? 'column' : normType;
@@ -478,7 +593,7 @@
           {},
           SERIES_DEFAULTS[rawType] || SERIES_DEFAULTS[normType] || {},
           s.options || {},
-          { name: s.name || key, type: seriesType, data: Array.isArray(data) ? data : (isNumber(data) ? [data] : []) }
+          { name: s.name || key, type: seriesType, data: normalized }
         );
         if (typeof yIdx !== 'undefined') built.yAxis = yIdx;
         return built;
@@ -610,8 +725,12 @@
     if (self.opts.configUrl) {
       return self._requestConfig()
         .then(function (newCfg) {
-          var seriesArr = self._seriesFromNewConfig(newCfg);
-          return finish(seriesArr);
+          var packed = self._seriesFromNewConfig(newCfg);
+          // if new yAxis array is provided, update it first to avoid #18
+          if (packed.yAxis && Array.isArray(packed.yAxis)) {
+            self.chart.update({ yAxis: packed.yAxis }, false, true);
+          }
+          return finish(packed.series);
         })
         .fail(self.opts.onError);
     }
@@ -1101,6 +1220,14 @@
 
         var options = this._baseOptions(cfg);
         return this._buildSeries(cfg).then((seriesArr) => {
+          // Ensure yAxes are enough before first render (avoid #18)
+          var need = this._requiredYAxisCount(seriesArr, cfg.type || 'line');
+          if (Array.isArray(options.yAxis)) {
+            // ok — config already set
+          } else if (need > 0) {
+            options.yAxis = [];
+            for (var i=0;i<need;i++) options.yAxis.push({ title:{text:null}, opposite:(i%2===1) });
+          }
           options.series = seriesArr;
           this._render(options, cfg);
           return this.chart;
@@ -1109,7 +1236,7 @@
       .fail(this.opts.onError)
       .always(() => {
         this._setLoading(false);
-        // Inform initial bounds (comment out if not desired)
+        // Inform initial bounds
         this._notifyBoundsChange();
       });
   };

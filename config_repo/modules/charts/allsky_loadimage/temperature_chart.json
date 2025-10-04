@@ -1,0 +1,14 @@
+{
+    "icon": "fas fa-chart-line",
+    "group": "Camera",
+    "title": "Camera Temperature",
+    "type": "line",
+    "table": "allsky_camera",     
+    "series": {
+        "exposure": {
+            "name": "Temperature",
+            "yAxis": 0,
+            "variable": "AS_CAMERATEMPERATURE"
+        }
+    }
+}

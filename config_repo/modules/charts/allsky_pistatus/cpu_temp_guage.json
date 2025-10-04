@@ -1,0 +1,13 @@
+{
+    "title": "CPU Temp",
+    "icon": "fa-solid fa-gauge",
+    "type": "gauge",
+    "group": "Hardware",
+    "table": "allsky_hardware",
+    "series": [
+        {
+            "name": "CPU Temp",
+            "variable": "AS_CPUTEMP"
+        }
+    ]
+}

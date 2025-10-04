@@ -3,16 +3,7 @@
 class ASCHARTMANAGER {
   tabCounter = 1;
 
-  /**
-   * @param {Object} [opts]
-   * @param {string} [opts.saveUrl]
-   * @param {string} [opts.loadUrl]
-   * @param {boolean} [opts.wrap=false]     // wrap POST body as { state:[...], meta:{...} }
-   * @param {string}  [opts.field='state']  // field name when wrap=true
-   * @param {boolean} [opts.includeMeta=true]
-   * @param {number}  [opts.saveDebounceMs=300]
-   * @param {Object}  [opts.ajaxHeaders]
-   */
+
   constructor(opts = {}) {
     this.opts = Object.assign({
       saveUrl: 'includes/moduleutil.php?request=SaveCharts',
@@ -81,7 +72,6 @@ class ASCHARTMANAGER {
     let chartManager = `
       <div id="as-chart-manager">
         <div id="as-charts-toolbox-wrapper">
-          <h4 class="text-center">Charts Menu</h4>
           <nav class="navbar navbar-default">
             <div class="collapse navbar-collapse" id="oe-module-editor-navbar">
               <ul class="nav navbar-nav">

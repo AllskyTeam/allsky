@@ -33,64 +33,7 @@ class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 		"testableresult": "images",
 		"centersettings": "false",
 		"extradatafilename": "allsky_starcount.json",
-		"group": "Image Analysis",  
-        "graphs": {
-            "chart1": {
-				"icon": "fa-solid fa-chart-line",
-				"title": "Stars",
-				"group": "Analysis",
-				"main": "true",
-				"config": {
-					"tooltip": "true",
-					"chart": {
-						"type": "spline",
-						"zooming": {
-							"type": "x"
-						}
-					},
-					"title": {
-						"text": "Stars"
-					},
-					"plotOptions": {
-						"series": {
-							"animation": "false"
-						}
-					},
-					"xAxis": {
-						"type": "datetime",
-						"dateTimeLabelFormats": {
-							"day": "%Y-%m-%d",
-							"hour": "%H:%M"
-						}
-					},
-					"yAxis": [
-						{ 
-							"title": {
-								"text": "Count"
-							},
-							"min": 0
-						}
-					],
-					"lang": {
-						"noData": "No data available"
-					},
-					"noData": {
-						"style": {
-							"fontWeight": "bold",
-							"fontSize": "16px",
-							"color": "#666"
-						}
-					}
-				},
-				"series": {
-					"count": {
-						"name": "Star Count",
-						"yAxis": 0,
-						"variable": "AS_STARCOUNT|AS_STARIMAGEURL"                 
-					}            
-				}
-			}
-		}, 
+		"group": "Image Analysis",
 		"extradata": {
 			"database": {
 				"enabled": "True",

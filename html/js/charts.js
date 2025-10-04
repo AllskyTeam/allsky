@@ -209,7 +209,7 @@ removeTab(tabId) {
 
   // 1) Destroy any created chart instances in this pane
   try {
-    const insts = $pane.data('asHighchartFromConfig_instances') || [];
+    const insts = $pane.data('allskyChart_instances') || [];
     insts.forEach((inst) => {
       try {
         if (typeof inst.destroy === 'function') {
@@ -224,7 +224,7 @@ removeTab(tabId) {
       }
     });
     // Remove instance list so we don't keep stale refs
-    $pane.removeData('asHighchartFromConfig_instances');
+    $pane.removeData('allskyChart_instances');
   } catch (e) {
     console.warn('Instance cleanup failed:', e);
   }
@@ -367,7 +367,7 @@ startRename(a) {
   // ---------- Instances / Bounds ----------
 
   getAllChartBoundsIn(tab) {
-    var instances = tab.data('asHighchartFromConfig_instances') || [];
+    var instances = tab.data('allskyChart_instances') || [];
     return instances
       .map(function (inst, i) {
         var b = inst.getBounds && inst.getBounds();
@@ -687,26 +687,24 @@ if ($first.length) {
     const nc = this._normalizeBounds(c);
     if (!nc.filename) return;
 
-    const beforeLen = ($pane.data('asHighchartFromConfig_instances') || []).length;
+    const beforeLen = ($pane.data('allskyChart_instances') || []).length;
 
     // Pane is visible: safe to build
-    $pane.asHighchartFromConfig({
+    $pane.allskyChart({
       configUrl: 'includes/moduleutil.php?request=GraphData&filename=' + encodeURIComponent(nc.filename),
       filename: nc.filename,
 
-      // Renamed keys as requested:
       initialPos:  { top: nc.top, left: nc.left },
       initialSize: { width: nc.width, height: nc.height },
 
       grid: { enabled: true, size: { x: 24, y: 24 }, snap: 'end' },
 
-      // Auto-save on drag/resize (debounced POST)
       onBoundsChange: () => this._saveDebounced()
     });
 
     // Enforce saved bounds after init (if plugin applies its own defaults)
     requestAnimationFrame(() => {
-      const after = $pane.data('asHighchartFromConfig_instances') || [];
+      const after = $pane.data('allskyChart_instances') || [];
       const newInsts = after.slice(beforeLen);
       newInsts.forEach((inst) => this._applyBounds(inst, nc));
     });

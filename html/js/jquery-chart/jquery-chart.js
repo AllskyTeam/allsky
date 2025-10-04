@@ -10,7 +10,7 @@
 (function ($) {
   'use strict';
 
-  var PLUGIN = 'asHighchartFromConfig';
+  var PLUGIN = 'allskyChart';
   var INST_KEY = PLUGIN + '_instances';
   var Z_STACK_NEXT = 1000;
 
@@ -63,37 +63,6 @@
       labels: { style: { color: '#fff', fontSize: '12px' } },
       minColor: '#342f95', maxColor: '#2caffe', tickColor: '#45445d'
     },
-    mapNavigation: {
-      enabled: true,
-      buttonOptions: {
-        theme: {
-          fill: '#46465C', 'stroke-width': 1, stroke: '#BBBAC5', r: 2,
-          style: { color: '#fff' },
-          states: {
-            hover: { fill: '#000', 'stroke-width': 1, stroke: '#f0f0f0', style: { color: '#fff' } },
-            select: { fill: '#000', 'stroke-width': 1, stroke: '#f0f0f0', style: { color: '#fff' } }
-          }
-        }
-      }
-    },
-    rangeSelector: {
-      buttonTheme: {
-        fill: '#46465C', stroke: '#BBBAC5', 'stroke-width': 1, style: { color: '#fff' },
-        states: {
-          hover: { fill: '#1f1836', style: { color: '#fff' }, 'stroke-width': 1, stroke: 'white' },
-          select: { fill: '#1f1836', style: { color: '#fff' }, 'stroke-width': 1, stroke: 'white' }
-        }
-      },
-      inputBoxBorderColor: '#BBBAC5',
-      inputStyle: { backgroundColor: '#2F2B38', color: '#fff' },
-      labelStyle: { color: '#fff' }
-    },
-    navigator: {
-      handles: { backgroundColor: '#BBBAC5', borderColor: '#2F2B38' },
-      outlineColor: '#CCC', maskFill: 'rgba(255,255,255,0.1)',
-      series: { color: '#A3EDBA', lineColor: '#A3EDBA' },
-      xAxis: { gridLineColor: '#505053' }
-    },
     scrollbar: {
       barBackgroundColor: '#BBBAC5', barBorderColor: '#808083',
       buttonArrowColor: '#2F2B38', buttonBackgroundColor: '#BBBAC5', buttonBorderColor: '#2F2B38',
@@ -141,7 +110,7 @@
   function boolish(v) { return (typeof v === 'string') ? v.toLowerCase() === 'true' : !!v; }
   function isNumber(x) { return typeof x === 'number' && !isNaN(x); }
 
-  // ---- NEW: robust point normalization (fixes x,y,data) ----
+  // ---- point normalization helpers (used by variable-driven mode) ----
   function toNumericX(x) {
     if (typeof x === 'number') return x;
     if (typeof x === 'string') {
@@ -153,8 +122,6 @@
 
   function normalizePointsForType(type, data) {
     var t = normalizeType(type);
-
-    // Gauge: single number
     if (t === 'gauge') {
       if (isNumber(data)) return [data];
       if (Array.isArray(data)) {
@@ -163,49 +130,34 @@
       }
       return [0];
     }
-
-    // Pie accepts {name,y} or [name, y]
     var isPie = (t === 'pie');
-
     if (!Array.isArray(data)) return [];
     return data.map(function (pt) {
-      // number-only points (valid for line/column)
       if (typeof pt === 'number') return pt;
-
-      // array points
       if (Array.isArray(pt)) {
-        // Treat as [x, y] normally; for pie, treat as [name, y]
         if (isPie) {
           var pname = (pt[0] != null) ? String(pt[0]) : '';
           return [pname, pt[1]];
         }
         return [toNumericX(pt[0]), pt[1]];
       }
-
-      // object points
       if (pt && typeof pt === 'object') {
         var out = {};
-        // support {x, y} (line/column) and {name, y} or {x: 'cat', y} for pie
         if (isPie) {
           if (typeof pt.name !== 'undefined') out.name = pt.name;
-          else if (typeof pt.x === 'string') out.name = pt.x; // x-as-category
+          else if (typeof pt.x === 'string') out.name = pt.x;
           if (typeof pt.y !== 'undefined') out.y = pt.y;
         } else {
           if (typeof pt.x !== 'undefined') out.x = toNumericX(pt.x);
           if (typeof pt.y !== 'undefined') out.y = pt.y;
         }
-
-        // move meta to custom
         if (typeof pt.custom !== 'undefined') out.custom = pt.custom;
         else if (typeof pt.data !== 'undefined') out.custom = pt.data;
-
-        // copy other safe fields
         ['color', 'id', 'selected', 'sliced', 'marker', 'dataLabels', 'name'].forEach(function (k) {
           if (typeof pt[k] !== 'undefined' && typeof out[k] === 'undefined') out[k] = pt[k];
         });
         return out;
       }
-
       return pt;
     });
   }
@@ -213,14 +165,13 @@
   /* ======================= Defaults ======================= */
   var TYPE_DEFAULTS = {
     common: {
-      title: { text: null }, // title in card header (not in chart)
+      title: { text: null },
       credits: { enabled: false },
       legend: { enabled: true },
       xAxis: { title: { text: null } },
       tooltip: { shared: true },
       plotOptions: { series: { turboThreshold: 0, marker: { enabled: false } } }
     },
-    // LINE default per your spec
     line: {
       chart: { type: 'line', zooming: { type: 'x' } },
       xAxis: {
@@ -309,14 +260,14 @@
   };
 
   var defaults = {
-    // Config source
-    config: null,        // object inline
-    configUrl: null,     // string or $.ajax options
+    // Config
+    config: null,
+    configUrl: null,
 
-    // Metadata outside config
-    filename: null,      // custom field returned by getBounds / notifications
+    // Metadata
+    filename: null,
 
-    // Variable resolver
+    // Resolver for "variable" series
     fetchSeriesData: function (variable) {
       return $.Deferred().reject(new Error('fetchSeriesData not implemented for ' + variable)).promise();
     },
@@ -325,10 +276,10 @@
     onBeforeRender: null,
     onError: function (err) { if (console) console.error(err); },
 
-    // Initial geometry: accepts either initialPos/initialSize OR top/left/width/height
-    initialPos: null,            // { top, left } px
-    initialSize: null,           // { width, height } px
-    top: undefined,              // optional shorthand
+    // Initial geometry
+    initialPos: null,            // { top, left }
+    initialSize: null,           // { width, height }
+    top: undefined,
     left: undefined,
     width: undefined,
     height: undefined,
@@ -338,33 +289,29 @@
     containment: 'host',
     startPos: { top: 20, left: 20 },
     minSize: { width: 320, height: 220 },
-    resizerSize: 15,             // resize handle size
+    resizerSize: 15,
 
     // Toolbar
     showToolbar: true,
     showRefreshButton: true,
-    refreshLabel: '',
+    refreshLabel: 'Refresh', // icon-only, kept for title attr
     showDeleteButton: true,
-    deleteLabel: '',
+    deleteLabel: 'Delete',
     confirmDelete: true,
 
-    // NEW: Tooltip toggle button labels
-    tooltipToggle: {
-      show: true,
-      labelOn: 'On',
-      labelOff: 'Off'
-    },
+    // Tooltip toggle (toolbar button)
+    showTooltipToggle: true,
 
     // Auto refresh
     autoRefresh: { enabled: true, options: [0, 10, 20, 30, 60, 120], defaultSeconds: 0 },
 
-    // Snap-to-grid
+    // Grid snap
     grid: { enabled: false, size: { x: 24, y: 24 }, snap: 'end', threshold: 0 },
 
     // Notifications
-    onBoundsChange: null,                  // function(bounds, instance) {}
+    onBoundsChange: null,
     boundsEventName: 'asHc.boundschange',
-    onDelete: null,                        // function(payload, instance) {}
+    onDelete: null,
     deleteEventName: 'asHc.deleted'
   };
 
@@ -376,7 +323,6 @@
 
     this.config = null;
     this.chart = null;
-
     this.filename = this.opts.filename || null;
 
     this.$wrapper = null;
@@ -387,12 +333,9 @@
     this.$inner = null;
     this.$resizer = null;
     this.$refreshBtn = null;
+    this.$tooltipBtn = null;
     this.$progress = null;
     this.$progressBar = null;
-
-    // NEW: tooltip toggle state & button
-    this._tooltipsEnabled = true;
-    this.$tooltipBtn = null;
 
     this._resizeObserver = null;
     this._innerObserver = null;
@@ -403,6 +346,11 @@
     this._progressRAF = null;
     this._progressStartTs = 0;
     this._progressDurationMs = 0;
+
+    this._tooltipsEnabled = true;
+
+    // 3D drag state
+    this._drag3d = { active: false, startX: 0, startY: 0, startAlpha: 0, startBeta: 0 };
   }
 
   Plugin.prototype._bringToFront = function () {
@@ -441,7 +389,6 @@
 
   /* ======================= Series coercion helpers ======================= */
   function coerceSeriesDataForType(type, payload) {
-    // accept { data: [...] } or [...] or number (gauge)
     if (!Array.isArray(payload) && typeof payload === 'object' && payload) {
       if (Array.isArray(payload.data)) payload = payload.data;
       else if (payload.series) {
@@ -460,130 +407,54 @@
     }
     return Array.isArray(payload) ? payload : [];
   }
-
-  // ---- UPDATED: returns normalized array of points for the given chart type
   function normalizeSeriesPayload(type, payload) {
     var coerced = coerceSeriesDataForType(normalizeType(type), payload);
     return normalizePointsForType(type, coerced);
   }
 
-  // Build series array from NEW CONFIG on refresh
-  Plugin.prototype._seriesFromNewConfig = function (newCfg) {
-    var self = this;
-    var curCfg = self.config || {};
-    var baseType = normalizeType(curCfg.type || 'line');
-    var norm = (baseType === 'area3d') ? 'area' : (baseType === 'column3d' ? 'column' : baseType);
-
-    var out = [];
-    var curSeries = curCfg.series || {};
-    var keys = Object.keys(curSeries);
-
-    function readNewSeriesDataByKey(key) {
-      var n = newCfg && newCfg.series;
-      if (!n) return undefined;
-      if (!Array.isArray(n) && typeof n === 'object') {
-        if (n[key] && Array.isArray(n[key].data)) return n[key].data;
-        if (Array.isArray(n[key])) return n[key];
-        return undefined;
-      }
-      if (Array.isArray(n)) {
-        var byName = n.find(function (s) { return s && (s.name === (curSeries[key].name || key)); });
-        if (byName && Array.isArray(byName.data)) return byName.data;
-        var idx = keys.indexOf(key);
-        if (idx >= 0 && n[idx] && Array.isArray(n[idx].data)) return n[idx].data;
-      }
-      return undefined;
-    }
-
-    keys.forEach(function (key) {
-      var sCur = curSeries[key] || {};
-      var sType = (baseType === 'area3d') ? 'area' : (baseType === 'column3d' ? 'column' : (baseType === 'pie' ? 'pie' : norm));
-      var newData = readNewSeriesDataByKey(key);
-
-      if (typeof newData === 'undefined' && self.chart) {
-        var live = self.chart.series.find(function (sr) { return sr.name === (sCur.name || key); });
-        if (live) newData = (live.options && live.options.data);
-      }
-
-      var normalizedData = normalizeSeriesPayload(norm, newData);
-      var built = $.extend(true, {},
-        (SERIES_DEFAULTS[baseType] || SERIES_DEFAULTS[norm] || {}),
-        sCur.options || {},
-        { name: sCur.name || key, type: sType, data: normalizedData }
-      );
-      if (norm !== 'gauge' && norm !== 'pie' && typeof sCur.yAxis === 'number') built.yAxis = sCur.yAxis;
-      out.push(built);
-    });
-
-    // Also return possible new yAxis config
-    return { series: out, yAxis: Array.isArray(newCfg.yAxis) ? newCfg.yAxis : undefined };
-  };
-
-  /* ======================= Options builder ======================= */
-  Plugin.prototype._baseOptions = function (cfg) {
-    var type = normalizeType(cfg.type);
-    var base = deepMerge({}, TYPE_DEFAULTS.common, TYPE_DEFAULTS[type] || {});
-    base.chart = deepMerge({}, base.chart, { plotBackgroundColor: 'transparent' });
-
-    var yAxes = this._resolveYAxes(deepMerge({}, base, cfg));
-    if (yAxes !== undefined) base.yAxis = yAxes;
-
-    var theme = getActiveTheme();
-    var themedOptions = deepMerge({}, theme, base, (cfg.hc || {}));
-    themedOptions.title = { text: null }; // title in header
-
-    // Respect instance tooltip enabled state, add HTML image with click-through to full image
-    themedOptions.tooltip = deepMerge({}, themedOptions.tooltip, {
-      enabled: this._tooltipsEnabled,
-      useHTML: true,
-      stickOnContact: true,
-      hideDelay: 250,
-      shared: false,
-      formatter: function () {
-        const p = this.point;
-        const thumbUrl = (p && (p.custom || (p.options && p.options.custom))) || null;
-
-        const dt = Highcharts.dateFormat('%Y-%m-%d %H:%M:%S', this.x);
-        let html = `
-    <div style="min-width:160px;max-width:260px">
-      <div><strong>${this.series.name}</strong></div>
-      <div>${dt}</div>
-      <div>Value: ${Highcharts.numberFormat(this.y, 2)}</div>
-  `;
-
-        if (thumbUrl) {
-          // derive full image by stripping "thumbnails/"
-          const fullUrl = thumbUrl.replace("thumbnails/", "");
-          html += `
-      <div style="margin-top:6px">
-        <a href="${fullUrl}" target="_blank" rel="noopener">
-          <img src="${thumbUrl}" alt="preview" width="200" height="200"
-               style="display:block;object-fit:cover;border-radius:4px"/>
-        </a>
-      </div>
-    `;
-        }
-
-        html += `</div>`;
-        return html;
-      }
-    });
-
-    if (type === 'pie' && (!cfg.hc || !cfg.hc.tooltip || typeof cfg.hc.tooltip.shared === 'undefined')) {
-      themedOptions.tooltip = deepMerge({}, themedOptions.tooltip, { shared: false });
-    }
-    return themedOptions;
-  };
-
-  /* ======================= Build initial series (config + variables) ======================= */
+  // Build series with "passthrough-first" behavior
   Plugin.prototype._buildSeries = function (cfg) {
     var self = this;
-    var seriesObj = cfg.series || {};
-    var keys = Object.keys(seriesObj);
-    if (!keys.length) return $.Deferred().resolve([]).promise();
 
     var rawType = (cfg.type || 'line').toLowerCase();
     var normType = normalizeType(cfg.type);
+    var resolvedChartSeriesType =
+      rawType === 'area3d' ? 'area' :
+        rawType === 'column3d' ? 'column' :
+          normType;
+
+    // --- Fast path: cfg.series is already an array of Highcharts-like series objects
+    if (Array.isArray(cfg.series)) {
+      var arr = cfg.series.map(function (s, i) {
+        var data = Array.isArray(s.data) ? s.data : [];
+        var normalized = normalizeSeriesPayload(normType, data);
+
+        var built = deepMerge(
+          {},
+          SERIES_DEFAULTS[rawType] || SERIES_DEFAULTS[normType] || {},
+          s.options || {},
+          {
+            name: s.name || ('Series ' + (i + 1)),
+            type: s.type || resolvedChartSeriesType,
+            data: normalized
+          }
+        );
+
+        if (typeof s.yAxis === 'number') built.yAxis = s.yAxis;
+        return built;
+      });
+
+      console.log('[asHc] _buildSeries(array) ->', arr.map(function (s) { return { name: s.name, yAxis: s.yAxis, points: (s.data || []).length }; }));
+      return $.Deferred().resolve(arr).promise();
+    }
+
+    // --- Legacy/object-map path (kept intact)
+    var seriesObj = cfg.series || {};
+    var keys = Object.keys(seriesObj);
+    if (!keys.length) {
+      console.log('[asHc] _buildSeries(object): no keys -> []');
+      return $.Deferred().resolve([]).promise();
+    }
 
     var promises = keys.map(function (key) {
       var s = seriesObj[key] || {};
@@ -594,29 +465,39 @@
       else dataPromise = $.Deferred().resolve([]).promise();
 
       return dataPromise.then(function (data) {
-        // Normalize points (fix x,y,data meta)
         var normalized = normalizeSeriesPayload(normType, data);
 
         if (normType === 'gauge') {
-          if (isNumber(normalized)) normalized = [normalized];
-          if (Array.isArray(normalized) && normalized.length > 1 && isNumber(normalized[0])) normalized = [normalized[0]];
+          if (typeof normalized === 'number') normalized = [normalized];
+          if (Array.isArray(normalized) && normalized.length > 1 && typeof normalized[0] === 'number') {
+            normalized = [normalized[0]];
+          }
         }
-        var yIdx = (normType === 'gauge' || normType === 'pie') ? undefined : (typeof s.yAxis === 'number' ? s.yAxis : 0);
-        var seriesType = (rawType === 'area3d') ? 'area' : (rawType === 'column3d') ? 'column' : normType;
 
         var built = deepMerge(
           {},
           SERIES_DEFAULTS[rawType] || SERIES_DEFAULTS[normType] || {},
           s.options || {},
-          { name: s.name || key, type: seriesType, data: normalized }
+          {
+            name: s.name || key,
+            type: resolvedChartSeriesType,
+            data: normalized
+          }
         );
-        if (typeof yIdx !== 'undefined') built.yAxis = yIdx;
+        if (normType !== 'gauge' && normType !== 'pie' && typeof s.yAxis === 'number') {
+          built.yAxis = s.yAxis;
+        }
         return built;
       });
     });
 
     return $.when.apply($, promises).then(function () {
-      return Array.prototype.slice.call(arguments);
+      var out = Array.prototype.slice.call(arguments);
+      // When only one series, $.when resolves with the single value (not as an arguments array),
+      // so normalize here:
+      if (promises.length === 1 && out.length && !out[0]) out = [arguments];
+      console.log('[asHc] _buildSeries(object) ->', out.map(function (s) { return { name: s.name, yAxis: s.yAxis, points: (s.data || []).length }; }));
+      return out;
     });
   };
 
@@ -645,6 +526,7 @@
     var bg = (theme.chart && theme.chart.backgroundColor) || '#ffffff';
     var bb = { boxSizing: 'border-box' };
 
+    // Card chrome
     if (this.$wrapper) {
       this.$wrapper.css($.extend({}, bb, {
         backgroundColor: bg,
@@ -660,7 +542,109 @@
       this.$progressBar.css({ backgroundColor: color });
     }
 
-    if (this.chart) this.chart.update(deepMerge({}, theme), true, true);
+    if (!this.chart) return;
+
+    // 1) Apply only safe chart-level visual properties (DO NOT pass xAxis/yAxis/series here)
+    var safeTheme = deepMerge({}, theme);
+    delete safeTheme.xAxis;
+    delete safeTheme.yAxis;
+    delete safeTheme.colorAxis;
+    delete safeTheme.series;
+    // (optional) If you don't use these, also prevent surprises:
+    delete safeTheme.navigator;
+    delete safeTheme.rangeSelector;
+    delete safeTheme.scrollbar;
+    delete safeTheme.mapNavigation;
+    delete safeTheme.drilldown;
+
+    this.chart.update(safeTheme, false, false);
+
+    // 2) Style each existing xAxis/yAxis individually without changing the axis count
+    if (theme.xAxis) {
+      this.chart.xAxis.forEach(function (ax) {
+        ax.update({
+          gridLineColor: theme.xAxis.gridLineColor,
+          lineColor: theme.xAxis.lineColor,
+          minorGridLineColor: theme.xAxis.minorGridLineColor,
+          tickColor: theme.xAxis.tickColor,
+          labels: theme.xAxis.labels ? { style: theme.xAxis.labels.style } : undefined,
+          title: theme.xAxis.title ? { style: theme.xAxis.title.style } : undefined
+        }, false);
+      });
+    }
+    if (theme.yAxis) {
+      this.chart.yAxis.forEach(function (ay) {
+        ay.update({
+          gridLineColor: theme.yAxis.gridLineColor,
+          lineColor: theme.yAxis.lineColor,
+          minorGridLineColor: theme.yAxis.minorGridLineColor,
+          tickColor: theme.yAxis.tickColor,
+          tickWidth: theme.yAxis.tickWidth,
+          labels: theme.yAxis.labels ? { style: theme.yAxis.labels.style } : undefined,
+          title: theme.yAxis.title ? { style: theme.yAxis.title.style } : undefined
+        }, false);
+      });
+    }
+
+    this.chart.redraw(false);
+  };
+
+  /* ======================= Tooltip options (HTML with image) ======================= */
+  function buildTooltipFormatter() {
+    return function () {
+      var p = this.point;
+      var thumbUrl = (p && (p.custom || (p.options && p.options.custom))) || null;
+      var dt = (typeof this.x === 'number')
+        ? Highcharts.dateFormat('%Y-%m-%d %H:%M:%S', this.x)
+        : this.x;
+
+      var html = '<div style="min-width:160px;max-width:260px">';
+      html += '<div><strong>' + this.series.name + '</strong></div>';
+      if (dt != null) html += '<div>' + dt + '</div>';
+      if (typeof this.y !== 'undefined') html += '<div>Value: ' + Highcharts.numberFormat(this.y, 2) + '</div>';
+
+      if (thumbUrl) {
+        var fullUrl = String(thumbUrl).replace('thumbnails/', '');
+        html += '' +
+          '<div style="margin-top:6px">' +
+          '  <a href="' + fullUrl + '" target="_blank" rel="noopener">' +
+          '    <img src="' + thumbUrl + '" alt="preview" width="100" height="100" ' +
+          '         style="display:block;object-fit:cover;border-radius:4px"/>' +
+          '  </a>' +
+          '</div>';
+      }
+      html += '</div>';
+      return html;
+    };
+  }
+
+  /* ======================= Options builder ======================= */
+  Plugin.prototype._baseOptions = function (cfg) {
+    var type = normalizeType(cfg.type);
+    var base = deepMerge({}, TYPE_DEFAULTS.common, TYPE_DEFAULTS[type] || {});
+    base.chart = deepMerge({}, base.chart, { plotBackgroundColor: 'transparent' });
+
+    var yAxes = this._resolveYAxes(deepMerge({}, base, cfg));
+    if (yAxes !== undefined) base.yAxis = yAxes;
+
+    var theme = getActiveTheme();
+    var themedOptions = deepMerge({}, theme, base, (cfg.hc || {}));
+    themedOptions.title = { text: null };
+
+    // Tooltip with HTML image
+    themedOptions.tooltip = deepMerge({}, themedOptions.tooltip, {
+      enabled: this._tooltipsEnabled,
+      useHTML: true,
+      stickOnContact: true,
+      hideDelay: 250,
+      shared: false,
+      formatter: buildTooltipFormatter()
+    });
+
+    if (type === 'pie' && (!cfg.hc || !cfg.hc.tooltip || typeof cfg.hc.tooltip.shared === 'undefined')) {
+      themedOptions.tooltip = deepMerge({}, themedOptions.tooltip, { shared: false });
+    }
+    return themedOptions;
   };
 
   /* ======================= Render / Sizing ======================= */
@@ -679,12 +663,66 @@
     }
 
     this._applyTheme();
+
+    console.log('%c[asHc] FINAL HIGHCHARTS OPTIONS:', 'color: #00b3ff; font-weight: bold;');
+    try {
+      console.log(JSON.stringify(options, null, 2));
+    } catch (e) {
+      console.log(options);
+    }
+
     this.chart = this.HC.chart(targetEl, options);
     this.$host.data('asHcChart', this.chart);
+
+    // --- POST-RENDER SANITY: if any series are missing, add them now ---
+    try {
+      var reqSeries = Array.isArray(rawConfig && rawConfig.series)
+        ? rawConfig.series
+        : (rawConfig && typeof rawConfig.series === 'object')
+          ? Object.keys(rawConfig.series).map(function (k) { return rawConfig.series[k]; })
+          : [];
+
+      var haveNames = (this.chart.series || []).map(function (s) { return s && s.name; });
+      // Add any requested series that didn't materialize
+      reqSeries.forEach((sReq, idx) => {
+        var name = sReq && sReq.name != null ? sReq.name : 'Series ' + (idx + 1);
+        if (haveNames.indexOf(name) === -1) {
+          // Ensure type + yAxis survive any upstream coercion
+          var sType = (rawConfig && rawConfig.type) ? String(rawConfig.type).toLowerCase() : 'line';
+          if (sType === 'area3d') sType = 'area';
+          if (sType === 'column3d') sType = 'column';
+
+          this.chart.addSeries({
+            name: name,
+            type: sType,
+            showInLegend: true,
+            enableMouseTracking: true,
+            yAxis: (typeof sReq.yAxis === 'number') ? sReq.yAxis : (idx === 1 ? 1 : 0),
+            data: Array.isArray(sReq.data) ? sReq.data : []
+          }, false);
+        }
+      });
+
+      if (reqSeries.length) {
+        this.chart.redraw();
+      }
+
+      // Debug
+      try {
+        console.log('[asHc] CHART SERIES AFTER FIX:',
+          (this.chart.series || []).map(function (s) { return { name: s.name, yAxis: s.yAxis && s.yAxis.index }; })
+        );
+      } catch (_) { }
+    } catch (e) {
+      try { console.warn('[asHc] post-render series fix failed:', e); } catch (_) { }
+    }
 
     this._sizeToInner();
     this.chart.reflow();
     this._applyTheme();
+
+    // Enable 3D drag if area3d / column3d
+    this._attach3dDragIfNeeded();
   };
 
   /* ======================= Config source ======================= */
@@ -740,12 +778,17 @@
     if (self.opts.configUrl) {
       return self._requestConfig()
         .then(function (newCfg) {
-          var packed = self._seriesFromNewConfig(newCfg);
-          // if new yAxis array is provided, update it first to avoid #18
-          if (packed.yAxis && Array.isArray(packed.yAxis)) {
-            self.chart.update({ yAxis: packed.yAxis }, false, true);
-          }
-          return finish(packed.series);
+          // keep axes if provided
+          var packedSeriesPromise = self._buildSeries(newCfg);
+          return $.when(packedSeriesPromise).then(function (seriesArr) {
+            if (Array.isArray(newCfg.yAxis)) {
+              self.chart.update({ yAxis: newCfg.yAxis }, false, true);
+            } else {
+              var need = self._requiredYAxisCount(seriesArr, newCfg.type || 'line');
+              self._ensureYAxisCount(need);
+            }
+            return finish(seriesArr);
+          });
         })
         .fail(self.opts.onError);
     }
@@ -754,10 +797,50 @@
   };
 
   /* ======================= Auto-refresh timer + PROGRESS BAR ======================= */
+  Plugin.prototype._ensureProgressEls = function () {
+    if (this.$progress && this.$progressBar) return;
+    this.$progress = $('<div class="as-hc-progress"></div>').css({
+      position: 'absolute', left: 0, right: 0, bottom: 0, height: '1px', pointerEvents: 'none'
+    });
+    this.$progressBar = $('<div class="as-hc-progress-bar"></div>').css({
+      position: 'absolute',
+      left: 0, bottom: 0,
+      height: '1px', width: '100%',
+      backgroundColor: (getActiveTheme().colors && getActiveTheme().colors[0]) || '#7cb5ec',
+      transform: 'translateZ(0)'
+    });
+    this.$progress.append(this.$progressBar);
+    this.$header.append(this.$progress);
+  };
+  Plugin.prototype._startProgress = function (durationMs) {
+    this._ensureProgressEls();
+    this._progressDurationMs = Math.max(50, durationMs || 1000);
+    this._progressStartTs = performance.now();
+    this.$progressBar.css({ width: '100%', left: 0 });
+
+    var self = this;
+    function tick(ts) {
+      var elapsed = ts - self._progressStartTs;
+      var pct = Math.min(1, elapsed / self._progressDurationMs);
+      var remaining = (1 - pct) * 100;
+      self.$progressBar.css('width', remaining + '%');
+      if (pct < 1) self._progressRAF = requestAnimationFrame(tick);
+      else self._progressRAF = null;
+    }
+    if (this._progressRAF) cancelAnimationFrame(this._progressRAF);
+    this._progressRAF = requestAnimationFrame(tick);
+  };
+  Plugin.prototype._stopProgress = function () {
+    if (this._progressRAF) { cancelAnimationFrame(this._progressRAF); this._progressRAF = null; }
+    if (this.$progressBar) this.$progressBar.css('width', '0%');
+  };
+  Plugin.prototype._restartProgress = function () {
+    if (this._autoSeconds > 0) { this._stopProgress(); this._startProgress(this._autoSeconds * 1000); }
+  };
+
   Plugin.prototype._startAutoTimer = function () {
     var self = this;
     if (self._autoTimer) window.clearInterval(self._autoTimer);
-
     if (self._autoSeconds > 0) {
       self._startProgress(self._autoSeconds * 1000);
       self._autoTimer = window.setInterval(function () {
@@ -777,46 +860,50 @@
     this.$refreshBtn.toggleClass('loading', !!on).prop('disabled', !!on).css('opacity', on ? 0.6 : 1);
   };
 
-  // Progress elements: 1px, anchored LEFT, starts full width and shrinks to 0
-  Plugin.prototype._ensureProgressEls = function () {
-    if (this.$progress && this.$progressBar) return;
-    this.$progress = $('<div class="as-hc-progress"></div>').css({
-      position: 'absolute', left: 0, right: 0, bottom: 0, height: '1px', pointerEvents: 'none'
-    });
-    this.$progressBar = $('<div class="as-hc-progress-bar"></div>').css({
-      position: 'absolute',
-      left: 0, bottom: 0,
-      height: '1px', width: '100%', // start full
-      backgroundColor: (getActiveTheme().colors && getActiveTheme().colors[0]) || '#7cb5ec',
-      transform: 'translateZ(0)'
-    });
-    this.$progress.append(this.$progressBar);
-    this.$header.append(this.$progress);
-  };
-  Plugin.prototype._startProgress = function (durationMs) {
-    this._ensureProgressEls();
-    this._progressDurationMs = Math.max(50, durationMs || 1000);
-    this._progressStartTs = performance.now();
-    this.$progressBar.css({ width: '100%', left: 0 });
+  /* ======================= 3D drag to rotate ======================= */
+  Plugin.prototype._attach3dDragIfNeeded = function () {
+    if (!this.chart) return;
+    var type = normalizeType(this.config && this.config.type);
+    if (type !== 'column3d' && type !== 'area3d') return;
 
     var self = this;
-    function tick(ts) {
-      var elapsed = ts - self._progressStartTs;
-      var pct = Math.min(1, elapsed / self._progressDurationMs);
-      var remaining = (1 - pct) * 100; // width shrinks toward left
-      self.$progressBar.css('width', remaining + '%');
-      if (pct < 1) self._progressRAF = requestAnimationFrame(tick);
-      else self._progressRAF = null;
+    var $dragTargets = this.$inner.add(this.$header);
+
+    $dragTargets.css('cursor', 'grab');
+
+    function onDown(e) {
+      if (e.button !== 0 && e.buttons !== 1) return;
+      var opts3d = self.chart.options.chart.options3d || {};
+      self._drag3d.active = true;
+      self._drag3d.startX = e.pageX;
+      self._drag3d.startY = e.pageY;
+      self._drag3d.startAlpha = opts3d.alpha || 0;
+      self._drag3d.startBeta = opts3d.beta || 0;
+      $dragTargets.css('cursor', 'grabbing');
+      e.preventDefault();
     }
-    if (this._progressRAF) cancelAnimationFrame(this._progressRAF);
-    this._progressRAF = requestAnimationFrame(tick);
-  };
-  Plugin.prototype._stopProgress = function () {
-    if (this._progressRAF) { cancelAnimationFrame(this._progressRAF); this._progressRAF = null; }
-    if (this.$progressBar) this.$progressBar.css('width', '0%');
-  };
-  Plugin.prototype._restartProgress = function () {
-    if (this._autoSeconds > 0) { this._stopProgress(); this._startProgress(this._autoSeconds * 1000); }
+    function onMove(e) {
+      if (!self._drag3d.active) return;
+      var dx = e.pageX - self._drag3d.startX;
+      var dy = e.pageY - self._drag3d.startY;
+      var beta = self._drag3d.startBeta + (dx / 3);
+      var alpha = self._drag3d.startAlpha + (dy / 3);
+      beta = Math.max(-100, Math.min(100, beta));
+      alpha = Math.max(-100, Math.min(100, alpha));
+      self.chart.update({ chart: { options3d: { beta: beta, alpha: alpha } } }, false);
+      self.chart.redraw(false);
+    }
+    function onUp() {
+      if (!self._drag3d.active) return;
+      self._drag3d.active = false;
+      $dragTargets.css('cursor', 'grab');
+    }
+
+    // Unbind first (avoid duplicates)
+    $dragTargets.off('.hc3d');
+    $dragTargets.on('pointerdown.hc3d', onDown);
+    $(window).on('pointermove.hc3d', onMove);
+    $(window).on('pointerup.hc3d', onUp);
   };
 
   /* ======================= Snap-to-grid ======================= */
@@ -963,7 +1050,6 @@
         self.$wrapper.css({ left: snap.left + 'px', top: snap.top + 'px' });
       }
 
-      // notify host of new position
       self._notifyBoundsChange();
     }
   };
@@ -1023,7 +1109,6 @@
       self._sizeToInner();
       if (self.chart) self.chart.reflow();
 
-      // notify host of new size
       self._notifyBoundsChange();
     }
   };
@@ -1035,13 +1120,14 @@
     if (this._resizeObserver) { this._resizeObserver.disconnect(); this._resizeObserver = null; }
     if (this._innerObserver) { this._innerObserver.disconnect(); this._innerObserver = null; }
     if (this._themeObserver) { this._themeObserver.disconnect(); this._themeObserver = null; }
+    $(window).off('.hc3d');
     if (this.chart && this.chart.destroy) this.chart.destroy();
     this.chart = null;
     if (this.$wrapper) { this.$wrapper.off('.' + PLUGIN).remove(); this.$wrapper = null; }
     this.$host.removeData('asHcChart');
   };
 
-  /* ======================= Mount layout (accepts initialPos/Size or top/left/width/height) ======================= */
+  /* ======================= Mount layout ======================= */
   Plugin.prototype._mountLayout = function (cfg) {
     if (this.$host.css('position') === 'static') this.$host.css('position', 'relative');
 
@@ -1051,12 +1137,10 @@
       return isFinite(n) ? n : fallback;
     }
 
-    // Prefer explicit top/left if provided, otherwise fall back to initialPos
     var posOpt = (typeof this.opts.top !== 'undefined' || typeof this.opts.left !== 'undefined')
       ? { top: this.opts.top, left: this.opts.left }
       : (this.opts.initialPos || {});
 
-    // Prefer explicit width/height if provided, otherwise fall back to initialSize
     var sizeOpt = (typeof this.opts.width !== 'undefined' || typeof this.opts.height !== 'undefined')
       ? { width: this.opts.width, height: this.opts.height }
       : (this.opts.initialSize || {});
@@ -1070,21 +1154,10 @@
     var theme = getActiveTheme();
     var bg = (theme.chart && theme.chart.backgroundColor) || '#ffffff';
 
-    var initTop = havePos
-      ? toNum(posOpt.top, this.opts.startPos.top)
-      : (this.opts.startPos.top + offset);
-
-    var initLeft = havePos
-      ? toNum(posOpt.left, this.opts.startPos.left)
-      : (this.opts.startPos.left + offset);
-
-    var initW = haveSize
-      ? Math.max(this.opts.minSize.width, toNum(sizeOpt.width, this.opts.minSize.width))
-      : Math.max(480, this.opts.minSize.width);
-
-    var initH = haveSize
-      ? Math.max(this.opts.minSize.height, toNum(sizeOpt.height, this.opts.minSize.height))
-      : Math.max(300, this.opts.minSize.height);
+    var initTop = havePos ? toNum(posOpt.top, this.opts.startPos.top) : (this.opts.startPos.top + offset);
+    var initLeft = havePos ? toNum(posOpt.left, this.opts.startPos.left) : (this.opts.startPos.left + offset);
+    var initW = haveSize ? Math.max(this.opts.minSize.width, toNum(sizeOpt.width, this.opts.minSize.width)) : Math.max(480, this.opts.minSize.width);
+    var initH = haveSize ? Math.max(this.opts.minSize.height, toNum(sizeOpt.height, this.opts.minSize.height)) : Math.max(300, this.opts.minSize.height);
 
     var hostW = this.$host.innerWidth(), hostH = this.$host.innerHeight();
     if (hostW && hostH) {
@@ -1118,15 +1191,11 @@
     });
     this.$tools = $('<div class="as-hc-tools"></div>').css({ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'default' });
 
+    // REFRESH (icon only)
     if (this.opts.showToolbar && this.opts.showRefreshButton) {
-
-      this.$refreshBtn = $('<button>', {
-        type: 'button',
-        class: 'as-hc-btn as-hc-refresh-btn',
-        title: (this.opts.refreshLabel || 'Refresh')
-      })
-        .append($('<i>', { class: 'fa fa-refresh', 'aria-hidden': 'true' }))
-        .css({ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 8px', cursor: 'pointer' })
+      this.$refreshBtn = $('<button type="button" class="as-hc-btn as-hc-refresh-btn" title="' + this.opts.refreshLabel + '"></button>')
+        .css({ display: 'inline-flex', alignItems: 'center', gap: 0, padding: '4px 8px', cursor: 'pointer' })
+        .append('<i class="fa fa-refresh" aria-hidden="true"></i>')
         .on('click', (e) => {
           e.preventDefault(); e.stopPropagation();
           this._setLoading(true);
@@ -1135,10 +1204,28 @@
       this.$tools.append(this.$refreshBtn);
     }
 
+    // TOOLTIP TOGGLE (icon only)
+    if (this.opts.showToolbar && this.opts.showTooltipToggle) {
+      this.$tooltipBtn = $('<button type="button" class="as-hc-btn as-hc-tooltip-btn" title="Toggle tooltips"></button>')
+        .css({ display: 'inline-flex', alignItems: 'center', gap: 0, padding: '4px 8px', cursor: 'pointer' })
+        .append('<i class="fa fa-comment-o" aria-hidden="true"></i>')
+        .on('click', (e) => {
+          e.preventDefault(); e.stopPropagation();
+          this._tooltipsEnabled = !this._tooltipsEnabled;
+          if (this.chart) {
+            this.chart.update({ tooltip: { enabled: this._tooltipsEnabled } }, false);
+            this.chart.redraw(false);
+          }
+          // visual hint
+          $(e.currentTarget).css('opacity', this._tooltipsEnabled ? 1 : 0.5);
+        });
+      this.$tools.append(this.$tooltipBtn);
+    }
+
+    // AUTO-REFRESH SELECT
     if (this.opts.showToolbar && this.opts.autoRefresh && this.opts.autoRefresh.enabled) {
       var options = this.opts.autoRefresh.options || [0, 10, 20, 30, 60, 120];
-      var $sel = $('<select class="as-hc-autorefresh" title="Auto refresh interval"></select>')
-        .css({ padding: '3px 6px' });
+      var $sel = $('<select class="as-hc-autorefresh" title="Auto refresh interval"></select>').css({ padding: '3px 6px' });
       options.forEach((sec) => {
         var label = sec === 0 ? 'None' : (sec + 's');
         var $opt = $('<option></option>').val(String(sec)).text(label);
@@ -1153,59 +1240,29 @@
       this.$tools.append($sel);
     }
 
-
-    if (this.opts.tooltipToggle && this.opts.tooltipToggle.show) {
-      this._tooltipsEnabled = (this.chart ? this.chart.options.tooltip.enabled !== false : true);
-      var label = this._tooltipsEnabled ? (this.opts.tooltipToggle.labelOn || 'On')
-        : (this.opts.tooltipToggle.labelOff || 'Off');
-
-      this.$tooltipBtn = $('<button>', {
-        type: 'button',
-        class: 'as-hc-btn as-hc-tooltips-btn',
-        title: 'Toggle tooltips'
-      })
-        .append($('<i>', { class: 'fa fa-comment', 'aria-hidden': 'true' }))
-        .append($('<span>').text(label))
-        .css({ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 8px', cursor: 'pointer' })
+    // DELETE (icon only)
+    if (this.opts.showToolbar && this.opts.showDeleteButton) {
+      var $btnDelete = $('<button type="button" class="as-hc-btn as-hc-delete-btn" title="' + this.opts.deleteLabel + '"></button>')
+        .css({ display: 'inline-flex', alignItems: 'center', gap: 0, padding: '4px 8px', cursor: 'pointer' })
+        .append('<i class="fa fa-trash" aria-hidden="true"></i>')
         .on('click', (e) => {
           e.preventDefault(); e.stopPropagation();
-          this._tooltipsEnabled = !this._tooltipsEnabled;
-          if (this.chart) {
-            this.chart.update({ tooltip: { enabled: this._tooltipsEnabled } }, false);
-            this.chart.redraw(false);
+          if (!this.opts.confirmDelete || window.confirm('Remove this chart?')) {
+            this._notifyDelete();
+            this.destroy();
+            var list = this.$host.data(INST_KEY) || [];
+            this.$host.data(INST_KEY, list.filter((i) => i !== this));
           }
-          this.$tooltipBtn.find('span').text(this._tooltipsEnabled
-            ? (this.opts.tooltipToggle.labelOn || 'On')
-            : (this.opts.tooltipToggle.labelOff || 'Off'));
         });
-
-      this.$tools.append(this.$tooltipBtn);
+      this.$tools.append($btnDelete);
     }
-
-    var $btnDelete = $('<button>', {
-      type: 'button',
-      class: 'as-hc-btn as-hc-delete-btn',
-      title: (this.opts.deleteLabel || 'Delete')
-    })
-      .append($('<i>', { class: 'fa fa-trash', 'aria-hidden': 'true' }))
-      .css({ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 8px', cursor: 'pointer' })
-      .on('click', (e) => {
-        e.preventDefault(); e.stopPropagation();
-        if (!this.opts.confirmDelete || window.confirm('Remove this chart?')) {
-          this._notifyDelete();
-          this.destroy();
-          var list = this.$host.data(INST_KEY) || [];
-          this.$host.data(INST_KEY, list.filter((i) => i !== this));
-        }
-      });
-    this.$tools.append($btnDelete);
 
     this.$header.append(this.$title, this.$tools);
 
     // progress elements
     this._ensureProgressEls();
 
-    // Body (relative) + inner (absolute fill)
+    // Body + Inner
     this.$body = $('<div class="as-hc-body"></div>').css($.extend({}, bb, {
       position: 'relative', backgroundColor: bg, flex: '1 1 auto', minHeight: 0, overflow: 'hidden'
     }));
@@ -1235,7 +1292,7 @@
       this._resizeObserver = new ResizeObserver(() => { this._sizeToInner(); });
       this._resizeObserver.observe(el);
     }
-    // Observe inner size (the actual chart box)
+    // Observe inner size
     if (typeof ResizeObserver !== 'undefined') {
       var innerEl = this.$inner[0];
       this._innerObserver = new ResizeObserver(() => { this._sizeToInner(); });
@@ -1262,32 +1319,82 @@
 
     return this._getConfig()
       .then((cfg) => {
+
+        console.log('[asHc] loaded cfg:', {
+          hasSeries: !!cfg.series,
+          seriesType: Array.isArray(cfg.series) ? 'array' : typeof cfg.series,
+          seriesLen: Array.isArray(cfg.series) ? cfg.series.length : (cfg.series ? Object.keys(cfg.series).length : 0)
+        });
+
         this.config = cfg;
         if ('main' in cfg) cfg.main = boolish(cfg.main);
-
-        // NEW: initialize tooltip enabled state from config (defaults to true)
-        var cfgTooltipEnabled = true;
-        if (cfg && cfg.hc && cfg.hc.tooltip && typeof cfg.hc.tooltip.enabled !== 'undefined') {
-          cfgTooltipEnabled = !!cfg.hc.tooltip.enabled;
-        } else if (cfg && cfg.tooltip && typeof cfg.tooltip.enabled !== 'undefined') {
-          cfgTooltipEnabled = !!cfg.tooltip.enabled;
-        }
-        this._tooltipsEnabled = cfgTooltipEnabled;
 
         var t = this.opts.headerTitle != null ? this.opts.headerTitle : (cfg && cfg.title) || '';
         this.$title && this.$title.text(t);
 
         var options = this._baseOptions(cfg);
         return this._buildSeries(cfg).then((seriesArr) => {
-          // Ensure yAxes are enough before first render (avoid #18)
-          var need = this._requiredYAxisCount(seriesArr, cfg.type || 'line');
-          if (Array.isArray(options.yAxis)) {
-            // ok — config already set
+          // *** CRITICAL FIX: actually assign built series to options ***
+          options.series = seriesArr.slice();
+
+          // Ensure y-axes BEFORE first render
+          var need = 0;
+          seriesArr.forEach(function (s) {
+            if (typeof s.yAxis === 'number') need = Math.max(need, s.yAxis + 1);
+          });
+
+          if (Array.isArray(cfg.yAxis)) {
+            options.yAxis = cfg.yAxis.slice();
           } else if (need > 0) {
-            options.yAxis = [];
-            for (var i = 0; i < need; i++) options.yAxis.push({ title: { text: null }, opposite: (i % 2 === 1) });
+            options.yAxis = options.yAxis || [];
           }
-          options.series = seriesArr;
+          if (need > 0) {
+            options.yAxis = options.yAxis || [];
+            for (var i = options.yAxis.length; i < need; i++) {
+              options.yAxis.push({ title: { text: null }, opposite: (i % 2 === 1) });
+            }
+          }
+
+          options.legend = options.legend || {};
+          options.legend.enabled = true;
+
+          // Lock in legend + axis mapping
+          options.series = (options.series || []).map(function (s, i) {
+            return $.extend(true, {
+              showInLegend: true,
+              enableMouseTracking: true
+            }, s, {
+              // If yAxis is missing, default second entry to axis 1
+              yAxis: (typeof s.yAxis === 'number') ? s.yAxis : (i === 1 ? 1 : 0)
+            });
+          });
+
+          // Ensure we truly have two axes if any series targets 1
+          var needsAxis1 = options.series.some(function (s) { return s.yAxis === 1; });
+          if (needsAxis1) {
+            if (!Array.isArray(options.yAxis)) {
+              options.yAxis = [
+                { title: { text: 'Exposure' } },
+                { title: { text: 'Gain' }, opposite: true }
+              ];
+            } else if (options.yAxis.length < 2) {
+              options.yAxis = [
+                options.yAxis[0] || { title: { text: 'Exposure' } },
+                $.extend(true, { title: { text: 'Gain' }, opposite: true }, options.yAxis[1] || {})
+              ];
+            }
+          }
+
+          // Datetime x for your ms timestamps
+          options.xAxis = $.extend(true, { type: 'datetime' }, options.xAxis || {});
+
+          // Debug
+          try {
+            console.log('[asHc] FINAL series to render:',
+              options.series.map(function (s) { return { name: s.name, yAxis: s.yAxis, len: (s.data || []).length }; })
+            );
+          } catch (_) { }
+
           this._render(options, cfg);
           return this.chart;
         });
@@ -1295,7 +1402,6 @@
       .fail(this.opts.onError)
       .always(() => {
         this._setLoading(false);
-        // Inform initial bounds
         this._notifyBoundsChange();
       });
   };
@@ -1305,7 +1411,6 @@
     var args = Array.prototype.slice.call(arguments, 1);
     var ret;
 
-    // Convenience: fetch all bounds across matched hosts
     if (optionOrMethod === 'getAllBounds') {
       var results = [];
       this.each(function () {

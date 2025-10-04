@@ -30,8 +30,10 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 		"extradata": {
 			"database": {
 				"enabled": "True",
-				"table": "allsky_camera",
-				"row_type": "int",
+				"table": "allsky_image",
+    			"pk": "id",
+    			"pk_source": "image_timestamp",
+    			"pk_type": "int",
     			"include_all": "true"
 			},
 			"values": {
@@ -49,7 +51,11 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 					"sample": "",
 					"group": "Camera",
 					"description": "Day / night flag",
-					"type": "string"
+					"type": "string",
+     				"dbtype": "varchar(10)",
+					"database": {
+						"table": "alex"
+					}
 				},
 				"AS_AUTOEXPOSURE": {
 					"name": "${AUTOEXPOSURE}",

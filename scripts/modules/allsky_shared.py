@@ -33,10 +33,12 @@ import pwd
 from pathlib import Path
 from functools import reduce
 from allskyvariables.allskyvariables import ALLSKYVARIABLES
+from allskydatabasemanager.allskydatabasemanager import ALLSKYDATABASEMANAGER, ConnType
 import pigpio
 import numpy as np
 import numpy.typing as npt
 from typing import Union, List, Dict, Any, Tuple, Sequence, Optional
+from mysql.connector.connection import MySQLConnection
 
  
 try:
@@ -916,7 +918,7 @@ def get_database_config():
     
     return secret_data
 
-def update_database(structure, extra_data, event):
+def update_database(structure, extra_data, event, source):
     save_daytime = get_setting('savedaytimeimages')
     save_nighttime = get_setting('savenighttimeimages')
 
@@ -1003,25 +1005,128 @@ def update_database(structure, extra_data, event):
                 log(0, f"ERROR: Database table name {secret_data['databasedatabase']} is invalid")
                 return
 
+            database_conn = None
             if secret_data['databasetype'] == 'mysql':
-                if check_mysql_connection(
-                    secret_data['databasehost'],
-                    secret_data['databaseuser'],
-                    secret_data['databasepassword'],
-                    secret_data['databasedatabase']
-                ):
-                    update_mysql_database(structure, extra_data)
-                else:
-                    log(0, "ERROR: Failed to connect to MySQL database. "
-                           "Please run the database manager utility.")
+                database_conn = ALLSKYDATABASEMANAGER(
+                    "mysql",
+                    host=secret_data['databasehost'],
+                    user=secret_data['databaseuser'],
+                    password=secret_data['databasepassword'],
+                    database=secret_data['databasedatabase'],           
+                )
 
             if secret_data['databasetype'] == 'sqlite':
-                update_sqlite_database(structure, extra_data)
+                try:
+                    db_path = os.environ['ALLSKY_DATABASES']
+                except KeyError:
+                    setupForCommandLine()
+                    db_path = os.environ['ALLSKY_DATABASES']                
+                database_conn = ALLSKYDATABASEMANAGER("sqlite", db_path=db_path)
 
-            log(4, f"INFO: Saved data to {secret_data['databasetype']} database")
+            if database_conn and not database_conn.check_connection():
+                log(0, "ERROR: Failed to connect to MySQL database. Please run the database manager utility.")
+                return
+
+            data = json.loads(extra_data)
+            if not _update_database(database_conn, data, structure, source):
+                log(0, f"ERROR: Unable to save data to {secret_data['databasetype']} database")
+                
     else:
         log(4, message)
+
+def _update_database(database_conn: Any, data: dict, structure: dict, source: str) -> bool:
+    result = True
+    
+    if 'database' in structure and 'enabled' in structure['database']:
+        if structure['database']['enabled']:
+            if 'table' in structure['database']:
+                database_table = structure['database']['table']
+                                
+                # split the extra data into two lists. One that uses the main table
+                # and those that use other tables
+                has_table: dict[str, dict] = {}
+                no_table: dict[str, dict] = {}
+                for key, value in data.items():
+                    if isinstance(value.get('database'), dict) and 'table' in value['database']:
+                        has_table[key] = value
+                    else:
+                        no_table[key] = value
+                    
+                columns = no_table.keys()
+                primary_key = structure.get('database', {}).get('pk', 'id')
+                primary_key_type = structure.get('database', {}).get('pk_type', 'int')
+                primary_key_source = structure.get('database', {}).get('pk_source', 'now')
+                primary_key_value = get_primary_key_value(primary_key_source, structure)
+                
+                columns = {primary_key: primary_key_type}
+
+                for key, entry in data.items():
+                    columns[key] = infer_sql_type(entry)
+                           
+                database_conn.ensure_columns(database_table, columns, primary_key=[primary_key])
+
+                row = {"id": primary_key_value}
+                for key, entry in data.items():
+                    row[key] = entry.get("value")
+
+                database_conn.upsert(
+                    table=database_table,
+                    data=row,
+                    unique_keys=[primary_key] 
+                )
+
+                log(4, f"INFO: Saved data to the {database_conn.get_database_type()} database")                    
+            else:
+                log(4, f"WARNING: No table defined for {source}")
+        else:
+            log(4, f"WARNING: Database disabled for for {source}")                    
+    else:
+        log(4, f"WARNING: Database structure invalid for {source}")                    
+                
+    return result
+
+def get_primary_key_value(primary_key_source: str, structure: dict):
+    primary_key_source = primary_key_source.lower()
+    
+    
+    # Assume we have access to AS_TIMESTAMP in the env
+    primary_key_value = get_environment_variable('AS_TIMESTAMP')
+
+    # Possibly running in the periodic flow so get the value from the overlay debug data
+    if primary_key_source == None:
+        primary_key_value = get_value_from_debug_data("AS_TIMESTAMP")
         
+    # Final fallback to use current time
+    if primary_key_source == None:
+        primary_key_value = builtins.int(time.time()) 
+
+    # Get the primary key.        
+    if 'pk_source' in structure:
+        primary_key =  structure['pk_source']
+        temp_primary_key = get_environment_variable(primary_key)  
+        if temp_primary_key == None:
+            temp_primary_key = get_value_from_debug_data(primary_key)
+            if temp_primary_key is not None:
+                row_key = primary_key
+                
+    return primary_key_value
+        
+
+def infer_sql_type(entry: dict) -> str:
+    """Infer an SQL column type from the entry's 'type' or 'dbtype'."""
+    if "dbtype" in entry:
+        return entry["dbtype"]
+    t = entry.get("type", "").lower()
+    if t in ("int", "integer"):
+        return "INT"
+    if t in ("number", "float", "double", "decimal"):
+        return "FLOAT"
+    if t in ("bool", "boolean"):
+        return "TINYINT(1)"
+    if t in ("temperature",):
+        return "FLOAT"
+    return "VARCHAR(1024)"
+
 def obfuscate_password(password: str) -> str:
     if not password:
         return ""
@@ -1133,8 +1238,9 @@ def update_sqlite_database(structure, extra_data):
 def get_sql_create(database_table, row_key_type="INT"):
     create_sql = f'CREATE TABLE IF NOT EXISTS {database_table} (row_key {row_key_type}, timestamp {row_key_type}, entity VARCHAR(1024), value VARCHAR(2048))'
     return create_sql
+
             
-def update_mysql_database(structure, extra_data): 
+def update_mysql_database(structure, extra_data):
     secret_data = get_database_config()
     
     try:
@@ -1155,6 +1261,8 @@ def update_mysql_database(structure, extra_data):
                             database=secret_data['databasedatabase']
                         )
 
+                        data = json.loads(extra_data)
+    
                         row_type = "VARCHAR(100)"
                         if "row_type" in structure['database']:
                             row_type = "INT"
@@ -1168,7 +1276,7 @@ def update_mysql_database(structure, extra_data):
                         cursor.execute(create_sql)
 
                         row_key = get_database_row_key(structure["database"])
-                        data = json.loads(extra_data)
+
                         for entity, value in data.items():
                             include_row = False
                             row_database_table = database_table
@@ -1263,35 +1371,35 @@ def saveExtraData(file_name: str = '', extra_data: dict = {}, source: str = '', 
         - Final mode is set to `0o770`; ownership is delegated to
           `set_permissions()`.
     """
-    try:
-        extra_data_path = get_extra_dir(True)
-        if extra_data_path is not None:
-            checkAndCreateDirectory(extra_data_path)
-            create_file_web_server_access(extra_data_path)
+    #try:
+    extra_data_path = get_extra_dir(True)
+    if extra_data_path is not None:
+        checkAndCreateDirectory(extra_data_path)
+        create_file_web_server_access(extra_data_path)
 
-            file_extension = Path(file_name).suffix
-            extra_data_filename = os.path.join(extra_data_path, file_name)
-            allsky_tmp = get_environment_variable("ALLSKY_TMP")
-            with tempfile.NamedTemporaryFile(mode="w", dir=allsky_tmp, delete=False) as temp_file:
-                if file_extension == '.json':
-                    extra_data = format_extra_data_json(extra_data, structure, source)
-                if len(custom_fields) > 0:
-                    for key, value in custom_fields.items():
-                        extra_data[key] = value
-                extra_data = json.dumps(extra_data, indent=4)
-                temp_file.write(extra_data)
-                temp_file_name = temp_file.name
+        file_extension = Path(file_name).suffix
+        extra_data_filename = os.path.join(extra_data_path, file_name)
+        allsky_tmp = get_environment_variable("ALLSKY_TMP")
+        with tempfile.NamedTemporaryFile(mode="w", dir=allsky_tmp, delete=False) as temp_file:
+            if file_extension == '.json':
+                extra_data = format_extra_data_json(extra_data, structure, source)
+            if len(custom_fields) > 0:
+                for key, value in custom_fields.items():
+                    extra_data[key] = value
+            extra_data = json.dumps(extra_data, indent=4)
+            temp_file.write(extra_data)
+            temp_file_name = temp_file.name
 
-            shutil.move(temp_file_name, extra_data_filename)
-            os.chmod(extra_data_filename, 0o770)
-            set_permissions(extra_data_filename)
+        shutil.move(temp_file_name, extra_data_filename)
+        os.chmod(extra_data_filename, 0o770)
+        set_permissions(extra_data_filename)
 
-            if 'database' in structure:
-                update_database(structure, extra_data, event)
-    except Exception as e:
-        me = os.path.basename(__file__)
-        eType, eObject, eTraceback = sys.exc_info()
-        log(0, f'ERROR: saveExtraData failed on line {eTraceback.tb_next.tb_lineno} {eTraceback.tb_lineno} in {me} - {e}')
+        if 'database' in structure:
+            update_database(structure, extra_data, event, source)
+    #except Exception as e:
+    #    me = os.path.basename(__file__)
+    #    eType, eObject, eTraceback = sys.exc_info()
+    #    log(0, f'ERROR: saveExtraData failed on line {eTraceback.tb_next.tb_lineno} {eTraceback.tb_lineno} in {me} - {e}')
 
 def format_extra_data_json(extra_data, structure, source):
     result = extra_data
@@ -1411,24 +1519,33 @@ def _get_expiry_time_for_module(flows, module_name, module_settings, tod):
     
     module_name = module_name.replace('.json', '').replace('allsky_', '')
     
+    
     delete_age = _get_dict_path(flows, [tod, module_name, 'metadata', 'arguments', 'dataage'])
+    enable_delete_age = _get_dict_path(flows, [tod, module_name, 'metadata', 'arguments', 'enabledataage'])
 
-    if delete_age is None:
+    use_custom_delete_age = False
+    if enable_delete_age is not None:
+        if enable_delete_age:
+            if delete_age is not None:
+                use_custom_delete_age = True
+            
+    if not use_custom_delete_age:
         for flow in flows:
             if flow != tod:
-                delete_age_tmp = _get_dict_path(flows, [flow, module_name, 'metadata', 'argumants', 'dataage'])
+                delete_age_tmp = _get_dict_path(flows, [flow, module_name, 'metadata', 'arguments', 'dataage'])
                 if delete_age_tmp is not None:
                     delete_age_tmp = round(float(delete_age_tmp))
                     if delete_age_tmp > delete_age:
-                        delete_age = delete_age_tmp                        
-    else:
+                        delete_age = delete_age_tmp
+
+    if delete_age is not None:
         delete_age = round(float(delete_age))
     
     if delete_age is None:
         delete_age = 600
         if 'expiryage' in module_settings:
             delete_age = round(module_settings['expiryage'])    
-    
+
     return delete_age
 
 def cleanup_extra_data():
@@ -1441,7 +1558,8 @@ def cleanup_extra_data():
         with os.scandir(extra_data_path) as entries:
             for entry in entries: 
                 if entry.is_file():
-                    delete_age = _get_expiry_time_for_module(flows, entry.name, module_settings, tod)
+                    #delete_age = _get_expiry_time_for_module(flows, entry.name, module_settings, tod)
+                    delete_age = 600
                     cleanup_extra_data_file(entry.path, delete_age)
             
 def cleanup_extra_data_file(file_name, delete_age=600):

@@ -1043,16 +1043,78 @@ class MODULEUTIL
      * Fetch full series of values
      * Returns: ['VAR' => [[ms,value], ...], ...]
      */
-    private function fetchSeriesData(PDO $pdo, string $table, array $variables): array
+    private function fetchSeriesData(PDO $pdo, string $table, array $variables, array $tooltips): array
     {
         if (!$variables) return [];
+
         $tsCol = $this->resolveTimestampColumn($table);
+        $tsCol = 'id';
+
+        $sql = "SELECT * from {$table} ORDER BY {$tsCol}";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute();
+        $out = [];
+        while ($row = $stmt->fetch()) {
+            foreach ($variables as $variable) {
+                if (isset($row[$variable])) {
+
+                    if ($variable== "AS_CAMERAEXPOSURE_US") {
+                        $value = $row[$variable] / 1000;
+                    } else {
+                        $value = $row[$variable];
+                        $value = number_format($value,2) + 0;
+                    }
+                    $timeStamp = $this->toMsTimestamp($row['id']);
+
+
+
+                    if (isset($tooltips[$variable])) {
+                        $tooltip = '';
+                        if (isset($row['AS_CAMERAIMAGEURL'])) {
+                            $tooltip = $row['AS_CAMERAIMAGEURL'];
+                        }
+                        $out[$variable][] = [
+                            'x' => $timeStamp,
+                            'y' => $value,
+                            'custom' => $tooltip
+                        ];
+                    } else {
+                        $out[$variable][] = [
+                            'x' => $timeStamp,
+                            'y' => $value
+                        ];
+                    }
+
+
+
+
+                }
+            }
+        }
+        return $out;
+
+        if (count($tooltips) > 0) {
+            $sql = "SELECT row_key AS ts, entity, value
+                    FROM allsky_camera
+                    WHERE entity IN ('AS_CAMERAIMAGEURL')
+                    ORDER BY row_key ASC";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute();
+            $result = $stmt->fetchAll();
+            $urlData = [];
+            foreach ($result as $data) {
+                $urlData[$data["ts"]] = $data["value"];
+            }
+
+        }
+
         $placeholders = implode(',', array_fill(0, count($variables), '?'));
 
         $sql = "SELECT {$tsCol} AS ts, entity, value
                 FROM {$table}
                 WHERE entity IN ({$placeholders})
                 ORDER BY {$tsCol}, entity ASC";
+
         $stmt = $pdo->prepare($sql);
         $stmt->execute(array_values($variables));
 
@@ -1061,12 +1123,27 @@ class MODULEUTIL
             if ($row['entity'] == "AS_CAMERAEXPOSURE_US") {
                 $row['value'] = $row['value'] / 1000;
             }
-            $out[(string)$row['entity']][] = [
-                $this->toMsTimestamp($row['ts']),
-                is_numeric($row['value']) ? 0 + $row['value'] : (float)$row['value'],
-            ];
+            $value = number_format($row['value'],2) + 0;
+            $timeStamp = $this->toMsTimestamp($row['ts']);
+
+            if (isset($tooltips[$row['entity']])) {
+                $tooltip = '';
+                if (isset($urlData[$row['ts']])) {
+                    $tooltip = $urlData[$row['ts']];
+                }
+                $out[(string)$row['entity']][] = [
+                    'x' => $timeStamp,
+                    'y' => $value,
+                    'custom' => $tooltip
+                ];
+            } else {
+                $out[(string)$row['entity']][] = [
+                    'x' => $timeStamp,
+                    'y' => $value
+                ];
+            }
         }
-      
+
         return $out;
     }
 
@@ -1095,11 +1172,13 @@ class MODULEUTIL
 
         $out = [];
         while ($row = $stmt->fetch()) {
+            $value = number_format($row['value'],2) + 0;            
             $out[(string)$row['entity']] = [
                 'ts_ms' => $this->toMsTimestamp($row['ts']),
-                'value' => is_numeric($row['value']) ? 0 + $row['value'] : (float)$row['value'],
+                'value' => $value
             ];
         }
+
         return $out;
     }
 
@@ -1142,6 +1221,16 @@ class MODULEUTIL
             }
         }
 
+        $tooltip = [];
+        foreach ($variables as $variablekey=>$item) {
+            if (strpos($item, '|') !== false) {
+                list($key, $value) = explode('|', $item, 2);
+                $tooltip[$key] = $value;
+                $variables[$variablekey] = $key;
+                $keyToVar[$variablekey] = $key;                
+            }
+        }
+
         if ($isGauge) {
             // latest-only
             $latestByVar = $this->fetchLatestValues($pdo, $table, $variables);
@@ -1153,7 +1242,7 @@ class MODULEUTIL
             }
         } else {
             // full series
-            $dataByVar = $this->fetchSeriesData($pdo, $table, $variables);
+            $dataByVar = $this->fetchSeriesData($pdo, $table, $variables, $tooltip);
             foreach ($keyToVar as $key => $var) {
                 unset($config['series'][$key]['variable']);
                 $config['series'][$key]['data'] = $dataByVar[$var] ?? [];

@@ -3,12 +3,12 @@
     "group": "Camera",
     "title": "Camera Temperature",
     "type": "line",
-    "table": "allsky_camera",     
+    "table": "allsky_image",     
     "series": {
         "exposure": {
             "name": "Temperature",
             "yAxis": 0,
-            "variable": "AS_CAMERATEMPERATURE"
+            "variable": "AS_CAMERATEMPERATURE|true"
         }
     }
 }

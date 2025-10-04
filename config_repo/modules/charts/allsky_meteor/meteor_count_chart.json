@@ -1,0 +1,14 @@
+{
+    "icon": "fas fa-chart-line",
+    "group": "Analysis",
+    "title": "Meteor Count",
+    "type": "line",
+    "table": "allsky_meteors",     
+    "series": {
+        "exposure": {
+            "name": "Meteor Count",
+            "yAxis": 0,
+            "variable": "AS_METEORCOUNT"
+        }
+    }
+}

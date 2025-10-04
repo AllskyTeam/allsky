@@ -1047,7 +1047,6 @@ class MODULEUTIL
     {
         if (!$variables) return [];
 
-        $tsCol = $this->resolveTimestampColumn($table);
         $tsCol = 'id';
 
         $sql = "SELECT * from {$table} ORDER BY {$tsCol}";
@@ -1093,58 +1092,6 @@ class MODULEUTIL
         }
         return $out;
 
-        if (count($tooltips) > 0) {
-            $sql = "SELECT row_key AS ts, entity, value
-                    FROM allsky_camera
-                    WHERE entity IN ('AS_CAMERAIMAGEURL')
-                    ORDER BY row_key ASC";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute();
-            $result = $stmt->fetchAll();
-            $urlData = [];
-            foreach ($result as $data) {
-                $urlData[$data["ts"]] = $data["value"];
-            }
-
-        }
-
-        $placeholders = implode(',', array_fill(0, count($variables), '?'));
-
-        $sql = "SELECT {$tsCol} AS ts, entity, value
-                FROM {$table}
-                WHERE entity IN ({$placeholders})
-                ORDER BY {$tsCol}, entity ASC";
-
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute(array_values($variables));
-
-        $out = [];
-        while ($row = $stmt->fetch()) {
-            if ($row['entity'] == "AS_CAMERAEXPOSURE_US") {
-                $row['value'] = $row['value'] / 1000;
-            }
-            $value = number_format($row['value'],2) + 0;
-            $timeStamp = $this->toMsTimestamp($row['ts']);
-
-            if (isset($tooltips[$row['entity']])) {
-                $tooltip = '';
-                if (isset($urlData[$row['ts']])) {
-                    $tooltip = $urlData[$row['ts']];
-                }
-                $out[(string)$row['entity']][] = [
-                    'x' => $timeStamp,
-                    'y' => $value,
-                    'custom' => $tooltip
-                ];
-            } else {
-                $out[(string)$row['entity']][] = [
-                    'x' => $timeStamp,
-                    'y' => $value
-                ];
-            }
-        }
-
-        return $out;
     }
 
     /**
@@ -1154,27 +1101,19 @@ class MODULEUTIL
     private function fetchLatestValues(PDO $pdo, string $table, array $variables): array
     {
         if (!$variables) return [];
-        $tsCol = $this->resolveTimestampColumn($table);
-        $placeholders = implode(',', array_fill(0, count($variables), '?'));
 
-        $sql = "WITH latest AS (
-                    SELECT entity, MAX({$tsCol}) AS max_ts
-                    FROM {$table}
-                    WHERE entity IN ({$placeholders})
-                    GROUP BY entity
-                )
-                SELECT t.entity, t.{$tsCol} AS ts, t.value
-                FROM {$table} t
-                JOIN latest l ON l.entity = t.entity AND l.max_ts = t.{$tsCol}";
+        $tsCol = 'id';
 
+        $sql = "SELECT * FROM {$table} ORDER BY {$tsCol} DESC LIMIT 1;";
         $stmt = $pdo->prepare($sql);
-        $stmt->execute(array_values($variables));
+        $stmt->execute();
 
         $out = [];
-        while ($row = $stmt->fetch()) {
-            $value = number_format($row['value'],2) + 0;            
-            $out[(string)$row['entity']] = [
-                'ts_ms' => $this->toMsTimestamp($row['ts']),
+        $row = $stmt->fetch();
+        foreach ($variables as $variable) {        
+            $value = number_format($row[$variable],2) + 0;            
+            $out[$variable] = [
+                'ts_ms' => $this->toMsTimestamp($row[$tsCol]),
                 'value' => $value
             ];
         }

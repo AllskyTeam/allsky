@@ -3,7 +3,8 @@
     "group": "Camera",
     "title": "Exposure vs Gain",
     "type": "line",
-    "table": "allsky_image", 
+    "table": "allsky_image",
+    "main": true,
     "yAxis": [
         {
             "title": {

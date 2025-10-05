@@ -21,12 +21,14 @@ class MODULEUTIL
     private $allsky_home = null;
     private $allsky_scripts = null;
     private $allskyMyFiles = null;
+    private $myFilesBase = null;
 
     function __construct() {
         $this->allskyModules = ALLSKY_SCRIPTS . '/modules';
         $this->userModules = ALLSKY_MODULE_LOCATION . '/modules';
 		$this->allskyMyFiles = ALLSKY_MYFILES_DIR;        
-		$this->myFiles = ALLSKY_MYFILES_DIR . '/modules';
+		$this->myFilesBase = ALLSKY_MYFILES_DIR;
+        $this->myFiles = ALLSKY_MYFILES_DIR . '/modules';
 		$this->myFilesData = ALLSKY_MYFILES_DIR . '/modules/moduledata';        
         $this->allsky_home = ALLSKY_HOME;
         $this->allsky_scripts = ALLSKY_SCRIPTS;
@@ -1122,6 +1124,59 @@ class MODULEUTIL
     }
 
 
+    function postModuleGraphData(): array
+    {
+        $chartDirs = [];
+        $requestedModule = $_POST['module'];
+
+        // User (custom) charts live here; these are merged in after core.
+        $chartDirs[]= $this->myFilesBase . '/charts';
+        // Core (shipped) charts live here.
+        $chartDirs[] = $this->allsky_config . '/modules/charts';
+        // Module charts live here; these are merged in after core.
+        $chartDirs[] = $this->myFilesData . '/charts';
+
+        foreach ($chartDirs as $chartDir) {
+            if (is_dir($chartDir)) {            
+                $dir = new DirectoryIterator($chartDir);
+                foreach ($dir as $entry) {
+                    if ($entry->isDot() || !$entry->isDir()) {
+                        continue;
+                    }      
+                    
+                    $module     = $entry->getFilename();
+                    $modulePath = $entry->getPathname();   
+                    if ($module == $requestedModule) {
+                        // Look for any JSON chart definition files directly within the module folder.
+                        foreach (glob($modulePath . '/*.json') as $jsonFile) {
+                            // Read the raw file; suppress warnings (e.g., unreadable file) and skip on failure.
+                            $raw = @file_get_contents($jsonFile);
+                            if ($raw === false) {
+                                continue;
+                            }
+
+                            // Decode JSON into associative array; skip invalid JSON.
+                            $data = json_decode($raw, true);
+                            if (!is_array($data)) {
+                                continue;
+                            }
+
+                            if (isset($data['main']) && $data['main'] == true) {
+                                $this->sendResponse(json_encode([
+                                    'path' => $modulePath,
+                                    'filename' => basename($jsonFile)
+                                ]));
+                            }
+                        }
+                    }
+                }
+            }
+
+        }
+
+        $this->sendResponse(json_encode([]));
+    }
+
     /**
      * Read config JSON file and build chart data
      */
@@ -1207,55 +1262,56 @@ class MODULEUTIL
         if (!is_dir($baseDir)) {
             return $chartList;
         }
-
-        // Iterate immediate children of $baseDir (modules expected to be subfolders).
-        $dir = new DirectoryIterator($baseDir);
-        foreach ($dir as $entry) {
-            // Skip "." and ".." and any non-directory entries.
-            if ($entry->isDot() || !$entry->isDir()) {
-                continue;
-            }
-
-            // Module name is the subfolder name; use it and its absolute path.
-            $module     = $entry->getFilename();
-            $modulePath = $entry->getPathname();
-
-            // Look for any JSON chart definition files directly within the module folder.
-            foreach (glob($modulePath . '/*.json') as $jsonFile) {
-                // Read the raw file; suppress warnings (e.g., unreadable file) and skip on failure.
-                $raw = @file_get_contents($jsonFile);
-                if ($raw === false) {
+        
+        if (is_dir($baseDir)) {
+            // Iterate immediate children of $baseDir (modules expected to be subfolders).
+            $dir = new DirectoryIterator($baseDir);            
+            foreach ($dir as $entry) {
+                // Skip "." and ".." and any non-directory entries.
+                if ($entry->isDot() || !$entry->isDir()) {
                     continue;
                 }
 
-                // Decode JSON into associative array; skip invalid JSON.
-                $data = json_decode($raw, true);
-                if (!is_array($data)) {
-                    continue;
+                // Module name is the subfolder name; use it and its absolute path.
+                $module     = $entry->getFilename();
+                $modulePath = $entry->getPathname();
+
+                // Look for any JSON chart definition files directly within the module folder.
+                foreach (glob($modulePath . '/*.json') as $jsonFile) {
+                    // Read the raw file; suppress warnings (e.g., unreadable file) and skip on failure.
+                    $raw = @file_get_contents($jsonFile);
+                    if ($raw === false) {
+                        continue;
+                    }
+
+                    // Decode JSON into associative array; skip invalid JSON.
+                    $data = json_decode($raw, true);
+                    if (!is_array($data)) {
+                        continue;
+                    }
+
+                    // The "group" key determines how charts are grouped; skip if missing/empty.
+                    $group = $data['group'] ?? null;
+                    if (!$group) {
+                        continue;
+                    }
+
+                    // Optional metadata with sensible fallbacks.
+                    $icon  = $data['icon']  ?? null;
+
+                    // Title prefers 'title' from JSON; otherwise uses the filename (without .json).
+                    $title = $data['title'] ?? basename($jsonFile, '.json');
+
+                    // Append a normalized chart entry under its group.
+                    $chartList[$group][] = [
+                        'module'   => $module,                       // Module (subfolder) the chart came from
+                        'filename' => $jsonFile,                     // Full path to the source JSON file
+                        'icon'     => $icon !== null ? (string)$icon : null, // Icon if present
+                        'title'    => (string)$title,                // Human-friendly title
+                    ];
                 }
-
-                // The "group" key determines how charts are grouped; skip if missing/empty.
-                $group = $data['group'] ?? null;
-                if (!$group) {
-                    continue;
-                }
-
-                // Optional metadata with sensible fallbacks.
-                $icon  = $data['icon']  ?? null;
-
-                // Title prefers 'title' from JSON; otherwise uses the filename (without .json).
-                $title = $data['title'] ?? basename($jsonFile, '.json');
-
-                // Append a normalized chart entry under its group.
-                $chartList[$group][] = [
-                    'module'   => $module,                       // Module (subfolder) the chart came from
-                    'filename' => $jsonFile,                     // Full path to the source JSON file
-                    'icon'     => $icon !== null ? (string)$icon : null, // Icon if present
-                    'title'    => (string)$title,                // Human-friendly title
-                ];
             }
         }
-
         return $chartList;
     }
 
@@ -1271,12 +1327,16 @@ class MODULEUTIL
         // Core (shipped) charts live here.
         $coreModules = $this->allsky_config . '/modules/charts';
 
-        // User (custom) charts live here; these are merged in after core.
+        // Module charts live here; these are merged in after core.
         $userModules = $this->myFilesData . '/charts';
+
+        // User (custom) charts live here; these are merged in after core.
+        $customCharts= $this->myFilesBase . '/charts';
 
         // Populate from core and then user paths (user charts can add more groups/items).
         $chartList = $this->buildChartList($chartList, $coreModules);
         $chartList = $this->buildChartList($chartList, $userModules);
+        $chartList = $this->buildChartList($chartList, $customCharts);
 
         // Sort groups by their keys in ascending order to make output stable/readable.
         // Note: asort() preserves keys and sorts by value; since $chartList is an

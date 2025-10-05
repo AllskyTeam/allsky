@@ -3,6 +3,7 @@
     "group": "Analysis",
     "title": "Star Count",
     "type": "line",
+    "main": true,    
     "table": "allsky_stars",     
     "series": {
         "exposure": {

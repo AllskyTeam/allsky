@@ -3,6 +3,7 @@
     "group": "Analysis",
     "title": "Meteor Count",
     "type": "line",
+    "main": true,    
     "table": "allsky_meteors",     
     "series": {
         "exposure": {

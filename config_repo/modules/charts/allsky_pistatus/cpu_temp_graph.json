@@ -3,7 +3,8 @@
     "group": "Hardware",
     "title": "CPU Temp",
     "type": "line",
-    "table": "allsky_hardware", 
+    "table": "allsky_hardware",
+    "main": true,
     "yAxis": [
         {
             "title": {

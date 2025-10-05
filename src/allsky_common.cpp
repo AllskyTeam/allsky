@@ -190,15 +190,10 @@ void add_variables_to_command(config cg, char *cmd, timeval startDateTime)
 	}
 
 	// Since negative temperatures are valid, check against an impossible temperature.
-	// The temperature passed to us is 10 times the actual temperature so we can deal with
-	// integers with 1 decimal place, which is all we care about.
 	if (cg.supportsTemperature && cg.lastSensorTemp != NOT_CHANGED) {
-		snprintf(tmp, s, " TEMPERATURE_C=%d", (int)round(cg.lastSensorTemp));
-		strcat(cmd, tmp);
-		snprintf(tmp, s, " TEMPERATURE_F=%d", (int)round((cg.lastSensorTemp * 1.8) +32));
+		snprintf(tmp, s, " TEMPERATURE_C=%.1f TEMPERATURE_F=%.1f", cg.lastSensorTemp, (cg.lastSensorTemp * 1.8) +32);
 		strcat(cmd, tmp);
 	}
-
 
 	if (cg.currentBin >= 0) {
 		snprintf(tmp, s, " BIN=%ld", cg.currentBin);

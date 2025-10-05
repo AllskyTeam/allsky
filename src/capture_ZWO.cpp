@@ -624,7 +624,7 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 	}
 	else
 	{
-		cg->lastSensorTemp = (long) ((double)temp / cg->divideTemperatureBy);
+		cg->lastSensorTemp = (double)temp / cg->divideTemperatureBy;
 	}
 
 	if (cg->isColorCamera)

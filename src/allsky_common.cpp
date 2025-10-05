@@ -32,7 +32,7 @@ char debug_text[500];						// buffer to hold debug messages
 
 /**
  * Helper function to display debug info.
- * If the required_level is negative then also put the info in a "message" file.
+ * If the required_level is 0 or negative then also put the info in a "message" file.
 **/
 void Log(int required_level, const char *fmt, ...)
 {
@@ -42,6 +42,7 @@ void Log(int required_level, const char *fmt, ...)
 		va_start(va, fmt);
 		vsnprintf(msg, sizeof(msg)-1, fmt, va);
 		printf("%s", msg);
+		va_end(va);
 
 		if (required_level <= 0)
 		{
@@ -73,8 +74,6 @@ void Log(int required_level, const char *fmt, ...)
 			Log(4, "Executing %s\n", command);
 			(void) system(command);
 		}
-
-		va_end(va);
 	}
 }
 
@@ -114,6 +113,7 @@ std::string exec(const char *cmd)
 	std::tr1::shared_ptr<FILE> pipe(popen(cmd, "r"), pclose);
 	if (!pipe)
 		return "ERROR";
+
 	char buffer[128];
 	std::string result = "";
 	while (!feof(pipe.get()))
@@ -185,20 +185,15 @@ void add_variables_to_command(config cg, char *cmd, timeval startDateTime)
 		}
 	}
 	if (cg.lastMean >= 0.0) {
-		snprintf(tmp, s, " MEAN=%f", cg.lastMean);
+		snprintf(tmp, s, " MEAN=%-.5f", cg.lastMean);
 		strcat(cmd, tmp);
 	}
 
 	// Since negative temperatures are valid, check against an impossible temperature.
-	// The temperature passed to us is 10 times the actual temperature so we can deal with
-	// integers with 1 decimal place, which is all we care about.
-	if (cg.supportsTemperature && cg.lastSensorTemp != NOT_SET) {
-		snprintf(tmp, s, " TEMPERATURE_C=%d", (int)round(cg.lastSensorTemp));
-		strcat(cmd, tmp);
-		snprintf(tmp, s, " TEMPERATURE_F=%d", (int)round((cg.lastSensorTemp * 1.8) +32));
+	if (cg.supportsTemperature && cg.lastSensorTemp != NOT_CHANGED) {
+		snprintf(tmp, s, " TEMPERATURE_C=%.1f TEMPERATURE_F=%.1f", cg.lastSensorTemp, (cg.lastSensorTemp * 1.8) +32);
 		strcat(cmd, tmp);
 	}
-
 
 	if (cg.currentBin >= 0) {
 		snprintf(tmp, s, " BIN=%ld", cg.currentBin);

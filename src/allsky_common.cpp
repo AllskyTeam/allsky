@@ -185,7 +185,7 @@ void add_variables_to_command(config cg, char *cmd, timeval startDateTime)
 		}
 	}
 	if (cg.lastMean >= 0.0) {
-		snprintf(tmp, s, " MEAN=%0.5f", cg.lastMean);
+		snprintf(tmp, s, " MEAN=%-.5f", cg.lastMean);
 		strcat(cmd, tmp);
 	}
 

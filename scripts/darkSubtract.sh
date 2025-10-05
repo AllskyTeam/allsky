@@ -52,7 +52,7 @@ fi
 
 # If the temp is a float, round and convert to int.
 # Don't update AS_TEMPERATURE_C since we want the float version to appear in overlays.
-TEMPERATURE="$( echo ${AS_TEMPERATURE_C} | gawk '{ printf("%d", $1+0.5); }' )"
+TEMPERATURE="$( echo "${AS_TEMPERATURE_C}" | gawk '{ printf("%d", $1+0.5); }' )"
 
 for EXT in "png" "jpg"
 do

@@ -176,6 +176,7 @@ class MODULESEDITOR {
                     }
                 });
 
+                $(document).off('click', '.module-enable');				
                 $(document).on('click', '.module-enable', (event) => {
                     let module = $(event.target).data('module');
                     let state = $(event.target).is(':checked');
@@ -194,6 +195,7 @@ class MODULESEDITOR {
                     $(document).trigger('module:dirty');
                 });
 
+				$(document).off('click', '.module-settings-button');
                 $(document).on('click', '.module-settings-button', (event) => {
 
 					/*var loadingTimer = setTimeout(() => {
@@ -267,7 +269,8 @@ class MODULESEDITOR {
                         }
                     }
                 });
-				
+
+				$(document).off('keyup', '#module-available-filter');				
 				$(document).on('keyup', '#module-available-filter', () => {
 					var searchText = $("#module-available-filter").val()
 					$("#modules-available .allskymodule").each(function () {
@@ -279,13 +282,14 @@ class MODULESEDITOR {
 						}
 					});
 				}) 
+				$(document).off('click', '#module-available-filter-clear');				
 				$(document).on('click', '#module-available-filter-clear', () => {
 					$("#module-available-filter").val('')
 					$("#modules-available .allskymodule").each(function () {
 						this.style.display = 'block'
 					});					
 				}) 
-
+				$(document).off('keyup', '#module-selected-filter');
 				$(document).on('keyup', '#module-selected-filter', () => {
 					var searchText = $("#module-selected-filter").val()
 					$("#modules-selected .allskymodule").each(function () {
@@ -299,13 +303,14 @@ class MODULESEDITOR {
 						}
 					});
 				}) 
+				$(document).off('click', '#module-selected-filter-clear');
 				$(document).on('click', '#module-selected-filter-clear', () => {
 					$("#module-selected-filter").val('')
 					$("#modules-selected .allskymodule").each(function () {
 						this.style.display = 'block'
 					});					
 				}) 				
-
+				$(document).off('module:dirty');
                 $(document).on('module:dirty', () => {
                     this.#dirty = true;
                     this.#updateToolbar();
@@ -314,6 +319,7 @@ class MODULESEDITOR {
 				this.#checkDependencies()
             });
 
+			$(document).off('hidden.bs.modal', '.modal');			
 			$(document).on('hidden.bs.modal', '.modal', function () {
 				if ($('.modal:visible').length) {
 					$('body').addClass('modal-open');

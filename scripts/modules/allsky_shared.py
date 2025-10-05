@@ -879,38 +879,6 @@ def install_requirements(req_file: str | Path, log_file: str | Path) -> bool:
 
     return len(failures) == 0
 
-def check_mysql_connection(host, user, password, database=None, port=3306):
-    try:
-        conn = mysql.connector.connect(
-            host=host,
-            user=user,
-            password=password,
-            port=port
-        )
-
-        if not conn.is_connected():
-            return False
-
-        cur = conn.cursor()
-
-        if database:
-            cur.execute(f"CREATE DATABASE IF NOT EXISTS {database};")
-            cur.execute("SHOW DATABASES LIKE %s", (database,))
-            if not cur.fetchone():
-                cur.close()
-                conn.close()
-                return False
-            cur.execute(f"USE `{database}`")
-
-        cur.close()
-        conn.close()
-
-        return True
-
-    except Exception as e:
-        log(0, f'ERROR: Database is configured as mysql but cannot connect: {e}')
-        return False
-
 def get_database_config():
     secret_data = get_secrets(['databasehost', 'databaseuser', 'databasepassword', 'databasedatabase'])
     secret_data['databasetype'] = get_setting('databasetype')
@@ -1056,18 +1024,33 @@ def _update_database(database_conn: Any, data: dict, structure: dict, source: st
                 primary_key = structure.get('database', {}).get('pk', 'id')
                 primary_key_type = structure.get('database', {}).get('pk_type', 'int')
                 primary_key_source = structure.get('database', {}).get('pk_source', 'now')
-                primary_key_value = get_primary_key_value(primary_key_source, structure)
+                primary_key_value = get_primary_key_value(structure)
                 
-                columns = {primary_key: primary_key_type}
+                columns = {
+                    primary_key: primary_key_type,
+                    "timestamp": "int"
+                }
 
-                for key, entry in data.items():
-                    columns[key] = infer_sql_type(entry)
-                           
+                row = {
+                    "id": primary_key_value,
+                    "timestamp": builtins.int(time.time())
+                }
+                
+                include_all = structure.get('database', {}).get('include_all', 'true')
+                include_all = to_bool(include_all)
+                if include_all:
+                    for key, entry in data.items():
+                        columns[key] = infer_sql_type(entry)
+                        row[key] = entry.get("value")
+                else:
+                    for key, entry in data.items():
+                        include_data = entry.get('database', {}).get('include', 'false')
+                        include_data = to_bool(include_data)
+                        if (include_data):
+                            columns[key] = infer_sql_type(entry)
+                            row[key] = entry.get("value")
+                                           
                 database_conn.ensure_columns(database_table, columns, primary_key=[primary_key])
-
-                row = {"id": primary_key_value}
-                for key, entry in data.items():
-                    row[key] = entry.get("value")
 
                 database_conn.upsert(
                     table=database_table,
@@ -1085,19 +1068,16 @@ def _update_database(database_conn: Any, data: dict, structure: dict, source: st
                 
     return result
 
-def get_primary_key_value(primary_key_source: str, structure: dict):
-    primary_key_source = primary_key_source.lower()
-    
-    
+def get_primary_key_value(structure: dict):    
     # Assume we have access to AS_TIMESTAMP in the env
     primary_key_value = get_environment_variable('AS_TIMESTAMP')
 
     # Possibly running in the periodic flow so get the value from the overlay debug data
-    if primary_key_source == None:
+    if primary_key_value == None:
         primary_key_value = get_value_from_debug_data("AS_TIMESTAMP")
         
     # Final fallback to use current time
-    if primary_key_source == None:
+    if primary_key_value == None:
         primary_key_value = builtins.int(time.time()) 
 
     # Get the primary key.        
@@ -1107,7 +1087,7 @@ def get_primary_key_value(primary_key_source: str, structure: dict):
         if temp_primary_key == None:
             temp_primary_key = get_value_from_debug_data(primary_key)
             if temp_primary_key is not None:
-                row_key = primary_key
+                primary_key_value = primary_key
                 
     return primary_key_value
         
@@ -1157,161 +1137,6 @@ def get_database_row_key(structure: dict):
                 row_key = temp_row_key
                 
     return row_key
-
-def update_sqlite_database(structure, extra_data):
-
-    try:
-        time_stamp = os.environ["AS_TIMESTAMP"]
-    except:
-        time_stamp = builtins.int(time.time()) # We have overidden int for locale so call builtin function here
-
-    try:
-        db_path = os.environ['ALLSKY_DATABASES']
-    except KeyError:
-        setupForCommandLine()
-        db_path = os.environ['ALLSKY_DATABASES']
-
-    try:
-        if "database" in structure:        
-            if 'enabled' in structure['database']:
-                if structure['database']['enabled']:
-                    if 'table' in structure['database']:
-                        database_table = structure['database']['table']
-                        row_type = "VARCHAR(100)"
-                        if "row_type" in structure['database']:
-                            row_type = "INTEGER"
-                        
-                        json_str = json.dumps(extra_data)
-                        timestamp = math.floor(time.time())
-
-                        if not create_sqlite_database(db_path):
-                            return False
-                        
-                        # Use a context manager to ensure safe connection handling
-                        with sqlite3.connect(db_path, timeout=10) as conn:
-                            #conn.execute('PRAGMA journal_mode = WAL')  # Enables safe concurrent access
-                            #conn.execute('PRAGMA synchronous = NORMAL')  # Balance between speed and safety
-                            create_sql = get_sql_create(database_table, row_type)
-                            conn.execute(create_sql)
-                            
-                            include_all = False
-                            if "include_all" in structure['database']:
-                                include_all = True if structure["database"]["include_all"].lower() == 'true' else False
-                                                    
-                            row_key = get_database_row_key(structure["database"])
-                            data = json.loads(extra_data)
-                            for entity, value in data.items():
-                                include_row = False
-                                row_database_table = database_table
-                                key = entity
-                                key1 = entity + "${COUNT}"
-                                found_key = None
-                                if key in structure["values"]:
-                                    if 'database' in structure["values"][key]:
-                                        found_key = key
-                                if key1 in structure["values"]:
-                                    if 'database' in structure["values"][key1]:
-                                        found_key = key1
-                                if found_key is not None:
-                                    if 'table' in structure["values"][found_key]["database"]:
-                                        row_database_table = value["database"]["table"]
-                                        create_sql = get_sql_create(row_database_table)
-                                        conn.execute(create_sql)
-                                        row_key = get_database_row_key(structure["values"][found_key]["database"])
-                                    if "include" in structure["values"][found_key]["database"]:
-                                        if "include" in structure["values"][found_key]["database"]:
-                                            include_row = True if structure["values"][found_key]["database"]["include"].lower() == 'true' else False
-                                                                                
-                                if include_row or include_all:                                         
-                                    val = value.get("value")   
-                                    conn.execute(
-                                        f"INSERT INTO {row_database_table} (row_key, entity, value, timestamp) VALUES (?, ?, ?, ?)",
-                                        (row_key, entity, str(val), time_stamp)
-                                    )
-                                    conn.commit()
-
-    except Exception as e:
-        me = os.path.basename(__file__)
-        eType, eObject, eTraceback = sys.exc_info()            
-        log(0, f'ERROR: update_sqlite_database failed on line {eTraceback.tb_lineno} in {me} - {e}')
-
-def get_sql_create(database_table, row_key_type="INT"):
-    create_sql = f'CREATE TABLE IF NOT EXISTS {database_table} (row_key {row_key_type}, timestamp {row_key_type}, entity VARCHAR(1024), value VARCHAR(2048))'
-    return create_sql
-
-            
-def update_mysql_database(structure, extra_data):
-    secret_data = get_database_config()
-    
-    try:
-        time_stamp = os.environ["AS_TIMESTAMP"]
-    except:
-        time_stamp = builtins.int(time.time()) # We have overidden int for locale so call builtin function here
-        
-    try:
-        if "database" in structure:
-            if 'enabled' in structure['database']:
-                if structure['database']['enabled']:
-                    if 'table' in structure['database']:
-                        database_table = structure['database']['table']
-                        conn = mysql.connector.connect(
-                            host=secret_data['databasehost'],
-                            user=secret_data['databaseuser'],
-                            password=secret_data['databasepassword'],
-                            database=secret_data['databasedatabase']
-                        )
-
-                        data = json.loads(extra_data)
-    
-                        row_type = "VARCHAR(100)"
-                        if "row_type" in structure['database']:
-                            row_type = "INT"
-                            
-                        include_all = False
-                        if "include_all" in structure['database']:
-                            include_all = True if structure["database"]["include_all"].lower() == 'true' else False
-                            
-                        cursor = conn.cursor()
-                        create_sql = get_sql_create(database_table, row_type)
-                        cursor.execute(create_sql)
-
-                        row_key = get_database_row_key(structure["database"])
-
-                        for entity, value in data.items():
-                            include_row = False
-                            row_database_table = database_table
-                            key = entity                            
-                            key1 = re.sub(r'\d+$', '', entity) + "${COUNT}" # Strip trailing numbers
-                            found_key = None
-                            if key in structure["values"]:
-                                if 'database' in structure["values"][key]:
-                                    found_key = key
-                            if key1 in structure["values"]:
-                                if 'database' in structure["values"][key1]:
-                                    found_key = key1
-                            if found_key is not None:
-                                if 'table' in structure["values"][found_key]["database"]:
-                                    row_database_table = value["database"]["table"]
-                                    create_sql = get_sql_create(row_database_table)
-                                    cursor.execute(create_sql)
-                                    row_key = get_database_row_key(structure["values"][found_key]["database"])
-                                if "include" in structure["values"][found_key]["database"]:
-                                    if "include" in structure["values"][found_key]["database"]:
-                                        include_row = True if structure["values"][found_key]["database"]["include"].lower() == 'true' else False
-                                    
-                            if include_row or include_all:                                
-                                val = value.get("value")
-                                cursor.execute(
-                                    f"INSERT INTO {row_database_table} (row_key, entity, value, timestamp) VALUES (%s, %s, %s, %s)",
-                                    (row_key, entity, str(val), time_stamp)
-                                )
-                        conn.commit()
-                        cursor.close()
-                        conn.close()
-    except Exception as e:
-        me = os.path.basename(__file__)
-        eType, eObject, eTraceback = sys.exc_info()            
-        log(0, f'ERROR: update_mysql_database failed on line {eTraceback.tb_lineno} in {me} - {e}')
 
 def save_extra_data(file_name: str = '', extra_data: dict = {}, source: str = '', structure: dict = {}, custom_fields: dict = {}, event: str = 'postcapture'):
     saveExtraData(file_name, extra_data, source, structure, custom_fields, event)

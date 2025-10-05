@@ -23,7 +23,6 @@ class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 		"name": "Star Count",
 		"description": "Counts stars in an image",
 		"events": [
-			"day",
 			"night"
 		],
 		"experimental": "true",
@@ -37,7 +36,10 @@ class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 		"extradata": {
 			"database": {
 				"enabled": "True",
-				"table": "allsky_stars"
+				"table": "allsky_stars",
+    			"pk": "id",
+    			"pk_source": "image_timestamp",
+    			"pk_type": "int"    
 			}, 
 			"values": {
 				"AS_STARIMAGE": {

@@ -26,74 +26,20 @@ class ALLSKYMETEOR(ALLSKYMODULEBASE):
 		"name": "AllSKY Meteor Detection",
 		"description": "Detects meteors in images",
 		"events": [
-			"night",
-			"day"
+			"night"
 		],
 		"experimental": "true",
 		"module": "allsky_meteor",
 		"centersettings": "false",
 		"extradatafilename": "allsky_meteor.json",
 		"group": "Image Analysis",
-        "graphs": {
-            "chart1": {
-				"icon": "fa-solid fa-chart-line",
-				"title": "Meteors",
-				"group": "Analysis",
-				"main": "true",
-				"config": {
-					"tooltip": "true",
-					"chart": {
-						"type": "spline",
-						"zooming": {
-							"type": "x"
-						}
-					},
-					"title": {
-						"text": "Meteors"
-					},
-					"plotOptions": {
-						"series": {
-							"animation": "false"
-						}
-					},
-					"xAxis": {
-						"type": "datetime",
-						"dateTimeLabelFormats": {
-							"day": "%Y-%m-%d",
-							"hour": "%H:%M"
-						}
-					},
-					"yAxis": [
-						{ 
-							"title": {
-								"text": "Count"
-							} 
-						}
-					],
-					"lang": {
-						"noData": "No data available"
-					},
-					"noData": {
-						"style": {
-							"fontWeight": "bold",
-							"fontSize": "16px",
-							"color": "#666"
-						}
-					}
-				},
-				"series": {
-					"count": {
-						"name": "Meteor Count",
-						"yAxis": 0,
-						"variable": "AS_METEORCOUNT|AS_METEORIMAGEURL"                 
-					}            
-				}
-			}
-		}, 
 		"extradata": {
 			"database": {
 				"enabled": "True",
-				"table": "allsky_meteors"
+				"table": "allsky_meteors",
+    			"pk": "id",
+    			"pk_source": "image_timestamp",
+    			"pk_type": "int"    
 			},      
 			"values": {
 				"AS_METEORIMAGE": {

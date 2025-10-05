@@ -1202,7 +1202,7 @@ class MODULEUTIL
         }
 
         $type = strtolower(trim((string)($config['type'] ?? 'line')));
-        $isGauge = in_array($type, ['gauge', 'guage'], true);
+        $isGauge = in_array($type, ['gauge', 'guage', 'yesno'], true);
 
         // Collect variables we need to fetch
         $variables = [];

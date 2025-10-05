@@ -33,7 +33,9 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 		"extradata": {
 			"database": {
 				"enabled": "True",
-				"table": "allsky_hardware"
+				"table": "allsky_hardware",
+    			"pk": "id",
+    			"pk_type": "int"
 			},      
 			"values": {
 				"AS_CPUTEMP": {

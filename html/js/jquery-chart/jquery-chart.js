@@ -3,7 +3,7 @@
  * Live theme switching: reacts to body.dark (via MutationObserver)
  * Auto-refresh progress: 1px line at header bottom that starts FULL and shrinks LEFT until next refresh
  * Notifies host on move/resize (boundschange) and on delete (deleted)
- * Supports: line, column, column3d, gauge, area3d, pie
+ * Supports: line, column, column3d, gauge, area3d, pie, yesno
  * Requires: jQuery, Highcharts, highcharts-more (gauge), highcharts-3d (area3d/column3d),
  *           and (optionally) modules/no-data-to-display
  */
@@ -11,8 +11,7 @@
   'use strict';
 
   var PLUGIN = 'allskyChart';
-  var INST_KEY = PLUGIN + '_instances';
-  var Z_STACK_NEXT = 1000;
+  var INST_KEY = PLUGIN + '_instances';  var Z_STACK_NEXT = 1000;
 
   /* ======================= THEMES ======================= */
   var darkTheme = {
@@ -34,7 +33,7 @@
       itemHoverStyle: { fontWeight: '700', color: '#fff' }
     },
     plotOptions: {
-      series: { dataLabels: { color: '#46465C', style: { fontSize: '13px' } }, marker: { lineColor: '#333' } },
+      series: { dataLabels: { color: '#46465C', style: { fontSize: '13px' } }, marker: { lineColor: '#fff' } },
       boxplot: { fillColor: '#505053' },
       candlestick: { lineColor: null, upColor: '#DA6D85', upLineColor: '#DA6D85' },
       errorbar: { color: 'white' },
@@ -105,6 +104,7 @@
     if (s === 'guage') s = 'gauge';
     if (s === 'spline') s = 'line';
     if (s === 'doughnut' || s === 'donut') s = 'pie';
+    if (s === 'indicator' || s === 'boolean') s = 'yesno'; // NEW alias
     return s;
   }
   function boolish(v) { return (typeof v === 'string') ? v.toLowerCase() === 'true' : !!v; }
@@ -126,6 +126,21 @@
         return [isNaN(n) ? 0 : n];
       }
       return [0];
+    }
+    if (t === 'yesno') {
+      // Coerce to single 0/1 value
+      var v = 0;
+      if (typeof data === 'boolean') v = data ? 1 : 0;
+      else if (isNumber(data)) v = data ? 1 : 0;
+      else if (typeof data === 'string') v = data.trim().length ? 1 : 0;
+      else if (Array.isArray(data) && data.length) {
+        var cell = data[0];
+        v = (typeof cell === 'boolean') ? (cell ? 1 : 0)
+          : (isNumber(cell)) ? (cell ? 1 : 0)
+          : (typeof cell === 'string') ? (cell.trim().length ? 1 : 0)
+          : 0;
+      }
+      return [v];
     }
     var isPie = (t === 'pie');
     if (!Array.isArray(data)) return [];
@@ -237,6 +252,15 @@
         }
       },
       legend: { enabled: true }
+    },
+    // NEW: Yes/No indicator
+    yesno: {
+      chart: { type: 'line' },  // underlying HC type is irrelevant; we render a label
+      legend: { enabled: false },
+      xAxis: { visible: false },
+      yAxis: { visible: false },
+      tooltip: { enabled: false },
+      plotOptions: { series: { enableMouseTracking: false } }
     }
   };
 
@@ -244,11 +268,11 @@
     line: {}, column: {}, column3d: {},
     gauge: {
       tooltip: { valueSuffix: ' %' },
-      dataLabels: { format: '{y} %', borderWidth: 0, style: { fontSize: '14px' } },
+      dataLabels: { format: '{y} %', borderWidth: 0, style: { textOutline: 'none', fontSize: '14px', color: '#ffffff' } },
       dial: { radius: '80%', backgroundColor: '#666', baseWidth: 16, baseLength: '0%', rearLength: '0%' },
       pivot: { backgroundColor: '#666', radius: 8 }
     },
-    area3d: {}, pie: {}
+    area3d: {}, pie: {}, yesno: {}
   };
 
   var defaults = {
@@ -283,7 +307,7 @@
     minSize: { width: 320, height: 220 },
     resizerSize: 15,
 
-    // Drag/resize toggles (NEW)
+    // Drag/resize toggles
     enableDrag: true,
     enableResize: true,
 
@@ -353,6 +377,7 @@
     this._tooltipsEnabled = true;
 
     this._drag3d = { active: false, startX: 0, startY: 0, startAlpha: 0, startBeta: 0 };
+    this._yesnoLabel = null; // NEW: renderer label for yes/no
     this._uid = Math.random().toString(36).slice(2);
   }
 
@@ -364,7 +389,7 @@
   /* ======================= Axis resolver ======================= */
   Plugin.prototype._resolveYAxes = function (cfg) {
     var t = normalizeType(cfg.type);
-    if (t === 'gauge' || t === 'pie') return undefined;
+    if (t === 'gauge' || t === 'pie' || t === 'yesno') return undefined; // skip for yesno
     if (Array.isArray(cfg.yAxis) && cfg.yAxis.length) return cfg.yAxis;
 
     if (cfg.axis && typeof cfg.axis === 'object') {
@@ -403,9 +428,10 @@
         }
       }
     }
-    if (type === 'gauge') {
-      if (typeof payload === 'number') return [payload];
-      if (Array.isArray(payload)) return [Number(payload[0] || 0)];
+    var t = normalizeType(type);
+    if (t === 'gauge' || t === 'yesno') {
+      if (typeof payload === 'boolean' || typeof payload === 'number' || typeof payload === 'string') return [payload];
+      if (Array.isArray(payload)) return [payload[0]];
       return [0];
     }
     return Array.isArray(payload) ? payload : [];
@@ -434,10 +460,14 @@
           {},
           SERIES_DEFAULTS[rawType] || SERIES_DEFAULTS[normType] || {},
           s.options || {},
-          { name: s.name || ('Series ' + (i + 1)), type: s.type || resolvedChartSeriesType, data: normalized }
+          {
+            name: s.name || ('Series ' + (i + 1)),
+            type: (normType === 'yesno') ? 'line' : (s.type || resolvedChartSeriesType),
+            data: normalized
+          }
         );
 
-        if (typeof s.yAxis === 'number') built.yAxis = s.yAxis;
+        if (typeof s.yAxis === 'number' && normType !== 'gauge' && normType !== 'pie' && normType !== 'yesno') built.yAxis = s.yAxis;
         return built;
       });
 
@@ -466,14 +496,22 @@
           if (typeof normalized === 'number') normalized = [normalized];
           if (Array.isArray(normalized) && normalized.length > 1 && typeof normalized[0] === 'number') normalized = [normalized[0]];
         }
+        if (normType === 'yesno') {
+          // ensure single 0/1
+          normalized = (Array.isArray(normalized) && normalized.length) ? [normalized[0] ? 1 : 0] : [0];
+        }
 
         var built = deepMerge(
           {},
           SERIES_DEFAULTS[rawType] || SERIES_DEFAULTS[normType] || {},
           s.options || {},
-          { name: s.name || key, type: resolvedChartSeriesType, data: normalized }
+          {
+            name: s.name || key,
+            type: (normType === 'yesno') ? 'line' : resolvedChartSeriesType,
+            data: normalized
+          }
         );
-        if (normType !== 'gauge' && normType !== 'pie' && typeof s.yAxis === 'number') built.yAxis = s.yAxis;
+        if (normType !== 'gauge' && normType !== 'pie' && normType !== 'yesno' && typeof s.yAxis === 'number') built.yAxis = s.yAxis;
         return built;
       });
     });
@@ -489,7 +527,7 @@
   /* ======================= yAxis guard ======================= */
   Plugin.prototype._requiredYAxisCount = function (seriesArr, chartType) {
     var t = (chartType || '').toLowerCase();
-    if (t === 'gauge' || t === 'pie') return 0;
+    if (t === 'gauge' || t === 'pie' || t === 'yesno') return 0;
     var maxIdx = 0;
     (seriesArr || []).forEach(function (s) {
       if (typeof s.yAxis === 'number') maxIdx = Math.max(maxIdx, s.yAxis);
@@ -511,6 +549,7 @@
     var bg = (theme.chart && theme.chart.backgroundColor) || '#ffffff';
     var bb = { boxSizing: 'border-box' };
 
+    // Card chrome
     if (this.$wrapper) {
       this.$wrapper.css($.extend({}, bb, {
         backgroundColor: bg,
@@ -521,13 +560,55 @@
     if (this.$body) this.$body.css($.extend({}, bb, { backgroundColor: bg }));
     if (this.$inner) this.$inner.css($.extend({}, bb, { backgroundColor: bg }));
 
+    // Progress bar color
     if (this.$progressBar) {
       var color = (theme.colors && theme.colors[0]) || (isDarkMode() ? '#A3EDBA' : '#7cb5ec');
       this.$progressBar.css({ backgroundColor: color });
     }
 
-    if (this.chart) this.chart.update(deepMerge({}, theme), true, true);
+    if (this.chart) {
+      // 1) Apply only theme parts that won’t touch axis/series arrays.
+      var safe = $.extend(true, {}, theme);
+      delete safe.yAxis;
+      delete safe.xAxis;
+      delete safe.series;
 
+      // No one-to-one here, so arrays aren’t reconciled.
+      this.chart.update(safe, /*redraw*/false, /*oneToOne*/false);
+
+      // 2) Now *style* existing axes individually (keep count & mapping intact).
+      var xa = theme.xAxis || {};
+      var ya = theme.yAxis || {};
+
+      if (this.chart.xAxis && this.chart.xAxis.length) {
+        for (var i = 0; i < this.chart.xAxis.length; i++) {
+          this.chart.xAxis[i].update({
+            gridLineColor: xa.gridLineColor,
+            lineColor: xa.lineColor,
+            tickColor: xa.tickColor,
+            labels: xa.labels,
+            title: xa.title
+          }, false);
+        }
+      }
+
+      if (this.chart.yAxis && this.chart.yAxis.length) {
+        for (var j = 0; j < this.chart.yAxis.length; j++) {
+          this.chart.yAxis[j].update({
+            gridLineColor: ya.gridLineColor,
+            lineColor: ya.lineColor,
+            tickColor: ya.tickColor,
+            tickWidth: ya.tickWidth,
+            labels: ya.labels,
+            title: ya.title
+          }, false);
+        }
+      }
+
+      this.chart.redraw(false);
+    }
+
+    // Keep parent height in sync after theme changes, too
     this._resizeParentToChart();
   };
 
@@ -584,6 +665,11 @@
 
     if (type === 'pie' && (!cfg.hc || !cfg.hc.tooltip || typeof cfg.hc.tooltip.shared === 'undefined')) {
       themedOptions.tooltip = deepMerge({}, themedOptions.tooltip, { shared: false });
+    }
+    if (type === 'yesno') {
+      // force off interactive bits
+      themedOptions.tooltip = { enabled: false };
+      themedOptions.legend = { enabled: false };
     }
     return themedOptions;
   };
@@ -651,6 +737,53 @@
     this.$wrapper.css({ left: 0, right: 0, width: 'auto' });
   };
 
+  /* ======================= Yes/No indicator helpers ======================= */
+  Plugin.prototype._computeYesNo = function () {
+    var cfg = this.config || {};
+    var yesNoOpts = (cfg.hc && cfg.hc.yesNo) || {};
+    var series = (cfg.series && cfg.series[0]) || {};
+    var v = 0;
+
+    // Prefer live chart point if available
+    if (this.chart && this.chart.series && this.chart.series.length && this.chart.series[0].points.length) {
+      v = this.chart.series[0].points[0].y ? 1 : 0;
+    } else if (Array.isArray(series.data) && series.data.length) {
+      var cell = series.data[0];
+      v = (typeof cell === 'boolean') ? (cell ? 1 : 0)
+        : (isNumber(cell)) ? (cell ? 1 : 0)
+        : (typeof cell === 'string') ? (cell.trim().length ? 1 : 0)
+        : (Array.isArray(cell) ? (cell[1] ? 1 : 0) : 0);
+    }
+
+    var theme = getActiveTheme();
+    var defaultYes = (theme.colors && theme.colors[0]) || '#2ecc71';
+    var defaultNo  = '#DF5353';
+
+    return {
+      truthy: !!v,
+      text: (!!v) ? (yesNoOpts.trueText || 'Yes') : (yesNoOpts.falseText || 'No'),
+      color: (!!v) ? (yesNoOpts.trueColor || defaultYes) : (yesNoOpts.falseColor || defaultNo),
+      fontSize: yesNoOpts.fontSize || '48px'
+    };
+  };
+  Plugin.prototype._updateYesNoLabel = function () {
+    if (!this.chart || !this.config || normalizeType(this.config.type) !== 'yesno') return;
+
+    var meta = this._computeYesNo();
+    var r = this.chart.renderer;
+    var cx = this.chart.plotLeft + (this.chart.plotWidth / 2);
+    var cy = this.chart.plotTop + (this.chart.plotHeight / 2);
+
+    if (!this._yesnoLabel) {
+      this._yesnoLabel = r.text(meta.text, cx, cy)
+        .css({ color: meta.color, fontSize: meta.fontSize, fontWeight: '700', textOutline: 'none' })
+        .attr({ align: 'center' })
+        .add();
+    } else {
+      this._yesnoLabel.attr({ x: cx, y: cy, text: meta.text }).css({ color: meta.color, fontSize: meta.fontSize });
+    }
+  };
+
   /* ======================= Render / Sizing ======================= */
   Plugin.prototype._sizeToInner = function () {
     if (!this.chart || !this.$inner) return;
@@ -658,6 +791,9 @@
     var ih = Math.max(0, Math.floor(this.$inner.height()));
     if (iw && ih) this.chart.setSize(iw, ih, false);
     this._resizeParentToChart();
+
+    // keep indicator centered
+    this._updateYesNoLabel();
   };
 
   Plugin.prototype._render = function (options, rawConfig) {
@@ -689,12 +825,13 @@
           var sType = (rawConfig && rawConfig.type) ? String(rawConfig.type).toLowerCase() : 'line';
           if (sType === 'area3d') sType = 'area';
           if (sType === 'column3d') sType = 'column';
+          if (sType === 'yesno') sType = 'line'; // neutral
 
           this.chart.addSeries({
             name: name,
             type: sType,
-            showInLegend: true,
-            enableMouseTracking: true,
+            showInLegend: sType !== 'line' || normalizeType(rawConfig.type) !== 'yesno',
+            enableMouseTracking: normalizeType(rawConfig.type) !== 'yesno',
             yAxis: (typeof sReq.yAxis === 'number') ? sReq.yAxis : (idx === 1 ? 1 : 0),
             data: Array.isArray(sReq.data) ? sReq.data : []
           }, false);
@@ -718,6 +855,10 @@
     this.chart.reflow();
     this._applyTheme();
     this._resizeParentToChart();
+
+    // Center indicator text if needed
+    this._updateYesNoLabel();
+
     this._attach3dDragIfNeeded();
   };
 
@@ -770,6 +911,7 @@
       self.chart.reflow();
       self._applyTheme();
       self._resizeParentToChart();
+      self._updateYesNoLabel();
 
       if (self._autoSeconds > 0) self._restartProgress();
       return self.chart;
@@ -786,6 +928,7 @@
               var need = self._requiredYAxisCount(seriesArr, newCfg.type || 'line');
               self._ensureYAxisCount(need);
             }
+            self.config = newCfg;
             return finish(seriesArr);
           });
         })
@@ -868,7 +1011,7 @@
     var self = this;
     var $dragTargets = this.$inner.add(this.$header);
 
-    // Respect enableDrag: if drag disabled, don't change cursor or bind
+    // Respect enableDrag
     if (!this.opts.enableDrag) return;
 
     $dragTargets.css('cursor', 'grab');
@@ -963,7 +1106,6 @@
     var self = this;
 
     if (!self.opts.enableDrag) {
-      // If drag disabled, ensure header cursor is default and skip bindings
       if (self.$header) self.$header.css('cursor', 'default');
       return;
     }
@@ -1205,7 +1347,7 @@
       position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       padding: '6px 8px', gap: '8px',
       userSelect: 'none',
-      cursor: this.opts.enableDrag ? 'move' : 'default'  // respect enableDrag (NEW)
+      cursor: this.opts.enableDrag ? 'move' : 'default'
     }));
     var titleText = this.opts.headerTitle != null ? this.opts.headerTitle : (cfg && cfg.title) || '';
     this.$title = $('<div class="as-hc-title"></div>').text(titleText).css({
@@ -1392,18 +1534,18 @@
           }
 
           options.legend = options.legend || {};
-          options.legend.enabled = true;
+          options.legend.enabled = (normalizeType(cfg.type) !== 'yesno');
 
           options.series = (options.series || []).map(function (s, i) {
             return $.extend(true, {
-              showInLegend: true,
-              enableMouseTracking: true
+              showInLegend: (normalizeType(cfg.type) !== 'yesno'),
+              enableMouseTracking: (normalizeType(cfg.type) !== 'yesno')
             }, s, {
               yAxis: (typeof s.yAxis === 'number') ? s.yAxis : (i === 1 ? 1 : 0)
             });
           });
 
-          var needsAxis1 = options.series.some(function (s) { return s.yAxis === 1; });
+          var needsAxis1 = (normalizeType(cfg.type) !== 'yesno') && options.series.some(function (s) { return s.yAxis === 1; });
           if (needsAxis1) {
             if (!Array.isArray(options.yAxis)) {
               options.yAxis = [
@@ -1418,7 +1560,9 @@
             }
           }
 
-          options.xAxis = $.extend(true, { type: 'datetime' }, options.xAxis || {});
+          if (normalizeType(cfg.type) !== 'column' && normalizeType(cfg.type) !== 'pie') {
+            options.xAxis = $.extend(true, { type: 'datetime' }, options.xAxis || {});
+          }
 
           try {
             console.log('[asHc] FINAL series to render:',
@@ -1467,7 +1611,7 @@
       var instances = $el.data(INST_KEY);
       if (!instances) { instances = []; $el.data(INST_KEY, instances); }
 
-      if (typeof optionOrMethod === 'string') {
+    if (typeof optionOrMethod === 'string') {
         instances.slice().forEach(function (inst) {
           if (typeof inst[optionOrMethod] !== 'function') throw new Error(PLUGIN + ': unknown method ' + optionOrMethod);
           ret = inst[optionOrMethod].apply(inst, args);

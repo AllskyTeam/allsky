@@ -26,7 +26,7 @@ if [[ -z ${AS_TEMPERATURE_C} ]]; then
 	MOVE_TO_FILE="${ALLSKY_DARKS}/$( basename "${CURRENT_IMAGE}" )"
 else
 	# If the temp is a float, round and convert to int.
-	AS_TEMPERATURE_C="$( echo ${AS_TEMPERATURE_C} | gawk '{ printf("%d", $1+0.5); }' )"
+	AS_TEMPERATURE_C="$( echo "${AS_TEMPERATURE_C}" | gawk '{ printf("%d", $1+0.5); }' )"
 	MOVE_TO_FILE="${ALLSKY_DARKS}/${AS_TEMPERATURE_C}.${DARK_EXTENSION}"
 fi
 mv "${CURRENT_IMAGE}" "${MOVE_TO_FILE}" || exit 3

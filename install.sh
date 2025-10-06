@@ -13,6 +13,19 @@ source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"
 
+# XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX TODO: temporary Trixie check
+if [[ ${PI_OS} == "trixie" ]]; then
+	echo -e "\n\n================================\n"
+	echo "Allsky does not yet work with the new Trixie operating system."
+	echo "Please use Bookworm instead."
+	echo "We will announce in the Allsky GitHub Discussions page when Trixie support is available."
+	echo -e "\nCheck back in a week or so."
+	echo -e "\n================================"
+	exit 0
+fi
+exit
+# XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
 # Default may be 700 (HOME) or 750 (ALLSKY_HOME) so web server can't read it
 chmod 755 "${HOME}" "${ALLSKY_HOME}"					|| exit "${EXIT_ERROR_STOP}"
 cd "${ALLSKY_HOME}"  									|| exit "${EXIT_ERROR_STOP}"
@@ -3300,7 +3313,7 @@ install_Python()
 	if [[ ${PI_OS} == "buster" ]]; then
 		# Force pip upgrade, without this installations on Buster fail.
 		pip3 install --upgrade pip > /dev/null 2>&1
-	elif [[ ${PI_OS} != "bullseye" && ${PI_OS} != "bookworm" ]]; then
+	elif [[ ${PI_OS} != "bullseye" && ${PI_OS} != "bookworm" && ${PI_OS} != "trixie" ]]; then
 		display_msg --log warning "Unknown operating system: ${PI_OS}."
 		M=""
 		R=""

@@ -3623,12 +3623,11 @@ update_overlays()
 	fi
 }
 
-MODULE_INSTALLER="${ALLSKY_SCRIPTS}/modules/allskymodulemanager/moduleinstaller.py"
 ####
 # Allow the user to install modules.
 install_modules()
 {
-	"${MODULE_INSTALLER}" --welcome
+	"${ALLSKY_MODULE_INSTALLER}" --welcome
 }
 
 ####
@@ -3637,7 +3636,7 @@ install_modules()
 update_modules()
 {
 
-	"${MODULE_INSTALLER}" --auto
+	"${ALLSKY_MODULE_INSTALLER}" --auto
 
 #	local X  MSG
 

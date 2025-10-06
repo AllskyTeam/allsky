@@ -14,7 +14,7 @@ source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
 source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"
 
 # XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX TODO: temporary Trixie check
-if [[ ${PI_OS} == "bookworm" ]]; then
+if [[ ${PI_OS} == "trixie" ]]; then
 	echo -e "\n\n================================\n"
 	echo "Allsky does not yet work with the new Trixie operating system."
 	echo "Please use Bookworm instead."

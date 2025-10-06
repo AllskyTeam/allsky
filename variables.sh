@@ -171,14 +171,15 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" || ${1} == "--force" ]]; then
 	ALLSKY_OVERLAY="${ALLSKY_CONFIG}/overlay"
 	ALLSKY_MY_OVERLAY_TEMPLATES="${ALLSKY_OVERLAY}/myTemplates"
 	ALLSKY_MODULES="${ALLSKY_CONFIG}/modules"
+	ALLSKY_MY_MODULES="${ALLSKY_MYFILES_DIR}/modules"
 	ALLSKY_MODULE_LOCATION="/opt/allsky"
 	ALLSKY_EXTRA_LEGACY="${ALLSKY_OVERLAY}/extra"
 	ALLSKY_EXTRA="${ALLSKY_TMP}/extra"
 	
-	# URL for the Allsy API
+	# URL for the Allsky API.
 	ALLSKY_API_URL="http://localhost:8090"
 
-	# Path to the Allsky database
+	# Path to the Allsky database.
 	ALLSKY_DATABASES="${ALLSKY_MYFILES_DIR}/allsky.db"
 
 	# Directories and files for the flow timer function
@@ -287,6 +288,13 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" || ${1} == "--force" ]]; then
 	# Anything at or above EXIT_ERROR_STOP is unrecoverable and the service must be stopped
 	EXIT_ERROR_STOP=100		# unrecoverable error - need user action so stop service
 	EXIT_NO_CAMERA=101		# cannot find camera
+# TODO: change all code to use variables below, not above, for consistency.
+	ALLSKY_EXIT_OK="${ALLSKY_EXIT_OK}"
+	ALLSKY_EXIT_PARTIAL_OK="${ALLSKY_EXIT_PARTIAL_OK}"
+	ALLSKY_EXIT_RESTARTING="${ALLSKY_EXIT_RESTARTING}"
+	ALLSKY_EXIT_RESET_USB="${ALLSKY_EXIT_RESET_USB}"
+	ALLSKY_EXIT_ERROR_STOP="${ALLSKY_EXIT_ERROR_STOP}"
+	ALLSKY_EXIT_NO_CAMERA="${ALLSKY_EXIT_NO_CAMERA}"
 
 	# Name of the Pi's OS in lowercase.
 	ALLSKY_PI_OS="$( grep VERSION_CODENAME /etc/os-release )"

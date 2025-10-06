@@ -23,7 +23,6 @@ if [[ ${PI_OS} == "trixie" ]]; then
 	echo -e "\n================================"
 	exit 0
 fi
-exit
 # XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
 # Default may be 700 (HOME) or 750 (ALLSKY_HOME) so web server can't read it

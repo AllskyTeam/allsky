@@ -25,8 +25,8 @@ usage_and_exit()
 	echo "description of modules."
 	echo
 	echo "Arguments:"
-	echo "   --help:         Display this message and exit."
-	echo "   --branch:       Prompt for a branch in the ${ALLSKY_GITHUB_ALLSKY_MODULES_REPO} repository."
+	echo "   --help          Display this message and exit."
+	echo "   --branch        Prompt for a branch in the ${ALLSKY_GITHUB_ALLSKY_MODULES_REPO} repository."
 	echo "   --setbranch b   Use branch 'b' from the ${ALLSKY_GITHUB_ALLSKY_MODULES_REPO} repository."
 	echo
 	exit "${RET}"
@@ -64,5 +64,5 @@ done
 [[ ${DO_HELP} == "true" ]] && usage_and_exit 0
 [[ ${OK} == "false" ]] && usage_and_exit 1
 
-# shellcheck disable=SC2068
+# shellcheck disable=SC2068,SC2086
 "${ALLSKY_MODULE_INSTALLER}" "${@}" ${ARGS}

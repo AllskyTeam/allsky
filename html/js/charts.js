@@ -699,7 +699,8 @@ if ($first.length) {
 
       grid: { enabled: true, size: { x: 24, y: 24 }, snap: 'end' },
 
-      onBoundsChange: () => this._saveDebounced()
+      onBoundsChange: () => this._saveDebounced(),
+      onDelete: () => this._saveDebounced()
     });
 
     // Enforce saved bounds after init (if plugin applies its own defaults)

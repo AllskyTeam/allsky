@@ -356,15 +356,15 @@ function generate_support_info()
 
 	cp "${ALLSKY_HOME}/variables.json" "${TEMP_DIR}"
 
+	# Copy most of ${ALLSKY_TMP} directory.
 	if [[ -d ${ALLSKY_TMP} ]]; then
-		cp -ar "${ALLSKY_TMP}" "${TEMP_DIR}"
-		# The cache files aren't needed.
-		rm -fr "${TEMP_DIR}/$( basename "${ALLSKY_TMP}" )/__pycache__"
+		mkdir "${TEMP_DIR}/tmp"
+		find "${ALLSKY_TMP}" -maxdepth 1 \
+			! \( -path "${ALLSKY_TMP}" -o -name "sequence-timelapse*" -o -name __pycache__ \) \
+			-exec cp -ar {} "${TEMP_DIR}/tmp" \;
 	fi
 
-	# Copy the whole ${ALLSKY_CONFIG} directory, then delete or truncate files we don't want.
-# TODO: use "find ! -name xxx" to not copy file we don't want.
-
+	# Copy ${ALLSKY_CONFIG} directory, then truncate files we don't want.
 	# The directory should exists unless installation failed.
 	[[ -d ${ALLSKY_CONFIG} ]] && cp -ar "${ALLSKY_CONFIG}" "${TEMP_DIR}"
 

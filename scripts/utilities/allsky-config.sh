@@ -75,6 +75,7 @@ function usage_and_exit()
 	echo "      compare_paths --website | --server"
 	echo "      test_upload --website | --server"
 
+	echo "      manage_modules [see --help for arguments]"
 	echo "      check_allsky [see --help for arguments]"
 	echo "      move_images"
 	echo "      prepare_logs [debug_level]"

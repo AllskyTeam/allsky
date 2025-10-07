@@ -13,7 +13,7 @@ usage_and_exit()
 	local RET=${1}
 	exec 2>&1
 	local USAGE="\n"
-	USAGE+="Usage: ${ME} [--help] [--branch] [--setbranch b]"
+	USAGE+="Usage: ${ME} [--help] [--branch] [--setbranch b] [--welcome]"
 	if [[ ${RET} -ne 0 ]]; then
 		E_ "${USAGE}"
 	else
@@ -28,6 +28,7 @@ usage_and_exit()
 	echo "   --help          Display this message and exit."
 	echo "   --branch        Prompt for a branch in the ${ALLSKY_GITHUB_ALLSKY_MODULES_REPO} repository."
 	echo "   --setbranch b   Use branch 'b' from the ${ALLSKY_GITHUB_ALLSKY_MODULES_REPO} repository."
+	echo "   --welcome       Display a dialog box asking to continue."
 	echo
 	exit "${RET}"
 }
@@ -47,7 +48,7 @@ while [[ $# -gt 0 ]]; do
 			ARGS+=" ${ARG} ${2}"
 			shift
 			;;
-		--branch)
+		--branch | --welcome)
 			ARGS+=" ${ARG}"
 			;;
 		-*)

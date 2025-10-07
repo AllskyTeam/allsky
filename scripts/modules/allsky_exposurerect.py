@@ -16,7 +16,7 @@ class ALLSKYEXPOSURERECT(ALLSKYMODULEBASE):
 
     meta_data = {
         "name": "Display the ZWO Histogram Box",
-        "description": "Overlay the ZWO 'Histogram Box' on images."
+        "description": "Overlay the ZWO 'Histogram Box' on images.",
         "full_description": "Overlay the ZWO 'Histogram Box' on images.  The size and location of the box is set by the <span class='WebUISetting'>Histogram Box</span> setting.",
         "module": "allsky_exposurerect",
         "group": "Image Adjustments",

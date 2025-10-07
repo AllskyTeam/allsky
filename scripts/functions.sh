@@ -247,7 +247,7 @@ function determineCommandToUse()
 	# If the cable is bad the camera might be found but not work,
 	# and the command can hang.
 
-	timeout 120 "${CMD_TO_USE_}" --timeout 1 --nopreview > /dev/null 2>&1
+	local ERR="$( timeout 120 "${CMD_TO_USE_}" --timeout 1 --nopreview 2>&1 )"
 	RET=$?
 	if [[ ${RET} -eq 0 || ${RET} -eq 137 ]]; then
 		# If another of these commands is running ours will hang for
@@ -265,6 +265,7 @@ function determineCommandToUse()
 	else
 		if [[ ${IGNORE_ERRORS} == "false" ]]; then
 			echo "'${CMD_TO_USE_}' failed with return code ${RET}." >&2
+			[[ -n ${ERR} ]] && indent "${ERR}" >&2
 			if [[ ${USE_doExit} == "true" ]]; then
 				EXIT_MSG="${PREFIX}\n${CMD_TO_USE_} failed!"
 				doExit "${EXIT_ERROR_STOP}" "Error" "${EXIT_MSG}" "${MSG}"
@@ -1571,4 +1572,78 @@ function remove_colors()
 			-e "s/${N}//g" \
 			-e "s/\\\Z.//g" \
 	)"
+}
+
+
+#####
+# Add very basic text to an image.
+addTextToImage()
+{
+	local POINT_SIZE=""
+	local FONT="${ALLSKY_OVERLAY}/system_fonts/Courier_New_Bold.ttf"
+	local STROKE="black"
+	local FILL="yellow"
+	local X="20"
+	local Y=""
+	local EXTRA_ARGS=""
+
+	while [[ $# -gt 0 ]]; do
+		ARG="${1}"
+		case "${ARG,,}" in
+			--point-size)
+				POINT_SIZE="${2}"
+				shift
+				;;
+			--font)
+				FONT="${2}"
+				shift
+				;;
+			--stroke)
+				STROKE="${2}"
+				shift
+				;;
+			--fill)
+				FILL="${2}"
+				shift
+				;;
+			--x)
+				X="${2}"
+				shift
+				;;
+			--y)
+				Y="${2}"
+				shift
+				;;
+			--extra-args)
+				# An additional step, like stretch an image, to perform at
+				# same time to avoid calling "convert" twice.
+				EXTRA_ARGS="${2}"
+				shift
+				;;
+			*)
+				break;
+				;;
+		esac
+		shift
+	done
+
+	local IN_IMAGE="${1}"
+	local OUT_IMAGE="${2}"
+	local TEXT="${3}"
+
+	# "identify" output:
+	#	image.jpg JPEG 4056x3040 4056x3040+0+0 8-bit sRGB 1.8263MiB 0.000u 0:00.000
+	local RESOLUTION="$( identify "${IN_IMAGE}" | gawk '{ print $3; }' )"
+	local WIDTH="${RESOLUTION%x*}"
+	local HEIGHT="${RESOLUTION##*x}"
+
+	# If the location wasn't specified put text in bottom left.
+	[[ -z ${POINT_SIZE} ]] && POINT_SIZE="$( echo "${WIDTH} / 33" | bc )"
+	[[ -z ${Y} ]] && Y=$(( HEIGHT - ( POINT_SIZE * 2) ))
+
+	#shellcheck disable=SC2086
+	convert ${EXTRA_ARGS} -font "${FONT}" -pointsize "${POINT_SIZE}" \
+		-fill "${FILL}" -stroke "${STROKE}" -strokewidth 3 \
+		-annotate "+${X}+${Y}" "${TEXT}" \
+		"${IN_IMAGE}" "${OUT_IMAGE}" 2>&1
 }

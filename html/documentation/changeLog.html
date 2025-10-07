@@ -64,8 +64,10 @@
 					<li>If your camera is very noisy it may create dark frames
 						that are brighter than the new
 						<span class="WebUISetting">Dark Frame Upper Threshold</span>
-						threshold, which is <code>0.05</code>.
+						value, which is <code>0.05</code>.
 						This threshold was <code>0.10</code> in the prior release.
+					<li>The AS_TEMPERATURE_C and AS_TEMPERATURE_F values (sensor temperature) now has 1 digit after the decimal point.
+						This may require you to change the format of those variables in the Overlay Editor.
 				</ul>
 
 <!--
@@ -77,6 +79,14 @@
 
 				<h4>Enhancements / Changes</h4>
 				<ul>
+					<li>New Allsky Database:
+						The database stores information on every image taken,
+						such as exposure time, whether or not it's a daytime or nighttime
+						image, and much more.
+						Several Allsky modules add data such as number of stars or
+						meteors detected.
+						This makes it easy to limit startrails to nighttime images only,
+						or to display all images with meteors.
 					<li>WebUI changes:
 						<ul>
 							<li>Several menu items are now grouped together;
@@ -114,10 +124,10 @@
 										and
 										<span class="WebUILink">Image Stretch</span>
 										helper tools create directories that are visible.
-<!--
 									<li>The icons indicating there are images, a timelapse,
 										a keogram, and/or a startrails are now the same
-										height as the "Delete" button.
+										height as the "Delete" button to give them a "cleaner" look.
+<!--
 									<li>If a timelapse, keogram, and/or startrails thumbnail
 										exists for a day, it is displayed instead of the
 										generic icon.
@@ -240,6 +250,9 @@
 				</ul>
 				<h4>New Settings</h4>
 				<ul>
+					<li>The <span class="WebUISetting">Focus Mode</span> setting helps you focus
+						by temporarily changes settings to the Pi can take and display pictures
+						as fast as possible, about once a second.
 					<li>The <span class="WebUISetting">Dark Frame Upper Threshold</span>
 						setting specifies when a dark frame is "too bright",
 						usually because the lens isn't fully covered when taking darks.

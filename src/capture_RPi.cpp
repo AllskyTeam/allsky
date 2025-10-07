@@ -382,7 +382,7 @@ bool readMetadataFile(string file)
 	char *buf = readFileIntoBuffer(&CG, file.c_str());
 	if (buf == NULL)
 	{
-		CG.lastSensorTemp = NOT_SET;
+		CG.lastSensorTemp = NOT_CHANGED;
 		// The other "last" values will use the requested values.
 		return(false);
 	}

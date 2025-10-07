@@ -75,6 +75,7 @@ function usage_and_exit()
 	echo "      compare_paths --website | --server"
 	echo "      test_upload --website | --server"
 
+	echo "      manage_modules [see --help for arguments]"
 	echo "      check_allsky [see --help for arguments]"
 	echo "      move_images"
 	echo "      prepare_logs [debug_level]"
@@ -503,6 +504,14 @@ function get_filesystems()
 	getFilesystems.sh "${@}"
 }
 
+#####
+# Allow users to install and uninstall modules.
+function manage_modules()
+{
+	# shellcheck disable=SC2068
+	manageModules.sh "${@}"
+}
+
 
 ####################################### Helper functions
 
@@ -551,8 +560,9 @@ function prompt()
 # If all that doesn't fit in the terminal windows, whiptail does NOT scroll.
 	local LINES=$(( 4 + NUM_OPTIONS + 2 + 1 + 2 ))
 	if [[ ${LINES} -ge ${WT_LINES} ]]; then
-		echo "Please resize you window to at least $(( LINES + 1 )) lines."
+		echo "Please resize your window to at least $(( LINES + 1 )) lines."
 		echo "It is only ${WT_LINES} lines now."
+		return 1
 	fi >&2
 
 	local OPT="$( whiptail --title "${TITLE}" --notags --menu "${PROMPT}" \
@@ -693,17 +703,14 @@ if [[ -z ${FUNCTION_TO_EXECUTE} ]]; then
 #####
 	CMDS+=("header"	      "Commands to Create Test Images or Videos" )
 
-# TODO: Not sure if I like it better with, or without this phrase:
-X="with different settings"
-X="                       "
 	((N++));	C="compare_timelapse"
-	CMDS+=("${C}"	"$( L "Create multiple timelapse videos ${X} (${C})" )")
+	CMDS+=("${C}"	"$( L "Create multiple timelapse videos                         (${C})" )")
 
 	((N++));	C="compare_startrails"
-	CMDS+=("${C}"	"$( L "Create multiple startrails ${X}       (${C})" )")
+	CMDS+=("${C}"	"$( L "Create multiple startrails                               (${C})" )")
 
 	((N++));	C="compare_stretches"
-	CMDS+=("${C}"	"$( L "Create multiple stretched images ${X} (${C})" )")
+	CMDS+=("${C}"	"$( L "Create multiple stretched images                         (${C})" )")
 
 
 #####
@@ -739,6 +746,10 @@ X="                       "
 #####
 	CMDS+=("header"	      "Misc. Commands" )
 
+	((N++));	C="manage_modules"
+	CMDS+=("${C}"	"$( L "Install or uninstall modules.                            (${C})" )")
+
+	((N++));	C="move_images"
 	((N++));	C="check_allsky"
 	CMDS+=("${C}"	"$( L "Check Allsky for setting errors and warnings             (${C})" )")
 

@@ -99,7 +99,8 @@ switch ($ID) {
 		rm_msg($ID);
 		break;
 
-	case "AM_ALLSKY_CONFIG | allsky-config":
+	case "AM_ALLSKY_CONFIG":
+	case "allsky-config":
 		if ($ARGS === "") {
 			echo "${eS}ERROR: Argument not given to command ID: '${ID}'.${eE}";
 			exit(1);

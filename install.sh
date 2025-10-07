@@ -12,6 +12,8 @@ source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
 source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"
+#shellcheck source-path=scripts
+source "${ALLSKY_SCRIPTS}/checkFunctions.sh"			|| exit "${EXIT_ERROR_STOP}"
 
 # Default may be 700 (HOME) or 750 (ALLSKY_HOME) so web server can't read it
 chmod 755 "${HOME}" "${ALLSKY_HOME}"					|| exit "${EXIT_ERROR_STOP}"
@@ -3354,12 +3356,9 @@ install_overlay()
 	cp  "${ALLSKY_REPO}/allskyvariables.json.repo" "${ALLSKY_CONFIG}/allskyvariables.json"
 
 
-	# ALLSKY_MY_OVERLAY_TEMPLATES is not in ALLSKY_REPI and we haven't restored
-	# anything yet, so create the directory.
+	# ALLSKY_MY_OVERLAY_TEMPLATES is not in ALLSKY_REPO and we haven't restored anything yet,
+	# so create the directory.
 	mkdir -p "${ALLSKY_MY_OVERLAY_TEMPLATES}"
-#xx TODO: these are done in set_permissions, so remove from here:
-#xx	sudo chgrp "${ALLSKY_WEBSERVER_GROUP}" "${ALLSKY_MY_OVERLAY_TEMPLATES}"
-#xx	sudo chmod 775 "${ALLSKY_MY_OVERLAY_TEMPLATES}"	
 
 	# Globals: SENSOR_WIDTH, SENSOR_HEIGHT, FULL_OVERLAY_NAME, SHORT_OVERLAY_NAME, OVERLAY_NAME
 	SENSOR_WIDTH="$( settings ".sensorWidth" "${ALLSKY_CC_FILE}" )"
@@ -3606,28 +3605,41 @@ remind_old_version()
 }
 
 ####
+# Set the current Allsky status and log a message.
+add_to_post_actions()
+{
+	local MSG="${1}"
+	echo -e "\n\n========== ACTION NEEDED:\n${MSG}" >> "${ALLSKY_POST_INSTALL_ACTIONS}"
+}
+
+####
 # Manage installation and setup of the Allsky database
 setup_database()
 {
-	sudo "$ALLSKY_SCRIPTS/utilities/database_manager.py" --auto
+	sudo "${ALLSKY_UTILITIES}/database_manager.py" --auto
 }
 
 ####
 # Manage overlay installation or updating
 update_overlays()
 {
+	local OVERLAY_MANAGER="${ALLSKY_SCRIPTS}/modules/allskyoverlaymanager/allskyoverlaymanager.py"
 	if [[ ${USE_PRIOR_ALLSKY} == "true" ]]; then
-		"$ALLSKY_SCRIPTS/modules/allskyoverlaymanager/allskyoverlaymanager.py" --auto --oldpath "${ALLSKY_PRIOR_DIR}" --oldcamera "${PRIOR_CAMERA_TYPE}"
+		"${OVERLAY_MANAGER}" --auto --oldpath "${ALLSKY_PRIOR_DIR}" --oldcamera "${PRIOR_CAMERA_TYPE}"
 	else
-		"$ALLSKY_SCRIPTS/modules/allskyoverlaymanager/allskyoverlaymanager.py" --install
+		"${OVERLAY_MANAGER}" --install
 	fi
 }
 
 ####
-# Allow the user to install extra modules.
+# Allow the user to install modules.
 install_modules()
 {
-	"$ALLSKY_SCRIPTS/modules/allskymodulemanager/moduleinstaller.py" --welcome
+	"${ALLSKY_MODULE_INSTALLER}" --welcome
+	RET=$?
+	if [[ ${RET} -eq ${EXIT_PARTIAL_OK} ]]; then
+		add_to_post_actions "To install and remove modules, execute 'allsky-config manage_modules'."
+	fi
 }
 
 ####
@@ -3636,7 +3648,7 @@ install_modules()
 update_modules()
 {
 
-	"$ALLSKY_SCRIPTS/modules/allskymodulemanager/moduleinstaller.py" --auto
+	"${ALLSKY_MODULE_INSTALLER}" --auto
 
 #	local X  MSG
 
@@ -3759,14 +3771,6 @@ do_allsky_status()
 	set_allsky_status "${STATUS}"
 }
 
-
-####
-# Set the current Allsky status and log a message.
-add_to_post_actions()
-{
-	local MSG="${1}"
-	echo -e "\n\n========== ACTION NEEDED:\n${MSG}" >> "${ALLSKY_POST_INSTALL_ACTIONS}"
-}
 
 ####
 # Set the specified json field in the specified file to now.

@@ -239,22 +239,6 @@ if [[ -n ${ERRORS} ]]; then
 	} >&2
 fi
 
-# Determine resolution of the first image so we can write text to it.
-# Assume all images are the same resolution.
-# image.jpg JPEG 4056x3040 4056x3040+0+0 8-bit sRGB 1.8263MiB 0.000u 0:00.000
-FIRST="$( head -1 "${IMAGES}" | sed 's/\t.*//' )"
-RESOLUTION="$( identify "${FIRST}" | gawk '{ print $3; }' )"
-WIDTH="${RESOLUTION%x*}"
-HEIGHT="${RESOLUTION##*x}"
-# Put text in bottom left.
-POINT_SIZE="$( echo "${WIDTH} / 33" | bc )"
-X="20"		# just need a little from left side
-Y=$(( HEIGHT - ( POINT_SIZE * 2) ))
-
-FONT="${ALLSKY_OVERLAY}/system_fonts/Courier_New_Bold.ttf"
-STROKE="black"
-FILL="yellow"
-
 # Create the startrails.
 NUM_CREATED=0
 for THRESHOLD in ${THRESHOLDS}
@@ -283,10 +267,7 @@ do
 		# Add text
 		TEXT="Brightness Threshold: ${THRESHOLD}"
 		TEXT+="\n${NUM_USED} of ${COUNT} images used."
-		convert -font "${FONT}" -pointsize "${POINT_SIZE}" \
-			-fill "${FILL}" -stroke "${STROKE}" -strokewidth 3 \
-			-annotate "+${X}+${Y}" "${TEXT}" \
-			"${OUTPUT}" "${OUTPUT}" 2>&1
+		addTextToImage "${OUTPUT}" "${OUTPUT}" "${TEXT}" 2>&1
 	else
 		echo -e "ERROR: Unable to make startrails.  Quitting." >&2
 		remove_colors "${MSG}" >&2

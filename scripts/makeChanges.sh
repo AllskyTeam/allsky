@@ -655,8 +655,7 @@ do
 			;;
 
 		"type")
-# TODO: Use  ${S_filename}  ??
-			check_filename_type "$( settings '.filename' )" "${NEW_VALUE}" || OK="false"
+			check_filename_type "${S_filename}" "${NEW_VALUE}" || OK="false"
 			;;
 
 		"filename")
@@ -665,6 +664,20 @@ do
 				WEBSITE_VALUE_CHANGED="true"
 			else
 				OK="false"
+			fi
+			;;
+
+		"focusmode")
+			if [[ ${NEW_VALUE} == "true" ]]; then
+				if [[ ${S_takedarkframes} == "true" ]]; then
+					wE_ "ERROR: ${WSNs}${LABEL}${WSNe} and ${WSNs}${S_takedarkframes_label}${WSNe} cannot be active at the same time."
+					# Restore to old value
+					echo "${wBR}Disabling ${WSNs}${LABEL}${WSNe}."
+					update_json_file ".${KEY}" "${OLD_VALUE}" "${ALLSKY_SETTINGS_FILE}" "boolean"
+					(( NUM_CHANGED-- ))
+				else
+					wE_ "Focus Mode is enable - don't forget to turn off when done focusing."
+				fi
 			fi
 			;;
 
@@ -995,6 +1008,15 @@ do
 	#	(For remote Website, query the Website for the number.)
 	# If MORE than NEW_VALUE, warn the user since those images will be deleted
 	# at the next endOfNight.sh run.
+			fi
+			;;
+
+		"enabledatabase")
+			if [[ ${NEW_VALUE} == "false" ]]; then
+				W="WARNING: "
+				W+="Disabling ${WSNs}${LABEL}${WSNe} will cause many new features not to work properly."
+				wW_ "${W}"
+# ALEX TODO: Anything if NEW_VALUE == "true" ?
 			fi
 			;;
 

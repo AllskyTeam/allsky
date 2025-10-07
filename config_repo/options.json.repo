@@ -1,77 +1,4 @@
 [
-	{
-		"name": "databasesettingsheader",
-		"label": "Database Settings",
-		"type": "header"
-	},
-	{
-		"name": "enabledatabase",
-		"default": false,
-		"description": "Enable the Allsky database.",
-		"label": "Enable Database",
-		"type": "boolean",
-		"carryforward": true,
-		"checkchanges": true
-	},
-	{
-		"name": "databasetype",
-		"default": "none",
-		"description": "The database to use to store data.",
-		"label": "Database Tyoe",
-		"type": "select_text",
-		"carryforward": true,
-		"optional": true,
-		"options": [
-			{
-				"value": "mysql",
-				"label": "MySQL"
-			},
-			{
-				"value": "sqlite",
-				"label": "SQLite"
-			}
-		]
-	},
-	{
-		"name": "databasehost",
-		"default": "",
-		"description": "The ip / hostname of the server running the database.",
-		"label": "Database Host",
-		"type": "text",
-		"carryforward": true,
-		"optional": true,
-		"source": "${ALLSKY_ENV}"
-	},
-	{
-		"name": "databaseuser",
-		"default": "",
-		"description": "The username used to connect to the database.",
-		"label": "Database User",
-		"type": "text",
-		"carryforward": true,
-		"optional": true,
-		"source": "${ALLSKY_ENV}"
-	},
-	{
-		"name": "databasepassword",
-		"default": "",
-		"description": "The password used to connect to the database.",
-		"label": "User Password",
-		"type": "text",
-		"carryforward": true,
-		"optional": true,
-		"source": "${ALLSKY_ENV}"
-	},
-	{
-		"name": "databasedatabase",
-		"default": "",
-		"description": "The database to use.",
-		"label": "Database",
-		"type": "text",
-		"carryforward": true,
-		"optional": true,
-		"source": "${ALLSKY_ENV}"
-	},
 {
 "name" : "daynighttab========================================",
 "display" : false,
@@ -814,9 +741,19 @@
 "action" : "reload"
 },
 {
+"name" : "focusmode",
+"default" : false,
+"description" : "Enable to have images created and displayed as fast as possible, to aid in focusing. Other than adding the focus metric to the images, no other processing is done on them.",
+"label" : "Focus Mode",
+"type" : "boolean",
+"usage" : "capture",
+"checkchanges" : true,
+"action" : "reload"
+},
+{
 "name" : "determinefocus",
 "default" : false,
-"description" : "Enable to have the image focus determined and output via the 'FOCUS' variable.",
+"description" : "Enable to have the image focus determined and output via the 'FOCUS' variable.  Automatically enabled if <span class='WebUISetting'>Focus Mode</span> is enabled.",
 "label" : "Record Focus",
 "type" : "boolean",
 "usage" : "capture",
@@ -2237,7 +2174,85 @@
 },
 
 {
+	"name" : "databasesettingsheader",
+	"label" : "Allsky Database Settings",
+	"type" : "header"
+},
+{
+"name" : "databasesubheader",
+"label" : "<div class='panel panel-danger' style='margin-bottom: 0'><div class='panel-heading'>*** Only change these settings if you know what you are doing. ***</div></div>",
+"type" : "header-sub"
+},
+{
+	"name" : "enabledatabase",
+	"default" : true,
+	"description" : "Enable the Allsky database.<br>Many new features will not work if the database is disabled.",
+	"label" : "Enable Database",
+	"type" : "boolean",
+	"carryforward" : true,
+	"checkchanges" : true
+},
+{
+	"name" : "databasedatabase",
+	"default" : "allsky",
+	"description" : "The name of the database to use.",
+	"label" : "Database",
+	"type" : "text",
+	"carryforward" : true,
+	"optional" : true,
+	"source" : "${ALLSKY_ENV}"
+},
+{
+	"name" : "databasetype",
+	"default" : "sqlite",
+	"description" : "The type of database.<br>MySQL has more features but uses a lot more CPU and memory.",
+	"label" : "Database Type",
+	"type" : "select_text",
+	"carryforward" : true,
+	"optional" : true,
+	"options" : [
+		{
+			"value" : "mysql",
+			"label" : "MySQL"
+		},
+		{
+			"value" : "sqlite",
+			"label" : "SQLite"
+		}
+	]
+},
+{
+	"name" : "databasehost",
+	"default" : "",
+	"description" : "(MySQL only) The IP address or hostname of the server running the database.<br>By default the database runs on your Pi.",
+	"label" : "Database Host",
+	"type" : "text",
+	"carryforward" : true,
+	"optional" : true,
+	"source" : "${ALLSKY_ENV}"
+},
+{
+	"name" : "databaseuser",
+	"default" : "",
+	"description" : "(MySQL only) The username used to connect to the database.",
+	"label" : "Database User",
+	"type" : "text",
+	"carryforward" : true,
+	"optional" : true,
+	"source" : "${ALLSKY_ENV}"
+},
+{
+	"name" : "databasepassword",
+	"default" : "",
+	"description" : "(MySQL only) The password used to connect to the database.",
+	"label" : "User Password",
+	"type" : "text",
+	"carryforward" : true,
+	"optional" : true,
+	"source" : "${ALLSKY_ENV}"
+},
 
+{
 "name" : "cameratab========================================",
 "label" : "Camera Type",
 "type" : "header-tab"

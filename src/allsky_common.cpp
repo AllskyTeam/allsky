@@ -32,7 +32,7 @@ char debug_text[500];						// buffer to hold debug messages
 
 /**
  * Helper function to display debug info.
- * If the required_level is negative then also put the info in a "message" file.
+ * If the required_level is 0 or negative then also put the info in a "message" file.
 **/
 void Log(int required_level, const char *fmt, ...)
 {
@@ -42,6 +42,7 @@ void Log(int required_level, const char *fmt, ...)
 		va_start(va, fmt);
 		vsnprintf(msg, sizeof(msg)-1, fmt, va);
 		printf("%s", msg);
+		va_end(va);
 
 		if (required_level <= 0)
 		{
@@ -73,8 +74,6 @@ void Log(int required_level, const char *fmt, ...)
 			Log(4, "Executing %s\n", command);
 			(void) system(command);
 		}
-
-		va_end(va);
 	}
 }
 
@@ -114,6 +113,7 @@ std::string exec(const char *cmd)
 	std::tr1::shared_ptr<FILE> pipe(popen(cmd, "r"), pclose);
 	if (!pipe)
 		return "ERROR";
+
 	char buffer[128];
 	std::string result = "";
 	while (!feof(pipe.get()))
@@ -134,6 +134,12 @@ void add_variables_to_command(config cg, char *cmd, timeval startDateTime)
 
 	int const s = 100;
 	char tmp[s];
+
+	if (cg.focusMode) {
+		// This must come first.
+		snprintf(tmp, s, " --focus-mode %ld", cg.lastFocusMetric);
+		strcat(cmd, tmp);
+	}
 
 	snprintf(tmp, s, " TIMESTAMP=%ld", startDateTime.tv_sec);
 	strcat(cmd, tmp);
@@ -179,20 +185,15 @@ void add_variables_to_command(config cg, char *cmd, timeval startDateTime)
 		}
 	}
 	if (cg.lastMean >= 0.0) {
-		snprintf(tmp, s, " MEAN=%f", cg.lastMean);
+		snprintf(tmp, s, " MEAN=%-.5f", cg.lastMean);
 		strcat(cmd, tmp);
 	}
 
 	// Since negative temperatures are valid, check against an impossible temperature.
-	// The temperature passed to us is 10 times the actual temperature so we can deal with
-	// integers with 1 decimal place, which is all we care about.
-	if (cg.supportsTemperature && cg.lastSensorTemp != NOT_SET) {
-		snprintf(tmp, s, " TEMPERATURE_C=%d", (int)round(cg.lastSensorTemp));
-		strcat(cmd, tmp);
-		snprintf(tmp, s, " TEMPERATURE_F=%d", (int)round((cg.lastSensorTemp * 1.8) +32));
+	if (cg.supportsTemperature && cg.lastSensorTemp != NOT_CHANGED) {
+		snprintf(tmp, s, " TEMPERATURE_C=%.1f TEMPERATURE_F=%.1f", cg.lastSensorTemp, (cg.lastSensorTemp * 1.8) +32);
 		strcat(cmd, tmp);
 	}
-
 
 	if (cg.currentBin >= 0) {
 		snprintf(tmp, s, " BIN=%ld", cg.currentBin);
@@ -833,7 +834,8 @@ void displayHelp(config cg)
 		printf(" -%-*s - Amount to rotate image in degrees - 0 or 180 [%ld].\n", n, "rotation n", cg.rotation);
 	}
 	printf(" -%-*s - 0 = No flip, 1 = Horizontal, 2 = Vertical, 3 = Both [%ld].\n", n, "flip n", cg.flip);
-	printf(" -%-*s - 'true' enables focus mode [%s].\n", n, "determinefocus b", yesNo(cg.determineFocus));
+	printf(" -%-*s - 'true' enables focus mode [%s].\n", n, "focusmode b", yesNo(cg.focusMode));
+	printf(" -%-*s - 'true' calculates focus metric [%s].\n", n, "determinefocus b", yesNo(cg.determineFocus));
 	printf(" -%-*s - 'true' enables consistent delays between images [%s].\n", n, "consistentdelays b", yesNo(cg.consistentDelays));
 	printf(" -%-*s - Format the time is displayed in [%s].\n", n, "timeformat s", cg.timeFormat);
 	printf(" -%-*s - Latitude of the camera [no default - you must set it].\n", n, "latitude s");
@@ -1000,7 +1002,8 @@ void displaySettings(config cg)
 		printf("   ZWO Exposure Type: %s\n", getZWOexposureType(cg.ZWOexposureType));
 	}
 	printf("   Preview: %s\n", yesNo(cg.preview));
-	printf("   Focus mode: %s\n", yesNo(cg.determineFocus));
+	printf("   Focus mode: %s\n", yesNo(cg.focusMode));
+	printf("   Calculate focus metric: %s\n", yesNo(cg.determineFocus));
 	printf("   Taking Dark Frames: %s\n", yesNo(cg.takeDarkFrames));
 	printf("   Delete Dark Frames higher than: %.4f\n", cg.darkFrameTooHigh);
 	printf("   Remove Bad Images Threshold Low: %.4f\n", cg.imageTooLow);
@@ -1066,6 +1069,8 @@ bool day_night_timeSleep(bool displayedMsg, config cg, bool isDaytime)
 
 void delayBetweenImages(config cg, long lastExposure_us, std::string sleepType)
 {
+	if (cg.currentDelay_ms == 0) return;	// will be 0 in Focus Mode
+
 	if (cg.takeDarkFrames) {
 		// Need to sleep a little since saving .png files takes a while.
 		usleep(5 * US_IN_SEC);
@@ -1561,6 +1566,10 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[], bool readConfig
 		else if (strcmp(a, "flip") == 0)
 		{
 			cg->flip = atol(argv[++i]);
+		}
+		else if (strcmp(a, "focusmode") == 0)
+		{
+			cg->focusMode = getBoolean(argv[++i]);
 		}
 		else if (strcmp(a, "determinefocus") == 0)
 		{

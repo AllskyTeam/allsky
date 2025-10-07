@@ -16,8 +16,8 @@ from gpiozero import CPUTemperature, Device
 class ALLSKYPISTATUS(ALLSKYMODULEBASE):
  
 	meta_data = {
-		"name": "Reads Pi Status",
-		"description": "Reads Pi Data",
+		"name": "Read Pi Status Data",
+		"description": "Read Pi status data so it can be added to overlays.",
 		"module": "allsky_pistatus",    
 		"version": "v1.0.0",
 		"events": [
@@ -29,140 +29,13 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 		"testable": "true",  
 		"centersettings": "false",
 		"group": "Hardware",
-        "graphs": {
-            "chart1": {
-				"icon": "fa-solid fa-chart-line",
-				"title": "Hardware",
-				"group": "Hardware",
-				"main": "true",
-				"config": {
-					"chart": {
-						"type": "spline",
-						"zooming": {
-							"type": "x"
-						}
-					},
-					"title": {
-						"text": "Hardware"
-					},
-					"plotOptions": {
-						"series": {
-							"animation": "false"
-						}
-					},
-					"xAxis": {
-						"type": "datetime",
-						"dateTimeLabelFormats": {
-							"day": "%Y-%m-%d",
-							"hour": "%H:%M"
-						}
-					},
-					"yAxis": [
-						{ 
-							"title": {
-								"text": "CPU Temp"
-							} 
-						},
-						{
-							"title": { 
-								"text": "Free Disk"
-							}, 
-							"opposite": "true"
-						}
-					],
-					"lang": {
-						"noData": "No data available"
-					},
-					"noData": {
-						"style": {
-							"fontWeight": "bold",
-							"fontSize": "16px",
-							"color": "#666"
-						}
-					}
-				},
-				"series": {
-					"exposure": {
-						"name": "CPU Temp",
-						"yAxis": 0,
-						"variable": "AS_CPUTEMP"                 
-					},
-					"gain": {
-						"name": "Free Disk",
-						"yAxis": 1,
-						"variable": "AS_DISKFREE"
-					}               
-				}
-			},
-            "memory": {
-				"icon": "fa-solid fa-chart-line",
-				"title": "Memory",
-				"group": "Hardware",
-				"main": "true",
-				"config": {
-					"chart": {
-						"type": "spline",
-						"zooming": {
-							"type": "x"
-						}
-					},
-					"title": {
-						"text": "Memory"
-					},
-					"plotOptions": {
-						"series": {
-							"animation": "false"
-						}
-					},
-					"xAxis": {
-						"type": "datetime",
-						"dateTimeLabelFormats": {
-							"day": "%Y-%m-%d",
-							"hour": "%H:%M"
-						}
-					},
-					"yAxis": [
-						{ 
-							"title": {
-								"text": "Memory"
-							} 
-						}
-					],
-					"lang": {
-						"noData": "No data available"
-					},
-					"noData": {
-						"style": {
-							"fontWeight": "bold",
-							"fontSize": "16px",
-							"color": "#666"
-						}
-					}
-				},
-				"series": {
-					"totalmemory": {
-						"name": "Total Memory",
-						"yAxis": 0,
-						"variable": "AS_MEMORYTOTAL"                 
-					},
-					"usedmemory": {
-						"name": "Used Memory",
-						"yAxis": 0,
-						"variable": "AS_MEMORYUSED"
-					},
-					"freememory": {
-						"name": "Free Memory",
-						"yAxis": 0,
-						"variable": "AS_MEMORYAVAILABLE"
-					}                
-				}
-			}
-		}, 
 		"extradatafilename": "allsky_pistatus.json", 
 		"extradata": {
 			"database": {
 				"enabled": "True",
-				"table": "allsky_hardware"
+				"table": "allsky_hardware",
+    			"pk": "id",
+    			"pk_type": "int"
 			},      
 			"values": {
 				"AS_CPUTEMP": {
@@ -247,6 +120,28 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 						"include" : "true"
 					}
 				},
+				"AS_DISKUSEDPERCENT": {
+					"name": "${DISKUSEDPERCENT}",
+					"format": "",
+					"sample": "78",              
+					"group": "Pi",
+					"description": "Disk used percentage",
+					"type": "number",
+					"database": {
+						"include" : "true"
+					}
+				},
+				"AS_DISKFREEPERCENT": {
+					"name": "${DISKFREEPERCENT}",
+					"format": "",
+					"sample": "78",              
+					"group": "Pi",
+					"description": "Disk free percentage",
+					"type": "number",
+					"database": {
+						"include" : "true"
+					}
+				},
 				"AS_MEMORYTOTAL": {
 					"name": "${MEMORYTOTAL}",
 					"format": "{gb|fsunit}",
@@ -279,6 +174,28 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 					"database": {
 						"include" : "true"
 					}
+				},
+				"AS_MEMORYUSEDPERCENTAGE": {
+					"name": "${MEMORYUSEDPERCENTAGE}",
+					"format": "",
+					"sample": "40",              
+					"group": "Pi",
+					"description": "Memory used %",
+					"type": "number",
+					"database": {
+						"include" : "true"
+					}
+				},
+				"AS_MEMORYFREEPERCENTAGE": {
+					"name": "${MEMORYFREEPERCENTAGE}",
+					"format": "",
+					"sample": "40",              
+					"group": "Pi",
+					"description": "Memory free %",
+					"type": "number",
+					"database": {
+						"include" : "true"
+					}
 				}
 			}
 		},
@@ -302,7 +219,7 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 			"enabledataage" : {
 				"required": "false",
 				"description": "Custom Data Expiry",
-				"help": "Enable custom data expiry. This will overrides the default in the module manager",
+				"help": "Enable custom data expiry. This will overrides the default in the module manager.",
 				"tab": "Data Control",
     			"type": {
 					"fieldtype": "checkbox"
@@ -311,7 +228,7 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 			"dataage" : {
 				"required": "false",
 				"description": "Data Age",
-				"help": "After this number of seconds if the module data is not updated it will be removed.",
+				"help": "After this number of seconds if the module data is not updated, it will be removed.",
 				"tab": "Data Control",
 				"type": {
 					"fieldtype": "spinner",
@@ -366,6 +283,8 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 			extra_data['AS_DISKSIZE'] = size
 			extra_data['AS_DISKUSAGE'] = used
 			extra_data['AS_DISKFREE'] = free
+			extra_data['AS_DISKUSEDPERCENT'] = (used / size) * 100 if size else 0
+			extra_data['AS_DISKFREEPERCENT'] = (free / size) * 100 if size else 0
 
 			self.log(4, f'INFO: Disk Size {size}, Disk Used {used}, Disk Free {free}')
 			vcgm = Vcgencmd()
@@ -395,10 +314,13 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 			mem = psutil.virtual_memory()
 			total_memory = mem.total
 			used_memory = mem.used
-			available_memory = mem.available	
+			available_memory = mem.available
+			percent = mem.percent
 			extra_data['AS_MEMORYTOTAL'] = total_memory
 			extra_data['AS_MEMORYUSED'] = used_memory
 			extra_data['AS_MEMORYAVAILABLE'] = available_memory
+			extra_data['AS_MEMORYUSEDPERCENTAGE'] = percent
+			extra_data['AS_MEMORYFREEPERCENTAGE'] = (available_memory / total_memory) * 100
    
 			allsky_shared.setLastRun('pistatus')
 			allsky_shared.dbUpdate('pistatus', extra_data)

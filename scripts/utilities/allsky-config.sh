@@ -75,6 +75,7 @@ function usage_and_exit()
 	echo "      compare_paths --website | --server"
 	echo "      test_upload --website | --server"
 
+	echo "      manage_modules [see --help for arguments]"
 	echo "      check_allsky [see --help for arguments]"
 	echo "      move_images"
 	echo "      prepare_logs [debug_level]"
@@ -503,6 +504,14 @@ function get_filesystems()
 	getFilesystems.sh "${@}"
 }
 
+#####
+# Allow users to install and uninstall modules.
+function manage_modules()
+{
+	# shellcheck disable=SC2068
+	manageModules.sh "${@}"
+}
+
 
 ####################################### Helper functions
 
@@ -737,6 +746,10 @@ if [[ -z ${FUNCTION_TO_EXECUTE} ]]; then
 #####
 	CMDS+=("header"	      "Misc. Commands" )
 
+	((N++));	C="manage_modules"
+	CMDS+=("${C}"	"$( L "Install or uninstall modules.                            (${C})" )")
+
+	((N++));	C="move_images"
 	((N++));	C="check_allsky"
 	CMDS+=("${C}"	"$( L "Check Allsky for setting errors and warnings             (${C})" )")
 

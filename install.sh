@@ -3605,6 +3605,14 @@ remind_old_version()
 }
 
 ####
+# Set the current Allsky status and log a message.
+add_to_post_actions()
+{
+	local MSG="${1}"
+	echo -e "\n\n========== ACTION NEEDED:\n${MSG}" >> "${ALLSKY_POST_INSTALL_ACTIONS}"
+}
+
+####
 # Manage installation and setup of the Allsky database
 setup_database()
 {
@@ -3628,6 +3636,10 @@ update_overlays()
 install_modules()
 {
 	"${ALLSKY_MODULE_INSTALLER}" --welcome
+	RET=$?
+	if [[ ${RET} -eq ${EXIT_PARTIAL_OK} ]]; then
+		add_to_post_actions "To install and remove modules, execute 'allsky-config manage_modules'."
+	fi
 }
 
 ####
@@ -3759,14 +3771,6 @@ do_allsky_status()
 	set_allsky_status "${STATUS}"
 }
 
-
-####
-# Set the current Allsky status and log a message.
-add_to_post_actions()
-{
-	local MSG="${1}"
-	echo -e "\n\n========== ACTION NEEDED:\n${MSG}" >> "${ALLSKY_POST_INSTALL_ACTIONS}"
-}
 
 ####
 # Set the specified json field in the specified file to now.

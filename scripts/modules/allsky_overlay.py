@@ -127,7 +127,7 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 			self.log(0,f'ERROR: Unable to read the overlay config file {oeConfigFile}')
 	        
 	def _log(self, level, text, preventNewline = False, exitCode=None, sendToAllsky=False, addErrorToOverlay=False):
-		self.log(level=level, text=text, preventNewline=preventNewline,exitCode=exitCode, sendToAllsky=sendToAllsky)
+		self.log(level=level, message=text, preventNewline=preventNewline,exitCode=exitCode, sendToAllsky=sendToAllsky)
 		if sendToAllsky:
 			if self._overlay_editor_config is not None:
 				if self._overlay_editor_config['overlayErrors']:
@@ -143,14 +143,14 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 		userPath = os.path.join(os.environ['ALLSKY_OVERLAY'], 'myTemplates', overlayName)
 		if os.path.isfile(userPath):
 			self._overlay_config_file = userPath
-			self._log(4, f'INFO: Time of day is {dayORNight} using overlay {overlayName}')
+			self.log(4, f'INFO: Time of day is {dayORNight} using overlay {overlayName}')
 		else:
 			corePath = os.path.join(os.environ['ALLSKY_OVERLAY'], 'config', overlayName)
 			if os.path.isfile(corePath):
 				self._overlay_config_file = corePath
-				self._log(4, f'INFO: Time of day is {dayORNight} using overlay {overlayName}')
+				self.log(4, f'INFO: Time of day is {dayORNight} using overlay {overlayName}')
 			else:
-				self._log(0, f'ERROR: Unable to locate an overlay file: TOD {dayORNight}, overlay "{overlayName}"', sendToAllsky=True)
+				self.log(0, f'ERROR: Unable to locate an overlay file: TOD {dayORNight}, overlay "{overlayName}"', sendToAllsky=True)
 				
 	def _dump_debug_data(self):
 		debugFilePath = os.path.join(allsky_shared.ALLSKY_TMP, 'overlaydebug.txt')
@@ -198,7 +198,7 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 			#	allsky_shared.log(1, f"WARNING: Config file '{self._overlay_config_file}' is empty.")
 			#	result = True
 		else:
-			self._log(0, f"ERROR: Config File '{self._overlay_config_file}' not accessible.", sendToAllsky=True)
+			self.log(0, f"ERROR: Config File '{self._overlay_config_file}' not accessible.", sendToAllsky=True)
 			result = False
 
 		return result
@@ -280,7 +280,7 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 			if font in systemFontMap:
 				fontPath = systemFontMap[font]['fontpath']
 			else:
-				self._log(0, f"ERROR: System font '{font}' not found in internal map.", sendToAllsky=True)
+				self.log(0, f"ERROR: System font '{font}' not found in internal map.", sendToAllsky=True)
 
 		if fontPath is not None:
 			if fontSize is None:
@@ -303,7 +303,7 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 					font = self._fonts[fontKey]
 					self.log(4, f'INFO: {preMsg} from disk.')
 				except OSError as err:
-					self._log(0, f"ERROR: Could not load font '{fontPath}' from disk.", sendToAllsky=True)
+					self.log(0, f"ERROR: Could not load font '{fontPath}' from disk.", sendToAllsky=True)
 					font = None
 		else:
 			font = None
@@ -538,7 +538,7 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 				outOfBounds = True
 
 			if outOfBounds:
-				self._log(0, f"ERROR: Field '{fieldLabel}' is outside of the image", sendToAllsky=True)
+				self.log(0, f"ERROR: Field '{fieldLabel}' is outside of the image", sendToAllsky=True)
 		except:
 			pass
 
@@ -620,7 +620,7 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 				self._image = self._overlay_transparent(imageName, self._image, image, imageX, imageY, imageData)
 				self.log(4, f"INFO: Adding image field {imageName}")
 			else:
-				self._log(1, f"WARNING: image '{imageName}' missing; ignoring.", sendToAllsky=True)
+				self.log(1, f"WARNING: image '{imageName}' missing; ignoring.", sendToAllsky=True)
 		else:
 			self.log(1, "WARNING: Image not set so ignoring.")
 
@@ -665,7 +665,7 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 
 			background[y:y+h, x:x+w] = (1.0 - mask) * background[y:y+h, x:x+w] + mask * overlay_image
 		else:
-			self._log(0, f"ERROR: Image '{imageName}' is outside the bounds of the main image.", sendToAllsky=True)
+			self.log(0, f"ERROR: Image '{imageName}' is outside the bounds of the main image.", sendToAllsky=True)
 
 		return background
 

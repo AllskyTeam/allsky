@@ -390,6 +390,7 @@ class ALLSKYMODULE:
             "blocks": os.path.join(moduledata_base_path, "blocks", self.name),
             "data": os.path.join(moduledata_base_path, "data", self.name),
             "info": os.path.join(moduledata_base_path, "info", self.name),
+            "charts": os.path.join(moduledata_base_path, "charts", self.name),
             "installer": os.path.join(moduledata_base_path, "installer", self.name),
             "logfiles": os.path.join(moduledata_base_path, "logfiles", self.name)
         }
@@ -454,6 +455,19 @@ class ALLSKYMODULE:
 
         return result
 
+    def _install_copy_charts(self) -> bool:
+        result = False
+        source = os.path.join(self._source_info["path"], "charts")
+        if os.path.isdir(source):
+            result = shared.copy_folder(source, self._module_paths["charts"])
+            self._log(True, f"INFO: {self.name} Copied module charts - {'Successful' if result else 'Failed'}")            
+        else:
+            self._log(True, f"INFO: {self.name} No charts required")
+            result = True
+        
+
+        return result
+    
     def _install_copy_data(self) -> bool:
         result = False
         source = os.path.join(self._source_info["path"], self.name)
@@ -584,6 +598,7 @@ class ALLSKYMODULE:
             ("copy blocks",           self._install_copy_blocks),
             ("copy data",             self._install_copy_data),
             ("copy info",             self._install_copy_info),
+            ("copy charts",           self._install_copy_charts),
             ("installer info",        self._install_installer_info),
             ("apt dependencies",      self._install_apt_dependencies),
             ("python dependencies",   self._install_python_dependencies),
@@ -614,6 +629,7 @@ class ALLSKYMODULE:
                 shared.remove_path(self._module_paths["blocks"])
                 shared.remove_path(self._module_paths["data"])
                 shared.remove_path(self._module_paths["info"])
+                shared.remove_path(self._module_paths["charts"])
                 shared.remove_path(self._module_paths["installer"])
                 shared.remove_path(self._module_paths["logfiles"])
                 result = True

@@ -1,925 +1,752 @@
 "use strict";
 
-class CHARTMANAGER {
+class ASCHARTMANAGER {
+  tabCounter = 1;
 
-    chartStorageKey = 'allsky-charts'
-    chartLockedKey = 'allsky-charts-locked'
-    refreshIntervals = {}
-    countdownTimers = {}
-    chartCount = 0
-    charts = new Map()
-    chartListVisible = false
-    chartsLocked = false
-    tabCount = 1
-    darkTheme = {
-        colors: [
-            '#8087E8', '#A3EDBA', '#F19E53', '#6699A1',
-            '#E1D369', '#87B4E7', '#DA6D85', '#BBBAC5'
-        ],
-        chart: {
-            backgroundColor: '#272727',
-            style: {
-                fontFamily: 'IBM Plex Sans, sans-serif'
-            }
-        },
-        title: {
-            style: {
-                fontSize: '22px',
-                fontWeight: '500',
-                color: '#fff'
-            }
-        },
-        subtitle: {
-            style: {
-                fontSize: '16px',
-                fontWeight: '400',
-                color: '#fff'
-            }
-        },
-        credits: {
-            style: {
-                color: '#f0f0f0'
-            }
-        },
-        caption: {
-            style: {
-                color: '#f0f0f0'
-            }
-        },
-        tooltip: {
-            borderWidth: 0,
-            backgroundColor: '#f0f0f0',
-            shadow: true
-        },
-        legend: {
-            backgroundColor: 'transparent',
-            itemStyle: {
-                fontWeight: '400',
-                fontSize: '12px',
-                color: '#fff'
-            },
-            itemHoverStyle: {
-                fontWeight: '700',
-                color: '#fff'
-            }
-        },
-        plotOptions: {
-            series: {
-                dataLabels: {
-                    color: '#46465C',
-                    style: {
-                        fontSize: '13px'
-                    }
-                },
-                marker: {
-                    lineColor: '#333'
-                }
-            },
-            boxplot: {
-                fillColor: '#505053'
-            },
-            candlestick: {
-                lineColor: null,
-                upColor: '#DA6D85',
-                upLineColor: '#DA6D85'
-            },
-            errorbar: {
-                color: 'white'
-            },
-            dumbbell: {
-                lowColor: '#f0f0f0'
-            },
-            map: {
-                borderColor: '#909090',
-                nullColor: '#78758C'
-            }
-        },
-        drilldown: {
-            activeAxisLabelStyle: {
-                color: '#F0F0F3'
-            },
-            activeDataLabelStyle: {
-                color: '#F0F0F3'
-            },
-            drillUpButton: {
-                theme: {
-                    fill: '#fff'
-                }
-            }
-        },
-        xAxis: {
-            gridLineColor: '#707073',
-            labels: {
-                style: {
-                    color: '#fff',
-                    fontSize: '12px'
-                }
-            },
-            lineColor: '#707073',
-            minorGridLineColor: '#505053',
-            tickColor: '#707073',
-            title: {
-                style: {
-                    color: '#fff'
-                }
-            }
-        },
-        yAxis: {
-            gridLineColor: '#707073',
-            labels: {
-                style: {
-                    color: '#fff',
-                    fontSize: '12px'
-                }
-            },
-            lineColor: '#707073',
-            minorGridLineColor: '#505053',
-            tickColor: '#707073',
-            tickWidth: 1,
-            title: {
-                style: {
-                    color: '#fff',
-                    fontWeight: '300'
-                }
-            }
-        },
-        colorAxis: {
-            gridLineColor: '#45445d',
-            labels: {
-                style: {
-                    color: '#fff',
-                    fontSize: '12px'
-                }
-            },
-            minColor: '#342f95',
-            maxColor: '#2caffe',
-            tickColor: '#45445d'
-        },
-        mapNavigation: {
-            enabled: true,
-            buttonOptions: {
-                theme: {
-                    fill: '#46465C',
-                    'stroke-width': 1,
-                    stroke: '#BBBAC5',
-                    r: 2,
-                    style: {
-                        color: '#fff'
-                    },
-                    states: {
-                        hover: {
-                            fill: '#000',
-                            'stroke-width': 1,
-                            stroke: '#f0f0f0',
-                            style: {
-                                color: '#fff'
-                            }
-                        },
-                        select: {
-                            fill: '#000',
-                            'stroke-width': 1,
-                            stroke: '#f0f0f0',
-                            style: {
-                                color: '#fff'
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        // Scroll charts
-        rangeSelector: {
-            buttonTheme: {
-                fill: '#46465C',
-                stroke: '#BBBAC5',
-                'stroke-width': 1,
-                style: {
-                    color: '#fff'
-                },
-                states: {
-                    hover: {
-                        fill: '#1f1836',
-                        style: {
-                            color: '#fff'
-                        },
-                        'stroke-width': 1,
-                        stroke: 'white'
-                    },
-                    select: {
-                        fill: '#1f1836',
-                        style: {
-                            color: '#fff'
-                        },
-                        'stroke-width': 1,
-                        stroke: 'white'
-                    }
-                }
-            },
-            inputBoxBorderColor: '#BBBAC5',
-            inputStyle: {
-                backgroundColor: '#2F2B38',
-                color: '#fff'
-            },
-            labelStyle: {
-                color: '#fff'
-            }
-        },
-        navigator: {
-            handles: {
-                backgroundColor: '#BBBAC5',
-                borderColor: '#2F2B38'
-            },
-            outlineColor: '#CCC',
-            maskFill: 'rgba(255,255,255,0.1)',
-            series: {
-                color: '#A3EDBA',
-                lineColor: '#A3EDBA'
-            },
-            xAxis: {
-                gridLineColor: '#505053'
-            }
-        },
-        scrollbar: {
-            barBackgroundColor: '#BBBAC5',
-            barBorderColor: '#808083',
-            buttonArrowColor: '#2F2B38',
-            buttonBackgroundColor: '#BBBAC5',
-            buttonBorderColor: '#2F2B38',
-            rifleColor: '#2F2B38',
-            trackBackgroundColor: '#78758C',
-            trackBorderColor: '#2F2B38'
-        }
-    }
-    lightTheme = {
-        chart: {
-            backgroundColor: '#FFFFFF',
-            style: {
-                fontFamily: 'Lucida Grande, Lucida Sans Unicode, Verdana, Arial, Helvetica, sans-serif'
-            }
-        },
-        title: {
-            style: {
-                color: '#333333',
-                fontSize: '18px'
-            }
-        },
-        xAxis: {
-            labels: {
-                style: {
-                    color: '#666666'
-                }
-            }
-        },
-        yAxis: {
-            labels: {
-                style: {
-                    color: '#666666'
-                }
-            }
-        },
-        legend: {
-            itemStyle: {
-                color: '#333333'
-            },
-            itemHoverStyle: {
-                color: '#000000'
-            }
-        },
-        tooltip: {
-            backgroundColor: 'rgba(255, 255, 255, 0.85)',
-            style: {
-                color: '#333333'
-            }
-        },
-        colors: [
-            '#7cb5ec', '#434348', '#90ed7d', '#f7a35c',
-            '#8085e9', '#f15c80', '#e4d354', '#2b908f',
-            '#f45b5b', '#91e8e1'
-        ]
-    }
 
-    createChartBox(id, moduleName, chartKey, left, top, width, height) {
-        const box = $('<div class="allsky-charts-dashboard-chart"></div>').attr({
-            'data-left': left, 'data-top': top, 'data-width': width, 'data-height': height
+  constructor(opts = {}) {
+    this.opts = Object.assign({
+      saveUrl: 'includes/moduleutil.php?request=SaveCharts',
+      loadUrl: 'includes/moduleutil.php?request=SaveCharts',
+      wrap: false,
+      field: 'state',
+      includeMeta: true,
+      saveDebounceMs: 300,
+      ajaxHeaders: undefined
+    }, opts);
+
+    // Debounced POST saver (used by onBoundsChange)
+    this._saveDebounced = this._debounce(() => {
+      if (this.opts.saveUrl) {
+        this.saveStateToUrl(this.opts.saveUrl, {
+          wrap: this.opts.wrap,
+          field: this.opts.field,
+          includeMeta: this.opts.includeMeta,
+          ajax: { headers: this.opts.ajaxHeaders }
         });
+      } else {
+        this.saveState();
+      }
+    }, this.opts.saveDebounceMs);
 
-        const container = $(`<div class="allsky-charts-chart-container" id="${id}" data-module="${moduleName}" data-chartkey="${chartKey}"></div>`);
-        const resizer = $('<div class="allsky-charts-resizer"></div>');
-        const toolbar = $(`<div class="allsky-charts-chart-toolbar"></div>`);
-        const select = $('<select></select>').css({ fontSize: '12px', marginRight: '5px' }).append(`
-            <option value="0">None</option>
-            <option value="5000">5s</option>
-            <option value="10000">10s</option>
-            <option value="30000">30s</option>
-            <option value="60000">1m</option>
-        `);
+    // Queue of charts to create when a tab becomes visible
+    this._pendingChartsByTab = Object.create(null);
 
-        const refreshBtn = $('<button title="Refresh" class="btn btn-primary btn-xs ml-1"><i class="fa-solid fa-arrows-rotate"></i></button>')
-        const closeBtn = $('<button title="Close" class="btn btn-danger btn-xs ml-1">×</button>')
+    this.buildHTML();
+    this.setupEvents();
 
-        const tabSelect = $('<select class="tab-selector ml-1" title="Move chart to another tab"></select>')
-        .css({ fontSize: '12px', marginRight: '5px' })
-    
-        const tabList = this.getTabList();
-        tabList.forEach(tab => {
-            tabSelect.append(`<option value="${tab.id}">${tab.name}</option>`)
-        })
-            
-        tabSelect.on('change', () => {
-            const newTabId = tabSelect.val()
-            $(`#${newTabId}`).append(box)
-            this.saveCharts()
-        })
-    
-        toolbar.append(select, refreshBtn, tabSelect, closeBtn);
+    // Lazy-create charts only when a tab is shown
+    $(document).on('shown.bs.tab', '#as-gm-tablist a[data-toggle="tab"]', (e) => {
+      const tabId = $(e.target).attr('href').slice(1);
+      this._restoreChartsIfPending(tabId);
+    });
 
-        const indicator = $('<div class="allsky-charts-refresh-indicator">⏳</div>').hide()
-
-        select.on('change', () => {
-            clearInterval(this.refreshIntervals[id]);
-            clearInterval(this.countdownTimers[id]);
-
-            const interval = parseInt(select.val());
-            if (interval > 0) {
-                let countdown = interval / 1000;
-                indicator.text(countdown + 's').show();
-
-                this.refreshIntervals[id] = setInterval(() => {
-                    this.renderChart(id, moduleName, chartKey);
-                    countdown = interval / 1000;
-                }, interval);
-
-                this.countdownTimers[id] = setInterval(() => {
-                    if (countdown > 0) {
-                        countdown--;
-                        indicator.text(countdown + 's');
-                    }
-                }, 1000);
-            } else {
-                indicator.hide();
-            }
-
-            this.saveCharts();
-        });
-
-        refreshBtn.on('click', () => {
-            this.renderChart(id, moduleName, chartKey);
-        });
-
-        closeBtn.on('click', () => {
-            clearInterval(this.refreshIntervals[id])
-            clearInterval(this.countdownTimers[id])
-            this.charts.delete(chartKey)
-            box.remove()
-            this.saveCharts()
-        })
-
-        box.hover(
-            () => toolbar.fadeIn(150),
-            () => toolbar.fadeOut(150)
-        )
-
-        box.append(container, resizer, toolbar, indicator);
-        this.makeDraggable(box);
-        this.makeResizable(box, resizer);
-        this.positionChartBox(box[0]);
-        return box[0];
+    // Auto-load from server if configured
+    if (this.opts.loadUrl) {
+      this.loadStateFromUrl(this.opts.loadUrl, {
+        clearExisting: true,
+        reuseTabIds: true,
+        ajax: { headers: this.opts.ajaxHeaders }
+      });
     }
+  }
 
-    renderChart(id, moduleName, chartKey, options = {}) {
+  // ---------- UI: show/hide + HTML ----------
 
-        const dom = document.getElementById(id);
-        if (!dom) {
-            return
-        }
-
-        this.positionChartBox(dom.closest('.allsky-charts-dashboard-chart'));
-
-        $.ajax({
-            url: 'includes/moduleutil.php?request=GraphData',
-            type: 'POST',
-            data: {
-                module: moduleName,
-                chartkey: chartKey
-            },
-            dataType: 'json',
-            success: (allskyChartData) => {
-
-                const hasTooltip = allskyChartData.tooltip
-                if (hasTooltip !== undefined) {
-                    allskyChartData.tooltip =  {
-                        useHTML: true,
-                        formatter: function () {
-                            return `
-                                <b>${Highcharts.dateFormat('%A, %b %e, %Y %H:%M', this.x)}</b><br>
-                                Value: ${this.y}<br>
-                                <img src="${this.point.data}" style="width:100px;height:auto;border:1px solid #ccc;" />
-                                `;
-                        }
-                    }
-                    const chartType = allskyChartData.chart?.type;
-                    if (chartType === 'line' || chartType === 'spline') {
-                        allskyChartData.chart = allskyChartData.chart || {};
-                        allskyChartData.chart.events = allskyChartData.chart.events || {};
-
-                        allskyChartData.series[0].data.forEach(point => {
-                            Highcharts.addEvent(point, 'click', function () {
-                                console.log('Point clicked:', this);
-                                window.open(this.data.replace('thumbnails/',''), '_blank');
-                            });
-                        });                    
-                    }
-                }
-
-                if (this.charts.has(chartKey)) {
-                    const chart = this.charts.get(chartKey);
-                    chart.update(allskyChartData);
-                } else {
-                    const chart = Highcharts.chart(dom, allskyChartData)
-                }
-                
-                this.setTheme()
-            },
-            error: function (xhr, status, error) {
-                console.error('Error:', error)
-            }
-        })
-
+  show() {
+    let menu = $('#as-charts-toolbox-wrapper');
+    if (!menu.hasClass('active')) {
+      menu.addClass('active');
+      this.buildChartGroups();
     }
+  }
 
-    positionChartBox(box) {
-        if (!box || !box.dataset) {
-            return
-        }
-        const rect = $('#allsky-charts-main')[0].getBoundingClientRect()
-        const left = (parseFloat(box.dataset.left) / 100) * rect.width
-        const top = (parseFloat(box.dataset.top) / 100) * rect.height
-        const width = (parseFloat(box.dataset.width) / 100) * rect.width
-        const height = (parseFloat(box.dataset.height) / 100) * rect.height
-        $(box).css({ left, top, width, height })
-        const container = $(box).find('.allsky-charts-chart-container')[0]
-        if (container) {
-            //echarts.getInstanceByDom(container)?.resize()
-        }
+  hide() {
+    let menu = $('#as-charts-toolbox-wrapper');
+    if (menu.hasClass('active')) {
+      menu.removeClass('active');
     }
+  }
 
-    makeDraggable(el) {
-        let isDragging = false
-        let offsetX = 0
-        let offsetY = 0
-
-        el.on('mousedown', (e) => {
-            if (!this.chartsLocked) {
-                if ($(e.target).is('select, button') || $(e.target).hasClass('allsky-charts-resizer')) {
-                    return
-                }
-
-                isDragging = true
-                offsetX = e.offsetX
-                offsetY = e.offsetY
-            }
-        })
-        $(document).on('mousemove', (e) => {
-            if (!isDragging) return;
-            const rect = $('#allsky-charts-main')[0].getBoundingClientRect();
-            const x = ((e.clientX - rect.left - offsetX) / rect.width) * 100;
-            const y = ((e.clientY - rect.top - offsetY) / rect.height) * 100;
-            el.attr('data-left', x).attr('data-top', y);
-            this.positionChartBox(el[0]);
-        }).on('mouseup', () => {
-            if (isDragging) {
-                this.saveCharts()
-            }
-            isDragging = false;
-        })
-    }
-
-    makeResizable(box, handle) {
-        let isResizing = false, startX, startY, startW, startH;
-        handle.on('mousedown', (e) => {
-            if (!this.chartsLocked) {
-                e.preventDefault()
-                isResizing = true
-                startX = e.clientX
-                startY = e.clientY
-                startW = box.width()
-                startH = box.height()
-            }
-        })
-        $(document).on('mousemove', (e) => {
-            if (!isResizing) {
-                return
-            }
-            const rect = $('#allsky-charts-main')[0].getBoundingClientRect()
-            const width = ((startW + (e.clientX - startX)) / rect.width) * 100
-            const height = ((startH + (e.clientY - startY)) / rect.height) * 100
-            box.attr('data-width', width).attr('data-height', height)
-            this.positionChartBox(box[0])
-        }).on('mouseup', (e) => {
-            if (isResizing) {
-                this.saveCharts()
-            }
-            isResizing = false
-        })
-    }
-
-    loadCharts() {
-        this.loadTabNamesAndBuildTabs()
-        const data = JSON.parse(localStorage.getItem(this.chartStorageKey) || '[]');
-        data.forEach(({ chartId, moduleName, chartKey, position, interval, tabId }) => {
-            const box = $(this.createChartBox(chartId, moduleName, chartKey, position.left, position.top, position.width, position.height))
-            tabId = tabId || 'tab1';            
-            $('#' + tabId).append(box);         
-            this.renderChart(chartId, moduleName, chartKey)
-            box.find('select').val(interval).trigger('change')
-        })
-        this.chartCount = data.reduce((max, c) => Math.max(max, parseInt(c.chartId.split('-')[1])), 0)
-        this.setTheme()
-    }
-
-    reloadAllCharts() {
-        $('.allsky-charts-dashboard-chart').each((_, el) => {
-            const $box = $(el);
-            const container = $box.find('.allsky-charts-chart-container');
-            const id = container.attr('id');
-            const moduleName = container.data('module');
-            const chartKey = container.data('chartkey');
-    
-            this.renderChart(id, moduleName, chartKey);
-        });
-    }
-
-    saveCharts() {
-        const data = $('.allsky-charts-dashboard-chart').map(function () {
-            const box = $(this)
-            const container = box.find('.allsky-charts-chart-container')
-            const select = box.find('select')
-
-            return {
-                chartId: container.attr('id'),
-                moduleName: container.data('module'),
-                chartKey: container.data('chartkey'),
-                tabId: container.closest('.tab-pane').attr('id'),              
-                position: {
-                    left: box.attr('data-left'),
-                    top: box.attr('data-top'),
-                    width: box.attr('data-width'),
-                    height: box.attr('data-height')
-                },
-                interval: select.val()
-            }
-        }).get()
-
-        localStorage.setItem(this.chartStorageKey, JSON.stringify(data));
-    }
-
-    saveTabNames() {
-        const tabNames = {};
-        $('#allsky-charts-tabbar li.custom-tab').each(function () {
-            const href = $(this).find('a').attr('href'); // e.g., #tab2
-            const name = $(this).find('.tab-title').text().trim();
-            if (href) {
-                tabNames[href.replace('#', '')] = name;
-            }
-        });
-        localStorage.setItem('allsky-tab-names', JSON.stringify(tabNames));
-    }
-    
-    loadTabNamesAndBuildTabs() {
-        const tabNames = JSON.parse(localStorage.getItem('allsky-tab-names') || '{}');
-    
-        for (const [tabId, title] of Object.entries(tabNames)) {
-            if ($(`#${tabId}`).length === 0) {
-                this.tabCount++
-                // Tab content
-                $('#allsky-charts-main').append(`<div id="${tabId}" class="tab-pane fade"></div>`);
-    
-                // Tab header
-                $(`
-                    <li class="custom-tab">
-                        <a href="#${tabId}" data-toggle="tab">
-                            <span class="tab-title" contenteditable="false">${title}</span>
-                        </a>
-                        <span class="close-tab"><i class="fa-solid fa-trash-can"></i></span>
-                    </li>
-                `).insertBefore('#add-tab-btn');
-            } else {
-                // Update the name in case it was renamed
-                $(`#allsky-charts-tabbar a[href="#${tabId}"] .tab-title`).text(title);
-            }
-        }
-    
-        $('#allsky-charts-tabbar li:not(#add-tab-btn)').first().find('a').tab('show');
-    }
-
-    deleteTabName(tabId) {
-        tabId = tabId.replace('#', '');
-        const tabNames = JSON.parse(localStorage.getItem('allsky-tab-names') || '{}');
-        delete tabNames[tabId];
-        localStorage.setItem('allsky-tab-names', JSON.stringify(tabNames));
-    }
-
-    setTheme() {
-        if ($('body').hasClass('dark')) {
-            Highcharts.setOptions(this.darkTheme)
-        } else {
-            Highcharts.setOptions(this.lightTheme)
-        }
-    }
-
-    #setLockedState() {
-        $('#allsky-charts-chart-toggle-lock').removeClass('fa-lock')
-        $('#allsky-charts-chart-toggle-lock').removeClass('fa-lock-open')
-        if (this.chartsLocked) {
-            $('#allsky-charts-chart-toggle-lock').addClass('fa-lock')
-        } else {
-            $('#allsky-charts-chart-toggle-lock').addClass('fa-lock-open')
-        }
-        localStorage.setItem(this.chartLockedKey, this.chartsLocked ? 'true' : 'false')
-    }
-
-    buildUI() {
-        $.ajax({
-            url: 'includes/moduleutil.php?request=AvailableGraphs',
-            type: 'GET',
-            async: false,
-            dataType: 'json',
-            success: function (allskyChartData) {
-                var sidebar = $('#allsky-charts-sidebar')
-                $.each(allskyChartData, function (categoryName, chartsArray) {
-                    var collapseId = 'category-' + categoryName.toLowerCase()
-                    var panel = $('<div>', { class: 'panel panel-default chart-category' })
-
-                    var heading = $('<div>', { class: 'panel-heading' }).append(
-                        $('<h4>', { class: 'panel-title' }).append(
-                            $('<a>', {
-                                class: 'collapsed',
-                                'data-toggle': 'collapse',
-                                href: '#' + collapseId,
-                                text: categoryName
-                            })
-                        )
-                    )
-
-                    var body = $('<div>', {
-                        id: collapseId,
-                        class: 'panel-collapse collapse'
-                    }).append(
-                        $('<div>', { class: 'panel-body' })
-                    )
-
-                    chartsArray.forEach(function (chart) {
-                        var item = $('<div>', {
-                            class: 'allsky-charts-chart-menu-item',
-                            'data-module': chart.module,
-                            'data-chartkey': chart.key,
-                            draggable: true
-                        }).append(
-                            $('<i>', { class: chart.icon }).css({ marginRight: '5px' }),
-                            chart.title
-                        )
-
-                        body.find('.panel-body').append(item)
-                    })
-
-                    panel.append(heading).append(body)
-                    sidebar.append(panel)
-                })
-            },
-            error: function (xhr, status, error) {
-                console.error('Error:', error)
-            }
-        })
-
-        this.chartsLocked = localStorage.getItem(this.chartLockedKey) === 'true'
-        this.#setLockedState()
-
-        $('#allsky-charts-sidebar').hide()
-    }
-
-    getTabList() {
-        const tabs = [];
-        $('#allsky-charts-tabbar li.custom-tab').each(function () {
-            const href = $(this).find('a').attr('href')
-            const name = $(this).find('.tab-title').text().trim()
-            if (href) {
-                tabs.push({ id: href.replace('#', ''), name })
-            }
-        })
-
-        return tabs
-    }
-
-    updateAllTabSelectors() {
-        const tabList = this.getTabList();
-        $('.tab-selector').each(function () {
-            const current = $(this).val()
-            $(this).empty()
-            tabList.forEach(tab => {
-                $(this).append(`<option value="${tab.id}">${tab.name}</option>`);
-            })
-            $(this).val(current)
-        })
-    }
-
-    addEvents() {
-        let draggingSidebar = false
-        let offsetX = 0
-        let offsetY = 0
-
-        $('#add-tab-btn').on('click', (e) => {
-            this.tabCount++
-        
-            const newTabId = `tab${this.tabCount}`
-            const newTabTitle = `Tab ${this.tabCount}`
-        
-            const $newTab = $(`
-                <li class="custom-tab">
-                    <a href="#${newTabId}" data-toggle="tab">
-                        <span class="tab-title" contenteditable="false">${newTabTitle}</span>
-                    </a>
-                    <span class="close-tab"><i class="fa-solid fa-trash-can"></i></span>
+  buildHTML() {
+    let chartManager = `
+      <div id="as-chart-manager">
+        <div id="as-charts-toolbox-wrapper">
+          <nav class="navbar navbar-default">
+            <div class="collapse navbar-collapse" id="oe-module-editor-navbar">
+              <ul class="nav navbar-nav">
+                <li>
+                  <div class="tooltip-wrapper disabled" data-toggle="tooltip" data-container="body" data-placement="top" title="Save The Module Configuration">
+                    <div class="btn btn-lg navbar-btn" id="module-editor-save"><i class="fa-solid fa-border-all"></i></div>
+                  </div>
                 </li>
-            `).insertBefore('#add-tab-btn');
-        
-            $('#allsky-charts-main').append(`<div id="${newTabId}" class="tab-pane fade"></div>`);
-        
-            $newTab.find('a').tab('show')
-            this.saveTabNames()
-            this.updateAllTabSelectors()
-        });
+              </ul>
+              <ul class="nav navbar-nav navbar-right">
+                <li>
+                  <div class="btn btn-lg navbar-btn" id="device-manager" data-toggle="tooltip" data-container="body" data-placement="top" title="Device Manager"><i class="fa-solid fa-wrench"></i></div>
+                </li>
+              </ul>                            
+            </div>
+          </nav>
+          <div id="as-charts-groups" class="panel-group">SS</div>
+        </div>
+      </div>`;
+    $('#s-chart-manager').remove();
+    $('body').append(chartManager);
 
-        $('#allsky-charts-tabbar').on('click', '.close-tab', (e) => {
-            e.stopPropagation(); // Prevent the tab from switching
-        
-            const $li = $(e.currentTarget).closest('li');
-            const href = $li.find('a').attr('href'); // e.g., "#tab2"
-            const $tabPane = $(href);            
-            const tabId = href.replace('#', '');
-            const tabName = $li.find('.tab-title').text().trim();
-        
-            // Optional: Protect tab1
-            if (tabId === 'tab1') {
-                alert('Tab 1 cannot be deleted.');
-                return;
-            }
-
-            const hasCharts = $tabPane.find('.allsky-charts-dashboard-chart').length > 0;
-            if (hasCharts) {
-                alert(`You can't delete "${tabName}" — it still contains charts.`);
-                return;
-            }
-
-            // Confirm deletion
-            const confirmed = confirm(`Are you sure you want to delete "${tabName}" and all its charts?`);
-            if (!confirmed) return;
-        
-            // Remove charts in the tab
-            $(href).find('.allsky-charts-dashboard-chart').each(function () {
-                $(this).remove(); // You might also want to clear refresh timers here
-            });
-        
-            // Remove tab content + header
-            $(href).remove();
-            $li.remove();
-        
-            // Switch to the first available tab
-            $('#allsky-charts-tabbar li.custom-tab:not(#add-tab-btn)').first().find('a').tab('show');
-        
-            // Remove tab name from storage
-            this.deleteTabName(tabId);
-        
-            // Save updated chart layout
-            this.saveCharts()
-            this.updateAllTabSelectors()
-        });
-
-
-        $('#allsky-charts-lock').click((e) => {
-            this.chartsLocked = !this.chartsLocked
-            this.#setLockedState()
-        })
-
-        $('#allsky-charts-chart-list-toggle').click(function () {
-            this.chartListVisible = !this.chartListVisible
-
-            if (this.chartListVisible) {
-                $('#allsky-charts-sidebar').show()
-                $('#allsky-charts-sidebar').css('left', '225px');
-                $('#allsky-charts-sidebar').css('top', '150px');                
-                $('#allsky-charts-chart-list-toggle-label')
-                    .removeClass('label-default')
-                    .addClass('label-success')
-                    .text('ON');
-            } else {
-                $('#allsky-charts-sidebar').hide()
-                $('#allsky-charts-chart-list-toggle-label')
-                    .removeClass('label-success')
-                    .addClass('label-default')
-                    .text('OFF');
-            }
-        });
-
-        $('#allsky-charts-sidebar').on('mousedown', function (e) {
-            if ($(e.target).closest('.allsky-charts-chart-menu-item').length) {
-                return
-            }
-            draggingSidebar = true
-            offsetX = e.clientX - this.offsetLeft
-            offsetY = e.clientY - this.offsetTop
-        })
-
-        $(document)
-            .on('mousemove', function (e) {
-                if (!draggingSidebar) {
-                    return
-                }
-                $('#allsky-charts-sidebar').css({ left: `${e.clientX - offsetX}px`, top: `${e.clientY - offsetY}px` })
-            })
-            .on('mouseup', () => draggingSidebar = false)
-
-        $('.allsky-charts-chart-menu-item').attr('draggable', true).on('dragstart', function (e) {
-            e.originalEvent.dataTransfer.setData('module', $(this).data('module'))
-            e.originalEvent.dataTransfer.setData('chartkey', $(this).data('chartkey'))
-        })
-
-        $('#allsky-charts-main').on('dragover', (e) => {
-            e.preventDefault()
-        })
-
-        $('#allsky-charts-main').on('drop', (e) => {
-            e.preventDefault()
-            let activeTab = $('#allsky-charts-main .tab-pane.active')[0]
-            let el = e.currentTarget
-            const moduleName = e.originalEvent.dataTransfer.getData('module')
-            const chartKey = e.originalEvent.dataTransfer.getData('chartkey')
-
-            const rect = el.getBoundingClientRect()
-            const left = ((e.originalEvent.clientX - rect.left) / rect.width) * 100
-            const top = ((e.originalEvent.clientY - rect.top) / rect.height) * 100
-            const id = 'chart-' + (++this.chartCount)
-            const box = this.createChartBox(id, moduleName, chartKey, left, top, 30, 20)
-            if (box) {
-                //el.appendChild(box)
-                activeTab.appendChild(box);
-                this.renderChart(id, moduleName, chartKey)
-                this.setTheme()
-                this.saveCharts()
-            }
-        })
-
-        $(window).on('resize', () => {
-            $('.allsky-charts-dashboard-chart').each((_, el) => this.positionChartBox(el))
-        })
-
-        $(document).on('allsky-theme-change', (e) => {
-            this.setTheme()
-            this.reloadAllCharts()          
-        })
-
-        $('.chart-category').each(function () {
-            const $panel = $(this);
-            const $items = $panel.find('.allsky-charts-chart-menu-item');
-            const $collapse = $panel.find('.panel-collapse');
-
-           // if ($items.length === 1) {
-           //     $collapse.addClass('in'); // Bootstrap 3 collapse "open" class
-           //     $panel.find('.panel-title a').removeClass('collapsed');
-           // }
-        });
-
-        $('[data-toggle="tooltip"]').tooltip();
-
-        this.loadCharts()
-
-        // Double-click to enable editing
-        $('#allsky-charts-tabbar').on('dblclick', '.tab-title', function (e) {
-            e.stopPropagation();
-            const $title = $(this);
-            $title.attr('contenteditable', 'true').focus();
-        });
-
-        // Blur or Enter key to finish editing
-        $('#allsky-charts-tabbar').on('blur', '.tab-title', (e) => {
-            $(e.currentTarget).attr('contenteditable', 'false');
-            this.saveTabNames(); // persist if you want
-        });
-
-        $('#allsky-charts-tabbar').on('keydown', '.tab-title', function (e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                $(this).blur();
-            }
-        });        
+    // Containment to avoid absolutely-positioned charts leaking
+    const cssId = 'as-gm-style-core';
+    if (!document.getElementById(cssId)) {
+      $('<style id="as-gm-style-core">#as-gm-tablist-content .tab-pane{position:relative;overflow:hidden;}</style>').appendTo('head');
     }
 
-    run() {
-        this.buildUI()
-        this.addEvents()
-    }
+// Containment style already added above; add measuring style too:
+const cssMeasureId = 'as-gm-measuring-style';
+if (!document.getElementById(cssMeasureId)) {
+  $('<style id="as-gm-measuring-style">')
+    .text(`
+      .as-gm-measuring{
+        position:fixed !important;
+        left:-10000px !important;
+        top:-10000px !important;
+        display:block !important;
+        visibility:visible !important;
+        pointer-events:none !important;
+        opacity:1 !important;
+        z-index:-1 !important;
+      }
+    `)
+    .appendTo('head');
 }
 
-$(function () {
-    let chartManager = new CHARTMANAGER()
-    chartManager.run()
-})
+
+  }
+
+  buildChartGroups() {
+    $.ajax({
+      url: 'includes/moduleutil.php?request=AvailableGraphs',
+      type: 'GET',
+      async: false,
+      dataType: 'json',
+      success: function (allskyChartData) {
+        let idCounter = 1;
+        var chartGroups = $('#as-charts-groups');
+        chartGroups.html('');
+
+        $.each(allskyChartData, function (categoryName, chartsArray) {
+          var collapseId = 'category-' + String(categoryName).toLowerCase();
+          var panel = $('<div>', { class: 'panel panel-default chart-category' });
+          var heading = $('<div>', { class: 'panel-heading' }).append(
+            $('<h4>', { class: 'panel-title' }).append(
+              $('<a>', {
+                class: 'collapsed small',
+                'data-toggle': 'collapse',
+                href: '#' + collapseId,
+                text: categoryName
+              })
+            )
+          );
+          var body = $('<div>', {
+            id: collapseId,
+            class: 'panel-collapse collapse'
+          }).append(
+            $('<div>', { class: 'panel-body' })
+          );
+
+          chartsArray.forEach(function (chart) {
+            var item = $('<div>', {
+              id: `as-cm-chart-entry-${idCounter}`,
+              class: 'as-cm-chart-entry',
+              'data-module': chart.module,
+              'data-filename': chart.filename,
+              draggable: true
+            }).append(
+              $('<i>', { class: chart.icon + ' small' }).css({ marginRight: '5px' }),
+              chart.title
+            );
+            idCounter++;
+            body.find('.panel-body').append(item);
+          });
+
+          panel.append(heading).append(body);
+          chartGroups.append(panel);
+        });
+      }
+    });
+  }
+
+  // ---------- Tabs ----------
+
+  addTab(title, content) {
+    this.tabCounter++;
+    var tabId = "as-gm-tab-" + this.tabCounter;
+
+    var newTab = $(
+      '<li><a href="#' + tabId + '" data-toggle="tab">' +
+      '<span class="tab-title">' + (title || 'Tab ' + this.tabCounter) + '</span>' +
+      '<span class="as-gm-tab-tools">' +
+      '<button class="close close-tab"><i class="fa-regular fa-xmark small text-danger"></i></button></a></li>' +
+      '</span>'
+    );
+
+    $('#as-gm-add-tab').before(newTab);
+
+    var newContent = $(
+      '<div class="tab-pane fade as-gm-tab" id="' + tabId + '">' +
+      (content || '') +
+      '</div>'
+    );
+    $('#as-gm-tablist-content').append(newContent);
+
+    newTab.find('a').tab('show');
+    return tabId;
+  }
+
+removeTab(tabId) {
+  const $pane = $('#' + tabId);
+  const $li   = $('#as-gm-tablist a[href="#' + tabId + '"]').closest('li');
+  const wasActive = $li.hasClass('active');
+
+  // 1) Destroy any created chart instances in this pane
+  try {
+    const insts = $pane.data('allskyChart_instances') || [];
+    insts.forEach((inst) => {
+      try {
+        if (typeof inst.destroy === 'function') {
+          inst.destroy();
+        } else if (inst.chart && typeof inst.chart.destroy === 'function') {
+          inst.chart.destroy();
+        }
+        const $node = inst.$root || inst.$el || inst.$container || inst.$box;
+        if ($node && $node.length) $node.remove();
+      } catch (e) {
+        console.warn('Chart destroy failed:', e);
+      }
+    });
+    // Remove instance list so we don't keep stale refs
+    $pane.removeData('allskyChart_instances');
+  } catch (e) {
+    console.warn('Instance cleanup failed:', e);
+  }
+
+  // 2) Clear any queued (not-yet-created) charts for this tab
+  if (this._pendingChartsByTab && this._pendingChartsByTab[tabId]) {
+    delete this._pendingChartsByTab[tabId];
+  }
+
+  // 3) Decide which tab to activate next (if needed) before removing DOM
+  const $nextLink = $li.next('li').not('#as-gm-add-tab').find('a[data-toggle="tab"]');
+  const $prevLink = $li.prev('li').find('a[data-toggle="tab"]');
+
+  // 4) Remove the nav item and pane
+  $li.remove();
+  $pane.remove();
+
+  // 5) If we deleted the active tab, activate a neighbor and restore its pending charts
+  if (wasActive) {
+    const $toShow = $nextLink.length ? $nextLink : $prevLink;
+    if ($toShow && $toShow.length) {
+      $toShow.tab('show');
+      const newId = $toShow.attr('href').slice(1);
+      this._restoreChartsIfPending(newId);
+    } else {
+      // No tabs left except the add button; nothing to activate
+    }
+  }
+
+  // 6) Save the state immediately after deletion
+  if (this.opts && this.opts.saveUrl) {
+    this.saveStateToUrl(this.opts.saveUrl, {
+      wrap: this.opts.wrap,
+      field: this.opts.field,
+      includeMeta: this.opts.includeMeta,
+      ajax: { headers: this.opts.ajaxHeaders }
+    }).catch((e) => console.warn('Save after delete failed:', e));
+  } else {
+    // Fallback: still compute JSON (useful for debugging)
+    this.saveState();
+  }
+}
+
+
+startRename(a) {
+  // Ensure there's a .tab-title span to edit (works for Home too)
+  const href = a.attr('href');
+  if (href) this._ensureTitleSpan(href.slice(1));
+
+  const $title = a.find('.tab-title');
+  if (a.find('.tab-title-editor').length) return;
+
+  const current = ($title.text() || '').trim();
+  const $input = $('<input type="text" class="form-control input-sm tab-title-editor">').val(current);
+
+  $('.as-gm-tab-tools').css({ visibility: 'hidden', display: 'none' });
+  $title.replaceWith($input);
+  $input.focus().select();
+
+  const finish = (saveIt) => {
+    const newText = saveIt ? ($input.val().trim() || current) : current;
+
+    // Replace editor with final title span
+    $input.replaceWith(`<span class="tab-title">${$('<div>').text(newText).html()}</span>`);
+    $('.as-gm-tab-tools').css({ visibility: 'visible', display: 'inline' });
+
+    // SAVE THE STATE RIGHT AFTER RENAME
+    if (this.opts && this.opts.saveUrl) {
+      // Immediate POST (no debounce) so renames are persisted at once
+      this.saveStateToUrl(this.opts.saveUrl, {
+        wrap: this.opts.wrap,
+        field: this.opts.field,
+        includeMeta: this.opts.includeMeta,
+        ajax: { headers: this.opts.ajaxHeaders }
+      }).catch((e) => console.warn('Rename save failed:', e));
+    } else {
+      // Fallback: still compute JSON (e.g., for debugging)
+      this.saveState();
+    }
+  };
+
+  $input.on('keydown', (e) => {
+    if (e.key === 'Enter') finish(true);
+    if (e.key === 'Escape') finish(false);
+  });
+  $input.on('blur', () => finish(true));
+}
+
+
+  // ---------- Events / DnD ----------
+
+  setupEvents() {
+    $('#as-charts-menu').off('click').on('click', (e) => this.show());
+
+    $(document).on('click', (e) => {
+      let isInside = $(e.target).closest('#as-charts-toolbox-wrapper').length > 0;
+      let isExcluded = $(e.target).closest('#as-charts-menu').length > 0;
+      if (!isInside && !isExcluded) this.hide();
+    });
+
+    $('#as-gm-add-tab').off('click').on('click', (e) => this.addTab());
+
+    $('#as-gm-tablist')
+      .on('click', '.close-tab', (e) => {
+        e.stopPropagation();
+        var tabId = $(e.currentTarget).closest('a').attr('href').substring(1);
+        this.removeTab(tabId);
+      })
+      .on('dblclick', '.tab-title', (e) => {
+        let el = e.currentTarget;
+        e.stopPropagation();
+        e.preventDefault();
+        this.startRename($(el).closest('a'));
+      });
+
+    $(document).on('dragover', '.as-gm-tab', function (e) { e.preventDefault(); });
+
+    $(document).on('dragstart', '.as-cm-chart-entry', function (e) {
+      e.originalEvent.dataTransfer.setData('id', $(this).attr('id'));
+    });
+
+    // Drop a chart entry onto a tab pane → queue/build it there
+    $(document).on('drop', '.as-gm-tab', (e) => {
+      let targetTab = e.currentTarget.id;
+      let elId = e.originalEvent.dataTransfer.getData('id');
+      if (!elId) return;
+
+      elId = $(`#${elId}`);
+      let chartFileName = elId.data('filename');
+
+      let $pane = $(`#${targetTab}`).addClass('as-grid-bg');
+      // Use guarded creation (queues if hidden)
+      this._createChartFromState($pane, {
+        filename: chartFileName,
+        top: 0, left: 0, width: 320, height: 240
+      });
+    });
+  }
+
+  // ---------- Instances / Bounds ----------
+
+  getAllChartBoundsIn(tab) {
+    var instances = tab.data('allskyChart_instances') || [];
+    return instances
+      .map(function (inst, i) {
+        var b = inst.getBounds && inst.getBounds();
+        if (!b) return null;
+        return {
+          index: i,
+          title: inst.$title ? inst.$title.text() : null,
+          top: b.top,
+          left: b.left,
+          width: b.width,
+          height: b.height,
+          filename: b.filename || null
+        };
+      })
+      .filter(Boolean);
+  }
+
+/**
+ * Make a hidden tab-pane measurable without showing it.
+ * Moves it off-screen temporarily, runs `fn()`, then restores styles.
+ */
+_makeMeasurable($pane, fn) {
+  // If it's already visible, just run.
+  if ($pane.is(':visible')) return fn();
+
+  const el = $pane[0];
+  const s  = el.style;
+  const orig = {
+    display: s.display,
+    visibility: s.visibility,
+    position: s.position,
+    left: s.left,
+    top: s.top,
+    width: s.width
+  };
+
+  // Put pane off-screen and visible for layout
+  $pane.addClass('as-gm-measuring');
+
+  // Give it a sensible width so children can compute layout
+  const $host = $('#as-gm-tablist-content');
+  const hostW = $host.width() || $pane.parent().width() || 800;
+  s.width = hostW + 'px';
+
+  // Force reflow
+  // eslint-disable-next-line no-unused-expressions
+  el.offsetHeight;
+
+  let out;
+  try {
+    out = fn();
+  } finally {
+    // Restore everything
+    $pane.removeClass('as-gm-measuring');
+    s.display    = orig.display;
+    s.visibility = orig.visibility;
+    s.position   = orig.position;
+    s.left       = orig.left;
+    s.top        = orig.top;
+    s.width      = orig.width;
+  }
+  return out;
+}
+
+
+  // ---------- SAVE ----------
+
+  /** Return JSON string of the current state (for debugging/manual use). */
+  saveState() {
+    const payload = this._collectState();
+    return JSON.stringify(payload, null, 2);
+  }
+
+
+/** Build full state for ALL tabs, including charts queued for hidden tabs. */
+_collectState() {
+  const allTabs = [];
+
+  $('#as-gm-tablist-content .tab-pane').each((_, el) => {
+    const $pane = $(el);
+    const tabId = $pane.attr('id');
+    const title = this._getTabTitle(tabId);
+
+    // 1) Charts already created in this pane (visible or hidden)
+    const created = this._makeMeasurable($pane, () => {
+      return this.getAllChartBoundsIn($pane) || [];
+    }) || [];
+
+    // 2) Charts queued for this tab but not created yet (strict lazy-create)
+    const queuedRaw = (this._pendingChartsByTab && this._pendingChartsByTab[tabId])
+      ? this._pendingChartsByTab[tabId]
+      : [];
+
+    // Normalize queued bounds (they can be strings)
+    const queued = queuedRaw.map((c) => this._normalizeBounds(c));
+
+    // 3) Merge created + queued
+    const charts = created.concat(queued);
+
+    allTabs.push({ tabId, title, charts });
+  });
+
+  return allTabs;
+}
+
+
+
+  /**
+   * Save current layout via POST to an AJAX URL (JSON).
+   * @param {string} url
+   * @param {Object} [opts]
+   * @param {boolean} [opts.wrap=false]
+   * @param {string}  [opts.field='state']
+   * @param {boolean} [opts.includeMeta=true]
+   * @param {Object}  [opts.ajax={}]
+   * @returns {Promise}
+   */
+  saveStateToUrl(url, opts = {}) {
+    const { wrap = false, field = 'state', includeMeta = true, ajax = {} } = opts;
+
+    const state = this._collectState();
+    let payload = state;
+    if (wrap) {
+      payload = { [field]: state };
+      if (includeMeta) {
+        payload.meta = { savedAt: new Date().toISOString(), version: 1 };
+      }
+    }
+
+    return $.ajax(Object.assign({
+      url,
+      method: 'POST',
+      data: JSON.stringify(payload),
+      contentType: 'application/json; charset=utf-8',
+      dataType: 'json',
+      cache: false,
+      headers: this.opts.ajaxHeaders
+    }, ajax));
+  }
+
+  // ---------- LOAD ----------
+
+  /**
+   * GET a saved layout from an AJAX URL and load it.
+   * Leaves current tabs intact if server returns empty.
+   */
+  loadStateFromUrl(url, opts = {}) {
+    const { clearExisting = true, reuseTabIds = true, ajax = {} } = opts;
+
+    return $.ajax(Object.assign({
+      url,
+      method: 'GET',
+      dataType: 'json',
+      cache: false,
+      headers: this.opts.ajaxHeaders
+    }, ajax)).then((resp) => {
+      let payload = Array.isArray(resp) ? resp : (resp && resp.state);
+      if (!payload || !Array.isArray(payload) || payload.length === 0) {
+        // Keep the existing UI (first tab etc.)
+        console.info('loadStateFromUrl(): empty state, leaving tabs unchanged');
+        return;
+      }
+      this.loadState(payload, { clearExisting, reuseTabIds });
+    }).catch((xhr, status, err) => {
+      console.error('loadStateFromUrl(): AJAX error', { status, err, xhr });
+    });
+  }
+
+  /**
+   * Load a saved layout object/JSON and rebuild tabs + charts.
+   * Uses strict lazy creation (queue charts for hidden tabs).
+   */
+  loadState(state, opts = {}) {
+    const { clearExisting = true, reuseTabIds = true } = opts;
+
+    const data = (typeof state === 'string') ? JSON.parse(state) : state;
+    if (!Array.isArray(data) || data.length === 0) {
+      console.info('loadState(): empty state, leaving current tabs unchanged');
+      return;
+    }
+
+    if (clearExisting && !reuseTabIds) {
+      // Wipe and rebuild
+      $('#as-gm-tablist-content .tab-pane').remove();
+      $('#as-gm-tablist li').not('#as-gm-add-tab').remove();
+      this.tabCounter = 1;
+    } else if (clearExisting && reuseTabIds) {
+      // Remove panes/nav not present in payload; keep matching ids
+      const keepIds = new Set(data.map(t => t.tabId).filter(Boolean));
+      $('#as-gm-tablist-content .tab-pane').each((_, el) => {
+        const id = el.id;
+        if (!keepIds.has(id)) $(el).remove();
+      });
+      $('#as-gm-tablist li').each((_, li) => {
+        const $a = $(li).find('a[href^="#"]');
+        if (!$a.length) return;
+        const id = $a.attr('href').slice(1);
+        if (!keepIds.has(id)) $(li).remove();
+      });
+    }
+
+    // Rebuild tabs (queue charts; don't build yet for hidden panes)
+    data.forEach((t, idx) => {
+      let tabId = t.tabId || '';
+      const title  = (t.title || `Tab ${idx + 1}`).trim();
+      const charts = Array.isArray(t.charts) ? t.charts : [];
+
+      const exists = tabId && $(`#${tabId}`).length > 0;
+      if (reuseTabIds && exists) {
+        this._setTabTitle(tabId, title);
+        $(`#${tabId}`).empty().addClass('tab-pane as-gm-tab as-grid-bg');
+      } else {
+        tabId = this.addTab(title);
+        if (reuseTabIds && t.tabId && tabId !== t.tabId) { this._renameTabIds(tabId, t.tabId); tabId = t.tabId; }
+        $(`#${tabId}`).addClass('as-grid-bg');
+      }
+
+      // Queue charts for later (when tab becomes visible)
+      this._pendingChartsByTab[tabId] = (this._pendingChartsByTab[tabId] || []).concat(charts);
+    });
+
+    // Ensure one tab is active; then build only that tab's charts
+    const $active = $('#as-gm-tablist li.active a[data-toggle="tab"]');
+    if ($active.length) {
+      this._restoreChartsIfPending($active.attr('href').slice(1));
+    } else {
+      const $first = $('#as-gm-tablist li:not(#as-gm-add-tab) a[data-toggle="tab"]').first();
+      if ($first.length) $first.tab('show'); // triggers _restoreChartsIfPending via event
+    }
+
+
+// Always end up back on the first tab after load
+const $first = $('#as-gm-tablist li:not(#as-gm-add-tab) a[data-toggle="tab"]').first();
+if ($first.length) {
+  $first.tab('show');
+  const firstId = $first.attr('href').slice(1);
+  this._restoreChartsIfPending(firstId);
+}
+
+
+  }
+
+  // ---------- Title / ID helpers ----------
+
+  /** Ensure a `.tab-title` span exists inside the nav <a> for a tabId. Returns that span. */
+  _ensureTitleSpan(tabId) {
+    const $a = $(`#as-gm-tablist a[href="#${tabId}"]`);
+    if (!$a.length) return $();
+    let $title = $a.find('.tab-title');
+    if ($title.length) return $title;
+
+    // Extract existing text (minus tools/icons) and wrap it
+    const $clone = $a.clone();
+    $clone.find('.as-gm-tab-tools, i, .close, button').remove();
+    const text = ($clone.text() || '').trim() || 'Tab';
+    const $tools = $a.find('.as-gm-tab-tools').detach();
+    $a.empty().append(`<span class="tab-title">${$('<div>').text(text).html()}</span>`);
+    if ($tools.length) $a.append($tools);
+    return $a.find('.tab-title');
+  }
+
+  _getTabTitle(tabId) {
+    const $a = $(`#as-gm-tablist a[href="#${tabId}"]`);
+    if (!$a.length) return '';
+    const $title = this._ensureTitleSpan(tabId);
+    return ($title.text() || '').trim();
+  }
+
+  _setTabTitle(tabId, title) {
+    const $title = this._ensureTitleSpan(tabId);
+    if ($title.length) $title.text(title);
+  }
+
+  _renameTabIds(oldId, newId) {
+    if (!oldId || !newId || oldId === newId) return;
+    const $pane = $(`#${oldId}`);
+    const $link = $(`#as-gm-tablist a[href="#${oldId}"]`);
+    if ($pane.length) $pane.attr('id', newId);
+    if ($link.length) $link.attr('href', `#${newId}`);
+  }
+
+  // ---------- Bounds / creation helpers ----------
+
+  /** Parse "120", "120px", "120.5", " 120 " → finite rounded number. */
+  _toNumber(v, fallback = 0) {
+    if (typeof v === 'number' && Number.isFinite(v)) return Math.round(v);
+    if (typeof v === 'string') {
+      const n = parseFloat(v.trim());
+      if (Number.isFinite(n)) return Math.round(n);
+    }
+    return Math.round(fallback);
+  }
+
+  /** Normalize a saved chart bounds object (strings -> numbers, with defaults). */
+  _normalizeBounds(c) {
+    return {
+      top:    this._toNumber(c.top,    0),
+      left:   this._toNumber(c.left,   0),
+      width:  this._toNumber(c.width,  320),
+      height: this._toNumber(c.height, 240),
+      filename: c.filename || null
+    };
+  }
+
+  /**
+   * Strictly lazy: if pane hidden and force=false, queue instead of creating now.
+   * Accepts { force } to bypass the visible gate (used when tab is shown).
+   * Uses initialPos / initialSize per your request.
+   */
+  _createChartFromState($pane, c, { force = false } = {}) {
+    if (!force && !$pane.is(':visible')) {
+      const tabId = $pane.attr('id');
+      (this._pendingChartsByTab[tabId] ||= []).push(c);
+      return;
+    }
+
+    const nc = this._normalizeBounds(c);
+    if (!nc.filename) return;
+
+    const beforeLen = ($pane.data('allskyChart_instances') || []).length;
+
+    // Pane is visible: safe to build
+    $pane.allskyChart({
+      configUrl: 'includes/moduleutil.php?request=GraphData&filename=' + encodeURIComponent(nc.filename),
+      filename: nc.filename,
+
+      initialPos:  { top: nc.top, left: nc.left },
+      initialSize: { width: nc.width, height: nc.height },
+
+      grid: { enabled: true, size: { x: 24, y: 24 }, snap: 'end' },
+
+      onBoundsChange: () => this._saveDebounced(),
+      onDelete: () => this._saveDebounced()
+    });
+
+    // Enforce saved bounds after init (if plugin applies its own defaults)
+    requestAnimationFrame(() => {
+      const after = $pane.data('allskyChart_instances') || [];
+      const newInsts = after.slice(beforeLen);
+      newInsts.forEach((inst) => this._applyBounds(inst, nc));
+    });
+  }
+
+  /** Create queued charts for a tab that just became visible. */
+  _restoreChartsIfPending(tabId) {
+    const pending = this._pendingChartsByTab[tabId];
+    if (!pending || !pending.length) return;
+    const $pane = $(`#${tabId}`).addClass('as-grid-bg');
+    pending.splice(0).forEach((c) => this._createChartFromState($pane, c, { force: true }));
+  }
+
+  /**
+   * Apply bounds directly on an instance (API or CSS fallback) and reflow.
+   */
+  _applyBounds(inst, b) {
+    try {
+      if (!inst) return;
+      if (typeof inst.setBounds === 'function') {
+        inst.setBounds(b);
+      } else {
+        if (typeof inst.setPosition === 'function') inst.setPosition(b.left, b.top);
+        if (typeof inst.setSize === 'function') inst.setSize(b.width, b.height);
+        const $node = inst.$root || inst.$el || inst.$container || inst.$box;
+        if ($node && $node.length) {
+          if ($node.css('position') === 'static') $node.css('position', 'absolute');
+          $node.css({ top: b.top, left: b.left, width: b.width, height: b.height });
+        }
+      }
+      if (typeof inst.reflow === 'function') inst.reflow();
+      if (inst.chart && typeof inst.chart.reflow === 'function') inst.chart.reflow();
+    } catch (e) {
+      console.warn('Bounds enforcement failed:', e);
+    }
+  }
+
+  // ---------- Misc ----------
+
+  _debounce(fn, wait = 300) {
+    let t;
+    return (...args) => { clearTimeout(t); t = setTimeout(() => fn.apply(this, args), wait); };
+  }
+}

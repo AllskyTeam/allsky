@@ -26,77 +26,13 @@ class ALLSKYCLEARSKY(ALLSKYMODULEBASE):
 		],
 		"experimental": "true",
   		"group": "Image Analysis",
-        "graphs": {
-            "chart1": {
-				"icon": "fa-solid fa-chart-line",
-				"title": "Sky State",
-				"group": "Analysis",
-				"main": "true",
-				"config": {
-					"tooltip": "true",
-					"chart": {
-						"type": "spline",
-						"zooming": {
-							"type": "x"
-						}
-					},
-					"title": {
-						"text": "Sky State"
-					},
-					"plotOptions": {
-						"series": {
-							"animation": "false"
-						}
-					},
-					"xAxis": {
-						"type": "datetime",
-						"dateTimeLabelFormats": {
-							"day": "%Y-%m-%d",
-							"hour": "%H:%M"
-						}
-					},
-					"yAxis": [
-						{ 
-							"title": {
-								"text": "Sky State"
-							} 
-						},
-						{ 
-							"title": {
-								"text": "Star Count"
-							},
-       						"opposite": "true" 
-						}
-					],
-					"lang": {
-						"noData": "No data available"
-					},
-					"noData": {
-						"style": {
-							"fontWeight": "bold",
-							"fontSize": "16px",
-							"color": "#666"
-						}
-					}
-				},
-				"series": {
-					"state": {
-						"name": "Sky State",
-						"yAxis": 0,
-						"variable": "AS_CLEARSKYSTATEFLAG"                 
-					},
-					"state": {
-						"name": "Star Count",
-						"yAxis": 1,
-						"variable": "AS_CLEARSKYSTATESTARS"                 
-					}          
-				}
-			}
-		}, 
 		"extradata": {
 			"database": {
 				"enabled": "True",
-				"table": "allsky_clearsky"
+				"table": "allsky_clearsky",
+    			"pk": "id",
+    			"pk_source": "image_timestamp",
+    			"pk_type": "int"    
 			}, 
 			"values": {
 				"AS_CLEARSKYSTATE": {

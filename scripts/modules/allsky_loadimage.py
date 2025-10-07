@@ -27,132 +27,13 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 			"day",
 			"night"
 		],
-        "graphs": {
-			"chart1": {
-				"icon": "fas fa-chart-line",
-				"title": "Camera",
-				"group": "Camera",
-				"main": "true",
-				"config": {
-					"tooltip": "true",
-					"chart": {
-						"type": "spline",
-						"zooming": {
-							"type": "x"
-						}
-					},
-					"title": {
-						"text": "Camera"
-					},
-					"plotOptions": {
-						"series": {
-							"animation": "false"
-						}
-					},
-					"xAxis": {
-						"type": "datetime",
-						"dateTimeLabelFormats": {
-							"day": "%Y-%m-%d",
-							"hour": "%H:%M"
-						}
-					},
-					"yAxis": [
-						{
-							"title": {
-								"text": "Exposure"
-							}
-						},
-						{
-							"title": {
-								"text": "Gain"
-							},
-							"opposite": "true"
-						}
-					],
-					"lang": {
-						"noData": "No data available"
-					},
-					"noData": {
-						"style": {
-							"fontWeight": "bold",
-							"fontSize": "16px",
-							"color": "#666"
-						}
-					}
-				},
-				"series": {
-					"exposure": {
-						"name": "Exposure",
-						"yAxis": 0,
-						"variable": "AS_CAMERAEXPOSURE|AS_CAMERAIMAGEURL"
-					},
-					"gain": {
-						"name": "Gain",
-						"yAxis": 1,
-						"variable": "AS_CAMERAGAIN"
-					}
-				}
-			},
-			"temp": {
-				"icon": "fas fa-chart-line",
-				"title": "Camera Temperature",
-				"group": "Camera",
-				"main": "true",
-				"config": {
-					"tooltip": "true",
-					"chart": {
-						"type": "spline",
-						"zooming": {
-							"type": "x"
-						}
-					},
-					"title": {
-						"text": "Camera Temperature"
-					},
-					"plotOptions": {
-						"series": {
-							"animation": "false"
-						}
-					},
-					"xAxis": {
-						"type": "datetime",
-						"dateTimeLabelFormats": {
-							"day": "%Y-%m-%d",
-							"hour": "%H:%M"
-						}
-					},
-					"yAxis": [
-						{
-							"title": {
-								"text": "Temperature"
-							}
-						}
-					],
-					"lang": {
-						"noData": "No data available"
-					},
-					"noData": {
-						"style": {
-							"fontWeight": "bold",
-							"fontSize": "16px",
-							"color": "#666"
-						}
-					}
-				},
-				"series": {
-					"exposure": {
-						"name": "Temperature",
-						"yAxis": 0,
-						"variable": "AS_CAMERATEMPERATURE|AS_CAMERAIMAGEURL"
-					}
-				}
-			}
-        },
 		"extradata": {
 			"database": {
 				"enabled": "True",
-				"table": "allsky_camera",
-				"row_type": "int",
+				"table": "allsky_image",
+    			"pk": "id",
+    			"pk_source": "image_timestamp",
+    			"pk_type": "int",
     			"include_all": "true"
 			},
 			"values": {
@@ -170,7 +51,11 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 					"sample": "",
 					"group": "Camera",
 					"description": "Day / night flag",
-					"type": "string"
+					"type": "string",
+     				"dbtype": "varchar(10)",
+					"database": {
+						"table": "alex"
+					}
 				},
 				"AS_AUTOEXPOSURE": {
 					"name": "${AUTOEXPOSURE}",
@@ -286,7 +171,7 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 			self.log(0, f'ERROR: Cannot load {allsky_shared.CURRENTIMAGEPATH}: {e}', exitCode=1)
 
 		filename = os.path.basename(allsky_shared.CURRENTIMAGEPATH)
-		date = filename[6:14]
+		date = allsky_shared.get_environment_variable('DATE_NAME')
 		url = f'/images/{date}/thumbnails/{filename}'
 
 		extra_data = {}

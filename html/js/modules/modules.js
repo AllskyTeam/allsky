@@ -176,6 +176,7 @@ class MODULESEDITOR {
                     }
                 });
 
+                $(document).off('click', '.module-enable');				
                 $(document).on('click', '.module-enable', (event) => {
                     let module = $(event.target).data('module');
                     let state = $(event.target).is(':checked');
@@ -194,6 +195,7 @@ class MODULESEDITOR {
                     $(document).trigger('module:dirty');
                 });
 
+				$(document).off('click', '.module-settings-button');
                 $(document).on('click', '.module-settings-button', (event) => {
 
 					/*var loadingTimer = setTimeout(() => {
@@ -267,7 +269,8 @@ class MODULESEDITOR {
                         }
                     }
                 });
-				
+
+				$(document).off('keyup', '#module-available-filter');				
 				$(document).on('keyup', '#module-available-filter', () => {
 					var searchText = $("#module-available-filter").val()
 					$("#modules-available .allskymodule").each(function () {
@@ -279,13 +282,14 @@ class MODULESEDITOR {
 						}
 					});
 				}) 
+				$(document).off('click', '#module-available-filter-clear');				
 				$(document).on('click', '#module-available-filter-clear', () => {
 					$("#module-available-filter").val('')
 					$("#modules-available .allskymodule").each(function () {
 						this.style.display = 'block'
 					});					
 				}) 
-
+				$(document).off('keyup', '#module-selected-filter');
 				$(document).on('keyup', '#module-selected-filter', () => {
 					var searchText = $("#module-selected-filter").val()
 					$("#modules-selected .allskymodule").each(function () {
@@ -299,13 +303,14 @@ class MODULESEDITOR {
 						}
 					});
 				}) 
+				$(document).off('click', '#module-selected-filter-clear');
 				$(document).on('click', '#module-selected-filter-clear', () => {
 					$("#module-selected-filter").val('')
 					$("#modules-selected .allskymodule").each(function () {
 						this.style.display = 'block'
 					});					
 				}) 				
-
+				$(document).off('module:dirty');
                 $(document).on('module:dirty', () => {
                     this.#dirty = true;
                     this.#updateToolbar();
@@ -314,6 +319,7 @@ class MODULESEDITOR {
 				this.#checkDependencies()
             });
 
+			$(document).off('hidden.bs.modal', '.modal');			
 			$(document).on('hidden.bs.modal', '.modal', function () {
 				if ($('.modal:visible').length) {
 					$('body').addClass('modal-open');
@@ -1116,21 +1122,12 @@ class MODULESEDITOR {
 					}
 					
 					if (fieldType == 'graph') {
-						if ('graphs' in moduleData.metadata) {
-							if (this.#settings.haveDatabase) {
-								Object.entries(moduleData.metadata.graphs).forEach(([graphName, graphData]) => {
-									if ('main' in graphData) {
-										if (graphData.main == 'true') {
-											controls['chart'].push({
-												'id': key,
-												'chartkey': graphName,
-												'module': module.replace('.py', '')
-											})						
-											inputHTML = `<div id="${key}"></div>`
-										}
-									}
-								});
-							}
+						if (this.#settings.haveDatabase) {
+							controls['chart'].push({
+								'id': key,
+								'module': module.replace('.py', '')
+							})						
+							inputHTML = `<div id="${key}"><h3 class="text-center">No history available</h3></div>`
 						}
 					}
 
@@ -1174,14 +1171,11 @@ class MODULESEDITOR {
 						if (this.#settings.haveDatabase) {					
 							fieldHTML = `
 								<div class="form-group" id="${key}-wrapper">
-									<div class="col-xs-11">
+									<div class="col-xs-12">
 										<div class="${extraClass}">
 											${inputHTML}
 										</div>
 										${helpText}
-									</div>
-									<div class="col-xs-1">
-										${fieldPostHTML}
 									</div>
 								</div>
 							`
@@ -1571,78 +1565,27 @@ class MODULESEDITOR {
 			$(value['id']).allskyURLCHECK({});
 		})
 
-		Object.entries(controls['chart']).forEach(([key, value]) => {
-
+		Object.entries(controls['chart']).forEach(([id, value]) => {
 			$.ajax({
-				url: 'includes/moduleutil.php?request=GraphData',
+				url: 'includes/moduleutil.php?request=ModuleGraphData',
 				type: 'POST',
 				data: {
-					'module': value.module,
-					'chartkey': value.chartkey
+					'module': value.module
 				},
 				dataType: 'json',
-				success: function (allskyChartData) {
-
-					if ($('body').hasClass('dark')) {
-						Highcharts.theme = {
-							chart: {
-								backgroundColor: '#1e1e1e', 
-								style: { color: '#ffffff' }
-							},
-							title: { style: { color: '#ffffff' } },
-							xAxis: {
-								labels: { style: { color: '#ffffff' } },
-								lineColor: '#ffffff',
-								tickColor: '#ffffff'
-							},
-							yAxis: {
-								labels: { style: { color: '#ffffff' } },
-								gridLineColor: '#444444',
-								title: { style: { color: '#ffffff' } }
-							},
-							legend: {
-								itemStyle: { color: '#ffffff' },
-								itemHoverStyle: { color: '#cccccc' }
-							},
-							tooltip: {
-								backgroundColor: 'rgba(0, 0, 0, 0.7)',
-								style: { color: '#ffffff' }
-							},
-							plotOptions: {
-								series: { dataLabels: { color: '#ffffff' } }
-							}
-						};
-						
-						Highcharts.setOptions(Highcharts.theme);
+				success: function (chartInfo) {
+					if (chartInfo.path !== undefined && chartInfo.filename !== undefined) {
+						$(`#${value.id}`).allskyChart({
+							configUrl: 'includes/moduleutil.php?request=GraphData&filename=' + encodeURIComponent(chartInfo.path) + '/' + chartInfo.filename,
+							filename: chartInfo.filename,
+							startPos: { top: 0, left: 0 },
+							showDeleteButton: false,
+							resizeParentHeight: true,
+							fitParentWidth: true,
+							enableDrag: false,
+							enableResize: false
+						});
 					}
-
-
-					const hasTooltip = allskyChartData.tooltip
-					if (hasTooltip !== undefined) {
-						allskyChartData.tooltip =  {
-							useHTML: true,
-							formatter: function () {
-								return `
-									<b>${Highcharts.dateFormat('%A, %b %e, %Y %H:%M', this.x)}</b><br>
-									Value: ${this.y}<br>
-									<img src="${this.point.data}" style="width:100px;height:auto;border:1px solid #ccc;" />
-									`;
-							}
-						}
-						const chartType = allskyChartData.chart?.type;
-						if (chartType === 'line' || chartType === 'spline') {
-							allskyChartData.chart = allskyChartData.chart || {};
-							allskyChartData.chart.events = allskyChartData.chart.events || {};
-	
-							allskyChartData.series[0].data.forEach(point => {
-								Highcharts.addEvent(point, 'click', function () {
-									console.log('Point clicked:', this);
-									window.open(this.data.replace('thumbnails/',''), '_blank');
-								});
-							});                    
-						}
-					}
-					Highcharts.chart(value['id'], allskyChartData);
 				},
 				error: function (xhr, status, error) {
 					console.error('AJAX error:', status, error);

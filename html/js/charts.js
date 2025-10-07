@@ -70,7 +70,7 @@ class ASCHARTMANAGER {
 
   buildHTML() {
     let chartManager = `
-      <div id="as-chart-manager">
+      <div id="as-chart-manager" class="noselect">
         <div id="as-charts-toolbox-wrapper">
           <nav class="navbar navbar-default">
             <div class="collapse navbar-collapse" id="oe-module-editor-navbar">
@@ -100,11 +100,11 @@ class ASCHARTMANAGER {
       $('<style id="as-gm-style-core">#as-gm-tablist-content .tab-pane{position:relative;overflow:hidden;}</style>').appendTo('head');
     }
 
-// Containment style already added above; add measuring style too:
-const cssMeasureId = 'as-gm-measuring-style';
-if (!document.getElementById(cssMeasureId)) {
-  $('<style id="as-gm-measuring-style">')
-    .text(`
+    // Containment style already added above; add measuring style too:
+    const cssMeasureId = 'as-gm-measuring-style';
+    if (!document.getElementById(cssMeasureId)) {
+      $('<style id="as-gm-measuring-style">')
+        .text(`
       .as-gm-measuring{
         position:fixed !important;
         left:-10000px !important;
@@ -116,8 +116,8 @@ if (!document.getElementById(cssMeasureId)) {
         z-index:-1 !important;
       }
     `)
-    .appendTo('head');
-}
+        .appendTo('head');
+    }
 
 
   }
@@ -139,7 +139,7 @@ if (!document.getElementById(cssMeasureId)) {
           var heading = $('<div>', { class: 'panel-heading' }).append(
             $('<h4>', { class: 'panel-title' }).append(
               $('<a>', {
-                class: 'collapsed small',
+                class: 'collapsed',
                 'data-toggle': 'collapse',
                 href: '#' + collapseId,
                 text: categoryName
@@ -154,12 +154,16 @@ if (!document.getElementById(cssMeasureId)) {
           );
 
           chartsArray.forEach(function (chart) {
+            let enabledClass='';
+            if (chart.enabled) {
+              enabledClass = 'as-cm-chart-entry-enabled';
+            }
             var item = $('<div>', {
               id: `as-cm-chart-entry-${idCounter}`,
-              class: 'as-cm-chart-entry',
+              class: `as-cm-chart-entry fs-16 noselect ${enabledClass}`,
               'data-module': chart.module,
               'data-filename': chart.filename,
-              draggable: true
+              draggable: chart.enabled
             }).append(
               $('<i>', { class: chart.icon + ' small' }).css({ marginRight: '5px' }),
               chart.title
@@ -202,116 +206,116 @@ if (!document.getElementById(cssMeasureId)) {
     return tabId;
   }
 
-removeTab(tabId) {
-  const $pane = $('#' + tabId);
-  const $li   = $('#as-gm-tablist a[href="#' + tabId + '"]').closest('li');
-  const wasActive = $li.hasClass('active');
+  removeTab(tabId) {
+    const $pane = $('#' + tabId);
+    const $li = $('#as-gm-tablist a[href="#' + tabId + '"]').closest('li');
+    const wasActive = $li.hasClass('active');
 
-  // 1) Destroy any created chart instances in this pane
-  try {
-    const insts = $pane.data('allskyChart_instances') || [];
-    insts.forEach((inst) => {
-      try {
-        if (typeof inst.destroy === 'function') {
-          inst.destroy();
-        } else if (inst.chart && typeof inst.chart.destroy === 'function') {
-          inst.chart.destroy();
+    // 1) Destroy any created chart instances in this pane
+    try {
+      const insts = $pane.data('allskyChart_instances') || [];
+      insts.forEach((inst) => {
+        try {
+          if (typeof inst.destroy === 'function') {
+            inst.destroy();
+          } else if (inst.chart && typeof inst.chart.destroy === 'function') {
+            inst.chart.destroy();
+          }
+          const $node = inst.$root || inst.$el || inst.$container || inst.$box;
+          if ($node && $node.length) $node.remove();
+        } catch (e) {
+          console.warn('Chart destroy failed:', e);
         }
-        const $node = inst.$root || inst.$el || inst.$container || inst.$box;
-        if ($node && $node.length) $node.remove();
-      } catch (e) {
-        console.warn('Chart destroy failed:', e);
-      }
-    });
-    // Remove instance list so we don't keep stale refs
-    $pane.removeData('allskyChart_instances');
-  } catch (e) {
-    console.warn('Instance cleanup failed:', e);
-  }
-
-  // 2) Clear any queued (not-yet-created) charts for this tab
-  if (this._pendingChartsByTab && this._pendingChartsByTab[tabId]) {
-    delete this._pendingChartsByTab[tabId];
-  }
-
-  // 3) Decide which tab to activate next (if needed) before removing DOM
-  const $nextLink = $li.next('li').not('#as-gm-add-tab').find('a[data-toggle="tab"]');
-  const $prevLink = $li.prev('li').find('a[data-toggle="tab"]');
-
-  // 4) Remove the nav item and pane
-  $li.remove();
-  $pane.remove();
-
-  // 5) If we deleted the active tab, activate a neighbor and restore its pending charts
-  if (wasActive) {
-    const $toShow = $nextLink.length ? $nextLink : $prevLink;
-    if ($toShow && $toShow.length) {
-      $toShow.tab('show');
-      const newId = $toShow.attr('href').slice(1);
-      this._restoreChartsIfPending(newId);
-    } else {
-      // No tabs left except the add button; nothing to activate
+      });
+      // Remove instance list so we don't keep stale refs
+      $pane.removeData('allskyChart_instances');
+    } catch (e) {
+      console.warn('Instance cleanup failed:', e);
     }
-  }
 
-  // 6) Save the state immediately after deletion
-  if (this.opts && this.opts.saveUrl) {
-    this.saveStateToUrl(this.opts.saveUrl, {
-      wrap: this.opts.wrap,
-      field: this.opts.field,
-      includeMeta: this.opts.includeMeta,
-      ajax: { headers: this.opts.ajaxHeaders }
-    }).catch((e) => console.warn('Save after delete failed:', e));
-  } else {
-    // Fallback: still compute JSON (useful for debugging)
-    this.saveState();
-  }
-}
+    // 2) Clear any queued (not-yet-created) charts for this tab
+    if (this._pendingChartsByTab && this._pendingChartsByTab[tabId]) {
+      delete this._pendingChartsByTab[tabId];
+    }
 
+    // 3) Decide which tab to activate next (if needed) before removing DOM
+    const $nextLink = $li.next('li').not('#as-gm-add-tab').find('a[data-toggle="tab"]');
+    const $prevLink = $li.prev('li').find('a[data-toggle="tab"]');
 
-startRename(a) {
-  // Ensure there's a .tab-title span to edit (works for Home too)
-  const href = a.attr('href');
-  if (href) this._ensureTitleSpan(href.slice(1));
+    // 4) Remove the nav item and pane
+    $li.remove();
+    $pane.remove();
 
-  const $title = a.find('.tab-title');
-  if (a.find('.tab-title-editor').length) return;
+    // 5) If we deleted the active tab, activate a neighbor and restore its pending charts
+    if (wasActive) {
+      const $toShow = $nextLink.length ? $nextLink : $prevLink;
+      if ($toShow && $toShow.length) {
+        $toShow.tab('show');
+        const newId = $toShow.attr('href').slice(1);
+        this._restoreChartsIfPending(newId);
+      } else {
+        // No tabs left except the add button; nothing to activate
+      }
+    }
 
-  const current = ($title.text() || '').trim();
-  const $input = $('<input type="text" class="form-control input-sm tab-title-editor">').val(current);
-
-  $('.as-gm-tab-tools').css({ visibility: 'hidden', display: 'none' });
-  $title.replaceWith($input);
-  $input.focus().select();
-
-  const finish = (saveIt) => {
-    const newText = saveIt ? ($input.val().trim() || current) : current;
-
-    // Replace editor with final title span
-    $input.replaceWith(`<span class="tab-title">${$('<div>').text(newText).html()}</span>`);
-    $('.as-gm-tab-tools').css({ visibility: 'visible', display: 'inline' });
-
-    // SAVE THE STATE RIGHT AFTER RENAME
+    // 6) Save the state immediately after deletion
     if (this.opts && this.opts.saveUrl) {
-      // Immediate POST (no debounce) so renames are persisted at once
       this.saveStateToUrl(this.opts.saveUrl, {
         wrap: this.opts.wrap,
         field: this.opts.field,
         includeMeta: this.opts.includeMeta,
         ajax: { headers: this.opts.ajaxHeaders }
-      }).catch((e) => console.warn('Rename save failed:', e));
+      }).catch((e) => console.warn('Save after delete failed:', e));
     } else {
-      // Fallback: still compute JSON (e.g., for debugging)
+      // Fallback: still compute JSON (useful for debugging)
       this.saveState();
     }
-  };
+  }
 
-  $input.on('keydown', (e) => {
-    if (e.key === 'Enter') finish(true);
-    if (e.key === 'Escape') finish(false);
-  });
-  $input.on('blur', () => finish(true));
-}
+
+  startRename(a) {
+    // Ensure there's a .tab-title span to edit (works for Home too)
+    const href = a.attr('href');
+    if (href) this._ensureTitleSpan(href.slice(1));
+
+    const $title = a.find('.tab-title');
+    if (a.find('.tab-title-editor').length) return;
+
+    const current = ($title.text() || '').trim();
+    const $input = $('<input type="text" class="form-control input-sm tab-title-editor">').val(current);
+
+    $('.as-gm-tab-tools').css({ visibility: 'hidden', display: 'none' });
+    $title.replaceWith($input);
+    $input.focus().select();
+
+    const finish = (saveIt) => {
+      const newText = saveIt ? ($input.val().trim() || current) : current;
+
+      // Replace editor with final title span
+      $input.replaceWith(`<span class="tab-title">${$('<div>').text(newText).html()}</span>`);
+      $('.as-gm-tab-tools').css({ visibility: 'visible', display: 'inline' });
+
+      // SAVE THE STATE RIGHT AFTER RENAME
+      if (this.opts && this.opts.saveUrl) {
+        // Immediate POST (no debounce) so renames are persisted at once
+        this.saveStateToUrl(this.opts.saveUrl, {
+          wrap: this.opts.wrap,
+          field: this.opts.field,
+          includeMeta: this.opts.includeMeta,
+          ajax: { headers: this.opts.ajaxHeaders }
+        }).catch((e) => console.warn('Rename save failed:', e));
+      } else {
+        // Fallback: still compute JSON (e.g., for debugging)
+        this.saveState();
+      }
+    };
+
+    $input.on('keydown', (e) => {
+      if (e.key === 'Enter') finish(true);
+      if (e.key === 'Escape') finish(false);
+    });
+    $input.on('blur', () => finish(true));
+  }
 
 
   // ---------- Events / DnD ----------
@@ -385,52 +389,52 @@ startRename(a) {
       .filter(Boolean);
   }
 
-/**
- * Make a hidden tab-pane measurable without showing it.
- * Moves it off-screen temporarily, runs `fn()`, then restores styles.
- */
-_makeMeasurable($pane, fn) {
-  // If it's already visible, just run.
-  if ($pane.is(':visible')) return fn();
+  /**
+   * Make a hidden tab-pane measurable without showing it.
+   * Moves it off-screen temporarily, runs `fn()`, then restores styles.
+   */
+  _makeMeasurable($pane, fn) {
+    // If it's already visible, just run.
+    if ($pane.is(':visible')) return fn();
 
-  const el = $pane[0];
-  const s  = el.style;
-  const orig = {
-    display: s.display,
-    visibility: s.visibility,
-    position: s.position,
-    left: s.left,
-    top: s.top,
-    width: s.width
-  };
+    const el = $pane[0];
+    const s = el.style;
+    const orig = {
+      display: s.display,
+      visibility: s.visibility,
+      position: s.position,
+      left: s.left,
+      top: s.top,
+      width: s.width
+    };
 
-  // Put pane off-screen and visible for layout
-  $pane.addClass('as-gm-measuring');
+    // Put pane off-screen and visible for layout
+    $pane.addClass('as-gm-measuring');
 
-  // Give it a sensible width so children can compute layout
-  const $host = $('#as-gm-tablist-content');
-  const hostW = $host.width() || $pane.parent().width() || 800;
-  s.width = hostW + 'px';
+    // Give it a sensible width so children can compute layout
+    const $host = $('#as-gm-tablist-content');
+    const hostW = $host.width() || $pane.parent().width() || 800;
+    s.width = hostW + 'px';
 
-  // Force reflow
-  // eslint-disable-next-line no-unused-expressions
-  el.offsetHeight;
+    // Force reflow
+    // eslint-disable-next-line no-unused-expressions
+    el.offsetHeight;
 
-  let out;
-  try {
-    out = fn();
-  } finally {
-    // Restore everything
-    $pane.removeClass('as-gm-measuring');
-    s.display    = orig.display;
-    s.visibility = orig.visibility;
-    s.position   = orig.position;
-    s.left       = orig.left;
-    s.top        = orig.top;
-    s.width      = orig.width;
+    let out;
+    try {
+      out = fn();
+    } finally {
+      // Restore everything
+      $pane.removeClass('as-gm-measuring');
+      s.display = orig.display;
+      s.visibility = orig.visibility;
+      s.position = orig.position;
+      s.left = orig.left;
+      s.top = orig.top;
+      s.width = orig.width;
+    }
+    return out;
   }
-  return out;
-}
 
 
   // ---------- SAVE ----------
@@ -442,36 +446,36 @@ _makeMeasurable($pane, fn) {
   }
 
 
-/** Build full state for ALL tabs, including charts queued for hidden tabs. */
-_collectState() {
-  const allTabs = [];
+  /** Build full state for ALL tabs, including charts queued for hidden tabs. */
+  _collectState() {
+    const allTabs = [];
 
-  $('#as-gm-tablist-content .tab-pane').each((_, el) => {
-    const $pane = $(el);
-    const tabId = $pane.attr('id');
-    const title = this._getTabTitle(tabId);
+    $('#as-gm-tablist-content .tab-pane').each((_, el) => {
+      const $pane = $(el);
+      const tabId = $pane.attr('id');
+      const title = this._getTabTitle(tabId);
 
-    // 1) Charts already created in this pane (visible or hidden)
-    const created = this._makeMeasurable($pane, () => {
-      return this.getAllChartBoundsIn($pane) || [];
-    }) || [];
+      // 1) Charts already created in this pane (visible or hidden)
+      const created = this._makeMeasurable($pane, () => {
+        return this.getAllChartBoundsIn($pane) || [];
+      }) || [];
 
-    // 2) Charts queued for this tab but not created yet (strict lazy-create)
-    const queuedRaw = (this._pendingChartsByTab && this._pendingChartsByTab[tabId])
-      ? this._pendingChartsByTab[tabId]
-      : [];
+      // 2) Charts queued for this tab but not created yet (strict lazy-create)
+      const queuedRaw = (this._pendingChartsByTab && this._pendingChartsByTab[tabId])
+        ? this._pendingChartsByTab[tabId]
+        : [];
 
-    // Normalize queued bounds (they can be strings)
-    const queued = queuedRaw.map((c) => this._normalizeBounds(c));
+      // Normalize queued bounds (they can be strings)
+      const queued = queuedRaw.map((c) => this._normalizeBounds(c));
 
-    // 3) Merge created + queued
-    const charts = created.concat(queued);
+      // 3) Merge created + queued
+      const charts = created.concat(queued);
 
-    allTabs.push({ tabId, title, charts });
-  });
+      allTabs.push({ tabId, title, charts });
+    });
 
-  return allTabs;
-}
+    return allTabs;
+  }
 
 
 
@@ -572,7 +576,7 @@ _collectState() {
     // Rebuild tabs (queue charts; don't build yet for hidden panes)
     data.forEach((t, idx) => {
       let tabId = t.tabId || '';
-      const title  = (t.title || `Tab ${idx + 1}`).trim();
+      const title = (t.title || `Tab ${idx + 1}`).trim();
       const charts = Array.isArray(t.charts) ? t.charts : [];
 
       const exists = tabId && $(`#${tabId}`).length > 0;
@@ -599,13 +603,13 @@ _collectState() {
     }
 
 
-// Always end up back on the first tab after load
-const $first = $('#as-gm-tablist li:not(#as-gm-add-tab) a[data-toggle="tab"]').first();
-if ($first.length) {
-  $first.tab('show');
-  const firstId = $first.attr('href').slice(1);
-  this._restoreChartsIfPending(firstId);
-}
+    // Always end up back on the first tab after load
+    const $first = $('#as-gm-tablist li:not(#as-gm-add-tab) a[data-toggle="tab"]').first();
+    if ($first.length) {
+      $first.tab('show');
+      const firstId = $first.attr('href').slice(1);
+      this._restoreChartsIfPending(firstId);
+    }
 
 
   }
@@ -664,9 +668,9 @@ if ($first.length) {
   /** Normalize a saved chart bounds object (strings -> numbers, with defaults). */
   _normalizeBounds(c) {
     return {
-      top:    this._toNumber(c.top,    0),
-      left:   this._toNumber(c.left,   0),
-      width:  this._toNumber(c.width,  320),
+      top: this._toNumber(c.top, 0),
+      left: this._toNumber(c.left, 0),
+      width: this._toNumber(c.width, 320),
       height: this._toNumber(c.height, 240),
       filename: c.filename || null
     };
@@ -694,7 +698,7 @@ if ($first.length) {
       configUrl: 'includes/moduleutil.php?request=GraphData&filename=' + encodeURIComponent(nc.filename),
       filename: nc.filename,
 
-      initialPos:  { top: nc.top, left: nc.left },
+      initialPos: { top: nc.top, left: nc.left },
       initialSize: { width: nc.width, height: nc.height },
 
       grid: { enabled: true, size: { x: 24, y: 24 }, snap: 'end' },

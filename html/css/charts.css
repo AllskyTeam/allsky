@@ -294,3 +294,31 @@ body.dark .as-hc-wrapper {
 .highcharts-tooltip div {
   pointer-events: auto !important;
 }
+
+.as-cm-chart-entry {
+  color: #ccc;
+}
+
+.dark .as-cm-chart-entry {
+  color: #484343;
+}
+
+.as-cm-chart-entry-enabled {
+  color: rgb(9, 101, 9) !important;
+}
+
+.noselect {
+  user-select: none;
+  -webkit-user-select: none; /* Safari */
+  -moz-user-select: none;    /* Firefox */
+  -ms-user-select: none;     /* IE10+/Edge */
+}
+
+.fs-10 { font-size: 10px; }
+.fs-12 { font-size: 12px; }
+.fs-14 { font-size: 14px; }
+.fs-16 { font-size: 16px; }
+.fs-18 { font-size: 18px; }
+.fs-20 { font-size: 20px; }
+.fs-24 { font-size: 24px; }
+.fs-32 { font-size: 32px; }

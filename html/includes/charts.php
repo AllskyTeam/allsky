@@ -11,19 +11,16 @@ function DisplayCharts()
   <script src="/js/highcharts/code/modules/solid-gauge.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
   <script src="/js/highcharts/code/modules/no-data-to-display.js"></script>
 
+  <link rel="stylesheet" href="/css/charts.css?c=<?php echo ALLSKY_VERSION; ?>" />  
   <script src="/js/jquery-chart/jquery-chart.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-
   <script src="/js/charts.js?c=<?php echo ALLSKY_VERSION; ?>"></script>  
-  <link rel="stylesheet" href="/css/charts.css?c=<?php echo ALLSKY_VERSION; ?>" />
 
-  <div class="panel panel-allsky">
+  <div class="panel panel-allsky noselect">
     <div class="panel-heading clearfix">
-      <!-- Left: icon + title -->
       <div class="pull-left">
         <i class="<?php echo $pageIcon ?>"></i> <?php echo $pageHeaderTitle ?>
       </div>
 
-      <!-- Right: burger menu -->
       <div class="pull-right">
         <button type="button" id="as-charts-menu" class="btn btn-default btn-xs">
           <i class="fa fa-bars"></i>

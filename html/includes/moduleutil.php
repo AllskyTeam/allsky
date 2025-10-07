@@ -1023,14 +1023,6 @@ class MODULEUTIL
     }
 
     /**
-     * Timestamp column resolver
-     */
-    private function resolveTimestampColumn(string $table): string
-    {
-        return (strtolower($table) === 'allsky_camera') ? 'row_key' : 'timestamp';
-    }
-
-    /**
      * Convert DB timestamp (int or string) into JS ms epoch
      */
     private function toMsTimestamp($dbTs): int
@@ -1171,6 +1163,53 @@ class MODULEUTIL
         }
     }
 
+    /**
+     * Check if a table exists in a PDO database connection.
+     *
+     * Works with MySQL, MariaDB, and SQLite.
+     *
+     * @param PDO    $pdo       Active PDO connection
+     * @param string $tableName Table name to check
+     * @return bool  True if the table exists, false otherwise
+     */
+    private function tableExists(PDO $pdo, string $tableName): bool
+    {
+        try {
+            $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+            $exists = false;
+
+            switch ($driver) {
+                case 'sqlite':
+                    // SQLite stores table names in sqlite_master
+                    $stmt = $pdo->prepare("SELECT name FROM sqlite_master WHERE type='table' AND name=:table");
+                    $stmt->execute([':table' => $tableName]);
+                    $exists = (bool)$stmt->fetchColumn();
+                    break;
+
+                case 'mysql':
+                case 'mariadb':
+                    // Works for both MySQL and MariaDB
+                    $stmt = $pdo->prepare("SHOW TABLES LIKE :table");
+                    $stmt->execute([':table' => $tableName]);
+                    $exists = (bool)$stmt->fetchColumn();
+                    break;
+
+                default:
+                    // Generic SQL standard fallback (might work on other drivers)
+                    $stmt = $pdo->prepare(
+                        "SELECT 1 FROM information_schema.tables WHERE table_name = :table LIMIT 1"
+                    );
+                    $stmt->execute([':table' => $tableName]);
+                    $exists = (bool)$stmt->fetchColumn();
+            }
+
+            return $exists;
+        } catch (Exception $e) {
+            error_log("tableExists() error: " . $e->getMessage());
+            return false;
+        }
+    }
+
     function postModuleGraphData(): array
     {
         $chartDirs = [];
@@ -1303,7 +1342,7 @@ class MODULEUTIL
      * @param string $baseDir   Root directory containing module subfolders.
      * @return array            Updated $chartList grouped by group name.
      */
-    private function buildChartList(array $chartList, string $baseDir): array
+    private function buildChartList(PDO $pdo, array $chartList, string $baseDir): array
     {
         // If the base directory doesn't exist, nothing to add—return existing list.
         if (!is_dir($baseDir)) {
@@ -1343,6 +1382,14 @@ class MODULEUTIL
                         continue;
                     }
 
+                    $table = $data['table'] ?? null;
+                    $enabled = false;
+                    if ($table != null) {
+                        if ($this->tableExists($pdo, $table)) {
+                            $enabled = true;
+                        }
+                    }
+
                     // Optional metadata with sensible fallbacks.
                     $icon  = $data['icon']  ?? null;
 
@@ -1351,10 +1398,11 @@ class MODULEUTIL
 
                     // Append a normalized chart entry under its group.
                     $chartList[$group][] = [
-                        'module'   => $module,                       // Module (subfolder) the chart came from
-                        'filename' => $jsonFile,                     // Full path to the source JSON file
-                        'icon'     => $icon !== null ? (string)$icon : null, // Icon if present
-                        'title'    => (string)$title,                // Human-friendly title
+                        'module'   => $module,                                  // Module (subfolder) the chart came from
+                        'filename' => $jsonFile,                                // Full path to the source JSON file
+                        'icon'     => $icon !== null ? (string)$icon : null,    // Icon if present
+                        'title'    => (string)$title,                           // Human-friendly title
+                        'enabled'  => $enabled                                  // Enabled if chart table exists
                     ];
                 }
             }
@@ -1380,10 +1428,12 @@ class MODULEUTIL
         // User (custom) charts live here; these are merged in after core.
         $customCharts= $this->myFilesBase . '/charts';
 
+        $pdo = $this->makePdo();
+
         // Populate from core and then user paths (user charts can add more groups/items).
-        $chartList = $this->buildChartList($chartList, $coreModules);
-        $chartList = $this->buildChartList($chartList, $userModules);
-        $chartList = $this->buildChartList($chartList, $customCharts);
+        $chartList = $this->buildChartList($pdo, $chartList, $coreModules);
+        $chartList = $this->buildChartList($pdo, $chartList, $userModules);
+        $chartList = $this->buildChartList($pdo, $chartList, $customCharts);
 
         // Sort groups by their keys in ascending order to make output stable/readable.
         // Note: asort() preserves keys and sorts by value; since $chartList is an

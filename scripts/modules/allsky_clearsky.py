@@ -15,8 +15,8 @@ from photutils.detection import DAOStarFinder
 class ALLSKYCLEARSKY(ALLSKYMODULEBASE):
 
 	meta_data = {
-		"name": "Clear Sky Alarm",
-		"description": "Clear Sky Alarm",
+		"name": "Clear Sky Indicator",
+		"description": "Indicate if the sky is clear or cloudy based on the number of stars in an image.",
 		"module": "allsky_clearsky",
 		"version": "v1.0.2",
 		"extradatafilename": "allsky_clearsky.json",
@@ -33,7 +33,7 @@ class ALLSKYCLEARSKY(ALLSKYMODULEBASE):
     			"pk": "id",
     			"pk_source": "image_timestamp",
     			"pk_type": "int"    
-			}, 
+			},
 			"values": {
 				"AS_CLEARSKYSTATE": {
 					"name": "${CLEARSKYSTATE}",
@@ -54,13 +54,13 @@ class ALLSKYCLEARSKY(ALLSKYMODULEBASE):
 				"AS_CLEARSKYSTATESTARS": {
 					"name": "${CLEARSKYSTATESTARS}",
 					"format": "",
-					"sample": "",                
+					"sample": "",
 					"group": "Environment",
 					"description": "Sky State Star Count",
 					"type": "number"
 				}
 			}
-		}, 
+		},
 		"arguments":{
 			"annotate": "false",
 			"clearvalue": 10,
@@ -72,7 +72,7 @@ class ALLSKYCLEARSKY(ALLSKYMODULEBASE):
 			"roi": {
 				"required": "false",
 				"description": "Region of Interest",
-				"help": "The area of the image to check for clear skies. Format is x1,y1,x2,y2",
+				"help": "The area of the image to check for clear skies. Format is x1,y1,x2,y2.",
 				"type": {
 					"fieldtype": "roi"
 				}
@@ -80,7 +80,7 @@ class ALLSKYCLEARSKY(ALLSKYMODULEBASE):
 			"roifallback" : {
 				"required": "true",
 				"description": "Fallback %",
-				"help": "If no ROI is set then this % of the image, from the center will be used",
+				"help": "If no ROI is set then this % of the image, from the center will be used.",
 				"type": {
 					"fieldtype": "spinner",
 					"min": 1,
@@ -91,7 +91,7 @@ class ALLSKYCLEARSKY(ALLSKYMODULEBASE):
 			"clearvalue" : {
 				"required": "true",
 				"description": "Clear Sky",
-				"help": "If more than this number of stars are found the sky will be considered clear",
+				"help": "If more than this number of stars are found the sky is considered clear.",
 				"type": {
 					"fieldtype": "spinner",
 					"min": 1,
@@ -102,7 +102,7 @@ class ALLSKYCLEARSKY(ALLSKYMODULEBASE):
 			"annotate" : {
 				"required": "false",
 				"description": "Annotate Stars",
-				"help": "If selected the identified stars in the image will be highlighted",
+				"help": "Select to highlight identified stars in the image.",
 				"tab": "Debug",
 				"type": {
 					"fieldtype": "checkbox"
@@ -111,7 +111,7 @@ class ALLSKYCLEARSKY(ALLSKYMODULEBASE):
 			"debugimage" : {
 				"required": "false",
 				"description": "Debug Image",
-				"help": "Image to use for debugging. DO NOT set this unless you know what you are doing",
+				"help": "Image to use for debugging. DO NOT set this unless you know what you are doing.",
 				"tab": "Debug"
 			},
 			"graph": {
@@ -139,10 +139,10 @@ class ALLSKYCLEARSKY(ALLSKYMODULEBASE):
 						"Updates for the new module manager structure"
 					]
 				}
-			]                                                          
+			]
 		}
 	}
-    
+
 	def run(self):
 		try:
 			roi_str = self.get_param('roi', '', str, True)
@@ -210,7 +210,7 @@ class ALLSKYCLEARSKY(ALLSKYMODULEBASE):
 			eType, eObject, eTraceback = sys.exc_info()
 			result = f'Module Clear Sky Alarm failed on line {eTraceback.tb_lineno} - {e}'
 			self.log(0, f'ERROR: {result}')
-   
+
 		return result
 
 def clearsky(params, event):

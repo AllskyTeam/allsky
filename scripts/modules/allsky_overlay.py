@@ -31,8 +31,8 @@ missingTypePlaceholder = "???"
 class ALLSKYOVERLAY(ALLSKYMODULEBASE):
     
 	meta_data = {
-		"name": "Overlays data on the image",
-		"description": "Overlays data fields on the image",
+		"name": "Overlay Information on an Image",
+		"description": "Overlay information (text, images, etc.) on an image.",
 		"module": "allsky_overlay",
 		"group": "Image Analysis",
 		"version": "v1.0.1",
@@ -52,7 +52,7 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 				"required": "false",
 				"tab": "Overlays",
 				"description": "Format Error Text",
-				"help": "Value to place in a variable when the provided format is invalid. defaults to ??"
+				"help": "Value to place in a variable when the provided format is invalid. Default is '??'."
 			}
 		},
 		"changelog": {

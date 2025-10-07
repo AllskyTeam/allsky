@@ -297,14 +297,20 @@ body.dark .as-hc-wrapper {
 
 .as-cm-chart-entry {
   color: #ccc;
+  line-height: 1.5em;
+  font-weight: 300;
 }
 
 .dark .as-cm-chart-entry {
   color: #484343;
+  line-height: 1.5em;
+  font-weight: 300;
 }
 
 .as-cm-chart-entry-enabled {
-  color: rgb(9, 101, 9) !important;
+  color: rgb(7, 241, 7) !important;
+  line-height: 1.5em;
+  font-weight: 300;
 }
 
 .noselect {

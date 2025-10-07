@@ -4,10 +4,14 @@ import os
 import sys
 import argparse
 
-# Ensure the script is running in the correct Python environment
-allsky_home = os.environ['ALLSKY_HOME']
+# Assume whoever calls us already sourced in variables.*
+# Ensure the script is running in the correct Python environment.
 here = os.path.dirname(os.path.abspath(__file__))
-venv_dir = os.path.join(allsky_home, 'venv')
+try:
+    venv_dir = os.environ['ALLSKY_PYTHON_VENV']
+except KeyError:
+    print("ERROR: This program needs to be run in an Allsky environment with variables.sh or variables.json sourced in.")
+    sys.exit(1)
 venv_python = os.path.join(venv_dir, 'bin', 'python3')
 if sys.executable != venv_python:
     os.execv(venv_python, [venv_python] + sys.argv)
@@ -25,9 +29,9 @@ sys.path.append(modules_dir)
 try:
     allsky_path = os.environ["ALLSKY_HOME"]
 except KeyError:
-    print("ERROR: ALLSKY_HOME environment variable is not set. Please set it to the AllSky installation directory.")
+    print("ERROR: Allsky appears not to be installed (the ALLSKY_HOME environment variable is not set).")
     sys.exit(1)
-            
+           
 allsky_variables_path = Path(f"{allsky_path}/variables.json")
 if not allsky_variables_path.is_file():
     print("ERROR: You must upgrade to the latest version of Allsky to install modules.")
@@ -47,24 +51,27 @@ from exceptions import ConfigError, ModuleError, NoVersionError
         
 class ALLSKYMODULEINSTALLER:
     
-    _module_repo_base_path = "/opt/allsky"
-    _module_repo_path = "/opt/allsky/allsky-modules"
+    _module_repo_base_path = os.environ["ALLSKY_MODULE_LOCATION"]
+    _module_repo_path = os.path.join(_module_repo_base_path, 'allsky-modules')
 
     _back_title= "Allsky Module Manager"
     _welcome_message = "The Allsky modules are a collection of extensions developed both by the Allsky team and the wider community. They allow you to expand the functionality of your Allsky system beyond basic image capture.\n\
 Modules can:\n\n\
- • Perform additional image processing to enhance captured frames.\n\
- • Integrate with external hardware such as sensors or I/O devices.\n\
- • Export data from Allsky to services such as mqtt, redis ...\n\
- • Add extra information to overlays using external services.\n\n\
-The official Allsky documentation provides detailed information on each module, including setup instructions and usage examples, so you can easily discover which modules suit your installation and how to get the most from them.\n\n\
-Would you like to review and install the available modules now?\
+ * Perform additional image processing to enhance captured frames.\n\
+ * Integrate with external hardware such as sensors or I/O devices.\n\
+ * Export data from Allsky to services such as mqtt, redis, etc.\n\
+ * Add extra information to overlays using external services.\n\n\
+The official Allsky Documentation provides detailed information on each module, including setup instructions and usage examples, so you can easily discover which modules suit your installation and how to get the most from them.\n\n\
+Would you like to review and install any available modules now?\
 "
                 
     def __init__(self, debug_mode): 
         self._debug_mode = debug_mode
         self._allsky_path = shared.get_environment_variable("ALLSKY_HOME")
-        self._branch = shared.get_environment_variable("ALLSKY_GITHUB_MAIN_BRANCH")
+        self._branch = shared.get_environment_variable("ALLSKY_GITHUB_MAIN_BRANCH")     # master branch is default
+        self._master_branch = self._branch
+        self._main_backtitle1 = f"Allsky Module Manager."
+        self._main_backtitle = self._main_backtitle1
         repo_base = shared.get_environment_variable("ALLSKY_GITHUB_ROOT")
         modules_repo = shared.get_environment_variable("ALLSKY_GITHUB_ALLSKY_MODULES_REPO")
         self._module_repo = f"{repo_base}/{modules_repo}"
@@ -80,10 +87,10 @@ Would you like to review and install the available modules now?\
         result = True
 
         if not os.path.exists(self._allsky_path):
-            raise ConfigError("AllSky does not seem to be installed. The /opt/allsky directory does not exist. Please install AllSky before installing the modules")
+            raise ConfigError("Allsky does not seem to be installed. Please install it before installing any modules.")
 
         if os.geteuid() == 0:
-            raise ConfigError("DO NOT run this as root. Run the installer as the same user as AllSky was installed")
+            raise ConfigError("DO NOT run this as root. Run the installer as the same user as Allsky was installed.")
 
         try:
             self.user = os.getlogin()
@@ -148,7 +155,7 @@ Would you like to review and install the available modules now?\
 
     def _select_git_branch(self, args: argparse.Namespace, force: bool = False) -> None:
         if args.branch or force:
-            wt = Whiptail(title="Select Branch", backtitle=f"Allsky Module Installer. Using branch {self._branch}")
+            wt = Whiptail(title="Select Branch", backtitle=f"Allsky Module Installer.")
             menu_items = [(branch, "") for branch in self._branches]
 
             branch, exit_code = wt.menu("Choose a branch:", menu_items)
@@ -159,6 +166,10 @@ Would you like to review and install the available modules now?\
             self._log(True, f"INFO: Setting branch to {args.setbranch}")
             self._branch = args.setbranch
 
+        # Only show branch if not the master branch.
+        if self._branch != self._master_branch:
+            self._main_backtitle = self.main_backtitle1 + f" Using '{self._branch}' branch."
+
         repo = Repo(self._module_repo_path)
 
         # checkout the branch (force to ensure working tree is updated)
@@ -168,7 +179,7 @@ Would you like to review and install the available modules now?\
         try:
             if "origin" in repo.remotes:
                 origin = repo.remotes.origin
-                self._log(True, f"INFO: Pulling latest changes for branch {self._branch} from origin…")
+                self._log(True, f"INFO: Pulling latest changes for branch {self._branch} from origin...")
                 origin.fetch(prune=True)
                 origin.pull(self._branch)
                 self._log(True, f"INFO: Branch {self._branch} is now up-to-date.")
@@ -261,7 +272,7 @@ Would you like to review and install the available modules now?\
 
         # Respect terminal width; keep within screen to avoid overflow
         cols, _rows = shutil.get_terminal_size(fallback=(120, 30))
-        desired_width = min(180, max(80, cols - 10))  # clamp to terminal; ≥80 for readability
+        desired_width = min(180, max(80, cols - 10))  # clamp to terminal; >= 80 for readability
 
         # Wrap descriptions to fit the checklist column
         module_triples, max_length = _wrap_items(module_triples, box_width=desired_width)
@@ -272,7 +283,7 @@ Would you like to review and install the available modules now?\
         # Show dialog
         w = Whiptail(
             title=f"Select Modules",
-            backtitle=f"Allsky Module Installer. Using branch {self._branch}",
+            backtitle=f"{self._main_backtitle}",
             width=desired_width,
         )
 
@@ -346,7 +357,7 @@ Would you like to review and install the available modules now?\
     def cleanup_opt(self, args):
         
         did_something = False
-        self._log(False, f"Starting cleanup of /opt/allsky/modules")
+        self._log(False, f"Starting cleanup of {self._module_repo_base_path}/modules")
         self._log(False, f"=======================================\n")
         
         try:
@@ -412,7 +423,7 @@ Would you like to review and install the available modules now?\
 
     def welcome_message(self):
 
-        w = Whiptail(title=f"Module Manager Welcome", backtitle=f"Allsky Module Manager. Using branch {self._branch}", height=25, width=80)
+        w = Whiptail(title=f"Module Manager Welcome", backtitle=f"{self._main_backtitle}", height=25, width=80)
         result = w.yesno(self._welcome_message)        
         return result
                             
@@ -431,19 +442,24 @@ Would you like to review and install the available modules now?\
             if self.welcome_message():
                 self._display_install_dialog()
                 sys.exit(0)
+            else:
+                sys.exit(os.environ["ALLSKY_EXIT_PARTIAL_OK"])  # indicates no error but user said "no"
         else:
             go_for_it = True
             
         if go_for_it:
             done = False
             while not done:
-                w = Whiptail(title="Main Menu", backtitle=f"Allsky Module Manager. Using branch {self._branch}", height=20, width=40)
-                menu_options = ['Install Modules', 'Uninstall Modules', 'Exit']
+                w = Whiptail(title="Main Menu", backtitle=f"{self._main_backtitle}", height=20, width=40)
+                menu_options = ['Install Modules']
+# TODO: Only add Uninstall if there's at least 1 installed module.
+                menu_options += ['Uninstall Modules']
                 if self._debug_mode:
-                    menu_options = ['Install Modules', 'Uninstall Modules', 'Switch Branch', 'Clean Opt', 'Exit']
+                    menu_options += ['Switch Branch', 'Clean Opt', 'Exit']
+                else:
+                    menu_options += ['Exit']
                     
                 menu_option, return_code = w.menu('', menu_options)
-
                 if return_code == 0:
                     if menu_option == 'Exit':
                         done = True
@@ -457,12 +473,17 @@ Would you like to review and install the available modules now?\
                     if menu_option == 'Uninstall Modules':
                         if self._pre_checks():
                             self._read_modules()
-                            modules_to_uninstall = self._display_uninstall_dialog()
+# TODO: FIX: _display_uninstall_dialog() does not exist.
+                            try:
+                                modules_to_uninstall = self._display_uninstall_dialog()
+                            except:
+                                modules_to_uninstall = None
                             if modules_to_uninstall is not None:
+# TODO: FIX: _do_uninstall_dialog() does not exist.
                                 self._do_uninstall(modules_to_uninstall)
                             else:
-                                w = Whiptail(title='Uninstall Modules', backtitle='AllSky Module Manager', height=8, width=50)
-                                w.msgbox("There are no modules available for uninstall.")
+                                w = Whiptail(title='Uninstall Modules', backtitle='Allsky Module Manager', height=8, width=50)
+                                w.msgbox("There are no modules available to uninstall.")
                         else:
                             sys.exit(0)
                 else:
@@ -471,7 +492,7 @@ Would you like to review and install the available modules now?\
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Allsky extra module installer")
     parser.add_argument("--debug", action="store_true", help="Enable debug mode, shows more detailed errors")
-    parser.add_argument("--branch", action="store_true", help="Allow the remote branch to be selected, default is Master")
+    parser.add_argument("--branch", action="store_true", help="Allow the remote branch to be selected, default is 'master'")
     parser.add_argument("--setbranch", type=str, help="Specify the remote branch to use")
     parser.add_argument("--cleanupopt", action="store_true", help="Cleanup the legacy module folders")
     parser.add_argument("--auto", action="store_true", help="Auto upgrade modules, will migrate if required")    
@@ -497,4 +518,3 @@ if __name__ == "__main__":
         module_installer.run(args)
     except Exception as e:
         print(e)
-            

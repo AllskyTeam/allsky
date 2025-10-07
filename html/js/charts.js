@@ -165,7 +165,7 @@ class ASCHARTMANAGER {
               'data-filename': chart.filename,
               draggable: chart.enabled
             }).append(
-              $('<i>', { class: chart.icon + ' small' }).css({ marginRight: '5px' }),
+              $('<i>', { class: chart.icon + ' fs-18' }).css({ marginRight: '5px' }),
               chart.title
             );
             idCounter++;

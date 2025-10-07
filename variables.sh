@@ -282,20 +282,20 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" || ${1} == "--force" ]]; then
 	ALLSKY_PYTHON_VENV="${ALLSKY_HOME}/venv"
 
 	# These EXIT codes from the capture programs must match what's in src/include/allsky_common.h
-	EXIT_OK=0
-	EXIT_PARTIAL_OK=90		# command partially worked
-	EXIT_RESTARTING=98		# process is restarting, i.e., stop, then start
-	EXIT_RESET_USB=99		# need to reset USB bus; cannot continue
+	ALLSKY_EXIT_OK=0
+	ALLSKY_EXIT_PARTIAL_OK=90		# command partially worked
+	ALLSKY_EXIT_RESTARTING=98		# process is restarting, i.e., stop, then start
+	ALLSKY_EXIT_RESET_USB=99		# need to reset USB bus; cannot continue
 	# Anything at or above EXIT_ERROR_STOP is unrecoverable and the service must be stopped
-	EXIT_ERROR_STOP=100		# unrecoverable error - need user action so stop service
-	EXIT_NO_CAMERA=101		# cannot find camera
-# TODO: change all code to use variables below, not above, for consistency.
-	ALLSKY_EXIT_OK="${ALLSKY_EXIT_OK}"
-	ALLSKY_EXIT_PARTIAL_OK="${ALLSKY_EXIT_PARTIAL_OK}"
-	ALLSKY_EXIT_RESTARTING="${ALLSKY_EXIT_RESTARTING}"
-	ALLSKY_EXIT_RESET_USB="${ALLSKY_EXIT_RESET_USB}"
-	ALLSKY_EXIT_ERROR_STOP="${ALLSKY_EXIT_ERROR_STOP}"
-	ALLSKY_EXIT_NO_CAMERA="${ALLSKY_EXIT_NO_CAMERA}"
+	ALLSKY_EXIT_ERROR_STOP=100		# unrecoverable error - need user action so stop service
+	ALLSKY_EXIT_NO_CAMERA=101		# cannot find camera
+# TODO: change all code to use variables above, not below, for consistency.
+	EXIT_OK="${ALLSKY_EXIT_OK}"
+	EXIT_PARTIAL_OK="${ALLSKY_EXIT_PARTIAL_OK}"
+	EXIT_RESTARTING="${ALLSKY_EXIT_RESTARTING}"
+	EXIT_RESET_USB="${ALLSKY_EXIT_RESET_USB}"
+	EXIT_ERROR_STOP="${ALLSKY_EXIT_ERROR_STOP}"
+	EXIT_NO_CAMERA="${ALLSKY_EXIT_NO_CAMERA}"
 
 	# Name of the Pi's OS in lowercase.
 	ALLSKY_PI_OS="$( grep VERSION_CODENAME /etc/os-release )"

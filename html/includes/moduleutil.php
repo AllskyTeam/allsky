@@ -1051,9 +1051,19 @@ class MODULEUTIL
 
         $tsCol = 'id';
 
-        $sql = "SELECT * from {$table} ORDER BY {$tsCol}";
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute();
+        try {
+            $sql = "SELECT * from {$table} ORDER BY {$tsCol}";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute();
+        } catch (PDOException $e) {
+            if ($this->isMissingTable($e, $pdo)) {
+                error_log("Missing table '{$table}' on driver ". $pdo->getAttribute(PDO::ATTR_DRIVER_NAME));
+                return [];
+            }
+            throw $e;
+        }
+
+
         $out = [];
         while ($row = $stmt->fetch()) {
             foreach ($variables as $variable) {
@@ -1106,9 +1116,20 @@ class MODULEUTIL
 
         $tsCol = 'id';
 
-        $sql = "SELECT * FROM {$table} ORDER BY {$tsCol} DESC LIMIT 1;";
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute();
+        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+        try {
+            $sql = "SELECT * FROM {$table} ORDER BY {$tsCol} DESC LIMIT 1";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute();
+        } catch (PDOException $e) {
+            if ($this->isMissingTable($e, $pdo)) {
+                error_log("Missing table '{$table}' on driver ". $pdo->getAttribute(PDO::ATTR_DRIVER_NAME));
+                return [];
+            }
+            throw $e;
+        }
+
 
         $out = [];
         $row = $stmt->fetch();
@@ -1123,6 +1144,32 @@ class MODULEUTIL
         return $out;
     }
 
+    /**
+     * Detect "table not found" across MySQL/MariaDB and SQLite.
+     */
+    private function isMissingTable(PDOException $e, PDO $pdo): bool
+    {
+        $driver = strtolower((string) $pdo->getAttribute(PDO::ATTR_DRIVER_NAME));
+        $code   = (string) $e->getCode();
+        $msg    = strtolower($e->getMessage());
+
+        switch ($driver) {
+            case 'mysql':      // covers both MySQL and MariaDB under PDO
+                // SQLSTATE 42S02 = Base table or view not found
+                return $code === '42S02' || strpos($msg, 'base table or view not found') !== false;
+
+            case 'sqlite':
+            case 'sqlite2':
+            case 'sqlite3':
+                // SQLite typically uses HY000 with message "no such table: <name>"
+                return strpos($msg, 'no such table') !== false;
+
+            default:
+                // Fallback: try common phrases
+                return strpos($msg, 'no such table') !== false
+                    || strpos($msg, 'table does not exist') !== false;
+        }
+    }
 
     function postModuleGraphData(): array
     {

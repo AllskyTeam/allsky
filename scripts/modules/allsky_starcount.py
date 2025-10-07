@@ -4,7 +4,7 @@ allsky_starcount.py
 Part of allsky postprocess.py modules.
 https://github.com/AllskyTeam/allsky
 
-This module attempts to count the number of stars in an image
+This module counts the number of stars in an image.
 
 Expected parameters:
 None
@@ -21,9 +21,8 @@ class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 
 	meta_data = {
 		"name": "Star Count",
-		"description": "Counts stars in an image",
+		"description": "Count the number of stars in an image.",
 		"events": [
-			"day",
 			"night"
 		],
 		"experimental": "true",
@@ -33,68 +32,14 @@ class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 		"testableresult": "images",
 		"centersettings": "false",
 		"extradatafilename": "allsky_starcount.json",
-		"group": "Image Analysis",  
-        "graphs": {
-            "chart1": {
-				"icon": "fa-solid fa-chart-line",
-				"title": "Stars",
-				"group": "Analysis",
-				"main": "true",
-				"config": {
-					"tooltip": "true",
-					"chart": {
-						"type": "spline",
-						"zooming": {
-							"type": "x"
-						}
-					},
-					"title": {
-						"text": "Stars"
-					},
-					"plotOptions": {
-						"series": {
-							"animation": "false"
-						}
-					},
-					"xAxis": {
-						"type": "datetime",
-						"dateTimeLabelFormats": {
-							"day": "%Y-%m-%d",
-							"hour": "%H:%M"
-						}
-					},
-					"yAxis": [
-						{ 
-							"title": {
-								"text": "Count"
-							},
-							"min": 0
-						}
-					],
-					"lang": {
-						"noData": "No data available"
-					},
-					"noData": {
-						"style": {
-							"fontWeight": "bold",
-							"fontSize": "16px",
-							"color": "#666"
-						}
-					}
-				},
-				"series": {
-					"count": {
-						"name": "Star Count",
-						"yAxis": 0,
-						"variable": "AS_STARCOUNT|AS_STARIMAGEURL"                 
-					}            
-				}
-			}
-		}, 
+		"group": "Image Analysis",
 		"extradata": {
 			"database": {
 				"enabled": "True",
-				"table": "allsky_stars"
+				"table": "allsky_stars",
+    			"pk": "id",
+    			"pk_source": "image_timestamp",
+    			"pk_type": "int"    
 			}, 
 			"values": {
 				"AS_STARIMAGE": {
@@ -282,11 +227,11 @@ class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 			self.log(4, f'INFO: Using fast detection method')
 			sources = allsky_shared.fast_star_count(
 				image_copy,
-				min_d_px = min_size,    # ~star core diameter in pixels (5–8)
+				min_d_px = min_size,    # ~star core diameter in pixels (5-8)
 				scale = scale,          # downscale for speed (0.5 good for 1080p)
 				corr_thresh = 0.78,     # template match threshold (0..1)
 				min_peak_contrast = 12, # center minus local ring (uint8)
-				anisotropy_min = 0.45,  # 0..1 (λ_min/λ_max) – low => edge-like
+				anisotropy_min = 0.45,  # 0..1 (lambda_min/lambda_max) - low => edge-like
 				mask_bottom_frac = 0.12 # ignore lowest X% (horizon glow)
 			)
 		else:

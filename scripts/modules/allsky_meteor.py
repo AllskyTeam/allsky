@@ -24,7 +24,7 @@ class ALLSKYMETEOR(ALLSKYMODULEBASE):
 
 	meta_data = {
 		"name": "Meteor Detection",
-		"description": "Detects meteors (i.e., streaks) in images.",
+		"description": "Detect meteors (i.e., streaks) in images.",
 		"events": [
 			"night"
 		],

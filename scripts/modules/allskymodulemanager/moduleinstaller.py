@@ -199,14 +199,19 @@ Would you like to review and install any available modules now?\
         
         return branch
                 
-    def _read_modules(self) -> None:
+    def _read_modules(self):
         self._module_list = []
         dirs = os.listdir(self._module_repo_path)
+        num_installed_modules = 0
         for dir in dirs:
             if dir.startswith('allsky_') and not os.path.isfile(dir):
-                self._module_list.append(ALLSKYMODULE(dir, self._debug_mode, self._module_repo_path))
+                mod = ALLSKYMODULE(dir, self._debug_mode, self._module_repo_path)
+                self._module_list.append(mod)
+                if mod.installed:
+                    num_installed_modules += 1
         
         self._module_list = sorted(self._module_list, key=lambda p: p.name)
+        return num_installed_modules
 
     def _find_module(self, module_name: str):
         found_module = None
@@ -443,7 +448,8 @@ Would you like to review and install any available modules now?\
                 self._display_install_dialog()
                 sys.exit(0)
             else:
-                sys.exit(os.environ["ALLSKY_EXIT_PARTIAL_OK"])  # indicates no error but user said "no"
+                ret = int(os.environ["ALLSKY_EXIT_PARTIAL_OK"])
+                sys.exit(ret)  # indicates no error but user said "no"
         else:
             go_for_it = True
             
@@ -452,25 +458,25 @@ Would you like to review and install any available modules now?\
             while not done:
                 w = Whiptail(title="Main Menu", backtitle=f"{self._main_backtitle}", height=20, width=40)
                 menu_options = ['Install Modules']
-# TODO: Only add Uninstall if there's at least 1 installed module.
-                menu_options += ['Uninstall Modules']
+                # Only add Uninstall if there's at least 1 installed module.
+                if self._read_modules() > 0:    # returns number of installed modules
+                    menu_options += ['Uninstall Modules']
                 if self._debug_mode:
-                    menu_options += ['Switch Branch', 'Clean Opt', 'Exit']
-                else:
-                    menu_options += ['Exit']
+                    menu_options += ['Switch Branch', 'Clean Opt']
+                menu_options += ['Exit']
                     
                 menu_option, return_code = w.menu('', menu_options)
                 if return_code == 0:
                     if menu_option == 'Exit':
                         done = True
-                    if menu_option == 'Clean Opt':
+                    elif menu_option == 'Clean Opt':
                         self.cleanup_opt()
-                    if menu_option == 'Switch Branch':
+                    elif menu_option == 'Switch Branch':
                         self._select_git_branch(args, True)
                         self._read_modules()
-                    if menu_option == 'Install Modules':
+                    elif menu_option == 'Install Modules':
                         modules_to_install = self._display_install_dialog()
-                    if menu_option == 'Uninstall Modules':
+                    elif menu_option == 'Uninstall Modules':
                         if self._pre_checks():
                             self._read_modules()
 # TODO: FIX: _display_uninstall_dialog() does not exist.

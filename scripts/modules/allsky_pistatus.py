@@ -16,8 +16,8 @@ from gpiozero import CPUTemperature, Device
 class ALLSKYPISTATUS(ALLSKYMODULEBASE):
  
 	meta_data = {
-		"name": "Reads Pi Status",
-		"description": "Reads Pi Data",
+		"name": "Read Pi Status Data",
+		"description": "Reads Pi status data so it can be added to overlays.",
 		"module": "allsky_pistatus",    
 		"version": "v1.0.0",
 		"events": [
@@ -219,7 +219,7 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 			"enabledataage" : {
 				"required": "false",
 				"description": "Custom Data Expiry",
-				"help": "Enable custom data expiry. This will overrides the default in the module manager",
+				"help": "Enable custom data expiry. This will overrides the default in the module manager.",
 				"tab": "Data Control",
     			"type": {
 					"fieldtype": "checkbox"
@@ -228,7 +228,7 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 			"dataage" : {
 				"required": "false",
 				"description": "Data Age",
-				"help": "After this number of seconds if the module data is not updated it will be removed.",
+				"help": "After this number of seconds if the module data is not updated, it will be removed.",
 				"tab": "Data Control",
 				"type": {
 					"fieldtype": "spinner",

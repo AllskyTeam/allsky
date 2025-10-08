@@ -1769,7 +1769,7 @@ install_dependencies_etc()
 	fi
 
 	TMP="${ALLSKY_LOGS}/allsky_dependencies.log"
-	run_aptGet ffmpeg lftp imagemagick bc > "${TMP}" 2>&1
+	run_aptGet ffmpeg lftp imagemagick sqlite3 bc > "${TMP}" 2>&1
 	check_success $? "Allsky dependency installation failed" "${TMP}" "${DEBUG}" ||
 		exit_with_image 1 "${STATUS_ERROR}" "dependency installation failed"
 

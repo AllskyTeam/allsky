@@ -14,8 +14,8 @@ import os
 class ALLSKYPURGEDB(ALLSKYMODULEBASE):
 
     meta_data = {
-        "name": "Allsky Purge DB",
-        "description": "Purges data from the Allsky modules database",
+        "name": "Purge DB Entries",
+        "description": "Purge old data from the Allsky database.",
         "module": "allsky_purgedb",
         "testable": "true",
         "centersettings": "false",
@@ -37,6 +37,7 @@ class ALLSKYPURGEDB(ALLSKYMODULEBASE):
             "purgedata" : {
                 "required": "false",
                 "description": "Enable Purge",
+                "help": "Enable to have old data automatically purged from the database.",                
                 "tab": "Purge",
                 "type": {
                     "fieldtype": "checkbox"
@@ -45,7 +46,7 @@ class ALLSKYPURGEDB(ALLSKYMODULEBASE):
             "runevery" : {
                 "required": "true",
                 "description": "Frequency",
-                "help": "How frequently to purge data, in hours",                
+                "help": "How frequently to purge data, in hours.",                
                 "tab": "Purge",
                 "type": {
                     "fieldtype": "spinner",
@@ -64,7 +65,7 @@ class ALLSKYPURGEDB(ALLSKYMODULEBASE):
             "hourstokeep" : {
                 "required": "true",
                 "description": "Hours To Keep",
-                "help": "How many hours to keep data for",                
+                "help": "Number of hours to keep data for.",
                 "tab": "Purge",
                 "type": {
                     "fieldtype": "spinner",

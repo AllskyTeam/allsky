@@ -1496,3 +1496,17 @@ div.sticky {
     cursor: default;
 }
 
+/* Dark Modals */
+.dark .modal-content {
+    background-color: #222222 !important;
+    color: var(--dark-text) !important;    
+}
+
+.dark .modal-header {
+    border-bottom: 1px solid black !important;
+}
+
+.dark .modal-footer {
+    border-top: 1px solid black !important;
+}
+/* End Dark Modals */

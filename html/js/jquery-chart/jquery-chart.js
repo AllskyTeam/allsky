@@ -104,7 +104,7 @@
     if (s === 'guage') s = 'gauge';
     if (s === 'spline') s = 'line';
     if (s === 'doughnut' || s === 'donut') s = 'pie';
-    if (s === 'indicator' || s === 'boolean') s = 'yesno'; // NEW alias
+    if (s === 'indicator' || s === 'boolean') s = 'yesno'; // alias
     return s;
   }
   function boolish(v) { return (typeof v === 'string') ? v.toLowerCase() === 'true' : !!v; }
@@ -128,7 +128,6 @@
       return [0];
     }
     if (t === 'yesno') {
-      // Coerce to single 0/1 value
       var v = 0;
       if (typeof data === 'boolean') v = data ? 1 : 0;
       else if (isNumber(data)) v = data ? 1 : 0;
@@ -253,9 +252,8 @@
       },
       legend: { enabled: true }
     },
-    // NEW: Yes/No indicator
     yesno: {
-      chart: { type: 'line' },  // underlying HC type is irrelevant; we render a label
+      chart: { type: 'line' },
       legend: { enabled: false },
       xAxis: { visible: false },
       yAxis: { visible: false },
@@ -353,7 +351,7 @@
     this.filename = this.opts.filename || null;
 
     this.$wrapper = null;
-    this.$header = null;
+       this.$header = null;
     this.$title = null;
     this.$tools = null;
     this.$body = null;
@@ -377,7 +375,7 @@
     this._tooltipsEnabled = true;
 
     this._drag3d = { active: false, startX: 0, startY: 0, startAlpha: 0, startBeta: 0 };
-    this._yesnoLabel = null; // NEW: renderer label for yes/no
+    this._yesnoLabel = null;
     this._uid = Math.random().toString(36).slice(2);
   }
 
@@ -389,7 +387,7 @@
   /* ======================= Axis resolver ======================= */
   Plugin.prototype._resolveYAxes = function (cfg) {
     var t = normalizeType(cfg.type);
-    if (t === 'gauge' || t === 'pie' || t === 'yesno') return undefined; // skip for yesno
+    if (t === 'gauge' || t === 'pie' || t === 'yesno') return undefined;
     if (Array.isArray(cfg.yAxis) && cfg.yAxis.length) return cfg.yAxis;
 
     if (cfg.axis && typeof cfg.axis === 'object') {
@@ -497,7 +495,6 @@
           if (Array.isArray(normalized) && normalized.length > 1 && typeof normalized[0] === 'number') normalized = [normalized[0]];
         }
         if (normType === 'yesno') {
-          // ensure single 0/1
           normalized = (Array.isArray(normalized) && normalized.length) ? [normalized[0] ? 1 : 0] : [0];
         }
 
@@ -567,16 +564,10 @@
     }
 
     if (this.chart) {
-      // 1) Apply only theme parts that won’t touch axis/series arrays.
       var safe = $.extend(true, {}, theme);
-      delete safe.yAxis;
-      delete safe.xAxis;
-      delete safe.series;
+      delete safe.yAxis; delete safe.xAxis; delete safe.series;
+      this.chart.update(safe, false, false);
 
-      // No one-to-one here, so arrays aren’t reconciled.
-      this.chart.update(safe, /*redraw*/false, /*oneToOne*/false);
-
-      // 2) Now *style* existing axes individually (keep count & mapping intact).
       var xa = theme.xAxis || {};
       var ya = theme.yAxis || {};
 
@@ -591,7 +582,6 @@
           }, false);
         }
       }
-
       if (this.chart.yAxis && this.chart.yAxis.length) {
         for (var j = 0; j < this.chart.yAxis.length; j++) {
           this.chart.yAxis[j].update({
@@ -604,11 +594,9 @@
           }, false);
         }
       }
-
       this.chart.redraw(false);
     }
 
-    // Keep parent height in sync after theme changes, too
     this._resizeParentToChart();
   };
 
@@ -667,7 +655,6 @@
       themedOptions.tooltip = deepMerge({}, themedOptions.tooltip, { shared: false });
     }
     if (type === 'yesno') {
-      // force off interactive bits
       themedOptions.tooltip = { enabled: false };
       themedOptions.legend = { enabled: false };
     }
@@ -732,8 +719,6 @@
         return;
       }
     }
-
-    // Default: fluidly fill host width
     this.$wrapper.css({ left: 0, right: 0, width: 'auto' });
   };
 
@@ -744,7 +729,6 @@
     var series = (cfg.series && cfg.series[0]) || {};
     var v = 0;
 
-    // Prefer live chart point if available
     if (this.chart && this.chart.series && this.chart.series.length && this.chart.series[0].points.length) {
       v = this.chart.series[0].points[0].y ? 1 : 0;
     } else if (Array.isArray(series.data) && series.data.length) {
@@ -792,7 +776,6 @@
     if (iw && ih) this.chart.setSize(iw, ih, false);
     this._resizeParentToChart();
 
-    // keep indicator centered
     this._updateYesNoLabel();
   };
 
@@ -825,7 +808,7 @@
           var sType = (rawConfig && rawConfig.type) ? String(rawConfig.type).toLowerCase() : 'line';
           if (sType === 'area3d') sType = 'area';
           if (sType === 'column3d') sType = 'column';
-          if (sType === 'yesno') sType = 'line'; // neutral
+          if (sType === 'yesno') sType = 'line';
 
           this.chart.addSeries({
             name: name,
@@ -849,14 +832,11 @@
       try { console.warn('[asHc] post-render series fix failed:', e); } catch (_) {}
     }
 
-    // Ensure width, then size chart
     this._fitToParentWidth();
     this._sizeToInner();
     this.chart.reflow();
     this._applyTheme();
     this._resizeParentToChart();
-
-    // Center indicator text if needed
     this._updateYesNoLabel();
 
     this._attach3dDragIfNeeded();
@@ -957,7 +937,7 @@
   Plugin.prototype._startProgress = function (durationMs) {
     this._ensureProgressEls();
     this._progressDurationMs = Math.max(50, durationMs || 1000);
-    this._progressStartTs = performance.now();
+       this._progressStartTs = performance.now();
     this.$progressBar.css({ width: '100%', left: 0 });
 
     var self = this;
@@ -1011,7 +991,6 @@
     var self = this;
     var $dragTargets = this.$inner.add(this.$header);
 
-    // Respect enableDrag
     if (!this.opts.enableDrag) return;
 
     $dragTargets.css('cursor', 'grab');
@@ -1207,7 +1186,6 @@
   Plugin.prototype._bindResize = function () {
     var self = this;
 
-    // If resizing is disabled, remove/hide handle and bail.
     if (!self.opts.enableResize) {
       if (self.$resizer) self.$resizer.hide();
       return;
@@ -1262,7 +1240,6 @@
       this.releasePointerCapture && this.releasePointerCapture(e.pointerId);
       $('html,body').removeClass('as-hc-noselect');
 
-      // If fitParentWidth is enabled, snap back to the parent width
       self._fitToParentWidth();
 
       $scope.off('pointermove.' + PLUGIN, onMove);
@@ -1399,6 +1376,11 @@
       $sel.on('change', () => {
         var secs = parseInt($sel.val(), 10) || 0;
         this.setAutoRefresh(secs);
+        // If you want a callback, you can wire it here externally via event or option.
+        if (typeof this.opts.onAutoRefreshChange === 'function') {
+          try { this.opts.onAutoRefreshChange(secs, this); } catch (e) {}
+        }
+        this.$host.trigger('asHc.autorefreshchange', [{ seconds: secs }, this]);
       });
       this.$tools.append($sel);
     }
@@ -1449,7 +1431,6 @@
     this.$wrapper.append(this.$header, this.$body, this.$resizer);
     this.$host.append(this.$wrapper);
 
-    // NEW: immediately fill parent width if enabled
     this._fitToParentWidth();
 
     // Interactions
@@ -1581,6 +1562,34 @@
       });
   };
 
+  /* ======================= Snap controls (NEW) ======================= */
+  // Enable/disable snapping to grid
+  Plugin.prototype.setSnapEnabled = function (enabled) {
+    this.opts.grid = this.opts.grid || {};
+    this.opts.grid.enabled = !!enabled;
+    return this;
+  };
+  // Choose when to snap: 'move' (during drag) or 'end' (on release)
+  Plugin.prototype.setSnapType = function (type) {
+    var t = (type || 'end').toString().toLowerCase();
+    if (t !== 'move' && t !== 'end') t = 'end';
+    this.opts.grid = this.opts.grid || {};
+    this.opts.grid.snap = t;
+    return this;
+  };
+  // Set grid cell size; if only x is given, y=x
+  Plugin.prototype.setSnapSize = function (x, y) {
+    var gx, gy;
+    if (typeof x === 'object' && x) { gx = x.x; gy = (x.y != null ? x.y : x.x); }
+    else { gx = x; gy = (y != null ? y : x); }
+    gx = parseInt(gx, 10); gy = parseInt(gy, 10);
+    if (!isFinite(gx) || gx <= 0) gx = 24;
+    if (!isFinite(gy) || gy <= 0) gy = gx;
+    this.opts.grid = this.opts.grid || {};
+    this.opts.grid.size = { x: gx, y: gy };
+    return this;
+  };
+
   /* ======================= jQuery bridge ======================= */
   $.fn[PLUGIN] = function (optionOrMethod) {
     var args = Array.prototype.slice.call(arguments, 1);
@@ -1611,7 +1620,7 @@
       var instances = $el.data(INST_KEY);
       if (!instances) { instances = []; $el.data(INST_KEY, instances); }
 
-    if (typeof optionOrMethod === 'string') {
+      if (typeof optionOrMethod === 'string') {
         instances.slice().forEach(function (inst) {
           if (typeof inst[optionOrMethod] !== 'function') throw new Error(PLUGIN + ': unknown method ' + optionOrMethod);
           ret = inst[optionOrMethod].apply(inst, args);

@@ -5,7 +5,7 @@ Part of allsky postprocess.py modules.
 https://github.com/AllskyTeam/allsky
 
 This module will load the last captured image into the shared module
-allowing it to be passed between modules
+allowing it to be passed between modules.
 
 '''
 import allsky_shared as allsky_shared
@@ -17,8 +17,8 @@ import sys
 class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 
 	meta_data = {
-		"name": "Loads the latest image",
-		"description": "Loads the last captured image",
+		"name": "Load the Current Image",
+		"description": "Load the last captured image.",
 		"module": "allsky_loadimage",
 		"ignorewatchdog": "True",
 		"extradatafilename": "allsky_camera.json",

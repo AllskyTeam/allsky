@@ -16,8 +16,8 @@ import re
 class ALLSKYEXPORT(ALLSKYMODULEBASE):
 
 	meta_data = {
-		"name": "Allsky Export",
-		"description": "Exports Allsky data to json",
+		"name": "Export Allsky Data",
+		"description": "Export data created by Allsky to a file for use by other programs.",
 		"module": "allsky_export",
 		"testable": "true",
 		"centersettings": "false",
@@ -34,12 +34,12 @@ class ALLSKYEXPORT(ALLSKYMODULEBASE):
 			"filelocation" : {
 				"required": "true",
 				"description": "File Location",
-				"help": "The location to save the json date"
+				"help": "The location to save the json file."
 			},
 			"extradata" : {
 				"required": "false",
 				"description": "Extra data to export",
-				"help": "Comma seperated list of additional variables to export to json"
+				"help": "Comma-separated list of additional variables to export."
 			}        
 		}          
 	}

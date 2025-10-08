@@ -26,10 +26,9 @@ from allskyexceptions import AllskyFormatError
 from allskyoverlay.overlaydata import ALLSKYOVERLAYDATA
 
 formatErrorPlaceholder = "??"
-missingTypePlaceholder = "???"
 
 class ALLSKYOVERLAY(ALLSKYMODULEBASE):
-    
+
 	meta_data = {
 		"name": "Overlay Information on an Image",
 		"description": "Overlay information (text, images, etc.) on an image.",
@@ -720,8 +719,15 @@ def overlay(params, event):
 		formaterrortext = params["formaterrortext"]
 	else:
 		formaterrortext = formatErrorPlaceholder
+
 	annotater = ALLSKYOVERLAY(params, event, formaterrortext)
-	annotater.annotate()
+
+	try:
+		annotater.annotate()
+	except Exception as e:
+		allsky_shared.log(f"ERROR in {__file__} calling annotater.annotate(): {e}")
+		exit(1)
+
 	result = ""
 
 	return result

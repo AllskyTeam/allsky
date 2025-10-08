@@ -19,8 +19,8 @@ import pathlib
 class ALLSKYSAVEINTERMMEDIATEIMAGE(ALLSKYMODULEBASE):
 
 	meta_data = {
-		"name": "Saves an intermediate image",
-		"description": "Saves an intermediate image",
+		"name": "Save an Intermediate Image",
+		"description": "Save the current version of an image in a specified location.",
 		"module": "allsky_saveintermediateimage",
 		"group": "Allsky Core",      
 		"events": [
@@ -34,7 +34,7 @@ class ALLSKYSAVEINTERMMEDIATEIMAGE(ALLSKYMODULEBASE):
 			"imagefolder" : {
 				"required": "true",
 				"description": "Image folder",
-				"help": "The folder to save the image in. The folder will be created if it does not exist. You can use AllSky Variables in the path"
+				"help": "The folder to save the image in. The folder will be created if it does not exist. You can use Allsky variables in the folder name."
 			}
 		}      
 	}

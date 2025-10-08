@@ -28,7 +28,7 @@ usage_and_exit()
 [[ $# -lt 2 ]] && usage_and_exit 1
 
 # Export so other scripts can use it.
-export DAY_OR_NIGHT="${1}"
+export DAY_OR_NIGHT="${1}";		export AS_DAY_OR_NIGHT="${DAY_OR_NIGHT}"
 [[ ${DAY_OR_NIGHT} != "DAY" && ${DAY_OR_NIGHT} != "NIGHT" ]] && usage_and_exit 1
 
 # ${CURRENT_IMAGE} is the full path to a uniquely-named file created by the capture program.
@@ -38,7 +38,7 @@ export DAY_OR_NIGHT="${1}"
 # that's what websites look for and what is uploaded.
 
 # Export so other scripts can use it.
-export CURRENT_IMAGE="${2}"
+export CURRENT_IMAGE="${2}";		export AS_CURRENT_IMAGE="${CURRENT_IMAGE}"
 shift 2
 if [[ ! -f ${CURRENT_IMAGE} ]] ; then
 	E_ "*** ${ME}: ERROR: File '${CURRENT_IMAGE}' not found; ignoring."

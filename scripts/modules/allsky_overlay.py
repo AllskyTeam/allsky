@@ -725,7 +725,7 @@ def overlay(params, event):
 	try:
 		annotater.annotate()
 	except Exception as e:
-		allsky_shared.log(f"ERROR in {__file__} calling annotater.annotate(): {e}")
+		allsky_shared.log(0, f"ERROR in {__file__} calling annotater.annotate(): {e}")
 		exit(1)
 
 	result = ""

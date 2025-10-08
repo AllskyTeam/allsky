@@ -15,8 +15,8 @@ import pathlib
 class ALLSKYSAVEIMAGE(ALLSKYMODULEBASE):
 
 	meta_data = {
-		"name": "Saves the image",
-		"description": "Saves the image",
+		"name": "Save an image",
+		"description": "Save the modified image.",
 		"module": "allsky_saveimage",
 		"ignorewatchdog": "True",
 		"group": "Allsky Core",       

@@ -52,10 +52,7 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 					"group": "Camera",
 					"description": "Day / night flag",
 					"type": "string",
-     				"dbtype": "varchar(10)",
-					"database": {
-						"table": "alex"
-					}
+     				"dbtype": "varchar(10)"
 				},
 				"AS_AUTOEXPOSURE": {
 					"name": "${AUTOEXPOSURE}",
@@ -88,14 +85,6 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 					"group": "Camera",
 					"description": "Height of image in pixels",
 					"type": "int"
-				},
-				"AS_CAMERAIMAGEURL": {
-					"name": "${CAMERAIMAGEURL}",
-					"format": "",
-					"sample": "",
-					"group": "Camera",
-					"description": "Current Image URL",
-					"type": "string"
 				},
 				"AS_CAMERAEXPOSURE_US": {
 					"name": "${CAMERAEXPOSURE_US}",

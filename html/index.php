@@ -143,7 +143,7 @@ $pageInfo = [
 		"icon" => "fa fa-bars fa-fw",
 	],
 	"charts" => [
-		"title" => "Charts",
+		"title" => "Chart Manager",
 		"icon" => "fa-solid fa-chart-line",
 	],
 	"LAN_info" => [

@@ -22,12 +22,12 @@
         {
             "name": "Exposure",
             "yAxis": 0,
-            "variable": "AS_CAMERAEXPOSURE_US|true"
+            "variable": "AS_EXPOSURE_US|true"
         },
         {
             "name": "Gain",
             "yAxis": 1,
-            "variable": "AS_CAMERAGAIN"
+            "variable": "AS_GAIN"
         }
     ]
 }

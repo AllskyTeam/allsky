@@ -445,6 +445,66 @@ class ALLSKYDATABASEMANAGER:
 
         return "OTHER_ERROR"
 
+    def list_tables(
+        self,
+        *,
+        schema: Optional[str] = None,
+        include_views: bool = False,
+        include_system: bool = False,
+    ) -> list[str]:
+        """
+        Return a list of table names available to the current connection.
+
+        Args:
+            schema:   (MySQL/MariaDB only) override database/schema to inspect.
+                    If None, uses the current database (DATABASE()).
+            include_views: include views in the result (False = tables only).
+            include_system:
+                - SQLite: include internal 'sqlite_%' tables if True (default False).
+                - MySQL/MariaDB: no effect (only current schema is queried).
+
+        Returns:
+            Sorted list of table (and optionally view) names.
+        """
+        if not self.conn:
+            self.connect()
+
+        # SQLite
+        if self.driver == "sqlite":
+            kinds = ["'table'"]
+            if include_views:
+                kinds.append("'view'")
+            sql = f"SELECT name FROM sqlite_master WHERE type IN ({', '.join(kinds)})"
+            if not include_system:
+                sql += " AND name NOT LIKE 'sqlite_%'"
+            sql += " ORDER BY name"
+            rows = self.fetchall(sql)
+            return [r["name"] for r in rows]
+
+        # MySQL / MariaDB
+        kinds = ["'BASE TABLE'"]
+        if include_views:
+            kinds.append("'VIEW'")
+        type_clause = f"({', '.join(kinds)})"
+
+        params: dict[str, Any] = {}
+        if schema:
+            where_schema = "TABLE_SCHEMA = :schema"
+            params["schema"] = schema
+        else:
+            # use the active DB
+            where_schema = "TABLE_SCHEMA = DATABASE()"
+
+        sql = (
+            "SELECT TABLE_NAME AS name "
+            "FROM information_schema.tables "
+            f"WHERE TABLE_TYPE IN {type_clause} AND {where_schema} "
+            "ORDER BY TABLE_NAME"
+        )
+        rows = self.fetchall(sql, params or None)
+        return [r["name"] for r in rows]
+
+
     # -------------------------------------------------------------------
     # run_sql WITH ERROR HANDLING (Works for MySQL & SQLite)
     # -------------------------------------------------------------------
@@ -499,7 +559,7 @@ class ALLSKYDATABASEMANAGER:
             else:
                 # CREATE/ALTER/DROP/etc.
                 op = "other"
-
+            
             cur = self.execute(translated, params)
             lastrowid = getattr(cur, "lastrowid", None)
             rowcount = getattr(cur, "rowcount", 0)

@@ -257,6 +257,7 @@ else
 	# During the daytime we alway save the file in today's directory.
 	export DATE_NAME="$( date +'%Y%m%d' )"
 fi
+export AS_DATE_NAME="${DATE_NAME}"
 
 activate_python_venv
 python3 "${ALLSKY_SCRIPTS}/flow-runner.py"

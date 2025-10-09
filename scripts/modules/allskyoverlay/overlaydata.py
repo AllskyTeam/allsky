@@ -284,7 +284,10 @@ class ALLSKYOVERLAYDATA:
 							field_data[def_key] = def_value
 
 			if format_matches:
-				formats = format_matches[variable_pos]
+				if variable_pos < len(format_matches):
+					formats = format_matches[variable_pos]
+				else:
+					formats = ""
     
 				if variable in self.extra_fields:
 

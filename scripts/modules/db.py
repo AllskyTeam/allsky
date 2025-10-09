@@ -66,7 +66,7 @@ class ALLSKYDB():
         if database_conn is not None:        
             query_result = database_conn.run_sql(query)
             if query_result['ok']:
-                if query_result['type'] == 'insert':
+                if query_result['type'] == 'select':
                     if return_format == 'json':
                         result = query_result['rows']
                     if return_format == 'tab':

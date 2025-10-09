@@ -46,7 +46,7 @@ class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 					"name": "${STARIMAGE}",
 					"format": "",
 					"sample": "",
-					"group": "Image Data",
+					"group": "Added Image Data",
 					"description": "Image with stars",
 					"type": "string"
 				},
@@ -54,7 +54,7 @@ class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 					"name": "${STARIMAGEPATH}",
 					"format": "",
 					"sample": "",                
-					"group": "Image Data",
+					"group": "Added Image Data",
 					"description": "Image with stars Path",
 					"type": "string"
 				},
@@ -62,7 +62,7 @@ class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 					"name": "${STARIMAGEURL}",
 					"format": "",
 					"sample": "",                
-					"group": "Image Data",
+					"group": "Added Image Data",
 					"description": "Image with stars URL",
 					"type": "string"
 				},
@@ -70,7 +70,7 @@ class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 					"name": "${STARCOUNT}",
 					"format": "",
 					"sample": "",                
-					"group": "Image Data",
+					"group": "Added Image Data",
 					"description": "STAR COUNT",
 					"type": "number",
 					"database": {

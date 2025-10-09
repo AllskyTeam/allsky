@@ -41,15 +41,23 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 					"name": "${CAMERAIMAGE}",
 					"format": "",
 					"sample": "",
-					"group": "Camera",
+					"group": "Allsky",
 					"description": "Current Image",
 					"type": "string"
+				},
+				"AS_DATE_NAME": {
+					"name": "${DATE_NAME}",
+					"format": "",
+					"sample": "",
+					"group": "Image Data",
+					"description": "Folder in allsky/images where image is",
+					"type": "int"
 				},
 				"AS_DAY_OR_NIGHT": {
 					"name": "${DAY_OR_NIGHT}",
 					"format": "",
 					"sample": "",
-					"group": "Camera",
+					"group": "Image Data",
 					"description": "DAY / NIGHT flag",
 					"type": "string",
      				"dbtype": "varchar(10)"
@@ -58,7 +66,7 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 					"name": "${AUTOEXPOSURE}",
 					"format": "",
 					"sample": "",
-					"group": "Camera",
+					"group": "Image Data",
 					"description": "Autoexposure enabled?",
 					"type": "bool"
 				},
@@ -66,7 +74,7 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 					"name": "${AUTOGAIN}",
 					"format": "",
 					"sample": "",
-					"group": "Camera",
+					"group": "Image Data",
 					"description": "Autogain enabled?",
 					"type": "bool"
 				},
@@ -74,7 +82,7 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 					"name": "${RESOLUTION_X}",
 					"format": "",
 					"sample": "",
-					"group": "Camera",
+					"group": "Image Data",
 					"description": "Width of image in pixels",
 					"type": "int"
 				},
@@ -82,7 +90,7 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 					"name": "${RESOLUTION_Y}",
 					"format": "",
 					"sample": "",
-					"group": "Camera",
+					"group": "Image Data",
 					"description": "Height of image in pixels",
 					"type": "int"
 				},
@@ -90,7 +98,7 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 					"name": "${EXPOSURE_US}",
 					"format": "",
 					"sample": "",
-					"group": "Camera",
+					"group": "Image Data",
 					"description": "Exposure",
 					"type": "number"
 				},
@@ -98,7 +106,7 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 					"name": "${GAIN}",
 					"format": "",
 					"sample": "",
-					"group": "Camera",
+					"group": "Image Data",
 					"description": "Exposure",
 					"type": "number"
 				},
@@ -106,7 +114,7 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 					"name": "${TEMPERATURE_C}",
 					"format": "",
 					"sample": "",
-					"group": "Camera",
+					"group": "Image Data",
 					"description": "Exposure",
 					"type": "temperature"
 				},
@@ -114,7 +122,7 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 					"name": "${MEAN}",
 					"format": "",
 					"sample": "",                
-					"group": "Camera",
+					"group": "Image Data",
 					"description": "Current Mean Pixel Value",
 					"type": "number"
 				}  
@@ -164,7 +172,8 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 
 		extra_data = {}
 		extra_data['AS_CAMERAIMAGE'] = filename
-		extra_data['AS_DAY_OR_NIGHT'] = allsky_shared.get_environment_variable('DAY_OR_NIGHT')
+		extra_data['AS_DATE_NAME'] = allsky_shared.get_environment_variable('AS_DATE_NAME')
+		extra_data['AS_DAY_OR_NIGHT'] = allsky_shared.get_environment_variable('AS_DAY_OR_NIGHT')
 		extra_data['AS_AUTOEXPOSURE'] = bool(allsky_shared.get_environment_variable('AS_AUTOEXPOSURE'))
 		extra_data['AS_AUTOGAIN'] = bool(allsky_shared.get_environment_variable('AS_AUTOGAIN'))
 		extra_data['AS_RESOLUTION_X'] = int(allsky_shared.get_environment_variable('AS_RESOLUTION_X'))

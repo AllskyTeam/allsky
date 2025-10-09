@@ -46,7 +46,7 @@ class ALLSKYMETEOR(ALLSKYMODULEBASE):
 					"name": "${METEORIMAGE}",
 					"format": "",
 					"sample": "",
-					"group": "Image Data",
+					"group": "Added Image Data",
 					"description": "Image with meteors",
 					"type": "string"
 				},
@@ -54,7 +54,7 @@ class ALLSKYMETEOR(ALLSKYMODULEBASE):
 					"name": "${METEORIMAGEPATH}",
 					"format": "",
 					"sample": "",
-					"group": "Image Data",
+					"group": "Added Image Data",
 					"description": "Image with meteors Path",
 					"type": "string"
 				},
@@ -62,7 +62,7 @@ class ALLSKYMETEOR(ALLSKYMODULEBASE):
 					"name": "${METEORIMAGEURL}",
 					"format": "",
 					"sample": "",
-					"group": "Image Data",
+					"group": "Added Image Data",
 					"description": "Image with meteors URL",
 					"type": "string"
 				},
@@ -70,7 +70,7 @@ class ALLSKYMETEOR(ALLSKYMODULEBASE):
 					"name": "${METEORCOUNT}",
 					"format": "",
 					"sample": "",
-					"group": "Image Data",
+					"group": "Added Image Data",
 					"description": "METEOR COUNT",
 					"type": "number"
 				}

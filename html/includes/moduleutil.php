@@ -1061,7 +1061,7 @@ class MODULEUTIL
             foreach ($variables as $variable) {
                 if (isset($row[$variable])) {
 
-                    if ($variable== "AS_CAMERAEXPOSURE_US") {
+                    if ($variable== "AS_EXPOSURE_US") {
                         $value = $row[$variable] / 1000;
                     } else {
                         $value = $row[$variable];
@@ -1069,12 +1069,16 @@ class MODULEUTIL
                     }
                     $timeStamp = $this->toMsTimestamp($row['id']);
 
-
-
                     if (isset($tooltips[$variable])) {
                         $tooltip = '';
-                        if (isset($row['AS_CAMERAIMAGEURL'])) {
-                            $tooltip = $row['AS_CAMERAIMAGEURL'];
+                        if (isset($row['AS_CAMERAIMAGE']) && isset($row['AS_DATE_NAME'])) {
+                            $i = $row['AS_CAMERAIMAGE'];
+                            $d = $row['AS_DATE_NAME'];
+                            $thumb = "/$d/thumbnails/$i";
+							if (file_exists(ALLSKY_IMAGES . $thumb)) {
+                            	$tooltip = "/images/$thumb";
+							}
+							# If no thumbnail, don't show anything - the full image is too big.
                         }
                         $out[$variable][] = [
                             'x' => $timeStamp,
@@ -1344,7 +1348,7 @@ class MODULEUTIL
      */
     private function buildChartList(PDO $pdo, array $chartList, string $baseDir): array
     {
-        // If the base directory doesn't exist, nothing to add—return existing list.
+        // If the base directory doesn't exist, nothing to add-return existing list.
         if (!is_dir($baseDir)) {
             return $chartList;
         }
@@ -1437,7 +1441,7 @@ class MODULEUTIL
 
         // Sort groups by their keys in ascending order to make output stable/readable.
         // Note: asort() preserves keys and sorts by value; since $chartList is an
-        // array of arrays, PHP will compare arrays—this still produces a deterministic
+        // array of arrays, PHP will compare array-this still produces a deterministic
         // order but if you prefer alphabetical by group name, consider ksort() instead.
         asort($chartList);
 

@@ -5,11 +5,11 @@
     "type": "line",
     "main": true,    
     "table": "allsky_stars",     
-    "series": {
-        "exposure": {
+    "series": [
+        {
             "name": "Star Count",
             "yAxis": 0,
             "variable": "AS_STARCOUNT"
         }
-    }
+    ]
 }

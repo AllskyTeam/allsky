@@ -5,11 +5,11 @@
     "type": "line",
     "main": true,    
     "table": "allsky_meteors",     
-    "series": {
-        "exposure": {
+    "series": [
+        {
             "name": "Meteor Count",
             "yAxis": 0,
             "variable": "AS_METEORCOUNT"
         }
-    }
+    ]
 }

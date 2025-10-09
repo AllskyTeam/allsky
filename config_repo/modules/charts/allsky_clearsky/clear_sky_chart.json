@@ -5,11 +5,11 @@
     "type": "line",
     "main": true,    
     "table": "allsky_clearsky",     
-    "series": {
-        "exposure": {
+    "series": [
+        {
             "name": "Sky State",
             "yAxis": 0,
             "variable": "AS_CLEARSKYSTATEFLAG"
         }
-    }
+    ]
 }

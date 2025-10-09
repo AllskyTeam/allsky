@@ -131,7 +131,8 @@
 		"sample": "",
 		"source": "Allsky",			
 		"type": "number",
-		"group": "Allsky"
+		"group": "Allsky",
+		"description" : "Height of optionally-resized image"
 	},
 	"AS_RESIZE_WIDTH": {
 		"name": "${RESIZE_WIDTH}",
@@ -139,7 +140,8 @@
 		"sample": "",
 		"source": "Allsky",			
 		"type": "number",
-		"group": "Allsky"
+		"group": "Allsky",
+		"description" : "Width of optionally-resized image"
 	},
 	"AS_STRETCH_AMOUNT": {
 		"name": "${STRETCH_AMOUNT}",
@@ -147,7 +149,8 @@
 		"sample": "",
 		"source": "Allsky",			
 		"type": "number",
-		"group": "Allsky"
+		"group": "Allsky",
+		"description": "Amount to optionally stretch an image"
 	},
 	"AS_STRETCH_MIDPOINT": {
 		"name": "${STRETCH_MIDPOINT}",
@@ -155,7 +158,8 @@
 		"sample": "",
 		"source": "Allsky",			
 		"type": "number",
-		"group": "Allsky"
+		"group": "Allsky",
+		"description": "Mid point of image stretch"
 	},
 	"AS_TIME": {
 		"name": "${TIME}",
@@ -236,6 +240,6 @@
 		"source": "Allsky",			
 		"type": "string",
 		"group": "Allsky",
-		"description": "Time of Day"
+		"description": "DAY / NIGHT flag"
 	}
 }

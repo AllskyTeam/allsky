@@ -66,12 +66,15 @@ class ALLSKYDB():
         if database_conn is not None:        
             query_result = database_conn.run_sql(query)
             if query_result['ok']:
-                if return_format == 'json':
-                    result = query_result['rows']
-                if return_format == 'tab':
-                    rows = query_result.get("rows", [])
-                    keys = list(rows[0].keys()) if rows else []
-                    result = "\n".join("\t".join(str(row.get(k, "")) for k in keys) for row in rows)
+                if query_result['type'] == 'insert':
+                    if return_format == 'json':
+                        result = query_result['rows']
+                    if return_format == 'tab':
+                        rows = query_result.get("rows", [])
+                        keys = list(rows[0].keys()) if rows else []
+                        result = "\n".join("\t".join(str(row.get(k, "")) for k in keys) for row in rows)
+                else:
+                    result = 'Ok'
             else:
                 result = query_result.get('error_code', 'Unknown')
         else:

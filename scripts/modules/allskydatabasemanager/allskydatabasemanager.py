@@ -460,7 +460,13 @@ class ALLSKYDATABASEMANAGER:
 
         Success:
           - SELECT  -> {"ok": True, "type": "select", "rows": [...]}
-          - Non-SELECT -> {"ok": True, "type": "write", "rowcount": int, "lastrowid": int|None}
+          - WRITE   -> {
+                          "ok": True,
+                          "type": "write",
+                          "operation": "insert"|"update"|"delete"|"upsert"|"other",
+                          "rowcount": int,
+                          "lastrowid": int|None
+                        }
 
         Error:
           {"ok": False, "error_code": "INVALID_SQL"|"TABLE_MISSING"|"OTHER_ERROR", "message": str}
@@ -471,18 +477,40 @@ class ALLSKYDATABASEMANAGER:
 
             translated = self._translate_mysql_sql_for_driver(sql, conflict_columns=conflict_columns)
 
-            # Strip comments and detect SELECT
-            head = re.sub(r"^\s*(/\*.*?\*/\s*)*(--[^\n]*\n\s*)*", "", translated, flags=re.S)
-            is_select = head.strip().upper().startswith("SELECT")
+            # Strip leading comments/whitespace to detect the primary keyword
+            cleaned = re.sub(r"^\s*(/\*.*?\*/\s*)*(--[^\n]*\n\s*)*", "", translated, flags=re.S)
+            head = cleaned.strip().upper()
 
-            if is_select:
+            # Detect operation (also handles UPSERT forms)
+            if head.startswith("SELECT"):
                 rows = self.fetchall(translated, params)
                 return {"ok": True, "type": "select", "rows": rows}
+
+            # Determine write operation for consistent response
+            if head.startswith("INSERT") or head.startswith("REPLACE"):
+                op = "insert"
+                # If it's an UPSERT flavor, relabel as upsert
+                if "ON DUPLICATE KEY UPDATE" in head or "ON CONFLICT" in head:
+                    op = "upsert"
+            elif head.startswith("UPDATE"):
+                op = "update"
+            elif head.startswith("DELETE"):
+                op = "delete"
+            else:
+                # CREATE/ALTER/DROP/etc.
+                op = "other"
 
             cur = self.execute(translated, params)
             lastrowid = getattr(cur, "lastrowid", None)
             rowcount = getattr(cur, "rowcount", 0)
-            return {"ok": True, "type": "write", "rowcount": rowcount, "lastrowid": lastrowid}
+
+            return {
+                "ok": True,
+                "type": "write",
+                "operation": op,         # <- always present for writes
+                "rowcount": rowcount,
+                "lastrowid": lastrowid,  # <- present for INSERT/UPSERT; None for UPDATE/DELETE
+            }
 
         except Exception as e:
             code = self._classify_sql_error(e)

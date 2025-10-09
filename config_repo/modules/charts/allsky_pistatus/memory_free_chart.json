@@ -1,7 +1,7 @@
 {
     "icon": "fas fa-chart-line",
     "group": "Hardware",
-    "title": "Memory Free %",
+    "title": "Free Memory % Chart",
     "type": "line",
     "table": "allsky_hardware", 
     "yAxis": [
@@ -13,7 +13,7 @@
     ],
     "series": [
         {
-            "name": "Memory Free %",
+            "name": "Free Memory %",
             "variable": "AS_MEMORYFREEPERCENTAGE"
         }
     ]

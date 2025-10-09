@@ -30,6 +30,7 @@ import requests
 import grp
 import builtins
 import pwd
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from functools import reduce
 from allskyvariables.allskyvariables import ALLSKYVARIABLES
@@ -37,7 +38,7 @@ from allskydatabasemanager.allskydatabasemanager import ALLSKYDATABASEMANAGER, C
 import pigpio
 import numpy as np
 import numpy.typing as npt
-from typing import Union, List, Dict, Any, Tuple, Sequence, Optional
+from typing import Union, List, Dict, Any, Tuple, Sequence, Optional, Iterable
 from mysql.connector.connection import MySQLConnection
 
  
@@ -61,7 +62,14 @@ def getEnvironmentVariable(name, fatal=False, debug=False, try_allsky_debug_file
             if try_allsky_debug_file:
                 result = get_value_from_debug_data(name)
             else:
-                setup_for_command_line()
+                # DO NOT change the below code
+                json_variables = f"{ALLSKYPATH}/variables.json"
+                with open(json_variables, 'r') as file:
+                    json_data = json.load(file)
+
+                for key, value in json_data.items():
+                    os.environ[str(key)] = str(value)
+
                 result = read_environment_variable(name)
                 
             if result == None and fatal:
@@ -886,6 +894,92 @@ def get_database_config():
     
     return secret_data
 
+def purge_database(dry_run: bool, to_keep: str = "") -> int:
+    results = {}
+
+    if not to_keep.strip():
+        days_to_keep = get_setting('daystokeep')
+        if days_to_keep == None:
+            days_to_keep = 14
+        days_to_keep = f'{days_to_keep}d'
+
+    m = re.fullmatch(r"\s*(\d+(?:\.\d+)?)\s*([dhDH])\s*", to_keep)
+    if not m:
+        raise ValueError("to_keep must look like '2d' or '23h' (days/hours).")
+
+    amount = float(m.group(1))
+    unit = m.group(2).lower()
+
+    delta = timedelta(days=amount) if unit == 'd' else timedelta(hours=amount)
+    now = datetime.now(timezone.utc)
+    cutoff_time = now - delta
+    cutoff_timestamp = builtins.int(cutoff_time.timestamp())
+
+    database_conn = get_database_connection()
+    if database_conn is not None:
+        available_tables: Iterable[str] = database_conn.list_tables()        
+
+        for table in available_tables:
+            try:
+                q_table = database_conn._quote_ident(table) 
+                q_ts    = database_conn._quote_ident('timestamp')
+
+                if dry_run:
+                    row = database_conn.fetchone(
+                        f"SELECT COUNT(*) AS n FROM {q_table} WHERE {q_ts} <= :cutoff",
+                        {"cutoff": cutoff_timestamp}
+                    )
+                    number_to_delete = builtins.int((row or {}).get("n", 0))
+                    results[table] = number_to_delete
+                    log(4, f"[DRY RUN] {table}: {number_to_delete} rows would be deleted (<= {cutoff_time})")
+                else:
+                    cur = database_conn.execute(
+                        f"DELETE FROM {q_table} WHERE {q_ts} <= :cutoff",
+                        {"cutoff": cutoff_timestamp}
+                    )
+                    number_deleted = builtins.int(getattr(cur, "rowcount", 0) or 0)
+                    results[table] = number_deleted
+                    log(4, f"{table}: deleted {number_deleted} rows (<= {cutoff_time})")
+
+            except Exception as e:
+                log(0, f"Error processing table {table}: {e}")
+                results[table] = -1
+    return results
+  
+def get_database_connection(silent=True):
+    database_conn = None
+    secret_data = get_database_config()
+
+    if secret_data['databaseenabled']:
+        if not re.fullmatch(r'[a-zA-Z_][a-zA-Z0-9_]*', secret_data['databasedatabase']):
+            log(0, f"ERROR: Database table name {secret_data['databasedatabase']} is invalid")
+            return
+
+        database_conn = None
+        if secret_data['databasetype'] == 'mysql':
+            database_conn = ALLSKYDATABASEMANAGER(
+                "mysql",
+                host=secret_data['databasehost'],
+                user=secret_data['databaseuser'],
+                password=secret_data['databasepassword'],
+                database=secret_data['databasedatabase'],
+                silent=silent         
+            )
+
+        if secret_data['databasetype'] == 'sqlite':
+            try:
+                db_path = os.environ['ALLSKY_DATABASES']
+            except KeyError:
+                setupForCommandLine()
+                db_path = os.environ['ALLSKY_DATABASES']                
+            database_conn = ALLSKYDATABASEMANAGER("sqlite", db_path=db_path, silent=silent)
+
+        if database_conn and not database_conn.check_connection():
+            log(0, "ERROR: Failed to connect to MySQL database. Please run the database manager utility.")
+            return
+        
+    return database_conn
+                
 def update_database(structure, extra_data, event, source):
     save_daytime = get_setting('savedaytimeimages')
     save_nighttime = get_setting('savenighttimeimages')
@@ -966,35 +1060,8 @@ def update_database(structure, extra_data, event, source):
             message = f"INFO: Not saving to database as database time_of_day_save {event} is set to never"
         
     if update_database_flag:
-        secret_data = get_database_config()
-
-        if secret_data['databaseenabled']:
-            if not re.fullmatch(r'[a-zA-Z_][a-zA-Z0-9_]*', secret_data['databasedatabase']):
-                log(0, f"ERROR: Database table name {secret_data['databasedatabase']} is invalid")
-                return
-
-            database_conn = None
-            if secret_data['databasetype'] == 'mysql':
-                database_conn = ALLSKYDATABASEMANAGER(
-                    "mysql",
-                    host=secret_data['databasehost'],
-                    user=secret_data['databaseuser'],
-                    password=secret_data['databasepassword'],
-                    database=secret_data['databasedatabase'],           
-                )
-
-            if secret_data['databasetype'] == 'sqlite':
-                try:
-                    db_path = os.environ['ALLSKY_DATABASES']
-                except KeyError:
-                    setupForCommandLine()
-                    db_path = os.environ['ALLSKY_DATABASES']                
-                database_conn = ALLSKYDATABASEMANAGER("sqlite", db_path=db_path)
-
-            if database_conn and not database_conn.check_connection():
-                log(0, "ERROR: Failed to connect to MySQL database. Please run the database manager utility.")
-                return
-
+        database_conn = get_database_connection()
+        if database_conn is not None:
             data = json.loads(extra_data)
             if not _update_database(database_conn, data, structure, source):
                 log(0, f"ERROR: Unable to save data to {secret_data['databasetype']} database")

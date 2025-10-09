@@ -6,9 +6,11 @@ from contextlib import contextmanager
 try:
     import mysql.connector
     from mysql.connector.connection import MySQLConnection
+    from mysql.connector import errorcode as _MYSQL_ERRCODES
 except ImportError:
     mysql = None
     MySQLConnection = None
+    _MYSQL_ERRCODES = None
 
 ConnType = Union[sqlite3.Connection, "MySQLConnection", None]
 
@@ -16,20 +18,31 @@ ConnType = Union[sqlite3.Connection, "MySQLConnection", None]
 class ALLSKYDATABASEMANAGER:
     """
     Unified DB manager supporting SQLite, MySQL, and MariaDB.
-    Handles:
-      - Automatic connection
-      - Query execution with retries and named params (:param)
-      - Auto table creation and schema synchronization
-      - Upsert compatibility (MySQL, MariaDB, SQLite)
+    - Named params (:name) or positional params are accepted.
+    - Translates MySQL-dialect SQL to SQLite when needed.
+    - run_sql() returns a consistent dict with ok/error_code/message.
+    - `silent=True` suppresses all logging from this class.
     """
 
-    def __init__(self, driver: str, *, db_path: str | None = None, timeout: float = 10.0,
-                host: str | None = None, user: str | None = None, password: str | None = None,
-                database: str | None = None, log_queries: bool = False,
-                logger: logging.Logger | None = None, retry_attempts: int = 5,
-                retry_backoff: float = 0.15, autocommit: bool = True):
+    def __init__(
+        self,
+        driver: str,
+        *,
+        db_path: str | None = None,
+        timeout: float = 10.0,
+        host: str | None = None,
+        user: str | None = None,
+        password: str | None = None,
+        database: str | None = None,
+        log_queries: bool = False,
+        silent: bool = False,            # <--- NEW
+        logger: logging.Logger | None = None,
+        retry_attempts: int = 5,
+        retry_backoff: float = 0.15,
+        autocommit: bool = True,
+    ):
         self.driver = driver.lower()
-        self.conn = None
+        self.conn: ConnType = None
         self._sqlite_db_path = db_path
         self._sqlite_timeout = timeout
         self._mysql_host = host
@@ -37,10 +50,24 @@ class ALLSKYDATABASEMANAGER:
         self._mysql_password = password
         self._mysql_database = database
         self.log_queries = log_queries
+        self.silent = silent             # <--- NEW
         self.logger = logger or logging.getLogger("ALLSKYDATABASEMANAGER")
+        if self.silent:
+            # Ensure the logger never emits anything from this class
+            self.logger.disabled = True
         self.retry_attempts = retry_attempts
         self.retry_backoff = retry_backoff
         self.autocommit = autocommit
+
+    # -------------------------------------------------------------------
+    # INTERNAL LOGGING (respects self.silent)
+    # -------------------------------------------------------------------
+    def _log_safe(self, level: str, msg: str, *args):
+        if self.silent:
+            return
+        fn = getattr(self.logger, level, None)
+        if fn:
+            fn(msg, *args)
 
     # -------------------------------------------------------------------
     # CONNECTIONS
@@ -50,11 +77,11 @@ class ALLSKYDATABASEMANAGER:
             return self.conn
 
         if self.driver == "sqlite":
-            # autocommit when isolation_level=None
+            # isolation_level=None enables autocommit for sqlite3
             self.conn = sqlite3.connect(
                 self._sqlite_db_path,
                 timeout=self._sqlite_timeout,
-                isolation_level=None if self.autocommit else "",  # "" enables explicit transactions
+                isolation_level=None if self.autocommit else "",
             )
             self.conn.row_factory = sqlite3.Row
         elif self.driver == "mysql":
@@ -69,7 +96,6 @@ class ALLSKYDATABASEMANAGER:
             try:
                 self.conn.autocommit = bool(self.autocommit)
             except Exception:
-                # very old connectors: ignore if not supported
                 pass
         else:
             raise ValueError(f"Unsupported driver: {self.driver}")
@@ -82,7 +108,6 @@ class ALLSKYDATABASEMANAGER:
             self.conn = None
 
     def check_connection(self) -> bool:
-        """Verify DB connectivity."""
         try:
             if not self.conn:
                 self.connect()
@@ -94,16 +119,14 @@ class ALLSKYDATABASEMANAGER:
                 return True
             return False
         except Exception as e:
-            self.logger.error("DB connection check failed: %s", e)
+            self._log_safe("error", "DB connection check failed: %s", e)
             return False
 
     def get_database_type(self) -> str:
         if self.driver == "sqlite":
             return "SQLite3"
         if self.driver == "mysql":
-            if self._mysql_is_mariadb():
-                return "MariaDB"
-            return "MySQL"
+            return "MariaDB" if self._mysql_is_mariadb() else "MySQL"
         return "Unknown"
 
     # -------------------------------------------------------------------
@@ -112,7 +135,13 @@ class ALLSKYDATABASEMANAGER:
     _named_param_re = re.compile(r":([A-Za-z_][A-Za-z0-9_]*)")
 
     def _prepare(self, sql: str, params: Union[Mapping[str, Any], Sequence[Any], None]) -> tuple[str, tuple[Any, ...]]:
-        """Convert :named placeholders into backend-specific syntax."""
+        """
+        Convert :named placeholders into backend-specific syntax.
+        Also supports positional '?' params.
+        """
+        # Normalize any MySQL-style %s to '?' so we can convert deterministically
+        sql = sql.replace("%s", "?")
+
         if isinstance(params, Mapping):
             names = self._named_param_re.findall(sql)
             norm_sql = self._named_param_re.sub("%s" if self.driver == "mysql" else "?", sql)
@@ -121,21 +150,21 @@ class ALLSKYDATABASEMANAGER:
 
         if isinstance(params, Sequence) and not isinstance(params, (str, bytes)):
             seq = tuple(params)
+            # For MySQL we need %s, SQLite uses '?'
             norm_sql = re.sub(r"\?", "%s", sql) if self.driver == "mysql" else sql
             return norm_sql, seq
 
         norm_sql = self._named_param_re.sub("%s" if self.driver == "mysql" else "?", sql)
         return norm_sql, tuple()
 
-    def _log(self, sql, params, elapsed, op="execute"):
-        if self.log_queries:
+    def _log_query(self, sql, params, elapsed, op="execute"):
+        if self.log_queries and not self.silent:
             self.logger.info("[%s] %s (%.3fs)\nSQL: %s\nParams: %s", self.driver, op, elapsed, sql, params)
 
     def _should_retry(self, exc: Exception) -> bool:
         return self.driver == "sqlite" and ("locked" in str(exc).lower() or "busy" in str(exc).lower())
 
     def _run_with_retry(self, cur, fn: str, sql: str, params: tuple[Any, ...]):
-        """Run a cursor operation (execute or executemany) with retry on transient SQLite locks."""
         delay = self.retry_backoff
         last_exception = None
 
@@ -143,27 +172,22 @@ class ALLSKYDATABASEMANAGER:
             try:
                 t0 = time.perf_counter()
                 getattr(cur, fn)(sql, params)
-                self._log(sql, params, time.perf_counter() - t0, fn)
+                self._log_query(sql, params, time.perf_counter() - t0, fn)
                 return cur
             except Exception as e:
                 last_exception = e
                 if self._should_retry(e) and attempt < self.retry_attempts - 1:
-                    # transient lock — back off and retry
-                    if self.log_queries:
-                        self.logger.warning(
-                            "Retry %d/%d after transient DB error: %s",
-                            attempt + 1,
-                            self.retry_attempts,
-                            e,
-                        )
+                    self._log_safe(
+                        "warning",
+                        "Retry %d/%d after transient DB error: %s",
+                        attempt + 1, self.retry_attempts, e,
+                    )
                     time.sleep(delay)
                     delay *= 2
                     continue
-                # Either non-retryable, or retries exhausted — re-raise
                 break
 
-        # if we reach here, retries exhausted or fatal error
-        self.logger.error("Database operation failed after %d attempts: %s", self.retry_attempts, last_exception)
+        self._log_safe("error", "Database operation failed after %d attempts: %s", self.retry_attempts, last_exception)
         raise last_exception
 
     # -------------------------------------------------------------------
@@ -218,22 +242,15 @@ class ALLSKYDATABASEMANAGER:
     # UPSERT (MySQL, MariaDB, SQLite)
     # -------------------------------------------------------------------
     def _mysql_is_mariadb(self) -> bool:
-        """Detect MariaDB server."""
         try:
             cur = self.execute("SELECT VERSION()")
             row = cur.fetchone()
-            if isinstance(row, dict):
-                ver = next(iter(row.values()))
-            elif isinstance(row, (tuple, list)):
-                ver = row[0]
-            else:
-                ver = str(row)
+            ver = next(iter(row.values())) if isinstance(row, dict) else (row[0] if isinstance(row, (tuple, list)) else str(row))
             return "mariadb" in str(ver).lower()
         except Exception:
             return False
 
     def _mysql_supports_insert_alias(self) -> bool:
-        """Detect MySQL ≥ 8.0.20 (supports INSERT ... AS alias ... ON DUPLICATE KEY UPDATE)."""
         try:
             info = getattr(self.conn, "get_server_info", None)
             ver = str(info()) if info else ""
@@ -252,7 +269,6 @@ class ALLSKYDATABASEMANAGER:
         unique_keys: Sequence[str],
         update_columns: Optional[Sequence[str]] = None,
     ):
-        # columns to insert
         cols = list(data.keys())
         if update_columns is None:
             update_columns = [c for c in cols if c not in unique_keys]
@@ -260,7 +276,6 @@ class ALLSKYDATABASEMANAGER:
         insert_cols = ", ".join(self._quote_ident(c) for c in cols)
         insert_vals = ", ".join(f":{c}" for c in cols)
 
-        # SQLite path
         if self.driver == "sqlite":
             conflict_cols = ", ".join(self._quote_ident(c) for c in unique_keys)
             set_clause = ", ".join(
@@ -272,9 +287,7 @@ class ALLSKYDATABASEMANAGER:
             )
             return self.execute(sql, data)
 
-        # MySQL / MariaDB path
         if self._mysql_is_mariadb():
-            # MariaDB: use VALUES() form
             set_clause = ", ".join(
                 f"{self._quote_ident(c)}=VALUES({self._quote_ident(c)})" for c in update_columns
             )
@@ -284,9 +297,7 @@ class ALLSKYDATABASEMANAGER:
             )
             return self.execute(sql, data)
 
-        # MySQL server
         if self._mysql_supports_insert_alias():
-            # MySQL ≥ 8.0.20: alias form (VALUES() is deprecated there)
             alias = "new"
             set_clause = ", ".join(
                 f"{self._quote_ident(c)}={alias}.{self._quote_ident(c)}" for c in update_columns
@@ -296,7 +307,6 @@ class ALLSKYDATABASEMANAGER:
                 f"AS {alias} ON DUPLICATE KEY UPDATE {set_clause}"
             )
         else:
-            # MySQL 5.7 / early 8.0: VALUES() form
             set_clause = ", ".join(
                 f"{self._quote_ident(c)}=VALUES({self._quote_ident(c)})" for c in update_columns
             )
@@ -324,7 +334,6 @@ class ALLSKYDATABASEMANAGER:
         return row is not None
 
     def get_columns(self, table: str) -> Optional[list[str]]:
-        """Return list of column names, or None if table doesn't exist."""
         if not self.conn:
             self.connect()
         if not self.table_exists(table):
@@ -333,10 +342,9 @@ class ALLSKYDATABASEMANAGER:
             cur = self.execute(f"PRAGMA table_info({self._quote_ident(table)})")
             rows = cur.fetchall()
             return [row["name"] if isinstance(row, dict) else row[1] for row in rows]
-        else:
-            cur = self.execute(f"SHOW COLUMNS FROM {self._quote_ident(table)}")
-            rows = cur.fetchall()
-            return [row["Field"] for row in rows]
+        cur = self.execute(f"SHOW COLUMNS FROM {self._quote_ident(table)}")
+        rows = cur.fetchall()
+        return [row["Field"] for row in rows]
 
     def ensure_columns(
         self,
@@ -347,17 +355,15 @@ class ALLSKYDATABASEMANAGER:
         primary_key: Optional[Sequence[str]] = None,
         auto_commit=True,
     ) -> list[str]:
-        """Ensure table exists with all columns; create or alter as needed."""
         if not self.conn:
             self.connect()
 
-        # create if missing
         if create_if_missing and not self.table_exists(table):
             self.create_table(table, columns, primary_key=primary_key)
             return list(columns.keys())
 
         existing = set(self.get_columns(table) or [])
-        added = []
+        added: list[str] = []
         q_table = self._quote_ident(table)
         for name, col_type in columns.items():
             if name in existing:
@@ -403,3 +409,220 @@ class ALLSKYDATABASEMANAGER:
             if self.conn:
                 self.conn.rollback()
             raise
+
+    # -------------------------------------------------------------------
+    # ERROR CLASSIFIER (SQLite + MySQL/MariaDB)
+    # -------------------------------------------------------------------
+    def _classify_sql_error(self, exc: Exception) -> str:
+        """
+        Returns: 'INVALID_SQL' | 'TABLE_MISSING' | 'OTHER_ERROR'
+        """
+        msg = str(exc).lower()
+
+        if self.driver == "sqlite":
+            if "no such table" in msg:
+                return "TABLE_MISSING"
+            if "syntax error" in msg or ("near" in msg and "syntax" in msg):
+                return "INVALID_SQL"
+            return "OTHER_ERROR"
+
+        if self.driver == "mysql":
+            errno = getattr(exc, "errno", None)
+            if errno is not None and _MYSQL_ERRCODES:
+                if errno == _MYSQL_ERRCODES.ER_NO_SUCH_TABLE:
+                    return "TABLE_MISSING"
+                if errno in (
+                    getattr(_MYSQL_ERRCODES, "ER_PARSE_ERROR", -1),
+                    getattr(_MYSQL_ERRCODES, "ER_SYNTAX_ERROR", -1),
+                ):
+                    return "INVALID_SQL"
+            # Fallback string checks
+            if "doesn't exist" in msg and "table" in msg:
+                return "TABLE_MISSING"
+            if "you have an error in your sql syntax" in msg or "syntax" in msg:
+                return "INVALID_SQL"
+            return "OTHER_ERROR"
+
+        return "OTHER_ERROR"
+
+    # -------------------------------------------------------------------
+    # run_sql WITH ERROR HANDLING (Works for MySQL & SQLite)
+    # -------------------------------------------------------------------
+    def run_sql(
+        self,
+        sql: str,
+        params: Union[Mapping[str, Any], Sequence[Any], None] = None,
+        *,
+        conflict_columns: Optional[Sequence[str]] = None,
+    ):
+        """
+        Execute a MySQL-dialect SQL string on the configured backend.
+
+        Success:
+          - SELECT  -> {"ok": True, "type": "select", "rows": [...]}
+          - Non-SELECT -> {"ok": True, "type": "write", "rowcount": int, "lastrowid": int|None}
+
+        Error:
+          {"ok": False, "error_code": "INVALID_SQL"|"TABLE_MISSING"|"OTHER_ERROR", "message": str}
+        """
+        try:
+            if not self.conn:
+                self.connect()
+
+            translated = self._translate_mysql_sql_for_driver(sql, conflict_columns=conflict_columns)
+
+            # Strip comments and detect SELECT
+            head = re.sub(r"^\s*(/\*.*?\*/\s*)*(--[^\n]*\n\s*)*", "", translated, flags=re.S)
+            is_select = head.strip().upper().startswith("SELECT")
+
+            if is_select:
+                rows = self.fetchall(translated, params)
+                return {"ok": True, "type": "select", "rows": rows}
+
+            cur = self.execute(translated, params)
+            lastrowid = getattr(cur, "lastrowid", None)
+            rowcount = getattr(cur, "rowcount", 0)
+            return {"ok": True, "type": "write", "rowcount": rowcount, "lastrowid": lastrowid}
+
+        except Exception as e:
+            code = self._classify_sql_error(e)
+            self._log_safe("error", "run_sql() failed [%s]: %s\nSQL: %s\nParams: %s", code, e, sql, params)
+            return {"ok": False, "error_code": code, "message": str(e)}
+
+    # -------------------------------------------------------------------
+    # SQL TRANSLATOR (MySQL → SQLite where needed)
+    # -------------------------------------------------------------------
+    def _translate_mysql_sql_for_driver(
+        self,
+        sql: str,
+        *,
+        conflict_columns: Optional[Sequence[str]] = None,
+    ) -> str:
+        """Translate a MySQL SQL string for the current backend (no-op on MySQL)."""
+        if self.driver == "mysql":
+            # Normalize %s → ? so binder can convert back if needed
+            return sql.replace("%s", "?")
+
+        # --- SQLite translations ---
+        s = sql
+
+        # Replace backticks with double-quotes for identifiers
+        s = s.replace("`", '"')
+
+        # Remove table options not supported by SQLite
+        s = re.sub(r"\s+ENGINE=\w+\b", "", s, flags=re.I)
+        s = re.sub(r"\s+DEFAULT\s+CHARSET=\w+\b", "", s, flags=re.I)
+        s = re.sub(r"\s+AUTO_INCREMENT=\d+\b", "", s, flags=re.I)
+
+        # Column-level AUTO_INCREMENT best-effort:
+        # turn:  "col" <type> AUTO_INCREMENT  ->  "col" INTEGER PRIMARY KEY AUTOINCREMENT
+        def _auto_inc_col(m):
+            colname = m.group(1)
+            return f'"{colname}" INTEGER PRIMARY KEY AUTOINCREMENT'
+        s = re.sub(
+            r'"([A-Za-z_][A-Za-z0-9_]*)"\s+[\w()]+\s+AUTO_INCREMENT',
+            _auto_inc_col,
+            s,
+            flags=re.I,
+        )
+
+        # Strip UNSIGNED (SQLite ignores it)
+        s = re.sub(r"\bUNSIGNED\b", "", s, flags=re.I)
+
+        # Map booleans / tinyint(1) to INTEGER
+        s = re.sub(r"\bTINYINT\s*$begin:math:text$\\s*1\\s*$end:math:text$", "INTEGER", s, flags=re.I)
+        s = re.sub(r"\bBOOL(EAN)?\b", "INTEGER", s, flags=re.I)
+
+        # Functions
+        s = re.sub(r"\bNOW\s*$begin:math:text$\\s*$end:math:text$", "CURRENT_TIMESTAMP", s, flags=re.I)
+        s = re.sub(r"\bLAST_INSERT_ID\s*$begin:math:text$\\s*$end:math:text$", "last_insert_rowid()", s, flags=re.I)
+
+        # FROM DUAL (not in SQLite)
+        s = re.sub(r"\s+FROM\s+DUAL\b", "", s, flags=re.I)
+
+        # LIMIT offset, count  ->  LIMIT count OFFSET offset
+        def _limit_swap(m):
+            off = m.group(1)
+            cnt = m.group(2)
+            return f"LIMIT {cnt} OFFSET {off}"
+        s = re.sub(r"\bLIMIT\s+(\d+)\s*,\s*(\d+)\b", _limit_swap, s, flags=re.I)
+
+        # Handle ON DUPLICATE KEY UPDATE → SQLite UPSERT
+        s = self._rewrite_mysql_upsert_to_sqlite(s, conflict_columns)
+
+        # Placeholders normalization
+        s = s.replace("%s", "?")
+
+        return s
+
+    def _rewrite_mysql_upsert_to_sqlite(
+        self,
+        sql: str,
+        conflict_columns: Optional[Sequence[str]],
+    ) -> str:
+        """
+        Convert:
+          INSERT INTO t (c1,c2,...) VALUES (...),(...),... ON DUPLICATE KEY UPDATE cX=VALUES(cX), cY=...
+        to:
+          INSERT INTO t (c1,c2,...) VALUES (...),(...)
+          ON CONFLICT (pk_or_unique_cols) DO UPDATE SET cX=excluded.cX, cY=excluded.cY
+
+        Only applied when we can determine conflict target (via conflict_columns or pragma lookup).
+        """
+        # Simple parser for single-table INSERT ... ON DUPLICATE KEY UPDATE ...
+        pattern = re.compile(
+            r'^\s*INSERT\s+INTO\s+("?[A-Za-z_][A-Za-z0-9_]*"?)[\s]*'
+            r'$begin:math:text$([^)]*)$end:math:text$\s*VALUES\s*($begin:math:text$[^)]+$end:math:text$(?:\s*,\s*$begin:math:text$[^)]+$end:math:text$)*)\s*'
+            r'ON\s+DUPLICATE\s+KEY\s+UPDATE\s+(.+)$',
+            re.I | re.S,
+        )
+        m = pattern.match(sql)
+        if not m:
+            return sql
+
+        table = m.group(1).strip()
+        cols_csv = m.group(2).strip()
+        vals_csv = m.group(3).strip()
+        updates = m.group(4).strip()
+
+        # Resolve conflict target
+        conflict = list(conflict_columns) if conflict_columns else self._infer_primary_key_columns_for_sqlite(table)
+        if not conflict:
+            # Can't safely translate without conflict target
+            return sql
+
+        # Rewrite VALUES(col) -> excluded."col"
+        def _values_to_excluded(match):
+            col = match.group(1).strip().strip('"')
+            return f'excluded."{col}"'
+
+        updates_sqlite = re.sub(
+            r'\bVALUES\s*$begin:math:text$\\s*"?(.*?)"?\\s*$end:math:text$',
+            _values_to_excluded,
+            updates,
+            flags=re.I,
+        )
+
+        conflict_clause = ", ".join(f'"{c}"' for c in conflict)
+        rewritten = (
+            f'INSERT INTO {table} ({cols_csv}) VALUES {vals_csv} '
+            f'ON CONFLICT ({conflict_clause}) DO UPDATE SET {updates_sqlite}'
+        )
+        return rewritten
+
+    def _infer_primary_key_columns_for_sqlite(self, quoted_table: str) -> list[str]:
+        """Look up PK columns from SQLite schema; returns [] if unknown."""
+        table = quoted_table.strip().strip('"')
+        try:
+            cur = self.execute(f'PRAGMA table_info("{table}")')
+            rows = cur.fetchall()
+            # rows fields: cid, name, type, notnull, dflt_value, pk
+            pk_cols: list[str] = []
+            for row in rows:
+                name = row["name"] if isinstance(row, dict) else row[1]
+                is_pk = row["pk"] if isinstance(row, dict) else row[5]
+                if is_pk:
+                    pk_cols.append(name)
+            return pk_cols
+        except Exception:
+            return []

@@ -1,12 +1,12 @@
 {
-    "title": "Free Memory %",
     "icon": "fa-solid fa-gauge",
-    "type": "gauge",
     "group": "Hardware",
+    "title": "Free Memory % Guage",
+    "type": "gauge",
     "table": "allsky_hardware",
     "series": [
         {
-            "name": "Free RAM %",
+            "name": "Free Memory %",
             "variable": "AS_MEMORYFREEPERCENTAGE"
         }
     ]

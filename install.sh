@@ -3269,55 +3269,64 @@ install_Python()
 	fi
 
 	NAME="Python_dependencies"
-	TMP="${ALLSKY_LOGS}/${NAME}"
-	display_msg --log progress "Installing ${NAME}${M}:"
-	COUNT=0
-	rm -f "${STATUS_FILE_TEMP}"
-	while read -r package
-	do
-		((COUNT++))
-		echo "${package}" > /tmp/package
-		# Make the numbers line up.
-		if [[ ${COUNT} -lt 10 ]]; then
-			C=" ${COUNT}"
-		else
-			C="${COUNT}"
-		fi
 
-		PACKAGE="   === Package # ${C} of ${NUM_TO_INSTALL}: [${package}]"
-		STATUS_NAME="${NAME}_${COUNT}"
-		# Need indirection since the ${STATUS_NAME} is the variable name and we want its value.
-		if [[ ${!STATUS_NAME} == "true" ]]; then
-			display_msg --log progress "${PACKAGE} - already installed."
-			continue
-		fi
-		display_msg --log progress "${PACKAGE}"
+	# If the requirements file is the same as the in the prior Allsky version,
+	# don't re-install these packages.
+	local PRIOR_REQ="${REQUIREMENTS_FILE/${ALLSKY_HOME}/${ALLSKY_PRIOR_DIR}}"
+	if [[ -f ${PRIOR_REQ} ]] && cmp --silent "${REQUIREMENTS_FILE}" "${PRIOR_REQ}" ; then
+		display_msg --log progress "Skipping installation of ${NAME} - already installed."
+	else
+		TMP="${ALLSKY_LOGS}/${NAME}"
+		display_msg --log progress "Installing ${NAME}${M}:"
+		COUNT=0
+		rm -f "${STATUS_FILE_TEMP}"
+		while read -r package
+		do
+			((COUNT++))
+			echo "${package}" > /tmp/package
+			# Make the numbers line up.
+			if [[ ${COUNT} -lt 10 ]]; then
+				C=" ${COUNT}"
+			else
+				C="${COUNT}"
+			fi
 
-		L="${TMP}.${COUNT}.log"
-		M="${NAME} [${package}] failed"
-		pip3 install --upgrade --no-warn-script-location -r /tmp/package > "${L}" 2>&1
-		# These files are too big to display so pass in "0" instead of ${DEBUG}.
-		if ! check_success $? "${M}" "${L}" 0 ; then
-			rm -fr "${PIP3_BUILD}"
+			PACKAGE="   === Package # ${C} of ${NUM_TO_INSTALL}: [${package}]"
+			STATUS_NAME="${NAME}_${COUNT}"
+			# Need indirection since the ${STATUS_NAME} is the variable name and we want its value.
+			if [[ ${!STATUS_NAME} == "true" ]]; then
+				display_msg --log progress "${PACKAGE} - already installed."
+				continue
+			fi
+			display_msg --log progress "${PACKAGE}"
 
-			# Add current status
-			update_status_from_temp_file
+			L="${TMP}.${COUNT}.log"
+			M="${NAME} [${package}] failed"
+			pip3 install --upgrade --no-warn-script-location -r /tmp/package > "${L}" 2>&1
+			# These files are too big to display so pass in "0" instead of ${DEBUG}.
+			if ! check_success $? "${M}" "${L}" 0 ; then
+				rm -fr "${PIP3_BUILD}"
 
-			exit_with_image 1 "${STATUS_ERROR}" "${M}."
-		fi
-		echo "${STATUS_NAME}='true'"  >> "${STATUS_FILE_TEMP}"
-	done < "${REQUIREMENTS_FILE}"
+				# Add current status
+				update_status_from_temp_file
 
-	# Add the status back in.
-	update_status_from_temp_file
+				exit_with_image 1 "${STATUS_ERROR}" "${M}."
+			fi
+			echo "${STATUS_NAME}='true'"  >> "${STATUS_FILE_TEMP}"
+		done < "${REQUIREMENTS_FILE}"
+
+		# Add the status back in.
+		update_status_from_temp_file
+	fi
 
 	# On Pi 5 models we need to replace rpi.gpi with lgpio.
 	# This should be done by adafruit-blinka.
 	# The code is in setup.py to do this but it
 	# doesn't appear to work hence we are forcing it here.
 	# gpiozero decodes the Pi revision number to calculate the Pi version so until the Pi 6 is 
-	# released this code will detect all future versions of the Pi 5
-	#
+	# released this code will detect all future versions of the Pi 5.
+# TODO FUTURE: modify as needed once Pi 6 is out.
+
 	local CMD="from gpiozero import Device"
 	CMD+="\nDevice.ensure_pin_factory()"
 	CMD+="\nprint(Device.pin_factory.board_info.model)"

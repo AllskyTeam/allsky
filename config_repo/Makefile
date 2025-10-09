@@ -2,6 +2,7 @@ platform = $(shell uname -m)
 
 HOMEDIR = $(shell dirname "$$PWD")
 CONFIGDIR = ${HOMEDIR}/config
+VENVDIR = ${HOMEDIR}/venv
 SCRIPTSDIR = ${HOMEDIR}/scripts
 UTILITIESDIR = ${SCRIPTSDIR}/utilities
 # TODO: get from variables.sh
@@ -85,7 +86,7 @@ install: createDirs
 	@systemctl enable allskyperiodic
 	@systemctl enable allskyserver
 	@echo "`date +%F\ %R:%S` Setting up ALLSKY_HOME environment variable..."
-	@echo "export ALLSKY_HOME=$(HOMEDIR)\nPATH=${PATH}:$(SCRIPTSDIR)" > /etc/profile.d/allsky.sh
+	@echo "export ALLSKY_HOME=$(HOMEDIR)\nexport ALLSKY_PYTHON_VENV=$(VENVDIR)\nPATH=${PATH}:$(SCRIPTSDIR)" > /etc/profile.d/allsky.sh
 
 .PHONY : install
 

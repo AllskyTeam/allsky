@@ -4,11 +4,11 @@
     "title": "Camera Temperature",
     "type": "line",
     "table": "allsky_image",     
-    "series": {
-        "exposure": {
+    "series": [
+        {
             "name": "Temperature",
             "yAxis": 0,
-            "variable": "AS_CAMERATEMPERATURE|true"
+            "variable": "AS_TEMPERATURE_C|true"
         }
-    }
+    ]
 }

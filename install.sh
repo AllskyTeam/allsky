@@ -3272,7 +3272,7 @@ install_Python()
 	# If the requirements file is the same as the in the prior Allsky version,
 	# don't re-install these packages.
 	local PRIOR_REQ="${REQUIREMENTS_FILE/${ALLSKY_HOME}/${ALLSKY_PRIOR_DIR}}"
-	if [[ -f ${PRIOR_REQ} ]] && cmp --silent "${REQUIREMENTS_FILE}" "${PRIOR_REQ}" ; then
+	if [[ ${WILL_USE_PRIOR} == "true" && ${SKIP} == "true" && -f ${PRIOR_REQ} ]] && cmp --silent "${REQUIREMENTS_FILE}" "${PRIOR_REQ}" ; then
 		display_msg --log progress "Skipping installation of ${NAME} - already installed."
 	else
 		TMP="${ALLSKY_LOGS}/${NAME}"

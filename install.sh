@@ -1843,8 +1843,7 @@ convert_settings_file()			# prior_file, new_file
 # TODO: Keep track somehow of which upgrades added, deleted, and/or changed names of
 # settings so we know if the settings file needs to be updated.
 
-	local MSG="Converting '$( basename "${PRIOR_FILE}" )'"
-	MSG+=" to new format in '$( basename "${NEW_FILE}" )' if needed."
+	local MSG="Converting '$( basename "${PRIOR_FILE}" )' to new format if needed."
 	display_msg --log progress "${MSG}"
 
 	DIR="/tmp/converted_settings"

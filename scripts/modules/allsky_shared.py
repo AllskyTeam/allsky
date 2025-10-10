@@ -888,6 +888,26 @@ def install_requirements(req_file: str | Path, log_file: str | Path) -> bool:
 
     return len(failures) == 0
 
+
+def save_json_file(data: dict, filename: Union[str, Path]) -> None:
+    """
+    Save a dictionary to a JSON file with pretty formatting.
+    Accepts either a string or Path object for the filename.
+
+    Args:
+        data: Dictionary to save.
+        filename: Path or string of the file to write.
+    """
+    file_path = Path(filename)
+
+    try:
+        with file_path.open('w', encoding='utf-8') as file:
+            json.dump(data, file, ensure_ascii=False, indent=4)
+    except:
+        return False
+    
+    return True
+            
 def load_json_file(path: str | Path):
     """
     Load a JSON file and return its parsed contents.

@@ -392,7 +392,8 @@ class ALLSKYMODULE:
             "info": os.path.join(moduledata_base_path, "info", self.name),
             "charts": os.path.join(moduledata_base_path, "charts", self.name),
             "installer": os.path.join(moduledata_base_path, "installer", self.name),
-            "logfiles": os.path.join(moduledata_base_path, "logfiles", self.name)
+            "logfiles": os.path.join(moduledata_base_path, "logfiles", self.name),
+            "dbconfig": os.path.join(self._source_info["path"], "db", "db_data.json")
         }
 
     def _install_apt_dependencies(self) -> bool:
@@ -539,6 +540,31 @@ class ALLSKYMODULE:
            
         return result
     
+    def _install_database_config(self) -> bool:
+        result = True        
+        source = os.path.join(self._source_info["path"], "db", "db_data.json")
+        file_path = Path(source)
+        if file_path.is_file():
+            db_config = shared.load_json_file(self._module_paths["dbconfig"])
+            
+            if self._source_info is not None:
+                meta_data = self._source_info["meta_data"]
+                table = meta_data.get("extradata", {}).get("database", {}).get("table", None)
+                if table is not None:
+                    user_db_config_file = os.path.join(shared.get_environment_variable("ALLSKY_MYFILES_DIR"), "db_data.json")
+                    user_db_config = shared.load_json_file(user_db_config_file)
+                    user_db_config[table] = db_config[table]
+                    shared.save_json_file(user_db_config, user_db_config_file)
+                    self._log(False, f"INFO: {self.name} Add db config data")
+                else:
+                    self._log(True, f"INFO: {self.name} No db config required")                      
+            else:
+                self._log(False, f"ERROR: {self.name} No meta data available in _install_database_config")
+        else:
+            self._log(True, f"INFO: {self.name} No db config required")            
+            
+        return result
+        
     def _post_install(self) -> bool:
         result = True
         post_run_script = self._installer_data.get("post-install", {}).get("run", None)
@@ -600,6 +626,7 @@ class ALLSKYMODULE:
             ("copy info",             self._install_copy_info),
             ("copy charts",           self._install_copy_charts),
             ("installer info",        self._install_installer_info),
+            ("Database Config",       self._install_database_config),
             ("apt dependencies",      self._install_apt_dependencies),
             ("python dependencies",   self._install_python_dependencies),
             ("Post install",          self._post_install),

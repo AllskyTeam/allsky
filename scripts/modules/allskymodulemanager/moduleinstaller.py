@@ -168,7 +168,7 @@ Would you like to review and install any available modules now?\
 
         # Only show branch if not the master branch.
         if self._branch != self._master_branch:
-            self._main_backtitle = self.main_backtitle1 + f" Using '{self._branch}' branch."
+            self._main_backtitle = self._main_backtitle1 + f" Using '{self._branch}' branch."
 
         repo = Repo(self._module_repo_path)
 

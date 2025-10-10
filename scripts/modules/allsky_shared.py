@@ -30,6 +30,7 @@ import requests
 import grp
 import builtins
 import pwd
+import numbers
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from functools import reduce
@@ -887,6 +888,28 @@ def install_requirements(req_file: str | Path, log_file: str | Path) -> bool:
 
     return len(failures) == 0
 
+def load_json_file(path: str | Path):
+    """
+    Load a JSON file and return its parsed contents.
+    Returns None if the file does not exist, is unreadable, or invalid JSON.
+
+    Args:
+        path: Path to the JSON file.
+
+    Returns:
+        dict | list | None
+    """
+    try:
+        file_path = Path(path)
+        if not file_path.is_file():
+            return {}
+
+        with file_path.open("r", encoding="utf-8") as file:
+            return json.load(file)
+
+    except (OSError, json.JSONDecodeError):
+        return {}
+
 def get_database_config():
     secret_data = get_secrets(['databasehost', 'databaseuser', 'databasepassword', 'databasedatabase'])
     secret_data['databasetype'] = get_setting('databasetype')
@@ -894,57 +917,165 @@ def get_database_config():
     
     return secret_data
 
-def purge_database(dry_run: bool, to_keep: str = "") -> int:
-    results = {}
+#
+# Database purge functions
+#
+def get_purge_config():
+    """
+    Load and merge purge configuration from core and user db_data.json files.
+    The configuration defines how long to retain data for each database table.
+    """
+    # Build paths to both the core and user configuration files
+    core_db_config_file = os.path.join(get_environment_variable('ALLSKY_CONFIG'), 'db_data.json')
+    user_db_config_file = os.path.join(get_environment_variable('ALLSKY_MYFILES_DIR'), 'db_data.json')
+    
+    # Load JSON data from both locations
+    core_db_config = load_json_file(core_db_config_file)
+    user_db_config = load_json_file(user_db_config_file)
+    
+    # Merge user config over core config (user overrides core)
+    db_config_file = core_db_config | user_db_config
+        
+    # Iterate over each table configuration entry
+    for name, entry in db_config_file.items():
+        pd = entry.get("purge_days")
 
-    if not to_keep.strip():
-        days_to_keep = get_setting('daystokeep')
-        if days_to_keep == None:
-            days_to_keep = 14
-        days_to_keep = f'{days_to_keep}d'
+        # If purge_days is a numeric value (e.g., 365), normalize it to an integer
+        if isinstance(pd, numbers.Number):
+            entry["purge_days"] = int(pd)
+            continue
 
-    m = re.fullmatch(r"\s*(\d+(?:\.\d+)?)\s*([dhDH])\s*", to_keep)
-    if not m:
-        raise ValueError("to_keep must look like '2d' or '23h' (days/hours).")
+        # If purge_days references a setting (dynamic source), resolve it
+        if isinstance(pd, dict) and pd.get("source_type") == "settings":
+            src_name = pd.get("source_name")
+            if src_name:
+                val = get_setting(src_name)
+                try:
+                    # Convert the value to an integer (e.g., "365" → 365)
+                    entry["purge_days"] = int(val)
+                except (TypeError, ValueError):
+                    # If conversion fails, leave it unchanged
+                    pass
+                    
+    # Return the final merged and normalized configuration
+    return db_config_file
 
-    amount = float(m.group(1))
-    unit = m.group(2).lower()
 
+def _calculate_purge_timestamp(purge_config: dict, table: str, override: str = "") -> int:
+    """
+    Calculate the cutoff timestamp for purging old records.
+
+    Args:
+        purge_config: Dictionary containing per-table purge settings.
+        table: The table name being processed.
+        override: Optional string like "2d" or "23h" to override the default retention period.
+
+    Returns:
+        Tuple of (cutoff_timestamp, cutoff_datetime, formatted_config_value)
+    """
+    # Default to global setting for days to keep, if defined
+    days_to_keep = get_setting('daystokeep')
+
+    # Handle manual override, if provided
+    if override != "":
+        # If override is just whitespace, use default value
+        if not override.strip():
+            if days_to_keep == None:
+                days_to_keep = 14  # Fallback default
+            days_to_keep = f'{days_to_keep}d'
+
+        # Validate override format: e.g. "2d" or "12h"
+        m = re.fullmatch(r"\s*(\d+(?:\.\d+)?)\s*([dhDH])\s*", override)
+        if not m:
+            raise ValueError("to_keep must look like '2d' or '23h' (days/hours).")
+
+        # Extract numeric value and unit (d = days, h = hours)
+        amount = float(m.group(1))
+        unit = m.group(2).lower()
+    else:
+        # Use configured or global default
+        unit = "d"
+        amount = purge_config.get(table, {}).get("purge_days", days_to_keep)
+        
+    # Compute timedelta based on unit (days or hours)
     delta = timedelta(days=amount) if unit == 'd' else timedelta(hours=amount)
+
+    # Calculate cutoff datetime and timestamp
     now = datetime.now(timezone.utc)
     cutoff_time = now - delta
+    cutoff_config_value = f"{amount}{unit}"
     cutoff_timestamp = builtins.int(cutoff_time.timestamp())
+    
+    # Return both numeric and readable cutoff values
+    return cutoff_timestamp, cutoff_time, cutoff_config_value
+        
 
+def purge_database(dry_run: bool = False, to_keep: str = "") -> int:
+    """
+    Purge old records from all database tables according to purge configuration.
+
+    Args:
+        dry_run: If True, only count rows that would be deleted.
+        to_keep: Optional override retention period (e.g., "7d", "48h").
+
+    Returns:
+        Dictionary mapping each table name to number of deleted (or would-be deleted) rows.
+    """
+    results = {}
+
+    # Load the purge configuration
+    purge_config = get_purge_config()
+    
+    # Get a database connection
     database_conn = get_database_connection()
     if database_conn is not None:
+        # Retrieve list of tables in the connected database
         available_tables: Iterable[str] = database_conn.list_tables()        
 
+        # Process each table individually
         for table in available_tables:
+            # Calculate the cutoff time for this table
+            cutoff_timestamp, cutoff_time, cutoff_config_value = _calculate_purge_timestamp(purge_config, table)
+
             try:
+                # Quote identifiers to handle special characters or reserved words
                 q_table = database_conn._quote_ident(table) 
                 q_ts    = database_conn._quote_ident('timestamp')
 
                 if dry_run:
+                    # Only count how many rows would be deleted
                     row = database_conn.fetchone(
                         f"SELECT COUNT(*) AS n FROM {q_table} WHERE {q_ts} <= :cutoff",
                         {"cutoff": cutoff_timestamp}
                     )
                     number_to_delete = builtins.int((row or {}).get("n", 0))
                     results[table] = number_to_delete
-                    log(4, f"[DRY RUN] {table}: {number_to_delete} rows would be deleted (<= {cutoff_time})")
+
+                    # Log summary of what would happen in dry run mode
+                    log(4, f"INFO: [DRY RUN] {table}: {number_to_delete} rows would be deleted (<= {cutoff_time}) - {cutoff_config_value}")
                 else:
+                    # Execute actual deletion query
                     cur = database_conn.execute(
                         f"DELETE FROM {q_table} WHERE {q_ts} <= :cutoff",
                         {"cutoff": cutoff_timestamp}
                     )
                     number_deleted = builtins.int(getattr(cur, "rowcount", 0) or 0)
                     results[table] = number_deleted
-                    log(4, f"{table}: deleted {number_deleted} rows (<= {cutoff_time})")
+
+                    # Log actual deletion results
+                    log(4, f"INFO: {table}: deleted {number_deleted} rows (<= {cutoff_time}) - {cutoff_config_value}")
 
             except Exception as e:
-                log(0, f"Error processing table {table}: {e}")
+                # Log any error encountered during table processing
+                log(0, f"Error processing table {table} in purge_database: {e}")
                 results[table] = -1
+
+    # Return per-table results summary
     return results
+#
+# End Database purge functions
+#
+
   
 def get_database_connection(silent=True):
     database_conn = None

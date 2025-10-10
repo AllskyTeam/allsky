@@ -189,4 +189,10 @@ activate_python_venv
 ${NICE} python3 "${ALLSKY_SCRIPTS}/flow-runner.py" --event nightday
 deactivate_python_venv
 
+#
+# Run database purge
+#
+echo -e "INFO: ===== Purging Allsky database."
+"${ALLSKY_UTILITIES}/db.py" --purge
+
 exit 0

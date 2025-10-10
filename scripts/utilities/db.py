@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-# -*- coding: utf-8 -*-
 
 """
 Allsky Database Management Script
@@ -168,22 +167,50 @@ if __name__ == "__main__":
     # Parse command-line arguments
     # ---------------------------------------------------------------------
     parser = argparse.ArgumentParser(description="Allsky database interface")
-    parser.add_argument("--debug", action="store_true",
-                        help="Enable debug mode, shows more detailed errors")
-    parser.add_argument("--install", action="store_true",
-                        help="Runs the Allsky database installation routines")
-    parser.add_argument("--run", type=str,
-                        help="Runs the specified SQL query against the database")
-    parser.add_argument("--format", choices=["tab", "json"], default="tab",
-                        help="Output format for --run: 'tab' (tab-separated) or 'json' (default: tab)")
-    args = parser.parse_args()
 
+    # global flag
+    parser.add_argument("--debug", action="store_true", help="Enable debug mode, shows more detailed errors")
+
+    # main modes (mutually exclusive)
+    modes = parser.add_mutually_exclusive_group(required=True)
+    modes.add_argument("--install", action="store_true", help="Runs the Allsky database installation routines")
+    modes.add_argument("--run", metavar="SQL", type=str, help="Runs the specified SQL query against the database")
+    modes.add_argument("--purge", action="store_true", help="Purges data from the Allsky database")
+    modes.add_argument("--purgedryrun", action="store_true", help="Performs a dry run purge of data from the Allsky database")
+
+    # only meaningful for --run
+    parser.add_argument( "--format", choices=["tab", "json"], help="Output format for --run: 'tab' or 'json' (default: 'tab' when using --run)")
+
+    args = parser.parse_args()
+    
+    # --format only allowed with --run
+    if args.format and not args.run:
+        parser.error("--format can only be used together with --run")
+
+    # Default format when --run is used but no --format given
+    if args.run and not args.format:
+        args.format = "tab"
+
+    # Sanity check for empty SQL
+    if args.run is not None and args.run.strip() == "":
+        parser.error("--run requires a non-empty SQL string")
+        
     # Create instance of the database handler
     allsky_db = ALLSKYDB(args.debug)
 
     # Execute chosen operation
     if args.install:
         allsky_db.install()
-
+        sys.exit(0)
+        
     if args.run:
         allsky_db.run(args.run, args.format)
+        sys.exit(0)
+        
+    if args.purge:
+        shared.purge_database()
+        sys.exit(0)
+                
+    if args.purgedryrun:
+        shared.purge_database(True)
+        sys.exit(0)        

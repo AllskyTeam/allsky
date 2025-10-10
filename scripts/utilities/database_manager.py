@@ -157,7 +157,6 @@ class ALLSKYDATABASEMANAGER:
     _purge_database_time = "Enter a number of hours to keep, or a number followed by 'd' for days to keep:"
     _whiptail_database_disabled = "No database is configured or enabled. Please check the database configuration"
     _whiptail_add_remote_user = "Creating a user for remote access will require changing the MySQL server to be accessible outside of this pi. This may pose a security risk if the pi is exposed to the internet.\n\nAre you sure you wish to proceed?"    
-    _whiptail_purge_missing = "You are using a database but the purge module is NOT installed. Please install the purge module in the periodic flow.\n\nFailure to run the purge module will result in degraded performance of Allsky and potential disk space issues."
     
     _back_title= "Allsky Database Manager"
     _whiptail_title_select_database = "Select Database"
@@ -1057,145 +1056,6 @@ class ALLSKYDATABASEMANAGER:
 
             self._info_prompt(self._whiptail_message, self._back_title, self._reset_complete)
 
-    @warn_no_database
-    def _purge_database(self):
-        """
-        Purge rows older than a specified age across all Allsky tables.
-
-        For MySQL: enumerates tables matching 'allsky_%' that have a 'timestamp'
-        column and deletes rows with timestamp < cutoff.
-
-        For SQLite: enumerates tables, checks for 'timestamp', and deletes rows
-        older than cutoff.
-
-        Prompts user for the age threshold in hours or 'Xd' for days.
-        """
-        purge_result = []
-        purged_something = False
-        
-        if self._database_config["databasetype"] == "mysql" and not self._mysql_installed:
-            self._info_prompt("Warning", self._back_title, "MySQL is enabled in the Allsky config but its not currently installed. Please install MySQL")
-            return
-                            
-        w = Whiptail(
-            title=self._whiptail_message,
-            backtitle=self._back_title,
-            height=10,
-            width=40            
-        )
-
-        while True:
-            value, code = w.inputbox(self._purge_database_time, default="7d")
-
-            if code != 0:
-                break
-
-            value = value.strip().lower()
-
-            try:
-                if value.endswith("d"):
-                    num_days = int(value[:-1])
-                    hours = num_days * 24
-                    break
-                else:
-                    hours = int(value)
-                    break
-            except ValueError:
-                w.msgbox("Invalid input. Please enter a number (e.g. 12) or number+d (e.g. 7d).")
-        
-        if code == 0:
-            cutoff = int(time.time()) - (hours * 60 * 60)
-            
-            if self._database_config["databasetype"] == "mysql":
-                command = [
-                    f"USE {self._database_config['databasedatabase']}", 
-                    'SHOW TABLES LIKE "allsky_%";'
-                ]
-                tables = self._run_mysql_command(
-                    self._database_config["databasehost"],
-                    self._database_config["databaseuser"],
-                    self._database_config["databasepassword"],
-                    command,
-                    command_type="fetchall"
-                )
-                
-                for table in tables:
-                    table_name = table[0]
-                    command = [
-                        f"USE {self._database_config['databasedatabase']}", 
-                        f"SHOW COLUMNS FROM `{table_name}` LIKE 'timestamp'"
-                    ]
-                    has_timestamp = self._run_mysql_command(
-                        self._database_config["databasehost"],
-                        self._database_config["databaseuser"],
-                        self._database_config["databasepassword"],
-                        command,
-                        command_type="fetchone"
-                    )
-                    if has_timestamp:
-                        command = [
-                            f"USE {self._database_config['databasedatabase']}", 
-                            f"SELECT COUNT(*) FROM `{table_name}` WHERE `timestamp` < {cutoff}"
-                        ]
-                        rows_to_delete = self._run_mysql_command(
-                            self._database_config["databasehost"],
-                            self._database_config["databaseuser"],
-                            self._database_config["databasepassword"],
-                            command,
-                            command_type="fetchone"
-                        )  
-                 
-                        if rows_to_delete:
-                            rows_to_delete = rows_to_delete[0]
-                        else:
-                            rows_to_delete = 0
-                        
-                        if rows_to_delete > 0:
-                            command = [
-                                f"USE {self._database_config['databasedatabase']}", 
-                                f"DELETE FROM `{table_name}` WHERE `timestamp` < {cutoff}"
-                            ]
-                            result = self._run_mysql_command(
-                                self._database_config["databasehost"],
-                                self._database_config["databaseuser"],
-                                self._database_config["databasepassword"],
-                                command
-                            )                        
-                            purge_result.append(f"{table_name} had {rows_to_delete} rows purged")
-                            purged_something = True
-                        else:
-                            purge_result.append(f"{table_name} has no rows requiring deletion")
-                    else:
-                        purge_result.append(f"{table_name} has no timestamp so data cannot be purged")
-                        
-            if self._database_config["databasetype"] == "sqlite":
-                command = "SELECT name FROM sqlite_master WHERE type='table'"
-                tables = self._run_sqlite_command(command, "fetchall")
-                for table in tables:
-                    table_name = table[0]                    
-                    if table_name.startswith("allsky_"):
-                        command = f"PRAGMA table_info({table_name})"
-                        columns = self._run_sqlite_command(command, "fetchall")
-                        column_names = [col[1] for col in columns]                        
-                        if "timestamp" in column_names:
-                            command = f"SELECT COUNT(*) FROM {table_name} WHERE timestamp < {cutoff}"
-                            rows_to_delete = self._run_sqlite_command(command, "fetchone")
-                            if rows_to_delete > 0:
-                                command = f"DELETE FROM {table_name} WHERE timestamp < {cutoff}"
-                                rows_deleted = self._run_sqlite_command(command)
-                                purged_something = True
-                            else:
-                                purge_result.append(f"{table_name} has no rows requiring deletion")
-                        else:
-                            purge_result.append(f"{table_name} has no timestamp so data cannot be purged")                                
-                                
-            dialog_text = "\n".join(purge_result)
-            self._info_prompt(
-                self._whiptail_message,
-                self._back_title,
-                dialog_text
-            )
-
     @warn_no_database    
     def _show_mysql_status(self):
         """
@@ -1396,10 +1256,8 @@ class ALLSKYDATABASEMANAGER:
           2) Run Setup Wizard
           3) Create Remote MySQL User
           4) Reset ALL Data
-          5) Purge Database
-          6) Exit
+          5) Exit
         """
-        self.preflight_checks()
         w = Whiptail(
             title=self._whiptail_title_main_menu,
             backtitle=self._back_title,
@@ -1413,13 +1271,12 @@ class ALLSKYDATABASEMANAGER:
                 ("2", "Run Setup Wizard"),
                 ("3", "Create Remote MySQL User"),
                 ("4", "Reset ALL Data"),
-                ("5", "Purge Database"),
-                ("6", "Exit"),
+                ("5", "Exit"),
             ]
 
             choice, code = w.menu("Select an option:", options)
 
-            if code != 0 or choice == "6":
+            if code != 0 or choice == "5":
                 break
             
             if choice == "1":
@@ -1433,29 +1290,6 @@ class ALLSKYDATABASEMANAGER:
                           
             if choice == "4":
                 self._reset_database()
-
-            if choice == "5":
-                self._purge_database()
-
-    def preflight_checks(self) -> bool:
-        """
-        Pre-run checks and warnings.
-
-        Currently warns if DB is enabled but purge flow isn't installed.
-
-        Returns
-        -------
-        bool
-            True (always), reserved for future gating.
-        """
-        result = True
-        database_config = shared.get_database_config()
-        if "databaseenabled" in database_config:
-            if database_config["databaseenabled"]:
-                flows = shared.get_flows_with_module("purgedb")
-                if not flows:
-                    self._info_prompt(self._whiptail_warning, self._back_title, self._whiptail_purge_missing)
-        return result
                                                 
     def remove_mysql(self, remove_data: bool = False):
         """

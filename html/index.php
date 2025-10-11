@@ -629,22 +629,22 @@ $allskyStatus = output_allsky_status();
 		<meta name="description" content="Web User Interface (WebUI) for Allsky">
 		<meta name="author" content="Thomas Jacquin">
 
-		<script src="documentation/js/documentation.js" type="application/javascript"></script>
-		<link href="documentation/css/light.css" rel="stylesheet">
-		<link href="documentation/css/documentation.css" rel="stylesheet">
+		<script src="documentation/js/documentation.js?c=<?php echo ALLSKY_VERSION; ?>" type="application/javascript"></script>
+		<link href="documentation/css/light.css?c=<?php echo ALLSKY_VERSION; ?>" rel="stylesheet">
+		<link href="documentation/css/documentation.css?c=<?php echo ALLSKY_VERSION; ?>" rel="stylesheet">
 		<link href="documentation/bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
 		<link href="documentation/bower_components/metisMenu/dist/metisMenu.min.css" rel="stylesheet">
 		<link href="documentation/css/sb-admin-2.css" rel="stylesheet">
 		<link rel="stylesheet" href="allsky/font-awesome/css/all.min.css" type="text/css">
 		<!-- OLD: <script defer src="documentation/js/all.min.js"></script> -->
-		<link href="documentation/css/custom.css" rel="stylesheet">
+		<link href="documentation/css/custom.css?c=<?php echo ALLSKY_VERSION; ?>" rel="stylesheet">
 		<link rel="shortcut icon" type="image/png" href="documentation/img/allsky-favicon.png">
-		<script src="documentation/js/functions.js"></script>
+		<script src="documentation/js/functions.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 		<script src="documentation/bower_components/jquery/dist/jquery.min.js"></script>
 		<script src="documentation/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
 		<script src="documentation/bower_components/metisMenu/dist/metisMenu.min.js"></script>
 		<script src="js/bigscreen.min.js"></script>
-		<script src="js/allsky.js"></script>
+		<script src="js/allsky.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 		<script src="documentation/js/sb-admin-2.js"></script>
 		<link rel='stylesheet' href='/css/checkbox.css?c=<?php echo ALLSKY_VERSION; ?>' />
 

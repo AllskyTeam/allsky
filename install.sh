@@ -3633,7 +3633,7 @@ update_overlays()
 {
 	local OVERLAY_MANAGER="${ALLSKY_SCRIPTS}/modules/allskyoverlaymanager/allskyoverlaymanager.py"
 	if [[ ${USE_PRIOR_ALLSKY} == "true" ]]; then
-		"${OVERLAY_MANAGER}" --auto --oldpath "${ALLSKY_PRIOR_DIR}" --oldcamera "${PRIOR_CAMERA_TYPE}"
+		"${OVERLAY_MANAGER}" --auto --oldpath "${ALLSKY_PRIOR_DIR}" --camera "${PRIOR_CAMERA_TYPE}"
 	else
 		"${OVERLAY_MANAGER}" --install
 	fi

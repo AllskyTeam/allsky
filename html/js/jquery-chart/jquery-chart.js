@@ -849,7 +849,7 @@
     }
     var cu = this.opts.configUrl;
     if (typeof cu === 'string') return $.getJSON(cu);
-    if (cu && cu.url) return $.ajax($.extend({ method: 'GET', dataType: 'json' }, cu));
+    if (cu && cu.url) return $.ajax($.extend({ method: 'GET', dataType: 'json', cache: false }, cu));
     return $.Deferred().reject(new Error('config or configUrl is required')).promise();
   };
 
@@ -872,7 +872,7 @@
 
     if (typeof cu === 'string') return $.getJSON(withBuster(cu));
     var opts = withBuster(cu);
-    return $.ajax($.extend({ method: 'GET', dataType: 'json' }, opts));
+    return $.ajax($.extend({ method: 'GET', dataType: 'json', cache: false }, opts));
   };
 
   /* ======================= Refresh (series-only) ======================= */

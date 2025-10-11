@@ -998,7 +998,7 @@ class MODULEUTIL
     /**
      * Database helper: create PDO connection
      */
-    private function makePdo(): PDO 
+    private function makePdo(): PDO|bool
     {
         $secretData = getDatabaseConfig();
 
@@ -1011,13 +1011,17 @@ class MODULEUTIL
             ]);
         }
         if ($secretData['databasetype'] === 'sqlite') {
-            $dsn = 'sqlite:' . ALLSKY_DATABASES;
-            $pdo = new PDO($dsn, null, null, [
-                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            ]);
-            // Enable WAL: $pdo->exec('PRAGMA journal_mode = WAL;');
-            return $pdo;
+            if (file_exists(ALLSKY_DATABASES)) {
+                $dsn = 'sqlite:' . ALLSKY_DATABASES;
+                $pdo = new PDO($dsn, null, null, [
+                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                ]);
+                // Enable WAL: $pdo->exec('PRAGMA journal_mode = WAL;');
+                return $pdo;
+            } else {
+                return false;
+            }
         }
         throw new RuntimeException('Unsupported datasource type');
     }
@@ -1316,20 +1320,30 @@ class MODULEUTIL
         }
 
         if ($isGauge) {
-            // latest-only
-            $latestByVar = $this->fetchLatestValues($pdo, $table, $variables);
-            foreach ($keyToVar as $key => $var) {
-                $latest = $latestByVar[$var] ?? null;
-                // Replace variable with gauge data (single number). Keep other fields.
-                unset($config['series'][$key]['variable']);
-                $config['series'][$key]['data'] = $latest ? [ $latest['value'] ] : [];
+            if ($pdo !== false) {
+                // latest-only
+                $latestByVar = $this->fetchLatestValues($pdo, $table, $variables);
+                foreach ($keyToVar as $key => $var) {
+                    $latest = $latestByVar[$var] ?? null;
+                    // Replace variable with gauge data (single number). Keep other fields.
+                    unset($config['series'][$key]['variable']);
+                    $config['series'][$key]['data'] = $latest ? [ $latest['value'] ] : [];
+                }
+            } else {
+                    unset($config['series'][$key]['variable']);
+                    $config['series'][$key]['data'] = [];
             }
         } else {
-            // full series
-            $dataByVar = $this->fetchSeriesData($pdo, $table, $variables, $tooltip);
-            foreach ($keyToVar as $key => $var) {
-                unset($config['series'][$key]['variable']);
-                $config['series'][$key]['data'] = $dataByVar[$var] ?? [];
+            if ($pdo !== false) {            
+                // full series
+                $dataByVar = $this->fetchSeriesData($pdo, $table, $variables, $tooltip);
+                foreach ($keyToVar as $key => $var) {
+                    unset($config['series'][$key]['variable']);
+                    $config['series'][$key]['data'] = $dataByVar[$var] ?? [];
+                }
+            } else {
+                    unset($config['series'][$key]['variable']);
+                    $config['series'][$key]['data'] = [];                
             }
         }
 
@@ -1434,16 +1448,18 @@ class MODULEUTIL
 
         $pdo = $this->makePdo();
 
-        // Populate from core and then user paths (user charts can add more groups/items).
-        $chartList = $this->buildChartList($pdo, $chartList, $coreModules);
-        $chartList = $this->buildChartList($pdo, $chartList, $userModules);
-        $chartList = $this->buildChartList($pdo, $chartList, $customCharts);
+        if ($pdo !== false) {
+            // Populate from core and then user paths (user charts can add more groups/items).
+            $chartList = $this->buildChartList($pdo, $chartList, $coreModules);
+            $chartList = $this->buildChartList($pdo, $chartList, $userModules);
+            $chartList = $this->buildChartList($pdo, $chartList, $customCharts);
 
-        // Sort groups by their keys in ascending order to make output stable/readable.
-        // Note: asort() preserves keys and sorts by value; since $chartList is an
-        // array of arrays, PHP will compare array-this still produces a deterministic
-        // order but if you prefer alphabetical by group name, consider ksort() instead.
-        asort($chartList);
+            // Sort groups by their keys in ascending order to make output stable/readable.
+            // Note: asort() preserves keys and sorts by value; since $chartList is an
+            // array of arrays, PHP will compare array-this still produces a deterministic
+            // order but if you prefer alphabetical by group name, consider ksort() instead.
+            asort($chartList);
+        }
 
         // Emit the grouped chart list as JSON to the client.
         $this->sendResponse(json_encode($chartList));

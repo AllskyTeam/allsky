@@ -243,8 +243,24 @@ class ALLSKYOVERLAYMANAGER:
                 "nighttimeoverlay": overlay_name.name
             }                        
             shared.update_settings(new_settings)
-            
         else:
+            if self._old_allsky_path and self._old_allsky_path.exists():
+                old_settings_file = self._old_allsky_path / "config" / "settings.json"
+                if old_settings_file.exists():
+                    old_settings = shared.load_json_file(old_settings_file)
+                    day_overlay_name = old_settings.get("daytimeoverlay", None)
+                    night_overlay_name = old_settings.get("nighttimeoverlay", None)
+                    if day_overlay_name is not None and night_overlay_name is not None:
+                        new_settings = {
+                            "daytimeoverlay": day_overlay_name,
+                            "nighttimeoverlay": night_overlay_name
+                        }                        
+                        shared.update_settings(new_settings)
+                        self._log(False, f"INFO: Setting 'daytimeoverlay' to {day_overlay_name}, 'nighttimeoverlay' to {night_overlay_name}")
+                    else:
+                        self._log(False, f"ERROR: Could not locate overlays in old settings file")                        
+                else:
+                    self._log(False, f"INFO: Could not find old settings file {old_settings_file}") 
             self._log(False, "INFO: Using new overlay system so ignoring any migrations")
             
         return True

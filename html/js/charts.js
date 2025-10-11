@@ -286,6 +286,7 @@ class ASCHARTMANAGER {
       url: 'includes/moduleutil.php?request=AvailableGraphs',
       type: 'GET',
       async: false,
+      cache: false,      
       dataType: 'json',
       success: function (allskyChartData) {
         let idCounter = 1;

@@ -18,6 +18,7 @@ if sys.executable != venv_python:
 
 import shutil
 import json
+import tempfile
 from pathlib import Path
 from git import Repo, InvalidGitRepositoryError, GitCommandError
 from allskymodule import ALLSKYMODULE
@@ -51,7 +52,7 @@ from exceptions import ConfigError, ModuleError, NoVersionError
         
 class ALLSKYMODULEINSTALLER:
     
-    _module_repo_base_path = os.environ["ALLSKY_MODULE_LOCATION"]
+    _module_repo_base_path = tempfile.gettempdir()
     _module_repo_path = os.path.join(_module_repo_base_path, 'allsky-modules')
 
     _back_title= "Allsky Module Manager"

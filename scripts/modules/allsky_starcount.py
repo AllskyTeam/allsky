@@ -85,6 +85,7 @@ class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 			"mask": "",
 			"enabledebug": "False",
 			"debugimage": "",
+			"annotatemain": "False",
 			"annotatecolour": "255,128,128",
 			"useclearsky": "False",
 			"minsize": "6",
@@ -164,7 +165,22 @@ class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 				"type": {
 					"fieldtype": "checkbox"
 				}          
-			},   
+			},
+			"annotatemain": {
+				"description": "Annotate Main",
+				"help": "Annotate the main captured image",
+				"tab": "Debug",    
+				"type": {
+					"fieldtype": "checkbox"             
+				},
+				"filters": {
+					"filter": "enabledebug",
+					"filtertype": "show",
+					"values": [
+						"enabledebug"
+					]
+				}                 
+			},      
 			"annotatecolour": {
 				"description": "Colour",
 				"help": "Colour highlighting stars",
@@ -251,7 +267,7 @@ class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 		mask_file_name = self.get_param('mask', '', str)
 		debug_image = self.get_param('debugimagename', '', str)
 		scale = self.get_param('scalefactor', 0.5, float)
-  
+		annotate_main_image = self.get_param('annotatemain', False, bool)
   
 		if mask_file_name:
 			image_copy = allsky_shared.mask_image(image, mask_file_name)
@@ -275,7 +291,7 @@ class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 			self.log(4, f'INFO: Using slow detection method')
 			sources, _ = allsky_shared.count_starts_in_image(image_copy)
 
-		if enable_debug and debug_image:
+		if enable_debug and debug_image or annotate_main_image:
 			if sources is not None:
 				for i, row in enumerate(sources):
 					x = round(float(row[0])) * 1

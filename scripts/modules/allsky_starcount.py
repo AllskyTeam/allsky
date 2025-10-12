@@ -23,9 +23,9 @@ class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 		"name": "Star Count",
 		"description": "Count the number of stars in an image.",
 		"events": [
+			"day",
 			"night"
 		],
-		"experimental": "true",
 		"module": "allsky_starcount",
 		"version": "v1.0.2",
 		"testable": "false",
@@ -80,10 +80,12 @@ class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 			}
 		},     
 		"arguments":{
-			"annotate": "false",
+			"debugimagename": "",
 			"scalefactor": "0.5",
 			"mask": "",
+			"enabledebug": "False",
 			"debugimage": "",
+			"annotatecolour": "255,128,128",
 			"useclearsky": "False",
 			"minsize": "6",
 			"method": "Fast"
@@ -97,32 +99,30 @@ class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 					"fieldtype": "checkbox"
 				}          
 			},
-   
+			"mask" : {
+				"required": "false",
+				"description": "Mask Path",
+				"help": "The name of the image mask. <span class=\"text-danger\">NOTE: It is highly recommened you create a mask to improve the detection performance</span>",
+				"type": {
+					"fieldtype": "image"
+				}                
+			},   
 			"method" : {
 				"required": "false",
 				"description": "Detection Method",
 				"help": "The detection method, Fast is quicker but may miss some stars, Slow is more accurate but takes longer",
-				"tab": "Method",
+				"tab": "Advanced",     
 				"type": {
 					"fieldtype": "select",
 					"values": "Fast,Slow",
 					"default": "Fast"
 				}
-			},
-			"mask" : {
-				"required": "false",
-				"description": "Mask Path",
-				"help": "The name of the image mask. <span class=\"text-danger\">NOTE: It is highly recommened you create a mask to improve the detection performance</span>",
-				"tab": "Method",
-				"type": {
-					"fieldtype": "image"
-				}                
-			},
+			},   
 			"scalefactor" : {
 				"required": "false",
 				"description": "Scale Factor",
-				"help": "Amount to scale the captured image by before attempting meteor detection",
-				"tab": "Method",    
+				"help": "Amount to scale the captured image by before attempting meteor detection", 
+				"tab": "Advanced",     
 				"type": {
 					"fieldtype": "spinner",
 					"min": ".25",
@@ -140,8 +140,8 @@ class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 			"minsize" : {
 				"required": "false",
 				"description": "Min star size (px)",
-				"help": "The mnimum size of a star in pixels. Smaller stars will be ignored",
-				"tab": "Method",    
+				"help": "The mnimum size of a star in pixels. Smaller stars will be ignored",   
+				"tab": "Advanced",     
 				"type": {
 					"fieldtype": "spinner",
 					"min": "1",
@@ -155,22 +155,57 @@ class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 						"Fast"
 					]
 				}         
-			}, 
-			"annotate" : {
+			},
+			"enabledebug" : {
 				"required": "false",
-				"description": "Annotate Stars",
-				"help": "If selected, the identified stars in the image will be highlighted",
-				"tab": "Debug",
+				"description": "Enable Debug Mode",
+				"help": "Enabling debug mode allows test images and annotation to be used",
+				"tab": "Debug",        
 				"type": {
 					"fieldtype": "checkbox"
 				}          
-			},
+			},   
+			"annotatecolour": {
+				"description": "Colour",
+				"help": "Colour highlighting stars",
+				"tab": "Debug",    
+				"type": {
+					"fieldtype": "colour"             
+				},
+				"filters": {
+					"filter": "enabledebug",
+					"filtertype": "show",
+					"values": [
+						"enabledebug"
+					]
+				}                 
+			},   
 			"debugimage" : {
 				"required": "false",
 				"description": "Debug Image",
 				"help": "Image to use for debugging. DO NOT set this unless you know what you are doing",
-				"tab": "Debug"        
+				"tab": "Debug",
+				"filters": {
+					"filter": "enabledebug",
+					"filtertype": "show",
+					"values": [
+						"enabledebug"
+					]
+				}        
 			},
+			"debugimagename" : {
+				"required": "false",
+				"description": "Debug Image Name",
+				"help": "The name of the annotated debug image, will be created in the current image folder",
+				"tab": "Debug",
+				"filters": {
+					"filter": "enabledebug",
+					"filtertype": "show",
+					"values": [
+						"enabledebug"
+					]
+				}          
+			},   
 			"graph": {
 				"required": "false",
 				"tab": "History",
@@ -208,19 +243,21 @@ class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 
 	def _process_image(
     	self, image: np.ndarray | None, 
-      	is_debug_image: bool = False
+      	is_debug_image: bool = False,
+       	enable_debug: bool = False
     ) -> np.ndarray | None:
      
 		detection_method = self.get_param('method', 'Fast', str)
 		mask_file_name = self.get_param('mask', '', str)
-		annotate_image = self.get_param('annotate', False, bool)
+		debug_image = self.get_param('debugimagename', '', str)
 		scale = self.get_param('scalefactor', 0.5, float)
-                 
-		image_copy = image.copy()
-     
+  
+  
 		if mask_file_name:
-			image_copy = allsky_shared.mask_image(image_copy, mask_file_name)
-
+			image_copy = allsky_shared.mask_image(image, mask_file_name)
+		else:
+			image_copy = image
+   
 		if detection_method == "Fast":
 			min_size = self.get_param('minsize', 6, int)
 
@@ -238,16 +275,16 @@ class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 			self.log(4, f'INFO: Using slow detection method')
 			sources, _ = allsky_shared.count_starts_in_image(image_copy)
 
-		if annotate_image:
+		if enable_debug and debug_image:
 			if sources is not None:
 				for i, row in enumerate(sources):
 					x = round(float(row[0])) * 1
 					y = round(float(row[1])) * 1
-					cv2.circle(image, (x, y), 10, (0, 0, 255), 1)
+					cv2.circle(image, (x, y), 10, (128, 128, 255), 1)
 
 			if is_debug_image:
 				save_name = allsky_shared.get_environment_variable("ALLSKY_CURRENT_DIR")
-				save_name = f"{save_name}/debug_starcount.png"
+				save_name = f"{save_name}/{debug_image}"
 				cv2.imwrite(save_name, image)  
    
 		return image, sources
@@ -256,16 +293,21 @@ class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 		
 		try:
 			result = ''
+			enable_debug = self.get_param('enabledebug', False, bool)   
 			debug_image_path = self.get_param('debugimage', None, str)
 
-			if debug_image_path is not None and debug_image_path != '':
+			if enable_debug and debug_image_path is not None and debug_image_path != '':
 				if allsky_shared.is_file_readable(debug_image_path):
 					self.log(4,f'INFO: Using debug image {debug_image_path}')
 					debug_image = cv2.imread(debug_image_path)
-					debug_image, sources = self._process_image(debug_image, True)
+					debug_image, sources = self._process_image(debug_image, True, enable_debug)
+				else:
+					self.log(4, f"ERROR: Debug image {debug_image_path} not found so ignoring")
+					source_image = allsky_shared.image
+					source_image, sources = self._process_image(source_image, False, enable_debug)
 			else:
 				source_image = allsky_shared.image
-				source_image, sources = self._process_image(source_image, False)
+				source_image, sources = self._process_image(source_image, False), enable_debug
     
 			if sources is not None:
 				result = f"Number of stars detected: {len(sources)}"

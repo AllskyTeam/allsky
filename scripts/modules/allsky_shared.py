@@ -2537,7 +2537,7 @@ def load_mask(mask_file_name, target_image):
 
     return mask
 
-def mask_image(image, mask_file_name=''):
+def mask_image(image, mask_file_name='', log_info=False):
     output = None
     try:
         if mask_file_name != '':
@@ -2553,7 +2553,8 @@ def mask_image(image, mask_file_name=''):
 
             output =  np.clip(output, 0, 255).astype(np.uint8)
             
-            log(4, f'INFO: Mask {mask_file_name} applied')
+            if log_info:
+                log(4, f'INFO: Mask {mask_file_name} applied')
                 
     except Exception as e:
         me = os.path.basename(__file__)
@@ -2562,7 +2563,13 @@ def mask_image(image, mask_file_name=''):
 
        
     return output
-     
+#
+# End Image processing
+#
+
+#
+# Star detection
+#
 def count_starts_in_image(image, mask_file_name=None):
     from photutils.detection import DAOStarFinder
     from astropy.stats import sigma_clipped_stats
@@ -2701,5 +2708,132 @@ def fast_star_count(
     return coords
 
 #
-# End Image processing
+# Meteor detection
+#
+def detect_meteors(img: np.ndarray,
+                          mask: Optional[np.ndarray] = None,
+                          *,
+                          blur_ksize: builtins.int = 3,
+                          bg_kernel: builtins.int = 31,
+                          k_sigma: float = 3.0,
+                          min_len_px: builtins.int = 20,
+                          min_aspect: float = 5.0,
+                          min_area_px: builtins.int = 15,
+                          hough_check: bool = True) -> List[dict]:
+    import cv2    
+    """
+    Detect meteors from a single image
+    - Automatically handles grayscale/BGR
+    - Mask is optional (255=detect, 0=ignore)
+    Returns list of detections [{bbox, center, angle_deg, length_px, aspect, score}]
+    """
+    # --- convert to gray ---
+    g = img if img.ndim == 2 else cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    if blur_ksize > 1:
+        g = cv2.GaussianBlur(g, (blur_ksize, blur_ksize), 0)
+
+    # --- background removal (median filter high-pass) ---
+    bg_kernel = bg_kernel if bg_kernel % 2 else bg_kernel + 1
+    bg = cv2.medianBlur(g, bg_kernel)
+    highpass = cv2.subtract(g, bg)
+
+    # --- remove point-like stars ---
+    open_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+    highpass = cv2.morphologyEx(highpass, cv2.MORPH_OPEN, open_kernel, iterations=1)
+
+    # --- mask setup ---
+    if mask is None:
+        mask = np.ones_like(highpass, np.uint8) * 255
+
+    # --- adaptive threshold ---
+    mean, std = cv2.meanStdDev(highpass, mask=mask)
+    tval = float(mean + k_sigma * std)
+    tval = max(tval, 10.0)
+    _, bin_img = cv2.threshold(highpass, tval, 255, cv2.THRESH_BINARY)
+
+    # --- morphology cleanup ---
+    kern = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+    bin_img = cv2.morphologyEx(bin_img, cv2.MORPH_CLOSE, kern, iterations=1)
+    bin_img = cv2.morphologyEx(bin_img, cv2.MORPH_OPEN, kern, iterations=1)
+
+    # Apply mask
+    bin_img = cv2.bitwise_and(bin_img, mask)
+
+    # --- find elongated bright regions ---
+    contours, _ = cv2.findContours(bin_img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    detections = []
+
+    for cnt in contours:
+        area = cv2.contourArea(cnt)
+        if area < min_area_px:
+            continue
+
+        if len(cnt) < 5:
+            rect = cv2.minAreaRect(cnt)
+            (cx, cy), (w, h), angle = rect
+            if w < 1 or h < 1:
+                continue
+            major, minor = (w, h) if w >= h else (h, w)
+            aspect = (major + 1e-6) / (minor + 1e-6)
+            length_px = major
+        else:
+            ellipse = cv2.fitEllipse(cnt)
+            (cx, cy), (w, h), angle = ellipse
+            major, minor = (w, h) if w >= h else (h, w)
+            aspect = (major + 1e-6) / (minor + 1e-6)
+            length_px = major
+
+        if length_px < min_len_px or aspect < min_aspect:
+            continue
+
+        # --- optional Hough line check ---
+        if hough_check:
+            x, y, w, h = cv2.boundingRect(cnt)
+            pad = 3
+            roi = bin_img[max(0,y-pad):y+h+pad, max(0,x-pad):x+w+pad]
+            lines = cv2.HoughLinesP(roi, 1, np.pi/180, threshold=12,
+                                    minLineLength=max(10, builtins.int(0.4*length_px)), maxLineGap=4)
+            if lines is None or len(lines) == 0:
+                continue
+
+        # --- score brightness ---
+        c_mask = np.zeros_like(bin_img)
+        cv2.drawContours(c_mask, [cnt], -1, 255, -1)
+        score = builtins.int(cv2.sumElems(cv2.bitwise_and(highpass, c_mask))[0])
+
+        detections.append({
+            "bbox": cv2.boundingRect(cnt),
+            "center": (float(cx), float(cy)),
+            "angle_deg": float(angle),
+            "length_px": float(length_px),
+            "aspect": float(aspect),
+            "score": score
+        })
+
+    detections.sort(key=lambda d: (d["score"], d["length_px"], d["aspect"]), reverse=True)
+    return detections
+
+
+def draw_detections(image: np.ndarray,
+                    detections: List[dict],
+                    mask: Optional[np.ndarray] = None) -> np.ndarray:
+    import cv2
+    """
+    Overlay rectangles + optional masked dimming for visualization.
+    """
+    out = image.copy()
+    if out.ndim == 2:
+        out = cv2.cvtColor(out, cv2.COLOR_GRAY2BGR)
+    for d in detections:
+        x, y, w, h = d["bbox"]
+        cv2.rectangle(out, (x, y), (x+w, y+h), (0, 255, 0), 1)
+        cx, cy = map(builtins.int, d["center"])
+        #cv2.circle(out, (cx, cy), 2, (0, 255, 255), -1)
+    if mask is not None:
+        dim = out.copy(); dim[:] = (0, 0, 0)
+        inv = cv2.bitwise_not(mask)
+        out = cv2.addWeighted(out, 1.0, cv2.bitwise_and(dim, dim, mask=inv), 0.6, 0)
+    return out
+#
+# End Meteor detection
 #

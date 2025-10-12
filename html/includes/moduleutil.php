@@ -1133,8 +1133,14 @@ class MODULEUTIL
 
         $out = [];
         $row = $stmt->fetch();
-        foreach ($variables as $variable) {        
-            $value = number_format($row[$variable],2) + 0;            
+        foreach ($variables as $variable) {
+            $value = 0;
+            if (isset($row[$variable])) {
+                $value = $row[$variable];
+                if (is_numeric($value)) {  
+                    $value = number_format($row[$variable],2) + 0;
+                }
+            }
             $out[$variable] = [
                 'ts_ms' => $this->toMsTimestamp($row[$tsCol]),
                 'value' => $value

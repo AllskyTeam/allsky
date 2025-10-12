@@ -294,7 +294,7 @@ class ASCHARTMANAGER {
         chartGroups.html('');
 
         $.each(allskyChartData, function (categoryName, chartsArray) {
-          var collapseId = 'category-' + String(categoryName).toLowerCase();
+          var collapseId = 'category-' + String(categoryName.replace(/ /g, '-')).toLowerCase();
           var panel = $('<div>', { class: 'panel panel-default chart-category' });
           var heading = $('<div>', { class: 'panel-heading' }).append(
             $('<h4>', { class: 'panel-title' }).append(

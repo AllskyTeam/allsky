@@ -315,19 +315,6 @@ def startModuleDebug(module):
     except:
         log(0, f"ERROR: Unable to create {moduleTmpDir}")
 
-def write_debug_image(module, fileName, image):
-	writeDebugImage(module, fileName, image)
-
-def writeDebugImage(module, fileName, image):
-    import cv2
-    global ALLSKY_WEBUI
-
-    debugDir = os.path.join(ALLSKY_WEBUI, "debug", module)
-    os.makedirs(debugDir, mode = 0o777, exist_ok = True)
-    moduleTmpFile = os.path.join(debugDir, fileName)
-    cv2.imwrite(moduleTmpFile, image, params=None)
-    log(4,"INFO: Wrote debug file {0}".format(moduleTmpFile))
-
 def setEnvironmentVariable(name, value, logMessage='', logLevel=4):
     result = True
 
@@ -1931,184 +1918,6 @@ def get_allsky_variable(variable):
 
     return result
 
-def load_mask(mask_file_name, target_image):
-    import cv2
-    mask = None
-    
-    mask_path = os.path.join(ALLSKY_OVERLAY, 'images', mask_file_name)
-    target_shape = target_image.shape[:2]
-    
-    mask = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
-    if mask is not None:
-        if (mask.shape[0] != target_shape[0]) or (mask.shape[1] != target_shape[1]):
-            mask = cv2.resize(mask, (target_shape[1], target_shape[0]))
-        mask = mask.astype(np.float32) / 255.0
-
-    return mask
-
-def mask_image(image, mask_file_name=''):
-    output = None
-    try:
-        if mask_file_name != '':
-            mask = load_mask(mask_file_name, image)
-            if len(image.shape) == 2:
-                image = image.astype(np.float32)
-                output = image * mask
-            else:
-                image = image.astype(np.float32)
-                if mask.ndim == 2:
-                    mask = mask[..., np.newaxis]
-                output = image * mask
-
-            output =  np.clip(output, 0, 255).astype(np.uint8)
-            
-            log(4, f'INFO: Mask {mask_file_name} applied')
-                
-    except Exception as e:
-        me = os.path.basename(__file__)
-        eType, eObject, eTraceback = sys.exc_info()
-        log(0, f'ERROR: mask_image failed on line {eTraceback.tb_lineno} in {me} - {e}')
-
-       
-    return output
-     
-def count_starts_in_image(image, mask_file_name=None):
-    from photutils.detection import DAOStarFinder
-    from astropy.stats import sigma_clipped_stats
-    import cv2
-    
-    # Convert to grayscale if it's RGB
-    if image.ndim == 3:
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    else:
-        gray = image
-
-    if mask_file_name is not None and mask_file_name != '':
-        gray = mask_image(gray, mask_file_name)
-
-    # Convert to float for processing
-    image_data = gray.astype(float)
-
-    # Estimate background stats
-    mean, median, std = sigma_clipped_stats(image_data, sigma=3.0)
-
-    # Detect stars
-    daofind = DAOStarFinder(fwhm=3.0, threshold=5.0*std)
-    sources = daofind(image_data - median)
-    
-    # Convert to list of (x, y) tuples if sources were found
-    coords = []
-    if sources is not None and len(sources) > 0:
-        x = sources['xcentroid'].tolist()
-        y = sources['ycentroid'].tolist()
-        coords = list(zip(x, y))
-
-    return coords, image
-
-def fast_star_count(
-    image: np.ndarray,
-    min_d_px: int,                 # ~star core diameter in pixels (try 5–8)
-    scale: float = 0.5,            # downscale for speed (0.5 good for 1080p)
-    corr_thresh: float = 0.78,     # template match threshold (0..1)
-    min_peak_contrast: float = 12, # center minus local ring (uint8)
-    anisotropy_min: float = 0.45,  # 0..1 (lamda_min/lamda_max) – low => edge-like
-    mask_bottom_frac: float = 0.12 # ignore lowest X% (horizon glow)
-) -> List[Tuple[float, float]]:
-    import cv2
-    """
-    Return (x, y) coords of detected stars in ORIGINAL image pixels.
-    Works with grayscale or BGR uint8.
-    """
-    # ---- grayscale & downscale ----
-    g = image if image.ndim == 2 else cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    H0, W0 = g.shape[:2]
-    if scale != 1.0:
-        g_ds = cv2.resize(g, None, fx=scale, fy=scale, interpolation=cv2.INTER_AREA)
-    else:
-        g_ds = g.copy()
-
-
-    # ---- background removal (large median) ----
-    k_bg = max(21, builtins.int(round(min(61, (min_d_px * 6) | 1))))  # odd; 21–61 range
-
-
-    # keep uint8 for medianBlur
-    bg = cv2.medianBlur(g_ds, k_bg)
-
-    # convert to float AFTER background removal if you want math safety
-    flat = cv2.subtract(g_ds.astype(np.float32), bg.astype(np.float32))
-
-
-    # ---- Gaussian matched filter (template correlation) ----
-    # Patch size ~ 2–2.5× diameter; sigma ~~ diameter / 3
-    patch = max(7, builtins.int(round(min_d_px * scale * 2.5)))
-    if patch % 2 == 0: patch += 1
-    yy, xx = np.mgrid[:patch, :patch]
-    cx = cy = patch // 2
-    sigma = max(0.6, (min_d_px * scale) / 3.0)
-    gauss = np.exp(-((xx - cx) ** 2 + (yy - cy) ** 2) / (2 * sigma * sigma)).astype(np.float32)
-    gauss = (gauss - gauss.mean()) / (gauss.std() + 1e-6)  # zero-mean, unit-std
-
-    # normalized correlation
-    R = cv2.matchTemplate(flat, gauss, method=cv2.TM_CCOEFF_NORMED)
-
-    # ---- non-maximum suppression + threshold ----
-    nms_k = 3
-    nms = cv2.dilate(R, np.ones((nms_k, nms_k), np.uint8))
-    peaks = (R >= corr_thresh) & (R >= nms)
-
-    # ---- mask fisheye border + bottom band ----
-    ph, pw = R.shape
-    mask = np.zeros((ph, pw), np.uint8)
-    cx_r, cy_r = pw // 2, ph // 2
-    rad = builtins.int(min(cx_r, cy_r) * 0.95)
-    cv2.circle(mask, (cx_r, cy_r), rad, 1, -1)
-    if mask_bottom_frac > 0:
-        cut = builtins.int(ph * (1.0 - mask_bottom_frac))
-        mask[cut:, :] = 0
-    peaks &= mask.astype(bool)
-
-    ys, xs = np.where(peaks)
-    if len(xs) == 0:
-        return []
-
-    coords = []
-    # offsets (matchTemplate coords are top-left of patch)
-    off = patch // 2
-
-    # Precompute gradients on downscaled image for anisotropy test
-    sx = cv2.Sobel(g_ds, cv2.CV_32F, 1, 0, ksize=3)
-    sy = cv2.Sobel(g_ds, cv2.CV_32F, 0, 1, ksize=3)
-
-    for x0, y0 in zip(xs, ys):
-        cx_ds, cy_ds = x0 + off, y0 + off
-
-        # Annulus contrast: center 3x3 vs ring in 7x7
-        yA = max(cy_ds - 1, 0); yB = min(cy_ds + 2, g_ds.shape[0])
-        xA = max(cx_ds - 1, 0); xB = min(cx_ds + 2, g_ds.shape[1])
-        center = flat[yA:yB, xA:xB].max()
-
-        yA2 = max(cy_ds - 4, 0); yB2 = min(cy_ds + 5, g_ds.shape[0])
-        xA2 = max(cx_ds - 4, 0); xB2 = min(cx_ds + 5, g_ds.shape[1])
-        ring = flat[yA2:yB2, xA2:xB2].copy()
-        ring[yA:yB, xA:xB] = center  # exclude center region approx
-        local_bg = np.median(ring)
-
-        if (center - local_bg) < min_peak_contrast:
-            continue
-
-        # Anisotropy (structure tensor proxy): stars ~ isotropic gradients
-        sx_win = np.abs(sx[yA2:yB2, xA2:xB2]); sy_win = np.abs(sy[yA2:yB2, xA2:xB2])
-        gx = sx_win.mean(); gy = sy_win.mean()
-        ratio = (min(gx, gy) + 1e-6) / (max(gx, gy) + 1e-6)  # 0..1
-        if ratio < anisotropy_min:
-            continue
-
-        # Accept; rescale to original coordinates
-        coords.append((float(cx_ds / scale), float(cy_ds / scale)))
-
-    return coords
-
 def get_sensor_temperature():
     temperature = 0
     camera_type = get_camera_type()
@@ -2697,3 +2506,200 @@ def select_folder(
         current = os.path.join(current, choice)
 
 ### End folder selection
+
+#
+# Image processing
+#
+def write_debug_image(module, fileName, image):
+	writeDebugImage(module, fileName, image)
+def writeDebugImage(module, fileName, image):
+    import cv2
+    global ALLSKY_WEBUI
+
+    debugDir = os.path.join(ALLSKY_WEBUI, "debug", module)
+    os.makedirs(debugDir, mode = 0o777, exist_ok = True)
+    moduleTmpFile = os.path.join(debugDir, fileName)
+    cv2.imwrite(moduleTmpFile, image, params=None)
+    log(4,"INFO: Wrote debug file {0}".format(moduleTmpFile))
+
+def load_mask(mask_file_name, target_image):
+    import cv2
+    mask = None
+    
+    mask_path = os.path.join(ALLSKY_OVERLAY, 'images', mask_file_name)
+    target_shape = target_image.shape[:2]
+    
+    mask = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
+    if mask is not None:
+        if (mask.shape[0] != target_shape[0]) or (mask.shape[1] != target_shape[1]):
+            mask = cv2.resize(mask, (target_shape[1], target_shape[0]))
+        mask = mask.astype(np.float32) / 255.0
+
+    return mask
+
+def mask_image(image, mask_file_name=''):
+    output = None
+    try:
+        if mask_file_name != '':
+            mask = load_mask(mask_file_name, image)
+            if len(image.shape) == 2:
+                image = image.astype(np.float32)
+                output = image * mask
+            else:
+                image = image.astype(np.float32)
+                if mask.ndim == 2:
+                    mask = mask[..., np.newaxis]
+                output = image * mask
+
+            output =  np.clip(output, 0, 255).astype(np.uint8)
+            
+            log(4, f'INFO: Mask {mask_file_name} applied')
+                
+    except Exception as e:
+        me = os.path.basename(__file__)
+        eType, eObject, eTraceback = sys.exc_info()
+        log(0, f'ERROR: mask_image failed on line {eTraceback.tb_lineno} in {me} - {e}')
+
+       
+    return output
+     
+def count_starts_in_image(image, mask_file_name=None):
+    from photutils.detection import DAOStarFinder
+    from astropy.stats import sigma_clipped_stats
+    import cv2
+    
+    # Convert to grayscale if it's RGB
+    if image.ndim == 3:
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    else:
+        gray = image
+
+    if mask_file_name is not None and mask_file_name != '':
+        gray = mask_image(gray, mask_file_name)
+
+    # Convert to float for processing
+    image_data = gray.astype(float)
+
+    # Estimate background stats
+    mean, median, std = sigma_clipped_stats(image_data, sigma=3.0)
+
+    # Detect stars
+    daofind = DAOStarFinder(fwhm=3.0, threshold=5.0*std)
+    sources = daofind(image_data - median)
+    
+    # Convert to list of (x, y) tuples if sources were found
+    coords = []
+    if sources is not None and len(sources) > 0:
+        x = sources['xcentroid'].tolist()
+        y = sources['ycentroid'].tolist()
+        coords = list(zip(x, y))
+
+    return coords, image
+
+def fast_star_count(
+    image: np.ndarray,
+    min_d_px: int,                 # ~star core diameter in pixels (try 5–8)
+    scale: float = 0.5,            # downscale for speed (0.5 good for 1080p)
+    corr_thresh: float = 0.78,     # template match threshold (0..1)
+    min_peak_contrast: float = 12, # center minus local ring (uint8)
+    anisotropy_min: float = 0.45,  # 0..1 (lamda_min/lamda_max) – low => edge-like
+    mask_bottom_frac: float = 0.12 # ignore lowest X% (horizon glow)
+) -> List[Tuple[float, float]]:
+    import cv2
+    """
+    Return (x, y) coords of detected stars in ORIGINAL image pixels.
+    Works with grayscale or BGR uint8.
+    """
+    # ---- grayscale & downscale ----
+    g = image if image.ndim == 2 else cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    H0, W0 = g.shape[:2]
+    if scale != 1.0:
+        g_ds = cv2.resize(g, None, fx=scale, fy=scale, interpolation=cv2.INTER_AREA)
+    else:
+        g_ds = g.copy()
+
+
+    # ---- background removal (large median) ----
+    k_bg = max(21, builtins.int(round(min(61, (min_d_px * 6) | 1))))  # odd; 21–61 range
+
+
+    # keep uint8 for medianBlur
+    bg = cv2.medianBlur(g_ds, k_bg)
+
+    # convert to float AFTER background removal if you want math safety
+    flat = cv2.subtract(g_ds.astype(np.float32), bg.astype(np.float32))
+
+
+    # ---- Gaussian matched filter (template correlation) ----
+    # Patch size ~ 2–2.5× diameter; sigma ~~ diameter / 3
+    patch = max(7, builtins.int(round(min_d_px * scale * 2.5)))
+    if patch % 2 == 0: patch += 1
+    yy, xx = np.mgrid[:patch, :patch]
+    cx = cy = patch // 2
+    sigma = max(0.6, (min_d_px * scale) / 3.0)
+    gauss = np.exp(-((xx - cx) ** 2 + (yy - cy) ** 2) / (2 * sigma * sigma)).astype(np.float32)
+    gauss = (gauss - gauss.mean()) / (gauss.std() + 1e-6)  # zero-mean, unit-std
+
+    # normalized correlation
+    R = cv2.matchTemplate(flat, gauss, method=cv2.TM_CCOEFF_NORMED)
+
+    # ---- non-maximum suppression + threshold ----
+    nms_k = 3
+    nms = cv2.dilate(R, np.ones((nms_k, nms_k), np.uint8))
+    peaks = (R >= corr_thresh) & (R >= nms)
+
+    # ---- mask fisheye border + bottom band ----
+    ph, pw = R.shape
+    mask = np.zeros((ph, pw), np.uint8)
+    cx_r, cy_r = pw // 2, ph // 2
+    rad = builtins.int(min(cx_r, cy_r) * 0.95)
+    cv2.circle(mask, (cx_r, cy_r), rad, 1, -1)
+    if mask_bottom_frac > 0:
+        cut = builtins.int(ph * (1.0 - mask_bottom_frac))
+        mask[cut:, :] = 0
+    peaks &= mask.astype(bool)
+
+    ys, xs = np.where(peaks)
+    if len(xs) == 0:
+        return []
+
+    coords = []
+    # offsets (matchTemplate coords are top-left of patch)
+    off = patch // 2
+
+    # Precompute gradients on downscaled image for anisotropy test
+    sx = cv2.Sobel(g_ds, cv2.CV_32F, 1, 0, ksize=3)
+    sy = cv2.Sobel(g_ds, cv2.CV_32F, 0, 1, ksize=3)
+
+    for x0, y0 in zip(xs, ys):
+        cx_ds, cy_ds = x0 + off, y0 + off
+
+        # Annulus contrast: center 3x3 vs ring in 7x7
+        yA = max(cy_ds - 1, 0); yB = min(cy_ds + 2, g_ds.shape[0])
+        xA = max(cx_ds - 1, 0); xB = min(cx_ds + 2, g_ds.shape[1])
+        center = flat[yA:yB, xA:xB].max()
+
+        yA2 = max(cy_ds - 4, 0); yB2 = min(cy_ds + 5, g_ds.shape[0])
+        xA2 = max(cx_ds - 4, 0); xB2 = min(cx_ds + 5, g_ds.shape[1])
+        ring = flat[yA2:yB2, xA2:xB2].copy()
+        ring[yA:yB, xA:xB] = center  # exclude center region approx
+        local_bg = np.median(ring)
+
+        if (center - local_bg) < min_peak_contrast:
+            continue
+
+        # Anisotropy (structure tensor proxy): stars ~ isotropic gradients
+        sx_win = np.abs(sx[yA2:yB2, xA2:xB2]); sy_win = np.abs(sy[yA2:yB2, xA2:xB2])
+        gx = sx_win.mean(); gy = sy_win.mean()
+        ratio = (min(gx, gy) + 1e-6) / (max(gx, gy) + 1e-6)  # 0..1
+        if ratio < anisotropy_min:
+            continue
+
+        # Accept; rescale to original coordinates
+        coords.append((float(cx_ds / scale), float(cy_ds / scale)))
+
+    return coords
+
+#
+# End Image processing
+#

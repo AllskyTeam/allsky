@@ -39,7 +39,8 @@ class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 				"table": "allsky_stars",
     			"pk": "id",
     			"pk_source": "image_timestamp",
-    			"pk_type": "int"    
+    			"pk_type": "int",
+           		"include_all": "false"
 			}, 
 			"values": {
 				"AS_STARIMAGE": {
@@ -48,7 +49,10 @@ class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 					"sample": "",
 					"group": "Added Image Data",
 					"description": "Image with stars",
-					"type": "string"
+					"type": "string",
+					"database": {
+						"include" : "true"
+					}     
 				},
 				"AS_STARIMAGEPATH": {
 					"name": "${STARIMAGEPATH}",

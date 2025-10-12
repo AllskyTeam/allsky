@@ -307,8 +307,8 @@ class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 					source_image, sources = self._process_image(source_image, False, enable_debug)
 			else:
 				source_image = allsky_shared.image
-				source_image, sources = self._process_image(source_image, False), enable_debug
-    
+				source_image, sources = self._process_image(source_image, False, enable_debug)
+
 			if sources is not None:
 				result = f"Number of stars detected: {len(sources)}"
 				self.log(1, f'INFO: {result}')

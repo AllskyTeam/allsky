@@ -14,6 +14,7 @@ www-data ALL=(ALL) NOPASSWD:/sbin/wpa_cli reconfigure
 www-data ALL=(ALL) NOPASSWD:/sbin/shutdown -h now
 www-data ALL=(ALL) NOPASSWD:/sbin/reboot
 www-data ALL=(ALL) NOPASSWD:/bin/systemctl
+www-data ALL=(ALL) NOPASSWD:/bin/journalctl
 www-data ALL=(ALL) NOPASSWD:/bin/chgrp
 www-data ALL=(ALL) NOPASSWD:/bin/chown
 www-data ALL=(ALL) NOPASSWD:/bin/chmod

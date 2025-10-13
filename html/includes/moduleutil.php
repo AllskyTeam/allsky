@@ -22,6 +22,7 @@ class MODULEUTIL
     private $allsky_scripts = null;
     private $allskyMyFiles = null;
     private $myFilesBase = null;
+    private $services = ['allsky', 'allskyperiodic', 'allskyserver'];
 
     function __construct() {
         $this->allskyModules = ALLSKY_SCRIPTS . '/modules';
@@ -39,7 +40,7 @@ class MODULEUTIL
 
     public function run()
     {
-        $this->checkXHRRequest();
+      //  $this->checkXHRRequest();
         $this->sanitizeRequest();
         $this->runRequest();
     }
@@ -1753,6 +1754,236 @@ class MODULEUTIL
 
         //var_dump($result["fields"]); die();
         $this->sendResponse(json_encode($result));          
+
+    }  
+    
+    public function getWatchdogStatus() {
+        $results = [];
+
+        foreach ($this->services as $service) {
+            $active = trim(shell_exec("systemctl is-active $service 2>/dev/null"));
+            $failed = trim(shell_exec("systemctl is-failed $service 2>/dev/null"));
+
+            // Extract PID from `systemctl show`
+            $pid = trim(shell_exec("systemctl show -p MainPID --value $service 2>/dev/null"));
+            if ($pid === '' || $pid === '0') {
+                $pid = null;
+            } else {
+                $pid = (int)$pid;
+            }
+
+            $results[] = [
+                'service' => $service,
+                'active'  => $active ?: 'unknown',
+                'failed'  => $failed ?: 'unknown',
+                'pid'     => $pid,
+            ];
+        }
+        $this->sendResponse(json_encode($results));  
+    }
+
+    public function getWatchdogManageService() {
+
+        $action        = isset($_REQUEST['action']) ? strtolower((string)$_REQUEST['action']) : 'status';
+        $serviceInput  = isset($_REQUEST['service']) ? trim((string)$_REQUEST['service']) : '';
+        $timeoutSec    = isset($_REQUEST['timeout']) ? max(1, (int)$_REQUEST['timeout']) : 12;
+        $journalLines  = isset($_REQUEST['journal_lines']) ? max(1, (int)$_REQUEST['journal_lines']) : 100;
+        $stabilitySec  = isset($_REQUEST['stability']) ? max(1, (int)$_REQUEST['stability']) : 4;
+
+        $res = ['ok' => false, 'action' => $action, 'service' => $serviceInput];
+
+        try {
+            if (!is_array($this->services)) {
+                throw new RuntimeException('$this->services must be an array of allowed systemd units (without ".service").');
+            }
+            if ($serviceInput === '' || !preg_match('/^[a-zA-Z0-9@._-]+$/', $serviceInput)) {
+                throw new RuntimeException('Invalid service name.');
+            }
+
+            $normalized = (substr($serviceInput, -8) === '.service') ? substr($serviceInput, 0, -8) : $serviceInput;
+
+            $allowed = array_fill_keys($this->services, true);
+            if (!isset($allowed[$normalized])) {
+                throw new RuntimeException('Service not allowed.');
+            }
+
+            $unit = $normalized . '.service';
+            $SYSTEMCTL = 'sudo /bin/systemctl'; 
+
+
+            $exec_cmd = function (string $cmd): array {
+                $out = []; $code = 0;
+                exec($cmd . ' 2>&1', $out, $code);
+                return [$code, implode("\n", $out)];
+            };
+
+            $is_active = function (string $unit) use ($SYSTEMCTL, $exec_cmd): string {
+                [$code, $out] = $exec_cmd($SYSTEMCTL . ' is-active ' . escapeshellarg($unit));
+                $s = trim($out);
+                return ($s !== '') ? $s : (($code === 0) ? 'active' : 'unknown');
+            };
+
+            $is_failed = function (string $unit) use ($SYSTEMCTL, $exec_cmd): string {
+                [$code, $out] = $exec_cmd($SYSTEMCTL . ' is-failed ' . escapeshellarg($unit));
+                $s = trim($out);
+                return ($s !== '') ? $s : (($code === 0) ? 'inactive' : 'unknown');
+            };
+
+            $get_pid = function (string $unit) use ($SYSTEMCTL, $exec_cmd): ?int {
+                [$code, $out] = $exec_cmd($SYSTEMCTL . ' show -p MainPID --value ' . escapeshellarg($unit));
+                $pid = (int)trim($out);
+                return ($code === 0 && $pid > 0) ? $pid : null;
+            };
+
+            $get_props = function (string $unit) use ($exec_cmd): array {
+                $props = [
+                    'ActiveState','SubState','Result',
+                    'ExecMainPID','ExecMainCode','ExecMainStatus',
+                    'MainPID','Restart','RestartSec','RestartUSec',
+                    'FragmentPath','ExecStart','ExecStartPre','ExecStartPost'
+                ];
+                [$code, $out] = $exec_cmd('sudo /bin/systemctl show ' . escapeshellarg($unit)
+                    . ' --no-pager --property=' . implode(',', $props));
+                $ret = ['exit' => $code];
+                foreach (explode("\n", trim($out)) as $line) {
+                    if ($line === '' || strpos($line, '=') === false) continue;
+                    [$k, $v] = explode('=', $line, 2);
+                    $ret[$k] = $v;
+                }
+                return $ret;
+            };
+
+            $collect_diag = function (string $unit, int $journalLines) use ($exec_cmd, $get_props): array {
+                [$sc_code, $sc_out] = $exec_cmd('sudo /bin/systemctl status --no-pager --full ' . escapeshellarg($unit));
+                [$jl_code, $jl_out] = $exec_cmd('sudo journalctl -q -u ' . escapeshellarg($unit)
+                    . ' -b -n ' . (int)$journalLines . ' --no-pager --no-hostname --output=short-monotonic');
+                $trim = function (string $s, int $max = 20000): string {
+                    return (strlen($s) > $max) ? (substr($s, 0, $max) . "\n…(truncated)…") : $s;
+                };
+                return [
+                    'properties'             => $get_props($unit),
+                    'systemctl_status_exit'  => $sc_code,
+                    'systemctl_status'       => $trim($sc_out),
+                    'journal_exit'           => $jl_code,
+                    'journal'                => $trim($jl_out),
+                ];
+            };
+
+            $get_state = function (string $unit) use ($get_props, $get_pid): array {
+                $props = $get_props($unit);
+                return [
+                    'ActiveState'   => $props['ActiveState']   ?? 'unknown',
+                    'SubState'      => $props['SubState']      ?? 'unknown',
+                    'Result'        => $props['Result']        ?? '',
+                    'ExecMainCode'  => $props['ExecMainCode']  ?? '',
+                    'ExecMainStatus'=> $props['ExecMainStatus']?? '',
+                    'MainPID'       => $props['MainPID']       ?? '',
+                    'pid'           => $get_pid($unit),
+                ];
+            };
+
+            $wait_for = function (string $unit, array $targets, float $timeoutSec, int $stepMs = 250) use ($is_active): string {
+                $deadline = microtime(true) + $timeoutSec;
+                do {
+                    $state = $is_active($unit);
+                    if (in_array($state, $targets, true)) return $state;
+                    usleep($stepMs * 1000);
+                } while (microtime(true) < $deadline);
+                return $is_active($unit);
+            };
+
+            $ensure_stable_active = function (string $unit, int $stabilitySec) use ($is_active, $get_state): bool {
+                $deadline = microtime(true) + $stabilitySec;
+                do {
+                    $act = $is_active($unit);
+                    if ($act !== 'active') {
+                        return false; 
+                    }
+                    $st = $get_state($unit);
+                    if (isset($st['SubState']) && stripos((string)$st['SubState'], 'auto-restart') !== false) {
+                        return false;
+                    }
+                    usleep(250 * 1000);
+                } while (microtime(true) < $deadline);
+                return true;
+            };
+
+            $final = null;
+            $failedAction = null;
+            $execOutput = null;
+
+            if ($action === 'start') {
+                [$code, $out] = $exec_cmd($SYSTEMCTL . ' start ' . escapeshellarg($unit));
+                if ($code !== 0) {
+                    $failedAction = 'start';
+                    $execOutput = $out;
+                } else {
+                    $final = $wait_for($unit, ['active'], (float)$timeoutSec);
+                    if ($final === 'active') {
+                        if (!$ensure_stable_active($unit, $stabilitySec)) {
+                            $failedAction = 'start';
+                        }
+                    } else {
+                        $failedAction = 'start';
+                    }
+                }
+            } elseif ($action === 'stop') {
+                [$code, $out] = $exec_cmd($SYSTEMCTL . ' stop ' . escapeshellarg($unit));
+                if ($code !== 0) {
+                    $failedAction = 'stop';
+                    $execOutput = $out;
+                } else {
+                    $final = $wait_for($unit, ['inactive', 'failed'], (float)$timeoutSec);
+                    if ($final !== 'inactive' && $final !== 'failed') {
+                        $failedAction = 'stop';
+                    }
+                }
+            } elseif ($action === 'restart') {
+                [$code, $out] = $exec_cmd($SYSTEMCTL . ' restart ' . escapeshellarg($unit));
+                if ($code !== 0) {
+                    $failedAction = 'restart';
+                    $execOutput = $out;
+                } else {
+                    $final = $wait_for($unit, ['active'], (float)$timeoutSec);
+                    if ($final === 'active') {
+                        if (!$ensure_stable_active($unit, $stabilitySec)) {
+                            $failedAction = 'restart';
+                        }
+                    } else {
+                        $failedAction = 'restart';
+                    }
+                }
+            } elseif ($action === 'status') {
+                $final = $is_active($unit);
+            } else {
+                throw new RuntimeException('Unknown action.');
+            }
+
+            if ($failedAction !== null) {
+                $res['ok']     = false;
+                $res['error']  = "Action '$failedAction' failed or timed out";
+                if ($execOutput) $res['exec_output'] = $execOutput;
+                $res['active'] = $is_active($unit);
+                $res['failed'] = $is_failed($unit);
+                $res['pid']    = $get_pid($unit);
+                $res['diagnostics'] = $collect_diag($unit, $journalLines);
+                echo json_encode($res, JSON_PRETTY_PRINT);
+                exit;
+            }
+
+            $res['ok']     = true;
+            $res['active'] = $final ?? $is_active($unit);
+            $res['failed'] = $is_failed($unit);
+            $res['pid']    = $get_pid($unit);
+            echo json_encode($res, JSON_PRETTY_PRINT);
+            exit;
+
+        } catch (Throwable $e) {
+            http_response_code(400);
+            $res['error'] = $e->getMessage();
+            echo json_encode($res, JSON_PRETTY_PRINT);
+            exit;
+        }
 
     }    
 }

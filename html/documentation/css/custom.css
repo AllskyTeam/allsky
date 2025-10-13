@@ -1510,3 +1510,31 @@ div.sticky {
     border-top: 1px solid black !important;
 }
 /* End Dark Modals */
+
+/* Watchdog */
+.watchdogHeader {
+	background-color: #ddd;
+	font-weight: bold;
+	font-size: 1.25em;
+	padding-top: 3px;
+	padding-bottom: 3px;
+}
+
+.dark .watchdogHeader {
+	background-color: #333;
+}
+
+.watchdogRow {
+	font-size: 1.25em;
+	padding-top: 3px;
+	padding-bottom: 3px;
+}
+
+.dark .watchdogHeader {
+}
+
+#as-system-err-journal {
+	max-height: 200px;
+	overflow: scroll
+}
+/* End Watchdog */

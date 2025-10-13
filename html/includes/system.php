@@ -291,138 +291,160 @@ function DisplaySystem()
 		$user_data_files_count = 0;
 	}
 	?>
-			<div class="panel panel-allsky">
-				<div class="panel-heading"><i class="<?php echo $pageIcon ?>"></i> <?php echo $pageHeaderTitle ?></div>
-				<div class="panel-body">
+		<div class="panel panel-allsky">
+			<div class="panel-heading"><i class="<?php echo $pageIcon ?>"></i> <?php echo $pageHeaderTitle ?></div>
+			<div class="panel-body">
 
-					<?php
-					$s = false;		// Update interval for Allsky Status ?
+				<?php
+				$s = false;		// Update interval for Allsky Status ?
 
-					if (isset($_POST['system_reboot'])) {
-						$status->addMessage("System Rebooting Now!", "warning", true);
-						$result = shell_exec("sudo /sbin/reboot");
-					} else if (isset($_POST['system_shutdown'])) {
-						$status->addMessage("System Shutting Down Now!", "warning", true);
-						$result = shell_exec("sudo /sbin/shutdown -h now");
-					} else if (isset($_POST['service_start'])) {
-						// Sleep to let Allsky status get updated.
-						// Starting Allsky takes longer to update status.
-						runCommand("sudo /bin/systemctl start allsky && sleep 4", "Allsky started", "success");
-						$s = true;
-					} else if (isset($_POST['service_stop'])) {
-						runCommand("sudo /bin/systemctl stop allsky && sleep 3", "Allsky stopped", "success");
-						$s = true;
-					}
-					if ($s) {
-						# Allsky status will change so check often.
-						echo "<script>allskystatus_interval = 2 * 1000;</script>";
-					}
+				if (isset($_POST['system_reboot'])) {
+					$status->addMessage("System Rebooting Now!", "warning", true);
+					$result = shell_exec("sudo /sbin/reboot");
+				} else if (isset($_POST['system_shutdown'])) {
+					$status->addMessage("System Shutting Down Now!", "warning", true);
+					$result = shell_exec("sudo /sbin/shutdown -h now");
+				} else if (isset($_POST['service_start'])) {
+					// Sleep to let Allsky status get updated.
+					// Starting Allsky takes longer to update status.
+					runCommand("sudo /bin/systemctl start allsky && sleep 4", "Allsky started", "success");
+					$s = true;
+				} else if (isset($_POST['service_stop'])) {
+					runCommand("sudo /bin/systemctl stop allsky && sleep 3", "Allsky stopped", "success");
+					$s = true;
+				}
+				if ($s) {
+					# Allsky status will change so check often.
+					echo "<script>allskystatus_interval = 2 * 1000;</script>";
+				}
 
-					$e = "";
-					// Execute optional user-specified button actions.
-					// This needs to be done here in case the command(s) return a status message
-					// which is displayed below.
-					for ($i=0; $i < $user_data_files_count; $i++) {
-						$e .= displayUserData($user_data_files[$i], "button-action");
-					}
+				$e = "";
+				// Execute optional user-specified button actions.
+				// This needs to be done here in case the command(s) return a status message
+				// which is displayed below.
+				for ($i=0; $i < $user_data_files_count; $i++) {
+					$e .= displayUserData($user_data_files[$i], "button-action");
+				}
 
-					if ($status->isMessage()) echo "<p>" . $status->showMessages() . "</p>";
-					?>
+				if ($status->isMessage()) echo "<p>" . $status->showMessages() . "</p>";
+				?>
 
-					<div class="row">
-						<div class="panel panel-success">
-							<div class="panel-body">
-								<h4>System Information</h4>
-								<?php if ($e !== "") echo "$e"; // display any error msg ?>
+				<ul class="nav nav-tabs">
+					<li class="active"><a href="#as-system-system" data-toggle="tab">System</a></li>
+					<li><a href="#as-system-watchdog" data-toggle="tab">Watchdogs</a></li>
+				</ul>
 
-								<table>
-								<!-- <colgroup> doesn't seem to support "width", so set on 1st line -->
-								<tr><td style="padding-right: 90px;">Hostname</td><td><?php echo $hostname ?></td></tr>
-								<tr><td>Pi Model</td><td><?php echo RPiModel() ?></td></tr>
-								<tr><td>Uptime</td><td id="as-uptime"><?php echo $uptime ?></td></tr>
-								<?php
-									// Optional user-specified progress bars.
-									$e = "";
-									for ($i=0; $i < $user_data_files_count; $i++) {
-										$e .= displayUserData($user_data_files[$i], "data");
-									}
-									if ($e !== "") echo "$e";
-								?>
+				<div class="tab-content" style="margin-top:15px;">
+					<div id="as-system-system" class="tab-pane fade in active">
 
-								<tr><td colspan="2" style="height: 5px"></td></tr>
-								<!-- Treat Throttle Status like a full-width progress bar -->
-								<?php displayProgress("", "Throttle Status", $throttle, 0, 100, 100, -1, -1, $throttle_status, "as-throttle"); ?>
-								<tr><td colspan="2" style="height: 5px"></td></tr>
-								<?php displayProgress("", "Memory Used", "$memused%", 0, $memused, 100, 90, 75, "", "as-memory"); ?>
-								<tr><td colspan="2" style="height: 5px"></td></tr>
-								<?php displayProgress("", "CPU Load", "$cpuLoad%", 0, $cpuLoad, 100, 90, 75, "", "as-cpuload", "Calculating"); ?>
-								<tr><td colspan="2" style="height: 5px"></td></tr>
-								<?php displayProgress("", "CPU Temperature", $display_temperature, 0, $temperature, 100, 70, 60, $temperature_status, "as-cputemp"); ?>
-								<tr><td colspan="2" style="height: 5px"></td></tr>
-								<?php 
-									$label = "Disk Usage";
-									if ($dp === -1) {
-										echo "<tr>";
-										echo "<td>$label</td>";
-										echo "<td>$dp_msg</td>";
-										echo "</tr>";
-									} else {
-										displayProgress("", $label, $dp_msg, 0, $dp, 100, 90, 70, "");
-									}
-								?>
-								<tr><td colspan="2" style="height: 5px"></td></tr>
-								<?php 
-									$label = str_replace(ALLSKY_HOME, "~/allsky", $tmp_dir) . " Usage";
-									if ($tdp === -1) {
-										echo "<tr>";
-										echo "<td>$label</td>";
-										echo "<td>$tdp_msg</td>";
-										echo "</tr>";
-									} else {
-										displayProgress("", $label, $tdp_msg, 0, $tdp, 100, 90, 70, "");
-									}
 
-									// Optional user-specified progress bars.
-									$e = "";
-									for ($i=0; $i < $user_data_files_count; $i++) {
-										$e .= displayUserData($user_data_files[$i], "progress");
-									}
-									if ($e !== "") echo "$e";
-								?>
-								</table>
-							</div><!-- /.panel-body -->
-						</div><!-- /.panel-default -->
-					</div><!-- /.row -->
+						<div class="row">
+							<div class="panel panel-success">
+								<div class="panel-body">
+									<h4>System Information</h4>
+									<?php if ($e !== "") echo "$e"; // display any error msg ?>
 
-					<div class="row">
-					<form action="?page=<?php echo $page ?>" method="POST">
-					<div style="margin-bottom: 15px">
-						<button type="submit" class="btn btn-success" name="service_start"/>
-							<i class="fa fa-play"></i> Start Allsky</button>
-						&nbsp;
-						<button type="submit" class="btn btn-danger" name="service_stop"/>
-							<i class="fa fa-stop"></i> Stop Allsky</button>
+									<table>
+									<!-- <colgroup> doesn't seem to support "width", so set on 1st line -->
+									<tr><td style="padding-right: 90px;">Hostname</td><td><?php echo $hostname ?></td></tr>
+									<tr><td>Pi Model</td><td><?php echo RPiModel() ?></td></tr>
+									<tr><td>Uptime</td><td id="as-uptime"><?php echo $uptime ?></td></tr>
+									<?php
+										// Optional user-specified progress bars.
+										$e = "";
+										for ($i=0; $i < $user_data_files_count; $i++) {
+											$e .= displayUserData($user_data_files[$i], "data");
+										}
+										if ($e !== "") echo "$e";
+									?>
+
+									<tr><td colspan="2" style="height: 5px"></td></tr>
+									<!-- Treat Throttle Status like a full-width progress bar -->
+									<?php displayProgress("", "Throttle Status", $throttle, 0, 100, 100, -1, -1, $throttle_status, "as-throttle"); ?>
+									<tr><td colspan="2" style="height: 5px"></td></tr>
+									<?php displayProgress("", "Memory Used", "$memused%", 0, $memused, 100, 90, 75, "", "as-memory"); ?>
+									<tr><td colspan="2" style="height: 5px"></td></tr>
+									<?php displayProgress("", "CPU Load", "$cpuLoad%", 0, $cpuLoad, 100, 90, 75, "", "as-cpuload", "Calculating"); ?>
+									<tr><td colspan="2" style="height: 5px"></td></tr>
+									<?php displayProgress("", "CPU Temperature", $display_temperature, 0, $temperature, 100, 70, 60, $temperature_status, "as-cputemp"); ?>
+									<tr><td colspan="2" style="height: 5px"></td></tr>
+									<?php 
+										$label = "Disk Usage";
+										if ($dp === -1) {
+											echo "<tr>";
+											echo "<td>$label</td>";
+											echo "<td>$dp_msg</td>";
+											echo "</tr>";
+										} else {
+											displayProgress("", $label, $dp_msg, 0, $dp, 100, 90, 70, "");
+										}
+									?>
+									<tr><td colspan="2" style="height: 5px"></td></tr>
+									<?php 
+										$label = str_replace(ALLSKY_HOME, "~/allsky", $tmp_dir) . " Usage";
+										if ($tdp === -1) {
+											echo "<tr>";
+											echo "<td>$label</td>";
+											echo "<td>$tdp_msg</td>";
+											echo "</tr>";
+										} else {
+											displayProgress("", $label, $tdp_msg, 0, $tdp, 100, 90, 70, "");
+										}
+
+										// Optional user-specified progress bars.
+										$e = "";
+										for ($i=0; $i < $user_data_files_count; $i++) {
+											$e .= displayUserData($user_data_files[$i], "progress");
+										}
+										if ($e !== "") echo "$e";
+									?>
+									</table>
+								</div><!-- /.panel-body -->
+							</div><!-- /.panel-default -->
+						</div><!-- /.row -->
+
+						<div class="row">
+						<form action="?page=<?php echo $page ?>" method="POST">
+						<div style="margin-bottom: 15px">
+							<button type="submit" class="btn btn-success" name="service_start"/>
+								<i class="fa fa-play"></i> Start Allsky</button>
+							&nbsp;
+							<button type="submit" class="btn btn-danger" name="service_stop"/>
+								<i class="fa fa-stop"></i> Stop Allsky</button>
+						</div>
+						<div style="line-height: 40px">
+							<button type="submit" class="btn btn-warning" name="system_reboot"/>
+								<i class="fa fa-power-off"></i> Reboot Raspberry Pi</button>
+							&nbsp;
+							<button type="submit" class="btn btn-warning" name="system_shutdown"/>
+								<i class="fa fa-plug"></i> Shutdown Raspberry Pi</button>
+						</div>
+						<?php // Optional user-specified data.
+							$e = "";
+							for ($i=0; $i < $user_data_files_count; $i++) {
+								$e .= displayUserData($user_data_files[$i], "button-button");
+							}
+							if ($e !== "") echo "$e";
+						?>
+						</form>
+						</div><!-- /.row -->
 					</div>
-					<div style="line-height: 40px">
-						<button type="submit" class="btn btn-warning" name="system_reboot"/>
-							<i class="fa fa-power-off"></i> Reboot Raspberry Pi</button>
-						&nbsp;
-						<button type="submit" class="btn btn-warning" name="system_shutdown"/>
-							<i class="fa fa-plug"></i> Shutdown Raspberry Pi</button>
+					<div id="as-system-watchdog" class="tab-pane fade">
+						<div class="row">
+							<div class="col-xs-3 watchdogHeader">Service</div>
+							<div class="col-xs-3 watchdogHeader">Status</div>
+							<div class="col-xs-2 watchdogHeader">PID</div>
+							<div class="col-xs-4 watchdogHeader">Actions</div>
+						</div>
+						<div id="as-system-watchdog-results">
+						</div>
 					</div>
-					<?php // Optional user-specified data.
-						$e = "";
-						for ($i=0; $i < $user_data_files_count; $i++) {
-							$e .= displayUserData($user_data_files[$i], "button-button");
-						}
-						if ($e !== "") echo "$e";
-					?>
-					</form>
-					</div><!-- /.row -->
+				</div>
+			</div><!-- /.panel-body -->
+		</div><!-- /.panel-primary -->
 
-				</div><!-- /.panel-body -->
-			</div><!-- /.panel-primary -->
-
+    	<script src="/js/jquery-loading-overlay/dist/loadingoverlay.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>		
+		<script src="js/watchdog.js"></script>
 	<?php
 }
 ?>

@@ -40,7 +40,7 @@ class MODULEUTIL
 
     public function run()
     {
-      //  $this->checkXHRRequest();
+        $this->checkXHRRequest();
         $this->sanitizeRequest();
         $this->runRequest();
     }

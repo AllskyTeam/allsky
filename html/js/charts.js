@@ -1,7 +1,230 @@
 "use strict";
 
+
+/*!
+ * timeRangeModal — Bootstrap 3 modal time range picker (no Live mode)
+ * Emits on the host button:
+ *   - 'tr.apply' (event, range)
+ *   - 'tr.clear' (event)
+ *   - 'tr.change' (event, range)
+ *
+ * Public methods:
+ *   - $(btn).timeRangeModal(opts)
+ *   - $(btn).timeRangeModal('open')
+ *   - $(btn).timeRangeModal('close')
+ *   - $(btn).timeRangeModal('destroy')
+ *   - $(btn).timeRangeModal('getRange')   -> {mode, quick, from, to}
+ *   - $(btn).timeRangeModal('setRange', r)
+ */
+(function ($) {
+  'use strict';
+
+  var PLUGIN = 'timeRangeModal';
+  var INST = PLUGIN + '_inst';
+  var UID = 0;
+
+  var defaults = {
+    range: { mode: 'quick', quick: '24h', from: null, to: null },
+    quickOptions: { '1h':'1h','6h':'6h','24h':'24h','7d':'7d','30d':'30d' },
+    modalTitle: 'Time range',
+    // Optional: modal size classes (BS3): '', 'modal-sm', 'modal-lg'
+    dialogClass: 'modal-sm'
+  };
+
+  function toUnix(dtLocalStr) {
+    if (!dtLocalStr) return null;
+    var t = Date.parse(dtLocalStr);
+    return isFinite(t) ? Math.floor(t / 1000) : null;
+  }
+  function fromUnixLocal(unix) {
+    if (!isFinite(unix)) return '';
+    var d = new Date(unix * 1000);
+    function pad(n){return (''+n).length===1?('0'+n):(''+n);}
+    return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()) +
+           'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+  }
+  function resolveQuickRange(key) {
+    var now = Math.floor(Date.now() / 1000);
+    var map = {
+      '1h': now - 3600,
+      '6h': now - 6*3600,
+      '24h': now - 24*3600,
+      '7d': now - 7*86400,
+      '30d': now - 30*86400
+    };
+    var from = map[key] != null ? map[key] : (now - 24*3600);
+    return { from: from, to: now };
+  }
+
+  function buildModalHtml(id, opts) {
+    var quickOpts = Object.keys(opts.quickOptions).map(function(v){
+      var label = opts.quickOptions[v];
+      var sel = v === '24h' ? ' selected' : '';
+      return '<option value="'+v+'"'+sel+'>'+label+'</option>';
+    }).join('');
+
+    return '' +
+'<div class="modal fade" id="'+id+'" tabindex="-1" role="dialog" aria-labelledby="'+id+'_label">' +
+'  <div class="modal-dialog '+(opts.dialogClass||'')+'" role="document">' +
+'    <div class="modal-content">' +
+'      <div class="modal-header">' +
+'        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span>&times;</span></button>' +
+'        <h4 class="modal-title" id="'+id+'_label"><i class="fa-regular fa-clock"></i> '+(opts.modalTitle||'Time range')+'</h4>' +
+'      </div>' +
+'      <div class="modal-body">' +
+'        <div class="form-inline" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">' +
+'          <select class="trm-mode form-control input-sm">' +
+'            <option value="quick">Last…</option>' +
+'            <option value="range">Custom</option>' +
+'          </select>' +
+'          <select class="trm-quick form-control input-sm" style="width:120px;">' + quickOpts + '</select>' +
+'          <div class="trm-range" style="display:none;display:flex;gap:6px;align-items:center;">' +
+'            <input type="datetime-local" class="trm-from form-control input-sm" style="width:180px;">' +
+'            <span>–</span>' +
+'            <input type="datetime-local" class="trm-to form-control input-sm" style="width:180px;">' +
+'          </div>' +
+'        </div>' +
+'      </div>' +
+'      <div class="modal-footer">' +
+'        <button type="button" class="btn btn-default btn-sm trm-clear">Clear</button>' +
+'        <button type="button" class="btn btn-primary btn-sm trm-apply">Apply</button>' +
+'      </div>' +
+'    </div>' +
+'  </div>' +
+'</div>';
+  }
+
+  function setUiFromRange($m, range) {
+    var mode = (range && (range.mode === 'quick' || range.mode === 'range')) ? range.mode : 'quick';
+    $m.find('.trm-mode').val(mode);
+    var showQuick = mode === 'quick';
+    var showRange = mode === 'range';
+    $m.find('.trm-quick').toggle(showQuick).val((range && range.quick) || '24h');
+    $m.find('.trm-range').toggle(showRange);
+    if (showRange) {
+      $m.find('.trm-from').val(fromUnixLocal(range && range.from));
+      $m.find('.trm-to').val(fromUnixLocal(range && range.to));
+    }
+  }
+  function readUiRange($m) {
+    var mode = String($m.find('.trm-mode').val() || 'quick');
+    if (mode === 'quick') {
+      var quick = String($m.find('.trm-quick').val() || '24h');
+      return { mode: 'quick', quick: quick, from: null, to: null };
+    }
+    var from = toUnix($m.find('.trm-from').val());
+    var to   = toUnix($m.find('.trm-to').val());
+    if (isFinite(from) && isFinite(to) && from > to) { var t=from; from=to; to=t; }
+    return { mode: 'range', quick: '24h', from: from, to: to };
+  }
+
+  function Instance($btn, opts) {
+    this.$btn = $btn;
+    this.opts = $.extend(true, {}, defaults, opts || {});
+    this.uid = (++UID);
+    this.id = 'trm_'+this.uid;
+    this.$modal = $(buildModalHtml(this.id, this.opts)).appendTo(document.body);
+    this._open = false;
+
+    // Seed UI
+    setUiFromRange(this.$modal, this.opts.range);
+
+    var self = this;
+
+    // Mode changes
+    this.$modal.on('change', '.trm-mode', function () {
+      var r = readUiRange(self.$modal);
+      setUiFromRange(self.$modal, r);
+      self.$btn.trigger('tr.change', [r]);
+    });
+    this.$modal.on('change input', '.trm-quick, .trm-from, .trm-to', function(){
+      var r = readUiRange(self.$modal);
+      self.$btn.trigger('tr.change', [r]);
+    });
+
+    // Apply
+    this.$modal.on('click', '.trm-apply', function(){
+      var r = readUiRange(self.$modal);
+      if (r.mode === 'quick') {
+        var abs = resolveQuickRange(r.quick || '24h');
+        r.from = abs.from; r.to = abs.to;
+      }
+      self.$btn.trigger('tr.apply', [r]);
+      self.close();
+    });
+
+    // Clear → reset to 24h
+    this.$modal.on('click', '.trm-clear', function(){
+      var r = { mode: 'quick', quick: '24h', from: null, to: null };
+      setUiFromRange(self.$modal, r);
+      self.$btn.trigger('tr.clear');
+      self.close();
+    });
+
+    // Button toggles modal
+    this.$btn.off('.'+PLUGIN).on('click.'+PLUGIN, function(e){
+      e.preventDefault();
+      self.open();
+    });
+
+    this.$modal.on('shown.bs.modal', function(){ self._open = true; });
+    this.$modal.on('hidden.bs.modal', function(){ self._open = false; });
+  }
+
+  Instance.prototype.open = function(){ this.$modal.modal('show'); };
+  Instance.prototype.close = function(){ this.$modal.modal('hide'); };
+  Instance.prototype.getRange = function(){
+    var r = readUiRange(this.$modal);
+    if (r.mode === 'quick') {
+      var abs = resolveQuickRange(r.quick || '24h');
+      r.from = abs.from; r.to = abs.to;
+    }
+    return r;
+  };
+  Instance.prototype.setRange = function(range){
+    this.opts.range = $.extend({}, this.opts.range, range || {});
+    setUiFromRange(this.$modal, this.opts.range);
+  };
+  Instance.prototype.destroy = function(){
+    try { this.$modal.modal('hide'); } catch(_){}
+    this.$btn.off('.'+PLUGIN);
+    this.$modal.off().remove();
+    this.$btn.removeData(INST);
+  };
+
+  $.fn[PLUGIN] = function(option){
+    var args = Array.prototype.slice.call(arguments, 1);
+    var ret;
+    this.each(function(){
+      var $el = $(this);
+      var inst = $el.data(INST);
+      if (!inst) {
+        if (typeof option === 'object' || !option) {
+          inst = new Instance($el, option || {});
+          $el.data(INST, inst);
+        } else {
+          return; // calling method before init
+        }
+      }
+      if (typeof option === 'string') {
+        if (typeof inst[option] !== 'function') throw new Error(PLUGIN+': unknown method '+option);
+        ret = inst[option].apply(inst, args);
+      }
+    });
+    return ret !== undefined ? ret : this;
+  };
+
+  // Minimal dark-friendly tweaks (optional)
+  if (!document.getElementById('trm-style')) {
+    $('<style id="trm-style">')
+      .text('body.dark .modal-content{background:#272727;border-color:#3a3a3a;color:#fff;} body.dark .modal-header, body.dark .modal-footer{border-color:#3a3a3a;}')
+      .appendTo('head');
+  }
+})(jQuery);
+
 class ASCHARTMANAGER {
   tabCounter = 1;
+  _zoomSyncing = false;
 
   constructor(opts = {}) {
     this.opts = Object.assign({
@@ -19,9 +242,20 @@ class ASCHARTMANAGER {
       snapType: 'end', // 'move' | 'end'
 
       // Per-chart auto-refresh (SECONDS)
-      autoRefreshSecondsDefault: 30,             // used for NEW charts
-      autoRefreshOptionsDefault: [0, 10, 20, 30, 60, 120]
+      autoRefreshSecondsDefault: 30,
+      autoRefreshOptionsDefault: [0, 10, 20, 30, 60, 120],
+
+      // Global date/time filter defaults (persisted) — no live
+      timeDefaults: {
+        mode: 'quick',   // 'quick' | 'range'
+        quick: '24h',
+        from: null,
+        to:   null
+      }
     }, opts);
+
+    // Global time range state (default to last 24h)
+    this._timeRange = Object.assign({}, this.opts.timeDefaults);
 
     // Debounced POST saver
     this._saveDebounced = this._debounce(() => {
@@ -43,14 +277,17 @@ class ASCHARTMANAGER {
     this.buildHTML();
     this.buildOptionsModal();
     this.setupEvents();
+    this._initTimeRangeButton();
 
     // Lazy build when a tab becomes visible
-    $(document).on('shown.bs.tab', '#as-gm-tablist a[data-toggle="tab"]', (e) => {
-      const tabId = $(e.target).attr('href').slice(1);
-      this._restoreChartsIfPending(tabId);
-    });
+    $(document)
+      .off('shown.bs.tab.asGM')
+      .on('shown.bs.tab.asGM', '#as-gm-tablist a[data-toggle="tab"]', (e) => {
+        const tabId = $(e.target).attr('href').slice(1);
+        this._restoreChartsIfPending(tabId);
+      });
 
-    // Auto-load
+    // Auto-load saved state
     if (this.opts.loadUrl) {
       this.loadStateFromUrl(this.opts.loadUrl, {
         clearExisting: true,
@@ -76,13 +313,24 @@ class ASCHARTMANAGER {
   }
 
   buildHTML() {
-    let chartManager = `
+    // Remove any existing manager
+    $('#as-chart-manager').remove();
+
+    const chartManager = `
       <div id="as-chart-manager" class="noselect">
         <div id="as-charts-toolbox-wrapper">
           <nav class="navbar navbar-default">
             <div class="container-fluid">
               <div class="collapse navbar-collapse">
-                <ul class="nav navbar-nav"></ul>
+                <ul class="nav navbar-nav">
+                  <!-- Time Range button (opens plugin popover) -->
+                  <li>
+                    <button type="button" id="as-tr-btn" class="btn btn-default navbar-btn" title="Time range">
+                      <i class="fa-regular fa-clock"></i>
+                      <span class="hidden-xs"> Set Time Range</span>
+                    </button>
+                  </li>
+                </ul>
                 <ul class="nav navbar-nav navbar-right">
                   <li>
                     <button type="button" class="btn btn-default navbar-btn" id="as-charts-toolbox-options" title="Options">
@@ -96,7 +344,7 @@ class ASCHARTMANAGER {
           <div id="as-charts-groups" class="panel-group">SS</div>
         </div>
       </div>`;
-    $('#s-chart-manager').remove();
+
     $('body').append(chartManager);
 
     if (!document.getElementById('as-gm-style-core')) {
@@ -182,7 +430,6 @@ class ASCHARTMANAGER {
         </form>
       </div>
       <div class="modal-footer">
-        <!-- Swapped order: Cancel first, Save last -->
         <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
         <button type="button" id="asChartsOptionsSave" class="btn btn-primary">Save</button>
       </div>
@@ -249,31 +496,19 @@ class ASCHARTMANAGER {
   _updatePaneGridBg($pane) {
     const sz = `${this.opts.gridSize}px ${this.opts.gridSize}px`;
     if (this.opts.gridEnabled) {
-      // Show grid: ensure class is present and clear any inline override
       $pane.addClass('as-grid-bg');
-      $pane.css({
-        backgroundSize: sz,
-        backgroundImage: '' // remove 'none' override so CSS class can show the grid
-      });
+      $pane.css({ backgroundSize: sz, backgroundImage: '' });
     } else {
-      // Hide grid completely
       $pane.removeClass('as-grid-bg');
-      $pane.css({
-        backgroundImage: 'none',
-        backgroundSize: '',          // optional: clear size
-        backgroundPosition: ''       // optional: reset
-      });
+      $pane.css({ backgroundImage: 'none', backgroundSize: '', backgroundPosition: '' });
     }
   }
 
   /** Apply UI settings across panes + snapping API */
   _applySettingsToUI() {
-    // Update each pane's background grid visibility + size
     $('#as-gm-tablist-content .tab-pane').each((_, pane) => {
       this._updatePaneGridBg($(pane));
     });
-
-    // Apply snap settings to each pane via jQuery plugin API
     $('#as-gm-tablist-content .tab-pane').each((_, pane) => {
       this._applySnapToPane($(pane));
     });
@@ -286,7 +521,7 @@ class ASCHARTMANAGER {
       url: 'includes/moduleutil.php?request=AvailableGraphs',
       type: 'GET',
       async: false,
-      cache: false,      
+      cache: false,
       dataType: 'json',
       success: function (allskyChartData) {
         let idCounter = 1;
@@ -477,19 +712,20 @@ class ASCHARTMANAGER {
       let targetTab = e.currentTarget.id;
       let elId = e.originalEvent.dataTransfer.getData('id');
       if (!elId) return;
-
       elId = $(`#${elId}`);
+
       let chartFileName = elId.data('filename');
 
       let $pane = $(`#${targetTab}`);
       // Respect grid enabled/disabled for background
       this._updatePaneGridBg($pane);
 
+      const timeQ = this._timeQueryString(); // include global time range
       this._createChartFromState($pane, {
         filename: chartFileName,
         top: 0, left: 0, width: 320, height: 240,
-        // seconds default — pulled from settings dialog value
-        autoRefreshSeconds: this.opts.autoRefreshSecondsDefault | 0
+        autoRefreshSeconds: this.opts.autoRefreshSecondsDefault | 0,
+        _timeQ: timeQ
       });
     });
   }
@@ -606,7 +842,8 @@ class ASCHARTMANAGER {
         gridEnabled: !!this.opts.gridEnabled,
         gridSize: this.opts.gridSize | 0,
         snapType: (this.opts.snapType === 'move') ? 'move' : 'end',
-        defaultAutoRefreshSeconds: this.opts.autoRefreshSecondsDefault | 0
+        defaultAutoRefreshSeconds: this.opts.autoRefreshSecondsDefault | 0,
+        timeRange: this._timeRange || this.opts.timeDefaults // persist global time range
       },
       tabs
     };
@@ -635,7 +872,7 @@ class ASCHARTMANAGER {
     }, ajax));
   }
 
-  /* ================= LOAD (legacy + new) ================= */
+  /* ================= LOAD ================= */
 
   loadStateFromUrl(url, opts = {}) {
     const { clearExisting = true, reuseTabIds = true, ajax = {} } = opts;
@@ -679,12 +916,25 @@ class ASCHARTMANAGER {
       this.opts.autoRefreshSecondsDefault = Math.max(0, settings.defaultAutoRefreshSeconds | 0);
     }
 
+    // restore global timeRange; coerce legacy 'live' to quick 24h
+    this._timeRange = (settings.timeRange && typeof settings.timeRange === 'object')
+      ? Object.assign({}, this.opts.timeDefaults, settings.timeRange)
+      : Object.assign({}, this.opts.timeDefaults);
+
+    if (!this._timeRange || (this._timeRange.mode !== 'quick' && this._timeRange.mode !== 'range')) {
+      this._timeRange = { mode: 'quick', quick: '24h', from: null, to: null };
+      try { $('#as-tr-btn').timeRangeModal('setRange', this._timeRange); } catch (_){}
+    }
+
     // Apply settings to panes right away (background grid & snap) + seed dialog
     this._applySettingsToUI();
     $('#opt-grid-enabled').prop('checked', !!this.opts.gridEnabled);
     $('#opt-grid-size').val(this.opts.gridSize);
     $('#opt-snap-type').val(this.opts.snapType);
     $('#opt-default-autorefresh').val(String(this.opts.autoRefreshSecondsDefault));
+
+    // Update timeRange button plugin UI if present
+    try { $('#as-tr-btn').timeRangePicker('setRange', this._timeRange); } catch (_) {}
 
     const tabs = Array.isArray(data.tabs) ? data.tabs : (Array.isArray(data) ? data : []);
     if (tabs.length === 0) {
@@ -738,12 +988,8 @@ class ASCHARTMANAGER {
       if ($first.length) $first.tab('show');
     }
 
-    const $first = $('#as-gm-tablist li:not(#as-gm-add-tab) a[data-toggle="tab"]').first();
-    if ($first.length) {
-      $first.tab('show');
-      const firstId = $first.attr('href').slice(1);
-      this._restoreChartsIfPending(firstId);
-    }
+    // Apply global time range to all charts once after load
+    this._applyTimeRangeToAllPanes();
   }
 
   /* ================= Title / ID helpers ================= */
@@ -830,15 +1076,15 @@ class ASCHARTMANAGER {
       ? Math.max(0, (+nc.autoRefreshSeconds) | 0)
       : (this.opts.autoRefreshSecondsDefault | 0);
 
+    const timeQ = (typeof c._timeQ === 'string') ? c._timeQ : this._timeQueryString();
+
     $pane.allskyChart({
-      configUrl: 'includes/moduleutil.php?request=GraphData&filename=' + encodeURIComponent(nc.filename),
+      configUrl: 'includes/moduleutil.php?request=GraphData&filename=' + encodeURIComponent(nc.filename) + timeQ,
       filename: nc.filename,
 
       initialPos: { top: nc.top, left: nc.left },
       initialSize: { width: nc.width, height: nc.height },
 
-      // Keep grid object for backward compatibility;
-      // authoritative snapping is applied below via API.
       grid: {
         enabled: !!this.opts.gridEnabled,
         size: { x: this.opts.gridSize, y: this.opts.gridSize },
@@ -866,6 +1112,11 @@ class ASCHARTMANAGER {
       newInsts.forEach((inst) => {
         this._applyBounds(inst, nc);
         this._applyAutoRefresh(inst, seconds);
+        try {
+          if (typeof inst.setTimeRange === 'function') inst.setTimeRange(this._timeRange);
+          inst._gmLastTimeRangeSig = JSON.stringify(this._timeRange || {});
+          inst._gmLastTimeQ = timeQ;
+        } catch (_) {}
       });
 
       // Apply snapping via the jQuery plugin API to ALL charts in this pane
@@ -921,9 +1172,6 @@ class ASCHARTMANAGER {
   }
 
   // >>> SNAP application using jQuery plugin API:
-  // $pane.allskyChart('setSnapEnabled', bool)
-  // $pane.allskyChart('setSnapType', 'move' | 'end')
-  // $pane.allskyChart('setSnapSize', number | {x,y})
   _applySnapToPane($pane) {
     try {
       const enabled = !!this.opts.gridEnabled;
@@ -938,7 +1186,6 @@ class ASCHARTMANAGER {
     }
   }
 
-  // Persist when plugin notifies a change from its UI
   _onAutoRefreshChange(seconds, inst) {
     try {
       const secs = Math.max(0, parseInt(seconds, 10) || 0);
@@ -949,47 +1196,127 @@ class ASCHARTMANAGER {
     }
   }
 
-  /* ================= Title / ID helpers ================= */
-
-  _ensureTitleSpan(tabId) {
-    const $a = $(`#as-gm-tablist a[href="#${tabId}"]`);
-    if (!$a.length) return $();
-    let $title = $a.find('.tab-title');
-    if ($title.length) return $title;
-
-    const $clone = $a.clone();
-    $clone.find('.as-gm-tab-tools, i, .close, button').remove();
-    const text = ($clone.text() || '').trim() || 'Tab';
-    const $tools = $a.find('.as-gm-tab-tools').detach();
-    $a.empty().append(`<span class="tab-title">${$('<div>').text(text).html()}</span>`);
-    if ($tools.length) $a.append($tools);
-    return $a.find('.tab-title');
-  }
-
-  _getTabTitle(tabId) {
-    const $a = $(`#as-gm-tablist a[href="#${tabId}"]`);
-    if (!$a.length) return '';
-    const $title = this._ensureTitleSpan(tabId);
-    return ($title.text() || '').trim();
-  }
-
-  _setTabTitle(tabId, title) {
-    const $title = this._ensureTitleSpan(tabId);
-    if ($title.length) $title.text(title);
-  }
-
-  _renameTabIds(oldId, newId) {
-    if (!oldId || !newId || oldId === newId) return;
-    const $pane = $(`#${oldId}`);
-    const $link = $(`#as-gm-tablist a[href="#${oldId}"]`);
-    if ($pane.length) $pane.attr('id', newId);
-    if ($link.length) $link.attr('href', `#${newId}`);
-  }
-
   /* ================= Utils ================= */
 
   _debounce(fn, wait = 300) {
     let t;
     return (...args) => { clearTimeout(t); t = setTimeout(() => fn.apply(this, args), wait); };
+  }
+
+  /* ================= Global Time Range: helpers & apply ================= */
+
+  _resolveQuickRange(quick) {
+    const now = Math.floor(Date.now() / 1000);
+    const map = {
+      '1h': now - 3600,
+      '6h': now - 6 * 3600,
+      '24h': now - 24 * 3600,
+      '7d': now - 7 * 86400,
+      '30d': now - 30 * 86400
+    };
+    const from = map[quick] != null ? map[quick] : (now - 24 * 3600);
+    return { from, to: now };
+  }
+
+  // Always produce from/to — quick expands to absolute
+  _timeQueryString() {
+    const tr = this._timeRange || this.opts.timeDefaults || { mode:'quick', quick:'24h' };
+    let from, to;
+
+    if (tr.mode === 'range' && Number.isFinite(tr.from) && Number.isFinite(tr.to)) {
+      from = tr.from; to = tr.to;
+    } else {
+      const q = this._resolveQuickRange(tr.quick || '24h');
+      from = q.from; to = q.to;
+    }
+
+    if (from > to) { const tmp = from; from = to; to = tmp; }
+    return `&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`;
+  }
+
+  _cacheBust(url) {
+    if (!url) return url;
+    // strip previous _ts
+    url = url.replace(/([?&])_ts=\d+(&|$)/, (m,p1,p2)=> p2 ? p1 : '');
+    const ts = Date.now();
+    const sep = url.indexOf('?') === -1 ? '?' : '&';
+    return `${url}${sep}_ts=${ts}`;
+  }
+
+  _refreshInstOnce(inst) {
+    if (inst._gmRefreshScheduled) return;
+    inst._gmRefreshScheduled = true;
+    requestAnimationFrame(() => {
+      inst._gmRefreshScheduled = false;
+      if (typeof inst.refresh === 'function') inst.refresh();
+    });
+  }
+
+  _applyTimeRangeToAllPanes() {
+    const extra = this._timeQueryString();                // &from=...&to=...
+    const trSig = JSON.stringify(this._timeRange || {});  // signature
+
+    $('#as-gm-tablist-content .tab-pane').each((_, pane) => {
+      const $pane = $(pane);
+      const insts = ($pane.data('allskyChart_instances') || []).filter(Boolean);
+
+      insts.forEach((inst) => {
+        try {
+          const oldUrl = (inst.opts && inst.opts.configUrl) || '';
+
+          // strip old from/to
+          const withoutOldFT = oldUrl.replace(/([?&])(from|to)=[^&]*/g, '').replace(/[?&]$/, '');
+          const sep = withoutOldFT.indexOf('?') === -1 ? '?' : '&';
+          const withFT = extra ? (withoutOldFT + sep + extra.slice(1)) : withoutOldFT;
+
+          // add cache-buster so the server actually gives us fresh data
+          const newUrl = this._cacheBust(withFT);
+
+          const urlChanged = newUrl !== oldUrl;
+          const trChanged  = trSig !== inst._gmLastTimeRangeSig;
+
+          if (inst.opts) inst.opts.configUrl = newUrl;
+
+          // Inform plugin (if it supports client-side filtering)
+          if (typeof inst.setTimeRange === 'function') {
+            inst.setTimeRange(this._timeRange);
+          }
+
+          if (urlChanged || trChanged) {
+            inst._gmLastTimeRangeSig = trSig;
+            inst._gmLastTimeQ = extra;
+            this._refreshInstOnce(inst);
+          }
+        } catch (e) {
+          console.warn('apply time range failed:', e);
+        }
+      });
+    });
+  }
+
+  _initTimeRangeButton() {
+    const saved = this._timeRange || this.opts.timeDefaults || { mode: 'quick', quick: '24h', from: null, to: null };
+    const $btn = $('#as-tr-btn');
+    if (!$btn.length) return;
+
+    // Initialize Bootstrap 3 modal version (ensure the plugin file above is loaded)
+    try { $btn.timeRangeModal({ range: saved, modalTitle: 'Time range', dialogClass: '' /* or modal-sm / modal-lg */ }); } catch (e) {}
+
+    // Apply handler
+    $btn.on('tr.apply', (e, range) => {
+      this._timeRange = range;                  // store (absolute for quick)
+      this._applyTimeRangeToAllPanes();         // rewrite URLs + refresh
+      this._saveDebounced();                    // persist to server
+    });
+
+    // Clear handler (reset to Last 24h)
+    $btn.on('tr.clear', () => {
+      this._timeRange = { mode:'quick', quick:'24h', from:null, to:null };
+      this._applyTimeRangeToAllPanes();
+      this._saveDebounced();
+    });
+
+    // Optional: preview changes while editing
+    // $btn.on('tr.change', (e, range) => {});
   }
 }

@@ -469,14 +469,12 @@
         return built;
       });
 
-      console.log('[asHc] _buildSeries(array) ->', arr.map(function (s) { return { name: s.name, yAxis: s.yAxis, points: (s.data || []).length }; }));
       return $.Deferred().resolve(arr).promise();
     }
 
     var seriesObj = cfg.series || {};
     var keys = Object.keys(seriesObj);
     if (!keys.length) {
-      console.log('[asHc] _buildSeries(object): no keys -> []');
       return $.Deferred().resolve([]).promise();
     }
 
@@ -516,7 +514,6 @@
     return $.when.apply($, promises).then(function () {
       var out = Array.prototype.slice.call(arguments);
       if (promises.length === 1 && out.length && !out[0]) out = [arguments];
-      console.log('[asHc] _buildSeries(object) ->', out.map(function (s) { return { name: s.name, yAxis: s.yAxis, points: (s.data || []).length }; }));
       return out;
     });
   };
@@ -788,9 +785,6 @@
 
     this._applyTheme();
 
-    console.log('%c[asHc] FINAL HIGHCHARTS OPTIONS:', 'color: #00b3ff; font-weight: bold;');
-    try { console.log(JSON.stringify(options, null, 2)); } catch (e) { console.log(options); }
-
     this.chart = this.HC.chart(targetEl, options);
     this.$host.data('asHcChart', this.chart);
 
@@ -823,11 +817,6 @@
 
       if (reqSeries.length) this.chart.redraw();
 
-      try {
-        console.log('[asHc] CHART SERIES AFTER FIX:',
-          (this.chart.series || []).map(function (s) { return { name: s.name, yAxis: s.yAxis && s.yAxis.index }; })
-        );
-      } catch (_) {}
     } catch (e) {
       try { console.warn('[asHc] post-render series fix failed:', e); } catch (_) {}
     }
@@ -1481,12 +1470,6 @@
     return this._getConfig()
       .then((cfg) => {
 
-        console.log('[asHc] loaded cfg:', {
-          hasSeries: !!cfg.series,
-          seriesType: Array.isArray(cfg.series) ? 'array' : typeof cfg.series,
-          seriesLen: Array.isArray(cfg.series) ? cfg.series.length : (cfg.series ? Object.keys(cfg.series).length : 0)
-        });
-
         this.config = cfg;
         if ('main' in cfg) cfg.main = boolish(cfg.main);
 
@@ -1544,12 +1527,6 @@
           if (normalizeType(cfg.type) !== 'column' && normalizeType(cfg.type) !== 'pie') {
             options.xAxis = $.extend(true, { type: 'datetime' }, options.xAxis || {});
           }
-
-          try {
-            console.log('[asHc] FINAL series to render:',
-              options.series.map(function (s) { return { name: s.name, yAxis: s.yAxis, len: (s.data || []).length }; })
-            );
-          } catch (_) {}
 
           this._render(options, cfg);
           return this.chart;

@@ -1042,14 +1042,18 @@ class MODULEUTIL
      * Fetch full series of values
      * Returns: ['VAR' => [[ms,value], ...], ...]
      */
-    private function fetchSeriesData(PDO $pdo, string $table, array $variables, array $tooltips): array
+    private function fetchSeriesData(PDO $pdo, string $table, array $variables, array $tooltips, int $from, int $to): array
     {
         if (!$variables) return [];
 
         $tsCol = 'id';
 
         try {
-            $sql = "SELECT * from {$table} ORDER BY {$tsCol}";
+            $extra = "";
+            if ($from !== false and $to !== false) {
+                $extra = "WHERE timestamp BETWEEN {$from} AND  {$to}";
+            }
+            $sql = "SELECT * from {$table} {$extra} ORDER BY {$tsCol}";
             $stmt = $pdo->prepare($sql);
             $stmt->execute();
         } catch (PDOException $e) {
@@ -1284,6 +1288,9 @@ class MODULEUTIL
     function getGraphData(): array
     {
         $configPath = $_GET['filename'];
+        $from = isset($_GET['from']) ? $_GET['from'] : false;
+        $to = isset($_GET['to']) ? $_GET['to'] : false;
+
         /* Sanitize filename */
         $pdo = $this->makePdo();
 
@@ -1343,7 +1350,7 @@ class MODULEUTIL
         } else {
             if ($pdo !== false) {            
                 // full series
-                $dataByVar = $this->fetchSeriesData($pdo, $table, $variables, $tooltip);
+                $dataByVar = $this->fetchSeriesData($pdo, $table, $variables, $tooltip, $from, $to);
                 foreach ($keyToVar as $key => $var) {
                     unset($config['series'][$key]['variable']);
                     $config['series'][$key]['data'] = $dataByVar[$var] ?? [];

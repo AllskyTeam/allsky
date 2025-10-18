@@ -865,6 +865,7 @@
 "usage" : "capture",
 "carryforward" : true,
 "checkchanges" : true,
+"noreset" : true,
 "action" : "reload"
 },
 {
@@ -2077,6 +2078,7 @@
 "default" : "",
 "description" : "The type and model of your camera. Set automatically.",
 "label" : "NOT DISPLAYED IN WebUI",
+"noreset" : true,
 "type" : "text"
 },
 {
@@ -2096,6 +2098,7 @@
 "description" : "The computer running your allsky camera. Set automatically.",
 "label" : "NOT DISPLAYED IN WebUI",
 "type" : "text",
+"noreset" : true,
 "carryforward" : true
 },
 {
@@ -2162,6 +2165,7 @@
 "default" : "",
 "description" : "The overlay file to use during daytime",
 "label" : "NOT DISPLAYED IN WebUI",
+"noreset" : true,
 "type" : "text"
 },
 {
@@ -2170,13 +2174,14 @@
 "default" : "",
 "description" : "The overlay file to use during nighttime",
 "label" : "NOT DISPLAYED IN WebUI",
+"noreset" : true,
 "type" : "text"
 },
 
 {
-	"name" : "databasesettingsheader",
-	"label" : "Allsky Database Settings",
-	"type" : "header"
+"name" : "databasesettingsheader",
+"label" : "Allsky Database Settings",
+"type" : "header"
 },
 {
 "name" : "databasesubheader",
@@ -2184,72 +2189,75 @@
 "type" : "header-sub"
 },
 {
-	"name" : "enabledatabase",
-	"default" : true,
-	"description" : "Enable the Allsky database.<br>Many new features will not work if the database is disabled.",
-	"label" : "Enable Database",
-	"type" : "boolean",
-	"carryforward" : true,
-	"checkchanges" : true
+"name" : "enabledatabase",
+"default" : true,
+"description" : "Enable the Allsky database.<br>Many new features will not work if the database is disabled.",
+"label" : "Enable Database",
+"type" : "boolean",
+"carryforward" : true,
+"checkchanges" : true
 },
 {
-	"name" : "databasedatabase",
-	"default" : "allsky",
-	"description" : "The name of the database to use.",
-	"label" : "Database",
-	"type" : "text",
-	"carryforward" : true,
-	"optional" : true,
-	"source" : "${ALLSKY_ENV}"
+"name" : "databasedatabase",
+"default" : "allsky",
+"description" : "The name of the database to use.",
+"label" : "Database",
+"type" : "text",
+"carryforward" : true,
+"optional" : true,
+"source" : "${ALLSKY_ENV}"
 },
 {
-	"name" : "databasetype",
-	"default" : "sqlite",
-	"description" : "The type of database.<br>MySQL has more features but uses a lot more CPU and memory.",
-	"label" : "Database Type",
-	"type" : "select_text",
-	"carryforward" : true,
-	"optional" : true,
-	"options" : [
-		{
-			"value" : "mysql",
-			"label" : "MySQL"
-		},
-		{
-			"value" : "sqlite",
-			"label" : "SQLite"
-		}
-	]
+"name" : "databasetype",
+"default" : "sqlite",
+"description" : "The type of database.<br>MySQL has more features but uses a lot more CPU and memory.",
+"label" : "Database Type",
+"type" : "select_text",
+"carryforward" : true,
+"optional" : true,
+"options" : [
+	{
+		"value" : "mysql",
+		"label" : "MySQL"
+	},
+	{
+		"value" : "sqlite",
+		"label" : "SQLite"
+	}
+]
 },
 {
-	"name" : "databasehost",
-	"default" : "",
-	"description" : "(MySQL only) The IP address or hostname of the server running the database.<br>By default the database runs on your Pi.",
-	"label" : "Database Host",
-	"type" : "text",
-	"carryforward" : true,
-	"optional" : true,
-	"source" : "${ALLSKY_ENV}"
+"name" : "databasehost",
+"default" : "",
+"description" : "(MySQL only) The IP address or hostname of the server running the database.<br>By default the database runs on your Pi.",
+"label" : "Database Host",
+"type" : "text",
+"carryforward" : true,
+"optional" : true,
+"noreset" : true,
+"source" : "${ALLSKY_ENV}"
 },
 {
-	"name" : "databaseuser",
-	"default" : "",
-	"description" : "(MySQL only) The username used to connect to the database.",
-	"label" : "Database User",
-	"type" : "text",
-	"carryforward" : true,
-	"optional" : true,
-	"source" : "${ALLSKY_ENV}"
+"name" : "databaseuser",
+"default" : "",
+"description" : "(MySQL only) The username used to connect to the database.",
+"label" : "Database User",
+"type" : "text",
+"carryforward" : true,
+"optional" : true,
+"noreset" : true,
+"source" : "${ALLSKY_ENV}"
 },
 {
-	"name" : "databasepassword",
-	"default" : "",
-	"description" : "(MySQL only) The password used to connect to the database.",
-	"label" : "User Password",
-	"type" : "text",
-	"carryforward" : true,
-	"optional" : true,
-	"source" : "${ALLSKY_ENV}"
+"name" : "databasepassword",
+"default" : "",
+"description" : "(MySQL only) The password used to connect to the database.",
+"label" : "User Password",
+"type" : "text",
+"carryforward" : true,
+"optional" : true,
+"noreset" : true,
+"source" : "${ALLSKY_ENV}"
 },
 
 {

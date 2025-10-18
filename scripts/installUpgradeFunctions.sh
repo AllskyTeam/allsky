@@ -468,7 +468,6 @@ function update_array_field()
 			update_json_file "${F}" "${NEW_VALUE}" "${FILE}"
 			if [[ $? -ne 0 ]]; then
 				echo "WARNING: Unable to update '${VALUE}' to '${NEW_VALUE} in '${FILE}'." >&2
-else echo "Updated '${VALUE}' to '${NEW_VALUE} in '${FILE}'." >&2
 			fi
 		fi
 	fi

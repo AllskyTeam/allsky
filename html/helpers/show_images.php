@@ -12,8 +12,8 @@ include_once('../includes/functions.php');
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<meta name="description" content="WebUI 'helper' page to display images">
-	<title>Display Images</title>
+	<meta name="description" content="WebUI 'helper' page to display images or videos">
+	<title>Display Images/Videos</title>
 
 	<link href="../documentation/css/custom.css" rel="stylesheet">
 	<link href="../documentation/css/documentation.css" rel="stylesheet">
@@ -25,11 +25,12 @@ include_once('../includes/functions.php');
 $day = getVariableOrDefault($_REQUEST, 'day', "");
 $pre = getVariableOrDefault($_REQUEST, 'pre', "");
 $type = getVariableOrDefault($_REQUEST, 'type', "");
+$filetype = getVariableOrDefault($_REQUEST, 'filetype', "picture");
 
 // Prepend "X" to the file name prefix so ListFileType() looks for files whose
 // names are "${pre}.*", rather than "${pre}-YYYYMMDD.*".
 // true == list the file names
-ListFileType("", "X${pre}", $type, "picture", true); 
+ListFileType("", "X${pre}", $type, $filetype, true); 
 ?>
 
 </body>

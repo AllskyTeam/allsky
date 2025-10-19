@@ -118,7 +118,7 @@ The <span class="WebUILink">Image Stretch</span> helper tool
 aids you in determining the best settings to stretch an image.
 </p>
 
-<details OPEN><summary></summary>
+<details><summary></summary>
 <p>
 If you want to lighten parts of your image to bring out details
 you can "stretch" your images.
@@ -184,6 +184,69 @@ The last image has a Stretch Amount of 20, which is way too much.
 </p>
 </details>
 
+<!-- =============================================================== -->
+<h2>Timelapse</h2>
+<p id="timelapse">
+The <span class="WebUILink">Timelapse</span> helper tool
+aids you in determining the best settings to use when creating timelapse videos.
+</p>
+
+<details><summary></summary>
+<p>
+This is a typical Timelapse Helper Tool page:
+</p>
+<p>
+<img src="timelapse_helper.png" class="imgCenter"
+	loading="lazy" width="75%" title="Timelapse Helper Tool">
+</p>
+<p>
+The following information is needed:
+<ul>
+	<li><strong>Use images from</strong><br>
+		This determines where the images are that will be used to create the timelapses.
+		By default yesterday's images are used.
+	<li><strong>Number of images to include in the videos</strong><br>
+		This determines how many images to use.
+		The more images you include the longer the video,
+		but the longer it'll take to create each timelapse.
+		The default number is a good place to start.
+	<li><span class="WebUISetting">Bitrate</span><strong> values to use</strong><br>
+		This determines the quality of a timelapse.
+		Higher bitrates include more information in each frame,
+		but also make the video larger.
+		<br>
+		Enter a space-separated list of bitrates.
+	<li><span class="WebUISetting">FPS</span><strong> values to use</strong><br>
+		This determines how many frames per second are displayed,
+		and hence how long the video is.
+		Larger numbers produce smoother, but larger videos.
+		<br>
+		Enter a space-separated list of bitrates.
+</ul>
+<blockquote>
+Note that the number of videos created is the number of
+bitrates times the number of FPS values, so if you have 3 bitrates and 5 FPS then
+15 videos will be created, which will take a LONG time.
+<br>
+We recommend initially leaving the FPS values to the default,
+which is your current <span class="WebUISetting">FPS</span> setting,
+and using 2 or 3 bitrates.
+Once you have the quality you desire, use that as the only bitrate
+and use 2 or 3 FPS values.
+</blockquote>
+</p>
+<hr>
+<p>
+A typical output is shown below.
+<br>
+Note that you won't see a difference in the images below - you'd need
+to play the videos.
+</p>
+<p>
+<img src="timelapse_helper_output.png" class="imgCenter imgBorder"
+	loading="lazy" width="85%" title="Timelapse Helper Tool output">
+</p>
+</details>
 
 </div><!-- Layout-main -->
 </div><!-- Layout -->

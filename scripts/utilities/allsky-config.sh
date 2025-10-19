@@ -214,7 +214,7 @@ function new_rpi_camera_info()
 function samba()
 {
 	if [[ ${ON_TTY} == "false" ]]; then
-		W_ "${ME} ${ME_F} must run from a terminal." >&2
+		W_ "${ME} ${ME_F} must be run from a terminal." >&2
 		return
 	fi
 
@@ -228,7 +228,7 @@ function samba()
 function move_images()
 {
 	if [[ ${ON_TTY} == "false" ]]; then
-		W_ "${ME} ${ME_F} must run from a terminal." >&2
+		W_ "${ME} ${ME_F} must be run from a terminal." >&2
 		return
 	fi
 
@@ -366,11 +366,6 @@ compare_stretches()
 # Help determine some timelapse settings.
 compare_timelapse()
 {
-	if [[ ${ON_TTY} == "false" ]]; then
-		W_ "${ME} ${ME_F} must run from a terminal." >&2
-		return
-	fi
-
 	# shellcheck disable=SC2068
 	compareTimelapse.sh "${@}"
 }
@@ -394,7 +389,7 @@ function change_tmp()
 	fi
 
 	if [[ ${ON_TTY} == "false" ]]; then
-		W_ "${ME} ${ME_F} must run from a terminal." >&2
+		W_ "${ME} ${ME_F} must be run from a terminal." >&2
 		return
 	fi
 
@@ -430,7 +425,7 @@ function change_swap()
 	fi
 
 	if [[ ${ON_TTY} == "false" ]]; then
-		W_ "${ME} ${ME_F} must run from a terminal." >&2
+		W_ "${ME} ${ME_F} must be run from a terminal." >&2
 		return
 	fi
 
@@ -659,7 +654,7 @@ if [[ -z ${FUNCTION_TO_EXECUTE} ]]; then
 	# No command given on command line so prompt for one.
 
 	if [[ ${ON_TTY} == "false" ]]; then
-		W_ "${ME} must run from a terminal or have all arguments included on the command line." >&2
+		W_ "${ME} must be run from a terminal or have all arguments included on the command line." >&2
 		exit 2
 	fi
 

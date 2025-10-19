@@ -399,7 +399,7 @@ function insertPage($p) {
 			break;
 		case "timelapse_settings":
 			include_once("helpers/$p.php");
-			// TODO: add function name						
+			timelapseSettings();
 			break;
 		case "constellation_overlay":
 			include_once("helpers/$p.php");
@@ -725,8 +725,8 @@ if (DHCP_ENABLED) {
 						insertMenuItem('check_allsky', "", "dropdown");
 						insertMenuItem('startrails_settings', "", "dropdown");
 						insertMenuItem('stretch_settings', "", "dropdown");
+						insertMenuItem('timelapse_settings', "", "dropdown");
 						// TODO: uncomment when scripts are created
-						// insertMenuItem('timelapse_settings', "", "dropdown");
 						// insertMenuItem('bad_images_settings', "", "dropdown");
 						// insertMenuItem('constellation_overlay', "", "dropdown");
 ?>

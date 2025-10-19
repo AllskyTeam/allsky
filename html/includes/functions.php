@@ -671,9 +671,27 @@ function ListFileType($dir, $imageFileName, $formalImageTypeName, $type, $listNa
 		if (count($imageTypes) == 0) {
 			echo "<span class='alert-warning'>There are no $formalImageTypeName for this day.</span>";
 		} else {
+			$num = 0;
 			foreach ($imageTypes as $imageType) {
 				$imageType_name = basename($imageType);
-				$fullFilename = "$images_dir/$chosen_day/$dir$imageType_name";
+				$pre = "$images_dir/$chosen_day/$dir";
+
+				if ($type == "picture") {
+				} else {		// video
+					$ext = pathinfo($imageType_name, PATHINFO_EXTENSION);
+					if ($ext != "mp4") continue;
+
+					$thumb = str_replace(".mp4", ".jpg", $imageType_name);
+					$thumb_file = ALLSKY_IMAGES . "/$chosen_day/$dir$thumb";
+					if (file_exists($thumb_file)) {
+						$thumb = "$pre$thumb";
+					} else {
+						$thumb = "";
+					}
+				}
+				$num += 1;
+
+				$fullFilename = "$pre$imageType_name";
 				if ($listNames) {
 					$class = "left center-text";
 					$name = "<br><span style='font-size: 125%;'>";
@@ -700,16 +718,22 @@ function ListFileType($dir, $imageFileName, $formalImageTypeName, $type, $listNa
 					}
 					echo "\n";
 				} else {	//video
+					if ($num > 1) echo "&nbsp;<br><br>";
 				    echo "<a href='$fullFilename'>";
+					if ($thumb !== "") {
+						$poster = "poster='$thumb$ts'";
+					} else {
+						$poster = "";
+					}
 				    echo "<div class='$class' style='width: 100%'>";
-					echo "<video width='85%' height='85%' controls>
+					echo "<video width='85%' height='85%' controls $poster>
 						<source src='$fullFilename$ts' type='video/mp4'>
 						Your browser does not support the video tag.
-					</video>
-					</div></a>";
+					</video>";
 					if ($listNames) {
 						echo $name;
 					}
+					echo "</div></a>";
 					echo "\n";
 				}
 			}

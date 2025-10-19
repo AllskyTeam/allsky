@@ -339,10 +339,10 @@ fi
 # Get some stats.
 
 # shellcheck disable=SC2086
-NUM_BITRATE=$( echo ${BITRATE_VALUES} | wc -w )
+# NUM_BITRATE=$( echo ${BITRATE_VALUES} | wc -w )
 # shellcheck disable=SC2086
-NUM_FPS=$( echo ${FPS_VALUES} | wc -w )
-NUM_TIMELAPSES=$(( NUM_BITRATE * NUM_FPS ))
+# NUM_FPS=$( echo ${FPS_VALUES} | wc -w )
+# NUM_TIMELAPSES=$(( NUM_BITRATE * NUM_FPS ))
 
 if [[ -z ${OUT_DIRECTORY} ]]; then
 	OUT_DIRECTORY="${d_OUT_DIRECTORY}"

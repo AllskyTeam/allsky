@@ -99,11 +99,11 @@
 											<i class="fas fa-brush"></i> <span class="caret"></span>
 										</button>
 										<ul class="dropdown-menu">
-											<li><a href="#" data-tool="freehand"><i class="fas fa-brush" title="Use a brush to draw"></i></a></li>
-											<li><a href="#" data-tool="feather"><i class="fa-solid fa-feather" title="Use a feather to draw"></i></a></li>
-											<li><a href="#" data-tool="square"><i class="fa-solid fa-square" title="Create a square"></i></a></li>
-											<li><a href="#" data-tool="filledPath"><i class="fa-solid fa-draw-polygon" title="Draw a shape"></i></a></li>
-											<li><a href="#" data-tool="circle"><i class="fa-solid fa-circle" title="Create a circle"></i></a></li>
+											<li><a href="#" data-tool="freehand"><i class="fas fa-brush" title="Use a brush to draw"></i> Freehand brush</a></li>
+											<li><a href="#" data-tool="square"><i class="fa-solid fa-square" title="Create a square"></i> Square</a></li>
+											<li><a href="#" data-tool="circle"><i class="fa-solid fa-circle" title="Create a circle"></i> Circle</a></li>
+											<li><a href="#" data-tool="filledPath"><i class="fa-solid fa-draw-polygon" title="Draw a shape"></i> Draw shape</a></li>
+											<li><a href="#" data-tool="feather"><i class="fa-solid fa-feather" title="Use a feather to draw"></i> Feather</a></li>
 										</ul>
 									</div>
 									<button class="allsky-mask-tool-button btn btn-default mr-0" id="allsky-mask-undoBtn" title="Undo"><i class="fa-solid fa-rotate-left"></i></button>
@@ -156,8 +156,8 @@
 								<div id="allsky-mask-container"></div>
 								</div>
 								<div class="modal-footer">
-									<button type="button" class="btn btn-default" id="allsky-mask-saveBtn" title="Save mask and close">Save</button>
-									<button type="button" class="btn btn-default" data-dismiss="modal" title="Close this window">Close</button>
+									<button type="button" class="btn btn-default btn-primary" id="allsky-mask-saveBtn" title="Save mask and close">Save</button>
+									<button type="button" class="btn btn-default btn-success" data-dismiss="modal" title="Close this window">Close</button>
 								</div>
 							</div>
 						</div>

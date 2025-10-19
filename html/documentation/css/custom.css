@@ -336,6 +336,26 @@ body.dark {
 	border-color: #6f888e;
 }
 
+.dark .panel-heading {
+	background: #2f2f2f !important;
+	color: white;
+	border-bottom: 1px solid #2f2f2f;
+}
+
+.dark .list-group-item {
+	background-color: #272727;
+	border: 1px solid #272727;
+	color: #fff;	
+}
+
+.dark .list-group-item.active, .dark .list-group-item.active:focus, .dark .list-group-item.active:hover {
+	z-index: 2;
+	color: #fff;
+	background-color: #337ab7;
+	border-color: #337ab7;
+}
+
+
 .highlightedBox {
 	border: 2px dashed red;
 	margin-top: 30px;

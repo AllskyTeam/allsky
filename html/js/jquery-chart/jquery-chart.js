@@ -102,11 +102,10 @@
   function normalizeType(t) {
     var s = (t || 'line').toLowerCase();
     if (s === 'guage') s = 'gauge';
-    if (s === 'spline') s = 'line';
-    if (s === 'doughnut' || s === 'donut') s = 'pie';
     if (s === 'indicator' || s === 'boolean') s = 'yesno'; // alias
     return s;
   }
+
   function boolish(v) { return (typeof v === 'string') ? v.toLowerCase() === 'true' : !!v; }
   function isNumber(x) { return typeof x === 'number' && !isNaN(x); }
   function toNumericX(x) {
@@ -182,6 +181,12 @@
       xAxis: { title: { text: null } },
       tooltip: { shared: true },
       plotOptions: { series: { turboThreshold: 0, marker: { enabled: false } } }
+    },
+    spline: {
+      chart: { type: 'spline', zooming: { type: 'x' } },
+      xAxis: { type: 'datetime', dateTimeLabelFormats: { day: '%Y-%m-%d', hour: '%H:%M' } },
+      lang: { noData: 'No data available' },
+      noData: { style: { fontWeight: 'bold', fontSize: '16px', color: '#666' } }
     },
     line: {
       chart: { type: 'spline', zooming: { type: 'x' } },
@@ -277,6 +282,8 @@
     // Config
     config: null,
     configUrl: null,
+    // NEW: optional AJAX spec (honored if provided; enables POST)
+    configAjax: null,
 
     // Metadata
     filename: null,
@@ -351,7 +358,7 @@
     this.filename = this.opts.filename || null;
 
     this.$wrapper = null;
-       this.$header = null;
+    this.$header = null;
     this.$title = null;
     this.$tools = null;
     this.$body = null;
@@ -377,6 +384,19 @@
     this._drag3d = { active: false, startX: 0, startY: 0, startAlpha: 0, startBeta: 0 };
     this._yesnoLabel = null;
     this._uid = Math.random().toString(36).slice(2);
+
+    // NEW: capture POST body if provided via configAjax
+    this._graphPostBody = null;
+    if (this.opts.configAjax && typeof this.opts.configAjax === 'object') {
+      if (this.opts.configAjax.method) {
+        this.opts.configAjax.method = String(this.opts.configAjax.method).toUpperCase();
+      }
+      if (this.opts.configAjax.data && typeof this.opts.configAjax.data === 'string') {
+        try { this._graphPostBody = JSON.parse(this.opts.configAjax.data); } catch (_e) { this._graphPostBody = null; }
+      } else if (this.opts.configAjax.data && typeof this.opts.configAjax.data === 'object') {
+        this._graphPostBody = $.extend(true, {}, this.opts.configAjax.data);
+      }
+    }
   }
 
   Plugin.prototype._bringToFront = function () {
@@ -447,7 +467,7 @@
     var resolvedChartSeriesType =
       rawType === 'area3d' ? 'area' :
       rawType === 'column3d' ? 'column' :
-      normType;
+      rawType;
 
     if (Array.isArray(cfg.series)) {
       var arr = cfg.series.map(function (s, i) {
@@ -832,36 +852,92 @@
   };
 
   /* ======================= Config source ======================= */
+  // NEW: build AJAX options honoring configAjax (POST) or legacy configUrl (GET)
+  Plugin.prototype._ajaxOptionsForConfig = function (cacheBust) {
+    var cu = this.opts.configUrl;
+    var ca = this.opts.configAjax;
+
+    // If caller supplied a full AJAX spec (e.g., POST body), prefer it.
+    if (ca && typeof ca === 'object') {
+      var ax = $.extend(true, {}, ca);
+      if (!ax.url) ax.url = cu || '';
+      if (!ax.method) ax.method = 'POST';
+      ax.method = String(ax.method).toUpperCase();
+      if (!ax.dataType) ax.dataType = 'json';
+      if (ax.method === 'POST' && !ax.contentType) ax.contentType = 'application/json; charset=utf-8';
+      if (ax.cache == null) ax.cache = false;
+
+      // Keep/refresh a parsed body so manager or plugin can update ranges
+      if (this._graphPostBody) {
+        if (cacheBust) this._graphPostBody._ts = Date.now();
+        ax.data = JSON.stringify(this._graphPostBody);
+      } else if (ax.data && typeof ax.data === 'string') {
+        // ensure cache-bust is present
+        if (cacheBust) {
+          try {
+            var body = JSON.parse(ax.data);
+            body._ts = Date.now();
+            ax.data = JSON.stringify(body);
+          } catch (_e) {}
+        }
+      } else if (ax.data && typeof ax.data === 'object') {
+        if (cacheBust) ax.data._ts = Date.now();
+      }
+      return ax;
+    }
+
+    // Legacy: configUrl can be a string or an $.ajax options object
+    if (typeof cu === 'string') {
+      if (!cacheBust) return { url: cu, method: 'GET', dataType: 'json', cache: false };
+      var sep = cu.indexOf('?') === -1 ? '?' : '&';
+      return { url: cu + sep + '_ts=' + Date.now(), method: 'GET', dataType: 'json', cache: false };
+    }
+
+    if (cu && typeof cu === 'object') {
+      var obj = $.extend(true, {}, cu);
+      // keep method if provided, else default to GET
+      obj.method = obj.method ? String(obj.method).toUpperCase() : 'GET';
+      if (!obj.dataType) obj.dataType = 'json';
+      if (obj.cache == null) obj.cache = false;
+
+      // cache-bust: add to data (for GET) or to body (for POST JSON)
+      if (cacheBust) {
+        if (obj.method === 'GET') {
+          obj.data = obj.data || {};
+          if (typeof obj.data === 'string') {
+            // leave strings alone (rare); GET string-params users should append _ts themselves
+          } else {
+            obj.data._ts = Date.now();
+          }
+        } else {
+          if (obj.contentType && obj.contentType.indexOf('application/json') !== -1) {
+            if (typeof obj.data === 'string') {
+              try { var b = JSON.parse(obj.data); b._ts = Date.now(); obj.data = JSON.stringify(b); } catch (_e) {}
+            } else if (obj.data && typeof obj.data === 'object') {
+              obj.data._ts = Date.now();
+              obj.data = JSON.stringify(obj.data);
+            }
+          }
+        }
+      }
+      return obj;
+    }
+
+    return { url: '', method: 'GET', dataType: 'json', cache: false };
+  };
+
   Plugin.prototype._getConfig = function () {
     if (this.opts.config && typeof this.opts.config === 'object') {
       return $.Deferred().resolve(this.opts.config).promise();
     }
-    var cu = this.opts.configUrl;
-    if (typeof cu === 'string') return $.getJSON(cu);
-    if (cu && cu.url) return $.ajax($.extend({ method: 'GET', dataType: 'json', cache: false }, cu));
-    return $.Deferred().reject(new Error('config or configUrl is required')).promise();
+    var ajaxOpts = this._ajaxOptionsForConfig(true); // initial fetch with cache-bust
+    return $.ajax(ajaxOpts);
   };
 
   Plugin.prototype._requestConfig = function () {
-    var cu = this.opts.configUrl;
-    if (!cu) return $.Deferred().reject(new Error('No configUrl set')).promise();
-
-    function withBuster(objOrUrl) {
-      var ts = Date.now();
-      if (typeof objOrUrl === 'string') {
-        var sep = objOrUrl.indexOf('?') === -1 ? '?' : '&';
-        return objOrUrl + sep + '_ts=' + ts;
-      } else {
-        var opts = $.extend(true, {}, objOrUrl);
-        opts.data = opts.data || {};
-        opts.data._ts = ts;
-        return opts;
-      }
-    }
-
-    if (typeof cu === 'string') return $.getJSON(withBuster(cu));
-    var opts = withBuster(cu);
-    return $.ajax($.extend({ method: 'GET', dataType: 'json', cache: false }, opts));
+    var ajaxOpts = this._ajaxOptionsForConfig(true); // refresh with cache-bust
+    if (!ajaxOpts.url) return $.Deferred().reject(new Error('No configUrl set')).promise();
+    return $.ajax(ajaxOpts);
   };
 
   /* ======================= Refresh (series-only) ======================= */
@@ -886,7 +962,7 @@
       return self.chart;
     }
 
-    if (self.opts.configUrl) {
+    if (self.opts.configUrl || self.opts.configAjax) {
       return self._requestConfig()
         .then(function (newCfg) {
           var packedSeriesPromise = self._buildSeries(newCfg);
@@ -926,7 +1002,7 @@
   Plugin.prototype._startProgress = function (durationMs) {
     this._ensureProgressEls();
     this._progressDurationMs = Math.max(50, durationMs || 1000);
-       this._progressStartTs = performance.now();
+    this._progressStartTs = performance.now();
     this.$progressBar.css({ width: '100%', left: 0 });
 
     var self = this;
@@ -1365,7 +1441,6 @@
       $sel.on('change', () => {
         var secs = parseInt($sel.val(), 10) || 0;
         this.setAutoRefresh(secs);
-        // If you want a callback, you can wire it here externally via event or option.
         if (typeof this.opts.onAutoRefreshChange === 'function') {
           try { this.opts.onAutoRefreshChange(secs, this); } catch (e) {}
         }
@@ -1540,13 +1615,11 @@
   };
 
   /* ======================= Snap controls (NEW) ======================= */
-  // Enable/disable snapping to grid
   Plugin.prototype.setSnapEnabled = function (enabled) {
     this.opts.grid = this.opts.grid || {};
     this.opts.grid.enabled = !!enabled;
     return this;
   };
-  // Choose when to snap: 'move' (during drag) or 'end' (on release)
   Plugin.prototype.setSnapType = function (type) {
     var t = (type || 'end').toString().toLowerCase();
     if (t !== 'move' && t !== 'end') t = 'end';
@@ -1554,7 +1627,6 @@
     this.opts.grid.snap = t;
     return this;
   };
-  // Set grid cell size; if only x is given, y=x
   Plugin.prototype.setSnapSize = function (x, y) {
     var gx, gy;
     if (typeof x === 'object' && x) { gx = x.x; gy = (x.y != null ? x.y : x.x); }
@@ -1564,6 +1636,21 @@
     if (!isFinite(gy) || gy <= 0) gy = gx;
     this.opts.grid = this.opts.grid || {};
     this.opts.grid.size = { x: gx, y: gy };
+    return this;
+  };
+
+  /* ======================= NEW public helpers ======================= */
+  // Allow host to replace the POST body (e.g., updated time range)
+  Plugin.prototype.setGraphPostBody = function (bodyObj) {
+    if (!bodyObj || typeof bodyObj !== 'object') return this;
+    this._graphPostBody = $.extend(true, {}, bodyObj);
+    if (this.opts.configAjax) {
+      this.opts.configAjax.data = JSON.stringify(this._graphPostBody);
+    }
+    return this;
+  };
+  Plugin.prototype.setConfigUrl = function (url) {
+    if (typeof url === 'string') this.opts.configUrl = url;
     return this;
   };
 

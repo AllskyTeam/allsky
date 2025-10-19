@@ -1,70 +1,71 @@
 #as-charts-toolbox-wrapper {
-    position: fixed;
-    top: 0px;
-    right: 0;
-    width: 400px;
-    height: 100%;
-    padding: 10px;
-    background-color: white;
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
-    transition: all 0.1s cubic-bezier(0.7, 0, 0.3, 1);
-    transform: translate3d(410px, 0, 0);
-    z-index: 1001;
+  position: fixed;
+  top: 0px;
+  right: 0;
+  width: 400px;
+  height: 100%;
+  padding: 10px;
+  background-color: white;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+  transition: all 0.1s cubic-bezier(0.7, 0, 0.3, 1);
+  transform: translate3d(410px, 0, 0);
+  z-index: 1001;
 }
 
 #as-charts-toolbox-wrapper.active {
-    transform: translate3d(0px, 0, 0);
+  transform: translate3d(0px, 0, 0);
 }
 
 .dark #as-charts-toolbox-wrapper {
-    background-color: #222;
+  background-color: #222;
 }
 
 .dark #as-charts-toolbox-wrapper .panel-heading {
-    background: #171717;
+  background: #171717;
 }
 
 .dark #as-charts-toolbox-wrapper .panel-heading .panel-title {
-    background: #171717;
-    color: white;
+  color: white;
 }
 
 .dark .panel-default>.panel-heading+.panel-collapse>.panel-body {
-    border-color: #0b0b0b;
+  border-color: #0b0b0b;
 }
 
 
 
 .as-gm-tab-tools {
-    margin-left: 10px;
-    opacity: 0;
-    visibility: hidden;
-    transition-delay: 0s;
-    transition: opacity 0.3s ease, visibility 0s linear;
+  margin-left: 10px;
+  opacity: 0;
+  visibility: hidden;
+  transition-delay: 0s;
+  transition: opacity 0.3s ease, visibility 0s linear;
 }
 
 li:hover .as-gm-tab-tools {
-    opacity: 1;
-    visibility: visible;
-    transition-delay: 0.5s;
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 0.5s;
 }
 
 #as-gm-tablist-content .tab-pane {
-    height: 95vh;
+  height: 95vh;
 }
 
 .dark .nav-tabs {
-    border-bottom: 1px solid #463f3f;
+  border-bottom: 1px solid #463f3f;
 }
 
 .dark .nav-tabs>li>a:hover {
-    border-color: #463f3f #463f3f #463f3f;
+  border-color: #463f3f #463f3f #463f3f;
 }
 
-.dark .nav-tabs>li.active>a, .dark .nav-tabs>li.active>a:focus, .dark .nav-tabs>li.active>a:hover {
-    background: #171717;
-    border: 1px solid #463f3f;
-    color: white;
+.dark .nav-tabs>li.active>a,
+.dark .nav-tabs>li.active>a:focus,
+.dark .nav-tabs>li.active>a:hover {
+  background: #171717;
+  border: 1px solid #463f3f;
+  color: white;
 }
 
 /* Prevent text selection during drag/resize */
@@ -78,9 +79,10 @@ li:hover .as-gm-tab-tools {
 /* Chart card */
 .as-hc-wrapper {
   position: absolute;
-  background: #fff;              /* opaque to avoid bleed-through */
+  background: #fff;
+  /* opaque to avoid bleed-through */
   border: 1px solid #ddd;
-  box-shadow: 0 2px 8px rgba(0,0,0,.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .15);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -96,21 +98,25 @@ li:hover .as-gm-tab-tools {
   border-bottom: 1px solid #ddd;
   font-weight: 600;
   line-height: 20px;
-  cursor: move;                  /* drag handle */
+  cursor: move;
+  /* drag handle */
   user-select: none;
 }
+
 .as-hc-title {
   flex: 1 1 auto;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
 .as-hc-tools {
   display: flex;
   align-items: center;
   gap: 8px;
   cursor: default;
 }
+
 .as-hc-btn {
   display: inline-flex;
   align-items: center;
@@ -122,14 +128,17 @@ li:hover .as-gm-tab-tools {
   cursor: pointer;
   border: 1px solid #ccc;
 }
+
 .as-hc-refresh-btn {
   color: #337ab7;
   border-color: #b9d3ea;
 }
+
 .as-hc-delete-btn {
   color: #d9534f;
   border-color: #e6b0ad;
 }
+
 .as-hc-tools select.as-hc-autorefresh {
   padding: 2px 6px;
   border: 1px solid #ccc;
@@ -145,14 +154,17 @@ li:hover .as-gm-tab-tools {
   position: relative;
   width: 100%;
   height: 100%;
-  background: #fff;              /* opaque */
+  background: #fff;
+  /* opaque */
 }
+
 .as-hc-inner {
   position: relative;
   width: 100%;
   height: 100%;
   z-index: 1;
-  background: #fff;              /* opaque */
+  background: #fff;
+  /* opaque */
 }
 
 /* Resize handle (bottom-right) */
@@ -163,11 +175,9 @@ li:hover .as-gm-tab-tools {
   width: 15px;
   height: 15px;
   cursor: se-resize;
-  background: linear-gradient(
-    135deg,
-    transparent 14px,
-    rgba(0,0,0,.25) 14px
-  );
+  background: linear-gradient(135deg,
+      transparent 14px,
+      rgba(0, 0, 0, .25) 14px);
   border-top-left-radius: 4px;
   opacity: .85;
   z-index: 5;
@@ -179,16 +189,20 @@ li:hover .as-gm-tab-tools {
   animation: as-hc-spin 1s linear infinite;
   will-change: transform;
 }
+
 @keyframes as-hc-spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Optional visual grid on the pane */
 .as-grid-bg {
   background-image:
-    linear-gradient(to right, rgba(0,0,0,.06) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(0,0,0,.06) 1px, transparent 1px);
-  background-size: 24px 24px; /* match grid.size */
+    linear-gradient(to right, rgba(0, 0, 0, .06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, .06) 1px, transparent 1px);
+  background-size: 24px 24px;
+  /* match grid.size */
 }
 
 /* ===== Dark mode for chart card header + tools ===== */
@@ -213,11 +227,13 @@ body.dark .as-hc-btn {
   color: #e6e6e6;
   border-color: #555;
 }
+
 body.dark .as-hc-btn:hover {
   background: #333333;
   border-color: #666;
   color: #ffffff;
 }
+
 body.dark .as-hc-btn:active {
   background: #262626;
   border-color: #555;
@@ -228,12 +244,15 @@ body.dark .as-hc-refresh-btn {
   color: #a8c9ff;
   border-color: #4a6ea8;
 }
+
 body.dark .as-hc-refresh-btn:hover {
   color: #d2e3ff;
   border-color: #5b84c8;
 }
+
 body.dark .as-hc-refresh-btn.loading {
-  opacity: 0.7; /* spin anim already handled */
+  opacity: 0.7;
+  /* spin anim already handled */
 }
 
 /* Delete (destructive) */
@@ -241,6 +260,7 @@ body.dark .as-hc-delete-btn {
   color: #ff9fa0;
   border-color: #a34a48;
 }
+
 body.dark .as-hc-delete-btn:hover {
   color: #ffc2c3;
   border-color: #be5a58;
@@ -252,11 +272,13 @@ body.dark .as-hc-tools select.as-hc-autorefresh {
   color: #eaeaea;
   border-color: #555;
 }
+
 body.dark .as-hc-tools select.as-hc-autorefresh:focus {
   outline: none;
   box-shadow: 0 0 0 2px rgba(104, 153, 255, 0.35);
   border-color: #6a90ff;
 }
+
 /* optional: dropdown options (Chrome/Edge/WebKit) */
 body.dark .as-hc-tools select.as-hc-autorefresh option {
   background: #242424;
@@ -265,28 +287,29 @@ body.dark .as-hc-tools select.as-hc-autorefresh option {
 
 /* Resize handle contrast on dark */
 body.dark .as-hc-resize {
-  background: linear-gradient(
-    135deg,
-    transparent 14px,
-    rgba(255,255,255,.28) 14px
-  );
+  background: linear-gradient(135deg,
+      transparent 14px,
+      rgba(255, 255, 255, .28) 14px);
 }
 
 /* Optional: darker grid lines for the tab pane visual grid */
 body.dark .as-grid-bg {
   background-image:
-    linear-gradient(to right, rgba(255,255,255,.08) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255,255,255,.08) 1px, transparent 1px);
+    linear-gradient(to right, rgba(255, 255, 255, .08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, .08) 1px, transparent 1px);
 }
+
 /* Light (default) */
 .as-hc-wrapper {
-  border: 1px solid #ddd; /* already present */
+  border: 1px solid #ddd;
+  /* already present */
 }
 
 /* Dark */
 body.dark .as-hc-wrapper {
-  border-color: #3a3a3a !important;   /* darker border */
-  box-shadow: 0 2px 8px rgba(255,255,255,.05) !important;
+  border-color: #3a3a3a !important;
+  /* darker border */
+  box-shadow: 0 2px 8px rgba(255, 255, 255, .05) !important;
 }
 
 .highcharts-tooltip,
@@ -315,16 +338,173 @@ body.dark .as-hc-wrapper {
 
 .noselect {
   user-select: none;
-  -webkit-user-select: none; /* Safari */
-  -moz-user-select: none;    /* Firefox */
-  -ms-user-select: none;     /* IE10+/Edge */
+  -webkit-user-select: none;
+  /* Safari */
+  -moz-user-select: none;
+  /* Firefox */
+  -ms-user-select: none;
+  /* IE10+/Edge */
 }
 
-.fs-10 { font-size: 10px; }
-.fs-12 { font-size: 12px; }
-.fs-14 { font-size: 14px; }
-.fs-16 { font-size: 16px; }
-.fs-18 { font-size: 18px; }
-.fs-20 { font-size: 20px; }
-.fs-24 { font-size: 24px; }
-.fs-32 { font-size: 32px; }
+.fs-10 {
+  font-size: 10px;
+}
+
+.fs-12 {
+  font-size: 12px;
+}
+
+.fs-14 {
+  font-size: 14px;
+}
+
+.fs-16 {
+  font-size: 16px;
+}
+
+.fs-18 {
+  font-size: 18px;
+}
+
+.fs-20 {
+  font-size: 20px;
+}
+
+.fs-24 {
+  font-size: 24px;
+}
+
+.fs-32 {
+  font-size: 32px;
+}
+
+.as-cm-entry-actions .btn {
+  min-width: 28px;
+  padding: 2px 6px;
+}
+
+.as-cm-entry-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Designer CSS */
+/* Chart Designer core styles */
+.ascd-modal .modal-dialog {
+  width: 1320px;
+  max-width: 98%;
+  height: auto;
+}
+
+.ascd-modal .modal-content {
+  height: auto;
+}
+
+.ascd-modal .modal-body {
+  max-height: 850px;
+  overflow-y: auto;
+}
+
+@media (max-width: 1400px) {
+  .ascd-modal .modal-dialog {
+    width: 98%;
+  }
+}
+
+.ascd-drop .ascd-badge {
+  cursor: default;
+}
+
+.ascd-y-columns {
+  display: flex;
+  gap: 8px;
+}
+
+.ascd-y-col {
+  flex: 1;
+  min-width: 0;
+}
+
+.ascd-fixed-x {
+  padding: 6px 8px;
+  border-radius: 4px;
+}
+
+.ascd-measure-pill {
+  margin: 3px 0;
+}
+
+.ascd-measure-pill .label {
+  display: inline-block;
+  cursor: move;
+}
+
+#finalJson {
+  white-space: pre;
+  font-family: Menlo, Consolas, monospace;
+  font-size: 12px;
+}
+
+.ascd-thumb-toggle {
+  margin-top: 6px;
+}
+
+.ascd-thumb-help {
+  font-size: 11px;
+  color: #777;
+  margin-top: 2px;
+}
+
+#ascd-preview {
+  min-height: 320px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 6px;
+  max-width: 100%;
+  margin: 0 auto 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Yes/No label */
+.yesno-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.yesno-chip {
+  font-size: 28px;
+  padding: 10px 18px;
+  border-radius: 6px;
+  font-weight: 700;
+  letter-spacing: .5px;
+}
+
+.yes-chip {
+  background: #5cb85c;
+  color: #fff;
+}
+
+.no-chip {
+  background: #d9534f;
+  color: #fff;
+}
+
+/* Dev panel */
+.ascd-dev pre {
+  max-height: 220px;
+  overflow: auto;
+  font-size: 11px;
+}
+
+.ascd-dev .panel-heading .btn {
+  margin-left: 6px;
+}
+
+/* End Deisgner css */

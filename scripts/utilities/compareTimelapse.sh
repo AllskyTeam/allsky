@@ -343,7 +343,6 @@ NUM_BITRATE=$( echo ${BITRATE_VALUES} | wc -w )
 # shellcheck disable=SC2086
 NUM_FPS=$( echo ${FPS_VALUES} | wc -w )
 NUM_TIMELAPSES=$(( NUM_BITRATE * NUM_FPS ))
-ON_TIMELAPSE=0
 
 if [[ -z ${OUT_DIRECTORY} ]]; then
 	OUT_DIRECTORY="${d_OUT_DIRECTORY}"
@@ -392,7 +391,6 @@ for BITRATE in ${BITRATE_VALUES}
 do
 	for FPS in ${FPS_VALUES}
 	do
-		(( ON_TIMELAPSE++ ))
 		OUTPUT_FILE="${OUT_DIRECTORY}/timelapse-fps_${FPS}-bitrate_${BITRATE}.mp4"
 
 # TODO: determine time to create first timelapse,
@@ -409,9 +407,17 @@ do
 			echo "Created '${OUTPUT_FILE}' with FPS ${FPS} and Bitrate ${BITRATE}."
 
 			# Create a "poster" for it.
+			POSTER="${OUTPUT_FILE/.mp4/.jpg}"
 ###				-filter:v scale="${THUMBNAIL_SIZE_X:-100}:-1" \
-			ffmpeg -loglevel error -ss "00:00:01" -i "${OUTPUT_FILE}" \
-				-frames:v 1 "${OUTPUT_FILE/.mp4/.jpg}"
+			ffmpeg -loglevel error -ss "00:00:00.2" -i "${OUTPUT_FILE}" \
+				-frames:v 1 "${POSTER}"
+			if [[ $? -eq 0 ]]; then
+				# Add text
+				   TEXT="FPS:     ${FPS}"
+			 	TEXT+="\nBitrate: ${BITRATE}k"
+				# 200 px from bottom to avoid video playback controls
+				addTextToImage --stroke-width 1 --y -200 "${POSTER}" "${POSTER}" "${TEXT}" 2>&1
+			fi
 		else
 			E_ "Unable to make timelapse for FPS ${FPS} and bitrate ${BITRATE}:\n${ERR}"
 		fi

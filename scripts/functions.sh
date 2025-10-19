@@ -1582,6 +1582,7 @@ addTextToImage()
 	local POINT_SIZE=""
 	local FONT="${ALLSKY_OVERLAY}/system_fonts/Courier_New_Bold.ttf"
 	local STROKE="black"
+	local STROKE_WIDTH="3"
 	local FILL="yellow"
 	local X="20"
 	local Y=""
@@ -1602,6 +1603,10 @@ addTextToImage()
 				STROKE="${2}"
 				shift
 				;;
+			--stroke-width)
+				STROKE_WIDTH="${2}"
+				shift
+				;;
 			--fill)
 				FILL="${2}"
 				shift
@@ -1619,6 +1624,9 @@ addTextToImage()
 				# same time to avoid calling "convert" twice.
 				EXTRA_ARGS="${2}"
 				shift
+				;;
+			--*)
+				E_ "Unknown argument: ${ARG}" >&2
 				;;
 			*)
 				break;
@@ -1639,11 +1647,16 @@ addTextToImage()
 
 	# If the location wasn't specified put text in bottom left.
 	[[ -z ${POINT_SIZE} ]] && POINT_SIZE="$( echo "${WIDTH} / 33" | bc )"
-	[[ -z ${Y} ]] && Y=$(( HEIGHT - ( POINT_SIZE * 2) ))
+	if [[ -z ${Y} ]]; then
+		Y=$(( HEIGHT - ( POINT_SIZE * 2) ))
+	elif [[ ${Y} -lt 0 ]]; then
+		# relative to the bottom of the image
+		Y=$(( HEIGHT + Y - ( POINT_SIZE * 2) ))
+	fi
 
 	#shellcheck disable=SC2086
 	convert ${EXTRA_ARGS} -font "${FONT}" -pointsize "${POINT_SIZE}" \
-		-fill "${FILL}" -stroke "${STROKE}" -strokewidth 3 \
+		-fill "${FILL}" -stroke "${STROKE}" -strokewidth "${STROKE_WIDTH}" \
 		-annotate "+${X}+${Y}" "${TEXT}" \
 		"${IN_IMAGE}" "${OUT_IMAGE}" 2>&1
 }

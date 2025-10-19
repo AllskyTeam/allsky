@@ -6,7 +6,7 @@
 
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$(dirname "${BASH_ARGV0}")/../.." )"
 ME="$( basename "${BASH_ARGV0}" )"
-COMMAND_LINE="${@}"
+COMMAND_LINE="${*}"
 
 #shellcheck source-path=.
 source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
@@ -163,7 +163,7 @@ fi
 if [[ -z ${IN_DIRECTORY} ]]; then
 	#### Get source of images.
 	echo "Where should the images to make the timelapses come from?"
-	if [[ -z ${d_IN_DIRECTORY} ]] then
+	if [[ -z ${d_IN_DIRECTORY} ]]; then
 		NO_MSG="You MUST enter something since there is no default directory."
 		echo "${NO_MSG}"
 	else
@@ -183,7 +183,7 @@ if [[ -z ${IN_DIRECTORY} ]]; then
 		read -r x
 
 		if [[ -z ${x} ]]; then
-			if [[ -z ${d_IN_DIRECTORY} ]] then
+			if [[ -z ${d_IN_DIRECTORY} ]]; then
 				E_ "${NO_MSG}; try again" >&2
 				continue;
 			fi

@@ -1,6 +1,7 @@
 <?php
 
 function DisplayLiveView($image_name, $delay, $daydelay, $daydelay_postMsg, $nightdelay, $nightdelay_postMsg, $darkframe) {
+	global $focusMode;
 	global $showUpdatedMessage;
 	global $pageHeaderTitle, $pageIcon;
 
@@ -14,12 +15,15 @@ function DisplayLiveView($image_name, $delay, $daydelay, $daydelay_postMsg, $nig
 
 	if ($darkframe) {
 		$myStatus->addMessage('Currently capturing dark frames. You can turn this off in the Allsky Settings page.');
+	} else if ($focusMode) {
+		$msg =  "Images updated as often as possible when in Focus Mode";
+		$myStatus->addMessage($msg, "message", false);
 	} else if ($showUpdatedMessage) {
 		$s =  number_format($daydelay);
 		$msg =  "Daytime images updated every $s seconds$daydelay_postMsg,";
 		$s =  number_format($nightdelay);
 		$msg .= " nighttime every $s seconds$nightdelay_postMsg";
-		$myStatus->addMessage("$msg", "message", false);
+		$myStatus->addMessage($msg, "message", false);
 	}
 ?>
 

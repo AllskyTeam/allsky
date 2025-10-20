@@ -148,6 +148,7 @@ $endSetting = "XX_END_XX";
 $saveChangesLabel = "Save changes";		// May be overwritten
 $forceRestart = false;					// Restart even if no changes?
 $hostname = null;
+$focusMode = false;
 
 $test_directory = "test";	// directories that start with this are "non-standard"
 
@@ -199,7 +200,7 @@ function update_allsky_status($newStatus) {
 	}
 }
 
-function output_allsky_status() {
+function get_allsky_status() {
 	global $allsky_status, $allsky_status_timestamp;
 
 	$retMsg = "";
@@ -210,6 +211,14 @@ function output_allsky_status() {
 	} else {
 		$allsky_status = getVariableOrDefault($s, 'status', "Unknown");
 		$allsky_status_timestamp = getVariableOrDefault($s, 'timestamp', null);
+	}
+}
+
+function output_allsky_status() {
+	global $allsky_status, $allsky_status_timestamp, $focusMode;
+
+	if ($allsky_status === null) {
+		get_allsky_status();		// sets global variables
 	}
 
 	if ($allsky_status_timestamp === null) {
@@ -228,10 +237,17 @@ function output_allsky_status() {
 			$class = "alert-warning";
 		}
 	}
-	return("<span class='nowrap $class' $title>Status: $allsky_status</span><br>");
+
+	if ($focusMode) {
+		$f = " - FOCUS MODE";
+	} else {
+		$f = "";
+	}
+	return("<span class='nowrap $class' $title>Status: $allsky_status$f</span><br>");
 }
 
 function initialize_variables($website_only=false) {
+	global $focusMode;
 	global $status;
 	global $image_name;
 	global $showUpdatedMessage, $delay, $daydelay, $daydelay_postMsg, $nightdelay, $nightdelay_postMsg;
@@ -244,6 +260,8 @@ function initialize_variables($website_only=false) {
 	global $hostname;
 
 	$settings_array = readSettingsFile();
+
+	$focusMode = getVariableOrDefault($settings_array, 'focusmode', false);
 
 	// See if there are any Website configuration files.
 	// The "has" variables just mean the associated configuration file exists,
@@ -352,6 +370,14 @@ function initialize_variables($website_only=false) {
 	// Lessen the delay between a new picture and when we check.
 	$delay /= 5;
 	$delay = max($delay, 2 * $ms_per_sec);
+	if ($focusMode) {
+		// In focusMode update the image very quickly.
+		// This overrides the code above.
+# TODO: Is 1/2 sec ok?
+		$delay = 0.5 * $ms_per_sec;
+		$daydelay = $delay;
+		$nightdelay = $delay;
+	}
 
 	exec("hostname -f", $hostarray);
 	$hostname = $hostarray[0];

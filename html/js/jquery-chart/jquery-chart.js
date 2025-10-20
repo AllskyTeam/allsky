@@ -1,19 +1,21 @@
 /*!
  * allskyChart — draggable/resizable Highcharts cards with toolbar + THEMES + series-only refresh
- * Live theme switching: reacts to body.dark (via MutationObserver)
- * Auto-refresh progress: 1px line at header bottom that starts FULL and shrinks LEFT until next refresh
- * Notifies host on move/resize (boundschange) and on delete (deleted)
- * Supports: line, column, column3d, gauge, area3d, pie, yesno
- * Requires: jQuery, Highcharts, highcharts-more (gauge), highcharts-3d (area3d/column3d),
- *           and (optionally) modules/no-data-to-display
+ * - Theme aware (auto switches using body.dark via MutationObserver)
+ * - Auto-refresh progress indicator (1px shrinking bar)
+ * - Emits events on move/resize (boundschange) and delete (deleted)
+ * - Supports multiple chart types (line/column/3D/gauge/area3d/pie/yesno)
+ * - Depends on: jQuery, Highcharts (+ highcharts-more, highcharts-3d, optional no-data-to-display)
  */
 (function ($) {
   'use strict';
 
   var PLUGIN = 'allskyChart';
-  var INST_KEY = PLUGIN + '_instances';  var Z_STACK_NEXT = 1000;
+  var INST_KEY = PLUGIN + '_instances';
+  var Z_STACK_NEXT = 1000; // for bringing active cards to front
 
-  /* ======================= THEMES ======================= */
+  /* ======================= THEMES =======================
+   * Two Highcharts theme presets. Active theme is tied to `body.dark`.
+   */
   var darkTheme = {
     colors: ['#8087E8', '#A3EDBA', '#F19E53', '#6699A1', '#E1D369', '#87B4E7', '#DA6D85', '#BBBAC5'],
     chart: {
@@ -87,7 +89,9 @@
   function isDarkMode() { return document.body.classList.contains('dark'); }
   function getActiveTheme() { return isDarkMode() ? darkTheme : lightTheme; }
 
-  /* ======================= Helpers ======================= */
+  /* ======================= Helpers =======================
+   * Small utilities for deep merge, type normalization, and data coercion.
+   */
   function deepMerge() {
     var args = Array.prototype.slice.call(arguments), out = {};
     args.forEach(function (src) {
@@ -102,12 +106,14 @@
   function normalizeType(t) {
     var s = (t || 'line').toLowerCase();
     if (s === 'guage') s = 'gauge';
-    if (s === 'indicator' || s === 'boolean') s = 'yesno'; // alias
+    if (s === 'indicator' || s === 'boolean') s = 'yesno'; // alias to yes/no indicator
     return s;
   }
 
   function boolish(v) { return (typeof v === 'string') ? v.toLowerCase() === 'true' : !!v; }
   function isNumber(x) { return typeof x === 'number' && !isNaN(x); }
+
+  // Convert ISO date strings to numeric timestamps for Highcharts
   function toNumericX(x) {
     if (typeof x === 'number') return x;
     if (typeof x === 'string') {
@@ -116,9 +122,11 @@
     }
     return x;
   }
+
+  // Normalize a *series data array* based on chart type expectations
   function normalizePointsForType(type, data) {
     var t = normalizeType(type);
-    if (t === 'gauge') {
+    if (t === 'gauge') { // gauge takes a single numeric value
       if (isNumber(data)) return [data];
       if (Array.isArray(data)) {
         var n = Number(data[0]);
@@ -126,7 +134,7 @@
       }
       return [0];
     }
-    if (t === 'yesno') {
+    if (t === 'yesno') { // boolean-ish => 0/1
       var v = 0;
       if (typeof data === 'boolean') v = data ? 1 : 0;
       else if (isNumber(data)) v = data ? 1 : 0;
@@ -143,15 +151,15 @@
     var isPie = (t === 'pie');
     if (!Array.isArray(data)) return [];
     return data.map(function (pt) {
-      if (typeof pt === 'number') return pt;
-      if (Array.isArray(pt)) {
+      if (typeof pt === 'number') return pt;                    // y
+      if (Array.isArray(pt)) {                                  // [x,y] or [name,value] for pie
         if (isPie) {
           var pname = (pt[0] != null) ? String(pt[0]) : '';
           return [pname, pt[1]];
         }
         return [toNumericX(pt[0]), pt[1]];
       }
-      if (pt && typeof pt === 'object') {
+      if (pt && typeof pt === 'object') {                       // point object
         var out = {};
         if (isPie) {
           if (typeof pt.name !== 'undefined') out.name = pt.name;
@@ -161,6 +169,7 @@
           if (typeof pt.x !== 'undefined') out.x = toNumericX(pt.x);
           if (typeof pt.y !== 'undefined') out.y = pt.y;
         }
+        // keep custom payload (used for thumbnails in tooltip)
         if (typeof pt.custom !== 'undefined') out.custom = pt.custom;
         else if (typeof pt.data !== 'undefined') out.custom = pt.data;
         ['color', 'id', 'selected', 'sliced', 'marker', 'dataLabels', 'name'].forEach(function (k) {
@@ -172,7 +181,9 @@
     });
   }
 
-  /* ======================= Defaults ======================= */
+  /* ======================= Defaults =======================
+   * High-level per-type defaults layered over a common base.
+   */
   var TYPE_DEFAULTS = {
     common: {
       title: { text: null },
@@ -267,6 +278,7 @@
     }
   };
 
+  // Per-type series defaults layered on top of TYPE_DEFAULTS
   var SERIES_DEFAULTS = {
     line: {}, column: {}, column3d: {},
     gauge: {
@@ -278,17 +290,19 @@
     area3d: {}, pie: {}, yesno: {}
   };
 
+  /* ======================= Public defaults =======================
+   * Plugin options (geometry, behavior, toolbar, grid, notifications, etc.)
+   */
   var defaults = {
-    // Config
-    config: null,
-    configUrl: null,
-    // NEW: optional AJAX spec (honored if provided; enables POST)
-    configAjax: null,
+    // Config source
+    config: null,              // direct config object
+    configUrl: null,           // URL or $.ajax options for GET
+    configAjax: null,          // $.ajax options for POST (preferred when using body payloads)
 
     // Metadata
     filename: null,
 
-    // Resolver
+    // Data resolver (used when cfg.series entries reference variables)
     fetchSeriesData: function (variable) {
       return $.Deferred().reject(new Error('fetchSeriesData not implemented for ' + variable)).promise();
     },
@@ -297,7 +311,7 @@
     onBeforeRender: null,
     onError: function (err) { if (console) console.error(err); },
 
-    // Initial geometry
+    // Initial geometry (position/size)
     initialPos: null,            // { top, left }
     initialSize: null,           // { width, height }
     top: undefined,
@@ -305,14 +319,14 @@
     width: undefined,
     height: undefined,
 
-    // Fallbacks
+    // Fallbacks / layout
     headerTitle: null,
     containment: 'host',
     startPos: { top: 20, left: 20 },
     minSize: { width: 320, height: 220 },
     resizerSize: 15,
 
-    // Drag/resize toggles
+    // Interactions
     enableDrag: true,
     enableResize: true,
 
@@ -333,30 +347,31 @@
     // Grid snap
     grid: { enabled: false, size: { x: 24, y: 24 }, snap: 'end', threshold: 0 },
 
-    // Notifications
+    // Notifications to host
     onBoundsChange: null,
     boundsEventName: 'asHc.boundschange',
     onDelete: null,
     deleteEventName: 'asHc.deleted',
 
-    // Resize parent height
+    // Resize/fill parent containers
     resizeParentHeight: false,
-
-    // Fit parent width
     fitParentWidth: false,
     resizeParentWidth: false // legacy alias
   };
 
-  /* ======================= Constructor ======================= */
+  /* ======================= Constructor =======================
+   * Initializes instance state and extracts POST body when configAjax is used.
+   */
   function Plugin(el, options) {
     this.$host = $(el);
     this.opts = $.extend(true, {}, defaults, options || {});
     this.HC = this.opts.highcharts;
 
-    this.config = null;
-    this.chart = null;
+    this.config = null;  // last fetched chart config
+    this.chart = null;   // Highcharts instance
     this.filename = this.opts.filename || null;
 
+    // DOM refs
     this.$wrapper = null;
     this.$header = null;
     this.$title = null;
@@ -369,6 +384,7 @@
     this.$progress = null;
     this.$progressBar = null;
 
+    // Observers/timers/state
     this._resizeObserver = null;
     this._innerObserver = null;
     this._themeObserver = null;
@@ -385,7 +401,7 @@
     this._yesnoLabel = null;
     this._uid = Math.random().toString(36).slice(2);
 
-    // NEW: capture POST body if provided via configAjax
+    // If configAjax is supplied, keep a parsed copy of the body so we can mutate it (time range, etc.)
     this._graphPostBody = null;
     if (this.opts.configAjax && typeof this.opts.configAjax === 'object') {
       if (this.opts.configAjax.method) {
@@ -399,12 +415,18 @@
     }
   }
 
+  // Top-most z-index for active card
   Plugin.prototype._bringToFront = function () {
     Z_STACK_NEXT += 1;
     if (this.$wrapper) this.$wrapper.css('z-index', Z_STACK_NEXT);
   };
 
-  /* ======================= Axis resolver ======================= */
+  /* ======================= Axis resolver =======================
+   * Builds yAxis array when cfg doesn't define it explicitly.
+   * - Skips for gauge/pie/yesno (no y-axes)
+   * - Uses cfg.axis keyed map if present
+   * - Otherwise, ensures enough axes to satisfy series[].yAxis indices
+   */
   Plugin.prototype._resolveYAxes = function (cfg) {
     var t = normalizeType(cfg.type);
     if (t === 'gauge' || t === 'pie' || t === 'yesno') return undefined;
@@ -433,7 +455,10 @@
     return axes;
   };
 
-  /* ======================= Series helpers ======================= */
+  /* ======================= Series helpers =======================
+   * Convert incoming series payloads into Highcharts-ready arrays/objects.
+   */
+  // Extracts the array-like data for the series, regardless of input shape
   function coerceSeriesDataForType(type, payload) {
     if (!Array.isArray(payload) && typeof payload === 'object' && payload) {
       if (Array.isArray(payload.data)) payload = payload.data;
@@ -459,6 +484,11 @@
     return normalizePointsForType(type, coerced);
   }
 
+  /**
+   * Build Highcharts series[] from cfg.series (array or object map).
+   * - Supports data inline, or deferred via fetchSeriesData(variable).
+   * - Handles special types (gauge/yesno) normalization.
+   */
   Plugin.prototype._buildSeries = function (cfg) {
     var self = this;
 
@@ -469,6 +499,7 @@
       rawType === 'column3d' ? 'column' :
       rawType;
 
+    // Array form: [{ name, data, ... }, ...]
     if (Array.isArray(cfg.series)) {
       var arr = cfg.series.map(function (s, i) {
         var data = Array.isArray(s.data) ? s.data : [];
@@ -492,12 +523,14 @@
       return $.Deferred().resolve(arr).promise();
     }
 
+    // Object form: { key: { name, data|variable, options } }
     var seriesObj = cfg.series || {};
     var keys = Object.keys(seriesObj);
     if (!keys.length) {
       return $.Deferred().resolve([]).promise();
     }
 
+    // Each key can fetch its own data (inline or via variable)
     var promises = keys.map(function (key) {
       var s = seriesObj[key] || {};
       var dataPromise;
@@ -531,6 +564,7 @@
       });
     });
 
+    // Collect results preserving promise arity
     return $.when.apply($, promises).then(function () {
       var out = Array.prototype.slice.call(arguments);
       if (promises.length === 1 && out.length && !out[0]) out = [arguments];
@@ -538,7 +572,9 @@
     });
   };
 
-  /* ======================= yAxis guard ======================= */
+  /* ======================= yAxis guard =======================
+   * Ensures chart has enough yAxis entries to cover series[].yAxis indices.
+   */
   Plugin.prototype._requiredYAxisCount = function (seriesArr, chartType) {
     var t = (chartType || '').toLowerCase();
     if (t === 'gauge' || t === 'pie' || t === 'yesno') return 0;
@@ -557,13 +593,15 @@
     }
   };
 
-  /* ======================= THEME & PROGRESS STYLES ======================= */
+  /* ======================= THEME & PROGRESS STYLES =======================
+   * Applies theme to the surrounding card and the Highcharts instance.
+   */
   Plugin.prototype._applyTheme = function () {
     var theme = getActiveTheme();
     var bg = (theme.chart && theme.chart.backgroundColor) || '#ffffff';
     var bb = { boxSizing: 'border-box' };
 
-    // Card chrome
+    // Card container styling
     if (this.$wrapper) {
       this.$wrapper.css($.extend({}, bb, {
         backgroundColor: bg,
@@ -574,12 +612,13 @@
     if (this.$body) this.$body.css($.extend({}, bb, { backgroundColor: bg }));
     if (this.$inner) this.$inner.css($.extend({}, bb, { backgroundColor: bg }));
 
-    // Progress bar color
+    // Progress bar color tracks theme
     if (this.$progressBar) {
       var color = (theme.colors && theme.colors[0]) || (isDarkMode() ? '#A3EDBA' : '#7cb5ec');
       this.$progressBar.css({ backgroundColor: color });
     }
 
+    // Update Highcharts with theme (avoid overriding axes/series wholesale)
     if (this.chart) {
       var safe = $.extend(true, {}, theme);
       delete safe.yAxis; delete safe.xAxis; delete safe.series;
@@ -617,7 +656,10 @@
     this._resizeParentToChart();
   };
 
-  /* ======================= Tooltip (HTML with image) ======================= */
+  /* ======================= Tooltip (HTML with image) =======================
+   * Custom formatter showing series name, datetime, value and optional thumbnail.
+   * Uses point.custom (or options.custom) to pass thumbnail URLs.
+   */
   function buildTooltipFormatter() {
     return function () {
       var p = this.point;
@@ -646,12 +688,15 @@
     };
   }
 
-  /* ======================= Options builder ======================= */
+  /* ======================= Options builder =======================
+   * Merge theme + type defaults + cfg.hc and set tooltip behavior.
+   */
   Plugin.prototype._baseOptions = function (cfg) {
     var type = normalizeType(cfg.type);
     var base = deepMerge({}, TYPE_DEFAULTS.common, TYPE_DEFAULTS[type] || {});
     base.chart = deepMerge({}, base.chart, { plotBackgroundColor: 'transparent' });
 
+    // Let resolver create yAxis if not fixed by type (undefined => keep caller's)
     var yAxes = this._resolveYAxes(deepMerge({}, base, cfg));
     if (yAxes !== undefined) base.yAxis = yAxes;
 
@@ -659,6 +704,7 @@
     var themedOptions = deepMerge({}, theme, base, (cfg.hc || {}));
     themedOptions.title = { text: null };
 
+    // HTML tooltip with formatter + toggle support
     themedOptions.tooltip = deepMerge({}, themedOptions.tooltip, {
       enabled: this._tooltipsEnabled,
       useHTML: true,
@@ -668,9 +714,11 @@
       formatter: buildTooltipFormatter()
     });
 
+    // For pies, tooltips are not shared by default
     if (type === 'pie' && (!cfg.hc || !cfg.hc.tooltip || typeof cfg.hc.tooltip.shared === 'undefined')) {
       themedOptions.tooltip = deepMerge({}, themedOptions.tooltip, { shared: false });
     }
+    // For yes/no indicator, remove legend/tooltip noise
     if (type === 'yesno') {
       themedOptions.tooltip = { enabled: false };
       themedOptions.legend = { enabled: false };
@@ -678,7 +726,9 @@
     return themedOptions;
   };
 
-  /* ======================= Parent height sync ======================= */
+  /* ======================= Parent height sync =======================
+   * Optionally set the parent container height to the card height.
+   */
   Plugin.prototype._resizeParentToChart = function () {
     var opt = this.opts && this.opts.resizeParentHeight;
     if (!opt) return;
@@ -709,7 +759,9 @@
     });
   };
 
-  /* ======================= Fit parent width ======================= */
+  /* ======================= Fit parent width =======================
+   * Optionally make card stretch to parent width (useful in grid layouts).
+   */
   function _resolveTarget($host, opt) {
     if (opt === true) return $host;
     if (typeof opt === 'object' && opt.selector) {
@@ -739,7 +791,9 @@
     this.$wrapper.css({ left: 0, right: 0, width: 'auto' });
   };
 
-  /* ======================= Yes/No indicator helpers ======================= */
+  /* ======================= Yes/No indicator helpers =======================
+   * Renders a centered label with configurable colors/text based on truthiness.
+   */
   Plugin.prototype._computeYesNo = function () {
     var cfg = this.config || {};
     var yesNoOpts = (cfg.hc && cfg.hc.yesNo) || {};
@@ -785,14 +839,15 @@
     }
   };
 
-  /* ======================= Render / Sizing ======================= */
+  /* ======================= Render / Sizing =======================
+   * Create/size the Highcharts instance within the card.
+   */
   Plugin.prototype._sizeToInner = function () {
     if (!this.chart || !this.$inner) return;
     var iw = Math.max(0, Math.floor(this.$inner.width()));
     var ih = Math.max(0, Math.floor(this.$inner.height()));
     if (iw && ih) this.chart.setSize(iw, ih, false);
     this._resizeParentToChart();
-
     this._updateYesNoLabel();
   };
 
@@ -805,9 +860,11 @@
 
     this._applyTheme();
 
+    // Build chart and store for external access
     this.chart = this.HC.chart(targetEl, options);
     this.$host.data('asHcChart', this.chart);
 
+    // Ensure series listed in cfg exist even if Highcharts stripped empties
     try {
       var reqSeries = Array.isArray(rawConfig && rawConfig.series)
         ? rawConfig.series
@@ -841,6 +898,7 @@
       try { console.warn('[asHc] post-render series fix failed:', e); } catch (_) {}
     }
 
+    // Final sizing/theming pass
     this._fitToParentWidth();
     this._sizeToInner();
     this.chart.reflow();
@@ -848,16 +906,20 @@
     this._resizeParentToChart();
     this._updateYesNoLabel();
 
+    // Enable dragging to rotate for 3D charts
     this._attach3dDragIfNeeded();
   };
 
-  /* ======================= Config source ======================= */
-  // NEW: build AJAX options honoring configAjax (POST) or legacy configUrl (GET)
+  /* ======================= Config source =======================
+   * Build ajax options for initial/refresh loads.
+   * - Prefers configAjax (POST body, cache-busting via _ts)
+   * - Supports legacy configUrl (string or $.ajax options)
+   */
   Plugin.prototype._ajaxOptionsForConfig = function (cacheBust) {
     var cu = this.opts.configUrl;
     var ca = this.opts.configAjax;
 
-    // If caller supplied a full AJAX spec (e.g., POST body), prefer it.
+    // Preferred: full $.ajax spec (often POST with JSON body)
     if (ca && typeof ca === 'object') {
       var ax = $.extend(true, {}, ca);
       if (!ax.url) ax.url = cu || '';
@@ -867,12 +929,11 @@
       if (ax.method === 'POST' && !ax.contentType) ax.contentType = 'application/json; charset=utf-8';
       if (ax.cache == null) ax.cache = false;
 
-      // Keep/refresh a parsed body so manager or plugin can update ranges
+      // Maintain a parsed body so manager may update time ranges, etc.
       if (this._graphPostBody) {
         if (cacheBust) this._graphPostBody._ts = Date.now();
         ax.data = JSON.stringify(this._graphPostBody);
       } else if (ax.data && typeof ax.data === 'string') {
-        // ensure cache-bust is present
         if (cacheBust) {
           try {
             var body = JSON.parse(ax.data);
@@ -886,29 +947,24 @@
       return ax;
     }
 
-    // Legacy: configUrl can be a string or an $.ajax options object
+    // Legacy: URL string
     if (typeof cu === 'string') {
       if (!cacheBust) return { url: cu, method: 'GET', dataType: 'json', cache: false };
       var sep = cu.indexOf('?') === -1 ? '?' : '&';
       return { url: cu + sep + '_ts=' + Date.now(), method: 'GET', dataType: 'json', cache: false };
     }
 
+    // Legacy: $.ajax options object
     if (cu && typeof cu === 'object') {
       var obj = $.extend(true, {}, cu);
-      // keep method if provided, else default to GET
       obj.method = obj.method ? String(obj.method).toUpperCase() : 'GET';
       if (!obj.dataType) obj.dataType = 'json';
       if (obj.cache == null) obj.cache = false;
 
-      // cache-bust: add to data (for GET) or to body (for POST JSON)
       if (cacheBust) {
         if (obj.method === 'GET') {
           obj.data = obj.data || {};
-          if (typeof obj.data === 'string') {
-            // leave strings alone (rare); GET string-params users should append _ts themselves
-          } else {
-            obj.data._ts = Date.now();
-          }
+          if (typeof obj.data !== 'string') obj.data._ts = Date.now();
         } else {
           if (obj.contentType && obj.contentType.indexOf('application/json') !== -1) {
             if (typeof obj.data === 'string') {
@@ -926,21 +982,25 @@
     return { url: '', method: 'GET', dataType: 'json', cache: false };
   };
 
+  // First config load (with cache-bust)
   Plugin.prototype._getConfig = function () {
     if (this.opts.config && typeof this.opts.config === 'object') {
       return $.Deferred().resolve(this.opts.config).promise();
     }
-    var ajaxOpts = this._ajaxOptionsForConfig(true); // initial fetch with cache-bust
+    var ajaxOpts = this._ajaxOptionsForConfig(true);
     return $.ajax(ajaxOpts);
   };
 
+  // Subsequent config refreshes (series-only update)
   Plugin.prototype._requestConfig = function () {
-    var ajaxOpts = this._ajaxOptionsForConfig(true); // refresh with cache-bust
+    var ajaxOpts = this._ajaxOptionsForConfig(true);
     if (!ajaxOpts.url) return $.Deferred().reject(new Error('No configUrl set')).promise();
     return $.ajax(ajaxOpts);
   };
 
-  /* ======================= Refresh (series-only) ======================= */
+  /* ======================= Refresh (series-only) =======================
+   * Refreshes series (and axes if needed) without fully rebuilding the card.
+   */
   Plugin.prototype.refresh = function () {
     var self = this;
     if (!self.config || !self.chart) return self.init();
@@ -967,6 +1027,7 @@
         .then(function (newCfg) {
           var packedSeriesPromise = self._buildSeries(newCfg);
           return $.when(packedSeriesPromise).then(function (seriesArr) {
+            // If new config declares yAxis explicitly, honor it
             if (Array.isArray(newCfg.yAxis)) {
               self.chart.update({ yAxis: newCfg.yAxis }, false, true);
             } else {
@@ -983,7 +1044,9 @@
     return self._buildSeries(self.config).then(finish).fail(self.opts.onError);
   };
 
-  /* ======================= Auto-refresh timer + PROGRESS ======================= */
+  /* ======================= Auto-refresh timer + PROGRESS =======================
+   * Manages the header-bottom progress line that shrinks to the left until refresh.
+   */
   Plugin.prototype._ensureProgressEls = function () {
     if (this.$progress && this.$progressBar) return;
     this.$progress = $('<div class="as-hc-progress"></div>').css({
@@ -1025,6 +1088,7 @@
     if (this._autoSeconds > 0) { this._stopProgress(); this._startProgress(this._autoSeconds * 1000); }
   };
 
+  // Starts/stops the interval that triggers refresh()
   Plugin.prototype._startAutoTimer = function () {
     var self = this;
     if (self._autoTimer) window.clearInterval(self._autoTimer);
@@ -1047,7 +1111,9 @@
     this.$refreshBtn.toggleClass('loading', !!on).prop('disabled', !!on).css('opacity', on ? 0.6 : 1);
   };
 
-  /* ======================= 3D drag to rotate ======================= */
+  /* ======================= 3D drag to rotate =======================
+   * For column3d/area3d, allow dragging the card to rotate the 3D camera.
+   */
   Plugin.prototype._attach3dDragIfNeeded = function () {
     if (!this.chart) return;
     var type = normalizeType(this.config && this.config.type);
@@ -1094,7 +1160,9 @@
     $(window).on('pointerup.hc3d', onUp);
   };
 
-  /* ======================= Snap-to-grid ======================= */
+  /* ======================= Snap-to-grid =======================
+   * Rounds drag position to grid cells if enabled.
+   */
   Plugin.prototype._snapPosition = function (left, top) {
     var g = this.opts.grid;
     if (!g || !g.enabled) return { left: left, top: top };
@@ -1111,7 +1179,9 @@
     return { left: roundTo(left, gx), top: roundTo(top, gy) };
   };
 
-  /* ======================= Bounds helpers & notifications ======================= */
+  /* ======================= Bounds helpers & notifications =======================
+   * Report geometry to host and emit custom events.
+   */
   Plugin.prototype.getBounds = function () {
     if (!this.$wrapper || !this.$wrapper.length) return null;
     var pos = this.$wrapper.position();
@@ -1145,7 +1215,9 @@
     this.$host.trigger(this.opts.deleteEventName, [payload, this]);
   };
 
-  /* ======================= Drag & Resize ======================= */
+  /* ======================= Drag & Resize =======================
+   * Pointer-driven drag/resize with optional containment and snap.
+   */
   Plugin.prototype._bindDrag = function () {
     var self = this;
 
@@ -1162,6 +1234,7 @@
 
     var dragging = false, start = { x: 0, y: 0, left: 0, top: 0 };
 
+    // Reduce accidental text/image drag inside the header
     $handle.css('touch-action', 'none')
       .on('selectstart.' + PLUGIN, function (e) {
         if ($(e.target).closest('.as-hc-tools, button, select, input, textarea, a, [contenteditable]').length) return;
@@ -1198,6 +1271,7 @@
       var newLeft = start.left + dx;
       var newTop = start.top + dy;
 
+      // Containment within host element or window
       if ($contain && $contain.length && $contain[0] !== window) {
         var maxLeft = $contain.innerWidth() - self.$wrapper.outerWidth();
         var maxTop = $contain.innerHeight() - self.$wrapper.outerHeight();
@@ -1210,6 +1284,7 @@
         newTop = Math.max(0, Math.min(newTop, maxTopW));
       }
 
+      // Live snap
       if (self.opts.grid && self.opts.grid.enabled && self.opts.grid.snap === 'move') {
         var snap = self._snapPosition(newLeft, newTop);
         newLeft = snap.left; newTop = snap.top;
@@ -1225,6 +1300,7 @@
       $scope.off('pointermove.' + PLUGIN, onMove);
       $scope.off('pointerup.' + PLUGIN, onUp);
 
+      // End-of-drag snap
       if (self.opts.grid && self.opts.grid.enabled && self.opts.grid.snap !== 'move') {
         var curLeft = parseFloat(self.$wrapper.css('left')) || 0;
         var curTop = parseFloat(self.$wrapper.css('top')) || 0;
@@ -1248,6 +1324,7 @@
     }
   };
 
+  // Resize handle at bottom-right corner
   Plugin.prototype._bindResize = function () {
     var self = this;
 
@@ -1316,7 +1393,9 @@
     }
   };
 
-  /* ======================= Destroy ======================= */
+  /* ======================= Destroy =======================
+   * Tears down observers, timers, event handlers, and chart.
+   */
   Plugin.prototype.destroy = function () {
     if (this._autoTimer) { clearInterval(this._autoTimer); this._autoTimer = null; }
     this._stopProgress();
@@ -1331,7 +1410,10 @@
     this.$host.removeData('asHcChart');
   };
 
-  /* ======================= Mount layout ======================= */
+  /* ======================= Mount layout =======================
+   * Builds the card DOM structure (header/tools/body/inner/resizer) and
+   * initializes interactions + observers.
+   */
   Plugin.prototype._mountLayout = function (cfg) {
     if (this.$host.css('position') === 'static') this.$host.css('position', 'relative');
 
@@ -1341,6 +1423,7 @@
       return isFinite(n) ? n : fallback;
     }
 
+    // Resolve initial position/size with fallbacks and slight offsets per card
     var posOpt = (typeof this.opts.top !== 'undefined' || typeof this.opts.left !== 'undefined')
       ? { top: this.opts.top, left: this.opts.left }
       : (this.opts.initialPos || {});
@@ -1363,6 +1446,7 @@
     var initW = haveSize ? Math.max(this.opts.minSize.width, toNum(sizeOpt.width, this.opts.minSize.width)) : Math.max(480, this.opts.minSize.width);
     var initH = haveSize ? Math.max(this.opts.minSize.height, toNum(sizeOpt.height, this.opts.minSize.height)) : Math.max(300, this.opts.minSize.height);
 
+    // Clamp to host bounds if known
     var hostW = this.$host.innerWidth(), hostH = this.$host.innerHeight();
     if (hostW && hostH) {
       initLeft = Math.max(0, Math.min(initLeft, Math.max(0, hostW - initW)));
@@ -1371,6 +1455,7 @@
 
     var bb = { boxSizing: 'border-box' };
 
+    // Wrapper (card)
     this.$wrapper = $('<div class="as-hc-wrapper"></div>').css($.extend({}, bb, {
       position: 'absolute',
       top: initTop, left: initLeft, width: initW, height: initH,
@@ -1385,6 +1470,7 @@
       this._bringToFront();
     });
 
+    // Header (title + tools)
     this.$header = $('<div class="as-hc-header"></div>').css($.extend({}, bb, {
       position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       padding: '6px 8px', gap: '8px',
@@ -1397,7 +1483,7 @@
     });
     this.$tools = $('<div class="as-hc-tools"></div>').css({ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'default' });
 
-    // REFRESH
+    // REFRESH button
     if (this.opts.showToolbar && this.opts.showRefreshButton) {
       this.$refreshBtn = $('<button type="button" class="as-hc-btn as-hc-refresh-btn" title="' + this.opts.refreshLabel + '"></button>')
         .css({ display: 'inline-flex', alignItems: 'center', gap: 0, padding: '4px 8px', cursor: 'pointer' })
@@ -1410,7 +1496,7 @@
       this.$tools.append(this.$refreshBtn);
     }
 
-    // TOOLTIP TOGGLE
+    // TOOLTIP toggle
     if (this.opts.showToolbar && this.opts.showTooltipToggle) {
       this.$tooltipBtn = $('<button type="button" class="as-hc-btn as-hc-tooltip-btn" title="Toggle tooltips"></button>')
         .css({ display: 'inline-flex', alignItems: 'center', gap: 0, padding: '4px 8px', cursor: 'pointer' })
@@ -1427,7 +1513,7 @@
       this.$tools.append(this.$tooltipBtn);
     }
 
-    // AUTO-REFRESH SELECT
+    // AUTO-REFRESH select
     if (this.opts.showToolbar && this.opts.autoRefresh && this.opts.autoRefresh.enabled) {
       var options = this.opts.autoRefresh.options || [0, 10, 20, 30, 60, 120];
       var $sel = $('<select class="as-hc-autorefresh" title="Auto refresh interval"></select>').css({ padding: '3px 6px' });
@@ -1449,7 +1535,7 @@
       this.$tools.append($sel);
     }
 
-    // DELETE
+    // DELETE button
     if (this.opts.showToolbar && this.opts.showDeleteButton) {
       var $btnDelete = $('<button type="button" class="as-hc-btn as-hc-delete-btn" title="' + this.opts.deleteLabel + '"></button>')
         .css({ display: 'inline-flex', alignItems: 'center', gap: 0, padding: '4px 8px', cursor: 'pointer' })
@@ -1468,10 +1554,10 @@
 
     this.$header.append(this.$title, this.$tools);
 
-    // progress elements
+    // Progress (auto-refresh) UI elements
     this._ensureProgressEls();
 
-    // Body + Inner
+    // Body + Inner container (chart lives in $inner)
     this.$body = $('<div class="as-hc-body"></div>').css($.extend({}, bb, {
       position: 'relative', backgroundColor: bg, flex: '1 1 auto', minHeight: 0, overflow: 'hidden'
     }));
@@ -1480,7 +1566,7 @@
     }));
     this.$body.append(this.$inner);
 
-    // Resizer handle (respect enableResize)
+    // Resizer handle
     this.$resizer = $('<div class="as-hc-resize" aria-hidden="true"></div>');
     if (this.opts.enableResize) {
       this.$resizer.css({
@@ -1497,25 +1583,24 @@
 
     this._fitToParentWidth();
 
-    // Interactions
+    // Interactions & observers
     this._bringToFront();
     this._bindDrag();
     this._bindResize();
 
-    // Observe wrapper resizes
+    // Resize observers keep chart sized to inner container
     if (typeof ResizeObserver !== 'undefined') {
       var el = this.$wrapper[0];
       this._resizeObserver = new ResizeObserver(() => { this._sizeToInner(); });
       this._resizeObserver.observe(el);
     }
-    // Observe inner size
     if (typeof ResizeObserver !== 'undefined') {
       var innerEl = this.$inner[0];
       this._innerObserver = new ResizeObserver(() => { this._sizeToInner(); });
       this._innerObserver.observe(innerEl);
     }
 
-    // Theme switching on body class change
+    // Theme watcher (body.class changes)
     if (typeof MutationObserver !== 'undefined') {
       this._themeObserver = new MutationObserver((muts) => {
         for (var i = 0; i < muts.length; i++) {
@@ -1525,7 +1610,7 @@
       this._themeObserver.observe(document.body, { attributes: true });
     }
 
-    // Window resize -> recompute width + chart size + parent height
+    // Window resize => fit width + reflow chart
     var self = this;
     $(window).off('.allsky-rph-' + PLUGIN + '-' + this._uid);
     $(window).on('resize.allsky-rph-' + PLUGIN + '-' + this._uid, function () {
@@ -1537,7 +1622,9 @@
     if (this._autoSeconds > 0) this._startAutoTimer();
   };
 
-  /* ======================= Init ======================= */
+  /* ======================= Init =======================
+   * Public entry: mounts layout, fetches config, builds options, renders chart.
+   */
   Plugin.prototype.init = function () {
     if (!this.$wrapper) this._mountLayout({ title: this.opts.headerTitle || 'Loading…' });
     this._setLoading(true);
@@ -1555,6 +1642,7 @@
         return this._buildSeries(cfg).then((seriesArr) => {
           options.series = seriesArr.slice();
 
+          // Ensure enough y-axes based on series[].yAxis usage or explicit cfg.yAxis
           var need = 0;
           seriesArr.forEach(function (s) {
             if (typeof s.yAxis === 'number') need = Math.max(need, s.yAxis + 1);
@@ -1572,9 +1660,11 @@
             }
           }
 
+          // Hide legend/tooltip for yesno
           options.legend = options.legend || {};
           options.legend.enabled = (normalizeType(cfg.type) !== 'yesno');
 
+          // Default yAxis assignment for 2-series charts
           options.series = (options.series || []).map(function (s, i) {
             return $.extend(true, {
               showInLegend: (normalizeType(cfg.type) !== 'yesno'),
@@ -1584,6 +1674,7 @@
             });
           });
 
+          // If any series target yAxis=1, ensure there are 2 axes and set titles
           var needsAxis1 = (normalizeType(cfg.type) !== 'yesno') && options.series.some(function (s) { return s.yAxis === 1; });
           if (needsAxis1) {
             if (!Array.isArray(options.yAxis)) {
@@ -1599,6 +1690,7 @@
             }
           }
 
+          // Most non-categorical charts use datetime x-axis
           if (normalizeType(cfg.type) !== 'column' && normalizeType(cfg.type) !== 'pie') {
             options.xAxis = $.extend(true, { type: 'datetime' }, options.xAxis || {});
           }
@@ -1614,7 +1706,9 @@
       });
   };
 
-  /* ======================= Snap controls (NEW) ======================= */
+  /* ======================= Snap controls (NEW) =======================
+   * Public API to control snap-to-grid at runtime (used by manager).
+   */
   Plugin.prototype.setSnapEnabled = function (enabled) {
     this.opts.grid = this.opts.grid || {};
     this.opts.grid.enabled = !!enabled;
@@ -1639,8 +1733,9 @@
     return this;
   };
 
-  /* ======================= NEW public helpers ======================= */
-  // Allow host to replace the POST body (e.g., updated time range)
+  /* ======================= NEW public helpers =======================
+   * Allow host (manager) to update POST body/URL between refreshes.
+   */
   Plugin.prototype.setGraphPostBody = function (bodyObj) {
     if (!bodyObj || typeof bodyObj !== 'object') return this;
     this._graphPostBody = $.extend(true, {}, bodyObj);
@@ -1654,11 +1749,14 @@
     return this;
   };
 
-  /* ======================= jQuery bridge ======================= */
+  /* ======================= jQuery bridge =======================
+   * Attaches the plugin to jQuery collections and adds a few helper calls.
+   */
   $.fn[PLUGIN] = function (optionOrMethod) {
     var args = Array.prototype.slice.call(arguments, 1);
     var ret;
 
+    // Utility: gather bounds from all instances on the collection
     if (optionOrMethod === 'getAllBounds') {
       var results = [];
       this.each(function () {
@@ -1679,6 +1777,7 @@
       return results;
     }
 
+    // Standard jQuery plugin behavior (init or call method on each instance)
     this.each(function () {
       var $el = $(this);
       var instances = $el.data(INST_KEY);

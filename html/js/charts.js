@@ -1,208 +1,12 @@
 "use strict";
 
-/*!
- * timeRangeModal — Bootstrap 3 modal time range picker (no Live mode)
+/**
+ * ASCHARTMANAGER
+ * - Manages tabs of draggable/resizable charts (allskyChart plugin).
+ * - Persists layout and global settings (including a global time range).
+ * - Applies the global time range to every chart and forces reloads when it changes.
+ * - Integrates with a chart designer for creating/editing custom charts.
  */
-(function ($) {
-  'use strict';
-  var PLUGIN = 'timeRangeModal';
-  var INST = PLUGIN + '_inst';
-  var UID = 0;
-
-  var defaults = {
-    range: { mode: 'quick', quick: '24h', from: null, to: null },
-    quickOptions: { '1h':'1h','6h':'6h','24h':'24h','7d':'7d','30d':'30d' },
-    modalTitle: 'Time range',
-    dialogClass: 'modal-sm'
-  };
-
-  function toUnix(dtLocalStr) {
-    if (!dtLocalStr) return null;
-    var t = Date.parse(dtLocalStr);
-    return isFinite(t) ? Math.floor(t / 1000) : null;
-  }
-  function fromUnixLocal(unix) {
-    if (!isFinite(unix)) return '';
-    var d = new Date(unix * 1000);
-    function pad(n){return (''+n).length===1?('0'+n):(''+n);}
-    return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()) +
-           'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
-  }
-  function resolveQuickRange(key) {
-    var now = Math.floor(Date.now() / 1000);
-    var map = {
-      '1h': now - 3600,
-      '6h': now - 6*3600,
-      '24h': now - 24*3600,
-      '7d': now - 7*86400,
-      '30d': now - 30*86400
-    };
-    var from = map[key] != null ? map[key] : (now - 24*3600);
-    return { from: from, to: now };
-  }
-
-  function buildModalHtml(id, opts) {
-    var quickOpts = Object.keys(opts.quickOptions).map(function(v){
-      var label = opts.quickOptions[v];
-      var sel = v === '24h' ? ' selected' : '';
-      return '<option value="'+v+'"'+sel+'>'+label+'</option>';
-    }).join('');
-    return '' +
-'<div class="modal fade" id="'+id+'" tabindex="-1" role="dialog" aria-labelledby="'+id+'_label">' +
-'  <div class="modal-dialog '+(opts.dialogClass||'')+'" role="document">' +
-'    <div class="modal-content">' +
-'      <div class="modal-header">' +
-'        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span>&times;</span></button>' +
-'        <h4 class="modal-title" id="'+id+'_label"><i class="fa-regular fa-clock"></i> '+(opts.modalTitle||'Time range')+'</h4>' +
-'      </div>' +
-'      <div class="modal-body">' +
-'        <div class="form-inline" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">' +
-'          <select class="trm-mode form-control input-sm">' +
-'            <option value="quick">Last…</option>' +
-'            <option value="range">Custom</option>' +
-'          </select>' +
-'          <select class="trm-quick form-control input-sm" style="width:120px;">' + quickOpts + '</select>' +
-'          <div class="trm-range" style="display:none;display:flex;gap:6px;align-items:center;">' +
-'            <input type="datetime-local" class="trm-from form-control input-sm" style="width:180px;">' +
-'            <span>–</span>' +
-'            <input type="datetime-local" class="trm-to form-control input-sm" style="width:180px;">' +
-'          </div>' +
-'        </div>' +
-'      </div>' +
-'      <div class="modal-footer">' +
-'        <button type="button" class="btn btn-default btn-sm trm-clear">Clear</button>' +
-'        <button type="button" class="btn btn-primary btn-sm trm-apply">Apply</button>' +
-'      </div>' +
-'    </div>' +
-'  </div>' +
-'</div>';
-  }
-
-  function setUiFromRange($m, range) {
-    var mode = (range && (range.mode === 'quick' || range.mode === 'range')) ? range.mode : 'quick';
-    $m.find('.trm-mode').val(mode);
-    var showQuick = mode === 'quick';
-    var showRange = mode === 'range';
-    $m.find('.trm-quick').toggle(showQuick).val((range && range.quick) || '24h');
-    $m.find('.trm-range').toggle(showRange);
-    if (showRange) {
-      $m.find('.trm-from').val(fromUnixLocal(range && range.from));
-      $m.find('.trm-to').val(fromUnixLocal(range && range.to));
-    }
-  }
-  function readUiRange($m) {
-    var mode = String($m.find('.trm-mode').val() || 'quick');
-    if (mode === 'quick') {
-      var quick = String($m.find('.trm-quick').val() || '24h');
-      return { mode: 'quick', quick: quick, from: null, to: null };
-    }
-    var from = toUnix($m.find('.trm-from').val());
-    var to   = toUnix($m.find('.trm-to').val());
-    if (isFinite(from) && isFinite(to) && from > to) { var t=from; from=to; to=t; }
-    return { mode: 'range', quick: '24h', from: from, to: to };
-  }
-
-  function Instance($btn, opts) {
-    this.$btn = $btn;
-    this.opts = $.extend(true, {}, defaults, opts || {});
-    this.uid = (++UID);
-    this.id = 'trm_'+this.uid;
-    this.$modal = $(buildModalHtml(this.id, this.opts)).appendTo(document.body);
-    this._open = false;
-    setUiFromRange(this.$modal, this.opts.range);
-    var self = this;
-
-    this.$modal.on('change', '.trm-mode', function () {
-      var r = readUiRange(self.$modal);
-      setUiFromRange(self.$modal, r);
-      self.$btn.trigger('tr.change', [r]);
-    });
-    this.$modal.on('change input', '.trm-quick, .trm-from, .trm-to', function(){
-      var r = readUiRange(self.$modal);
-      self.$btn.trigger('tr.change', [r]);
-    });
-    this.$modal.on('click', '.trm-apply', function(){
-      var r = readUiRange(self.$modal);
-      if (r.mode === 'quick') {
-        var abs = resolveQuickRange(r.quick || '24h');
-        r.from = abs.from; r.to = abs.to;
-      }
-      self.$btn.trigger('tr.apply', [r]);
-      self.close();
-    });
-    this.$modal.on('click', '.trm-clear', function(){
-      var r = { mode: 'quick', quick: '24h', from: null, to: null };
-      setUiFromRange(self.$modal, r);
-      self.$btn.trigger('tr.clear');
-      self.close();
-    });
-    this.$btn.off('.'+PLUGIN).on('click.'+PLUGIN, function(e){
-      e.preventDefault();
-      self.open();
-    });
-    this.$modal.on('shown.bs.modal', function(){ self._open = true; });
-    this.$modal.on('hidden.bs.modal', function(){ self._open = false; });
-  }
-
-  Instance.prototype.open = function(){ this.$modal.modal('show'); };
-  Instance.prototype.close = function(){ this.$modal.modal('hide'); };
-  Instance.prototype.getRange = function(){
-    var r = readUiRange(this.$modal);
-    if (r.mode === 'quick') {
-      var abs = (function (key) {
-        var now = Math.floor(Date.now() / 1000);
-        var map = { '1h': now-3600, '6h': now-6*3600, '24h': now-24*3600, '7d': now-7*86400, '30d': now-30*86400 };
-        return { from: map[key] != null ? map[key] : (now-24*3600), to: now };
-      })(r.quick || '24h');
-      r.from = abs.from; r.to = abs.to;
-    }
-    return r;
-  };
-  Instance.prototype.setRange = function(range){
-    this.opts.range = $.extend({}, this.opts.range, range || {});
-    setUiFromRange(this.$modal, this.opts.range);
-  };
-  Instance.prototype.destroy = function(){
-    try { this.$modal.modal('hide'); } catch(_){}
-    this.$btn.off('.'+PLUGIN);
-    this.$modal.off().remove();
-    this.$btn.removeData(INST);
-  };
-
-  $.fn[PLUGIN] = function(option){
-    var args = Array.prototype.slice.call(arguments, 1);
-    var ret;
-    this.each(function(){
-      var $el = $(this);
-      var inst = $el.data(INST);
-      if (!inst) {
-        if (typeof option === 'object' || !option) {
-          inst = new Instance($el, option || {});
-          $el.data(INST, inst);
-        } else {
-          return;
-        }
-      }
-      if (typeof option === 'string') {
-        if (typeof inst[option] !== 'function') throw new Error(PLUGIN+': unknown method '+option);
-        ret = inst[option].apply(inst, args);
-      }
-    });
-    return ret !== undefined ? ret : this;
-  };
-
-  if (!document.getElementById('trm-style')) {
-    $('<style id="trm-style">')
-      .text('body.dark .modal-content{background:#272727;border-color:#3a3a3a;color:#fff;} body.dark .modal-header, body.dark .modal-footer{border-color:#3a3a3a;}')
-      .appendTo('head');
-  }
-})(jQuery);
-
-
-/* ===========================================================================================
-   ASCHARTMANAGER
-   =========================================================================================== */
-
 class ASCHARTMANAGER {
   tabCounter = 1;
   _zoomSyncing = false;
@@ -217,35 +21,34 @@ class ASCHARTMANAGER {
       saveDebounceMs: 300,
       ajaxHeaders: undefined,
 
-      // Global settings defaults
+      // Grid / snapping defaults (global)
       gridEnabled: true,
       gridSize: 24,
-      snapType: 'end', // 'move' | 'end'
+      snapType: 'end', // 'move' or 'end'
 
-      // Per-chart auto-refresh (SECONDS)
+      // Chart auto-refresh defaults (per chart)
       autoRefreshSecondsDefault: 30,
       autoRefreshOptionsDefault: [0, 10, 20, 30, 60, 120],
 
-      // Global date/time filter defaults (persisted)
+      // Global time-range defaults (persisted)
       timeDefaults: { mode: 'quick', quick: '24h', from: null, to: null },
 
-      // Designer integration
+      // Designer integration options
       designer: {
-        enabled: true,                // show “Create Chart” button
-        devPanel: true,               // pass through to designer plugin
-        mountSelector: 'body',        // where to append the hidden host
+        enabled: true,
+        devPanel: true,
+        mountSelector: 'body',
         variablesUrl: 'includes/moduleutil.php?request=AvailableVariables',
         graphDataUrl: 'includes/moduleutil.php?request=GraphData',
         saveUrl: 'includes/moduleutil.php?request=SaveCustomChart',
-        // NEW: load existing chart by name (designer will call this internally)
         loadChartUrl: 'includes/moduleutil.php?request=LoadCustomChart'
       }
     }, opts);
 
-    // Global time range
+    // Global time-range state
     this._timeRange = Object.assign({}, this.opts.timeDefaults);
 
-    // Debounced saver
+    // Debounced saver (URL or local)
     this._saveDebounced = this._debounce(() => {
       if (this.opts.saveUrl) {
         this.saveStateToUrl(this.opts.saveUrl, {
@@ -259,7 +62,7 @@ class ASCHARTMANAGER {
       }
     }, this.opts.saveDebounceMs);
 
-    // charts waiting for hidden tab
+    // Charts queued for tabs that are not visible yet
     this._pendingChartsByTab = Object.create(null);
 
     this.buildHTML();
@@ -269,6 +72,7 @@ class ASCHARTMANAGER {
     this._initTimeRangeButton();
     this._initDesignerIntegration();
 
+    // When a tab is shown, instantiate any queued charts in that tab
     $(document)
       .off('shown.bs.tab.asGM')
       .on('shown.bs.tab.asGM', '#as-gm-tablist a[data-toggle="tab"]', (e) => {
@@ -276,6 +80,7 @@ class ASCHARTMANAGER {
         this._restoreChartsIfPending(tabId);
       });
 
+    // Initial load of saved state (tabs/layout/settings/time-range)
     if (this.opts.loadUrl) {
       this.loadStateFromUrl(this.opts.loadUrl, {
         clearExisting: true,
@@ -288,17 +93,21 @@ class ASCHARTMANAGER {
   /* ================= UI shell ================= */
 
   show() {
-    let menu = $('#as-charts-toolbox-wrapper');
+    const menu = $('#as-charts-toolbox-wrapper');
     if (!menu.hasClass('active')) {
       menu.addClass('active');
       this.buildChartGroups();
     }
   }
+
   hide() {
-    let menu = $('#as-charts-toolbox-wrapper');
+    const menu = $('#as-charts-toolbox-wrapper');
     if (menu.hasClass('active')) menu.removeClass('active');
   }
 
+  /**
+   * Mounts the static manager UI (toolbox, tabs container) and core styles.
+   */
   buildHTML() {
     $('#as-chart-manager').remove();
 
@@ -365,11 +174,13 @@ class ASCHARTMANAGER {
     }
   }
 
+  /**
+   * Styles for the left list (available chart entries).
+   */
   injectListStyles() {
     if (document.getElementById('asg-list-style')) return;
     $('<style id="asg-list-style">')
       .text(`
-        /* Sidebar entries: no underline between items */
         .as-cm-chart-entry { padding:8px 10px; display:flex; align-items:center; justify-content:space-between; border:0 !important; }
         .as-cm-title { display:inline-flex; align-items:center; gap:6px; cursor:grab; }
         .as-cm-title:active { cursor:grabbing; }
@@ -381,6 +192,9 @@ class ASCHARTMANAGER {
 
   /* ================= Options modal ================= */
 
+  /**
+   * Builds the Options modal and binds its controls to manager settings.
+   */
   buildOptionsModal() {
     if ($('#asChartsOptionsModal').length) return;
 
@@ -489,6 +303,9 @@ class ASCHARTMANAGER {
     });
   }
 
+  /**
+   * Applies grid background to a pane according to current settings.
+   */
   _updatePaneGridBg($pane) {
     const sz = `${this.opts.gridSize}px ${this.opts.gridSize}px`;
     if (this.opts.gridEnabled) {
@@ -499,6 +316,10 @@ class ASCHARTMANAGER {
       $pane.css({ backgroundImage: 'none', backgroundSize: '', backgroundPosition: '' });
     }
   }
+
+  /**
+   * Refreshes UI elements impacted by settings (grid background + snapping).
+   */
   _applySettingsToUI() {
     $('#as-gm-tablist-content .tab-pane').each((_, pane) => {
       this._updatePaneGridBg($(pane));
@@ -510,6 +331,9 @@ class ASCHARTMANAGER {
 
   /* ================= Available charts list ================= */
 
+  /**
+   * Loads and renders the list of available charts (grouped).
+   */
   buildChartGroups() {
     $.ajax({
       url: 'includes/moduleutil.php?request=AvailableGraphs',
@@ -518,13 +342,12 @@ class ASCHARTMANAGER {
       cache: false,
       dataType: 'json',
       success: (allskyChartData) => {
-        var chartGroups = $('#as-charts-groups');
+        const chartGroups = $('#as-charts-groups');
         chartGroups.empty();
 
         $.each(allskyChartData, (categoryName, chartsArray) => {
           const collapseId = 'category-' + String(categoryName.replace(/ /g, '-')).toLowerCase();
 
-          // panel (heading collapsed by default; groups collapsed)
           const $panel  = $('<div>', { class: 'panel panel-default chart-category' });
 
           const $heading = $('<div>', { class: 'panel-heading' }).append(
@@ -540,7 +363,6 @@ class ASCHARTMANAGER {
             const enabledClass = chart.enabled ? 'as-cm-chart-entry-enabled' : '';
             const safeId = String(chart.filename || chart.title || 'chart').replace(/[^\w\-:.]/g, '_');
 
-            // LEFT draggable-only title (icon + text)
             const $title = $('<span class="as-cm-title" draggable="'+(!!chart.enabled)+'">')
               .append($('<i>', { class: (chart.icon || 'fa fa-chart-line') + ' fs-18' }).css({ marginRight: '6px' }))
               .append(document.createTextNode(chart.title || chart.filename || 'Chart'))
@@ -594,11 +416,14 @@ class ASCHARTMANAGER {
 
   /* ================= Tabs ================= */
 
+  /**
+   * Creates a new tab with a pane and activates it.
+   */
   addTab(title, content) {
     this.tabCounter++;
-    var tabId = "as-gm-tab-" + this.tabCounter;
+    const tabId = "as-gm-tab-" + this.tabCounter;
 
-    var newTab = $(
+    const newTab = $(
       '<li><a href="#' + tabId + '" data-toggle="tab">' +
       '<span class="tab-title">' + (title || 'Tab ' + this.tabCounter) + '</span>' +
       '<span class="as-gm-tab-tools">' +
@@ -608,7 +433,7 @@ class ASCHARTMANAGER {
 
     $('#as-gm-add-tab').before(newTab);
 
-    var newContent = $(
+    const newContent = $(
       '<div class="tab-pane fade as-gm-tab" id="' + tabId + '">' +
       (content || '') +
       '</div>'
@@ -621,6 +446,9 @@ class ASCHARTMANAGER {
     return tabId;
   }
 
+  /**
+   * Removes a tab and its charts, switches focus appropriately, and saves.
+   */
   removeTab(tabId) {
     const $pane = $('#' + tabId);
     const $li = $('#as-gm-tablist a[href="#' + tabId + '"]').closest('li');
@@ -670,6 +498,9 @@ class ASCHARTMANAGER {
     }
   }
 
+  /**
+   * Starts inline rename for a tab (double-click title).
+   */
   startRename(a) {
     const href = a.attr('href');
     if (href) this._ensureTitleSpan(href.slice(1));
@@ -706,54 +537,56 @@ class ASCHARTMANAGER {
 
   /* ================= Events / DnD ================= */
 
+  /**
+   * Binds toolbox visibility, tab actions, DnD from list, and custom chart actions.
+   */
   setupEvents() {
     $('#as-charts-menu').off('click').on('click', (e) => this.show());
 
     $(document).on('click', (e) => {
-      let isInside = $(e.target).closest('#as-charts-toolbox-wrapper').length > 0;
-      let isExcluded = $(e.target).closest('#as-charts-menu').length > 0;
+      const isInside = $(e.target).closest('#as-charts-toolbox-wrapper').length > 0;
+      const isExcluded = $(e.target).closest('#as-charts-menu').length > 0;
       if (!isInside && !isExcluded) this.hide();
     });
 
-    // “Create Chart” -> open designer
     $(document).off('click.asCreateChart').on('click.asCreateChart', '#as-create-chart', (e) => {
       e.preventDefault();
       this._openDesigner();
     });
 
-    // Tabs
     $('#as-gm-add-tab').off('click').on('click', (e) => this.addTab());
     $('#as-gm-tablist')
       .on('click', '.close-tab', (e) => {
         e.stopPropagation();
-        var tabId = $(e.currentTarget).closest('a').attr('href').substring(1);
+        const tabId = $(e.currentTarget).closest('a').attr('href').substring(1);
         this.removeTab(tabId);
       })
       .on('dblclick', '.tab-title', (e) => {
-        let el = e.currentTarget;
+        const el = e.currentTarget;
         e.stopPropagation();
         e.preventDefault();
         this.startRename($(el).closest('a'));
       });
 
-    // Only the *title* is draggable (not the buttons)
+    // Drag from left list (title only)
     $(document).off('dragstart.asSidebar').on('dragstart.asSidebar', '.as-cm-title', function (e) {
       const meta = $(this).data('drag') || {};
       e.originalEvent.dataTransfer.setData('text/plain', JSON.stringify({ filename: meta.filename || meta.title || '', title: meta.title || '' }));
     });
 
-    // Drop onto tab pane creates chart
+    // Drop onto pane to create a chart
     $(document).on('dragover', '.as-gm-tab', function (e) { e.preventDefault(); });
     $(document).on('drop', '.as-gm-tab', (e) => {
-      let targetTab = e.currentTarget.id;
-      let payloadTxt = e.originalEvent.dataTransfer.getData('text/plain');
+      const targetTab = e.currentTarget.id;
+      const payloadTxt = e.originalEvent.dataTransfer.getData('text/plain');
       if (!payloadTxt) return;
+
       let meta;
       try { meta = JSON.parse(payloadTxt); } catch(_) { meta = {}; }
       const filename = meta && meta.filename ? meta.filename : (meta && meta.title ? meta.title : null);
       if (!filename) return;
 
-      let $pane = $(`#${targetTab}`);
+      const $pane = $(`#${targetTab}`);
       this._updatePaneGridBg($pane);
 
       this._createChartFromState($pane, {
@@ -763,7 +596,7 @@ class ASCHARTMANAGER {
       });
     });
 
-    // Delete (confirm → remove instances → server)
+    // Custom chart delete (immediate UI removal + server call)
     $(document)
       .off('asCharts:customDelete.handler')
       .on('asCharts:customDelete.handler', (e, info) => {
@@ -771,11 +604,9 @@ class ASCHARTMANAGER {
         const display = info.title || info.filename;
         if (!window.confirm(`Delete custom chart “${display}”? This can’t be undone.`)) return;
 
-        // Remove from all tabs immediately
         this._purgeChartEverywhere(info.filename);
         try { this._saveDebounced(); } catch(_) {}
 
-        // Server delete
         $.ajax({
           url: 'includes/moduleutil.php?request=DeleteCustomChart',
           method: 'POST',
@@ -799,7 +630,7 @@ class ASCHARTMANAGER {
         });
       });
 
-    // Edit → open designer pre-populated by name
+    // Custom chart edit (open designer prefilled)
     $(document)
       .off('asCharts:customEdit.handler')
       .on('asCharts:customEdit.handler', (e, info) => {
@@ -809,8 +640,11 @@ class ASCHARTMANAGER {
 
   /* ================= Instances / bounds / refresh ================= */
 
+  /**
+   * Returns bounds (and per-chart auto-refresh) for all charts in a tab.
+   */
   getAllChartBoundsIn(tab) {
-    var instances = tab.data('allskyChart_instances') || [];
+    const instances = tab.data('allskyChart_instances') || [];
     return instances
       .map((inst, i) => {
         const b = inst.getBounds && inst.getBounds();
@@ -844,6 +678,9 @@ class ASCHARTMANAGER {
       .filter(Boolean);
   }
 
+  /**
+   * Executes a function with a hidden pane temporarily made measurable.
+   */
   _makeMeasurable($pane, fn) {
     if ($pane.is(':visible')) return fn();
     const el = $pane[0];
@@ -865,11 +702,17 @@ class ASCHARTMANAGER {
 
   /* ================= SAVE ================= */
 
+  /**
+   * Returns a JSON string of current state (settings + tabs + charts).
+   */
   saveState() {
     const payload = this._collectState();
     return JSON.stringify(payload, null, 2);
   }
 
+  /**
+   * Constructs the state object for persistence.
+   */
   _collectState() {
     const tabs = [];
     $('#as-gm-tablist-content .tab-pane').each((_, el) => {
@@ -899,6 +742,9 @@ class ASCHARTMANAGER {
     };
   }
 
+  /**
+   * Saves state via HTTP (optionally wrapped with metadata).
+   */
   saveStateToUrl(url, opts = {}) {
     const { wrap = false, field = 'state', includeMeta = true, ajax = {} } = opts;
     const state = this._collectState();
@@ -920,12 +766,15 @@ class ASCHARTMANAGER {
 
   /* ================= LOAD ================= */
 
+  /**
+   * Loads state JSON from URL and applies it.
+   */
   loadStateFromUrl(url, opts = {}) {
     const { clearExisting = true, reuseTabIds = true, ajax = {} } = opts;
     return $.ajax(Object.assign({
       url, method: 'GET', dataType: 'json', cache: false, headers: this.opts.ajaxHeaders
     }, ajax)).then((resp) => {
-      let payload = (resp && resp.state) ? resp.state : resp;
+      const payload = (resp && resp.state) ? resp.state : resp;
       if (Array.isArray(payload)) {
         this.loadState({ tabs: payload }, { clearExisting, reuseTabIds });
       } else if (payload && typeof payload === 'object') {
@@ -936,6 +785,11 @@ class ASCHARTMANAGER {
     });
   }
 
+  /**
+   * Applies an in-memory state object or JSON string to the UI.
+   * - Restores settings and tabs.
+   * - Re-applies global time range (and reloads charts).
+   */
   loadState(state, opts = {}) {
     const { clearExisting = true, reuseTabIds = true } = opts;
     const data = (typeof state === 'string') ? JSON.parse(state) : state;
@@ -959,7 +813,8 @@ class ASCHARTMANAGER {
     $('#opt-snap-type').val(this.opts.snapType);
     $('#opt-default-autorefresh').val(String(this.opts.autoRefreshSecondsDefault));
 
-    try { $('#as-tr-btn').timeRangePicker('setRange', this._timeRange); } catch (_) {}
+    // Sync the time-range picker with the restored range
+    try { $('#as-tr-btn').timeRangeModal('setRange', this._timeRange); } catch (_) {}
 
     const tabs = Array.isArray(data.tabs) ? data.tabs : (Array.isArray(data) ? data : []);
     if (tabs.length === 0) return;
@@ -1001,6 +856,7 @@ class ASCHARTMANAGER {
       if ($first.length) $first.tab('show');
     }
 
+    // Important: propagate time-range to all charts and reload them
     this._applyTimeRangeToAllPanes();
   }
 
@@ -1020,12 +876,14 @@ class ASCHARTMANAGER {
     if ($tools.length) $a.append($tools);
     return $a.find('.tab-title');
   }
+
   _getTabTitle(tabId) {
     const $a = $(`#as-gm-tablist a[href="#${tabId}"]`);
     if (!$a.length) return '';
     const $title = this._ensureTitleSpan(tabId);
     return ($title.text() || '').trim();
   }
+
   _setTabTitle(tabId, title) {
     const $title = this._ensureTitleSpan(tabId);
     if ($title.length) $title.text(title);
@@ -1033,6 +891,9 @@ class ASCHARTMANAGER {
 
   /* ================= Bounds / normalize / create ================= */
 
+  /**
+   * Coerces values to integer pixels with fallback.
+   */
   _toNumber(v, fallback = 0) {
     if (typeof v === 'number' && Number.isFinite(v)) return Math.round(v);
     if (typeof v === 'string') {
@@ -1042,6 +903,9 @@ class ASCHARTMANAGER {
     return Math.round(fallback);
   }
 
+  /**
+   * Normalizes chart bounds and per-chart auto-refresh seconds.
+   */
   _normalizeBounds(c) {
     let seconds = null;
     if (c && c.autoRefreshSeconds != null && Number.isFinite(+c.autoRefreshSeconds)) {
@@ -1060,6 +924,9 @@ class ASCHARTMANAGER {
     };
   }
 
+  /**
+   * Resolves a quick time-range key into absolute unix seconds.
+   */
   _resolveQuickRange(quick) {
     const now = Math.floor(Date.now() / 1000);
     const map = {
@@ -1072,6 +939,10 @@ class ASCHARTMANAGER {
     const from = map[quick] != null ? map[quick] : (now - 24 * 3600);
     return { from, to: now };
   }
+
+  /**
+   * Returns a concrete {from,to} pair based on current global time-range.
+   */
   _currentRangePair() {
     const tr = this._timeRange || this.opts.timeDefaults || { mode:'quick', quick:'24h' };
     if (tr.mode === 'range' && Number.isFinite(tr.from) && Number.isFinite(tr.to)) {
@@ -1080,6 +951,10 @@ class ASCHARTMANAGER {
     const q = this._resolveQuickRange(tr.quick || '24h');
     return { from: q.from, to: q.to };
   }
+
+  /**
+   * Builds the POST body for chart config requests (includes range + optional chart reference).
+   */
   _buildGraphPostBody({ filename = null, chartConfig = null } = {}) {
     const range = this._currentRangePair();
     const body = { range, _ts: Date.now() };
@@ -1089,6 +964,11 @@ class ASCHARTMANAGER {
     return body;
   }
 
+  /**
+   * Creates and mounts a chart instance inside a pane from saved/chart data.
+   * - Ensures plugin receives current time range via POST body and URL query.
+   * - Wraps the instance refresh to always re-apply the latest range before reloads.
+   */
   _createChartFromState($pane, c, { force = false } = {}) {
     if (!force && !$pane.is(':visible')) {
       const tabId = $pane.attr('id');
@@ -1106,8 +986,12 @@ class ASCHARTMANAGER {
 
     const postBody = this._buildGraphPostBody({ filename: nc.filename, chartConfig: nc.chartConfig });
 
+    // Persist time-range to URL as well (some backends may read either body or query)
+    const baseUrl = 'includes/moduleutil.php?request=GraphData';
+    const qs = this._timeQueryString();
+
     $pane.allskyChart({
-      configUrl: 'includes/moduleutil.php?request=GraphData', // POST
+      configUrl: baseUrl + qs,
       configAjax: {
         method: 'POST',
         data: JSON.stringify(postBody),
@@ -1134,13 +1018,21 @@ class ASCHARTMANAGER {
       onDelete: () => this._saveDebounced()
     });
 
+    // After plugin mounts, complete configuration and wrap refresh
     requestAnimationFrame(() => {
       const after = $pane.data('allskyChart_instances') || [];
       const newInsts = after.slice(beforeLen);
       newInsts.forEach((inst) => {
         this._applyBounds(inst, nc);
         this._applyAutoRefresh(inst, seconds);
+
+        // Keep a manager copy and push into plugin via public setters (critical for future refreshes)
         inst._gmGraphPostBody = postBody;
+        if (!inst._gmBaseConfigUrl) inst._gmBaseConfigUrl = baseUrl;
+
+        try { if (typeof inst.setGraphPostBody === 'function') inst.setGraphPostBody(postBody); } catch(_) {}
+        try { if (typeof inst.setConfigUrl === 'function') inst.setConfigUrl(baseUrl + qs); } catch(_) {}
+
         this._wrapInstanceRefreshWithFreshRange(inst);
         try {
           if (typeof inst.setTimeRange === 'function') inst.setTimeRange(this._timeRange);
@@ -1151,6 +1043,9 @@ class ASCHARTMANAGER {
     });
   }
 
+  /**
+   * Instantiates any charts queued for a tab once it becomes visible.
+   */
   _restoreChartsIfPending(tabId) {
     const pending = this._pendingChartsByTab[tabId];
     if (!pending || !pending.length) return;
@@ -1159,6 +1054,9 @@ class ASCHARTMANAGER {
     pending.splice(0).forEach((c) => this._createChartFromState($pane, c, { force: true }));
   }
 
+  /**
+   * Applies saved geometry to a chart instance.
+   */
   _applyBounds(inst, b) {
     try {
       if (!inst) return;
@@ -1179,6 +1077,10 @@ class ASCHARTMANAGER {
       console.warn('Bounds enforcement failed:', e);
     }
   }
+
+  /**
+   * Ensures a chart instance uses the given auto-refresh interval.
+   */
   _applyAutoRefresh(inst, seconds) {
     if (!inst) return;
     try {
@@ -1193,6 +1095,10 @@ class ASCHARTMANAGER {
       inst._autoSeconds = Math.max(0, parseInt(seconds, 10) || 0);
     } catch (e) { console.warn('apply auto-refresh to instance failed:', e); }
   }
+
+  /**
+   * Pushes snap settings to a pane's charts.
+   */
   _applySnapToPane($pane) {
     try {
       const enabled = !!this.opts.gridEnabled;
@@ -1203,6 +1109,10 @@ class ASCHARTMANAGER {
       $pane.allskyChart('setSnapSize', size);
     } catch (e) { console.warn('apply snap to pane failed:', e); }
   }
+
+  /**
+   * Records per-chart auto-refresh changes and persists state.
+   */
   _onAutoRefreshChange(seconds, inst) {
     try {
       const secs = Math.max(0, parseInt(seconds, 10) || 0);
@@ -1211,13 +1121,19 @@ class ASCHARTMANAGER {
     } catch (e) { console.warn('onAutoRefreshChange handler failed:', e); }
   }
 
+  /**
+   * Simple debounce utility bound to instance.
+   */
   _debounce(fn, wait = 300) {
     let t;
     return (...args) => { clearTimeout(t); t = setTimeout(() => fn.apply(this, args), wait); };
   }
 
-  /* ================= Time range → POST bodies ================= */
+  /* ================= Time range → POST bodies + Reload ================= */
 
+  /**
+   * Schedules a single refresh on the next animation frame.
+   */
   _refreshInstOnce(inst) {
     if (inst._gmRefreshScheduled) return;
     inst._gmRefreshScheduled = true;
@@ -1227,6 +1143,38 @@ class ASCHARTMANAGER {
     });
   }
 
+  /**
+   * Reloads all charts in a pane using available plugin hooks.
+   */
+  _reloadPaneCharts($pane) {
+    try {
+      try { $pane.allskyChart('refreshAll'); return; } catch (_) {}
+
+      const insts = ($pane.data('allskyChart_instances') || []).filter(Boolean);
+      insts.forEach((inst, idx) => {
+        if (inst && typeof inst.refresh === 'function') {
+          inst.refresh();
+          return;
+        }
+        try { $pane.allskyChart('refreshByIndex', idx); return; } catch (_) {}
+        try { $pane.allskyChart('refresh', inst); return; } catch (_) {}
+        try { $(inst.$root || inst.$el || inst.$container || inst.$box || $pane).trigger('asChart:refresh'); } catch (_) {}
+        try {
+          if (typeof inst.reflow === 'function') inst.reflow();
+          if (inst.chart && typeof inst.chart.reflow === 'function') inst.chart.reflow();
+        } catch (_) {}
+      });
+    } catch (e) {
+      console.warn('reload pane charts failed:', e);
+    }
+  }
+
+  /**
+   * Applies current global time range to every chart and forces a reload.
+   * - Updates each chart's internal POST body via plugin API (setGraphPostBody).
+   * - Keeps URL query in sync (setConfigUrl) for backends that read from query.
+   * - Calls a pane-wide reload to fetch fresh data.
+   */
   _applyTimeRangeToAllPanes() {
     const trSig = JSON.stringify(this._timeRange || {});
     const freshRange = this._currentRangePair();
@@ -1242,21 +1190,39 @@ class ASCHARTMANAGER {
           if (tr.mode === 'range' && Number.isFinite(tr.from) && Number.isFinite(tr.to)) {
             useRange = { from: tr.from, to: tr.to };
           }
-          if (inst.opts && inst.opts.configAjax && inst._gmGraphPostBody) {
+
+          // Update manager copy and push to plugin
+          if (inst._gmGraphPostBody && typeof inst._gmGraphPostBody === 'object') {
             inst._gmGraphPostBody.range = useRange;
             inst._gmGraphPostBody._ts = Date.now();
-            inst.opts.configAjax.data = JSON.stringify(inst._gmGraphPostBody);
+          } else {
+            inst._gmGraphPostBody = { range: useRange, _ts: Date.now() };
           }
+
+          if (typeof inst.setGraphPostBody === 'function') {
+            inst.setGraphPostBody(inst._gmGraphPostBody);
+          }
+
+          // Sync URL query
+          const base = inst._gmBaseConfigUrl || 'includes/moduleutil.php?request=GraphData';
+          const url = base + this._timeQueryString();
+          if (typeof inst.setConfigUrl === 'function') {
+            inst.setConfigUrl(url);
+          }
+
           if (typeof inst.setTimeRange === 'function') inst.setTimeRange(this._timeRange);
-          if (trSig !== inst._gmLastTimeRangeSig) {
-            inst._gmLastTimeRangeSig = trSig;
-            this._refreshInstOnce(inst);
-          }
+          inst._gmLastTimeRangeSig = trSig;
         } catch (e) { console.warn('apply time range failed:', e); }
       });
+
+      // Reload the pane after all instances are updated
+      this._reloadPaneCharts($pane);
     });
   }
 
+  /**
+   * Initializes the time-range picker button and hooks up apply/clear events.
+   */
   _initTimeRangeButton() {
     const saved = this._timeRange || this.opts.timeDefaults || { mode: 'quick', quick: '24h', from: null, to: null };
     const $btn = $('#as-tr-btn');
@@ -1276,6 +1242,9 @@ class ASCHARTMANAGER {
     });
   }
 
+  /**
+   * Wraps a chart's refresh() so the latest time-range is injected just before reload.
+   */
   _wrapInstanceRefreshWithFreshRange(inst) {
     if (!inst || inst._gmRefreshWrapped) return;
     const original = (typeof inst.refresh === 'function') ? inst.refresh.bind(inst) : null;
@@ -1285,17 +1254,30 @@ class ASCHARTMANAGER {
     };
     inst._gmRefreshWrapped = true;
   }
+
+  /**
+   * Re-applies the latest time-range to a single chart's POST body and URL.
+   */
   _reapplyFreshRangeToInstance(inst) {
     const tr = this._timeRange || this.opts.timeDefaults || { mode:'quick', quick:'24h' };
     let useRange = this._currentRangePair();
     if (tr.mode === 'range' && Number.isFinite(tr.from) && Number.isFinite(tr.to)) {
       useRange = { from: tr.from, to: tr.to };
     }
-    if (inst.opts && inst.opts.configAjax && inst._gmGraphPostBody) {
+
+    if (!inst._gmGraphPostBody || typeof inst._gmGraphPostBody !== 'object') {
+      inst._gmGraphPostBody = { range: useRange, _ts: Date.now() };
+    } else {
       inst._gmGraphPostBody.range = useRange;
       inst._gmGraphPostBody._ts = Date.now();
-      inst.opts.configAjax.data = JSON.stringify(inst._gmGraphPostBody);
     }
+
+    try { if (typeof inst.setGraphPostBody === 'function') inst.setGraphPostBody(inst._gmGraphPostBody); } catch(_) {}
+
+    const base = inst._gmBaseConfigUrl || 'includes/moduleutil.php?request=GraphData';
+    const url = base + this._timeQueryString();
+    try { if (typeof inst.setConfigUrl === 'function') inst.setConfigUrl(url); } catch(_) {}
+
     if (typeof inst.setTimeRange === 'function') {
       inst.setTimeRange(this._timeRange);
     }
@@ -1303,15 +1285,16 @@ class ASCHARTMANAGER {
 
   /* ================= Designer integration ================= */
 
+  /**
+   * Prepares the hidden designer host and initializes the designer plugin once.
+   */
   _initDesignerIntegration() {
     if (!this.opts.designer || !this.opts.designer.enabled) return;
 
-    // Create a hidden host once
     if (!$('#chartDesignerHost').length) {
       $('<div id="chartDesignerHost" style="display:none;"></div>').appendTo(this.opts.designer.mountSelector || 'body');
     }
 
-    // Initialize the designer plugin once (assumes plugin is loaded globally)
     if (!$('#chartDesignerHost').data('allskyChartDesigner')) {
       try {
         $('#chartDesignerHost').allskyChartDesigner({
@@ -1326,7 +1309,6 @@ class ASCHARTMANAGER {
       }
     }
 
-    // Back-compat bridge if designer emits a DOM event
     $(document).off('allskyChartDesigner:save.asMgr')
       .on('allskyChartDesigner:save.asMgr', (e, payload) => {
         const cfg = payload && payload.configJSON;
@@ -1334,11 +1316,13 @@ class ASCHARTMANAGER {
       });
   }
 
+  /**
+   * Opens the designer in new or edit mode.
+   */
   _openDesigner(options = {}) {
     try {
       const api = $('#chartDesignerHost').data('allskyChartDesigner');
       if (api && typeof api.open === 'function') {
-        // Supports open({ name }) for edit OR open() for new
         api.open(options);
       } else {
         $('#chartDesignerHost').trigger('allskyChartDesigner:open', [options]);
@@ -1348,8 +1332,10 @@ class ASCHARTMANAGER {
     }
   }
 
+  /**
+   * Saves a custom chart configuration to the server and refreshes the list.
+   */
   _saveCustomChart(configJSON) {
-    // Use the chart TITLE as the file name (server uses name as filename)
     const title = (configJSON && String(configJSON.title || '').trim()) || '';
     if (!title) {
       this._popup('Please enter a chart title before saving.');
@@ -1367,7 +1353,7 @@ class ASCHARTMANAGER {
     .done((resp) => {
       if (resp && resp.ok) {
         this._popup('Custom chart saved.');
-        this.buildChartGroups(); // refresh the available list
+        this.buildChartGroups();
       } else {
         const msg = (resp && resp.error) ? resp.error : 'Unknown error';
         this._popup(`Save failed: ${msg}`);
@@ -1381,17 +1367,18 @@ class ASCHARTMANAGER {
 
   /* ================= Remove a chart everywhere (helper) ================= */
 
+  /**
+   * Removes a chart (by filename) from pending queues and destroys live instances.
+   */
   _purgeChartEverywhere(filename) {
     if (!filename) return;
 
-    // Remove pending (not yet created) in every tab
     Object.keys(this._pendingChartsByTab || {}).forEach((tabId) => {
       const list = this._pendingChartsByTab[tabId];
       if (!Array.isArray(list)) return;
       this._pendingChartsByTab[tabId] = list.filter((c) => (c && c.filename) !== filename);
     });
 
-    // Destroy created instances that match filename
     $('#as-gm-tablist-content .tab-pane').each((_, pane) => {
       const $pane = $(pane);
       let insts = $pane.data('allskyChart_instances') || [];
@@ -1407,7 +1394,6 @@ class ASCHARTMANAGER {
             null;
 
           if (instFile === filename) {
-            // Kill chart + remove DOM node
             try { if (typeof inst.destroy === 'function') inst.destroy(); } catch(_){}
             try { if (inst.chart && typeof inst.chart.destroy === 'function') inst.chart.destroy(); } catch(_){}
             const $node = inst.$root || inst.$el || inst.$container || inst.$box;
@@ -1416,7 +1402,6 @@ class ASCHARTMANAGER {
             keep.push(inst);
           }
         } catch (e) {
-          // If anything goes wrong, keep the inst to avoid nuking unrelated charts
           keep.push(inst);
         }
       });
@@ -1427,6 +1412,9 @@ class ASCHARTMANAGER {
 
   /* ================= Helpers ================= */
 
+  /**
+   * Simple alert helper that prefers bootbox if present.
+   */
   _popup(message, title) {
     if (window.bootbox && typeof bootbox.alert === 'function') {
       bootbox.alert({ title: title || 'Notice', message: String(message || '') });
@@ -1435,6 +1423,9 @@ class ASCHARTMANAGER {
     }
   }
 
+  /**
+   * Builds a URL query string with the current concrete {from,to}.
+   */
   _timeQueryString() {
     const { from, to } = this._currentRangePair();
     return `&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`;

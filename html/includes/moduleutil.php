@@ -2973,9 +2973,9 @@ class MODULEUTIL
             }
 
             // Extract key configuration details
-            $groupName  = $meta['module'] ?? null;                      // Internal module key
-            $includeAll = $this->to_bool($dbConf['include_all'] ?? false); // Global include flag
-            $tableName  = $dbConf['table'] ?? null;                     // Database table name
+            $groupName  = $meta['module'] ?? null;                          // Internal module key
+            $includeAll = $this->to_bool($dbConf['include_all'] ?? false);  // Global include flag
+            $tableName  = $dbConf['table'] ?? null;                         // Database table name
 
             if (!$groupName || !$tableName) continue;
 
@@ -2987,15 +2987,19 @@ class MODULEUTIL
                 $include = $includeAll || $this->to_bool($vmeta['database']['include'] ?? false);
                 if (!$include) continue;
 
-                // Extract description and display group
-                $desc          = $vmeta['description'] ?? '';
-                $groupDisplay  = $meta['group'] ?? 'Unknown';
+                // Only include variables of type int, float, number or bool
+                // TODO: Validate the above list
+                if (in_array($vmeta['type'] ?? null, ['int', 'float', 'number', 'temperature', 'bool'], true)) {
+                    // Extract description and display group
+                    $desc          = $vmeta['description'] ?? '';
+                    $groupDisplay  = $meta['group'] ?? 'Unknown';
 
-                // --- Step 4: Add entry to grouped result ---
-                $result[$groupDisplay][$varKey] = [
-                    'description' => $desc,
-                    'table'       => $tableName
-                ];
+                    // --- Step 4: Add entry to grouped result ---
+                    $result[$groupDisplay][$varKey] = [
+                        'description' => $desc,
+                        'table'       => $tableName
+                    ];
+                }
             }
         }
 

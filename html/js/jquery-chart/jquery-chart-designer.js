@@ -9,7 +9,6 @@
 (function ($) {
   'use strict';
 
-  /* ========== small helpers ========== */
   function escapeHtml(s){
     return String(s).replace(/[&<>\"']/g, function(m){
       return ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[m]);
@@ -47,7 +46,6 @@
     return /\|true$/i.test(String(id||''));
   }
 
-  /* ========== minimal HC defaults (client) ========== */
   var TYPE_DEFAULTS = {
     common: {
       title: { text: null },
@@ -58,6 +56,12 @@
       plotOptions: { series: { turboThreshold: 0, marker: { enabled: false } } }
     },
     line: {
+      chart: { type: 'spline', zooming: { type: 'x' } },
+      xAxis: { type: 'datetime', dateTimeLabelFormats: { day: '%Y-%m-%d', hour: '%H:%M' } },
+      lang: { noData: 'No data available' },
+      noData: { style: { fontWeight: 'bold', fontSize: '16px', color: '#666' } }
+    },
+    spline: {
       chart: { type: 'spline', zooming: { type: 'x' } },
       xAxis: { type: 'datetime', dateTimeLabelFormats: { day: '%Y-%m-%d', hour: '%H:%M' } },
       lang: { noData: 'No data available' },
@@ -127,102 +131,162 @@
     return cfg;
   }
 
-  /* ========== modal HTML ========== */
-  var MODAL_HTML =
-    '<div class="modal fade ascd-modal" tabindex="-1" role="dialog" aria-hidden="true">\
-      <div class="modal-dialog modal-lg"><div class="modal-content">\
-        <div class="modal-header">\
-          <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>\
-          <h4 class="modal-title">Design a Custom Chart</h4>\
-        </div>\
-        <div class="modal-body">\
-          <div class="row" style="display:flex;">\
-            <div class="col-sm-2">\
-              <div class="panel panel-default">\
-                <div class="panel-heading"><strong>Chart Type</strong></div>\
-                <div class="list-group ascd-type-list">\
-                  <a href="#" class="list-group-item" data-type="line">Line</a>\
-                  <a href="#" class="list-group-item" data-type="spline">Spline</a>\
-                  <a href="#" class="list-group-item" data-type="area">Area</a>\
-                  <a href="#" class="list-group-item" data-type="column">Column</a>\
-                  <a href="#" class="list-group-item" data-type="bar">Bar</a>\
-                  <a href="#" class="list-group-item" data-type="column3d">Column 3D</a>\
-                  <a href="#" class="list-group-item" data-type="area3d">Area 3D</a>\
-                  <a href="#" class="list-group-item" data-type="gauge">Gauge</a>\
-                  <a href="#" class="list-group-item" data-type="yesno">Yes / No</a>\
-                </div>\
-              </div>\
-              <div class="panel panel-default">\
-                <div class="panel-heading"><h5 class="panel-title" style="margin:0;"><a data-toggle="collapse" href="#ascd-details">Chart Details</a></h5></div>\
-                <div id="ascd-details" class="panel-collapse">\
-                  <div class="panel-body">\
-                    <div class="form-group"><label>Title</label><input type="text" class="form-control input-sm ascd-title" placeholder="Chart title" /></div>\
-                    <div class="form-group hidden"><label>Group</label><input type="text" class="form-control input-sm ascd-group" value="Custom" /></div>\
-                  </div>\
-                </div>\
-              </div>\
-            </div>\
-            <div class="col-sm-6">\
-              <div id="ascd-preview"></div>\
-              <div class="panel panel-default ascd-mapping-cart" style="margin-top:10px;">\
-                <div class="panel-heading"><strong>Axis Variables</strong></div>\
-                <div class="panel-body">\
-                  <div class="ascd-y-columns" style="margin-top:8px;">\
-                    <div class="ascd-y-col">\
-                      <label class="control-label">Y (Left)</label>\
-                      <div class="ascd-drop ascd-drop-y-left" data-accept="measure" style="min-height:72px;border:1px dashed #bbb;border-radius:4px;padding:6px;"></div>\
-                      <div class="checkbox ascd-thumb-toggle"><label><input type="checkbox" class="ascd-thumb-left"> Thumbnails on Left</label></div>\
-                      <div class="text-right" style="margin-top:4px;"><button class="btn btn-xs btn-link ascd-clear-y-left">clear</button></div>\
-                    </div>\
-                    <div class="ascd-y-col">\
-                      <label class="control-label">Y (Right)</label>\
-                      <div class="ascd-drop ascd-drop-y-right" data-accept="measure" style="min-height:72px;border:1px dashed #bbb;border-radius:4px;padding:6px;"></div>\
-                      <div class="checkbox ascd-thumb-toggle"><label><input type="checkbox" class="asccd-thumb-right ascd-thumb-right"> Thumbnails on Right</label></div>\
-                      <div class="text-right" style="margin-top:4px;"><button class="btn btn-xs btn-link ascd-clear-y-right">clear</button></div>\
-                    </div>\
-                  </div>\
-                </div>\
-              </div>\
-              <div class="panel panel-default ascd-mapping-gauge" style="display:none; margin-top:10px;">\
-                <div class="panel-heading"><strong>Gauge Target</strong></div>\
-                <div class="panel-body">\
-                  <label class="control-label">Value (measure)</label>\
-                  <div class="ascd-drop ascd-drop-gauge" data-accept="measure" style="min-height:38px;border:1px dashed #bbb;border-radius:4px;padding:6px;"></div>\
-                  <div class="text-right" style="margin-top:4px;"><button class="btn btn-xs btn-link ascd-clear-gauge">clear</button></div>\
-                </div>\
-              </div>\
-              <div class="panel panel-default ascd-mapping-yesno" style="display:none; margin-top:10px;">\
-                <div class="panel-heading"><strong>Yes / No Target</strong></div>\
-                <div class="panel-body">\
-                  <label class="control-label">Value (measure)</label>\
-                  <div class="ascd-drop ascd-drop-yesno" data-accept="measure" style="min-height:38px;border:1px dashed #bbb;border-radius:4px;padding:6px;"></div>\
-                  <div class="text-right" style="margin-top:4px;"><button class="btn btn-xs btn-link ascd-clear-yesno">clear</button></div>\
-                </div>\
-              </div>\
-              <!-- Dev panel placeholder (injected conditionally) -->\
-              <div class="ascd-dev-slot"></div>\
-            </div>\
-            <div class="col-sm-4">\
-              <div class="panel panel-default">\
-                <div class="panel-heading"><strong>Variables</strong></div>\
-                <div class="panel-body">\
-                  <div class="panel-group ascd-measure-groups"></div>\
-                </div>\
-              </div>\
-            </div>\
-          </div>\
-        </div>\
-        <div class="modal-footer">\
-          <span class="text-muted ascd-status pull-left" style="margin-top:8px;"></span>\
-          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>\
-          <button type="button" class="btn btn-primary ascd-preview">Preview</button>\
-          <button type="button" class="btn btn-success ascd-save" disabled>Save</button>\
-        </div>\
-      </div></div></div>';
+  var MODAL_HTML = `
+    <div class="modal fade ascd-modal" tabindex="-1" role="dialog" aria-hidden="true">
+      <div class="modal-dialog modal-lg"><div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+          <h4 class="modal-title">Design a Custom Chart</h4>
+        </div>
+        <div class="modal-body">
+          <div class="row" style="display:flex;">
+            <div class="col-sm-2">
+              <div class="panel panel-default">
+                <div class="panel-heading"><strong>Chart Type</strong></div>
+                <div class="list-group ascd-type-list">
+                  <a href="#" class="list-group-item" data-type="line">Line</a>
+                  <a href="#" class="list-group-item" data-type="spline">Spline</a>
+                  <a href="#" class="list-group-item" data-type="area">Area</a>
+                  <a href="#" class="list-group-item" data-type="column">Column</a>
+                  <a href="#" class="list-group-item" data-type="bar">Bar</a>
+                  <a href="#" class="list-group-item" data-type="column3d">Column 3D</a>
+                  <a href="#" class="list-group-item" data-type="area3d">Area 3D</a>
+                  <a href="#" class="list-group-item" data-type="gauge">Gauge</a>
+                  <a href="#" class="list-group-item" data-type="yesno">Yes / No</a>
+                </div>
+              </div>
+              <div class="panel panel-default">
+                <div class="panel-heading">
+                  <h5 class="panel-title" style="margin:0;">
+                    <a data-toggle="collapse" href="#ascd-details">Chart Details</a>
+                  </h5>
+                </div>
+                <div id="ascd-details" class="panel-collapse">
+                  <div class="panel-body">
+                    <div class="form-group">
+                      <label>Title</label>
+                      <input type="text" class="form-control input-sm ascd-title" placeholder="Chart title" />
+                    </div>
+                    <div class="form-group hidden">
+                      <label>Group</label>
+                      <input type="text" class="form-control input-sm ascd-group" value="Custom" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-  /* ========== plugin ========== */
+            <div class="col-sm-6">
+              <div class="panel panel-default ascd-preview-panel">
+                <div class="panel-heading" style="display:flex;align-items:center;justify-content:space-between;">
+                  <strong>Preview</strong>
+                  <div>
+                    <button type="button" class="btn btn-default btn-xs ascd-open-tr" title="Time Range"><i class="fa-solid fa-clock"></i></button>
+                    <button type="button" class="btn btn-default btn-xs ascd-preview" title="Preview"><i class="fa-solid fa-rotate-right"></i></button>
+                  </div>
+                </div>
+                <div class="panel-body">
+                  <div id="ascd-preview"></div>
+                </div>
+              </div>
+
+              <div class="panel panel-default ascd-mapping-cart" style="margin-top:10px;">
+                <div class="panel-heading"><strong>Axis Variables</strong></div>
+                <div class="panel-body">
+                  <div class="ascd-y-columns" style="margin-top:8px;">
+                    <div class="ascd-y-col">
+                      <label class="control-label">Y (Left)</label>
+                      <div class="ascd-drop ascd-drop-y-left" data-accept="measure" style="min-height:72px;border:1px dashed #bbb;border-radius:4px;padding:6px;"></div>
+                      <div class="ascd-inline-controls" style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;">
+                        <div class="checkbox ascd-thumb-toggle" style="margin:0;">
+                          <label><input type="checkbox" class="ascd-thumb-left"> Thumbnails on Left</label>
+                        </div>
+                        <button class="btn btn-xs btn-default ascd-clear-y-left">Clear</button>
+                      </div>
+                    </div>
+
+                    <div class="ascd-y-col">
+                      <label class="control-label">Y (Right)</label>
+                      <div class="ascd-drop ascd-drop-y-right" data-accept="measure" style="min-height:72px;border:1px dashed #bbb;border-radius:4px;padding:6px;"></div>
+                      <div class="ascd-inline-controls" style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;">
+                        <div class="checkbox ascd-thumb-toggle" style="margin:0;">
+                          <label><input type="checkbox" class="asccd-thumb-right ascd-thumb-right"> Thumbnails on Right</label>
+                        </div>
+                        <button class="btn btn-xs btn-default ascd-clear-y-right">Clear</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="panel panel-default ascd-mapping-gauge" style="display:none; margin-top:10px;">
+                <div class="panel-heading"><strong>Gauge Target</strong></div>
+                <div class="panel-body">
+                  <label class="control-label">Value (measure)</label>
+                  <div class="ascd-drop ascd-drop-gauge" data-accept="measure" style="min-height:38px;border:1px dashed #bbb;border-radius:4px;padding:6px;"></div>
+                  <div class="text-right" style="margin-top:4px;">
+                    <button class="btn btn-xs btn-link ascd-clear-gauge">clear</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="panel panel-default ascd-mapping-yesno" style="display:none; margin-top:10px;">
+                <div class="panel-heading"><strong>Yes / No Target</strong></div>
+                <div class="panel-body">
+                  <label class="control-label">Value (measure)</label>
+                  <div class="ascd-drop ascd-drop-yesno" data-accept="measure" style="min-height:38px;border:1px dashed #bbb;border-radius:4px;padding:6px;"></div>
+                  <div class="text-right" style="margin-top:4px;">
+                    <button class="btn btn-xs btn-link ascd-clear-yesno">clear</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="ascd-dev-slot"></div>
+            </div>
+
+            <div class="col-sm-4">
+              <div class="panel panel-default">
+                <div class="panel-heading"><strong>Variables</strong></div>
+                <div class="panel-body">
+                  <div class="panel-group ascd-measure-groups"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-danger ascd-reset" disabled>Reset</button>
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          <span class="text-muted ascd-status pull-left" style="margin-top:8px;"></span>
+          <button type="button" class="btn btn-success ascd-save" disabled>Save</button>
+        </div>
+      </div></div>
+    </div>`;
+
+  var TITLE_MODAL_HTML = `
+    <div class="modal fade ascd-title-modal" tabindex="-1" role="dialog" aria-hidden="true">
+      <div class="modal-dialog"><div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+          <h4 class="modal-title">Name your chart</h4>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Title</label>
+            <input type="text" class="form-control input-sm ascd-title-input" placeholder="Chart title" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary ascd-title-ok">Save</button>
+        </div>
+      </div></div>
+    </div>`;
+
   function plugin(host, opts){
     var modal = $(MODAL_HTML).appendTo('body');
+    var titleModal = $(TITLE_MODAL_HTML).appendTo('body');
     var types = modal.find('.ascd-type-list');
     var statusEl = modal.find('.ascd-status');
     var preview = modal.find('#ascd-preview');
@@ -241,33 +305,37 @@
     var groupInput = modal.find('.ascd-group');
     var thumbLeft = modal.find('.ascd-thumb-left');
     var thumbRight = modal.find('.ascd-thumb-right');
+    var btnOpenTR = modal.find('.ascd-open-tr');
+    var btnReset = modal.find('.ascd-reset');
+    var titleModalInput = titleModal.find('.ascd-title-input');
+    var titleModalOk = titleModal.find('.ascd-title-ok');
 
-    // Dev Panel
     var dev = { enabled: !!opts.showDevPanel };
     if (dev.enabled) {
-      var devHtml =
-        '<div class="panel panel-default ascd-dev" style="margin-top:10px;">\
-          <div class="panel-heading">Developer Console\
-            <button type="button" class="btn btn-xs btn-default ascd-send-preview">Send Preview Request</button>\
-            <button type="button" class="btn btn-xs btn-default ascd-send-vars">Send VariableSeriesData</button>\
-          </div>\
-          <div class="panel-body">\
-            <div class="row">\
-              <div class="col-sm-6">\
-                <label>Preview Request → <code>GraphData</code></label>\
-                <pre class="well well-sm ascd-dev-req-preview">{}</pre>\
-                <label>Preview Response</label>\
-                <pre class="well well-sm ascd-dev-resp-preview">{}</pre>\
-              </div>\
-              <div class="col-sm-6">\
-                <label>Series Request → <code>VariableSeriesData</code></label>\
-                <pre class="well well-sm ascd-dev-req-series">{}</pre>\
-                <label>Series Response</label>\
-                <pre class="well well-sm ascd-dev-resp-series">{}</pre>\
-              </div>\
-            </div>\
-          </div>\
-        </div>';
+      var devHtml = `
+      <div class="panel panel-default ascd-dev" style="margin-top:10px;">
+        <div class="panel-heading">
+          Developer Console
+          <button type="button" class="btn btn-xs btn-default ascd-send-preview">Send Preview Request</button>
+          <button type="button" class="btn btn-xs btn-default ascd-send-vars">Send VariableSeriesData</button>
+        </div>
+        <div class="panel-body">
+          <div class="row">
+            <div class="col-sm-6">
+              <label>Preview Request → <code>GraphData</code></label>
+              <pre class="well well-sm ascd-dev-req-preview">{}</pre>
+              <label>Preview Response</label>
+              <pre class="well well-sm ascd-dev-resp-preview">{}</pre>
+            </div>
+            <div class="col-sm-6">
+              <label>Series Request → <code>VariableSeriesData</code></label>
+              <pre class="well well-sm ascd-dev-req-series">{}</pre>
+              <label>Series Response</label>
+              <pre class="well well-sm ascd-dev-resp-series">{}</pre>
+            </div>
+          </div>
+        </div>
+      </div>`;
       modal.find('.ascd-dev-slot').replaceWith(devHtml);
       dev.$reqPrev  = modal.find('.ascd-dev-req-preview');
       dev.$respPrev = modal.find('.ascd-dev-resp-preview');
@@ -283,7 +351,9 @@
       yLeft: [], yRight: [], gaugeVal: null, yesnoVal: null,
       lastOutput: null,
       _catalogReady: false,
-      _pendingPopulate: null
+      _pendingPopulate: null,
+      tfFrom: null,
+      tfTo: null
     };
 
     function status(msg, error){
@@ -300,6 +370,15 @@
       return false;
     }
 
+    function updateResetEnabled(){
+      var enabled =
+        !!state.gaugeVal ||
+        !!state.yesnoVal ||
+        (state.yLeft && state.yLeft.length > 0) ||
+        (state.yRight && state.yRight.length > 0);
+      btnReset.prop('disabled', !enabled);
+    }
+
     function selectType(t){
       state.type = t;
       types.find('.list-group-item').removeClass('active').filter('[data-type="'+t+'"]').addClass('active');
@@ -307,18 +386,25 @@
       modal.find('.ascd-mapping-cart').toggle(isCart);
       modal.find('.ascd-mapping-gauge').toggle(isGauge);
       modal.find('.ascd-mapping-yesno').toggle(isYesNo);
+      updateResetEnabled();
       if (canPreviewNow()) previewChart(); else { status(''); state.lastOutput=null; btnSave.prop('disabled', true); preview.empty(); }
     }
 
-    function badge(id,label){
-      return '<span class="label label-primary ascd-badge" data-id="'+escapeHtml(id)+'" style="display:inline-block;margin:2px;">'+escapeHtml(label)+' <span class="fa-solid fa-trash ascd-remove" title="Remove" style="margin-left:4px; cursor:pointer;"></span></span>';
+    function badge(id, label){
+      return `
+        <span class="label label-primary ascd-badge" data-id="${escapeHtml(id)}" style="display:inline-block;margin:2px;">
+          ${escapeHtml(label)}
+          <span class="fa-solid fa-trash ascd-remove" title="Remove" style="margin-left:4px; cursor:pointer;"></span>
+        </span>
+      `;
     }
-    function setSingleTarget(drop, field){ drop.empty().append($(badge(field.id, field.label))); }
+    function setSingleTarget(drop, field){ drop.empty().append($(badge(field.id, field.label))); updateResetEnabled(); }
     function addMultiTarget(drop, field, arr){
       if(arr.indexOf(field.id)===-1){
         arr.push(field.id);
         drop.append($(badge(field.id, field.label)));
       }
+      updateResetEnabled();
     }
     function removeBadge(b){
       var id=b.data('id');
@@ -328,6 +414,7 @@
       else if (container.hasClass('ascd-drop-yesno')) state.yesnoVal=null;
       else if (container.hasClass('ascd-drop-y-left'))  state.yLeft = state.yLeft.filter(function(y){ return y!==id; });
       else if (container.hasClass('ascd-drop-y-right')) state.yRight = state.yRight.filter(function(y){ return y!==id; });
+      updateResetEnabled();
       maybeAutoPreview();
     }
     function maybeAutoPreview(){
@@ -335,6 +422,7 @@
       if (canPreviewNow()) previewChart();
       else { preview.empty(); state.lastOutput=null; btnSave.prop('disabled', true); }
     }
+
     function bindDrop(drop, accept, onAdd){
       drop.on('dragover',function(ev){ ev.preventDefault(); $(this).css('border','1px dashed #44ff44'); })
           .on('dragleave',function(){ $(this).css('border','1px dashed #bbb'); })
@@ -358,9 +446,9 @@
       var titleTip = (m.label||m.id) + ' — ' + (m.id) + (m.table?(' — table: '+m.table):'');
       var wrap = $('<div class="ascd-measure-pill"></div>');
       var label = $('<span class="label label-default" draggable="true"></span>')
-                    .attr('title', escapeHtml(titleTip))
-                    .html('<strong>'+escapeHtml(labelText)+'</strong>')
-                    .data('field',{id:m.id,label:labelText,table:m.table||'',kind:'measure'});
+        .attr('title', escapeHtml(titleTip))
+        .html(`<strong>${escapeHtml(labelText)}</strong>`)
+        .data('field', { id:m.id, label:labelText, table:m.table||'', kind:'measure' });
       label.on('dragstart', function(ev){
         ev.originalEvent.dataTransfer.setData('text/plain', JSON.stringify($(this).data('field')));
       });
@@ -371,20 +459,34 @@
       var map = {}; measures.forEach(function(m){ (map[m.group||'Other']=map[m.group||'Other']||[]).push(m); }); return map;
     }
     function renderMeasureGroups(){
-      var grouped=groupMeasures(state.catalog.measures);
-      var names=Object.keys(grouped).sort();
+      var grouped = groupMeasures(state.catalog.measures);
+      var names = Object.keys(grouped).sort();
       groups.empty();
       names.forEach(function(name, idx){
         var items = grouped[name];
-        var gid='ascd-g-'+idx;
-        var panel=$('<div class="panel panel-default"></div>');
-        panel.append('<div class="panel-heading"><h5 class="panel-title" style="margin:0;"><a data-toggle="collapse" href="#'+gid+'">'+tcase(name)+' <span class="text-muted">('+items.length+')</span></a></h5></div>');
-        var body=$('<div id="'+gid+'" class="panel-collapse collapse"><div class="panel-body"></div></div>'); /* collapsed by default */
+        var gid = 'ascd-g-' + idx;
+        var panel = $('<div class="panel panel-default"></div>');
+        panel.append($(`
+          <div class="panel-heading">
+            <h5 class="panel-title" style="margin:0;">
+              <a data-toggle="collapse" href="#${gid}">
+                ${tcase(name)} <span class="text-muted">(${items.length})</span>
+              </a>
+            </h5>
+          </div>
+        `));
+        var body = $(
+          `<div id="${gid}" class="panel-collapse collapse">
+            <div class="panel-body"></div>
+          </div>`
+        );
         items.forEach(function(m){ body.find('.panel-body').append(mkMeasurePill(m)); });
         panel.append(body);
         groups.append(panel);
       });
-      if(!groups.children().length){ groups.append('<div class="text-muted">No measures available.</div>'); }
+      if (!groups.children().length){
+        groups.append('<div class="text-muted">No measures available.</div>');
+      }
     }
 
     function updateSaveEnabled(){
@@ -394,16 +496,13 @@
         case 'yesno': ok=!!state.yesnoVal; break;
         default: ok=(state.yLeft.length || state.yRight.length);
       }
-      var titleOk = $.trim(titleInput.val()).length>0;
-      btnSave.prop('disabled', !(ok && state.lastOutput && titleOk));
+      btnSave.prop('disabled', !(ok && state.lastOutput));
     }
 
-    // Build chart config used both for preview (GraphData) and final "Save"
     function buildChartConfig(){
       function findMeta(id){ return (state.catalog.measures||[]).filter(function(m){ return m.id===id; })[0] || null; }
       var group = $.trim(groupInput.val() || 'Custom') || 'Custom';
       var title = $.trim(titleInput.val());
-
       if (state.type === 'gauge'){
         var mg = findMeta(state.gaugeVal) || {label: state.gaugeVal, table: ''};
         var cfg = {
@@ -428,14 +527,11 @@
         if (my.table) cfgY.table = my.table;
         return cfgY;
       }
-
       var leftThumb = !!thumbLeft.prop('checked');
       var rightThumb = !!thumbRight.prop('checked');
-
       var leftIds = state.yLeft.slice(0), rightIds = state.yRight.slice(0);
       var byAxisTitle = {0:null, 1:null};
       var series = [];
-
       leftIds.forEach(function(id){
         var m=findMeta(stripThumbSuffix(id)) || {label:stripThumbSuffix(id), table:''};
         if (byAxisTitle[0]===null) byAxisTitle[0]=m.label||id;
@@ -448,12 +544,10 @@
         var variable = stripThumbSuffix(id) + (rightThumb ? '|true' : '');
         series.push({ name: m.label||id, yAxis: 1, variable: variable, table: m.table||'' });
       });
-
       var yAxis = [];
       if (leftIds.length){ yAxis.push({ title: { text: byAxisTitle[0] || 'Left' } }); }
       if (rightIds.length){ yAxis.push({ title: { text: byAxisTitle[1] || 'Right' }, opposite: true }); }
       if (!yAxis.length){ yAxis = [{ title:{ text: '' } }]; }
-
       var tables = series.map(function(s){ return s.table||''; }).filter(Boolean);
       var uniqueTables = Array.from(new Set(tables));
       var rootTable = null;
@@ -461,10 +555,8 @@
         rootTable = uniqueTables[0];
         series = series.map(function(s){ var c=$.extend({}, s); delete c.table; return c; });
       }
-
       var iconMap={ line:'fas fa-chart-line', spline:'fas fa-wave-square', area:'fas fa-chart-area', column:'fas fa-chart-bar', bar:'fas fa-chart-bar', column3d:'fas fa-cube', area3d:'fas fa-cubes' };
       var icon = iconMap[state.type] || 'fas fa-chart-line';
-
       var finalCfg = {
         icon: icon,
         group: group,
@@ -477,7 +569,6 @@
       return finalCfg;
     }
 
-    // Dev-only: build VariableSeriesData payload (series-centric)
     function buildVariableSeriesPayload(){
       function metaFor(id){
         var m = (state.catalog.measures||[]).filter(function(x){ return x.id===id; })[0];
@@ -512,13 +603,16 @@
       var truthy = toBool(value);
       var txt = truthy ? 'YES' : 'NO';
       var cls = truthy ? 'yes-chip' : 'no-chip';
-      $(intoEl).html('<div class="yesno-wrap"><span class="yesno-chip '+cls+'">'+txt+'</span></div>');
+      $(intoEl).html(`
+        <div class="yesno-wrap">
+          <span class="yesno-chip ${cls}">${txt}</span>
+        </div>
+      `);
       return { kind:'yesnoLabel', value:value, truthy:truthy };
     }
     function toHighcharts(query, data){
       var cfg = baseConfigFor(query.type);
       cfg = deepMerge(cfg, { title:{ text:null }, credits:{enabled:false} });
-
       if (query.type === 'gauge') {
         if (data && Array.isArray(data.series)) { cfg.series = data.series; return cfg; }
         var v = data && data.value;
@@ -532,20 +626,16 @@
         if (yn && typeof yn === 'object') { if ('value' in yn) yn = yn.value; else if ('y' in yn) yn = yn.y; }
         return renderYesNoLabel(yn, $('#ascd-preview')[0]);
       }
-
       var isCol3D = (query.type==='column3d');
       var isArea3D = (query.type==='area3d');
       var baseType = isCol3D ? 'column' : (isArea3D ? 'area' : (query.type==='spline' ? 'spline' : query.type));
-
       var leftSet=query.yLeft||[], rightSet=query.yRight||[];
       var needTwo = leftSet.length && rightSet.length;
-
       if (!cfg.yAxis){
         cfg.yAxis = needTwo ? [{ title:{text:null} }, { title:{text:null}, opposite:true }] : [{ title:{text:null} }];
       } else if (needTwo && cfg.yAxis.length===1){
         cfg.yAxis.push({ title:{text:null}, opposite:true });
       }
-
       var fromData = cleanSeries(data.series || []);
       cfg.series = fromData.map(function(s){
         var idx = rightSet.indexOf(s.id)>=0 ? 1 : 0;
@@ -555,6 +645,13 @@
         return out;
       });
       return cfg;
+    }
+
+    function getActiveRange(){
+      if (isFinite(state.tfFrom) && isFinite(state.tfTo)) return { from: state.tfFrom, to: state.tfTo };
+      var now = Math.floor(Date.now()/1000);
+      var sec = (opts.timeframe && opts.timeframe.defaultSeconds) || 24*3600;
+      return { from: now - sec, to: now };
     }
 
     function previewFromServer(resp){
@@ -571,7 +668,6 @@
         var normalized = (q.type==='gauge' || q.type==='yesno')
           ? { value: (resp && (resp.value !== undefined ? resp.value : (resp.data !== undefined ? resp.data : null))) }
           : { series: resp && resp.series ? resp.series : [] };
-
         var hc = toHighcharts(q, normalized);
         if (hc && hc.kind === 'yesnoLabel'){
           state.lastOutput = hc;
@@ -587,25 +683,19 @@
       }
     }
 
-    // === Preview: POST config to GraphData (last 24h) ===
     function previewChart(){
       state.lastOutput=null; updateSaveEnabled();
-      var titleOk = $.trim(titleInput.val()).length>0;
-      if (!titleOk) status('Enter a title to enable Save.'); else status('');
-
+      status('');
       if (state.type==='gauge' && !state.gaugeVal) { status('Select a gauge value field.', true); return; }
       if (state.type==='yesno' && !state.yesnoVal) { status('Select a yes/no value field.', true); return; }
       if (!/^(gauge|yesno)$/.test(state.type) && !(state.yLeft.length || state.yRight.length)) {
         status('Drag at least one measure into Y Left/Right.', true); return;
       }
-
       var chartConfig = buildChartConfig();
-      var now = Math.floor(Date.now()/1000), from = now - 24*3600;
-      var previewPayload = { chartConfig: chartConfig, from: from, to: now };
-
+      var range = getActiveRange();
+      var previewPayload = { chartConfig: chartConfig, range: { from: range.from, to: range.to } };
       if (dev.enabled && dev.$reqPrev) dev.$reqPrev.text(JSON.stringify(previewPayload, null, 2));
-
-      status('Preview: requesting last 24h from server…');
+      status('Preview: requesting data from server…');
       $.ajax({
         url: (opts.graphDataUrl || 'includes/moduleutil.php?request=GraphData'),
         method: 'POST',
@@ -626,7 +716,6 @@
       });
     }
 
-    // Dev panel: send VariableSeriesData request
     function sendVariableSeries(){
       function canSend(){
         if (state.type==='gauge') return !!state.gaugeVal;
@@ -660,29 +749,19 @@
       });
     }
 
-    /* ========== Populate UI from an existing config (Edit) ========== */
     function applyConfigToUI(cfg){
       try {
-        // Clear previous
         dropYLeft.empty(); dropYRight.empty(); dropGauge.empty(); dropYesNo.empty();
         state.yLeft = []; state.yRight = []; state.gaugeVal = null; state.yesnoVal = null;
         thumbLeft.prop('checked', false); thumbRight.prop('checked', false);
         preview.empty(); state.lastOutput = null;
-
-        // Title / group
         if (cfg.title) titleInput.val(String(cfg.title));
         groupInput.val(String(cfg.group || 'Custom'));
-
-        // Type
         var t = String(cfg.type || 'line').toLowerCase();
-        // Ensure type matches our list (we only special-map 3D outbound; inbound we'll keep as-is if present)
         var allowedTypes = {line:1,spline:1,area:1,column:1,bar:1,gauge:1,yesno:1,area3d:1,column3d:1};
         if (!allowedTypes[t]) t = 'line';
         selectType(t);
-
-        // Series → left/right/gauge/yesno + thumbnail toggles
         var series = Array.isArray(cfg.series) ? cfg.series : [];
-
         if (t === 'gauge') {
           if (series[0]) {
             var varIdG = series[0].variable || series[0].id || series[0].name || '';
@@ -700,7 +779,6 @@
         } else {
           var leftIds = [], rightIds = [];
           var leftHadThumb = false, rightHadThumb = false;
-
           series.forEach(function(s){
             var vid = String(s.variable || s.id || s.name || '');
             if (!vid) return;
@@ -715,33 +793,28 @@
               addMultiTarget(dropYLeft, { id: stripThumbSuffix(vid), label: s.name || stripThumbSuffix(vid) }, state.yLeft);
             }
           });
-
-          // If ANY series carried |true for that axis, check thumbnail toggle
           thumbLeft.prop('checked', !!leftHadThumb);
           thumbRight.prop('checked', !!rightHadThumb);
         }
-
+        updateResetEnabled();
         updateSaveEnabled();
-        // Auto fire a preview so the user sees current data
         if (canPreviewNow()) previewChart();
-
       } catch (e) {
         console.error('applyConfigToUI failed:', e);
         status('Could not populate editor from the existing chart.', true);
       }
     }
 
-    /* ========== Bindings ========== */
     types.on('click','.list-group-item',function(e){ e.preventDefault(); selectType($(this).data('type')); });
     bindDrop(dropYLeft,'measure',function(f){ addMultiTarget(dropYLeft,f,state.yLeft); });
     bindDrop(dropYRight,'measure',function(f){ addMultiTarget(dropYRight,f,state.yRight); });
     bindDrop(dropGauge,'measure',function(f){ setSingleTarget(dropGauge,f); state.gaugeVal=f.id; });
     bindDrop(dropYesNo,'measure',function(f){ setSingleTarget(dropYesNo,f); state.yesnoVal=f.id; });
 
-    clearYLeft.on('click',function(e){ e.preventDefault(); dropYLeft.empty(); state.yLeft=[]; preview.empty(); state.lastOutput=null; updateSaveEnabled(); });
-    clearYRight.on('click',function(e){ e.preventDefault(); dropYRight.empty(); state.yRight=[]; preview.empty(); state.lastOutput=null; updateSaveEnabled(); });
-    clearGauge.on('click',function(e){ e.preventDefault(); dropGauge.empty(); state.gaugeVal=null; preview.empty(); state.lastOutput=null; updateSaveEnabled(); });
-    clearYesNo.on('click',function(e){ e.preventDefault(); dropYesNo.empty(); state.yesnoVal=null; preview.empty(); state.lastOutput=null; updateSaveEnabled(); });
+    clearYLeft.on('click',function(e){ e.preventDefault(); dropYLeft.empty(); state.yLeft=[]; preview.empty(); state.lastOutput=null; updateSaveEnabled(); updateResetEnabled(); });
+    clearYRight.on('click',function(e){ e.preventDefault(); dropYRight.empty(); state.yRight=[]; preview.empty(); state.lastOutput=null; updateSaveEnabled(); updateResetEnabled(); });
+    clearGauge.on('click',function(e){ e.preventDefault(); dropGauge.empty(); state.gaugeVal=null; preview.empty(); state.lastOutput=null; updateSaveEnabled(); updateResetEnabled(); });
+    clearYesNo.on('click',function(e){ e.preventDefault(); dropYesNo.empty(); state.yesnoVal=null; preview.empty(); state.lastOutput=null; updateSaveEnabled(); updateResetEnabled(); });
 
     btnPreview.on('click', previewChart);
     if (dev.enabled) {
@@ -749,7 +822,66 @@
       dev.$btnVars.on('click', sendVariableSeries);
     }
 
-    // Load variables catalog (measures)
+    function openTimeRange(e){
+      e.preventDefault();
+      var initial = getActiveRange();
+      var optsTR = { anchor: btnOpenTR[0], from: initial.from, to: initial.to, width: 900 };
+      try {
+        if ($.fn.timeRangeModal) {
+          try { $(document.body).timeRangeModal('destroy'); } catch(_) {}
+          try { $(document.body).timeRangeModal({}); } catch(_) {}
+          $(document.body).timeRangeModal('open', optsTR);
+          return;
+        }
+      } catch(_) {}
+      try {
+        if ($.timeRangeModal && typeof $.timeRangeModal === 'function') {
+          $.timeRangeModal('open', optsTR);
+          return;
+        }
+        if ($.timeRangeModal && $.timeRangeModal.open) {
+          $.timeRangeModal.open(optsTR);
+          return;
+        }
+      } catch(_) {}
+      try {
+        if (window.timeRangeModal && typeof window.timeRangeModal === 'function') {
+          window.timeRangeModal('open', optsTR);
+          return;
+        }
+        if (window.timeRangeModal && window.timeRangeModal.open) {
+          window.timeRangeModal.open(optsTR);
+          return;
+        }
+      } catch(_) {}
+      $(document).trigger('tr.open', optsTR);
+    }
+    btnOpenTR.on('click', openTimeRange);
+
+    $(document).on('tr.apply', function(e, payload){
+      var r = (payload && payload.range) ? payload.range : payload || {};
+      if (isFinite(r.from) && isFinite(r.to)){
+        state.tfFrom = Math.floor(r.from);
+        state.tfTo   = Math.floor(r.to);
+        previewChart();
+      }
+    });
+
+    function doReset(){
+      titleInput.val('');
+      groupInput.val('Custom');
+      dropYLeft.empty(); dropYRight.empty(); dropGauge.empty(); dropYesNo.empty();
+      state.yLeft=[]; state.yRight=[]; state.gaugeVal=null; state.yesnoVal=null;
+      thumbLeft.prop('checked', false); thumbRight.prop('checked', false);
+      state.lastOutput=null; preview.empty();
+      state.tfFrom=null; state.tfTo=null;
+      selectType((opts.defaults && opts.defaults.type) || 'line');
+      updateSaveEnabled();
+      updateResetEnabled();
+      status('');
+    }
+    btnReset.on('click', function(e){ e.preventDefault(); if (!btnReset.prop('disabled')) doReset(); });
+
     function fetchCatalog(){
       var url = (opts.variablesUrl || 'includes/moduleutil.php?request=AvailableVariables');
       var d = $.Deferred();
@@ -760,10 +892,9 @@
             d.resolve({ measures: measuresFlat });
           } catch (e){ d.reject(e); }
         })
-        .fail(
-          function(xhr){ 
-            d.reject(new Error('Failed to load variable catalog (' + (xhr.status||'') + ').')); 
-          });
+        .fail(function(xhr){ 
+          d.reject(new Error('Failed to load variable catalog (' + (xhr.status||'') + ').')); 
+        });
       return d.promise();
     }
     function normalizeCatalog(resp){
@@ -812,13 +943,12 @@
     selectType(state.type);
     titleInput.on('input', updateSaveEnabled);
 
-    // Save -> emit config and reuse preview output for final render
     btnSave.on('click', function(){
       if (!state.lastOutput){ status('Preview first.', true); return; }
-      if ($.trim(titleInput.val()).length===0){
-        status('Please enter a title.', true);
-        $('#ascd-details').collapse('show');
-        setTimeout(function(){ titleInput.focus(); }, 200);
+      var currentTitle = $.trim(titleInput.val());
+      if (!currentTitle){
+        titleModal.modal('show');
+        setTimeout(function(){ titleModalInput.val('').focus(); }, 200);
         return;
       }
       var finalCfg = buildChartConfig();
@@ -827,18 +957,27 @@
       $(modal).modal('hide');
     });
 
-    /* ========== Public API: open (optionally with config or by name) ========== */
+    titleModalOk.on('click', function(){
+      var t = $.trim(titleModalInput.val());
+      if (!t){ titleModalInput.focus(); return; }
+      titleInput.val(t);
+      titleModal.modal('hide');
+      var finalCfg = buildChartConfig();
+      var payloadOut={ configJSON: finalCfg, previewOutput: state.lastOutput };
+      host.trigger('allskyChartDesigner:save', payloadOut);
+      $(modal).modal('hide');
+    });
+
+    titleModal.on('shown.bs.modal', function(){ titleModalInput.trigger('focus'); });
+    titleModalInput.on('keypress', function(e){ if (e.which === 13) { titleModalOk.click(); } });
+
     function doOpen(optsOpen){
       $(modal).modal('show');
-
-      // If a config object is provided, populate immediately (or defer until catalog is ready)
       if (optsOpen && optsOpen.config && typeof optsOpen.config === 'object') {
         if (state._catalogReady) applyConfigToUI(optsOpen.config);
         else state._pendingPopulate = optsOpen.config;
         return;
       }
-
-      // If we got a name + loadChartUrl, fetch and populate
       if (optsOpen && optsOpen.name && opts.loadChartUrl) {
         var req = { name: String(optsOpen.name) };
         $.ajax({
@@ -850,7 +989,6 @@
           cache: false,
           timeout: 15000
         }).done(function(resp){
-          // Expect either { ok:true, config:{...} } or just the config object
           var cfg = (resp && resp.config) ? resp.config : resp;
           if (cfg && typeof cfg === 'object') {
             if (state._catalogReady) applyConfigToUI(cfg);
@@ -870,7 +1008,6 @@
     });
   }
 
-  /* ========== jQuery bridge ========== */
   $.fn.allskyChartDesigner = function(options){
     var defaults = {
       defaults:{type:'line'},
@@ -878,9 +1015,12 @@
       graphDataUrl: 'includes/moduleutil.php?request=GraphData',
       variableSeriesUrl: 'includes/moduleutil.php?request=VariableSeriesData',
       showDevPanel: false,
-      // Optional: endpoint to fetch a chart for editing by name
-      // Expect either { ok:true, config:{...} } or just the config object
-      loadChartUrl: null
+      loadChartUrl: null,
+      timeframe: {
+        selector: null,
+        options: null,
+        defaultSeconds: 24*3600
+      }
     };
     var opts = $.extend(true, {}, defaults, options || {});
     return this.each(function(){

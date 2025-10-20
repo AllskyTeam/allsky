@@ -261,7 +261,7 @@ function initialize_variables($website_only=false) {
 
 	$settings_array = readSettingsFile();
 
-	$focusMode = getVariableOrDefault($settings_array, 'focusmode', false);
+	$focusMode = toBool(getVariableOrDefault($settings_array, 'focusmode', "false"));
 
 	// See if there are any Website configuration files.
 	// The "has" variables just mean the associated configuration file exists,

@@ -204,9 +204,9 @@ if [[ ${CROP_IMAGE} -gt 0 ]]; then
 	ERROR_MSG="$( checkCropValues "${CROP_TOP}" "${CROP_RIGHT}" "${CROP_BOTTOM}" "${CROP_LEFT}" \
 		"${AS_RESOLUTION_X}" "${AS_RESOLUTION_Y}" 2>&1 )"
 	if [[ -z ${ERROR_MSG} ]]; then
+		CROP_WIDTH=$(( AS_RESOLUTION_X - CROP_RIGHT - CROP_LEFT ))
+		CROP_HEIGHT=$(( AS_RESOLUTION_Y - CROP_TOP - CROP_BOTTOM ))
 		if [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
-			CROP_WIDTH=$(( AS_RESOLUTION_X - CROP_RIGHT - CROP_LEFT ))
-			CROP_HEIGHT=$(( AS_RESOLUTION_Y - CROP_TOP - CROP_BOTTOM ))
 			echo -e "${ME} Cropping '${CURRENT_IMAGE}' to ${CROP_WIDTH}x${CROP_HEIGHT}."
 		fi
 		C=""

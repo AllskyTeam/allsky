@@ -612,6 +612,18 @@ int main(int argc, char *argv[])
 	bool displayedNoDaytimeMsg = false;
 	bool displayedNoNighttimeMsg = false;
 
+	if (CG.focusMode)
+	{
+		// Make things as efficient as possible.
+		CG.debugLevel = 1;
+		CG.daytimeCapture = true;		CG.daytimeSave = false;
+		CG.nighttimeCapture = true;		CG.nighttimeSave = false;
+		CG.determineFocus = true;
+		CG.dayDelay_ms = 0;
+		CG.nightDelay_ms = 0;
+		CG.consistentDelays = false;
+	}
+
 	// Start taking pictures
 
 	while (bMain)
@@ -677,7 +689,8 @@ int main(int argc, char *argv[])
 				continue;
 			}
 
-			Log(1, "==========\n=== Starting daytime capture ===\n==========\n");
+			Log(1, "==========\n=== Starting daytime %s ===\n==========\n",
+				CG.focusMode ? "focus mode" : "capture");
 
 			if (numExposures == 0 && CG.dayAutoExposure)
 				CG.currentSkipFrames = CG.daySkipFrames;
@@ -727,7 +740,8 @@ int main(int argc, char *argv[])
 				continue;
 			}
 
-			Log(1, "==========\n=== Starting nighttime capture ===\n==========\n");
+			Log(1, "==========\n=== Starting nighttime %s ===\n==========\n",
+				CG.focusMode ? "focus mode" : "capture");
 
 			// We only skip initial frames if we are starting in nighttime and using auto-exposure.
 			if (numExposures == 0 && CG.nightAutoExposure)
@@ -757,7 +771,6 @@ int main(int argc, char *argv[])
 			CG.currentTuningFile = CG.nightTuningFile;
 		}
 		// ========== Done with dark frame / day / night settings
-
 
 		if (CG.myModeMeanSetting.currentMean > 0.0)
 		{
@@ -816,6 +829,24 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 		// Wait for switch day time -> night time or night time -> day time
 		while (bMain && lastDayOrNight == dayOrNight)
 		{
+			if (CG.focusMode && numExposures == 1)
+			{
+				// Once we know the correct exposure, manual exposure and gain are faster.
+				if (CG.currentAutoExposure)
+				{
+					Log(1, "Turning off auto-exposure due to focus mode\n");
+					CG.currentAutoExposure = false;
+				}
+				if (CG.currentAutoGain)
+				{
+					Log(1, "Turning off auto-gain due to focus mode\n");
+					CG.currentAutoGain = false;
+				}
+	
+				CG.myModeMeanSetting.modeMean = false;
+				myModeMeanSetting.meanAuto = MEAN_AUTO_OFF;
+			}
+
 			// date/time is added to many log entries to make it easier to associate them
 			// with an image (which has the date/time in the filename).
 			exposureStartDateTime = getTimeval();
@@ -896,14 +927,26 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 				}
 				else if (meanIsOK(&CG, exposureStartDateTime))	// meanIsOK() outputs messages
 				{
-					char cmd[1100+strlen(CG.allskyHome)];
-					const char *t = CG.takeDarkFrames ? "dark" : dayOrNight.c_str();
-					Log(1, "  > Saving %s image '%s'\n", t, CG.finalFileName);
-					snprintf(cmd, sizeof(cmd), "%s/saveImage.sh %s '%s'",
-						CG.allskyScripts, dayOrNight.c_str(), CG.fullFilename);
+					Log(4, "  > Saving %s image '%s'\n",
+						CG.takeDarkFrames ? "dark" : dayOrNight.c_str(), CG.finalFileName);
 
-					add_variables_to_command(CG, cmd, exposureStartDateTime);
-					strcat(cmd, " &");
+					char cmd[1100+strlen(CG.allskyHome)];
+
+					if (CG.focusMode)
+					{
+						snprintf(cmd, sizeof(cmd), "%s/saveImage.sh %s '%s' --focus-mode %ld", CG.allskyScripts,
+							dayOrNight.c_str(), CG.fullFilename, CG.lastFocusMetric);
+						// In focusMode, wait for processing to complete since we
+						// don't otherwise delay between images.
+					}
+					else
+					{
+						snprintf(cmd, sizeof(cmd), "%s/saveImage.sh %s '%s'", CG.allskyScripts,
+							dayOrNight.c_str(), CG.fullFilename);
+						add_variables_to_command(CG, cmd, exposureStartDateTime);
+						strcat(cmd, " &");
+					}
+
 					// Not too useful to check return code for commands run in the background.
 					system(cmd);
 				} else {

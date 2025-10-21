@@ -24,6 +24,15 @@ function DisplayCharts()
       </div>
 
       <div class="pull-right">
+        <button type="button" id="as-tr-btn" class="btn btn-primary btn-xs mr-2" title="Time range">
+          <i class="fa-regular fa-clock"></i>
+        </button>
+        <button type="button" id="as-create-chart" class="btn btn-primary btn-xs mr-2" title="Create a new chart">
+          <i class="fa-solid fa-plus"></i>
+        </button>        
+        <button type="button" class="btn btn-default btn-xs mr-4" id="as-charts-toolbox-options" title="Options">
+          <i class="fa-solid fa-gear"></i>
+        </button>        
         <button type="button" id="as-charts-menu" class="btn btn-default btn-xs">
           <i class="fa fa-bars"></i>
         </button>

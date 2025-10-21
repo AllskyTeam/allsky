@@ -1,24 +1,90 @@
 /*!
  * allskyChartDesigner (server-driven)
- * - Builds chart config UI and previews by POSTing to server
- * - No demo data; everything comes from your endpoints
- * - Optional Developer Panel via showDevPanel option
+ * -----------------------------------
+ * A Bootstrap 3 + jQuery modal plugin that lets users compose custom Highcharts
+ * via drag/drop mapping of available "measures" (variables) to chart axes and
+ * then preview the result by POSTing to server endpoints.
  *
- * Requires: jQuery, Bootstrap (modal), Highcharts (+ more, 3D, solid-gauge as needed)
+ * Key features
+ * - Server-normalized measure catalog via `AvailableVariables`
+ * - Optional Developer Console for inspecting request/response payloads
+ * - Supports multiple chart types: line/spline/area/column/bar, 3D column/area,
+ *   radial gauge, and a minimalist yes/no visualization
+ * - Two-axis support (left/right) with per-axis series assignment
+ * - Thumbnails support flag appended to variable id using a "|true" suffix
+ * - Time range selection via external `timeRangeModal` (if available)
+ *
+ * Dependencies
+ * - jQuery (plugin style)
+ * - Bootstrap 3 (modal, collapse)
+ * - Highcharts (plus 3D and solid-gauge modules as needed)
+ *
+ * Public API (attached to the host element via jQuery .data)
+ * ---------------------------------------------------------
+ *   $(el).allskyChartDesigner(opts)
+ *   $(el).data('allskyChartDesigner').open({
+ *     // Option A: open with an existing config object (populate UI immediately)
+ *     config: <ChartConfig JSON>,
+ *     // Option B: open by name, fetched via opts.loadChartUrl
+ *     name: 'existing-chart-name'
+ *   })
+ *
+ * Events emitted
+ * --------------
+ *   'allskyChartDesigner:save'
+ *      detail: {
+ *        configJSON: <final chart config to persist>,
+ *        previewOutput: <Highcharts options used in the last preview>
+ *      }
+ *
+ * Server endpoints (defaults can be overridden via options)
+ * --------------------------------------------------------
+ *   opts.variablesUrl        -> returns measure catalog
+ *   opts.graphDataUrl        -> receives { chartConfig, range } and returns data for preview
+ *   opts.variableSeriesUrl   -> (dev console) receives variable selections to fetch raw series
+ *   opts.loadChartUrl        -> receives { name } and returns { config } for editing an existing chart
+ *
+ * Expected payload formats (high-level)
+ * -------------------------------------
+ *   1) AvailableVariables (catalog):
+ *        - Either an array of items { id, label, group, table?, description? }
+ *        - Or an object keyed by group -> { id: { description, table? } }
+ *
+ *   2) GraphData (preview response):
+ *        - For cartesian charts: { series: [ { name, data: [[x,y],...], yAxis? } ], yAxis? }
+ *        - For gauge:            { value: Number } OR { series: HighchartsGaugeSeries[] }
+ *        - For yes/no:           { value: Boolean|Number|String }
+ *
+ * Options (JSDoc)
+ * ---------------
+ * @typedef {Object} AllskyChartDesignerOptions
+ * @property {{type:string}} [defaults]                - Initial chart-type selection; default 'line'.
+ * @property {string} [variablesUrl]                   - GET endpoint for measures catalog.
+ * @property {string} [graphDataUrl]                   - POST endpoint for preview data.
+ * @property {string} [variableSeriesUrl]              - POST endpoint (dev-only) for raw series lookup.
+ * @property {boolean} [showDevPanel=false]            - Show the Developer Console.
+ * @property {string|null} [loadChartUrl=null]         - POST endpoint to load a chart by name.
+ * @property {{selector?:string, options?:Object, defaultSeconds?:number}} [timeframe]
+ *
  */
 (function ($) {
   'use strict';
 
+  /** HTML-escape a string for safe attribute/text injection. */
   function escapeHtml(s){
     return String(s).replace(/[&<>\"']/g, function(m){
       return ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[m]);
     });
   }
+
+  /** Title-case helper; converts snake/space/kebab to spaced Title Case. */
   function tcase(s){
     return String(s||'').replace(/(^|[_\s-])([a-z])/g, function(_,p,a){
       return (p?' ':'')+a.toUpperCase();
     });
   }
+
+  /** Coerce various truthy/falsy representations to a boolean. */
   function toBool(v){
     if (v === true || v === 1) return true;
     if (typeof v === 'string'){
@@ -28,6 +94,8 @@
     if (typeof v === 'number') return v !== 0;
     return false;
   }
+
+  /** Deep-merge source object `s` into target `t` (arrays are overwritten). */
   function deepMerge(t, s){
     if (!s) return t;
     Object.keys(s).forEach(function(k){
@@ -39,13 +107,22 @@
     });
     return t;
   }
+
+  /** Remove the "|true" thumbnail suffix from a variable id. */
   function stripThumbSuffix(id){
     return String(id||'').replace(/\|true$/i,'');
   }
+
+  /** Detect a trailing "|true" thumbnail suffix on a variable id. */
   function hasThumbSuffix(id){
     return /\|true$/i.test(String(id||''));
   }
 
+  /**
+   * Highcharts base defaults by type. `TYPE_DEFAULTS.common` is applied first,
+   * then the specific type block. `baseConfigFor(type)` assembles the merged
+   * configuration used by `toHighcharts()`.
+   */
   var TYPE_DEFAULTS = {
     common: {
       title: { text: null },
@@ -55,23 +132,26 @@
       tooltip: { shared: true },
       plotOptions: { series: { turboThreshold: 0, marker: { enabled: false } } }
     },
-    line: {
-      chart: { type: 'spline', zooming: { type: 'x' } },
-      xAxis: { type: 'datetime', dateTimeLabelFormats: { day: '%Y-%m-%d', hour: '%H:%M' } },
-      lang: { noData: 'No data available' },
-      noData: { style: { fontWeight: 'bold', fontSize: '16px', color: '#666' } }
-    },
+    // Spline/Line: datetime x-axis with basic no-data styling
     spline: {
       chart: { type: 'spline', zooming: { type: 'x' } },
       xAxis: { type: 'datetime', dateTimeLabelFormats: { day: '%Y-%m-%d', hour: '%H:%M' } },
       lang: { noData: 'No data available' },
       noData: { style: { fontWeight: 'bold', fontSize: '16px', color: '#666' } }
     },
+    line: {
+      chart: { type: 'spline', zooming: { type: 'x' } },
+      xAxis: { type: 'datetime', dateTimeLabelFormats: { day: '%Y-%m-%d', hour: '%H:%M' } },
+      lang: { noData: 'No data available' },
+      noData: { style: { fontWeight: 'bold', fontSize: '16px', color: '#666' } }
+    },
+    // Category x-axis columns
     column: {
       chart: { type: 'column' },
       plotOptions: { column: { pointPadding: 0.1, borderWidth: 0, groupPadding: 0.1 } },
       xAxis: { type: 'category' }
     },
+    // 3D column defaults
     column3d: {
       chart: {
         type: 'column',
@@ -87,6 +167,7 @@
       xAxis: { type: 'category' },
       yAxis: [{ title: { text: null } }]
     },
+    // Semi-circular gauge with three colored bands
     gauge: {
       chart: { type: 'gauge', spacingBottom: 28 },
       pane: { startAngle: -90, endAngle: 90, center: ['50%', '75%'], size: '110%', background: null },
@@ -100,6 +181,7 @@
         ]
       }]
     },
+    // 3D area defaults
     area3d: {
       chart: {
         type: 'area',
@@ -116,6 +198,7 @@
       yAxis: [{ title: { text: null } }],
       zAxis: { visible: false }
     },
+    // Minimal binary (yes/no) visualization
     yesno: {
       chart: { type: 'line' },
       legend: { enabled: false },
@@ -125,21 +208,24 @@
       plotOptions: { series: { enableMouseTracking: false } }
     }
   };
+
+  /** Build a type-specific Highcharts base config (common + per-type). */
   function baseConfigFor(type){
     var cfg = deepMerge({}, TYPE_DEFAULTS.common);
     cfg = deepMerge(cfg, TYPE_DEFAULTS[type] || {});
     return cfg;
   }
 
+  /** Modal markup rendered once per plugin instance. */
   var MODAL_HTML = `
     <div class="modal fade ascd-modal" tabindex="-1" role="dialog" aria-hidden="true">
       <div class="modal-dialog modal-lg"><div class="modal-content">
         <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
           <h4 class="modal-title">Design a Custom Chart</h4>
         </div>
         <div class="modal-body">
           <div class="row" style="display:flex;">
+            <!-- Left rail: type & basic details -->
             <div class="col-sm-2">
               <div class="panel panel-default">
                 <div class="panel-heading"><strong>Chart Type</strong></div>
@@ -176,13 +262,14 @@
               </div>
             </div>
 
+            <!-- Middle: preview + mapping areas -->
             <div class="col-sm-6">
-              <div class="panel panel-default ascd-preview-panel">
-                <div class="panel-heading" style="display:flex;align-items:center;justify-content:space-between;">
+              <div class="panel panel-default">
+                <div class="panel-heading" style="display:flex; align-items:center;">
                   <strong>Preview</strong>
-                  <div>
-                    <button type="button" class="btn btn-default btn-xs ascd-open-tr" title="Time Range"><i class="fa-solid fa-clock"></i></button>
-                    <button type="button" class="btn btn-default btn-xs ascd-preview" title="Preview"><i class="fa-solid fa-rotate-right"></i></button>
+                  <div style="margin-left:auto; display:flex; gap:6px;">
+                    <button type="button" class="btn btn-default btn-xs ascd-time-btn" title="Time Range"><i class="fa fa-clock"></i></button>
+                    <button type="button" class="btn btn-default btn-xs ascd-preview" title="Preview"><i class="fa fa-refresh"></i></button>
                   </div>
                 </div>
                 <div class="panel-body">
@@ -190,14 +277,15 @@
                 </div>
               </div>
 
+              <!-- Cartesian mapping (two Y-axes) -->
               <div class="panel panel-default ascd-mapping-cart" style="margin-top:10px;">
                 <div class="panel-heading"><strong>Axis Variables</strong></div>
                 <div class="panel-body">
-                  <div class="ascd-y-columns" style="margin-top:8px;">
-                    <div class="ascd-y-col">
+                  <div class="ascd-y-columns" style="margin-top:8px; display:flex; gap:16px;">
+                    <div class="ascd-y-col" style="flex:1;">
                       <label class="control-label">Y (Left)</label>
                       <div class="ascd-drop ascd-drop-y-left" data-accept="measure" style="min-height:72px;border:1px dashed #bbb;border-radius:4px;padding:6px;"></div>
-                      <div class="ascd-inline-controls" style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;">
+                      <div class="clearfix" style="margin-top:6px; display:flex; justify-content:space-between; align-items:center;">
                         <div class="checkbox ascd-thumb-toggle" style="margin:0;">
                           <label><input type="checkbox" class="ascd-thumb-left"> Thumbnails on Left</label>
                         </div>
@@ -205,12 +293,12 @@
                       </div>
                     </div>
 
-                    <div class="ascd-y-col">
+                    <div class="ascd-y-col" style="flex:1;">
                       <label class="control-label">Y (Right)</label>
                       <div class="ascd-drop ascd-drop-y-right" data-accept="measure" style="min-height:72px;border:1px dashed #bbb;border-radius:4px;padding:6px;"></div>
-                      <div class="ascd-inline-controls" style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;">
+                      <div class="clearfix" style="margin-top:6px; display:flex; justify-content:space-between; align-items:center;">
                         <div class="checkbox ascd-thumb-toggle" style="margin:0;">
-                          <label><input type="checkbox" class="asccd-thumb-right ascd-thumb-right"> Thumbnails on Right</label>
+                          <label><input type="checkbox" class="ascd-thumb-right"> Thumbnails on Right</label>
                         </div>
                         <button class="btn btn-xs btn-default ascd-clear-y-right">Clear</button>
                       </div>
@@ -219,24 +307,26 @@
                 </div>
               </div>
 
+              <!-- Gauge mapping -->
               <div class="panel panel-default ascd-mapping-gauge" style="display:none; margin-top:10px;">
                 <div class="panel-heading"><strong>Gauge Target</strong></div>
                 <div class="panel-body">
                   <label class="control-label">Value (measure)</label>
                   <div class="ascd-drop ascd-drop-gauge" data-accept="measure" style="min-height:38px;border:1px dashed #bbb;border-radius:4px;padding:6px;"></div>
-                  <div class="text-right" style="margin-top:4px;">
-                    <button class="btn btn-xs btn-link ascd-clear-gauge">clear</button>
+                  <div class="clearfix" style="margin-top:6px; display:flex; justify-content:flex-end; gap:8px;">
+                    <button class="btn btn-xs btn-default ascd-clear-gauge">Clear</button>
                   </div>
                 </div>
               </div>
 
+              <!-- Yes/No mapping -->
               <div class="panel panel-default ascd-mapping-yesno" style="display:none; margin-top:10px;">
                 <div class="panel-heading"><strong>Yes / No Target</strong></div>
                 <div class="panel-body">
                   <label class="control-label">Value (measure)</label>
                   <div class="ascd-drop ascd-drop-yesno" data-accept="measure" style="min-height:38px;border:1px dashed #bbb;border-radius:4px;padding:6px;"></div>
-                  <div class="text-right" style="margin-top:4px;">
-                    <button class="btn btn-xs btn-link ascd-clear-yesno">clear</button>
+                  <div class="clearfix" style="margin-top:6px; display:flex; justify-content:flex-end; gap:8px;">
+                    <button class="btn btn-xs btn-default ascd-clear-yesno">Clear</button>
                   </div>
                 </div>
               </div>
@@ -244,6 +334,7 @@
               <div class="ascd-dev-slot"></div>
             </div>
 
+            <!-- Right rail: variable catalog grouped by 'group' -->
             <div class="col-sm-4">
               <div class="panel panel-default">
                 <div class="panel-heading"><strong>Variables</strong></div>
@@ -256,42 +347,30 @@
         </div>
 
         <div class="modal-footer">
+          <span class="text-muted ascd-status pull-left" style="margin-top:8px;"></span>
           <button type="button" class="btn btn-danger ascd-reset" disabled>Reset</button>
           <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-          <span class="text-muted ascd-status pull-left" style="margin-top:8px;"></span>
           <button type="button" class="btn btn-success ascd-save" disabled>Save</button>
         </div>
       </div></div>
     </div>`;
 
-  var TITLE_MODAL_HTML = `
-    <div class="modal fade ascd-title-modal" tabindex="-1" role="dialog" aria-hidden="true">
-      <div class="modal-dialog"><div class="modal-content">
-        <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
-          <h4 class="modal-title">Name your chart</h4>
-        </div>
-        <div class="modal-body">
-          <div class="form-group">
-            <label>Title</label>
-            <input type="text" class="form-control input-sm ascd-title-input" placeholder="Chart title" />
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-          <button type="button" class="btn btn-primary ascd-title-ok">Save</button>
-        </div>
-      </div></div>
-    </div>`;
-
+  /**
+   * Core plugin initializer. Builds modal, binds UI events, wires AJAX calls,
+   * and exposes a small open() API.
+   * @param {jQuery} host  Host element receiving the plugin.
+   * @param {AllskyChartDesignerOptions} opts Merged options.
+   */
   function plugin(host, opts){
+    // Cache important DOM nodes
     var modal = $(MODAL_HTML).appendTo('body');
-    var titleModal = $(TITLE_MODAL_HTML).appendTo('body');
     var types = modal.find('.ascd-type-list');
     var statusEl = modal.find('.ascd-status');
     var preview = modal.find('#ascd-preview');
     var btnPreview = modal.find('.ascd-preview');
     var btnSave = modal.find('.ascd-save');
+    var btnReset = modal.find('.ascd-reset');
+    var btnTime = modal.find('.ascd-time-btn');
     var groups = modal.find('.ascd-measure-groups');
     var dropYLeft = modal.find('.ascd-drop-y-left');
     var dropYRight = modal.find('.ascd-drop-y-right');
@@ -305,11 +384,8 @@
     var groupInput = modal.find('.ascd-group');
     var thumbLeft = modal.find('.ascd-thumb-left');
     var thumbRight = modal.find('.ascd-thumb-right');
-    var btnOpenTR = modal.find('.ascd-open-tr');
-    var btnReset = modal.find('.ascd-reset');
-    var titleModalInput = titleModal.find('.ascd-title-input');
-    var titleModalOk = titleModal.find('.ascd-title-ok');
 
+    // Optional Developer Console slot setup
     var dev = { enabled: !!opts.showDevPanel };
     if (dev.enabled) {
       var devHtml = `
@@ -345,24 +421,53 @@
       dev.$btnVars  = modal.find('.ascd-send-vars');
     }
 
+    // In-memory UI state
     var state = {
-      catalog: {measures:[]},
+      catalog: {measures:[]},     // normalized measures catalog
       type: (opts.defaults && opts.defaults.type) || 'line',
-      yLeft: [], yRight: [], gaugeVal: null, yesnoVal: null,
-      lastOutput: null,
-      _catalogReady: false,
-      _pendingPopulate: null,
-      tfFrom: null,
+      yLeft: [], yRight: [],      // selected variable ids for left/right Y
+      gaugeVal: null,             // selected variable id for gauge
+      yesnoVal: null,             // selected variable id for yes/no
+      lastOutput: null,           // last Highcharts options or yes/no render marker
+      _catalogReady: false,       // when catalog finished loading
+      _pendingPopulate: null,     // hold an incoming config until catalog ready
+      tfFrom: null,               // active time range (unix seconds)
       tfTo: null
     };
 
+    /** Update the status message area. */
     function status(msg, error){
       statusEl.text(msg||'');
       statusEl.toggleClass('text-danger', !!error);
     }
+
+    /** True for cartesian (non-gauge/non-yesno) types. */
     function isCartesianType(t){ return !/^(gauge|yesno)$/.test(t); }
+
+    /** Map UI type to Highcharts base series type (3D → 2D base). */
     function mapTypeForConfig(t){ return (t==='column3d')?'column':(t==='area3d'?'area':t); }
 
+    /** Whether the selection has at least one visible series/target. */
+    function computeHasAnySeries(){
+      if (state.type==='gauge') return !!state.gaugeVal;
+      if (state.type==='yesno') return !!state.yesnoVal;
+      return !!(state.yLeft.length || state.yRight.length);
+    }
+
+    /** Enable/disable Reset button based on current selections. */
+    function updateResetEnabled(){
+      btnReset.prop('disabled', !computeHasAnySeries());
+    }
+
+    /** Enable/disable axis-specific controls. */
+    function updateAxisControls(){
+      thumbLeft.prop('disabled', state.yLeft.length===0);
+      clearYLeft.prop('disabled', state.yLeft.length===0);
+      thumbRight.prop('disabled', state.yRight.length===0);
+      clearYRight.prop('disabled', state.yRight.length===0);
+    }
+
+    /** Allow preview only once we have at least one mapped field for the type. */
     function canPreviewNow(){
       if (isCartesianType(state.type)) return !!(state.yLeft.length || state.yRight.length);
       if (state.type==='gauge') return !!state.gaugeVal;
@@ -370,15 +475,7 @@
       return false;
     }
 
-    function updateResetEnabled(){
-      var enabled =
-        !!state.gaugeVal ||
-        !!state.yesnoVal ||
-        (state.yLeft && state.yLeft.length > 0) ||
-        (state.yRight && state.yRight.length > 0);
-      btnReset.prop('disabled', !enabled);
-    }
-
+    /** Switch the visible mapping section by type and optionally trigger preview. */
     function selectType(t){
       state.type = t;
       types.find('.list-group-item').removeClass('active').filter('[data-type="'+t+'"]').addClass('active');
@@ -386,10 +483,12 @@
       modal.find('.ascd-mapping-cart').toggle(isCart);
       modal.find('.ascd-mapping-gauge').toggle(isGauge);
       modal.find('.ascd-mapping-yesno').toggle(isYesNo);
+      updateAxisControls();
       updateResetEnabled();
       if (canPreviewNow()) previewChart(); else { status(''); state.lastOutput=null; btnSave.prop('disabled', true); preview.empty(); }
     }
 
+    /** Render a small removable pill for a mapped measure. */
     function badge(id, label){
       return `
         <span class="label label-primary ascd-badge" data-id="${escapeHtml(id)}" style="display:inline-block;margin:2px;">
@@ -398,14 +497,21 @@
         </span>
       `;
     }
-    function setSingleTarget(drop, field){ drop.empty().append($(badge(field.id, field.label))); updateResetEnabled(); }
+
+    /** Replace content of a single-target drop (gauge/yesno). */
+    function setSingleTarget(drop, field){ drop.empty().append($(badge(field.id, field.label))); }
+
+    /** Append a measure to a multi-target drop (left/right Y). */
     function addMultiTarget(drop, field, arr){
       if(arr.indexOf(field.id)===-1){
         arr.push(field.id);
         drop.append($(badge(field.id, field.label)));
       }
+      updateAxisControls();
       updateResetEnabled();
     }
+
+    /** Remove a mapped measure pill and update state. */
     function removeBadge(b){
       var id=b.data('id');
       var container = b.closest('.ascd-drop');
@@ -414,15 +520,19 @@
       else if (container.hasClass('ascd-drop-yesno')) state.yesnoVal=null;
       else if (container.hasClass('ascd-drop-y-left'))  state.yLeft = state.yLeft.filter(function(y){ return y!==id; });
       else if (container.hasClass('ascd-drop-y-right')) state.yRight = state.yRight.filter(function(y){ return y!==id; });
+      updateAxisControls();
       updateResetEnabled();
       maybeAutoPreview();
     }
+
+    /** Preview automatically when selection changes. */
     function maybeAutoPreview(){
       updateSaveEnabled();
       if (canPreviewNow()) previewChart();
       else { preview.empty(); state.lastOutput=null; btnSave.prop('disabled', true); }
     }
 
+    /** Make a drop-zone accept JSON drag payloads with a `kind` discriminator. */
     function bindDrop(drop, accept, onAdd){
       drop.on('dragover',function(ev){ ev.preventDefault(); $(this).css('border','1px dashed #44ff44'); })
           .on('dragleave',function(){ $(this).css('border','1px dashed #bbb'); })
@@ -436,36 +546,49 @@
             }catch(e){}
           });
     }
+
+    // Remove pill clicks (delegated)
     $(document).on('click', '.ascd-remove', function(e){
       e.preventDefault(); e.stopPropagation();
       removeBadge($(this).closest('.ascd-badge'));
     });
 
+    /** Construct a draggable label for a measure entry. */
     function mkMeasurePill(m){
       var labelText = m.label || m.id;
       var titleTip = (m.label||m.id) + ' — ' + (m.id) + (m.table?(' — table: '+m.table):'');
       var wrap = $('<div class="ascd-measure-pill"></div>');
+
       var label = $('<span class="label label-default" draggable="true"></span>')
         .attr('title', escapeHtml(titleTip))
         .html(`<strong>${escapeHtml(labelText)}</strong>`)
         .data('field', { id:m.id, label:labelText, table:m.table||'', kind:'measure' });
+
       label.on('dragstart', function(ev){
         ev.originalEvent.dataTransfer.setData('text/plain', JSON.stringify($(this).data('field')));
       });
+
       wrap.append(label);
       return wrap;
     }
+
+    /** Group measures by "group" property for accordion rendering. */
     function groupMeasures(measures){
       var map = {}; measures.forEach(function(m){ (map[m.group||'Other']=map[m.group||'Other']||[]).push(m); }); return map;
     }
+
+    /** Render the variables accordion. */
     function renderMeasureGroups(){
       var grouped = groupMeasures(state.catalog.measures);
       var names = Object.keys(grouped).sort();
       groups.empty();
+
       names.forEach(function(name, idx){
         var items = grouped[name];
         var gid = 'ascd-g-' + idx;
+
         var panel = $('<div class="panel panel-default"></div>');
+
         panel.append($(`
           <div class="panel-heading">
             <h5 class="panel-title" style="margin:0;">
@@ -475,20 +598,25 @@
             </h5>
           </div>
         `));
+
         var body = $(
           `<div id="${gid}" class="panel-collapse collapse">
             <div class="panel-body"></div>
           </div>`
         );
+
         items.forEach(function(m){ body.find('.panel-body').append(mkMeasurePill(m)); });
+
         panel.append(body);
         groups.append(panel);
       });
+
       if (!groups.children().length){
         groups.append('<div class="text-muted">No measures available.</div>');
       }
     }
 
+    /** Enable the Save button only after a successful preview exists. */
     function updateSaveEnabled(){
       var ok=false;
       switch(state.type){
@@ -499,14 +627,21 @@
       btnSave.prop('disabled', !(ok && state.lastOutput));
     }
 
+    /**
+     * Build the persisted chart config from current UI state.
+     * - Adds per-axis titles based on the first series per axis
+     * - Moves identical per-series `table` property to a top-level `table`
+     */
     function buildChartConfig(){
       function findMeta(id){ return (state.catalog.measures||[]).filter(function(m){ return m.id===id; })[0] || null; }
       var group = $.trim(groupInput.val() || 'Custom') || 'Custom';
       var title = $.trim(titleInput.val());
+
+      // Singular targets: gauge / yesno
       if (state.type === 'gauge'){
         var mg = findMeta(state.gaugeVal) || {label: state.gaugeVal, table: ''};
         var cfg = {
-          title: title,
+          title: title || null,
           icon: 'fa-solid fa-gauge',
           type: 'gauge',
           group: group,
@@ -518,7 +653,7 @@
       if (state.type === 'yesno'){
         var my = findMeta(state.yesnoVal) || {label: state.yesnoVal, table: ''};
         var cfgY = {
-          title: title,
+          title: title || null,
           icon: 'fas fa-toggle-on',
           type: 'yesno',
           group: group,
@@ -527,11 +662,15 @@
         if (my.table) cfgY.table = my.table;
         return cfgY;
       }
+
+      // Cartesian targets (left/right), with optional thumbnail flags
       var leftThumb = !!thumbLeft.prop('checked');
       var rightThumb = !!thumbRight.prop('checked');
+
       var leftIds = state.yLeft.slice(0), rightIds = state.yRight.slice(0);
       var byAxisTitle = {0:null, 1:null};
       var series = [];
+
       leftIds.forEach(function(id){
         var m=findMeta(stripThumbSuffix(id)) || {label:stripThumbSuffix(id), table:''};
         if (byAxisTitle[0]===null) byAxisTitle[0]=m.label||id;
@@ -544,10 +683,14 @@
         var variable = stripThumbSuffix(id) + (rightThumb ? '|true' : '');
         series.push({ name: m.label||id, yAxis: 1, variable: variable, table: m.table||'' });
       });
+
+      // Build yAxis array only for axes that have series
       var yAxis = [];
       if (leftIds.length){ yAxis.push({ title: { text: byAxisTitle[0] || 'Left' } }); }
       if (rightIds.length){ yAxis.push({ title: { text: byAxisTitle[1] || 'Right' }, opposite: true }); }
       if (!yAxis.length){ yAxis = [{ title:{ text: '' } }]; }
+
+      // If all series share the same table, lift to top-level
       var tables = series.map(function(s){ return s.table||''; }).filter(Boolean);
       var uniqueTables = Array.from(new Set(tables));
       var rootTable = null;
@@ -555,12 +698,14 @@
         rootTable = uniqueTables[0];
         series = series.map(function(s){ var c=$.extend({}, s); delete c.table; return c; });
       }
+
       var iconMap={ line:'fas fa-chart-line', spline:'fas fa-wave-square', area:'fas fa-chart-area', column:'fas fa-chart-bar', bar:'fas fa-chart-bar', column3d:'fas fa-cube', area3d:'fas fa-cubes' };
       var icon = iconMap[state.type] || 'fas fa-chart-line';
+
       var finalCfg = {
         icon: icon,
         group: group,
-        title: title,
+        title: title || null,
         type: mapTypeForConfig(state.type),
         yAxis: yAxis,
         series: series
@@ -569,6 +714,7 @@
       return finalCfg;
     }
 
+    /** Construct payload for dev-only VariableSeriesData endpoint. */
     function buildVariableSeriesPayload(){
       function metaFor(id){
         var m = (state.catalog.measures||[]).filter(function(x){ return x.id===id; })[0];
@@ -587,6 +733,10 @@
       return { type: state.type, xField: 'timestamp', xIsDatetime: true, yLeft: left, yRight: right };
     }
 
+    /**
+     * Sanitize incoming series from the server: ensure [x,y] tuples, drop NaNs,
+     * and preserve yAxis/opposite hints where provided.
+     */
     function cleanSeries(series){
       series = Array.isArray(series) ? series : [];
       return series.map(function(s){
@@ -596,9 +746,18 @@
           if (p && typeof p === 'object' && 'x' in p && 'y' in p) return isFinite(p.x) && isFinite(p.y);
           return false;
         }).map(function(p){ return Array.isArray(p) ? p : [p.x, p.y]; });
-        return { id: s.id || s.variable || s.name, name: s.name || s.id || s.variable, data: clean };
+
+        return {
+          id: s.id || s.variable || s.name,
+          name: s.name || s.id || s.variable,
+          data: clean,
+          yAxis: (s.yAxis === 1 ? 1 : 0),
+          opposite: s.opposite === true
+        };
       });
     }
+
+    /** Minimal yes/no renderer; writes directly into preview element. */
     function renderYesNoLabel(value, intoEl){
       var truthy = toBool(value);
       var txt = truthy ? 'YES' : 'NO';
@@ -610,9 +769,17 @@
       `);
       return { kind:'yesnoLabel', value:value, truthy:truthy };
     }
+
+    /**
+     * Convert a normalized server response to Highcharts options, per type.
+     * - For gauge: either use provided series or wrap single numeric value
+     * - For yes/no: render a chip into the preview and return sentinel object
+     * - For cartesian: build yAxis and series arrays; support dual axes
+     */
     function toHighcharts(query, data){
       var cfg = baseConfigFor(query.type);
       cfg = deepMerge(cfg, { title:{ text:null }, credits:{enabled:false} });
+
       if (query.type === 'gauge') {
         if (data && Array.isArray(data.series)) { cfg.series = data.series; return cfg; }
         var v = data && data.value;
@@ -621,32 +788,53 @@
         cfg.series = [{ name: query.valueField || 'Value', data: [val] }];
         return cfg;
       }
+
       if (query.type === 'yesno') {
         var yn = data && data.value;
         if (yn && typeof yn === 'object') { if ('value' in yn) yn = yn.value; else if ('y' in yn) yn = yn.y; }
         return renderYesNoLabel(yn, $('#ascd-preview')[0]);
       }
+
       var isCol3D = (query.type==='column3d');
       var isArea3D = (query.type==='area3d');
       var baseType = isCol3D ? 'column' : (isArea3D ? 'area' : (query.type==='spline' ? 'spline' : query.type));
-      var leftSet=query.yLeft||[], rightSet=query.yRight||[];
-      var needTwo = leftSet.length && rightSet.length;
-      if (!cfg.yAxis){
-        cfg.yAxis = needTwo ? [{ title:{text:null} }, { title:{text:null}, opposite:true }] : [{ title:{text:null} }];
-      } else if (needTwo && cfg.yAxis.length===1){
-        cfg.yAxis.push({ title:{text:null}, opposite:true });
+
+      var incoming = cleanSeries(data.series || []);
+      var anyRight = incoming.some(function(s){ return s.yAxis === 1 || s.opposite === true; });
+
+      // yAxis assembly: prefer server-provided, else synthesize
+      if (Array.isArray(data.yAxis) && data.yAxis.length){
+        cfg.yAxis = data.yAxis.map(function(ax, i){
+          ax = ax || {};
+          ax.title = ax.title || { text: null };
+          ax.labels = ax.labels || {};
+          ax.labels.enabled = true;
+          if (i === 1 && typeof ax.opposite === 'undefined') ax.opposite = true;
+          return ax;
+        });
+      } else {
+        if (!cfg.yAxis){
+          cfg.yAxis = [{ title:{text:null}, labels:{enabled:true} }];
+        } else if (!Array.isArray(cfg.yAxis)){
+          cfg.yAxis = [cfg.yAxis];
+        }
+        if (anyRight && cfg.yAxis.length === 1){
+          cfg.yAxis.push({ title:{text:null}, opposite:true, labels:{enabled:true} });
+        }
       }
-      var fromData = cleanSeries(data.series || []);
-      cfg.series = fromData.map(function(s){
-        var idx = rightSet.indexOf(s.id)>=0 ? 1 : 0;
-        var out = { id:s.id, name:s.name||s.id, data:s.data };
-        if (needTwo) out.yAxis = idx;
-        out.type = baseType;
+
+      cfg.series = incoming.map(function(s){
+        var out = { id:s.id, name:s.name||s.id, data:s.data, type: baseType };
+        if (cfg.yAxis && cfg.yAxis.length > 1){
+          out.yAxis = (s.yAxis === 1 || s.opposite === true) ? 1 : 0;
+        }
         return out;
       });
+
       return cfg;
     }
 
+    /** Get current time range; default to last N seconds from options. */
     function getActiveRange(){
       if (isFinite(state.tfFrom) && isFinite(state.tfTo)) return { from: state.tfFrom, to: state.tfTo };
       var now = Math.floor(Date.now()/1000);
@@ -654,9 +842,50 @@
       return { from: now - sec, to: now };
     }
 
+    /** Set the active time range (unix seconds). */
+    function setRange(from, to){
+      if (isFinite(from) && isFinite(to)){
+        state.tfFrom = Math.floor(from);
+        state.tfTo   = Math.floor(to);
+      }
+    }
+
+    /** Open external time range modal if present, else emit a generic event. */
+    function openTimeRangeModal(){
+      var cur = getActiveRange();
+      $('#ascd-trm').remove();
+      var hostDiv = $('<div id="ascd-trm"></div>').appendTo(document.body);
+      if ($.fn.timeRangeModal){
+        try{
+          hostDiv.timeRangeModal({ from: cur.from, to: cur.to, wide: true });
+          if (typeof hostDiv.timeRangeModal === 'function'){
+            hostDiv.timeRangeModal('open');
+          }
+        }catch(_){}
+      } else {
+        try { $(document).trigger('tr.open', [{from:cur.from, to:cur.to}]); } catch(_){}
+      }
+    }
+
+    // Time range apply hooks (both names are listened for)
+    $(document).on('tr.apply.ascd', function(e, payload){
+      if (payload && isFinite(payload.from) && isFinite(payload.to)){
+        setRange(payload.from, payload.to);
+        if (canPreviewNow()) previewChart();
+      }
+    });
+    $(document).on('tr.apply', function(e, payload){
+      if (payload && isFinite(payload.from) && isFinite(payload.to)){
+        setRange(payload.from, payload.to);
+        if (canPreviewNow()) previewChart();
+      }
+    });
+
+    /** Render preview using a server response payload. */
     function previewFromServer(resp){
       try{
         var q = { type: state.type, yLeft: state.yLeft.map(stripThumbSuffix), yRight: state.yRight.map(stripThumbSuffix), valueField: state.gaugeVal || state.yesnoVal };
+        // Special case: gauge data can come as full series
         if (resp && resp.type === 'gauge' && Array.isArray(resp.series)) {
           var gcfg = deepMerge(baseConfigFor('gauge'), { series: resp.series });
           Highcharts.chart(preview[0], gcfg);
@@ -668,9 +897,10 @@
         var normalized = (q.type==='gauge' || q.type==='yesno')
           ? { value: (resp && (resp.value !== undefined ? resp.value : (resp.data !== undefined ? resp.data : null))) }
           : { series: resp && resp.series ? resp.series : [] };
+
         var hc = toHighcharts(q, normalized);
         if (hc && hc.kind === 'yesnoLabel'){
-          state.lastOutput = hc;
+          state.lastOutput = hc; // sentinel for yes/no render
         } else {
           Highcharts.chart(preview[0], hc);
           state.lastOutput = hc;
@@ -683,27 +913,34 @@
       }
     }
 
+    /**
+     * Collect current config + range, POST to graphDataUrl, then render.
+     * Developer Console mirrors request/response for troubleshooting.
+     */
     function previewChart(){
       state.lastOutput=null; updateSaveEnabled();
-      status('');
+
       if (state.type==='gauge' && !state.gaugeVal) { status('Select a gauge value field.', true); return; }
       if (state.type==='yesno' && !state.yesnoVal) { status('Select a yes/no value field.', true); return; }
       if (!/^(gauge|yesno)$/.test(state.type) && !(state.yLeft.length || state.yRight.length)) {
         status('Drag at least one measure into Y Left/Right.', true); return;
       }
+
       var chartConfig = buildChartConfig();
-      var range = getActiveRange();
-      var previewPayload = { chartConfig: chartConfig, range: { from: range.from, to: range.to } };
+      var r = getActiveRange();
+      var previewPayload = { chartConfig: chartConfig, range: { from: r.from, to: r.to } };
+
       if (dev.enabled && dev.$reqPrev) dev.$reqPrev.text(JSON.stringify(previewPayload, null, 2));
+
       status('Preview: requesting data from server…');
       $.ajax({
-        url: (opts.graphDataUrl || 'includes/moduleutil.php?request=GraphData'),
+        url: (opts.graphDataUrl || 'includes/chartutil.php?request=GraphData'),
         method: 'POST',
         data: JSON.stringify(previewPayload),
         contentType: 'application/json; charset=utf-8',
         dataType: 'json',
         cache: false,
-        timeout: 15000
+               timeout: 15000
       }).done(function(resp){
         if (dev.enabled && dev.$respPrev) {
           try { dev.$respPrev.text(JSON.stringify(resp, null, 2)); } catch(_) { dev.$respPrev.text('OK (non-JSON)'); }
@@ -716,6 +953,7 @@
       });
     }
 
+    /** Dev helper: send the variable selection to variableSeriesUrl. */
     function sendVariableSeries(){
       function canSend(){
         if (state.type==='gauge') return !!state.gaugeVal;
@@ -749,19 +987,25 @@
       });
     }
 
+    /** Populate the UI from an existing ChartConfig object. */
     function applyConfigToUI(cfg){
       try {
+        // Clear current selections/state
         dropYLeft.empty(); dropYRight.empty(); dropGauge.empty(); dropYesNo.empty();
         state.yLeft = []; state.yRight = []; state.gaugeVal = null; state.yesnoVal = null;
         thumbLeft.prop('checked', false); thumbRight.prop('checked', false);
         preview.empty(); state.lastOutput = null;
+
         if (cfg.title) titleInput.val(String(cfg.title));
         groupInput.val(String(cfg.group || 'Custom'));
+
         var t = String(cfg.type || 'line').toLowerCase();
         var allowedTypes = {line:1,spline:1,area:1,column:1,bar:1,gauge:1,yesno:1,area3d:1,column3d:1};
         if (!allowedTypes[t]) t = 'line';
         selectType(t);
+
         var series = Array.isArray(cfg.series) ? cfg.series : [];
+
         if (t === 'gauge') {
           if (series[0]) {
             var varIdG = series[0].variable || series[0].id || series[0].name || '';
@@ -777,113 +1021,87 @@
             setSingleTarget(dropYesNo, { id: state.yesnoVal, label: series[0].name || state.yesnoVal });
           }
         } else {
-          var leftIds = [], rightIds = [];
+          // Cartesian: restore left/right series, detect thumbnail flags per side
           var leftHadThumb = false, rightHadThumb = false;
+
           series.forEach(function(s){
             var vid = String(s.variable || s.id || s.name || '');
             if (!vid) return;
             var isRight = (s.yAxis === 1 || s.opposite === true);
             if (isRight) {
-              rightIds.push(stripThumbSuffix(vid));
+              state.yRight.push(stripThumbSuffix(vid));
               rightHadThumb = rightHadThumb || hasThumbSuffix(vid);
-              addMultiTarget(dropYRight, { id: stripThumbSuffix(vid), label: s.name || stripThumbSuffix(vid) }, state.yRight);
+              dropYRight.append($(badge(stripThumbSuffix(vid), s.name || stripThumbSuffix(vid))));
             } else {
-              leftIds.push(stripThumbSuffix(vid));
+              state.yLeft.push(stripThumbSuffix(vid));
               leftHadThumb = leftHadThumb || hasThumbSuffix(vid);
-              addMultiTarget(dropYLeft, { id: stripThumbSuffix(vid), label: s.name || stripThumbSuffix(vid) }, state.yLeft);
+              dropYLeft.append($(badge(stripThumbSuffix(vid), s.name || stripThumbSuffix(vid))));
             }
           });
+
           thumbLeft.prop('checked', !!leftHadThumb);
           thumbRight.prop('checked', !!rightHadThumb);
         }
+
+        updateAxisControls();
         updateResetEnabled();
         updateSaveEnabled();
         if (canPreviewNow()) previewChart();
+
       } catch (e) {
         console.error('applyConfigToUI failed:', e);
         status('Could not populate editor from the existing chart.', true);
       }
     }
 
+    // Bind type selection and drop-zones
     types.on('click','.list-group-item',function(e){ e.preventDefault(); selectType($(this).data('type')); });
     bindDrop(dropYLeft,'measure',function(f){ addMultiTarget(dropYLeft,f,state.yLeft); });
     bindDrop(dropYRight,'measure',function(f){ addMultiTarget(dropYRight,f,state.yRight); });
-    bindDrop(dropGauge,'measure',function(f){ setSingleTarget(dropGauge,f); state.gaugeVal=f.id; });
-    bindDrop(dropYesNo,'measure',function(f){ setSingleTarget(dropYesNo,f); state.yesnoVal=f.id; });
+    bindDrop(dropGauge,'measure',function(f){ setSingleTarget(dropGauge,f); state.gaugeVal=f.id; updateResetEnabled(); });
+    bindDrop(dropYesNo,'measure',function(f){ setSingleTarget(dropYesNo,f); state.yesnoVal=f.id; updateResetEnabled(); });
 
-    clearYLeft.on('click',function(e){ e.preventDefault(); dropYLeft.empty(); state.yLeft=[]; preview.empty(); state.lastOutput=null; updateSaveEnabled(); updateResetEnabled(); });
-    clearYRight.on('click',function(e){ e.preventDefault(); dropYRight.empty(); state.yRight=[]; preview.empty(); state.lastOutput=null; updateSaveEnabled(); updateResetEnabled(); });
-    clearGauge.on('click',function(e){ e.preventDefault(); dropGauge.empty(); state.gaugeVal=null; preview.empty(); state.lastOutput=null; updateSaveEnabled(); updateResetEnabled(); });
-    clearYesNo.on('click',function(e){ e.preventDefault(); dropYesNo.empty(); state.yesnoVal=null; preview.empty(); state.lastOutput=null; updateSaveEnabled(); updateResetEnabled(); });
+    // Clear buttons
+    clearYLeft.on('click',function(e){
+      e.preventDefault();
+      dropYLeft.empty(); state.yLeft=[];
+      updateAxisControls(); updateResetEnabled(); updateSaveEnabled();
+      if (state.yRight.length>0) previewChart(); else { preview.empty(); state.lastOutput=null; btnSave.prop('disabled', true); }
+    });
+    clearYRight.on('click',function(e){
+      e.preventDefault();
+      dropYRight.empty(); state.yRight=[];
+      updateAxisControls(); updateResetEnabled(); updateSaveEnabled();
+      if (state.yLeft.length>0) previewChart(); else { preview.empty(); state.lastOutput=null; btnSave.prop('disabled', true); }
+    });
+    clearGauge.on('click',function(e){
+      e.preventDefault();
+      dropGauge.empty(); state.gaugeVal=null;
+      updateResetEnabled(); updateSaveEnabled();
+      preview.empty(); state.lastOutput=null; btnSave.prop('disabled', true);
+    });
+    clearYesNo.on('click',function(e){
+      e.preventDefault();
+      dropYesNo.empty(); state.yesnoVal=null;
+      updateResetEnabled(); updateSaveEnabled();
+      preview.empty(); state.lastOutput=null; btnSave.prop('disabled', true);
+    });
 
-    btnPreview.on('click', previewChart);
+    // Thumbnail toggle impacts variable id suffix → triggers preview
+    thumbLeft.on('change', function(){ if (state.yLeft.length) maybeAutoPreview(); });
+    thumbRight.on('change', function(){ if (state.yRight.length) maybeAutoPreview(); });
+
+    // Actions
+    btnPreview.on('click', function(e){ e.preventDefault(); previewChart(); });
+    btnTime.on('click', function(e){ e.preventDefault(); openTimeRangeModal(); });
     if (dev.enabled) {
       dev.$btnPrev.on('click', previewChart);
       dev.$btnVars.on('click', sendVariableSeries);
     }
 
-    function openTimeRange(e){
-      e.preventDefault();
-      var initial = getActiveRange();
-      var optsTR = { anchor: btnOpenTR[0], from: initial.from, to: initial.to, width: 900 };
-      try {
-        if ($.fn.timeRangeModal) {
-          try { $(document.body).timeRangeModal('destroy'); } catch(_) {}
-          try { $(document.body).timeRangeModal({}); } catch(_) {}
-          $(document.body).timeRangeModal('open', optsTR);
-          return;
-        }
-      } catch(_) {}
-      try {
-        if ($.timeRangeModal && typeof $.timeRangeModal === 'function') {
-          $.timeRangeModal('open', optsTR);
-          return;
-        }
-        if ($.timeRangeModal && $.timeRangeModal.open) {
-          $.timeRangeModal.open(optsTR);
-          return;
-        }
-      } catch(_) {}
-      try {
-        if (window.timeRangeModal && typeof window.timeRangeModal === 'function') {
-          window.timeRangeModal('open', optsTR);
-          return;
-        }
-        if (window.timeRangeModal && window.timeRangeModal.open) {
-          window.timeRangeModal.open(optsTR);
-          return;
-        }
-      } catch(_) {}
-      $(document).trigger('tr.open', optsTR);
-    }
-    btnOpenTR.on('click', openTimeRange);
-
-    $(document).on('tr.apply', function(e, payload){
-      var r = (payload && payload.range) ? payload.range : payload || {};
-      if (isFinite(r.from) && isFinite(r.to)){
-        state.tfFrom = Math.floor(r.from);
-        state.tfTo   = Math.floor(r.to);
-        previewChart();
-      }
-    });
-
-    function doReset(){
-      titleInput.val('');
-      groupInput.val('Custom');
-      dropYLeft.empty(); dropYRight.empty(); dropGauge.empty(); dropYesNo.empty();
-      state.yLeft=[]; state.yRight=[]; state.gaugeVal=null; state.yesnoVal=null;
-      thumbLeft.prop('checked', false); thumbRight.prop('checked', false);
-      state.lastOutput=null; preview.empty();
-      state.tfFrom=null; state.tfTo=null;
-      selectType((opts.defaults && opts.defaults.type) || 'line');
-      updateSaveEnabled();
-      updateResetEnabled();
-      status('');
-    }
-    btnReset.on('click', function(e){ e.preventDefault(); if (!btnReset.prop('disabled')) doReset(); });
-
+    /** Fetch and normalize the measures catalog, then render. */
     function fetchCatalog(){
-      var url = (opts.variablesUrl || 'includes/moduleutil.php?request=AvailableVariables');
+      var url = (opts.variablesUrl || 'includes/chartutil.php?request=AvailableVariables');
       var d = $.Deferred();
       $.ajax({ url: url, method: 'GET', dataType: 'json', cache: false })
         .done(function(resp){
@@ -892,11 +1110,11 @@
             d.resolve({ measures: measuresFlat });
           } catch (e){ d.reject(e); }
         })
-        .fail(function(xhr){ 
-          d.reject(new Error('Failed to load variable catalog (' + (xhr.status||'') + ').')); 
-        });
+        .fail(function(xhr){ d.reject(new Error('Failed to load variable catalog (' + (xhr.status||'') + ').')); });
       return d.promise();
     }
+
+    /** Normalize catalog payload into a flat [{id,label,group,table,description}] list. */
     function normalizeCatalog(resp){
       var out = [];
       if (Array.isArray(resp)){
@@ -926,6 +1144,8 @@
       });
       return out;
     }
+
+    // Load catalog; if a config was queued pre-catalog, apply it after load
     fetchCatalog().done(function(cat){
       state.catalog = cat;
       state._catalogReady = true;
@@ -940,44 +1160,42 @@
       status('Failed to load fields: ' + (err && err.message ? err.message : err), true);
     });
 
+    // Initial type selection and form bindings
     selectType(state.type);
     titleInput.on('input', updateSaveEnabled);
 
+    // Reset wipes all mappings and preview output
+    btnReset.on('click', function(){
+      if ($(this).prop('disabled')) return;
+      dropYLeft.empty(); dropYRight.empty(); dropGauge.empty(); dropYesNo.empty();
+      state.yLeft=[]; state.yRight=[]; state.gaugeVal=null; state.yesnoVal=null;
+      thumbLeft.prop('checked', false); thumbRight.prop('checked', false);
+      preview.empty(); state.lastOutput=null;
+      updateAxisControls(); updateResetEnabled(); updateSaveEnabled();
+    });
+
+    // Save emits final config + last preview options and closes the modal
     btnSave.on('click', function(){
       if (!state.lastOutput){ status('Preview first.', true); return; }
-      var currentTitle = $.trim(titleInput.val());
-      if (!currentTitle){
-        titleModal.modal('show');
-        setTimeout(function(){ titleModalInput.val('').focus(); }, 200);
-        return;
-      }
       var finalCfg = buildChartConfig();
       var payloadOut={ configJSON: finalCfg, previewOutput: state.lastOutput };
       host.trigger('allskyChartDesigner:save', payloadOut);
       $(modal).modal('hide');
     });
 
-    titleModalOk.on('click', function(){
-      var t = $.trim(titleModalInput.val());
-      if (!t){ titleModalInput.focus(); return; }
-      titleInput.val(t);
-      titleModal.modal('hide');
-      var finalCfg = buildChartConfig();
-      var payloadOut={ configJSON: finalCfg, previewOutput: state.lastOutput };
-      host.trigger('allskyChartDesigner:save', payloadOut);
-      $(modal).modal('hide');
-    });
-
-    titleModal.on('shown.bs.modal', function(){ titleModalInput.trigger('focus'); });
-    titleModalInput.on('keypress', function(e){ if (e.which === 13) { titleModalOk.click(); } });
-
+    /** Open the modal, optionally pre-populating from config or 
+     *  loading by name via opts.loadChartUrl. */
     function doOpen(optsOpen){
       $(modal).modal('show');
+
+      // Direct config provided – populate immediately (or defer until catalog ready)
       if (optsOpen && optsOpen.config && typeof optsOpen.config === 'object') {
         if (state._catalogReady) applyConfigToUI(optsOpen.config);
         else state._pendingPopulate = optsOpen.config;
         return;
       }
+
+      // Load by name from server, if configured
       if (optsOpen && optsOpen.name && opts.loadChartUrl) {
         var req = { name: String(optsOpen.name) };
         $.ajax({
@@ -1003,17 +1221,19 @@
       }
     }
 
+    // Expose minimal API on the host element
     host.data('allskyChartDesigner', {
       open: function(optsOpen){ doOpen(optsOpen || {}); }
     });
   }
 
+  /** jQuery plugin wrapper – ensures single instance per host element. */
   $.fn.allskyChartDesigner = function(options){
     var defaults = {
       defaults:{type:'line'},
-      variablesUrl: 'includes/moduleutil.php?request=AvailableVariables',
-      graphDataUrl: 'includes/moduleutil.php?request=GraphData',
-      variableSeriesUrl: 'includes/moduleutil.php?request=VariableSeriesData',
+      variablesUrl: 'includes/chartutil.php?request=AvailableVariables',
+      graphDataUrl: 'includes/chartutil.php?request=GraphData',
+      variableSeriesUrl: 'includes/chartutil.php?request=VariableSeriesData',
       showDevPanel: false,
       loadChartUrl: null,
       timeframe: {

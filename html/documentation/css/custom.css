@@ -342,6 +342,11 @@ body.dark {
 	border-bottom: 1px solid #2f2f2f;
 }
 
+.dark .modal-footer {
+	border-top: 1px solid black !important;
+	background-color: #222222 !important;
+}
+
 .dark .list-group-item {
 	background-color: #272727;
 	border: 1px solid #272727;

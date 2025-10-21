@@ -13,8 +13,8 @@ class ASCHARTMANAGER {
 
   constructor(opts = {}) {
     this.opts = Object.assign({
-      saveUrl: 'includes/moduleutil.php?request=SaveCharts',
-      loadUrl: 'includes/moduleutil.php?request=SaveCharts',
+      saveUrl: 'includes/chartutil.php?request=SaveCharts',
+      loadUrl: 'includes/chartutil.php?request=SaveCharts',
       wrap: false,
       field: 'state',
       includeMeta: true,
@@ -38,10 +38,10 @@ class ASCHARTMANAGER {
         enabled: true,
         devPanel: true,
         mountSelector: 'body',
-        variablesUrl: 'includes/moduleutil.php?request=AvailableVariables',
-        graphDataUrl: 'includes/moduleutil.php?request=GraphData',
-        saveUrl: 'includes/moduleutil.php?request=SaveCustomChart',
-        loadChartUrl: 'includes/moduleutil.php?request=LoadCustomChart'
+        variablesUrl: 'includes/chartutil.php?request=AvailableVariables',
+        graphDataUrl: 'includes/chartutil.php?request=GraphData',
+        saveUrl: 'includes/chartutil.php?request=SaveCustomChart',
+        loadChartUrl: 'includes/chartutil.php?request=LoadCustomChart'
       }
     }, opts);
 
@@ -118,18 +118,8 @@ class ASCHARTMANAGER {
             <div class="container-fluid">
               <div class="collapse navbar-collapse">
                 <ul class="nav navbar-nav">
-                  <li>
-                    <button type="button" id="as-tr-btn" class="btn btn-primary navbar-btn" title="Time range">
-                      <i class="fa-regular fa-clock"></i>
-                      <span class="hidden-xs"> Set Time Range</span>
-                    </button>
-                  </li>
                   ${this.opts.designer && this.opts.designer.enabled ? `
                   <li>
-                    <button type="button" id="as-create-chart" class="ml-2 btn btn-primary navbar-btn" title="Create a new chart">
-                      <i class="fa-solid fa-plus"></i>
-                      <span class="hidden-xs"> Create Chart</span>
-                    </button>
                   </li>` : ``}
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
@@ -336,7 +326,7 @@ class ASCHARTMANAGER {
    */
   buildChartGroups() {
     $.ajax({
-      url: 'includes/moduleutil.php?request=AvailableGraphs',
+      url: 'includes/chartutil.php?request=AvailableGraphs',
       type: 'GET',
       async: false,
       cache: false,
@@ -608,7 +598,7 @@ class ASCHARTMANAGER {
         try { this._saveDebounced(); } catch(_) {}
 
         $.ajax({
-          url: 'includes/moduleutil.php?request=DeleteCustomChart',
+          url: 'includes/chartutil.php?request=DeleteCustomChart',
           method: 'POST',
           data: JSON.stringify({ name: info.filename }),
           contentType: 'application/json; charset=utf-8',
@@ -987,7 +977,7 @@ class ASCHARTMANAGER {
     const postBody = this._buildGraphPostBody({ filename: nc.filename, chartConfig: nc.chartConfig });
 
     // Persist time-range to URL as well (some backends may read either body or query)
-    const baseUrl = 'includes/moduleutil.php?request=GraphData';
+    const baseUrl = 'includes/chartutil.php?request=GraphData';
     const qs = this._timeQueryString();
 
     $pane.allskyChart({
@@ -1204,7 +1194,7 @@ class ASCHARTMANAGER {
           }
 
           // Sync URL query
-          const base = inst._gmBaseConfigUrl || 'includes/moduleutil.php?request=GraphData';
+          const base = inst._gmBaseConfigUrl || 'includes/chartutil.php?request=GraphData';
           const url = base + this._timeQueryString();
           if (typeof inst.setConfigUrl === 'function') {
             inst.setConfigUrl(url);
@@ -1274,7 +1264,7 @@ class ASCHARTMANAGER {
 
     try { if (typeof inst.setGraphPostBody === 'function') inst.setGraphPostBody(inst._gmGraphPostBody); } catch(_) {}
 
-    const base = inst._gmBaseConfigUrl || 'includes/moduleutil.php?request=GraphData';
+    const base = inst._gmBaseConfigUrl || 'includes/chartutil.php?request=GraphData';
     const url = base + this._timeQueryString();
     try { if (typeof inst.setConfigUrl === 'function') inst.setConfigUrl(url); } catch(_) {}
 
@@ -1343,7 +1333,7 @@ class ASCHARTMANAGER {
     }
 
     $.ajax({
-      url: this.opts.designer.saveUrl || 'includes/moduleutil.php?request=SaveCustomChart',
+      url: this.opts.designer.saveUrl || 'includes/chartutil.php?request=SaveCustomChart',
       method: 'POST',
       data: JSON.stringify({ title: title, config: configJSON }),
       contentType: 'application/json; charset=utf-8',

@@ -381,7 +381,7 @@ function DisplaySystem()
 									?>
 									<tr><td colspan="2" style="height: 5px"></td></tr>
 									<?php 
-										$tmp = str_replace(ALLSKY_HOME, "~/allsky", $tmp_dir)
+										$tmp = str_replace(ALLSKY_HOME, "~/allsky", $tmp_dir);
 										$label = "<span title='Usage of just ~/allsky is on.'>$tmp Usage</span>";
 										if ($tdp === -1) {
 											echo "<tr>";

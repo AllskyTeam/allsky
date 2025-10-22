@@ -219,41 +219,41 @@ function displayUserData($file, $displayType)
  */
 function DisplaySystem()
 {
-	global $temptype, $page, $settings_array, $status, $hostname;
+	global $page, $settings_array, $status, $hostname;
 	global $pageHeaderTitle, $pageIcon;
 
 	$uptime = getUptime();
-
 	$memused = getMemoryUsed();
 
-	// Disk and File usage.
+	// Disk usage.
 
 	// Filesystem Allsky is on.
-	$top_dir = ALLSKY_WEBUI;
+	$top_dir = ALLSKY_HOME;
 	$df = @disk_free_space($top_dir);		// returns bytes
 	if ($df === false) {
 		$dp = -1;	// signals an error
-		$dp_msg = "<span class='errorMsg'>Unable to read '$top_dir'.</span>";
+		$dp_msg = "<span class='errorMsg'>Unable to get size of '$top_dir'.</span>";
 	} else {
-		// and get disk space total (in bytes)
+		// Get disk space total (in bytes).
 		$dt = disk_total_space($top_dir);
-		// now we calculate the disk space used (in bytes)
+		// Now we calculate the disk space used (in bytes).
 		$du = $dt - $df;
-		// percentage of disk used - this will be used to also set the width % of the progress bar
+		// % of disk used - this will be used to also set the width % of the progress bar.
 		$dp = sprintf('%d', ($du / $dt) * 100);
 
-		/* and we format the size from bytes to MB, GB, etc. */
+		// Format the size from bytes to MB, GB, etc.
 		$df = formatSize($df);
 		$du = formatSize($du);
 		$dt = formatSize($dt);
 		$dp_msg = "$dp% &nbsp; &nbsp; - &nbsp; &nbsp; $dt ($df free)";
 	}
+
 	// Allsky tmp filesystem
 	$tmp_dir = ALLSKY_TMP;
 	$tdf = @disk_free_space($tmp_dir);
 	if ($tdf === false) {
 		$tdp = -1;
-		$tdp_msg = "<span class='errorMsg'>Unable to read '$tmp_dir'.</span>";
+		$tdp_msg = "<span class='errorMsg'>Unable to get size of '$tmp_dir'.</span>";
 	} else {
 		$tdt = disk_total_space($tmp_dir);
 		$tdu = $tdt - $tdf;
@@ -369,7 +369,7 @@ function DisplaySystem()
 									<?php displayProgress("", "CPU Temperature", $display_temperature, 0, $temperature, 100, 70, 60, $temperature_status, "as-cputemp"); ?>
 									<tr><td colspan="2" style="height: 5px"></td></tr>
 									<?php 
-										$label = "Disk Usage";
+										$label = "<span title='Usage of disk ~/allsky is on.'>Disk Usage</span>";
 										if ($dp === -1) {
 											echo "<tr>";
 											echo "<td>$label</td>";
@@ -381,7 +381,8 @@ function DisplaySystem()
 									?>
 									<tr><td colspan="2" style="height: 5px"></td></tr>
 									<?php 
-										$label = str_replace(ALLSKY_HOME, "~/allsky", $tmp_dir) . " Usage";
+										$tmp = str_replace(ALLSKY_HOME, "~/allsky", $tmp_dir);
+										$label = "<span title='Usage of just ~/allsky is on.'>$tmp Usage</span>";
 										if ($tdp === -1) {
 											echo "<tr>";
 											echo "<td>$label</td>";

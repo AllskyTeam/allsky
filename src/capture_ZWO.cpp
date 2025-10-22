@@ -140,21 +140,9 @@ void *Display(void *params)
 	return (void *)0;
 }
 
-void *SaveImgThd(void *para)
+// Save the image.
+void saveImage()
 {
-	while (bSaveRun)
-	{
-		pthread_mutex_lock(&mtxSaveImg);
-		pthread_cond_wait(&condStartSave, &mtxSaveImg);
-
-		if (gotSignal)
-		{
-			// we got a signal to exit, so don't save the (probably incomplete) image
-			pthread_mutex_unlock(&mtxSaveImg);
-			break;
-		}
-
-
 		// I don't know how to cast "st" to 0, so call now() and ignore it.
 		auto st = std::chrono::high_resolution_clock::now();
 		auto et = st;
@@ -164,13 +152,25 @@ void *SaveImgThd(void *para)
 		{
 			bSavingImg = true;
 
-			char cmd[1100+strlen(CG.allskyHome)];
 			Log(4, "  > Saving %s image '%s'\n",
 				CG.takeDarkFrames ? "dark" : dayOrNight.c_str(), CG.finalFileName);
-			snprintf(cmd, sizeof(cmd), "%s/saveImage.sh %s '%s'",
-				CG.allskyScripts, dayOrNight.c_str(), CG.fullFilename);
-			add_variables_to_command(CG, cmd, exposureStartDateTime);
-			strcat(cmd, " &");
+
+			char cmd[1100+strlen(CG.allskyHome)];
+
+			if (CG.focusMode)
+			{
+				snprintf(cmd, sizeof(cmd), "%s/saveImage.sh %s '%s' --focus-mode %ld", CG.allskyScripts,
+					dayOrNight.c_str(), CG.fullFilename, CG.lastFocusMetric);
+				// In focusMode, wait for processing to complete since we
+				// don't otherwise delay between images.
+			}
+			else
+			{
+				snprintf(cmd, sizeof(cmd), "%s/saveImage.sh %s '%s'", CG.allskyScripts,
+					dayOrNight.c_str(), CG.fullFilename);
+				add_variables_to_command(CG, cmd, exposureStartDateTime);
+				strcat(cmd, " &");
+			}
 
 			try
 			{
@@ -209,6 +209,24 @@ void *SaveImgThd(void *para)
 			// This can happen if the program is closed before the first picture.
 			Log(0, "----- SaveImgThd(): pRgb.data is null\n");
 		}
+}
+
+// Save an image using a separate thread so it's done in parallel.
+void *SaveImgThd(void *para)
+{
+	while (bSaveRun)
+	{
+		pthread_mutex_lock(&mtxSaveImg);
+		pthread_cond_wait(&condStartSave, &mtxSaveImg);
+
+		if (gotSignal)
+		{
+			// we got a signal to exit, so don't save the (probably incomplete) image
+			pthread_mutex_unlock(&mtxSaveImg);
+			break;
+		}
+
+		saveImage();
 
 		pthread_mutex_unlock(&mtxSaveImg);
 	}
@@ -964,9 +982,10 @@ int main(int argc, char *argv[])
 	bool ok = true;
 	if (CG.HB.sArgs[0] != '\0')
 	{
-		if (sscanf(CG.HB.sArgs, "%d %d %f %f", &CG.HB.histogramBoxSizeX, &CG.HB.histogramBoxSizeY, &CG.HB.histogramBoxPercentFromLeft, &CG.HB.histogramBoxPercentFromTop) != 4)
+		if (sscanf(CG.HB.sArgs, "%d %d %f %f", &CG.HB.histogramBoxSizeX, &CG.HB.histogramBoxSizeY,
+			&CG.HB.histogramBoxPercentFromLeft, &CG.HB.histogramBoxPercentFromTop) != 4)
 		{
-			Log(0, "*** %s: ERROR: Not enough histogram box parameters should be 4: '%s'\n", CG.ME, CG.HB.sArgs);
+			Log(0, "*** %s: ERROR: Not enough histogram box parameters; should be 4: '%s'\n", CG.ME, CG.HB.sArgs);
 			ok = false;
 		} else {
 			if (CG.HB.histogramBoxSizeX < 1 || CG.HB.histogramBoxSizeY < 1)
@@ -1126,6 +1145,20 @@ int main(int argc, char *argv[])
 		capturingVideo = true;
 	}
 
+	if (CG.focusMode)
+	{
+		// Make things as efficient as possible.
+		CG.debugLevel = 1;
+		CG.daytimeCapture = true;		CG.daytimeSave = false;
+		CG.nighttimeCapture = true;		CG.nighttimeSave = false;
+		CG.determineFocus = true;
+		CG.dayDelay_ms = 0;
+		CG.nightDelay_ms = 0;
+		CG.consistentDelays = false;
+	}
+
+	// Start taking pictures
+
 	while (bMain)
 	{
 		// Find out if it is currently DAY or NIGHT
@@ -1191,7 +1224,8 @@ int main(int argc, char *argv[])
 				continue;
 			}
 
-			Log(1, "==========\n=== Starting daytime capture ===\n==========\n");
+			Log(1, "==========\n=== Starting daytime %s ===\n==========\n",
+				CG.focusMode ? "focus mode" : "capture");
 
 			// We only skip initial frames if we are starting in daytime and using auto-exposure.
 			if (numExposures == 0 && CG.dayAutoExposure)
@@ -1289,7 +1323,8 @@ int main(int argc, char *argv[])
 				continue;
 			}
 
-			Log(1, "==========\n=== Starting nighttime capture ===\n==========\n");
+			Log(1, "==========\n=== Starting nighttime %s ===\n==========\n",
+				CG.focusMode ? "focus mode" : "capture");
 
 			// We only skip initial frames if we are starting in nighttime and using auto-exposure.
 			if (numExposures == 0 && CG.nightAutoExposure)
@@ -1336,6 +1371,22 @@ int main(int argc, char *argv[])
 			}
 		}
 		// ========== Done with dark frams / day / night settings
+
+		if (CG.focusMode && numExposures == 1)
+		{
+			// Once we know the correct exposure, manual exposure and gain are faster.
+			if (CG.HB.useHistogram)
+			{
+				// On ZWO, "useHistogram" means we're using auto-exposure.
+				Log(1, "Turning off auto-exposure due to focus mode\n");
+				CG.HB.useHistogram = false;
+			}
+			if (CG.currentAutoGain)
+			{
+				Log(1, "Turning off auto-gain due to focus mode\n");
+				CG.currentAutoGain = false;
+			}
+		}
 
 		CG.myModeMeanSetting.minMean = CG.myModeMeanSetting.currentMean - CG.myModeMeanSetting.currentMean_threshold;
 		CG.myModeMeanSetting.maxMean = CG.myModeMeanSetting.currentMean + CG.myModeMeanSetting.currentMean_threshold;
@@ -1850,9 +1901,15 @@ long saved_newExposure_us = newExposure_us;
 							snprintf(CG.fullFilename, sizeof(CG.fullFilename), "%s/%s", CG.saveDir, CG.finalFileName);
 						}
 
-						pthread_mutex_lock(&mtxSaveImg);
-						pthread_cond_signal(&condStartSave);
-						pthread_mutex_unlock(&mtxSaveImg);
+						if (CG.focusMode) {
+							saveImage();
+						} else {
+							// In non-focusMode we save the image in the background since processing
+							// the image can take a long time.
+							pthread_mutex_lock(&mtxSaveImg);
+							pthread_cond_signal(&condStartSave);
+							pthread_mutex_unlock(&mtxSaveImg);
+						}
 					}
 					else
 					{

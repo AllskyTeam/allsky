@@ -51,12 +51,17 @@ fi
 
 WORKING_DIR=$( dirname "${CURRENT_IMAGE}" )		# the directory the image is currently in
 WEBSITE_FILE="${WORKING_DIR}/${ALLSKY_FULL_FILENAME}"	# The file name the websites look for
+CURRENT_ALLSKY_STATUS="$( get_allsky_status )"
+# Only update if different so we don't loose original timestamp
+if [[ ${CURRENT_ALLSKY_STATUS} != "${ALLSKY_STATUS_RUNNING}" ]]; then
+	set_allsky_status "${ALLSKY_STATUS_RUNNING}" || echo "Unsable to set Allsky Status"
+fi
 
 if [[ ${1} == "--focus-mode" ]]; then
 	# Add the metric to the image, rename it, and exit.
 	FOCUS_METRIC="${2}"
 	TEXT="Focus Mode, metric = ${FOCUS_METRIC}"
-	TEXT+="\n$(echo "${CURRENT_IMAGE}" | sed -e "s/.*${ALLSKY_FILENAME}-//" -e "s/.${ALLSKY_EXTENSION}//" )"
+	TEXT+="\nTime: $( date +'%H:%M:%S.%N' )"
 	# Use defaults for everything but Y location - put near top.
 	addTextToImage --y 100 "${CURRENT_IMAGE}" "${CURRENT_IMAGE}" "${TEXT}"
 	mv "${CURRENT_IMAGE}" "${WEBSITE_FILE}"
@@ -512,9 +517,5 @@ fi
 
 # We create ${WEBSITE_FILE} as late as possible to avoid it being overwritten.
 mv "${CURRENT_IMAGE}" "${WEBSITE_FILE}" || echo "ERROR: ${ME} Unable to rename current image to final name." >&2
-
-# Only update if different so we don't loose original timestamp
-STATUS="$( get_allsky_status )"
-[[ ${STATUS} != "${ALLSKY_STATUS_RUNNING}" ]] && set_allsky_status "${ALLSKY_STATUS_RUNNING}"
 
 exit 0

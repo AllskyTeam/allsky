@@ -34,7 +34,7 @@
             "example": "25-12-23 23:10",
             "stackable": false,
             "type": "date"
-        },        
+        },
         {
             "format": "%m-%d-%y",
             "description": "Short US date",
@@ -48,7 +48,7 @@
             "example": "12-25-23 23:10",
             "stackable": false,
             "type": "date"
-        },        
+        },
         {
             "format": "customdate",
             "description": "Custom date format.",
@@ -57,7 +57,7 @@
             "type": "date"
         },
         {
-            "format": "int",            
+            "format": "int",
             "description": "Integered Number",
             "example": "52",
             "attribute": [
@@ -69,7 +69,7 @@
             "type": "number"
         },
         {
-            "format": "float",            
+            "format": "float",
             "description": "Floating Point Number",
             "example": "52.12",
             "attribute": [
@@ -79,37 +79,37 @@
                 "locale"
             ],
             "type": "number"
-        },     
+        },
         {
-            "format": "{:.0f}",            
-            "description": "Number to zero DP. (LEGACY DO NOT USE)",
+            "format": "{:.0f}",
+            "description": "Number to zero decimal places.",
             "example": "52",
             "stackable": true,
             "legacy": "Legacy",
             "type": "number"
         },
         {
-            "format": "{:.2f}",            
-            "description": "Number to 2 DP. (LEGACY DO NOT USE)",
+            "format": "{:.2f}",
+            "description": "Number to 2 decimal places.",
             "example": "52.00",
             "stackable": false,
-            "legacy": "Legacy",            
+            "legacy": "Legacy",
             "type": "number"
-        },        
+        },
         {
             "format": "{:,}",
-            "description": "Comma for thousands. (LEGACY DO NOT USE)",
+            "description": "Comma for thousands.",
             "example": "800,000",
             "stackable": false,
-            "legacy": "Legacy",            
+            "legacy": "Legacy",
             "type": "number"
         },
         {
             "format": "{:n}",
-            "description": "Use locale thousands. (LEGACY DO NOT USE)",
+            "description": "Use locale thousands.",
             "example": "800.000",
             "stackable": false,
-            "legacy": "Legacy",            
+            "legacy": "Legacy",
             "type": "number"
         },
         {
@@ -118,7 +118,7 @@
             "example": "Yes, No",
             "stackable": false,
             "type": "bool"
-        },        
+        },
         {
             "format": "onoff",
             "description": "Output On (if input is 1) or Off",
@@ -139,37 +139,37 @@
             "example": "1, 0",
             "stackable": false,
             "type": "bool"
-        },                 
+        },
         {
             "format": "%yes",
-            "description": "Output Yes or No. (LEGACY DO NOT USE)",
+            "description": "Output Yes or No.",
             "example": "Yes, No",
             "stackable": false,
-            "legacy": "Legacy",            
+            "legacy": "Legacy",
             "type": "bool"
         },
         {
             "format": "%on",
-            "description": "Output On or Off. (LEGACY DO NOT USE)",
+            "description": "Output On or Off.",
             "example": "On, Off",
             "stackable": false,
-            "legacy": "Legacy",            
+            "legacy": "Legacy",
             "type": "bool"
         },
         {
             "format": "%true",
-            "description": "Output True of False. (LEGACY DO NOT USE)",
+            "description": "Output True of False.",
             "example": "True, False",
             "stackable": false,
-            "legacy": "Legacy",            
+            "legacy": "Legacy",
             "type": "bool"
         },
         {
             "format": "%1",
-            "description": "Output 1 or 0. (LEGACY DO NOT USE)",
+            "description": "Output 1 or 0.",
             "example": "1, 0",
             "stackable": false,
-            "legacy": "Legacy",            
+            "legacy": "Legacy",
             "type": "bool"
         },
         {
@@ -179,12 +179,12 @@
             "attribute": [
                 "dp0",
                 "deg"
-            ],            
+            ],
             "stackable": false,
             "type": "elevation"
-        },      
+        },
         {
-            "format": "float",            
+            "format": "float",
             "description": "Floating Point Number",
             "example": "52.12",
             "attribute": [
@@ -200,12 +200,12 @@
             "attribute": [
                 "dp0",
                 "deg"
-            ],            
+            ],
             "stackable": false,
             "type": "azimuth"
-        },      
+        },
         {
-            "format": "float",            
+            "format": "float",
             "description": "Floating Point Number",
             "example": "52.12",
             "attribute": [
@@ -218,7 +218,7 @@
             "format": "dms",
             "description": "Azimuth to Degrees, Minutes and Seconds",
             "example": "123",
-            "function": "dms",             
+            "function": "dms",
             "stackable": false,
             "type": "azimuth"
         },
@@ -228,186 +228,152 @@
             "example": "12",
             "attribute": [
                 "fsunit"
-            ],                   
+            ],
             "stackable": false,
             "type": "filesize"
-        },        
+        },
         {
             "format": "TB",
             "description": "Filesize in Tb",
-            "example": "12",             
+            "example": "12",
             "attribute": [
                 "fsunit"
-            ],                   
+            ],
             "stackable": false,
             "type": "filesize"
         },
 		{
             "format": "GB",
             "description": "Filesize in Gb",
-            "example": "12",             
+            "example": "12",
             "attribute": [
                 "fsunit"
-            ],                   
+            ],
             "stackable": false,
             "type": "filesize"
         },
         {
             "format": "MB",
             "description": "Filesize in Mb",
-            "example": "1.2",            
+            "example": "1.2",
             "attribute": [
                 "fsunit"
-            ],                   
+            ],
             "stackable": false,
             "type": "filesize"
         },
         {
             "format": "B",
             "description": "Filesize in B",
-            "example": "102400",            
+            "example": "102400",
             "attribute": [
                 "fsunit"
-            ],                   
+            ],
             "stackable": false,
             "type": "filesize"
         },
         {
-            "format": "allsky",
-            "description": "Use Allsky setting",
-            "example": "23.50",
+            "format": "defaults",
+            "description": "Use default variable attributes - see Sample -->",
+            "example": "23.5&deg; C",
+            "stackable": false,
+            "type": "temperature"
+        },
+        {
+            "format": "custom",
+            "description": "Customize variable attributes",
+            "example": "23.54&deg; C",
             "attribute": [
-                "dp2",
-                "allsky",
+                "dp",
+                "degctof",
+                "degftoc",
                 "deg",
-                "unit"
-            ],                      
-            "stackable": false,
-            "type": "temperature"
-        },        
-        {
-            "format": "deg",
-            "description": "Degrees 2DP",
-            "example": "23.50",          
-            "stackable": false,
-            "type": "temperature"
-        },
-        {
-            "format": "degint",
-            "description": "Degrees Integer",
-            "example": "23",           
-            "stackable": false,
-            "type": "temperature"
-        },
-        {
-            "format": "degctof",
-            "description": "Degrees C to F to 2DP",
-            "example": "86.50",            
-            "stackable": false,
-            "type": "temperature"
-        },
-        {
-            "format": "degctofint",
-            "description": "Degrees C to F integer",
-            "example": "86",            
-            "stackable": false,
-            "type": "temperature"
-        },
-        {
-            "format": "degftoc",
-            "description": "Degrees F to C to 2DP",
-            "example": "23.50",           
-            "stackable": false,
-            "type": "temperature"
-        },
-        {
-            "format": "degftocint",
-            "description": "Degrees F to C integer",
-            "example": "23",          
+                "temp_unit"
+            ],
             "stackable": false,
             "type": "temperature"
         },
         {
             "format": "onoff",
             "description": "Show as On or Off",
-            "example": "On",           
+            "example": "On",
             "stackable": false,
             "type": "gpio"
         },
         {
             "format": "yesno",
             "description": "Show as Yes or No",
-            "example": "Yes",           
+            "example": "Yes",
             "stackable": false,
             "type": "gpio"
-        },        
+        },
         {
             "format": "truefalse",
             "description": "Show as True or False",
-            "example": "False",           
+            "example": "False",
             "stackable": false,
             "type": "gpio"
         },
         {
             "format": "num",
             "description": "Show as 1 or 0",
-            "example": "False",           
+            "example": "False",
             "stackable": false,
             "type": "gpio"
-        },        
+        },
         {
             "format": "none",
             "description": "No chnage to the string",
-            "example": "",           
+            "example": "",
             "stackable": false,
             "type": "string"
         },
         {
             "format": "upper",
             "description": "Convert string to upper case",
-            "example": "",           
+            "example": "",
             "stackable": false,
             "type": "string"
         },
         {
             "format": "lower",
             "description": "Convert string to lower case",
-            "example": "",           
+            "example": "",
             "stackable": false,
             "type": "string"
         },
         {
             "format": "camel",
             "description": "Convert string to camel case",
-            "example": "",           
+            "example": "",
             "stackable": false,
             "type": "string"
         },
         {
             "format": "capitalize",
             "description": "Capitalize the string",
-            "example": "",           
+            "example": "",
             "stackable": false,
             "type": "string"
         },
         {
             "format": "flightlevel",
             "description": "Convert altitude in metres to flight level",
-            "example": "",           
+            "example": "",
             "stackable": false,
             "type": "altitude"
         },
         {
             "format": "flip",
             "description": "Image flip",
-            "example": "",           
+            "example": "",
             "stackable": false,
             "type": "flip"
         },
         {
             "format": "allsky",
             "description": "Allsky internal distance (miles)",
-            "example": "",           
+            "example": "",
             "stackable": false,
             "type": "distance"
         },
@@ -420,21 +386,21 @@
                 "allsky",
                 "dp",
                 "distunit"
-            ],                     
+            ],
             "stackable": false,
             "type": "distance"
         },
         {
             "format": "ktom",
             "description": "Kilometres to Miles",
-            "example": "",           
+            "example": "",
             "stackable": false,
             "attribute": [
-                "ktom",                
+                "ktom",
                 "allsky",
                 "dp",
                 "distunit"
-            ],                     
+            ],
             "type": "distance"
         }  
     ]

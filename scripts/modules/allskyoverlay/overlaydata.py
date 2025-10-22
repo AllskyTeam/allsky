@@ -368,7 +368,7 @@ class ALLSKYOVERLAYDATA:
 			else:
 				field_label = field_label.replace('&deg;', '')
     
-			field_label = field_label.replace(raw_variable, str(value))
+			field_label = field_label.replace(raw_variable, str(value), 1)
 
 		field_data['label'] = field_label
 

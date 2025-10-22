@@ -24,7 +24,7 @@
     },    
     "locale": {
         "description": "Use locale formatting",
-        "example": "1,234.56",
+        "example": "1.234,56 versus 1,234.56",
         "type": {
             "field": "boolean"
         }  

@@ -11,8 +11,8 @@
         const parsedInitials = {};
         if (settings.initialValues) {
             settings.initialValues.split('|').forEach(item => {
-                if (/^dp\d+$/.test(item)) {
-                    parsedInitials['dp'] = item.replace('dp', '');
+                if (/^dp=\d+$/.test(item)) {
+                    parsedInitials['dp'] = item.replace('dp=', '');
                 } else {
                     const parts = item.match(/^([^=]+)=(.*)$/);
                     if (parts) {
@@ -47,7 +47,7 @@
         const $form = $modal.find('form');
 
         settings.keys.forEach(key => {
-            if (/^dp\d+$/.test(key)) {
+            if (/^dp=\d+$/.test(key)) {
                 key = 'dp';
             }
 
@@ -123,12 +123,7 @@
                 } else {
                     const val = $field.val();
                     if (val !== "") {
-                        if (key === 'dp') {
-                            //resultKeys.push(`dp${val}`);
-                            resultKeys.push(`${key}=${val}`);
-                        } else {
-                            resultKeys.push(`${key}=${val}`);
-                        }
+                        resultKeys.push(`${key}=${val}`);
                     }
                 }
             });

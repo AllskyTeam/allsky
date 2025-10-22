@@ -2948,7 +2948,7 @@ class OEUIMANAGER {
                             });    
 
                             if (group === 'Legacy') {
-                                group = 'Legacy Formats - NO NOT USE';
+                                group = 'Legacy Formats - DO NOT USE';
                             }
                             return $('<tr/>')
                                 .append('<td colspan="9">' + icon + ' ' + group + '</td>')
@@ -3009,7 +3009,7 @@ class OEUIMANAGER {
                         data: jsonData,
                         keys: keys,
                         initialValues: format,
-                        title: 'Configure Format Options',
+                        title: 'Configure Format "' + rowData.format + '" Options',
                         onSubmit: function (resultString) {
                             let uiManager = window.oedi.get('uimanager')
                             //let format = '{' + $(event.currentTarget).data('format') + '}'

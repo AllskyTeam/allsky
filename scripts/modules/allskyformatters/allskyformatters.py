@@ -274,7 +274,7 @@ class AllskyFormatters:
 			processed = True
    
 		if 'deg' in formats:
-			value = f'{value}°'
+			value = f'{value}Â°'
 			processed = True    
         
         # If we havn't processed the value yet, we will try to format it using the lgeacy formats
@@ -332,14 +332,16 @@ class AllskyFormatters:
 		""" Formats a value in temperature units
 			Not using match is deliberate
    
-			Formatters
-   
-			deg			- Formats the passed value to 2 decimal places
-			degint		- Formats the passed value to an integer
-			degctof		- Converts C to F then formats to 2 decimal places
-			degctofint	- Converts C to F then formats as an integer
-			degftoc		- Converts F to C then formats to 2 decimal places
-			degftocint	- Converts F to C then formats as an integer
+		Formatters:
+			defaults	- Uses what the Allsky team thinks is most common precision, deg, and temp_unit.
+			custom		- Let user pick precision, degree symbol, unit, and conversion algorithm.
+
+		Attributes:
+			degctof		- Converts C to F.  Set unit to "F".
+			degftoc		- Converts F to C.  Set unit to "C".
+			dp=x		- Display "x" decimal places (dp=0 is default0.
+			deg			- Add degree symbol to end of number.
+			temp_unit   - Add either "C" or "F", depending on current value of variable.
    
 		Args:
 			value (any): The input value 
@@ -352,39 +354,47 @@ class AllskyFormatters:
 		"""
 		try:
 			formats = self._split_format(format)
-			temp_units = allsky_shared.getSetting('temptype')
+# TODO: get unit from the type the variable is (which requires another field); don't assume it's "C".
+			unit = "C"			# Default, and is what's used internally in code.
+			dp = 0				# Default is 0 decimal points (i.e., an int).
+			do_deg = False
+			do_unit = False
       
 			value = float(value)
 			if 'degctof' in formats:
+				value_c = value
 				value = value * 9 / 5 + 32
-				value = round(value, 2) 
+				self._debug(f'INFO: Converting temperature to F. ({value_c}C -> {value}F)')
+				unit = 'F'
 
 			if 'degftoc' in formats:
+				# Allsky temperatures are internally stored as C so this format isn't needed,
+				# BUT, user temperatures may be stored in F.
+				value_f = value
 				value = (value - 32) * 5 / 9
-				value = round(value, 2) 
+				self._debug(f'INFO: Converting temperature to C. ({value_f}F -> {value}C)')
+				unit = 'C'
 
-			if 'allsky' in formats:
-				if temp_units == 'C':
-					value = round(value, 2)
-				elif temp_units == 'F':
-					value_c = value
-					value = round((value * (9/5)) + 32, 2)
-					self._debug(f'INFO: Converting temperature to F to match Allsky settings. ({value_c}C -> {value}F)')
-			else:
-				temp_units = 'C'
-				
-			match = re.search(r'\bdp(\d+)\b', format)
-			dp = 0
+			if 'defaults' in formats:
+				dp = 1
+				do_deg = True
+				do_unit = True
+				unit = 'C'
+
+			match = re.search(r'\bdp=(\d+)\b', format)
+			##x allsky_shared.log(1, f"xxxxxxx {variable_name} match={match}, format={format}")
 			if match:
 				dp = self._parse_format(formats, 'dp', int)
+				##x allsky_shared.log(1, f"xxxxxxx dp={dp}")
 			
 			value = self._format_number(value, dp, False)
+			##x allsky_shared.log(1, f"xxxxx  value now = {value} with dp={dp}")
          
-			if 'deg' in formats:
-				value = f'{value}°'
+			if 'deg' in formats or do_deg:
+				value = f'{value}Â°'
 	
-			if 'unit' in formats:
-				value = f'{value} {temp_units}'
+			if 'temp_unit' in formats or do_unit:
+				value = f'{value} {unit}'
 
 			value = str(value)
 		except ValueError:
@@ -453,7 +463,7 @@ class AllskyFormatters:
 			minutes_decimal = abs(float_value - degrees) * 60
 			minutes = int(minutes_decimal)
 			seconds = round((minutes_decimal - minutes) * 60, 2)
-			value = f"{degrees}° {minutes}' {seconds}\""
+			value = f"{degrees}Â° {minutes}' {seconds}\""
 		else:
 			match = re.search(r'\bdp(\d+)\b', format)
 			dp = self._parse_format(formats, 'dp', int)
@@ -461,7 +471,7 @@ class AllskyFormatters:
 			value = self._format_number(float_value, dp, False)
 			
 			if 'deg' in formats:
-				value = f'{value}°'
+				value = f'{value}Â°'
 
 		value = str(value)
 
@@ -495,7 +505,7 @@ class AllskyFormatters:
 		value = self._format_number(float_value, dp, False)
 		
 		if 'deg' in formats:
-			value = f'{value}°'
+			value = f'{value}Â°'
     
 		value = str(value)
 
@@ -596,7 +606,7 @@ class AllskyFormatters:
 		Returns:
 			(string): The formatted value
 		"""
-		value = f'{str(value)}°'
+		value = f'{str(value)}Â°'
 
 
 		return value

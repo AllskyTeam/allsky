@@ -159,8 +159,8 @@ void saveImage()
 
 			if (CG.focusMode)
 			{
-				snprintf(cmd, sizeof(cmd), "%s/saveImage.sh %s '%s' --focus-mode %ld", CG.allskyScripts,
-					dayOrNight.c_str(), CG.fullFilename, CG.lastFocusMetric);
+				snprintf(cmd, sizeof(cmd), "%s/saveImage.sh %s '%s' --focus-mode %ld %d", CG.allskyScripts,
+					dayOrNight.c_str(), CG.fullFilename, CG.lastFocusMetric, numExposures);
 				// In focusMode, wait for processing to complete since we
 				// don't otherwise delay between images.
 			}

@@ -1582,7 +1582,7 @@ addTextToImage()
 	local POINT_SIZE=""
 	local FONT="${ALLSKY_OVERLAY}/system_fonts/Courier_New_Bold.ttf"
 	local STROKE="black"
-	local STROKE_WIDTH="3"
+	local STROKE_WIDTH="2"
 	local FILL="yellow"
 	local X="20"
 	local Y=""

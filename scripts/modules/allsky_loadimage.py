@@ -51,7 +51,7 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 					"sample": "",
 					"group": "Image Data",
 					"description": "Folder in allsky/images where image is",
-					"type": "int"
+					"type": "string"
 				},
 				"AS_DAY_OR_NIGHT": {
 					"name": "${DAY_OR_NIGHT}",
@@ -107,7 +107,7 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 					"format": "",
 					"sample": "",
 					"group": "Image Data",
-					"description": "Exposure",
+					"description": "Gain",
 					"type": "number"
 				},
 				"AS_TEMPERATURE_C": {
@@ -115,7 +115,7 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 					"format": "",
 					"sample": "",
 					"group": "Image Data",
-					"description": "Exposure",
+					"description": "Sensor Temperature",
 					"type": "temperature"
 				},
 				"AS_MEAN": {

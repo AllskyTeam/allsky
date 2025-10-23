@@ -60,8 +60,9 @@ fi
 if [[ ${1} == "--focus-mode" ]]; then
 	# Add the metric to the image, rename it, and exit.
 	FOCUS_METRIC="${2}"
+	NUM_EXPOSURES="${3}"
 	TEXT="Focus Mode, metric = ${FOCUS_METRIC}"
-	TEXT+="\nTime: $( date +'%H:%M:%S.%N' )"
+	TEXT+="\nFrame: ${NUM_EXPOSURES}"
 	# Use defaults for everything but Y location - put near top.
 	addTextToImage --y 100 "${CURRENT_IMAGE}" "${CURRENT_IMAGE}" "${TEXT}"
 	mv "${CURRENT_IMAGE}" "${WEBSITE_FILE}"

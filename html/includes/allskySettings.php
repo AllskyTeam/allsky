@@ -1,5 +1,10 @@
 <?php
 
+if (basename(__FILE__) === basename($_SERVER['SCRIPT_FILENAME'])) {
+    include_once('functions.php');
+    redirect("/index.php");
+}
+
 $debug = false;
 
 // Get the json for the given file if we haven't already and return a pointer to the data.
@@ -118,14 +123,13 @@ function checkType($fieldName, $value, $old, $label, $label_prefix, $type, &$sho
 // This eliminates the need for JSON_NUMERIC_CHECK, which converts some
 // strings we want as strings to numbers, e.g., "longitude = +105.0" should stay as a string.
 function setValue($name, $value, $type) {
+# TODO: May 2025:  Is it ok to return "" for empty numbers?
 	if ($value === "") return "";
 
 	if ($type === "integer") {
 		return (int) $value;
 	} else if ($type === "float") {
 		return (float) $value;
-	} else if ($type === "boolean") {
-		return toBool($value);
 	} else {
 		return $value;
 	}
@@ -688,19 +692,11 @@ if ($debug) {
 
 	} else if (isset($_POST['reset_settings'])) {
 		if (CSRFValidate()) {
-			$new_settings_array = array();
+			$settings_array = array();
 			$sourceFilesChanged = array();
 			$sourceFilesContents = array();
 			foreach ($options_array as $option){
 				$name = $option['name'];
-				$noReset = getVariableOrDefault($option, 'noreset', "false");
-				if ($noReset === "true") {
-					// Leave this setting as is.
-					$new_settings_array[$name] = $settings_array[$name];
-					continue;
-				}
-
-				// Set new value to default.
 				$default = getVariableOrDefault($option, 'default', null);
 				if ($default !== null) {
 					$logicalType = getLogicalType(getVariableOrDefault($option, 'type', "text"));
@@ -714,13 +710,13 @@ if ($debug) {
 						$sourceFilesContents[$fileName] = &getSourceArray($fileName);
 						$sourceFilesContents[$fileName][$name] = $default;
 					} else {
-						$new_settings_array[$name] = $default;
+						$settings_array[$name] = $default;
 					}
 				}
 			}
 
 			// Update the settings file then any source files.
-			$content = json_encode($new_settings_array, $mode);
+			$content = json_encode($settings_array, $mode);
 			$msg = updateFile($settings_file, $content, "settings", true);
 			if ($msg === "") {
 				$status->addMessage("Settings reset to default", 'info');
@@ -737,7 +733,6 @@ if ($debug) {
 				$settings_array = readSettingsFile();
 			} else {
 				$status->addMessage("Failed to reset settings: $msg", 'danger');
-				$settings_array = $new_settings_array;
 			}
 		} else {
 			$status->addMessage('Unable to reset settings - session timeout', 'danger');

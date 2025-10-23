@@ -1,4 +1,8 @@
 <?php
+if (basename(__FILE__) === basename($_SERVER['SCRIPT_FILENAME'])) {
+    include_once('functions.php');
+    redirect("/index.php");
+}
 
 /**
  *
@@ -148,7 +152,6 @@ $endSetting = "XX_END_XX";
 $saveChangesLabel = "Save changes";		// May be overwritten
 $forceRestart = false;					// Restart even if no changes?
 $hostname = null;
-$focusMode = false;
 
 $test_directory = "test";	// directories that start with this are "non-standard"
 
@@ -200,7 +203,7 @@ function update_allsky_status($newStatus) {
 	}
 }
 
-function get_allsky_status() {
+function output_allsky_status() {
 	global $allsky_status, $allsky_status_timestamp;
 
 	$retMsg = "";
@@ -211,14 +214,6 @@ function get_allsky_status() {
 	} else {
 		$allsky_status = getVariableOrDefault($s, 'status', "Unknown");
 		$allsky_status_timestamp = getVariableOrDefault($s, 'timestamp', null);
-	}
-}
-
-function output_allsky_status() {
-	global $allsky_status, $allsky_status_timestamp, $focusMode;
-
-	if ($allsky_status === null) {
-		get_allsky_status();		// sets global variables
 	}
 
 	if ($allsky_status_timestamp === null) {
@@ -237,17 +232,10 @@ function output_allsky_status() {
 			$class = "alert-warning";
 		}
 	}
-
-	if ($focusMode) {
-		$f = " - FOCUS MODE";
-	} else {
-		$f = "";
-	}
-	return("<span class='nowrap $class' $title>Status: $allsky_status$f</span><br>");
+	return("<span class='nowrap $class' $title>Status: $allsky_status</span><br>");
 }
 
 function initialize_variables($website_only=false) {
-	global $focusMode;
 	global $status;
 	global $image_name;
 	global $showUpdatedMessage, $delay, $daydelay, $daydelay_postMsg, $nightdelay, $nightdelay_postMsg;
@@ -260,8 +248,6 @@ function initialize_variables($website_only=false) {
 	global $hostname;
 
 	$settings_array = readSettingsFile();
-
-	$focusMode = toBool(getVariableOrDefault($settings_array, 'focusmode', "false"));
 
 	// See if there are any Website configuration files.
 	// The "has" variables just mean the associated configuration file exists,
@@ -370,14 +356,6 @@ function initialize_variables($website_only=false) {
 	// Lessen the delay between a new picture and when we check.
 	$delay /= 5;
 	$delay = max($delay, 2 * $ms_per_sec);
-	if ($focusMode) {
-		// In focusMode update the image very quickly.
-		// This overrides the code above.
-# TODO: Is 1/2 sec ok?
-		$delay = 0.5 * $ms_per_sec;
-		$daydelay = $delay;
-		$nightdelay = $delay;
-	}
 
 	exec("hostname -f", $hostarray);
 	$hostname = $hostarray[0];
@@ -454,6 +432,7 @@ function CSRFToken() {
 */
 function CSRFValidate() {
   global $useLogin;
+
   if (! $useLogin) return true;
   if (isset($_POST['csrf_token']) && hash_equals($_POST['csrf_token'], $_SESSION['csrf_token']) ) {
     return true;
@@ -697,27 +676,9 @@ function ListFileType($dir, $imageFileName, $formalImageTypeName, $type, $listNa
 		if (count($imageTypes) == 0) {
 			echo "<span class='alert-warning'>There are no $formalImageTypeName for this day.</span>";
 		} else {
-			$num = 0;
 			foreach ($imageTypes as $imageType) {
 				$imageType_name = basename($imageType);
-				$pre = "$images_dir/$chosen_day/$dir";
-
-				if ($type == "picture") {
-				} else {		// video
-					$ext = pathinfo($imageType_name, PATHINFO_EXTENSION);
-					if ($ext != "mp4") continue;
-
-					$thumb = str_replace(".mp4", ".jpg", $imageType_name);
-					$thumb_file = ALLSKY_IMAGES . "/$chosen_day/$dir$thumb";
-					if (file_exists($thumb_file)) {
-						$thumb = "$pre$thumb";
-					} else {
-						$thumb = "";
-					}
-				}
-				$num += 1;
-
-				$fullFilename = "$pre$imageType_name";
+				$fullFilename = "$images_dir/$chosen_day/$dir$imageType_name";
 				if ($listNames) {
 					$class = "left center-text";
 					$name = "<br><span style='font-size: 125%;'>";
@@ -744,22 +705,16 @@ function ListFileType($dir, $imageFileName, $formalImageTypeName, $type, $listNa
 					}
 					echo "\n";
 				} else {	//video
-					if ($num > 1) echo "&nbsp;<br><br>";
 				    echo "<a href='$fullFilename'>";
-					if ($thumb !== "") {
-						$poster = "poster='$thumb$ts'";
-					} else {
-						$poster = "";
-					}
 				    echo "<div class='$class' style='width: 100%'>";
-					echo "<video width='85%' height='85%' controls $poster>
+					echo "<video width='85%' height='85%' controls>
 						<source src='$fullFilename$ts' type='video/mp4'>
 						Your browser does not support the video tag.
-					</video>";
+					</video>
+					</div></a>";
 					if ($listNames) {
 						echo $name;
 					}
-					echo "</div></a>";
 					echo "\n";
 				}
 			}
@@ -1211,13 +1166,12 @@ function getCPUTemp()
 	}
 	$display_temperature = "";
 	if ($temptype == "C" || $temptype == "B") {
-		$C = number_format($temperature, 1, '.', '');
-		$display_temperature =  "$C&deg; C";
+		$display_temperature = number_format($temperature, 1, '.', '') . "&deg;C";
 	}
 	if ($temptype == "F" || $temptype == "B") {
-		$F = (($temperature * 1.8) + 32);
-		$F = number_format($F, 1, '.', '');
-		$display_temperature .= "&nbsp; &nbsp; $F&deg; F";
+		$t = (($temperature * 1.8) + 32);
+		$t = number_format($t, 1, '.', '');
+		$display_temperature .= "&nbsp; &nbsp; $t &deg;F";
 	}
 
 	return array(
@@ -1378,6 +1332,44 @@ function getHTTPResponseCodeString($responseCode)
         $result = "HTTP/1.1 500 Internal Server Error";
     }
 	return $result;
+}
+
+function redirect(string $url, string $flash = "", int $statusCode = 302): never {
+    if (!headers_sent()) {
+				$_SESSION["flash"] = $flash;
+        header('Location: ' . $url, true, $statusCode);
+        exit;
+    } else {
+        // Fallback if headers already sent
+        echo "<script>window.location.href='" . htmlspecialchars($url, ENT_QUOTES) . "';</script>";
+        echo '<noscript><meta http-equiv="refresh" content="0;url=' . htmlspecialchars($url, ENT_QUOTES) . '"></noscript>';
+        exit;
+    }
+}
+
+
+/** Is the user logged in? */
+function is_logged_in(): bool {
+    return !empty($_SESSION['auth']) && $_SESSION['auth'] === true;
+}
+
+
+function useLogin() {
+	global $useLogin;
+
+	$csrf_token = '';
+	if ($useLogin) {
+		session_start();
+		if (empty($_SESSION['csrf_token'])) {
+			if (function_exists('mcrypt_create_iv')) {
+				$_SESSION['csrf_token'] = bin2hex(mcrypt_create_iv(32, MCRYPT_DEV_URANDOM));
+			} else {
+				$_SESSION['csrf_token'] = bin2hex(openssl_random_pseudo_bytes(32));
+			}
+		}
+		$csrf_token = $_SESSION['csrf_token'];
+	}
+	return $csrf_token;
 }
 
 ?>

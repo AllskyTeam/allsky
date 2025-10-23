@@ -60,9 +60,13 @@
 }
 
 .navbar-brand img {
-	height: 50px;
+	height: 60px;
 	display: inline-block;
 	margin-right: 15px;
+}
+
+.dark .navbar-brand img {
+	filter: brightness(2);
 }
 
 .version-title {
@@ -457,7 +461,7 @@ table .alert-dismissable {
 }
 
 .dark .alert-success {
-	color: #c0efac;
+	color: #95bb85;
 	border-color: #8f9d84;
 	background-color: #044a05;
 }

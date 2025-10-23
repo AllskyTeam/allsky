@@ -7,22 +7,22 @@ include_once('authenticate.php');
 
 class MODULEUTIL
 {
-    private $request;
-    private $method;
-    private $jsonResponse = false;
-    private $allskyModules;
-    private $userModules;
-	private $myFiles;
-    private $myFilesData;
-    private $allsky_config = null;
-    private $extra_data = null;
-    private $extra_legacy_data = null;
-    private $allskySettings = null;
-    private $allsky_home = null;
-    private $allsky_scripts = null;
-    private $allskyMyFiles = null;
-    private $myFilesBase = null;
-    private $services = ['allsky', 'allskyperiodic', 'allskyserver'];
+    protected $request;
+    protected $method;
+    protected $jsonResponse = false;
+    protected $allskyModules;
+    protected $userModules;
+	protected $myFiles;
+    protected $myFilesData;
+    protected $allsky_config = null;
+    protected $extra_data = null;
+    protected $extra_legacy_data = null;
+    protected $allskySettings = null;
+    protected $allsky_home = null;
+    protected $allsky_scripts = null;
+    protected $allskyMyFiles = null;
+    protected $myFilesBase = null;
+    protected $services = ['allsky', 'allskyperiodic', 'allskyserver'];
 
     function __construct() {
         $this->allskyModules = ALLSKY_SCRIPTS . '/modules';
@@ -40,7 +40,7 @@ class MODULEUTIL
 
     public function run()
     {
-        $this->checkXHRRequest();
+        //$this->checkXHRRequest();
         $this->sanitizeRequest();
         $this->runRequest();
     }
@@ -75,17 +75,18 @@ class MODULEUTIL
         die();
     }
 
-    private function sendResponse($response = 'ok')
+    protected function sendResponse($response = 'ok')
     {
         echo ($response);
         die();
     }
 
+
     private function runRequest() {
         $action = $this->method . $this->request;
 
-        if (is_callable(array('MODULEUTIL', $action))) {
-            call_user_func(array($this, $action));
+        if (is_string($action) && method_exists($this, $action) && is_callable([$this, $action])) {
+            $this->{$action}();
         } else {
             $this->send404();
         }
@@ -182,7 +183,7 @@ class MODULEUTIL
         return $metaData;
     }
 
-    private function readModuleData($moduleDirectory, $type, $event) {
+    protected function readModuleData($moduleDirectory, $type, $event) {
         $arrFiles = array();
 
         if (is_dir($moduleDirectory)) {
@@ -989,543 +990,6 @@ class MODULEUTIL
 		$this->sendResponse(json_encode($result));
 	}
 
-    /**
-     * Start Chart Code
-     */
-
-
-
-
-    /**
-     * Database helper: create PDO connection
-     */
-    private function makePdo(): PDO|bool
-    {
-        $secretData = getDatabaseConfig();
-
-        if ($secretData['databasetype'] === 'mysql') {
-            $dsn = sprintf('mysql:host=%s;port=%d;dbname=%s;charset=utf8mb4',
-                $secretData['databasehost'], (int)($secretData['databaseport'] ?? 3306), $secretData['databasedatabase']);
-            return new PDO($dsn, $secretData['databaseuser'], $secretData['databasepassword'], [
-                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            ]);
-        }
-        if ($secretData['databasetype'] === 'sqlite') {
-            if (file_exists(ALLSKY_DATABASES)) {
-                $dsn = 'sqlite:' . ALLSKY_DATABASES;
-                $pdo = new PDO($dsn, null, null, [
-                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                ]);
-                // Enable WAL: $pdo->exec('PRAGMA journal_mode = WAL;');
-                return $pdo;
-            } else {
-                return false;
-            }
-        }
-        throw new RuntimeException('Unsupported datasource type');
-    }
-
-    /**
-     * Convert DB timestamp (int or string) into JS ms epoch
-     */
-    private function toMsTimestamp($dbTs): int
-    {
-        $unit = 1000;
-        if (is_numeric($dbTs)) return (int)$dbTs * $unit;
-        $t = strtotime((string)$dbTs);
-        return $t !== false ? $t * $unit : 0;
-    }
-
-    /**
-     * Fetch full series of values
-     * Returns: ['VAR' => [[ms,value], ...], ...]
-     */
-    private function fetchSeriesData(PDO $pdo, string $table, array $variables, array $tooltips, int $from, int $to): array
-    {
-        if (!$variables) return [];
-
-        $tsCol = 'id';
-
-        try {
-            $extra = "";
-            if ($from !== false and $to !== false) {
-                $extra = "WHERE timestamp BETWEEN {$from} AND  {$to}";
-            }
-            $sql = "SELECT * from {$table} {$extra} ORDER BY {$tsCol}";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute();
-        } catch (PDOException $e) {
-            if ($this->isMissingTable($e, $pdo)) {
-                error_log("Missing table '{$table}' on driver ". $pdo->getAttribute(PDO::ATTR_DRIVER_NAME));
-                return [];
-            }
-            throw $e;
-        }
-
-
-        $out = [];
-        while ($row = $stmt->fetch()) {
-            foreach ($variables as $variable) {
-                if (isset($row[$variable])) {
-
-                    if ($variable== "AS_EXPOSURE_US") {
-                        $value = $row[$variable] / 1000;
-                    } else {
-                        $value = $row[$variable];
-                        $value = number_format($value,2) + 0;
-                    }
-                    $timeStamp = $this->toMsTimestamp($row['id']);
-
-                    if (isset($tooltips[$variable])) {
-                        $tooltip = '';
-                        if (isset($row['AS_CAMERAIMAGE']) && isset($row['AS_DATE_NAME'])) {
-                            $i = $row['AS_CAMERAIMAGE'];
-                            $d = $row['AS_DATE_NAME'];
-                            $thumb = "/$d/thumbnails/$i";
-							if (file_exists(ALLSKY_IMAGES . $thumb)) {
-                            	$tooltip = "/images/$thumb";
-							}
-							# If no thumbnail, don't show anything - the full image is too big.
-                        }
-                        $out[$variable][] = [
-                            'x' => $timeStamp,
-                            'y' => $value,
-                            'custom' => $tooltip
-                        ];
-                    } else {
-                        $out[$variable][] = [
-                            'x' => $timeStamp,
-                            'y' => $value
-                        ];
-                    }
-
-
-
-
-                }
-            }
-        }
-        return $out;
-
-    }
-
-    /**
-     * Fetch latest value for each variable
-     * Returns: ['VAR' => ['ts_ms'=>int,'value'=>float], ...]
-     */
-    private function fetchLatestValues(PDO $pdo, string $table, array $variables): array
-    {
-        if (!$variables) return [];
-
-        $tsCol = 'id';
-
-        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-        try {
-            $sql = "SELECT * FROM {$table} ORDER BY {$tsCol} DESC LIMIT 1";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute();
-        } catch (PDOException $e) {
-            if ($this->isMissingTable($e, $pdo)) {
-                error_log("Missing table '{$table}' on driver ". $pdo->getAttribute(PDO::ATTR_DRIVER_NAME));
-                return [];
-            }
-            throw $e;
-        }
-
-
-        $out = [];
-        $row = $stmt->fetch();
-        foreach ($variables as $variable) {
-            $value = 0;
-            if (isset($row[$variable])) {
-                $value = $row[$variable];
-                if (is_numeric($value)) {  
-                    $value = number_format($row[$variable],2) + 0;
-                }
-            }
-            $out[$variable] = [
-                'ts_ms' => $this->toMsTimestamp($row[$tsCol]),
-                'value' => $value
-            ];
-        }
-
-        return $out;
-    }
-
-    /**
-     * Detect "table not found" across MySQL/MariaDB and SQLite.
-     */
-    private function isMissingTable(PDOException $e, PDO $pdo): bool
-    {
-        $driver = strtolower((string) $pdo->getAttribute(PDO::ATTR_DRIVER_NAME));
-        $code   = (string) $e->getCode();
-        $msg    = strtolower($e->getMessage());
-
-        switch ($driver) {
-            case 'mysql':      // covers both MySQL and MariaDB under PDO
-                // SQLSTATE 42S02 = Base table or view not found
-                return $code === '42S02' || strpos($msg, 'base table or view not found') !== false;
-
-            case 'sqlite':
-            case 'sqlite2':
-            case 'sqlite3':
-                // SQLite typically uses HY000 with message "no such table: <name>"
-                return strpos($msg, 'no such table') !== false;
-
-            default:
-                // Fallback: try common phrases
-                return strpos($msg, 'no such table') !== false
-                    || strpos($msg, 'table does not exist') !== false;
-        }
-    }
-
-    /**
-     * Check if a table exists in a PDO database connection.
-     *
-     * Works with MySQL, MariaDB, and SQLite.
-     *
-     * @param PDO    $pdo       Active PDO connection
-     * @param string $tableName Table name to check
-     * @return bool  True if the table exists, false otherwise
-     */
-    private function tableExists(PDO $pdo, string $tableName): bool
-    {
-        try {
-            $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
-            $exists = false;
-
-            switch ($driver) {
-                case 'sqlite':
-                    // SQLite stores table names in sqlite_master
-                    $stmt = $pdo->prepare("SELECT name FROM sqlite_master WHERE type='table' AND name=:table");
-                    $stmt->execute([':table' => $tableName]);
-                    $exists = (bool)$stmt->fetchColumn();
-                    break;
-
-                case 'mysql':
-                case 'mariadb':
-                    // Works for both MySQL and MariaDB
-                    $stmt = $pdo->prepare("SHOW TABLES LIKE :table");
-                    $stmt->execute([':table' => $tableName]);
-                    $exists = (bool)$stmt->fetchColumn();
-                    break;
-
-                default:
-                    // Generic SQL standard fallback (might work on other drivers)
-                    $stmt = $pdo->prepare(
-                        "SELECT 1 FROM information_schema.tables WHERE table_name = :table LIMIT 1"
-                    );
-                    $stmt->execute([':table' => $tableName]);
-                    $exists = (bool)$stmt->fetchColumn();
-            }
-
-            return $exists;
-        } catch (Exception $e) {
-            error_log("tableExists() error: " . $e->getMessage());
-            return false;
-        }
-    }
-
-    function postModuleGraphData(): array
-    {
-        $chartDirs = [];
-        $requestedModule = $_POST['module'];
-
-        // User (custom) charts live here; these are merged in after core.
-        $chartDirs[]= $this->myFilesBase . '/charts';
-        // Core (shipped) charts live here.
-        $chartDirs[] = $this->allsky_config . '/modules/charts';
-        // Module charts live here; these are merged in after core.
-        $chartDirs[] = $this->myFilesData . '/charts';
-
-        foreach ($chartDirs as $chartDir) {
-            if (is_dir($chartDir)) {            
-                $dir = new DirectoryIterator($chartDir);
-                foreach ($dir as $entry) {
-                    if ($entry->isDot() || !$entry->isDir()) {
-                        continue;
-                    }      
-                    
-                    $module     = $entry->getFilename();
-                    $modulePath = $entry->getPathname();   
-                    if ($module == $requestedModule) {
-                        // Look for any JSON chart definition files directly within the module folder.
-                        foreach (glob($modulePath . '/*.json') as $jsonFile) {
-                            // Read the raw file; suppress warnings (e.g., unreadable file) and skip on failure.
-                            $raw = @file_get_contents($jsonFile);
-                            if ($raw === false) {
-                                continue;
-                            }
-
-                            // Decode JSON into associative array; skip invalid JSON.
-                            $data = json_decode($raw, true);
-                            if (!is_array($data)) {
-                                continue;
-                            }
-
-                            if (isset($data['main']) && $data['main'] == true) {
-                                $this->sendResponse(json_encode([
-                                    'path' => $modulePath,
-                                    'filename' => basename($jsonFile)
-                                ]));
-                            }
-                        }
-                    }
-                }
-            }
-
-        }
-
-        $this->sendResponse(json_encode([]));
-    }
-
-    /**
-     * Read config JSON file and build chart data
-     */
-    function getGraphData(): array
-    {
-        $configPath = $_GET['filename'];
-        $from = isset($_GET['from']) ? $_GET['from'] : false;
-        $to = isset($_GET['to']) ? $_GET['to'] : false;
-
-        /* Sanitize filename */
-        $pdo = $this->makePdo();
-
-        if (!is_file($configPath) || !is_readable($configPath)) {
-            throw new RuntimeException("Config file not found or unreadable: {$configPath}");
-        }
-        $raw = file_get_contents($configPath);
-        $config = json_decode($raw, true);
-        if (!is_array($config)) {
-            throw new RuntimeException("Invalid JSON in {$configPath}: " . json_last_error_msg());
-        }
-
-        $table = $config['table'] ?? '';
-        $series = $config['series'] ?? null;
-        if (!$table || !is_array($series)) {
-            throw new InvalidArgumentException('Config must include "table" and "series".');
-        }
-
-        $type = strtolower(trim((string)($config['type'] ?? 'line')));
-        $isGauge = in_array($type, ['gauge', 'guage', 'yesno'], true);
-
-        // Collect variables we need to fetch
-        $variables = [];
-        $keyToVar = [];
-        foreach ($series as $key => $def) {
-            if (isset($def['variable'])) {
-                $var = (string)$def['variable'];
-                $variables[] = $var;
-                $keyToVar[$key] = $var;
-            }
-        }
-
-        $tooltip = [];
-        foreach ($variables as $variablekey=>$item) {
-            if (strpos($item, '|') !== false) {
-                list($key, $value) = explode('|', $item, 2);
-                $tooltip[$key] = $value;
-                $variables[$variablekey] = $key;
-                $keyToVar[$variablekey] = $key;                
-            }
-        }
-
-        if ($isGauge) {
-            if ($pdo !== false) {
-                // latest-only
-                $latestByVar = $this->fetchLatestValues($pdo, $table, $variables);
-                foreach ($keyToVar as $key => $var) {
-                    $latest = $latestByVar[$var] ?? null;
-                    // Replace variable with gauge data (single number). Keep other fields.
-                    unset($config['series'][$key]['variable']);
-                    $config['series'][$key]['data'] = $latest ? [ $latest['value'] ] : [];
-                }
-            } else {
-                    unset($config['series'][$key]['variable']);
-                    $config['series'][$key]['data'] = [];
-            }
-        } else {
-            if ($pdo !== false) {            
-                // full series
-                $dataByVar = $this->fetchSeriesData($pdo, $table, $variables, $tooltip, $from, $to);
-                foreach ($keyToVar as $key => $var) {
-                    unset($config['series'][$key]['variable']);
-                    $config['series'][$key]['data'] = $dataByVar[$var] ?? [];
-                }
-            } else {
-                    unset($config['series'][$key]['variable']);
-                    $config['series'][$key]['data'] = [];                
-            }
-        }
-
-        
-        $this->sendResponse(json_encode($config));        
-    }
-
-    /**
-     * Scan a base charts directory for module subfolders, read any *.json chart
-     * definitions inside them, and append normalized entries into $chartList
-     * grouped by their "group" field from the JSON.
-     *
-     * @param array  $chartList Existing grouped chart list to add to.
-     * @param string $baseDir   Root directory containing module subfolders.
-     * @return array            Updated $chartList grouped by group name.
-     */
-    private function buildChartList(PDO $pdo, array $chartList, string $baseDir): array
-    {
-        // If the base directory doesn't exist, nothing to add-return existing list.
-        if (!is_dir($baseDir)) {
-            return $chartList;
-        }
-        
-        if (is_dir($baseDir)) {
-            // Iterate immediate children of $baseDir (modules expected to be subfolders).
-            $dir = new DirectoryIterator($baseDir);            
-            foreach ($dir as $entry) {
-                // Skip "." and ".." and any non-directory entries.
-                if ($entry->isDot() || !$entry->isDir()) {
-                    continue;
-                }
-
-                // Module name is the subfolder name; use it and its absolute path.
-                $module     = $entry->getFilename();
-                $modulePath = $entry->getPathname();
-
-                // Look for any JSON chart definition files directly within the module folder.
-                foreach (glob($modulePath . '/*.json') as $jsonFile) {
-                    // Read the raw file; suppress warnings (e.g., unreadable file) and skip on failure.
-                    $raw = @file_get_contents($jsonFile);
-                    if ($raw === false) {
-                        continue;
-                    }
-
-                    // Decode JSON into associative array; skip invalid JSON.
-                    $data = json_decode($raw, true);
-                    if (!is_array($data)) {
-                        continue;
-                    }
-
-                    // The "group" key determines how charts are grouped; skip if missing/empty.
-                    $group = $data['group'] ?? null;
-                    if (!$group) {
-                        continue;
-                    }
-
-                    $table = $data['table'] ?? null;
-                    $enabled = false;
-                    if ($table != null) {
-                        if ($this->tableExists($pdo, $table)) {
-                            $enabled = true;
-                        }
-                    }
-
-                    // Optional metadata with sensible fallbacks.
-                    $icon  = $data['icon']  ?? null;
-
-                    // Title prefers 'title' from JSON; otherwise uses the filename (without .json).
-                    $title = $data['title'] ?? basename($jsonFile, '.json');
-
-                    // Append a normalized chart entry under its group.
-                    $chartList[$group][] = [
-                        'module'   => $module,                                  // Module (subfolder) the chart came from
-                        'filename' => $jsonFile,                                // Full path to the source JSON file
-                        'icon'     => $icon !== null ? (string)$icon : null,    // Icon if present
-                        'title'    => (string)$title,                           // Human-friendly title
-                        'enabled'  => $enabled                                  // Enabled if chart table exists
-                    ];
-                }
-            }
-        }
-        return $chartList;
-    }
-
-    /**
-     * Build a grouped list of available charts from both core and user locations
-     * and return it as JSON.
-     */
-    public function getAvailableGraphs()
-    {
-        // Start with an empty grouped list.
-        $chartList = [];
-
-        // Core (shipped) charts live here.
-        $coreModules = $this->allsky_config . '/modules/charts';
-
-        // Module charts live here; these are merged in after core.
-        $userModules = $this->myFilesData . '/charts';
-
-        // User (custom) charts live here; these are merged in after core.
-        $customCharts= $this->myFilesBase . '/charts';
-
-        $pdo = $this->makePdo();
-
-        if ($pdo !== false) {
-            // Populate from core and then user paths (user charts can add more groups/items).
-            $chartList = $this->buildChartList($pdo, $chartList, $coreModules);
-            $chartList = $this->buildChartList($pdo, $chartList, $userModules);
-            $chartList = $this->buildChartList($pdo, $chartList, $customCharts);
-
-            // Sort groups by their keys in ascending order to make output stable/readable.
-            // Note: asort() preserves keys and sorts by value; since $chartList is an
-            // array of arrays, PHP will compare array-this still produces a deterministic
-            // order but if you prefer alphabetical by group name, consider ksort() instead.
-            asort($chartList);
-        }
-
-        // Emit the grouped chart list as JSON to the client.
-        $this->sendResponse(json_encode($chartList));
-    }
-
-
-    public function postSaveCharts() {
-
-        // Get raw POST body (because contentType is JSON, not form data)
-        $jsonData = file_get_contents("php://input");
-
-        // Decode JSON to array
-        $data = json_decode($jsonData, true);
-
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            $this->send500();
-        }
-
-        $stateFile = $this->allskyMyFiles . '/state.json';
-        if (file_put_contents($stateFile, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)) === false) {
-            $this->send500('Failed to save JSON');
-        }
-        
-        $this->sendResponse('');
-    }
-
-    public function getSaveCharts() {
-        $stateFile = $this->allskyMyFiles . '/state.json';
-        $jsonString = @file_get_contents($stateFile);
-
-        if ($jsonString === false) {
-            $jsonString = "[]";
-        }
-
-
-        // Decode & re-encode to ensure valid JSON output
-        $data = json_decode($jsonString, true);
-
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            $this->send500('Invalid JSON');
-        }
-
-        $this->sendResponse(json_encode($data));
-
-
-
-    }
-
-    /**
-     * End Chart Code
-     */
-
     public function postHassSensors() {
         $hassUrl = $_POST['hassurl'];
         $token = $_POST['hassltt'];
@@ -1995,5 +1459,12 @@ class MODULEUTIL
     }    
 }
 
-$moduleUtil = new MODULEUTIL();
-$moduleUtil->run();
+// Only run if this file is the entry point (not when included)
+$entry = PHP_SAPI === 'cli'
+    ? realpath($_SERVER['argv'][0] ?? '')
+    : realpath($_SERVER['SCRIPT_FILENAME'] ?? '');
+
+if ($entry === __FILE__) {
+    $moduleUtil = new MODULEUTIL();
+    $moduleUtil->run();
+}

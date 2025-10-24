@@ -421,7 +421,7 @@ function CSRFToken() {
 	global $useLogin;
 	if (! $useLogin) return;
 ?>
-<input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>" />
+<input type="hidden" name="csrf_token" id="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>" />
 <?php
 }
 
@@ -1359,7 +1359,9 @@ function useLogin() {
 
 	$csrf_token = '';
 	if ($useLogin) {
-		session_start();
+		if (session_status() === PHP_SESSION_NONE) {
+			session_start();
+		}
 		if (empty($_SESSION['csrf_token'])) {
 			if (function_exists('mcrypt_create_iv')) {
 				$_SESSION['csrf_token'] = bin2hex(mcrypt_create_iv(32, MCRYPT_DEV_URANDOM));

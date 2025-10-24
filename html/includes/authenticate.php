@@ -48,5 +48,9 @@ if ($useLogin) {
             redirect("/index.php?page=login");
         }
     }
+} else {
+    if ($page == "login") {
+        redirect("/index.php");
+    }
 }
 ?>

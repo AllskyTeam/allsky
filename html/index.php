@@ -25,10 +25,12 @@ $useMeteors = false;
 
 // functions.php sets a bunch of constants and variables.
 include_once('includes/functions.php');
+initialize_variables();		// sets some variables
+$csrf_token = useLogin();
+$page = getVariableOrDefault($_REQUEST, 'page', "live_view");
 include_once('includes/authenticate.php');
 include_once('includes/status_messages.php');
 $status = new StatusMessages();
-initialize_variables();		// sets some variables
 
 // TODO in major release after v2025.xx.xx:
 // We want to remove the "DHCP" page from Allsky but aren't sure if anyone's using it.
@@ -36,23 +38,6 @@ initialize_variables();		// sets some variables
 // If no one complains we can remove everything DHCP related.
 define('DHCP_ENABLED', false);
 
-function useLogin() {
-	global $useLogin;
-
-	$csrf_token = '';
-	if ($useLogin) {
-		session_start();
-		if (empty($_SESSION['csrf_token'])) {
-			if (function_exists('mcrypt_create_iv')) {
-				$_SESSION['csrf_token'] = bin2hex(mcrypt_create_iv(32, MCRYPT_DEV_URANDOM));
-			} else {
-				$_SESSION['csrf_token'] = bin2hex(openssl_random_pseudo_bytes(32));
-			}
-		}
-		$csrf_token = $_SESSION['csrf_token'];
-	}
-	return $csrf_token;
-}
 
 function getRemoteWebsiteVersion() {
 	global $useRemoteWebsite, $status;
@@ -94,6 +79,10 @@ if ($fa_size == "lg") {
 }
 
 $pageInfo = [
+	"login" => [
+		"title" => "Login",
+		"icon" => "fa fa-right-to-bracketfa-fw"
+	],	
 	"live_view" => [
 		"title" => "Live View",
 		"icon" => "fa fa-eye fa-fw",
@@ -314,7 +303,7 @@ function insertMenuItem($p, $day, $type="", $href_only=false) {
 function insertPage($p) {
 	global $image_name, $delay, $daydelay, $daydelay_postMsg, $nightdelay, $nightdelay_postMsg, $darkframe;
 
-	switch ($p) {
+	switch ($p) {		
 		case "list_days":
 			include_once("includes/days.php");
 			ListDays();
@@ -399,7 +388,7 @@ function insertPage($p) {
 			break;
 		case "timelapse_settings":
 			include_once("helpers/$p.php");
-			timelapseSettings();
+			// TODO: add function name						
 			break;
 		case "constellation_overlay":
 			include_once("helpers/$p.php");
@@ -608,15 +597,24 @@ function insertEditorCode($p) {
 	}
 }
 
-$page = getVariableOrDefault($_REQUEST, 'page', "live_view");
+
 $day = getVariableOrDefault($_REQUEST, 'day', "");	if ($day !== "") $day = " - $day";
-$csrf_token = useLogin();
 $remoteWebsiteVersion = getRemoteWebsiteVersion();
 $pageTitle = getPageTitle($page, $day);
 $pageHeaderTitle = getPageHeaderTitle($page, $day);
 $pageIcon = getPageIcon($page);
 $allskyStatus = output_allsky_status();
 
+if ($page=="login") {
+		include_once("includes/login.php");
+		DisplayLoginPage();
+		die();
+}
+if ($page=="logout") {
+	$_SESSION['auth'] = false;
+  $_SESSION['user'] = "";
+	redirect("index.php?page=login");
+}
 ?>
 
 <!DOCTYPE html>
@@ -629,6 +627,12 @@ $allskyStatus = output_allsky_status();
 		<meta name="description" content="Web User Interface (WebUI) for Allsky">
 		<meta name="author" content="Thomas Jacquin">
 
+		<link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="shortcut icon" href="/favicon.ico" />
+		<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+		<link rel="manifest" href="/site.webmanifest" />
+
 		<script src="documentation/js/documentation.js?c=<?php echo ALLSKY_VERSION; ?>" type="application/javascript"></script>
 		<link href="documentation/css/light.css?c=<?php echo ALLSKY_VERSION; ?>" rel="stylesheet">
 		<link href="documentation/css/documentation.css?c=<?php echo ALLSKY_VERSION; ?>" rel="stylesheet">
@@ -638,7 +642,6 @@ $allskyStatus = output_allsky_status();
 		<link rel="stylesheet" href="allsky/font-awesome/css/all.min.css" type="text/css">
 		<!-- OLD: <script defer src="documentation/js/all.min.js"></script> -->
 		<link href="documentation/css/custom.css?c=<?php echo ALLSKY_VERSION; ?>" rel="stylesheet">
-		<link rel="shortcut icon" type="image/png" href="documentation/img/allsky-favicon.png">
 		<script src="documentation/js/functions.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 		<script src="documentation/bower_components/jquery/dist/jquery.min.js"></script>
 		<script src="documentation/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
@@ -658,13 +661,7 @@ $allskyStatus = output_allsky_status();
 		<!-- Header -->
 		<div class="header">
 			<div class="navbar-brand valign-center">
-				<button id="toggleNav" class="btn btn-default btn-xs" title="Toggle menu">
-					<i class="fa-solid fa-bars"></i>
-				</button>				
-				<a id="index" class="navbar-brand valign-center" href="index.php">
-					<img src="documentation/img/allsky-logo.png" title="Allsky logo">
-					<div class="navbar-title nowrap">Web User Interface (WebUI)</div>
-				</a>
+					<img id="toggleNav" src="documentation/img/logo-d-t.png" title="Allsky logo">
 				<div class="version-title version-title-color">
 					<span id="allskyStatus"><?php echo $allskyStatus; ?></span>
 					<?php insertVersions(); ?>
@@ -725,8 +722,8 @@ if (DHCP_ENABLED) {
 						insertMenuItem('check_allsky', "", "dropdown");
 						insertMenuItem('startrails_settings', "", "dropdown");
 						insertMenuItem('stretch_settings', "", "dropdown");
-						insertMenuItem('timelapse_settings', "", "dropdown");
 						// TODO: uncomment when scripts are created
+						// insertMenuItem('timelapse_settings', "", "dropdown");
 						// insertMenuItem('bad_images_settings', "", "dropdown");
 						// insertMenuItem('constellation_overlay', "", "dropdown");
 ?>
@@ -741,6 +738,18 @@ if (DHCP_ENABLED) {
 						<span class="menu-text"> Light/Dark mode</span>
 					</span>	
 				</li>
+<?php
+	if ($useLogin) {
+?>
+				<li>
+					<a id="logout" href="index.php?page=logout">
+						<i class="fa fa-right-from-bracket fa-fw"></i>
+						<span class="menu-text"> Logout</span>
+					</a>
+				</li>
+<?php
+	}
+?>
 			</ul>
 		</div>
 

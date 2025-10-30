@@ -430,16 +430,20 @@ function CSRFToken() {
 * Validate CSRF Token
 *
 */
-function CSRFValidate() {
-  global $useLogin;
+function CSRFValidate(): bool {
+  	global $useLogin;
 
-  if (! $useLogin) return true;
-  if (isset($_POST['csrf_token']) && hash_equals($_POST['csrf_token'], $_SESSION['csrf_token']) ) {
-    return true;
-  } else {
-    error_log('CSRF violation');
-    return false;
-  }
+  	if (! $useLogin) return true;
+
+    if (session_status() !== PHP_SESSION_ACTIVE) { 
+			@session_start(); 
+		}
+    $session = $_SESSION['csrf_token'] ?? '';
+    $header  = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+    $field   = $_POST['csrf_token'] ?? '';
+
+    $provided = $header ?: $field;
+    return is_string($session) && is_string($provided) && hash_equals($session, $provided);
 }
 
 /**

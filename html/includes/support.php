@@ -13,6 +13,8 @@ if (! is_dir(ALLSKY_SUPPORT_DIR)) {
 	}
 }
 
+  global $pageHeaderTitle, $pageIcon;
+	
 ?>
 
 <style>

@@ -626,6 +626,7 @@ if ($page=="logout") {
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<meta name="description" content="Web User Interface (WebUI) for Allsky">
 		<meta name="author" content="Thomas Jacquin">
+		<meta name="csrf-token" content="<?= htmlspecialchars($csrf_token, ENT_QUOTES) ?>">
 
 		<link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -650,6 +651,10 @@ if ($page=="logout") {
 		<script src="js/allsky.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 		<script src="documentation/js/sb-admin-2.js"></script>
 		<link rel='stylesheet' href='/css/checkbox.css?c=<?php echo ALLSKY_VERSION; ?>' />
+
+		<script>
+			window.csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+		</script>
 
 		<!-- Code Mirror editor -->
 		<?php insertEditorCode($page); ?>

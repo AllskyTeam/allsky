@@ -133,7 +133,8 @@ class ALLSKYSUPPORT {
 				type: 'POST',
 				cache: false,
 				data: {
-					logId: logId
+					logId: logId,
+    			csrf_token: window.csrfToken 					
 				},
 				xhrFields: {
 				  responseType: 'blob'

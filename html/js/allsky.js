@@ -83,6 +83,15 @@ class ALLSKY {
 	}
 
 	#setupajaxIntercept() {
+
+		$.ajaxSetup({
+			beforeSend: function (xhr, settings) {
+				if (window.csrfToken) {
+					xhr.setRequestHeader('X-CSRF-Token', window.csrfToken);
+				}
+			}
+		});
+
 		$(document).ajaxComplete(function(event, xhr, settings) {
 				try {
 						var response = xhr.responseJSON || JSON.parse(xhr.responseText);

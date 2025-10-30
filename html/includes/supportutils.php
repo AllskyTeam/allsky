@@ -1,329 +1,342 @@
 <?php
-
 include_once('functions.php');
 initialize_variables();
-
 include_once('authenticate.php');
 
 class SUPPORTUTIL
 {
-	private $request;
-	private $method;
-	private $jsonResponse = false;
-	private $issueDir;
+    private string $request = '';
+    private string $method = '';
+    private bool $jsonResponse = true;
+    private string $issueDir;
 
-	function __construct() {
-		$this->issueDir = ALLSKY_SUPPORT_DIR;
-		if (! is_dir($this->issueDir)) {
-			$this->send404("Directory '" . $this->issueDir . "' not found!");
-		}
-	}
+    public function __construct()
+    {
+        $this->issueDir = ALLSKY_SUPPORT_DIR;
+        if (!is_dir($this->issueDir) || !is_readable($this->issueDir)) {
+            $this->send404("Support directory is unavailable.");
+        }
+    }
 
-	public function run()
-	{
-		$this->checkXHRRequest();
-		$this->sanitizeRequest();
-		$this->runRequest();
-	}
+    // Entry point: verify XHR, normalize inputs, then dispatch
+    public function run(): void
+    {
+        $this->ensureXHR();
+        $this->normalizeInputs();
+        $this->dispatch();
+    }
 
-	private function checkXHRRequest()
-	{
-		$var = "HTTP_X_REQUESTED_WITH";
-		$val = "";
-		if (empty($_SERVER[$var])) {
-			$this->send404("$var not set");
-		} else {
-			$val = strtolower($_SERVER[$var]);
-			$v = "xmlhttprequest";
-			if ($val != $v) {
-				$this->send404("$var ($val) != $v");
-			}
-		}
-	}
+    // Require XMLHttpRequest/fetch (blocks direct navigation)
+    private function ensureXHR(): void
+    {
+        $hdr = $_SERVER['HTTP_X_REQUESTED_WITH'] ?? '';
+        if (strcasecmp($hdr, 'xmlhttprequest') !== 0) {
+            $this->send404("AJAX required.");
+        }
+    }
 
-	private function sanitizeRequest()
-	{
-		$this->request = $_GET['request'];
-		$this->method = strtolower($_SERVER['REQUEST_METHOD']);
+    // Sanitize the "request" selector and method name
+    private function normalizeInputs(): void
+    {
+        $req = $_GET['request'] ?? '';
+        $this->request = preg_replace('/[^a-zA-Z0-9_]/', '', $req) ?: '';
+        $this->method  = strtolower($_SERVER['REQUEST_METHOD'] ?? 'get');
+        $accepts = $_SERVER['HTTP_ACCEPT'] ?? '';
+        $this->jsonResponse = (stripos($accepts, 'application/json') !== false);
+    }
 
-		$accepts = $_SERVER['HTTP_ACCEPT'];
-		if (stripos($accepts, 'application/json') !== false) {
-			$this->jsonResponse = true;
-		}
-	}
+    // Consistent 404 JSON response
+    private function send404(string $msg = "Not found"): void
+    {
+        http_response_code(404);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['error' => $msg, 'code' => 404], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        exit;
+    }
 
-	private function send404($msg = null)
-	{
-		header('HTTP/1.0 404');
-		if ($msg !== null) {
-			header('Content-Type: application/json');
-			echo json_encode([
-				'error' => $msg,
-				'code' => 404
-			]);
-		}
-		die();
-	}
+    // Consistent 500 JSON response, with safe message
+    private function send500(string $msg = "Internal error"): void
+    {
+        http_response_code(500);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['error' => $msg, 'code' => 500], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        exit;
+    }
 
-	private function send500($msg = null)
-	{
-		header('HTTP/1.0 500 Internal Server Error');
-		if ($msg !== null) {
-			header('Content-Type: application/json');
-			echo json_encode([
-				'error' => $msg,
-				'code' => 500
-			]);
-		}
-		die();
-	}
+    // JSON payload writer
+    private function sendResponse($payload = ['ok' => true]): void
+    {
+        http_response_code(200);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        exit;
+    }
 
-	private function sendResponse($response = 'ok')
-	{
-		http_response_code(200);
-		header('Content-Type: application/json');
-		echo ($response);
-		die();
-	}
+    // Restrict dispatch to a whitelist and enforce CSRF on state-changing verbs
+    private function dispatch(): void
+    {
+        $action = $this->method . ucfirst($this->request);
 
-	private function runRequest()
-	{
-		$action = $this->method . $this->request;
-		if (is_callable(array('SUPPORTUTIL', $action))) {
-			call_user_func(array($this, $action));
-		} else {
-			$this->send404($this->request . " is not callable.");
-		}
-	}
+        $allowed = [
+            'getSupportFilesList',
+            'getGenerateLog',
+            'postDownloadLog',
+            'postDeleteLog',
+            'postChangeGithubId',
+        ];
 
-	private function humanReadableFileSize($bytes, $decimals = 2)
-	{
-		$sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-		$factor = floor((strlen($bytes) - 1) / 3);
-		if ($factor == 0) {
-			$s = "%d";		// Bytes need no decimal
-		} else {
-			$s = "%.{$decimals}f";
-		}
-		return sprintf($s, $bytes / pow(1024, $factor)) . ' ' . $sizes[$factor];
-	}
+        if (!in_array($action, $allowed, true) || !method_exists($this, $action)) {
+            $this->send404($this->request . " is not callable.");
+        }
 
-	public function postDownloadLog()
-	{
-		$logId = $_POST['logId'];		// filename
-		$logId = basename($logId);
-		$fromFile = $this->issueDir . DIRECTORY_SEPARATOR . $logId;
+        if (in_array($this->method, ['post', 'put', 'patch', 'delete'], true)) {
+            if (!function_exists('CSRFValidate') || !CSRFValidate()) {
+                $this->send500('Invalid CSRF token.');
+            }
+        }
 
-		if ( ! is_readable($fromFile)) {
-			$this->send500("'$fromFle' does not exist or is not readable.");
-		} else {
-			header('Content-Description: File Transfer');
-			header('Content-Type: application/octet-stream');
-			header('Content-Disposition: attachment; filename="' . basename($fromFile) . '"');
-			header('Content-Transfer-Encoding: binary');
-			header('Expires: 0');
-			header('Cache-Control: must-revalidate');
-			header('Pragma: public');
-			header('Content-Length: ' . filesize($fromFile));
-			if ( ! readfile($fromFile)) {
-				$this->send500("Unable to read from '$fromFle'.");
-			}
-		}
-		exit;
-	}
+        try {
+            $this->$action();
+        } catch (Throwable $e) {
+            error_log("SUPPORTUTIL error in {$action}: " . $e->getMessage());
+            $this->send500();
+        }
+    }
 
-	private function parseFilename($filename) {
-		// File name format:
-		//		support-REPO-PROBLEM_TYPE-PROBLEM_ID-YYYYMMDDHHMMSS.zip
-		//      0       1    2            3          4
-		// Where:
-		//	REPO is "repo", "AS", or "ASM".
-		//	PROBLEM_TYPE is "type", "discussion", or "issue"
-		//	PROBLEM_ID is "none" or a numeric GitHub ID.
-		$ok = true;
-		$name = explode("-", $filename);
-		$num = count($name);
-		if ($num !== 5) {
-			$ok = false;
-		} else {
-			$support = $name[0];
-			$repo = $name[1];
-			$type = $name[2];
-			$id = $name[3];
-			$timestamp = $name[4];
-			if ($support !== "support") {
-				$ok = false;
-			} else {
-				$t = explode(".", $timestamp);
-				$timestamp = $t[0];
-				$ext = $t[1];
-// error_log("support=$support, repo=$repo, id=$id, timestamp=$timestamp, ext=$ext");
-				return [
-					'repo'		=> $repo,
-					'type'		=> $type,
-					'id'		=> $id,
-					'timestamp' => $timestamp,
-					'ext'	   => $ext
-				];
-			}
-		}
-		if (! $ok) {
-			error_log("Support log file '$filename' is not a valid file name - ignoring.");
-			return null;
-		}
-	}
+    // Convert bytes to a readable size string
+    private function humanReadableFileSize(int $bytes, int $decimals = 2): string
+    {
+        $sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+        $factor = (int) floor((strlen((string) $bytes) - 1) / 3);
+        $factor = max(0, min($factor, count($sizes) - 1));
+        $fmt = $factor === 0 ? '%d' : "%.{$decimals}f";
+        return sprintf($fmt, $bytes / (1024 ** $factor)) . ' ' . $sizes[$factor];
+    }
 
-	public function postChangeGithubId()
-	{
-		$logId = $_POST['logId'];		// filename
-		$logId = basename($logId);
+    // Resolve a basename within the support directory and block traversal
+    private function safePathFromBasename(string $name): ?string
+    {
+        $name = basename($name);
+        if ($name === '' || $name === '.' || $name === '..') return null;
 
-		$fromFile = $this->issueDir . DIRECTORY_SEPARATOR . $logId;
-		if ( ! is_readable($fromFile)) {
-			$this->send500("'$fromFile' does not exist or is not readable.");
-		}
+        $full = $this->issueDir . DIRECTORY_SEPARATOR . $name;
+        $realBase = realpath($this->issueDir);
+        $realFull = realpath($full);
 
-		$newRepo = $_POST['repo'];			// user-entered repository name
-		$newId  = $_POST['newId'];		// user-entered number
-		$fileParts = $this->parseFilename($logId);
-		if ($fileParts === null) {
-			$this->send500("Bad file name: '$logId'");
-		}
+        if ($realBase === false || $realFull === false) return null;
+        if (strpos($realFull, $realBase . DIRECTORY_SEPARATOR) !== 0 && $realFull !== $realBase) return null;
 
-// TODO: Look in GitHub to see if the newId is an existing Discussion or Issue.
-// Tell the user to re-enter the number if not in GitHub.
-// BE CAREFUL: if you look in {[issues|discussions} for an item and it's in the other one,
-// GitHub returns HTM code 302 and then returns the page in the other location assuming it exists.
-// Need to treat HTML 404 and 302 as both "not found".
-$newType = "discussion"; // For now assume Discussion.
+        return $realFull;
+    }
 
-		$timestamp = $fileParts['timestamp'];		// reuse existing value
-		$ext = $fileParts['ext'];
-		$newFile = $this->issueDir . DIRECTORY_SEPARATOR;
-		$newFile .= "support-$newRepo-$newType-$newId-$timestamp.$ext";
-		$ret = @rename($fromFile, $newFile);
-		if ($ret === false) {
-			// Assume if failed due to permissions.
-			$cmd = "sudo chgrp " . WEBSERVER_GROUP . " '$fromFile' " . ALLSKY_SUPPORT_DIR;
-			$cmd .= " && sudo chmod g+w '$fromFile' " . ALLSKY_SUPPORT_DIR;
-			$return = null;
-			$ret = exec("( $cmd ) 2>&1", $return, $retval);
-			if (gettype($return) === "array")
-				$c = count($return);
-			else
-				$c = 0;
-			if ($ret === false || $c > 0 || $retval !== 0) {
-				$msg = "ERROR: '$cmd' returned code $retval: ";
-				if ($c > 0) {
-					$msg .= implode("\n", $return);
-				} else {
-					$msg .= error_get_last()['message'];
-				}
-				error_log($msg);
-				$this->send500("cmd '$cmd' failed");
-			}
-			$ret = @rename($fromFile, $newFile);
-			if ($ret === false) {
-				$msg = "ERROR: '$cmd' failed: ";
-				$msg .= error_get_last()['message'];
-				error_log($msg);
-				$this->send500("Could not rename($fromFile, $newFile)");
-			}
-		}
+    // Parse support file name into components, or null if invalid
+    private function parseFilename(string $filename): ?array
+    {
+        $parts = explode('-', $filename);
+        if (count($parts) !== 5) {
+            error_log("Invalid support file name: {$filename}");
+            return null;
+        }
 
-		$this->sendResponse(json_encode("ok"));
-	}
+        [$p0, $repo, $type, $id, $tsExt] = $parts;
+        if ($p0 !== 'support') {
+            error_log("Invalid prefix in support file: {$filename}");
+            return null;
+        }
 
-	public function postDeleteLog()
-	{
-		$logId = $_POST['logId'];		// filename
-		$logId = basename($logId);
+        $dot = strrpos($tsExt, '.');
+        if ($dot === false) {
+            error_log("Missing extension in support file: {$filename}");
+            return null;
+        }
 
-		$fileToDelete = $this->issueDir . DIRECTORY_SEPARATOR . $logId;
-		if (@unlink($fileToDelete)) {
-			$this->sendResponse(json_encode("ok"));
-		} else {
-			$this->send500("Could not unlink($fileToDelete)");
-		}
-	}
+        $timestamp = substr($tsExt, 0, $dot);
+        $ext = substr($tsExt, $dot + 1);
 
-	public function getSupportFilesList()
-	{
-		$data = array();
+        if (!preg_match('/^\d{14}$/', $timestamp)) {
+            error_log("Invalid timestamp in support file: {$filename}");
+            return null;
+        }
+        if (!preg_match('/^[a-zA-Z0-9_-]+$/', $repo)) return null;
+        if (!preg_match('/^(type|discussion|issue)$/', $type)) return null;
+        if (!preg_match('/^(none|\d+)$/', $id)) return null;
+        if (!preg_match('/^[a-zA-Z0-9]+$/', $ext)) return null;
 
-		if ( ! is_dir($this->issueDir)) {
-			$sg = "Directory '" . $this->issueDir . "' does not exist.";
-			$this->send500($msg);
-			return;
-		}
+        return [
+            'repo'      => $repo,
+            'type'      => $type,
+            'id'        => $id,
+            'timestamp' => $timestamp,
+            'ext'       => $ext,
+        ];
+    }
 
-		$files = @scandir($this->issueDir);
-		if ($files === false) {
-			$msg = "scandir({$this->issueDir}) failed.";
-			$data[] = [
-				"filename" => "",
-				"repo" => "",
-				"type" => "",
-				"ID" => "",
-				"sortfield" => "",
-				"date" => "<br><p class='errorMsgBox errorMsg'>$msg</p>",
-				"size" => "",
-				"actions" => ""
-			];
-		} else {
-			foreach ($files as $file) {
-				if (strpos($file, '.') === 0) {		// ignore "." and ".."
-					continue;
-				}
-				$fileParts = $this->parseFilename(($file));
-				if ($fileParts === null) {
-					continue;
-				}
+    // POST: stream a support bundle to the client
+    public function postDownloadLog(): void
+    {
+        $logId = $_POST['logId'] ?? '';
+        $path = $this->safePathFromBasename($logId);
+        if ($path === null || !is_readable($path)) {
+            $this->send500("File not found or not readable.");
+        }
 
-				$repo = $fileParts['repo'];
-				$problemType = $fileParts['type'];
-				$GitHubID = $fileParts['id'];
-				$date = $fileParts['timestamp'];
-				$year = substr($date, 0, 4);
-				$month = substr($date, 4, 2);
-				$day = substr($date, 6, 2);
-				$hour = substr($date, 8, 2);
-				$minute = substr($date, 10, 2);
-				$second = substr($date, 12, 2);
-				$timestamp = mktime($hour, $minute, $second, $month, $day, $year);
-				$formattedDate = strftime("%A %d %B %Y, %H:%M", $timestamp);
-				$size = filesize($this->issueDir . DIRECTORY_SEPARATOR . $file);
-				$hrSize = $this->humanReadableFileSize($size);
+        $fname = basename($path);
+        header('Content-Description: File Transfer');
+        header('Content-Type: application/octet-stream');
+        header('Content-Disposition: attachment; filename="' . rawurlencode($fname) . '"');
+        header('Content-Transfer-Encoding: binary');
+        header('Expires: 0');
+        header('Cache-Control: private, must-revalidate');
+        header('Pragma: public');
+        header('Content-Length: ' . (string) filesize($path));
 
-				$data[] = [
-					"filename" => $file,
-					"repo" => $repo,
-					"type" => $problemType,
-					"ID" => $GitHubID,
-					"sortfield" => $year.$month.$day.$hour.$minute.$second,
-					"date" => $formattedDate,
-					"size" => $hrSize,
-					"actions" => ""
-				];
-			}
-		}
-		$this->sendResponse(json_encode($data));
-	}
+        $ok = @readfile($path);
+        if ($ok === false) {
+            $this->send500("Unable to read file.");
+        }
+        exit;
+    }
 
-	public function getGenerateLog()
-	{
-		$command = 'export ALLSKY_HOME=' . ALLSKY_HOME . '; export SUDO_OK="true"; ';
-		$command .= ALLSKY_HOME . '/support.sh --auto 2>&1';
-		exec($command, $output, $exitCode);
-		if ($exitCode === 0) {
-			$this->sendResponse(json_encode("ok"));
-		} else {
-			$this->send500("[$cmd] failed: " . implode(" ", $output));
-		}
-	}
+    // POST: rename a support bundle to point to a different repo/ID
+    public function postChangeGithubId(): void
+    {
+        $logId = $_POST['logId'] ?? '';
+        $repo  = $_POST['repo']  ?? '';
+        $newId = $_POST['newId'] ?? '';
 
+        $path = $this->safePathFromBasename($logId);
+        if ($path === null || !is_writable($path)) {
+            $this->send500("Source file not found or not writable.");
+        }
+
+        $fileParts = $this->parseFilename(basename($path));
+        if ($fileParts === null) {
+            $this->send500("Invalid file name.");
+        }
+
+        if (!preg_match('/^[a-zA-Z0-9_-]+$/', $repo)) {
+            $this->send500("Invalid repository name.");
+        }
+        if (!preg_match('/^(none|\d+)$/', $newId)) {
+            $this->send500("Invalid ID.");
+        }
+
+        $newType = 'discussion';
+        $timestamp = $fileParts['timestamp'];
+        $ext = $fileParts['ext'];
+        $newBase = "support-{$repo}-{$newType}-{$newId}-{$timestamp}.{$ext}";
+        $newPath = $this->safePathFromBasename($newBase);
+        if ($newPath === null) {
+            $this->send500("Invalid destination name.");
+        }
+
+        if (@rename($path, $newPath) === false) {
+            $msg = error_get_last()['message'] ?? 'rename failed';
+            error_log("rename failed: {$msg}");
+            $this->send500("Rename failed.");
+        }
+
+        $this->sendResponse(['ok' => true]);
+    }
+
+    // POST: delete a support bundle
+    public function postDeleteLog(): void
+    {
+        $logId = $_POST['logId'] ?? '';
+        $path = $this->safePathFromBasename($logId);
+        if ($path === null || !is_writable($path)) {
+            $this->send500("File not found or not writable.");
+        }
+
+        if (@unlink($path)) {
+            $this->sendResponse(['ok' => true]);
+        } else {
+            $this->send500("Delete failed.");
+        }
+    }
+
+    // GET: list support bundles with metadata
+    public function getSupportFilesList(): void
+    {
+        $data = [];
+
+        if (!is_dir($this->issueDir)) {
+            $this->send500("Support directory missing.");
+        }
+
+        $files = @scandir($this->issueDir);
+        if ($files === false) {
+            $this->send500("Unable to list support directory.");
+        }
+
+        foreach ($files as $file) {
+            if ($file === '.' || $file === '..') continue;
+
+            $parts = $this->parseFilename($file);
+            if ($parts === null) continue;
+
+            $dateStr = $parts['timestamp']; // YYYYMMDDHHMMSS
+            $dt = DateTime::createFromFormat('YmdHis', $dateStr);
+            if (!$dt) continue;
+
+            $full = $this->issueDir . DIRECTORY_SEPARATOR . $file;
+            if (!is_file($full)) continue;
+
+            $sizeBytes = (int) @filesize($full);
+            $hrSize = $this->humanReadableFileSize(max(0, $sizeBytes));
+
+            $data[] = [
+                'filename'  => $file,
+                'repo'      => $parts['repo'],
+                'type'      => $parts['type'],
+                'ID'        => $parts['id'],
+                'sortfield' => $dt->format('YmdHis'),
+                'date'      => $dt->format('l d F Y, H:i'),
+                'size'      => $hrSize,
+                'actions'   => '',
+            ];
+        }
+
+        $this->sendResponse($data);
+    }
+
+    // GET: launch support log generator securely and report result
+    public function getGenerateLog(): void
+    {
+        $script = ALLSKY_HOME . '/support.sh';
+        if (!is_file($script) || !is_executable($script)) {
+            $this->send500("Support script unavailable.");
+        }
+
+        $cmd = ['/bin/bash', $script, '--auto'];
+        $descriptors = [
+            1 => ['pipe', 'w'],
+            2 => ['pipe', 'w'],
+        ];
+
+        $env = [
+            'ALLSKY_HOME' => ALLSKY_HOME,
+            'SUDO_OK'     => 'true',
+        ];
+
+        $proc = proc_open($cmd, $descriptors, $pipes, null, $env);
+        if (!is_resource($proc)) {
+            $this->send500("Unable to start support script.");
+        }
+
+        $stdout = stream_get_contents($pipes[1]);
+        $stderr = stream_get_contents($pipes[2]);
+        foreach ($pipes as $p) { if (is_resource($p)) fclose($p); }
+
+        $status = proc_close($proc);
+        if ($status === 0) {
+            $this->sendResponse(['ok' => true, 'output' => trim($stdout)]);
+        } else {
+            error_log("support.sh failed: code={$status}, stderr=" . trim($stderr));
+            $this->send500("Support generation failed.");
+        }
+    }
 }
-
 
 $supportUtil = new SUPPORTUTIL();
 $supportUtil->run();

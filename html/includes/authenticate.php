@@ -19,7 +19,7 @@ if ($useLogin) {
 
             if (!CSRFValidate()) {
                 $throttle->fail();
-                redirect("/index.php?page=login", "Invalid username or password.");
+                redirect("/index.php?page=login", "Invalid username or password.", true);
             }
 
             $privateVars   = get_decoded_json_file(ALLSKY_ENV, true, "");
@@ -31,6 +31,11 @@ if ($useLogin) {
             $okUser = hash_equals($adminUser, $user);
             $okPass = password_verify($pass, $adminPassword);
 
+            if (strlen($user) > 128 || strlen($pass) > 4096) {
+                $throttle->fail();
+                redirect("/index.php?page=login", "Invalid username or password.", true);
+            }
+
             if ($okUser && $okPass) {
                 $throttle->reset();
                 session_regenerate_id(true);
@@ -40,17 +45,17 @@ if ($useLogin) {
                 redirect("/index.php?page=live_view");
             } else {
                 $throttle->fail();
-                redirect("/index.php?page=login", "Invalid username or password.");
+                redirect("/index.php?page=login", "Invalid username or password.", true);
             }
         }
 
         if ($page !== "login") {
-            redirect("/index.php?page=login");
+            redirect("/index.php?page=login", null, true);
         }
     }
 } else {
     if ($page == "login") {
-        redirect("/index.php");
+        redirect("/index.php", null, true);
     }
 }
 ?>

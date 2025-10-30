@@ -78,9 +78,22 @@ class ALLSKY {
 	};
 
 	constructor(page) {
+		this.#setupajaxIntercept();
 		this.#allskyPage = page;
 	}
 
+	#setupajaxIntercept() {
+		$(document).ajaxComplete(function(event, xhr, settings) {
+				try {
+						var response = xhr.responseJSON || JSON.parse(xhr.responseText);
+						if (response && response.redirect) {
+								window.location.href = response.redirect;
+						}
+				} catch (e) {
+				}
+		});
+
+	}
 	#setupTheme() {
 		if (!localStorage.getItem("theme")) {
 			localStorage.setItem("theme", "light")

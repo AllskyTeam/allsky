@@ -1334,17 +1334,93 @@ function getHTTPResponseCodeString($responseCode)
 	return $result;
 }
 
-function redirect(string $url, string $flash = "", int $statusCode = 302): never {
-    if (!headers_sent()) {
-				$_SESSION["flash"] = $flash;
-        header('Location: ' . $url, true, $statusCode);
-        exit;
-    } else {
-        // Fallback if headers already sent
-        echo "<script>window.location.href='" . htmlspecialchars($url, ENT_QUOTES) . "';</script>";
-        echo '<noscript><meta http-equiv="refresh" content="0;url=' . htmlspecialchars($url, ENT_QUOTES) . '"></noscript>';
-        exit;
+
+/**
+ * Determine if the current HTTP request should be treated as an AJAX/API call.
+ *
+ * Heuristics used (in order):
+ *  1) X-Requested-With header set to "XMLHttpRequest" (classic jQuery convention)
+ *  2) Accept header indicates JSON is acceptable (typical for API/fetch clients)
+ *  3) Explicit query/body flag `ajax=1` (manual override/fallback)
+ *
+ * @return bool True if the request should be considered AJAX-like; otherwise false.
+ */
+function is_ajax_request(): bool
+{
+    // 1) jQuery and some libraries send this header automatically.
+    if (
+        !empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&
+        strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest'
+    ) {
+        return true;
     }
+
+    // 2) If the client explicitly accepts JSON, we treat it as an API/AJAX intent.
+    //    Using stripos(...) !== false so it's case-insensitive and matches anywhere.
+    if (
+        !empty($_SERVER['HTTP_ACCEPT']) &&
+        stripos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false
+    ) {
+        return true;
+    }
+
+    // 3) Manual override: allow callers to force AJAX handling by passing ajax=1.
+    //    Works for both GET and POST because we check $_REQUEST.
+    if (isset($_REQUEST['ajax']) && $_REQUEST['ajax'] === '1') {
+        return true;
+    }
+
+    // None of the heuristics matched; treat as a normal (non-AJAX) request.
+    return false;
+}
+
+/**
+ * Redirect helper that is "AJAX-aware".
+ *
+ * Behavior:
+ * - Normal browser request: send a 302 Location redirect.
+ * - AJAX-like request (per is_ajax_request()):
+ *     a) If $useJsonForAjax === true: return HTTP 200 JSON {redirect, message}.
+ *     b) Else: return custom HTTP status 278 with Location header (clients can act on it).
+ *
+ * If a flash message is provided, it is stored in session for retrieval after navigation.
+ *
+ * @param string      $url             Absolute or relative URL to redirect to.
+ * @param string|null $flashMessage    Optional flash message to store in session.
+ * @param bool        $useJsonForAjax  If true, respond with JSON payload for AJAX calls; otherwise use 278 + Location.
+ * @return void
+ */
+function redirect(string $url, ?string $flashMessage = null, bool $useJsonForAjax = false): void
+{
+    // Stash an optional flash message so the next page can display it.
+    if ($flashMessage) {
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            @session_start(); // Suppress notice if headers already started; adjust to your logging policy.
+        }
+        $_SESSION['flash_message'] = $flashMessage;
+    }
+
+    // AJAX-aware branch
+    if (is_ajax_request()) {
+        if ($useJsonForAjax) {
+            // JSON mode: clients parse and redirect themselves.
+            http_response_code(200);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode([
+                'redirect' => $url,
+                'message'  => $flashMessage,
+            ]);
+        } else {
+            // Header mode: emit a Location header with a non-standard status so browsers do NOT auto-follow in XHR.
+            header('Location: ' . $url);
+            http_response_code(278); // Custom code; client-side JS should check for this and redirect.
+        }
+        exit; // Always stop execution after emitting a redirect response.
+    }
+
+    // Standard browser redirect (non-AJAX): 302 Found
+    header('Location: ' . $url, true, 302);
+    exit;
 }
 
 

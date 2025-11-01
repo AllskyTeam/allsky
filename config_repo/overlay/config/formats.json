@@ -260,7 +260,7 @@
         {
             "format": "num",
             "description": "Show as 1 or 0",
-            "example": "False",
+            "example": "0",
             "stackable": false,
             "type": "gpio"
         },

@@ -1274,7 +1274,11 @@ class OVERLAYUTIL
             $this->sendHTTPResponse(500);
         }
 
-        $command = 'sudo ' . $this->allsky_scripts  . '/test_overlay.sh --allsky_home ' . $this->allsky_home  . ' --allsky_scripts ' . $this->allsky_scripts  . ' --allsky_tmp ' . $this->allskyTmp . " --overlay '$fileName'";
+        $command = 'sudo ' . $this->allsky_scripts  . '/test_overlay.sh';
+		$command .= ' --allsky_home ' . $this->allsky_home;
+		$command .= ' --allsky_scripts ' . $this->allsky_scripts ;
+		$command .= ' --allsky_tmp ' . $this->allskyTmp;
+		$command .= " --overlay '$fileName'";
 
         $result = $this->runShellCommand($command);
 

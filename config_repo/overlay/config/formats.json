@@ -316,14 +316,6 @@
         },
 
         {
-            "format": "flip",
-            "description": "Image flip",
-            "example": "",
-            "stackable": false,
-            "type": "flip"
-        },
-
-        {
             "format": "Allsky internal",
             "description": "Allsky internal distance (miles)",
             "example": "",

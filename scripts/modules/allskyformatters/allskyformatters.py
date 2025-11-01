@@ -644,16 +644,6 @@ class AllskyFormatters:
 		return value
 
 
-	def as_flip(self, value, variable_name, format, variable_type, debug=False):
-		''' Displays the image "flip" value.
-		'''
-		
-		if format == 'flip':
-			value = value.capitalize()
-			
-		return value
-
-
 	def as_deg(self, value, variable_name, format, variable_type, debug=False):
 		""" Adds a degrees symbol
 		Args:

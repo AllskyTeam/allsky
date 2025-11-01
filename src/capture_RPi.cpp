@@ -426,12 +426,12 @@ else Log(5, "  ExposureTime = %f ('%s')\n", x, value);
 		{
 
 			// [ float, float ]		red, blue
-			if (sscanf(value, "[ %lf, %lf ]", &CG.lastWBR, &CG.lastWBB) != 2)
+			if (sscanf(value, "[ %f, %f ]", &CG.lastWBR, &CG.lastWBB) != 2)
 			{
 				Log(1, "*** %s: WARNING, WBR and WBB not on line: '%s=%s'\n", CG.ME, name,value);
 			}
 else
-Log(5, "  ColourGains: Red: %lf, Blue: %lf\n", CG.lastWBR, CG.lastWBB);
+Log(5, "  ColourGains: Red: %f, Blue: %f\n", CG.lastWBR, CG.lastWBB);
 		}
 		else if (strcmp(name, "SensorTemperature") == 0)
 		{

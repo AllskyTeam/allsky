@@ -2609,7 +2609,7 @@ class OEUIMANAGER {
         $('#textdialog').dialog({
             resizable: false,
             closeOnEscape: false,
-            width: 350,
+            width: 500,
             beforeClose: function (event, ui) {
                 let uiManager = window.oedi.get('uimanager');
                // uiManager.selected = null;
@@ -2668,8 +2668,6 @@ class OEUIMANAGER {
                     uiManager.transformer.forceUpdate();
                 });
             }
-
-            
 
             uiManager.updateToolbar();
         }
@@ -2840,6 +2838,7 @@ class OEUIMANAGER {
 
     #createFormatHelpWindow(type) {
 		var filterType = type
+        var fType = ''		// ECC testing
         $('#formatlisttable').DataTable().destroy()
         $('#formatlisttable').removeClass('hidden')
         $(document).off('click', '.oe-format-replace')
@@ -2867,6 +2866,8 @@ class OEUIMANAGER {
 
 				$('#oe-format-filters').off('change')			
 				$('#oe-format-filters').on('change', function() {
+	filterType = this.value;	// ECC testing
+	//x console.log("Got change, value=", this.value);
 					if (this.value === 'all') {
 						formatTable.column(3).search('').draw()
 					} else {
@@ -2888,7 +2889,7 @@ class OEUIMANAGER {
 				columns: [
 					{ 
 						data: 'format',
-						width: '15%',
+						width: '20%',
                         render: function(data, type, row, meta) {
                             let result = data
                             if (row.value !== '') {
@@ -2906,7 +2907,13 @@ class OEUIMANAGER {
 						width: '20%'					
 					},                  
 					{ 
-						data: 'type',
+						// Was: data: 'type',
+						// ECC: Set fType to the current filter.
+                        data: function(data, type) {
+                            fType = data.type.charAt(0).toUpperCase() + data.type.slice(1);
+	//x console.log("fType now=", fType);
+							return fType;
+						},
 						visible: false
 					},
 					{ 
@@ -2921,11 +2928,13 @@ class OEUIMANAGER {
 						render: function (item, type, row, meta) {
                             let buttons = '';
                             if (item.legacy !== 'Legacy') {
-                                let buttonReplace = '<button type="button" title="Replace Format" class="btn btn-success btn-xs oe-format-replace" data-index="' + meta.row + '" data-format="' + item.format + '"><i class="fa-solid fa-right-to-bracket"></i></button>';
+                                let icon = '<i class="fa-solid fa-right-to-bracket"></i></button>';
+                                let buttonReplace = '<button type="button" title="Replace Format" class="btn btn-success btn-xs oe-format-replace" data-index="' + meta.row + '" data-format="' + item.format + '">' + icon + '</button>';
                                 let buttonAdd = ''
 
                                 if (row.stackable) {
-                                    buttonAdd = '<button type="button" title="Add to format" class="btn btn-primary btn-xs oe-format-add" data-format="' + item.format + '"><i class="fa-solid fa-plus"></i></button>';
+                                    icon = '<i class="fa-solid fa-plus"></i></button>';
+                                    buttonAdd = '<button type="button" title="Add to format" class="btn btn-primary btn-xs oe-format-add" data-format="' + item.format + '">' + icon + '</button>';
                                 }
                                 
                                 buttons = '<div class="btn-group">' + buttonReplace + buttonAdd + '</div>';
@@ -2937,21 +2946,33 @@ class OEUIMANAGER {
                     rowGroup: {
                         dataSrc: 'legacy',
                         startRender: function (rows, group) {
-                            if (group == 'No group') {
-                                group = 'Available Formats';
-                            }                            
+                            // TODO: Only show "Available Formats" if showing all filters (filterType == "all").
+							let label = '';
+							let showHeader = true;
+							if (filterType !== "all" && group !== 'Legacy') {
+								showHeader = false;
+							}
+		//x console.log("filterType=" + filterType, " group=" + group, " showHeader=", showHeader);
+                            if (group === 'No group') {
+                                group = '<u>Available Formats';
+                                // TODO: FIX: this works except when "Show All" is selected, then every group says "Temperature"
+                                // group += ' for ' + fType;
+                                group += '</u>';
+								label = "<br>";
+                            }
                             var collapsed = !!legacyCollapsedGroups[group];
                             
-                            let icon = collapsed ? '<i class="fa-solid fa-angles-right"></i>' : '<i class="fa-solid fa-angles-down"></i>';
                             rows.nodes().each(function (r) {
                                 r.style.display = collapsed ? 'none' : '';
                             });    
 
-                            if (group === 'Legacy') {
-                                group = 'Legacy Formats - NO NOT USE';
+                            if (group === 'Legacy') {	// TODO: Add filter name if "Show All" is selected.
+                                group = 'Legacy Formats - DO NOT USE';
                             }
+                            let icon = collapsed ? '<i class="fa-solid fa-angles-right"></i>' : '<i class="fa-solid fa-angles-down"></i>';
+							if (showHeader) label += icon + ' ' + group;
                             return $('<tr/>')
-                                .append('<td colspan="9">' + icon + ' ' + group + '</td>')
+                                .append('<td colspan="9">' + label + '</td>')
                                 .attr('data-name', group)
                                 .toggleClass('collapsed', collapsed);
                         }
@@ -3009,7 +3030,7 @@ class OEUIMANAGER {
                         data: jsonData,
                         keys: keys,
                         initialValues: format,
-                        title: 'Configure Format Options',
+                        title: 'Configure Format "' + rowData.format + '" Options',
                         onSubmit: function (resultString) {
                             let uiManager = window.oedi.get('uimanager')
                             //let format = '{' + $(event.currentTarget).data('format') + '}'

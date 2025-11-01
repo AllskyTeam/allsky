@@ -1,76 +1,65 @@
 {
     "data": [
         {
-            "format": "allsky",
-            "description": "Use the default Allsky format",
+            "format": "Default date",
+            "description": "Use default data attributes - see Sample -->",
             "example": "25-12-23 23:20",
             "stackable": false,
             "type": "date"
         },
         {
             "format": "%d-%m-%y %H:%M",
-            "description": "Short date/time UK format",
+            "description": "Short date/time (UK format)",
             "example": "25-12-23 23:20",
             "stackable": false,
             "type": "date"
         },
         {
             "format": "%m-%d-%Y %I:%M %p",
-            "description": "Short date/time US format",
+            "description": "Short date/time (US format)",
             "example": "12-25-2023 11:20 AM",
             "stackable": false,
             "type": "date"
         },
-		{
+        {
             "format": "%d-%m-%y",
-            "description": "Short date",
+            "description": "Short date (UK format)",
             "example": "25-12-23",
             "stackable": false,
             "type": "date"
         },
         {
-            "format": "%d-%m-%y %H:%m",
-            "description": "Short date and time",
-            "example": "25-12-23 23:10",
-            "stackable": false,
-            "type": "date"
-        },
-        {
             "format": "%m-%d-%y",
-            "description": "Short US date",
+            "description": "Short date (US format)",
             "example": "12-25-23",
             "stackable": false,
             "type": "date"
         },
         {
+            "format": "%d-%m-%y %H:%m",
+            "description": "Short date and time (UK format)",
+            "example": "25-12-23 23:10",
+            "stackable": false,
+            "type": "date"
+        },
+        {
             "format": "%m-%d-%y %H:%m",
-            "description": "Short US date and time",
+            "description": "Short date and time (US format)",
             "example": "12-25-23 23:10",
             "stackable": false,
             "type": "date"
         },
         {
-            "format": "customdate",
-            "description": "Custom date format.",
+            "format": "Custom date",
+            "description": "Custom date format",
             "example": "N/A",
             "stackable": false,
             "type": "date"
         },
+
         {
-            "format": "int",
-            "description": "Integered Number",
-            "example": "52",
-            "attribute": [
-                "dp0",
-                "per",
-                "deg",
-                "locale"
-            ],
-            "type": "number"
-        },
-        {
-            "format": "float",
-            "description": "Floating Point Number",
+            "format": "Custom number",
+            "description": "Customize how a number is displayed",
             "example": "52.12",
             "attribute": [
                 "dp",
@@ -82,7 +71,7 @@
         },
         {
             "format": "{:.0f}",
-            "description": "Number to zero decimal places.",
+            "description": "Display number with zero decimal places",
             "example": "52",
             "stackable": true,
             "legacy": "Legacy",
@@ -90,7 +79,7 @@
         },
         {
             "format": "{:.2f}",
-            "description": "Number to 2 decimal places.",
+            "description": "Display number with 2 decimal places",
             "example": "52.00",
             "stackable": false,
             "legacy": "Legacy",
@@ -98,7 +87,7 @@
         },
         {
             "format": "{:,}",
-            "description": "Comma for thousands.",
+            "description": "Use comma for thousands separator",
             "example": "800,000",
             "stackable": false,
             "legacy": "Legacy",
@@ -106,7 +95,7 @@
         },
         {
             "format": "{:n}",
-            "description": "Use locale thousands.",
+            "description": "Use locale thousands separator",
             "example": "800.000",
             "stackable": false,
             "legacy": "Legacy",
@@ -114,35 +103,35 @@
         },
         {
             "format": "yesno",
-            "description": "Output Yes (if input is 1) or No",
+            "description": "Output 'Yes' if input is 1, or 'No'",
             "example": "Yes, No",
             "stackable": false,
             "type": "bool"
         },
         {
             "format": "onoff",
-            "description": "Output On (if input is 1) or Off",
+            "description": "Output 'On' if input is 1, or 'Off'",
             "example": "On, Off",
             "stackable": false,
             "type": "bool"
         },
         {
             "format": "truefalse",
-            "description": "Output True (if input is 1) of False",
+            "description": "Output 'True' if input is 1, of 'False'",
             "example": "True, False",
             "stackable": false,
             "type": "bool"
         },
         {
             "format": "num",
-            "description": "Output 1 (if input is 1) or 0",
+            "description": "Output '1' if input is 1, or '0'",
             "example": "1, 0",
             "stackable": false,
             "type": "bool"
         },
         {
             "format": "%yes",
-            "description": "Output Yes or No.",
+            "description": "Output 'Yes' or 'No'",
             "example": "Yes, No",
             "stackable": false,
             "legacy": "Legacy",
@@ -150,7 +139,7 @@
         },
         {
             "format": "%on",
-            "description": "Output On or Off.",
+            "description": "Output 'On' or 'Off'",
             "example": "On, Off",
             "stackable": false,
             "legacy": "Legacy",
@@ -158,7 +147,7 @@
         },
         {
             "format": "%true",
-            "description": "Output True of False.",
+            "description": "Output 'True' or 'False'",
             "example": "True, False",
             "stackable": false,
             "legacy": "Legacy",
@@ -166,129 +155,83 @@
         },
         {
             "format": "%1",
-            "description": "Output 1 or 0.",
+            "description": "Output '1' or '0'",
             "example": "1, 0",
             "stackable": false,
             "legacy": "Legacy",
             "type": "bool"
         },
+
         {
-            "format": "int",
-            "description": "Elevation integered",
-            "example": "123",
+            "format": "Custom elevation",
+            "description": "Elevation with decimal places and degree symbol",
+            "example": "52.12 &deg;",
             "attribute": [
-                "dp0",
-                "deg"
+                "dp",
+                "deg",
+				"locale"
             ],
             "stackable": false,
             "type": "elevation"
         },
+
         {
-            "format": "float",
-            "description": "Floating Point Number",
+            "format": "Custom azimuth",
+            "description": "Azimuth with decimal places and degree symbol",
             "example": "52.12",
             "attribute": [
                 "dp",
-                "deg"
-            ],
-            "type": "elevation"
-        },			
-        {
-            "format": "int",
-            "description": "Azimuth integered",
-            "example": "123",
-            "attribute": [
-                "dp0",
-                "deg"
-            ],
-            "stackable": false,
-            "type": "azimuth"
-        },
-        {
-            "format": "float",
-            "description": "Floating Point Number",
-            "example": "52.12",
-            "attribute": [
-                "dp",
-                "deg"
+                "deg",
+				"locale"
             ],
             "type": "azimuth"
         },
         {
             "format": "dms",
-            "description": "Azimuth to Degrees, Minutes and Seconds",
+            "description": "Display azimuth with Degrees, Minutes, and Seconds",
             "example": "123",
             "function": "dms",
             "stackable": false,
             "type": "azimuth"
         },
+
         {
-            "format": "Auto",
-            "description": "Auto Filesize",
-            "example": "12",
+            "format": "Auto filesize",
+            "description": "The most appropriate unit will be displayed (GB, etc.)",
+            "example": "12 GB",
+            "stackable": false,
+            "type": "filesize"
+        },
+        {
+            "format": "Custom filesize",
+            "description": "Filesize with decimal places and units (GB, MB, etc.)",
+            "example": "12 TB",
             "attribute": [
-                "fsunit"
+                "dp",
+                "fsunit",
+				"locale"
             ],
             "stackable": false,
             "type": "filesize"
         },
         {
-            "format": "TB",
-            "description": "Filesize in Tb",
-            "example": "12",
-            "attribute": [
-                "fsunit"
-            ],
-            "stackable": false,
-            "type": "filesize"
-        },
-		{
-            "format": "GB",
-            "description": "Filesize in Gb",
-            "example": "12",
-            "attribute": [
-                "fsunit"
-            ],
-            "stackable": false,
-            "type": "filesize"
-        },
-        {
-            "format": "MB",
-            "description": "Filesize in Mb",
-            "example": "1.2",
-            "attribute": [
-                "fsunit"
-            ],
-            "stackable": false,
-            "type": "filesize"
-        },
-        {
-            "format": "B",
-            "description": "Filesize in B",
-            "example": "102400",
-            "attribute": [
-                "fsunit"
-            ],
-            "stackable": false,
-            "type": "filesize"
-        },
-        {
-            "format": "defaults",
-            "description": "Use default variable attributes - see Sample -->",
+            "format": "Default temperature",
+            "description": "Use default temperature attributes - see Sample -->",
             "example": "23.5&deg; C",
             "stackable": false,
             "type": "temperature"
         },
         {
-            "format": "custom",
+            "format": "Custom temerature",
             "description": "Customize variable attributes",
-            "example": "23.54&deg; C",
+            "example": "23,54&deg; C",
             "attribute": [
                 "dp",
                 "degctof",
                 "degftoc",
                 "deg",
-                "temp_unit"
+                "temp_unit",
+				"locale"
             ],
             "stackable": false,
             "type": "temperature"
@@ -323,39 +266,47 @@
         },
         {
             "format": "none",
-            "description": "No chnage to the string",
+            "description": "No change to the string",
             "example": "",
             "stackable": false,
             "type": "string"
         },
         {
             "format": "upper",
-            "description": "Convert string to upper case",
-            "example": "",
+            "description": "Convert string to UPPER CASE",
+            "example": "HELLO, WORLD!",
             "stackable": false,
             "type": "string"
         },
         {
             "format": "lower",
             "description": "Convert string to lower case",
-            "example": "",
+            "example": "hello, world!",
             "stackable": false,
             "type": "string"
         },
         {
             "format": "camel",
-            "description": "Convert string to camel case",
-            "example": "",
+            "description": "Convert string to camelCase",
+            "example": "hello, World!",
             "stackable": false,
             "type": "string"
         },
         {
             "format": "capitalize",
             "description": "Capitalize the string",
-            "example": "",
+            "example": "Hello, World!",
             "stackable": false,
             "type": "string"
         },
+        {
+            "format": "sentence",
+            "description": "Capitalize the string, removing leading and trailing spaces",
+            "example": "Hello, World!",
+            "stackable": false,
+            "type": "string"
+        },
+
         {
             "format": "flightlevel",
             "description": "Convert altitude in metres to flight level",
@@ -363,6 +314,7 @@
             "stackable": false,
             "type": "altitude"
         },
+
         {
             "format": "flip",
             "description": "Image flip",
@@ -370,8 +322,9 @@
             "stackable": false,
             "type": "flip"
         },
+
         {
-            "format": "allsky",
+            "format": "Allsky internal",
             "description": "Allsky internal distance (miles)",
             "example": "",
             "stackable": false,
@@ -383,7 +336,7 @@
             "example": "",
             "attribute": [
                 "mtok",
-                "allsky",
+                "Allsky internal",
                 "dp",
                 "distunit"
             ],
@@ -397,11 +350,11 @@
             "stackable": false,
             "attribute": [
                 "ktom",
-                "allsky",
+                "Allsky internal",
                 "dp",
                 "distunit"
             ],
             "type": "distance"
-        }  
+        }
     ]
 }

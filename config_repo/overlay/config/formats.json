@@ -222,7 +222,7 @@
             "type": "temperature"
         },
         {
-            "format": "Custom temerature",
+            "format": "Custom temperature",
             "description": "Customize variable attributes",
             "example": "23,54&deg; C",
             "attribute": [

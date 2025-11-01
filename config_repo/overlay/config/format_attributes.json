@@ -33,7 +33,6 @@
         "description": "Convert C to F",
         "example": "",
         "type": {
-			"checked" : true,
             "field": "boolean"
         }  
     },
@@ -41,22 +40,29 @@
         "description": "Convert F to C",
         "example": "",
         "type": {
-			"checked" : true,
             "field": "boolean"
         }  
     },
     "temp_unit": {
         "description": "Add unit (C or F)",
-        "example": "",
+        "example": "21.2 C",
         "type": {
             "field": "boolean"
         }  
     },
     "fsunit": {
-        "description": "Add filesize settings units symbol",
-        "example": "",
+        "description": "Add filesize units symbol",
+        "example": "12 GB",
         "type": {
-            "field": "boolean"
+            "field": "select",
+            "values": {
+                "": "None",
+                "B": "Bytes",
+                "KB": "KB",
+                "MB": "MB",
+                "GB": "GB",
+                "TB": "TB"
+            }
         }  
     },
     "mtok": {

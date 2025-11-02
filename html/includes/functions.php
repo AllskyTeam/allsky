@@ -438,6 +438,7 @@ function CSRFValidate(): bool {
     if (session_status() !== PHP_SESSION_ACTIVE) { 
 			@session_start(); 
 		}
+
     $session = $_SESSION['csrf_token'] ?? '';
     $header  = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
     $field   = $_POST['csrf_token'] ?? '';

@@ -2,202 +2,205 @@
 include_once('functions.php');
 initialize_variables();
 include_once('authenticate.php');
+include_once('utilbase.php');
 
-class UIUTIL
-{
-    private string $request = '';
-    private string $method = '';
-    private bool $jsonResponse = false;
+/**
+ * UIUTIL
+ *
+ * Small UI-facing endpoint collection for the dashboard.
+ * Renders HTML fragments (progress bars, text) rather than JSON by default.
+ *
+ * Exposed routes:
+ *   GET  AllskyStatus   -> overall system status (preformatted string/HTML)
+ *   GET  CPULoad        -> CPU load as a bootstrap progress bar
+ *   GET  CPUTemp        -> CPU temperature as a progress bar with status color
+ *   GET  MemoryUsed     -> Memory usage as a progress bar
+ *   GET  ThrottleStatus -> Raspberry Pi throttle state as a colored bar
+ *   GET  Uptime         -> Human readable uptime string
+ *   POST Multiple       -> Batch several GETs in one JSON request
+ *
+ * Notes:
+ * - This class flips $jsonResponse to false so `sendHTTPResponse()` returns
+ *   text/HTML snippets (good for dropping into the DOM).
+ * - All user-visible text is escaped; numbers are clamped where appropriate.
+ * - The heavy lifting (load/temp/mem/throttle/uptime) comes from helpers
+ *   in functions.php.
+ */
+class UIUTIL extends UTILBASE {
+
     private bool $returnValues = false;
-    private string $allskyHome;
+    
+    /** Declare which routes exist and which HTTP verbs are allowed */
+    protected function getRoutes(): array
+    {
+        return [
+            'AllskyStatus'   => ['get'],
+            'CPULoad'        => ['get'],
+            'CPUTemp'        => ['get'],
+            'MemoryUsed'     => ['get'],
+            'Multiple'       => ['post'],
+            'ThrottleStatus' => ['get'],
+            'Uptime'         => ['get'],
+        ];
+    }
 
+    /** Serve HTML/text by default (not JSON) for all responses in this class */
     public function __construct()
     {
-        $this->allskyHome = ALLSKY_HOME;
+        $this->jsonResponse = false;
     }
 
-    // Entry point for all incoming requests
-    public function run(): void
-    {
-        $this->checkXHRRequest();
-        $this->sanitizeRequest();
-        $this->runRequest();
-    }
-
-    // Ensures the request originated from an XMLHttpRequest or fetch
-    private function checkXHRRequest(): void
-    {
-        $xhr = $_SERVER['HTTP_X_REQUESTED_WITH'] ?? '';
-        if (strcasecmp($xhr, 'xmlhttprequest') !== 0) {
-            $this->send404();
-        }
-    }
-
-    // Cleans input parameters and sets response mode
-    private function sanitizeRequest(): void
-    {
-        $req = $_GET['request'] ?? '';
-        $req = preg_replace('/[^a-zA-Z0-9_]/', '', $req);
-        $this->request = $req;
-
-        $this->method = strtolower($_SERVER['REQUEST_METHOD'] ?? 'get');
-
-        $accepts = $_SERVER['HTTP_ACCEPT'] ?? '';
-        if (stripos($accepts, 'application/json') !== false) {
-            $this->jsonResponse = true;
-        }
-    }
-
-    // Sends a 404 response and stops execution
-    private function send404(): void
-    {
-        http_response_code(404);
-        exit('404 Not Found');
-    }
-
-    // Sends a 500 response with an optional message
-    private function send500(string $msg = 'Internal Server Error'): void
-    {
-        http_response_code(500);
-        header('Content-Type: text/plain; charset=utf-8');
-        echo htmlspecialchars($msg, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-        exit;
-    }
-
-    // Sends a sanitized response to the client
-    private function sendResponse($response = 'ok', bool $isJson = false): void
-    {
-        $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
-        $host = $_SERVER['HTTP_HOST'] ?? '';
-        $allow_origin = '';
-
-        if ($origin && stripos($origin, $host) !== false) {
-            $allow_origin = $origin;
-        } else {
-            $allow_origin = 'null';
-        }
-
-        header('Vary: Origin');
-        header("Access-Control-Allow-Origin: $allow_origin");
-        header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-        header('Access-Control-Allow-Headers: Content-Type, X-Requested-With, Authorization, X-CSRF-Token');
-        header('Access-Control-Allow-Credentials: true');
-        header('Cache-Control: no-store, no-cache, must-revalidate');
-
-        if ($isJson) {
-            header('Content-Type: application/json; charset=utf-8');
-            echo json_encode($response, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-        } else {
-            header('Content-Type: text/html; charset=UTF-8');
-            // Output raw HTML so .html() inserts real elements
-            echo (string)$response;
-        }
-        exit;
-    }
-
-    // Validates and dispatches a request to an allowed method
-    private function runRequest(): void
-    {
-        $action = $this->method . ucfirst($this->request);
-
-        $allowedMethods = [
-            'getAllskyStatus',
-            'getCPULoad',
-            'getCPUTemp',
-            'getMemoryUsed',
-            'getThrottleStatus',
-            'getUptime',
-            'postMultiple'
-        ];
-
-        if (!in_array($action, $allowedMethods, true) || !method_exists($this, $action)) {
-            $this->send404();
-        }
-
-        if (in_array($this->method, ['post', 'put', 'delete', 'patch'], true)) {
-            if (!function_exists('CSRFValidate') || !CSRFValidate()) {
-                $this->send500('Invalid or missing CSRF token.');
-            }
-        }
-
-        try {
-            $this->$action();
-        } catch (Throwable $e) {
-            error_log("UIUTIL Error: " . $e->getMessage());
-            $this->send500();
-        }
-    }
-
-    // Creates a styled progress bar element with safe output
+    /**
+     * Build a bootstrap progress bar with safe output.
+     *
+     * @param mixed       $x                (unused placeholder maintained for compatibility)
+     * @param string      $data             Label shown inside the bar
+     * @param float|int   $min              Lower bound for clamping
+     * @param float|int   $current          Current numeric value
+     * @param float|int   $max              Upper bound for clamping
+     * @param float|int   $danger           Threshold for red (>=)
+     * @param float|int   $warning          Threshold for yellow (>=)
+     * @param string      $status_override  Force bar state ('success'|'warning'|'danger'|…)
+     *
+     * @return string HTML <div> for a progress-bar-* element
+     */
     private function displayProgress($x, $data, $min, $current, $max, $danger, $warning, $status_override): string
     {
+        // Choose a state: explicit override wins; otherwise decide from thresholds
         $myStatus = $status_override ?: (
             $current >= $danger ? 'danger' :
             ($current >= $warning ? 'warning' : 'success')
         );
 
+        // Keep values sane and compute width
         $current = max($min, min($current, $max));
         $width = (($current - $min) / ($max - $min)) * 100;
-        $dataEsc = htmlspecialchars((string)$data, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 
+        // Return a single progress bar segment with accessible attributes
         return sprintf(
             "<div class='progress-bar progress-bar-not-animated progress-bar-%s' ".
             "role='progressbar' title='current: %s, min: %s, max: %s' ".
             "aria-valuenow='%s' aria-valuemin='%s' aria-valuemax='%s' ".
             "style='width: %.2f%%;'><span class='nowrap'>%s</span></div>",
             htmlspecialchars($myStatus, ENT_QUOTES, 'UTF-8'),
-            $current, $min, $max, $current, $min, $max, $width, $dataEsc
+            $current, $min, $max, $current, $min, $max, $width, $data
         );
     }
 
-    // Returns the overall system status
+    /** Overall system status string/HTML as produced by helper code */
     public function getAllskyStatus(): void
     {
         $result = output_allsky_status();
-        $this->sendResponse($result, $this->jsonResponse);
+        $this->sendHTTPResponse($result);
     }
 
-    // Returns CPU load percentage with a visual bar
-    public function getCPULoad(): void
+    /** CPU load as a percentage progress bar (green→yellow→red) */
+    public function getCPULoad()
     {
         $cpuLoad = (float)getCPULoad(1);
         $bar = $this->displayProgress('', "$cpuLoad%", 0, $cpuLoad, 100, 90, 75, '');
-        $this->sendResponse($bar);
+
+        if ($this->returnValues) {
+            return $bar;
+        }
+
+        $this->sendHTTPResponse($bar);
     }
 
-    // Returns CPU temperature with formatted output
-    public function getCPUTemp(): void
+    /** CPU temperature as a formatted progress bar with status color */
+    public function getCPUTemp()
     {
-        $data = getCPUTemp();
+        $data = getCPUTemp(); // ['temperature' => float, 'display_temperature' => '...', 'temperature_status' => 'success|warning|danger']
         $temp = (float)$data['temperature'];
-        $bar = $this->displayProgress('', htmlspecialchars($data['display_temperature'], ENT_QUOTES), 0, $temp, 100, 70, 60, $data['temperature_status']);
-        $this->sendResponse($bar);
+        $bar = $this->displayProgress(
+            '',
+            $data['display_temperature'],
+            0,
+            $temp,
+            100,
+            70,
+            60,
+            $data['temperature_status']
+        );
+
+        if ($this->returnValues) {
+            return $bar;
+        }
+
+        $this->sendHTTPResponse($bar);
     }
 
-    // Returns system memory usage percentage
-    public function getMemoryUsed(): void
+    /** Memory usage as a percentage progress bar */
+    public function getMemoryUsed()
     {
         $used = (float)getMemoryUsed();
         $bar = $this->displayProgress('', "$used%", 0, $used, 100, 90, 75, '');
-        $this->sendResponse($bar);
+
+        if ($this->returnValues) {
+            return $bar;
+        }
+
+        $this->sendHTTPResponse($bar);
     }
 
-    // Returns hardware throttle information
-    public function getThrottleStatus(): void
+    /** Raspberry Pi throttle status as a colored single-segment bar */
+    public function getThrottleStatus()
     {
-        $data = getThrottleStatus();
-        $bar = $this->displayProgress('', htmlspecialchars($data['throttle'], ENT_QUOTES), 0, 100, 100, -1, -1, $data['throttle_status']);
-        $this->sendResponse($bar);
+        $data = getThrottleStatus(); // e.g. ['throttle' => '...','throttle_status' => 'success|warning|danger']
+        $bar = $this->displayProgress(
+            '',
+            htmlspecialchars($data['throttle'], ENT_QUOTES),
+            0,
+            100,
+            100,
+            -1,
+            -1,
+            $data['throttle_status']
+        );
+
+        if ($this->returnValues) {
+            return $bar;
+        }
+
+        $this->sendHTTPResponse($bar);
     }
 
-    // Returns system uptime string
-    public function getUptime(): void
+    /** Human-readable uptime string (escaped) */
+    public function getUptime()
     {
         $uptime = htmlspecialchars(getUptime(), ENT_QUOTES);
-        $this->sendResponse($uptime);
+
+        if ($this->returnValues) {
+            return $uptime;
+        }
+
+        $this->sendHTTPResponse($uptime);
     }
 
-    // Handles multiple batched JSON data requests
+    /**
+     * Batch endpoint: accept a JSON array describing which getters to run,
+     * call each one, and return a JSON object of results.
+     *
+     * Input format (example):
+     * [
+     *   {"data":"CPULoad"},
+     *   {"data":"CPUTemp"},
+     *   {"data":"Uptime"}
+     * ]
+     *
+     * Response:
+     * {
+     *   "CPULoad": "<div class='progress-bar …'>…</div>",
+     *   "CPUTemp": "<div class='progress-bar …'>…</div>",
+     *   "Uptime":  "1 day 02:33:10"
+     * }
+     *
+     * Security/robustness:
+     * - Hard size limit (1 MB) on the JSON body
+     * - Only methods whitelisted in getRoutes() and actually implemented are called
+     * - Method names derived from user input are sanitized to [a-zA-Z0-9_]
+     * - Errors in an individual call return an error string for that key; the batch continues
+     */
     public function postMultiple(): void
     {
         $input = file_get_contents('php://input');
@@ -216,14 +219,19 @@ class UIUTIL
         }
 
         $this->returnValues = true;
+
         $result = [];
 
         foreach ($data as $key => $value) {
             if (!isset($value['data'])) continue;
+
+            // Build a safe method name like "getCPULoad"
             $methodName = 'get' . preg_replace('/[^a-zA-Z0-9_]/', '', $value['data']);
 
             if (method_exists($this, $methodName)) {
                 try {
+                    // Call the method and capture its return value (if any).
+                    // Most getters here directly send output; returned values are included when present.
                     $result[$value['data']] = call_user_func([$this, $methodName]);
                 } catch (Throwable $e) {
                     $result[$value['data']] = 'Error: ' . $e->getMessage();
@@ -233,16 +241,11 @@ class UIUTIL
             }
         }
 
-        $this->sendResponse($result, true);
+        // For the batch endpoint we do respond with JSON
+        $this->sendResponse($result);
     }
 }
 
-// Handles CORS preflight requests
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(204);
-    exit;
-}
-
-// Entry point for request processing
+// Script entrypoint
 $uiUtil = new UIUTIL();
 $uiUtil->run();

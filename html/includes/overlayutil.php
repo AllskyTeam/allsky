@@ -1,1291 +1,1279 @@
 <?php
+declare(strict_types=1);
 
 include_once('functions.php');
-initialize_variables();		// sets some variables
-
+initialize_variables();
 include_once('authenticate.php');
+include_once('utilbase.php');
 
-class OVERLAYUTIL
-{
-    private $request;
-    private $method;
-    private $jsonResponse = false;
-    private $overlayPath;
-    private $overlayConfigPath;
-    private $allskyOverlays;
-    private $allskyTmp;
-    private $allskyStatus;    
-    private $cc = "";
-    private $excludeVariables = array(
-        "\${TEMPERATURE_C}" => array(
-            "ccfield" => "hasSensorTemperature",
-            "value" => false,
-        ),
-        "\${TEMPERATURE_F}" => array(
-            "ccfield" => "hasSensorTemperature",
-            "value" => false,
-        )
-    );
-
-    public function __construct() 
+/**
+ * OVERLAYUTIL
+ *
+ * API for managing overlay templates, assets, and related app settings used by the WebUI designer.
+ * It serves overlay JSON, lists/creates/deletes user overlays, and handles image/font uploads.
+ *
+ * Design notes
+ * - Routing is allow-listed via getRoutes(), and UTILBASE handles verb gating + CSRF for unsafe methods.
+ * - Any user-provided filenames are sanitized; paths are built via helpers to avoid traversal.
+ * - JSON responses are used where practical; some endpoints return HTML/text when that’s what the UI expects.
+ * - Shell/Python helpers are executed via tiny wrappers that capture stdout/stderr and validate inputs.
+ */
+class OVERLAYUTIL extends UTILBASE {
+    protected function getRoutes(): array
     {
-        $this->overlayPath = ALLSKY_OVERLAY;
-        $this->overlayConfigPath = $this->overlayPath . "/config";
-        $this->allskyOverlays = ALLSKY_MY_OVERLAY_TEMPLATES . '/';
-        $this->allskyTmp = ALLSKY_TMP;
-        $this->allskyStatus = ALLSKY_STATUS;
-        $this->allsky_scripts = ALLSKY_SCRIPTS;
-        $this->allsky_home = ALLSKY_HOME;
-
-        $ccFile = ALLSKY_CONFIG . "/cc.json";
-        $ccJson = file_get_contents($ccFile, true);
-        $this->cc = json_decode($ccJson, true);
+        return [
+            'AppConfig'        => ['get', 'post'],
+            'AutoExposure'     => ['get', 'post'],
+            'Base64Image'      => ['post'],
+            'Config'           => ['get', 'post'],
+            'Configs'          => ['get'],
+            'Data'             => ['get', 'post'],
+            'Font'             => ['delete'],
+            'FontNames'        => ['get'],
+            'Fonts'            => ['get', 'post'],
+            'Formats'          => ['get'],
+            'Image'            => ['delete'],
+            'ImageDetails'     => ['get'],
+            'Images'           => ['get', 'post'],
+            'LoadOverlay'      => ['get'],
+            'NewOverlay'       => ['post'],
+            'Overlay'          => ['delete'],
+            'OverlayData'      => ['get'],
+            'OverlayList'      => ['get'],
+            'Overlays'         => ['get'],
+            'PythonDate'       => ['post'],
+            'Sample'           => ['post'],
+            'SaveSettings'     => ['post'],
+            'Status'           => ['get'],
+            'Suggest'          => ['get'],
+            'ValidateFilename' => ['get'],
+        ];
     }
 
-    public function run() 
-    {
-        //$this->checkXHRRequest();
-        $this->sanitizeRequest();
-        $this->runRequest();
-    }
+    // Common paths and config locations used throughout this class
+    private string $overlayPath;
+    private string $overlayConfigPath;
+    private string $allskyOverlays;
+    private string $allskyTmp;
+    private string $allskyStatus;
+    private string $allsky_scripts;
+    private string $allsky_home;
 
-    private function checkXHRRequest() 
+    // Camera capability flags loaded from cc.json (used to hide irrelevant fields)
+    private array $cc = [];
+
+    // Field visibility rules keyed by token; hide when capability doesn't match
+    private array $excludeVariables = [
+        '${TEMPERATURE_C}' => ['ccfield' => 'hasSensorTemperature', 'value' => false],
+        '${TEMPERATURE_F}' => ['ccfield' => 'hasSensorTemperature', 'value' => false],
+    ];
+
+    public function __construct()
     {
-        if (empty($_SERVER['HTTP_X_REQUESTED_WITH']) || strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) != 'xmlhttprequest') {
-            $this->sendHTTPResponse(404);
+        // Cache base paths to keep the body code readable
+        $this->overlayPath       = rtrim(ALLSKY_OVERLAY, '/');
+        $this->overlayConfigPath = $this->overlayPath . '/config';
+        $this->allskyOverlays    = rtrim(ALLSKY_MY_OVERLAY_TEMPLATES, '/') . '/';
+        $this->allskyTmp         = rtrim(ALLSKY_TMP, '/');
+        $this->allskyStatus      = ALLSKY_STATUS;
+        $this->allsky_scripts    = rtrim(ALLSKY_SCRIPTS, '/');
+        $this->allsky_home       = rtrim(ALLSKY_HOME, '/');
+
+        // Load optional capability metadata; absence should not break the UI
+        $ccFile = rtrim(ALLSKY_CONFIG, '/') . '/cc.json';
+        if (is_file($ccFile) && is_readable($ccFile)) {
+            $raw = file_get_contents($ccFile);
+            $parsed = json_decode($raw ?: '[]', true);
+            $this->cc = is_array($parsed) ? $parsed : [];
         }
     }
 
-    private function sanitizeRequest() 
-    {
-        $this->request = $_GET['request'];
-        $this->method = strtolower($_SERVER['REQUEST_METHOD']);
+    /* ========================== Filesystem helpers ========================== */
 
-        $accepts = $_SERVER['HTTP_ACCEPT'];
-        if (stripos($accepts, 'application/json') !== false) {
-            $this->jsonResponse = true;
+    /**
+     * Sanitize a filename and validate extension when a list is provided.
+     * If no list is given, names with or without extensions are accepted.
+     */
+    private function safeFileName(string $name, array $allowedExt = []): string
+    {
+        $name = trim($name);
+        $name = str_replace(["\0", '/', '\\'], '', $name);
+        // Intentionally skip basename() to preserve names starting with dots if needed
+
+        if (!empty($allowedExt)) {
+            $ext = strtolower(pathinfo($name, PATHINFO_EXTENSION));
+            if ($ext === '' || !in_array($ext, $allowedExt, true)) {
+                $this->sendHTTPResponse('Unsupported file type.', 400);
+            }
         }
+
+        return $name;
     }
 
-    private function sendHTTPResponse($httpCode=200, $message='')
+    // Join a directory and filename with a single slash
+    private function joinPath(string $dir, string $file): string
     {
-        $header = getHTTPResponseCodeString($httpCode);
-        header($header);
-        if ($message !== '') {
-            echo $message;
-        }
-        die();
+        return rtrim($dir, '/') . '/' . ltrim($file, '/');
     }
 
-    private function sendResponse($response = 'ok', $httpCode=200)
-    {
-        $header = getHTTPResponseCodeString($httpCode);
-        header($header);
-        if ($httpCode === 200) {
-            echo ($response);
-        }
-        die();
-    }
+    /* =============================== Imaging =============================== */
 
-    private function runRequest() 
+    /**
+     * Create a square thumbnail (90×90 by default) while keeping aspect ratio.
+     * PNGs retain transparency; other formats get a flat background color.
+     * Returns false on any failure; callers decide how to surface errors.
+     */
+    private function createThumbnail(string $sourceImagePath, string $destImagePath, int $thumbWidth = 90, int $thumbHeight = 90, $background = false): bool
     {
-        $action = $this->method . $this->request;
-        if (is_callable(array('OVERLAYUTIL', $action))) {
-            call_user_func(array($this, $action));
+        if (!is_file($sourceImagePath) || !is_readable($sourceImagePath)) return false;
+
+        [$ow, $oh, $otype] = getimagesize($sourceImagePath);
+        if ($ow <= 0 || $oh <= 0) return false;
+
+        // Scale to fit inside a square and center the result
+        if ($ow > $oh) {
+            $nw = $thumbWidth;
+            $nh = (int) floor($oh * $nw / $ow);
         } else {
-            $this->sendHTTPResponse(404);
+            $nh = $thumbHeight;
+            $nw = (int) floor($ow * $nh / $oh);
         }
+        $dx = (int) floor(($thumbWidth  - $nw) / 2);
+        $dy = (int) floor(($thumbHeight - $nh) / 2);
+
+        // Pick loaders/savers based on image type
+        switch ($otype) {
+            case IMAGETYPE_GIF:  $save = 'imagegif';  $load = 'imagecreatefromgif';  break;
+            case IMAGETYPE_JPEG: $save = 'imagejpeg'; $load = 'imagecreatefromjpeg'; break;
+            case IMAGETYPE_PNG:  $save = 'imagepng';  $load = 'imagecreatefrompng';  break;
+            default: return false;
+        }
+
+        $src = @$load($sourceImagePath);
+        if (!$src) return false;
+
+        $dst = imagecreatetruecolor($thumbWidth, $thumbHeight);
+
+        // Preserve alpha for PNGs; others get a solid fill
+        if ($otype === IMAGETYPE_PNG) {
+            imagealphablending($dst, false);
+            imagesavealpha($dst, true);
+            $transparent = imagecolorallocatealpha($dst, 0, 0, 0, 127);
+            imagefill($dst, 0, 0, $transparent);
+        } else {
+            $bg = is_array($background) ? $background : [0, 0, 0];
+            [$r, $g, $b] = $bg;
+            $color = imagecolorallocate($dst, (int)$r, (int)$g, (int)$b);
+            imagefill($dst, 0, 0, $color);
+        }
+
+        imagecopyresampled($dst, $src, $dx, $dy, 0, 0, $nw, $nh, $ow, $oh);
+
+        @mkdir(dirname($destImagePath), 0775, true);
+
+        $ok = $save($dst, $destImagePath);
+        imagedestroy($src);
+        imagedestroy($dst);
+
+        return $ok && is_file($destImagePath);
     }
 
-    private function createThumbnail($sourceImagePath, $destImagePath, $thumbWidth = 90, $thumbHeight = 90, $background = false) 
+    /* ============================ Config endpoints =========================== */
+
+    // Return overlay.json if present, otherwise a minimal empty object
+    public function getConfig(): void
     {
-        list($original_width, $original_height, $original_type) = getimagesize($sourceImagePath);
-        if ($original_width > $original_height) {
-            $new_width = $thumbWidth;
-            $new_height = intval($original_height * $new_width / $original_width);
-        } else {
-            $new_height = $thumbHeight;
-            $new_width = intval($original_width * $new_height / $original_height);
+        $file = $this->overlayConfigPath . '/overlay.json';
+        if (is_file($file) && is_readable($file)) {
+            $this->sendResponse(file_get_contents($file) ?: '{}');
         }
-        $dest_x = intval(($thumbWidth - $new_width) / 2);
-        $dest_y = intval(($thumbHeight - $new_height) / 2);
-
-        if ($original_type === 1) {
-            $imgt = "ImageGIF";
-            $imgcreatefrom = "ImageCreateFromGIF";
-        } else if ($original_type === 2) {
-            $imgt = "ImageJPEG";
-            $imgcreatefrom = "ImageCreateFromJPEG";
-        } else if ($original_type === 3) {
-            $imgt = "ImagePNG";
-            $imgcreatefrom = "ImageCreateFromPNG";
-        } else {
-            return false;
-        }
-
-        $old_image = $imgcreatefrom($sourceImagePath);
-        $new_image = imagecreatetruecolor($thumbWidth, $thumbHeight); // creates new image, but with a black background
-
-        // figuring out the color for the background
-        if ($original_type == 1 || $original_type == 2) {
-            list($red, $green, $blue) = $background;
-            $color = imagecolorallocate($new_image, $red, $green, $blue);
-            imagefill($new_image, 0, 0, $color);
-            // apply transparent background only if is a png image
-        } else if ($original_type == 3) {
-            imagealphablending($new_image, false);
-            imagesavealpha($new_image, true);
-            //imagesavealpha($new_image, TRUE);
-            //$color = imagecolorallocatealpha($new_image, 0, 0, 0, 127);
-            //imagefill($new_image, 0, 0, $color);
-        }
-
-        imagecopyresampled($new_image, $old_image, $dest_x, $dest_y, 0, 0, $new_width, $new_height, $original_width, $original_height);
-        $imgt($new_image, $destImagePath);
-        return file_exists($destImagePath);
+        $this->sendResponse('{}');
     }
 
-    public function getConfig() 
+    /**
+     * Save an overlay JSON (core or user space).
+     * Pretty-prints to keep diffs readable in version control.
+     */
+    public function postConfig(): void
     {
-        $fileName = $this->overlayConfigPath . '/overlay.json';
-        if (file_exists($fileName) && is_readable($fileName)) {
-            $config = file_get_contents($fileName);
-        } else {
-            $config = array();
+        $overlayName = $_POST['overlay']['name'] ?? '';
+        $overlayType = $_POST['overlay']['type'] ?? '';
+        if ($overlayName === '' || ($overlayType !== 'user' && $overlayType !== 'core')) {
+            $this->sendHTTPResponse('Invalid overlay metadata.', 400);
         }
-        $this->sendResponse($config);
+
+        $targetName = $this->safeFileName($overlayName, ['json']);
+        $fileName = ($overlayType === 'user')
+            ? $this->joinPath($this->allskyOverlays, $targetName)
+            : $this->joinPath($this->overlayConfigPath, $targetName);
+
+        $raw = $_POST['config'] ?? '';
+        $decoded = json_decode($raw, true);
+        if ($decoded === null) {
+            $this->sendHTTPResponse('Invalid JSON.', 422);
+        }
+
+        $pretty = json_encode($decoded, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        $msg = updateFile($fileName, $pretty, $fileName, false, true);
+        if ($msg !== '') $this->sendHTTPResponse($msg, 500);
+
+        $this->sendResponse(['ok' => true]);
     }
 
-    public function postConfig() 
+    /**
+     * Read per-app designer settings. Ensure a sane set of defaults when the file isn’t present.
+     */
+    public function getAppConfig($returnResult = false)
     {
-        $overlayName = $_POST['overlay']['name'];
-        $overlayType = $_POST['overlay']['type'];
+        $file = $this->overlayConfigPath . '/oe-config.json';
+        $configStr = (is_file($file) && is_readable($file)) ? (file_get_contents($file) ?: '') : '';
 
-        if ($overlayType === 'user') {
-            $fileName = $this->allskyOverlays . $overlayName;
+        if ($configStr === '') {
+            $configStr = json_encode([
+                "gridVisible"        => true,
+                "gridSize"           => 10,
+                "gridOpacity"        => 30,
+                "snapBackground"     => true,
+                "addlistpagesize"    => 20,
+                "addfieldopacity"    => 15,
+                "selectfieldopacity" => 30,
+                "mousewheelzoom"     => false,
+                "backgroundopacity"  => 40,
+            ], JSON_UNESCAPED_SLASHES);
+        }
+
+        $config = json_decode($configStr, false) ?: (object)[];
+        if (!isset($config->overlayErrors))     $config->overlayErrors = true;
+        if (!isset($config->overlayErrorsText)) $config->overlayErrorsText = 'Error found; see the WebUI';
+
+        if (!$returnResult) {
+            $this->sendResponse(json_encode($config, JSON_UNESCAPED_SLASHES));
         } else {
-            $fileName = $this->overlayConfigPath . '/' . $overlayName;
-        }
-        $config = $_POST['config'];
-        $formattedJSON = json_encode(json_decode($config), JSON_PRETTY_PRINT);
-		// updateFile() only returns error messages.
-        $msg = updateFile($fileName, $formattedJSON, $fileName, false, true);
-		if ($msg !== "") {
-            $this->sendHTTPResponse(500, $msg);
-        } else {
-            $this->sendResponse();
-        }
-    }
-
-    public function getAppConfig($returnResult=false) 
-    {
-        $fileName = $this->overlayConfigPath . '/oe-config.json';
-        $config = file_get_contents($fileName);
-        if ($config === false) {
-            $config = '{
-                "gridVisible": true,
-                "gridSize": 10,
-                "gridOpacity": 30,
-                "snapBackground": true,
-                "addlistpagesize": 20,
-                "addfieldopacity": 15,
-                "selectfieldopacity": 30,
-                "mousewheelzoom": false,
-                "backgroundopacity": 40
-            }';
-        }
-
-        $config = json_decode($config);
-        if (!isset($config->overlayErrors)) {
-            $config->overlayErrors = true;
-        }
-        if (!isset($config->overlayErrorsText)) {
-            $config->overlayErrorsText = 'Error found; see the WebU';
-        }
-        $config = json_encode($config);
-
-        if (!$config) {
-            $this->sendResponse($config);
-        } else {
-            $config = json_decode($config);
             return $config;
         }
     }
 
-    public function postAppConfig() 
+    // Save app-level designer settings with pretty printing
+    public function postAppConfig(): void
     {
-        $fileName = $this->overlayConfigPath . '/oe-config.json';
-        $settings = $_POST["settings"];
-        $formattedJSON = json_encode(json_decode($settings), JSON_PRETTY_PRINT);
+        $file = $this->overlayConfigPath . '/oe-config.json';
+        $raw  = $_POST['settings'] ?? '';
+        $decoded = json_decode($raw, true);
+        if ($decoded === null) $this->sendHTTPResponse('Invalid JSON.', 422);
 
-        $msg = updateFile($fileName, $formattedJSON, $fileName, false, true);
-		if ($msg === "") {
-            $this->sendResponse();
-        } else {
-            $this->sendHTTPResponse(500, $msg);
-        }
+        $pretty = json_encode($decoded, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        $msg = updateFile($file, $pretty, $file, false, true);
+        if ($msg !== '') $this->sendHTTPResponse($msg, 500);
+
+        $this->sendResponse(['ok' => true]);
     }
 
-    private function includeField($field) 
+    /* ============================== Field data ============================== */
+
+    /**
+     * Visibility filter for fields based on camera capability flags.
+     * Returns false when a field should not be shown for the current device.
+     */
+    private function includeField(string $field): bool
     {
-        $result = true;
         if (isset($this->excludeVariables[$field])) {
-            $modifier = $this->excludeVariables[$field];
-            if (isset($this->cc[$modifier["ccfield"]])) {
-                if ($this->cc[$modifier["ccfield"]] == $modifier["value"]) {
-                    $result = false;
-                }
+            $rule = $this->excludeVariables[$field];
+            $key  = $rule['ccfield'];
+            if (isset($this->cc[$key]) && $this->cc[$key] == $rule['value']) {
+                return false;
             }
         }
-        return $result;
+        return true;
     }
 
-    public function getData($returnResult=false) 
+    /**
+     * Combine system fields.json and userfields.json into one consumable list for the UI.
+     * Stable numeric IDs are assigned for the front-end table.
+     */
+    public function getData($returnResult = false)
     {
-        $fileName = $this->overlayConfigPath . '/fields.json';
-        $fields = file_get_contents($fileName);
-        $systemData = json_decode($fields);
+        $systemPath = $this->overlayConfigPath . '/fields.json';
+        $userPath   = $this->overlayConfigPath . '/userfields.json';
 
-        $fileName = $this->overlayConfigPath . '/userfields.json';
-        $fields = file_get_contents($fileName);
-        $userData = json_decode($fields);
+        $systemData = (is_file($systemPath) && is_readable($systemPath)) ? json_decode(file_get_contents($systemPath) ?: '{}') : (object)['data' => []];
+        $userData   = (is_file($userPath)   && is_readable($userPath))   ? json_decode(file_get_contents($userPath)   ?: '{}') : (object)['data' => []];
 
         $counter = 1;
-        $mergedFields = array();
+        $merged  = [];
 
-        foreach($systemData->data as $systemField) {
-            if ($this->includeField($systemField->name)) {
-                $field = array(
-                    "id" => $counter,
-                    "name" => $systemField->name,
-                    "description" => $systemField->description,
-                    "format" => $systemField->format,
-                    "sample" => $systemField->sample,
-                    "type" => $systemField->type,
-                    "source" => $systemField->source
-                );
-                array_push($mergedFields, $field);
-                $counter++;
+        foreach (($systemData->data ?? []) as $f) {
+            if (!isset($f->name)) continue;
+            if ($this->includeField($f->name)) {
+                $merged[] = [
+                    "id"          => $counter++,
+                    "name"        => (string)($f->name ?? ''),
+                    "description" => (string)($f->description ?? ''),
+                    "format"      => (string)($f->format ?? ''),
+                    "sample"      => (string)($f->sample ?? ''),
+                    "type"        => (string)($f->type ?? ''),
+                    "source"      => (string)($f->source ?? ''),
+                ];
             }
         }
 
-        foreach($userData->data as $userField) {
-
-            if ($this->includeField($systemField->name)) {
-                $field = array(
-                    "id" => $counter,
-                    "name" => $userField->name,
-                    "description" => $userField->description,
-                    "format" => $userField->format,
-                    "sample" => $userField->sample,
-                    "type" => $userField->type,
-                    "source" => $userField->source
-                );
-                array_push($mergedFields, $field);
-                $counter++;
+        foreach (($userData->data ?? []) as $f) {
+            if (!isset($f->name)) continue;
+            if ($this->includeField($f->name)) {
+                $merged[] = [
+                    "id"          => $counter++,
+                    "name"        => (string)($f->name ?? ''),
+                    "description" => (string)($f->description ?? ''),
+                    "format"      => (string)($f->format ?? ''),
+                    "sample"      => (string)($f->sample ?? ''),
+                    "type"        => (string)($f->type ?? ''),
+                    "source"      => (string)($f->source ?? ''),
+                ];
             }
         }
 
-        $fields = array(
-            "data" => $mergedFields
-        );
-        $jsonFields = json_encode($fields);
+        $payload = ["data" => $merged];
 
         if (!$returnResult) {
-            $jsonFields = json_encode($fields);
-            $this->sendResponse($jsonFields);
+            $this->sendResponse(json_encode($payload, JSON_UNESCAPED_SLASHES));
         } else {
-            return $fields;
+            return $payload;
         }
     }
 
-    public function postData() 
+    /**
+     * Save user-defined fields back to userfields.json.
+     * Only entries with source="User" are persisted; UI reindexes IDs.
+     */
+    public function postData(): void
     {
-        $fileName = $this->overlayConfigPath . '/userfields.json';
-        $fields = $_POST["data"];
-        $fields = json_decode($fields);
+        $target = $this->overlayConfigPath . '/userfields.json';
+        $raw    = $_POST['data'] ?? '';
+        $obj    = json_decode($raw);
+        if (!$obj || !isset($obj->data) || !is_array($obj->data)) {
+            $this->sendHTTPResponse('Invalid fields payload.', 422);
+        }
 
-        $userFields = array();
-        foreach($fields->data as $fieldData) {
-            if ($fieldData->source == "User") {
-                $field = array(
-                    "id" => 0,
-                    "name" => $fieldData->name,
-                    "description" => $fieldData->description,
-                    "format" => $fieldData->format,
-                    "sample" => $fieldData->sample,
-                    "type" => $fieldData->type,
-                    "source" => $fieldData->source
-                );
-                array_push($userFields, $field);
+        $user = [];
+        foreach ($obj->data as $f) {
+            if (($f->source ?? '') === 'User') {
+                $user[] = [
+                    "id"          => 0,
+                    "name"        => (string)($f->name ?? ''),
+                    "description" => (string)($f->description ?? ''),
+                    "format"      => (string)($f->format ?? ''),
+                    "sample"      => (string)($f->sample ?? ''),
+                    "type"        => (string)($f->type ?? ''),
+                    "source"      => "User",
+                ];
             }
         }
-        $fields = array(
-            "data" => $userFields
-        );
-        $formattedJSON = json_encode($fields, JSON_PRETTY_PRINT);
 
-        $msg = updateFile($fileName, $formattedJSON, $fileName, false, true);
-		if ($msg === "") {
-            $this->sendResponse();
-        } else {
-            $this->sendHTTPResponse(500, $msg);
-        }
+        $pretty = json_encode(["data" => $user], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        $msg = updateFile($target, $pretty, $target, false, true);
+        if ($msg !== '') $this->sendHTTPResponse($msg, 500);
+
+        $this->sendResponse(['ok' => true]);
     }
 
-    public function getOverlayData($returnResult=false)  
+    /* ========================= Overlay runtime data ========================= */
+
+    /**
+     * Parse overlaydebug.txt into a simple array for the UI. Tolerant of odd lines/encodings.
+     */
+    public function getOverlayData($returnResult = false)
     {
-        $result = [];
-        $fileName = $this->allskyTmp . '/overlaydebug.txt';
+        $result = ['data' => []];
+        $file   = $this->allskyTmp . '/overlaydebug.txt';
 
-        if (file_exists($fileName)) {
-            $fields = file($fileName);
+        if (is_file($file) && is_readable($file)) {
+            $lines = file($file);
+            if ($lines !== false) {
+                $i = 0;
+                foreach ($lines as $line) {
+                    $parts = explode(' ', $line, 2);
+                    if (count($parts) > 1) {
+                        $name  = trim($parts[0]);
+                        $value = trim($parts[1]);
 
-            if ($fields !== false) {
-                $fieldData = [];
-                $count = 0;
-                foreach ($fields as $field) {
-                    $fieldSplit = explode(" ", $field, 2);
-                    // Fields that have \n in them will be split and
-                    // the line after \n may not have any spaces.
-                    // Silently ignore these lines since they aren't errors.
+                        // Normalize to UTF-8; ignore bad sequences
+                        $value = iconv("UTF-8", "ISO-8859-1//IGNORE", $value);
+                        $value = iconv("ISO-8859-1", "UTF-8", $value);
 
-                    // TODO: Whatever creates this file should handle fields with \n.
-                    // If the line(s) after the \n have spaces in them,
-                    // they will be treated as fields, which they aren't.
-                    if (count($fieldSplit) > 1) {
-                        $value = trim($fieldSplit[1]);
-                        $value = iconv("UTF-8","ISO-8859-1//IGNORE",$value);
-                        $value = iconv("ISO-8859-1","UTF-8",$value);
-                        if (substr($fieldSplit[0],0,3) == "AS_") {
-                            $obj = (object) [
-                                'id' => $count,
-                                'name' => $fieldSplit[0],
-                                'value' => $value
+                        if (strpos($name, 'AS_') === 0) {
+                            $result['data'][] = (object)[
+                                'id'    => $i++,
+                                'name'  => $name,
+                                'value' => $value,
                             ];
-                            $fieldData[] = $obj;
-                            $count++;
                         }
                     }
                 }
-
-                $result['data'] = $fieldData;
             }
         }
 
         if (!$returnResult) {
-            $data = json_encode($result, JSON_PRETTY_PRINT);
-            $this->sendResponse($data);
+            $this->sendResponse(json_encode($result, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
         } else {
             return $result;
-        }        
+        }
     }
 
-    public function getAutoExposure() 
+    /* ========================= Auto-exposure mask ========================== */
+
+    // Return the raw autoexposure.json string (the UI expects a JSON string)
+    public function getAutoExposure(): void
     {
-        $data = file_get_contents($this->overlayConfigPath . "/autoexposure.json");
+        $file = $this->overlayConfigPath . "/autoexposure.json";
+        $data = (is_file($file) && is_readable($file)) ? (file_get_contents($file) ?: '{}') : '{}';
         $this->sendResponse($data);
     }
 
-    public function postAutoExposure() 
+    /**
+     * Save auto-exposure settings and regenerate a helper PNG preview.
+     * Dimensions are clamped to at least 1px to avoid GD warnings.
+     */
+    public function postAutoExposure(): void
     {
-        $data = $_POST["data"];
-        $data = json_decode($data);
-        if ($data !== null) {
-            $data = json_encode($data, JSON_PRETTY_PRINT);
-            $fileName = $this->overlayConfigPath . "/autoexposure.json";
-        	$msg = updateFile($fileName, $data, $fileName, false, true);
-			if ($msg !== "") {
-            	$this->sendResponse($msg);
-        	}
-            $data = json_decode($data);
+        $raw = $_POST['data'] ?? '';
+        $cfg = json_decode($raw);
+        if ($cfg === null) $this->sendHTTPResponse(422, "'data' must be valid JSON.");
 
-            $image = imagecreate($data->stagewidth, $data->stageheight);
-            $black = imagecolorallocate($image, 0, 0, 0);
-            $white = imagecolorallocate($image, 255, 255, 255);
-            imagefill($image, 0, 0, $black);
+        // Persist for the UI first
+        $dst = $this->overlayConfigPath . "/autoexposure.json";
+        $msg = updateFile($dst, json_encode($cfg, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES), $dst, false, true);
+        if ($msg !== '') $this->sendHTTPResponse($msg, 500);
 
-            imagefilledellipse($image, $data->x, $data->y, $data->xrad * 2, $data->yrad * 2, $white);
+        // Bake mask image for the preview
+        $w = max(1, (int)($cfg->stagewidth  ?? 0));
+        $h = max(1, (int)($cfg->stageheight ?? 0));
+        $x = (int)($cfg->x    ?? (int)floor($w/2));
+        $y = (int)($cfg->y    ?? (int)floor($h/2));
+        $xr= max(1, (int)($cfg->xrad ?? (int)floor($w/4)));
+        $yr= max(1, (int)($cfg->yrad ?? (int)floor($h/4)));
 
-            imagepng($image, "../autoexposure.png");
-            $this->sendResponse();
-        } else {
-            $this->sendHTTPResponse(500, "'data' is null in postAutoExposure");
-        }
+        $img   = imagecreatetruecolor($w, $h);
+        $black = imagecolorallocate($img, 0, 0, 0);
+        $white = imagecolorallocate($img, 255, 255, 255);
+        imagefill($img, 0, 0, $black);
+        imagefilledellipse($img, $x, $y, $xr * 2, $yr * 2, $white);
+        imagepng($img, $this->joinPath($this->overlayPath, 'autoexposure.png'));
+        imagedestroy($img);
+
+        $this->sendResponse(['ok' => true]);
     }
 
-    private function processDebugData() 
+    /* ====================== Font helpers (fc-scan parsing) ===================== */
+
+    /**
+     * Call fc-scan on a font file and parse key/value lines into a simple map.
+     * Failures return a compact error object rather than throwing.
+     */
+    private function scanFont(string $fontPath)
     {
-        $file = $this->allskyTmp . "/overlaydebug.txt";
-
-        $exampleData = array();
-        if (is_readable($file)) {
-            $rawData = file($file, FILE_IGNORE_NEW_LINES);
-            foreach($rawData  as $line) {
-                $firstSpace = strpos($line, " ");
-                $var = substr($line, 0, $firstSpace);
-                $value = ltrim(substr($line, $firstSpace));
-                $line = str_replace("  ", "", $line);
-                $exampleData[$var] = $value;
-            }
+        $cmd = 'fc-scan ' . escapeshellarg($fontPath);
+        $res = $this->runShellCommand($cmd);
+        if ($res['error']) {
+            return ['error' => 'fc-scan failed: ' . $res['message']];
         }
-        return $exampleData;
-    }
-
-    private function scanFont($fontPath)
-    {
-        $output = [];
-        $command = 'fc-scan ' . escapeshellarg($fontPath);
-        exec($command, $lines, $code);
-
-        if ($code !== 0) {
-            return ['error' => "fc-scan failed"];
-        }
-
         $parsed = [];
-        foreach ($lines as $line) {
-            if (preg_match('/^\s*([a-zA-Z0-9_]+):\s+(.+)$/', trim($line), $matches)) {
-                $key = $matches[1];
-                $rawValue = $matches[2];
-
-                // Match first quoted value only (e.g. "Regular" from multiple)
-                if (preg_match('/"([^"]+)"/', $rawValue, $valueMatch)) {
-                    $parsed[$key] = $valueMatch[1];
+        foreach (preg_split('/\R/', trim($res['message'])) as $line) {
+            if (preg_match('/^\s*([a-zA-Z0-9_]+):\s+(.+)$/', trim($line), $m)) {
+                $key = $m[1]; $raw = $m[2];
+                if (preg_match('/"([^"]+)"/', $raw, $vm)) {
+                    $parsed[$key] = $vm[1];
                 } else {
-                    $parsed[$key] = $rawValue;
+                    $parsed[$key] = $raw;
                 }
             }
         }
-
-        return $parsed;      
+        return $parsed;
     }
 
-    public function getFontNames() 
+    // Compact list of built-in and user font names/paths for dropdowns
+    public function getFontNames(): void
     {
-        $count = 1;
-        $systemFontBase = '/system_fonts/';
-        $usableFonts = array(
-            'Arial' => array('fontpath' => $systemFontBase . 'Arial.ttf'),
-            'Arial Black' => array('fontpath' => $systemFontBase . 'Arial_Black.ttf'),
-            'Times New Roman' => array('fontpath' => $systemFontBase . 'Times_New_Roman.ttf'),
-            'Courier New' => array('fontpath' => $systemFontBase . 'cour.ttf'),
-            'Verdana' => array('fontpath' => $systemFontBase . 'Verdana.ttf'),
-            'Trebuchet MS' => array('fontpath' => $systemFontBase . 'trebuc.ttf'),
-            'Impact' => array('fontpath' => $systemFontBase . 'Impact.ttf'),
-            'Georgia' => array('fontpath' => $systemFontBase . 'Georgia.ttf'),
-            'Comic Sans MS' => array('fontpath' => $systemFontBase . 'comic.ttf'),
-        );
+        $count  = 1;
+        $rows   = [];
+        $base   = '/system_fonts/';
+        $builtin = [
+            'Arial'           => 'Arial.ttf',
+            'Arial Black'     => 'Arial_Black.ttf',
+            'Times New Roman' => 'Times_New_Roman.ttf',
+            'Courier New'     => 'cour.ttf',
+            'Verdana'         => 'Verdana.ttf',
+            'Trebuchet MS'    => 'trebuc.ttf',
+            'Impact'          => 'Impact.ttf',
+            'Georgia'         => 'Georgia.ttf',
+            'Comic Sans MS'   => 'comic.ttf',
+        ];
 
-        foreach ($usableFonts as $fontName => $fontData) {
-            $obj = (object) [
-                'id' => $count,
-                'name' => $fontName,
-                'path' => $fontData['fontpath']
-            ];
-            $fields[] = $obj;
-            $count++;
+        foreach ($builtin as $name => $file) {
+            $rows[] = (object)[ 'id' => $count++, 'name' => $name, 'path' => $base . $file ];
         }
 
-        $fontDir = $this->overlayPath . '/fonts/';
-        $fontList = scandir($fontDir);
-        foreach ($fontList as $font) {
-            if ($font !== '.' && $font !== '..') {
-                $obj = (object) [
-                    'id' => $count,
+        $dir = $this->overlayPath . '/fonts/';
+        if (is_dir($dir)) {
+            foreach (scandir($dir) ?: [] as $font) {
+                if ($font === '.' || $font === '..') continue;
+                $rows[] = (object)[
+                    'id'   => $count++,
                     'name' => pathinfo($font, PATHINFO_FILENAME),
-                    'path' => '/fonts/' . $font
+                    'path' => '/fonts/' . $this->safeFileName($font, ['ttf','otf']),
                 ];
             }
-            $fields[] = $obj;
-            $count++;
         }
 
-        $data = array(
-            'data' => $fields,
-        );
-
-        $data = json_encode($data, JSON_PRETTY_PRINT);
-        $this->sendResponse($data);  
+        $this->sendResponse(json_encode(['data' => $rows], JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
     }
 
-    public function getFonts()  
+    // Richer listing that includes family/style by calling fc-scan
+    public function getFonts(): void
     {
-        $count = 1;
-        $systemFontBase = $this->overlayPath . '/system_fonts/';
-        $usableFonts = array(
-            'Arial' => array('fontpath' => $systemFontBase . 'Arial.ttf'),
-            'Arial Black' => array('fontpath' => $systemFontBase . 'Arial_Black.ttf'),
-            'Times New Roman' => array('fontpath' => $systemFontBase . 'Times_New_Roman.ttf'),
-            'Courier New' => array('fontpath' => $systemFontBase . 'cour.ttf'),
-            'Verdana' => array('fontpath' => $systemFontBase . 'Verdana.ttf'),
-            'Trebuchet MS' => array('fontpath' => $systemFontBase . 'trebuc.ttf'),
-            'Impact' => array('fontpath' => $systemFontBase . 'Impact.ttf'),
-            'Georgia' => array('fontpath' => $systemFontBase . 'Georgia.ttf'),
-            'Comic Sans MS' => array('fontpath' => $systemFontBase . 'comic.ttf'),
-        );
+        $count  = 1;
+        $rows   = [];
 
-        foreach ($usableFonts as $fontName => $fontData) {
-            $fontInfo = $this->scanFont($fontData['fontpath']);
-            $obj = (object) [
-                'id' => $count,
-                'name' => $fontName,
-                'family' => $fontInfo['family'],
-                'style' => $fontInfo['style'],
-                'type' => 'system',
-                'path' => $fontData['fontpath']
+        $systemBase = $this->overlayPath . '/system_fonts/';
+        $systemMap = [
+            'Arial'           => 'Arial.ttf',
+            'Arial Black'     => 'Arial_Black.ttf',
+            'Times New Roman' => 'Times_New_Roman.ttf',
+            'Courier New'     => 'cour.ttf',
+            'Verdana'         => 'Verdana.ttf',
+            'Trebuchet MS'    => 'trebuc.ttf',
+            'Impact'          => 'Impact.ttf',
+            'Georgia'         => 'Georgia.ttf',
+            'Comic Sans MS'   => 'comic.ttf',
+        ];
+
+        foreach ($systemMap as $name => $file) {
+            $abs  = $systemBase . $file;
+            $info = $this->scanFont($abs);
+            $rows[] = (object)[
+                'id'     => $count++,
+                'name'   => $name,
+                'family' => $info['family'] ?? $name,
+                'style'  => $info['style']  ?? 'Regular',
+                'type'   => 'system',
+                'path'   => $abs,
             ];
-            $fields[] = $obj;
-            $count++;
         }
 
-        $fontDir = $this->overlayPath . '/fonts/';
-        $fontList = scandir($fontDir);
-        foreach ($fontList as $font) {
-            if ($font !== '.' && $font !== '..') {
-                $fontPath = $this->overlayPath . '/fonts/' . $font;
-                $fontInfo = $this->scanFont($fontPath);
-                $obj = (object) [
-                    'id' => $count,
-                    'name' => pathinfo($font, PATHINFO_FILENAME),
-                    'family' => $fontInfo['family'],
-                    'style' => $fontInfo['style'],
-                    'type' => 'user',
-                    'path' => '/fonts/' . $font
+        $dir = $this->overlayPath . '/fonts/';
+        if (is_dir($dir)) {
+            foreach (scandir($dir) ?: [] as $font) {
+                if ($font === '.' || $font === '..') continue;
+                $abs = $dir . $font;
+                if (!is_file($abs)) continue;
+
+                $info = $this->scanFont($abs);
+                $rows[] = (object)[
+                    'id'     => $count++,
+                    'name'   => pathinfo($font, PATHINFO_FILENAME),
+                    'family' => $info['family'] ?? pathinfo($font, PATHINFO_FILENAME),
+                    'style'  => $info['style']  ?? 'Regular',
+                    'type'   => 'user',
+                    'path'   => '/fonts/' . $this->safeFileName($font, ['ttf','otf']),
                 ];
             }
-            $fields[] = $obj;
-            $count++;
         }
 
-        $data = array(
-            'data' => $fields,
-        );
-
-        $data = json_encode($data, JSON_PRETTY_PRINT);
-        $this->sendResponse($data);        
+        $this->sendResponse(json_encode(['data' => $rows], JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
     }
 
-    public function postFonts() 
+    /**
+     * Install fonts from a dafont.com URL or an uploaded zip.
+     * We only extract valid TTF/OTF files with expected magic bytes.
+     */
+    public function postFonts(): void
     {
+        $saveFolder = $this->overlayPath . '/fonts/';
+        @mkdir($saveFolder, 0775, true);
 
-        if (isset($_POST['fontURL'])) {
-            $fontURL = strtolower($_POST['fontURL']);
-			$URL = "https://www.dafont.com/";
-            if (substr($fontURL, 0, 23) === $URL) {
-                $fontName = str_replace($URL, "", $fontURL);
-                $fontName = str_replace(".font", "", $fontName);
-                $fileName = str_replace("-", "_", $fontName);
+        $downloadPath = '';
+        $maxZipSize   = 20 * 1024 * 1024;
 
-                $downloadURL = "https://dl.dafont.com/dl/?f=" . $fileName;
-                $downloadPath = sys_get_temp_dir() . '/' . $fileName . '.zip';
-
-                $contents = file_get_contents($downloadURL);
-                if ($contents === false) {
-                    $this->sendHTTPResponse(422, "Failed getting font from '$downloadURL'.");
-                }
-
-        		$msg = updateFile($downloadPath, $contents, $downloadPath, false, true);
-				if ($msg !== "") {
-                    $this->sendHTTPResponse(422, $msg);
-                }
-            } else {
-                $this->sendHTTPResponse(404);
+        if (!empty($_POST['fontURL'])) {
+            // Restrict sources to dafont.com to lower the risk profile
+            $fontURL = trim((string)$_POST['fontURL']);
+            $host    = parse_url($fontURL, PHP_URL_HOST) ?: '';
+            if (strcasecmp($host, 'www.dafont.com') !== 0 && strcasecmp($host, 'dl.dafont.com') !== 0) {
+                $this->sendHTTPResponse('Only dafont.com is allowed.', 404);
             }
+
+            $ctx = stream_context_create([
+                'http' => ['timeout' => 10, 'follow_location' => 1],
+                'ssl'  => ['verify_peer' => true, 'verify_peer_name' => true],
+            ]);
+
+            // dafont page → dl URL mapping
+            $fontName = str_replace("https://www.dafont.com/", "", $fontURL);
+            $fontName = str_replace(".font", "", $fontName);
+            $fileName = str_replace("-", "_", $fontName);
+            $downloadURL = "https://dl.dafont.com/dl/?f=" . $fileName;
+
+            $data = @file_get_contents($downloadURL, false, $ctx);
+            if ($data === false) $this->sendHTTPResponse("Failed to download '$fontURL'.", 422);
+            if (strlen($data) > $maxZipSize) $this->sendHTTPResponse('Zip too large.', 413);
+
+            $downloadPath = sys_get_temp_dir() . '/font_' . bin2hex(random_bytes(6)) . '.zip';
+            $msg = updateFile($downloadPath, $data, $downloadPath, false, true);
+            if ($msg !== '') $this->sendHTTPResponse($msg, 422);
+        } elseif (isset($_FILES['oe-fontupload-file']) && is_uploaded_file($_FILES['oe-fontupload-file']['tmp_name'])) {
+            if ((int)($_FILES['oe-fontupload-file']['size'] ?? 0) > $maxZipSize) {
+                $this->sendHTTPResponse('Zip too large.', 413);
+            }
+            $downloadPath = $_FILES['oe-fontupload-file']['tmp_name'];
         } else {
-            if (isset($_FILES['oe-fontupload-file'])) {
-                if (is_uploaded_file($_FILES['oe-fontupload-file']['tmp_name'])) {
-                    $downloadPath = $_FILES['oe-fontupload-file']['tmp_name'];
-                } else {
-                    $this->sendHTTPResponse(413);
-                }
-            }
+            $this->sendHTTPResponse('No font source provided.', 400);
         }
 
-        $saveFolder = $this->overlayPath . "/fonts/";
-        $result = array();
-        $zipArchive = new ZipArchive();
-        $zipArchive->open($downloadPath);
-        for ($i = 0; $i < $zipArchive->numFiles; $i++) {
-            $stat = $zipArchive->statIndex($i);
-
-            $nameInArchive = $stat['name'];
-            $fileInfo = explode('.', $nameInArchive);
-            $ext = strtolower(end($fileInfo));
-
-            $validExtenstions = array("ttf", "otf");
-            $validSignatures = array("00010000", "4F54544F");
-
-            if (strpos($nameInArchive, "MACOSX") === false) {
-                if (in_array($ext, $validExtenstions)) {
-                    $fp = $zipArchive->getStream($nameInArchive);
-                    if (!$fp) {
-                        exit("failed\n");
-                    }
-
-                    $contents = '';
-                    while (!feof($fp)) {
-                        $contents .= fread($fp, 1024);
-                    }
-                    fclose($fp);
-
-                    $cleanFileName = basename(str_replace(' ', '', $nameInArchive));
-                    $fileName = $saveFolder . $cleanFileName;
-                    $sig = substr($contents,0,4);
-                    $sig = strtoupper(bin2hex($sig));
-                    if (in_array($sig, $validSignatures)) {
-                        if ($file = fopen($fileName, 'wb')) {
-                            fwrite($file, $contents);
-                            fclose($file);
-
-                            $fontPath = str_replace($this->overlayPath, "", $fileName);
-                            $key = basename($fileName);
-                            $key = str_replace($validExtenstions, "", $key);
-                            $key = str_replace(".", "", $key);
-
-                            $result[] = array(
-                                'key' => $key,
-                                'path' => $fontPath,
-                            );
-                        } else {
-                            $this->sendHTTPResponse(507);
-                        }
-                    } else {
-                        $this->sendHTTPResponse(415);
-                    }
-                }
-            }
+        $zip = new ZipArchive();
+        if ($zip->open($downloadPath) !== true) {
+            $this->sendHTTPResponse('Invalid zip.', 422);
         }
-        if (empty($result)) {
-            $this->sendHTTPResponse(417);
+
+        $result = [];
+        $validExt   = ['ttf', 'otf'];
+        $validMagic = ['00010000', '4F54544F']; // TrueType/OTTO signatures
+
+        for ($i = 0; $i < $zip->numFiles; $i++) {
+            $stat = $zip->statIndex($i);
+            $name = $stat['name'] ?? '';
+            if ($name === '' || stripos($name, '__MACOSX') !== false) continue;
+
+            // Avoid zip-slip: drop paths and keep only the last component
+            $base = $this->safeFileName($name);
+            $ext  = strtolower(pathinfo($base, PATHINFO_EXTENSION));
+            if (!in_array($ext, $validExt, true)) continue;
+
+            $stream = $zip->getStream($name);
+            if (!$stream) continue;
+
+            $contents = stream_get_contents($stream);
+            fclose($stream);
+            if ($contents === false || $contents === '') continue;
+
+            // Quick signature check to filter junk
+            $magic = strtoupper(bin2hex(substr($contents, 0, 4)));
+            if (!in_array($magic, $validMagic, true)) continue;
+
+            $dest = $this->joinPath($saveFolder, $base);
+            $err  = updateFile($dest, $contents, $dest, false, true);
+            if ($err !== '') $this->sendHTTPResponse($err, 507);
+
+            $result[] = [
+                'key'  => pathinfo($base, PATHINFO_FILENAME),
+                'path' => str_replace($this->overlayPath, '', $dest),
+            ];
         }
-        $this->sendResponse(json_encode($result));
+        $zip->close();
+
+        if (empty($result)) $this->sendHTTPResponse('No valid fonts found.', 417);
+        $this->sendResponse(json_encode($result, JSON_UNESCAPED_SLASHES));
     }
 
-    public function deleteFont() 
+    // Delete a user-provided font; built-ins are not removed here
+    public function deleteFont(): void
     {
-        $fontName = $_GET['fontName'];
-        $fontName = basename($fontName);
+        $fontName = $this->safeFileName($_GET['fontName'] ?? '', ['ttf','otf']);
+        if ($fontName === '') $this->sendHTTPResponse('Missing fontName.', 400);
 
-        $fontPath = $this->overlayPath . '/fonts/' . $fontName;
-        if (file_exists($fontPath) && is_readable($fontPath)) {        
-            unlink($fontPath);
-            $this->sendResponse();
+        $path = $this->joinPath($this->overlayPath . '/fonts', $fontName);
+        if (is_file($path) && is_writable($path)) {
+            @unlink($path);
+            $this->sendResponse(['ok' => true]);
         } else {
-            $this->sendResponse('', 500);
+            $this->sendHTTPResponse('Font not found.', 404);
         }
     }
 
-    public function getImageDetails() {
-        $fileName = $this->getSetting("filename");
-        $imagePath = "current/" . $fileName;
+    /* ================================ Images ================================ */
 
-        $this->sendResponse(json_encode($imagePath));
-    }
-
-    public function postBase64Image() 
+    // Provide the current image path expected by the UI (returned as a JSON string)
+    public function getImageDetails(): void
     {
-        $base64Image = $_POST['image'];
-        $filename = basename($_POST['filename']);
+        $fileName = $this->getSetting('filename');
+        $imagePath = 'current/' . $this->safeFileName((string)$fileName, ['png','jpg','jpeg','gif','webp']);
+        $this->sendResponse(json_encode($imagePath, JSON_UNESCAPED_SLASHES));
+    }
 
-        // Check if the string contains the "data:image" prefix and remove it if needed.
-        if (preg_match('/^data:image\/(\w+);base64,/', $base64Image, $type)) {
-            // Extract the image type (jpg, png, gif, etc.)
-            $base64Image = substr($base64Image, strpos($base64Image, ',') + 1);
-            $imageType = strtolower($type[1]); // e.g., "jpg", "png"
-        
-            // Validate the image type if needed
-            if (!in_array($imageType, ['jpg', 'jpeg', 'png'])) {
-                die('Unsupported image type.');
+    /**
+     * Accept a small base64 image and save it to /images, plus a 90×90 thumbnail.
+     * Only jpg/jpeg/png are allowed here.
+     */
+    public function postBase64Image(): void
+    {
+        $dataUrl  = (string)($_POST['image'] ?? '');
+        $nameRaw  = (string)($_POST['filename'] ?? '');
+        if ($dataUrl === '' || $nameRaw === '') {
+            $this->sendHTTPResponse('Missing image or filename.', 400);
+        }
+
+        if (!preg_match('/^data:image\/(\w+);base64,/', $dataUrl, $m)) {
+            $this->sendHTTPResponse('Unsupported image type.', 415);
+        }
+        $type = strtolower($m[1]);
+        if (!in_array($type, ['jpg','jpeg','png'], true)) {
+            $this->sendHTTPResponse('Unsupported image type.', 415);
+        }
+
+        $raw = base64_decode(substr($dataUrl, strpos($dataUrl, ',') + 1), true);
+        if ($raw === false) $this->sendHTTPResponse('Base64 decoding failed.', 422);
+
+        $imgDir   = $this->overlayPath . '/images/';
+        $thumbDir = $this->overlayPath . '/imagethumbnails/';
+        @mkdir($imgDir, 0775, true);
+        @mkdir($thumbDir, 0775, true);
+
+        $base   = $this->safeFileName($nameRaw) . '.' . $type;
+        $target = $this->joinPath($imgDir, $base);
+
+        $msg = updateFile($target, $raw, $target, false, true);
+        if ($msg !== '') $this->sendHTTPResponse($msg, 500);
+
+        $this->createThumbnail($target, $this->joinPath($thumbDir, $base), 90, 90);
+
+        $this->sendResponse(['ok' => true, 'filename' => $base]);
+    }
+
+    /**
+     * Standard multipart upload path for larger images.
+     * After moving the upload, create a matching thumbnail.
+     */
+    public function postImages(): void
+    {
+        $imgDir   = $this->overlayPath . '/images/';
+        $thumbDir = $this->overlayPath . '/imagethumbnails/';
+        @mkdir($imgDir, 0775, true);
+        @mkdir($thumbDir, 0775, true);
+
+        if (!isset($_FILES['file']) || !is_uploaded_file($_FILES['file']['tmp_name'])) {
+            $this->sendHTTPResponse('No file uploaded.', 400);
+        }
+
+        $safeName = $this->safeFileName($_FILES['file']['name'], ['png','jpg','jpeg']);
+        $target   = $this->joinPath($imgDir, $safeName);
+        $moved    = move_uploaded_file($_FILES['file']['tmp_name'], $target);
+
+        if ($moved) {
+            $this->createThumbnail($target, $this->joinPath($thumbDir, $safeName), 90, 90);
+            $this->sendResponse(['ok' => true]);
+        } else {
+            $err = (int)($_FILES['file']['error'] ?? 0);
+            if ($err === UPLOAD_ERR_INI_SIZE || $err === UPLOAD_ERR_FORM_SIZE) {
+                $this->sendHTTPResponse('File too large.', 400);
             }
-        } else {
-            die('unknown image type');
-        }
-        
-        $imageData = base64_decode($base64Image);
-        if ($imageData === false) {
-            die('Base64 decoding failed.');
-        }
-        
-        $imageFolder = $this->overlayPath . '/images/';
-        $thumbnailFolder = $this->overlayPath . '/imagethumbnails/';
-
-        $filename = $filename . "." . $imageType;
-        $targetFile = $imageFolder . $filename;
-
-        // Save the image to the server
-        $msg = updateFile($targetFile, $imageData, $targetFile, false, true);
-        if ($msg === "") {
-            $thumbnailPath = $thumbnailFolder . $filename;
-            $this->createThumbnail($targetFile, $thumbnailPath, 90);            
-            echo "Image saved successfully as $filename";
-        } else {
-            echo "Failed to save the image: $msg.";
+            $this->sendHTTPResponse('Upload failed.', 500);
         }
     }
 
-    public function postImages() 
+    // Enumerate available thumbnails for the image picker
+    public function getImages(): void
     {
-        $result = false;
-        $imageFolder = $this->overlayPath . '/images/';
-        $thumbnailFolder = $this->overlayPath . '/imagethumbnails/';
+        $valid = ['png','jpg','jpeg'];
+        $dir   = $this->overlayPath . '/imagethumbnails';
+        $out   = [];
 
-        if (!empty($_FILES)) {
-            $tempFile = $_FILES['file']['tmp_name'];
-            $targetFile = $imageFolder . $_FILES['file']['name'];
-            $result = move_uploaded_file($tempFile, $targetFile);
-            if ($result) {
-                $thumbnailPath = $thumbnailFolder . $_FILES['file']['name'];
-                $this->createThumbnail($targetFile, $thumbnailPath, 90);
-            }
-        }
-        if ($result) {
-            $this->sendResponse();
-        } else {
-            if (isset($_FILES['file']['error'])) {
-                if ($_FILES['file']['error'] == 1) {
-                    $this->sendHTTPResponse(400, 'File is too large. Either reduce its size or adjust the php settings to allow larger files to be uploaded');
-                } else {
-                    $this->sendHTTPResponse(500);
-                }
-            } else {
-                $this->sendHTTPResponse(500);
-            }
-        }
-    }
-
-    public function getImages() 
-    {
-        $validFileTypes = array('png', 'jpg', 'jpeg');
-
-        $baseThumbnailURL = '//' . $_SERVER['SERVER_NAME'] . '/overlay/imagethumbnails';
-
-        $imageThumbnailFolder = $this->overlayPath . "/imagethumbnails";
-
-        $files = array();
-        $fh = opendir($imageThumbnailFolder);
-
-        if ($fh) {
-            while (($entry = readdir($fh)) !== false) {
-                $ext = pathinfo($entry, PATHINFO_EXTENSION);
-                if (in_array($ext, $validFileTypes)) {
-                    $files[] = array(
-                        'filename' => $entry,
-                        'thumbnailurl' => $baseThumbnailURL . '/' . $entry,
-                    );
+        if (is_dir($dir)) {
+            foreach (scandir($dir) ?: [] as $f) {
+                if ($f === '.' || $f === '..') continue;
+                $ext = strtolower(pathinfo($f, PATHINFO_EXTENSION));
+                if (in_array($ext, $valid, true)) {
+                    $out[] = [
+                        'filename'     => $f,
+                        'thumbnailurl' => '/overlay/imagethumbnails/' . rawurlencode($f),
+                    ];
                 }
             }
         }
-        closedir($fh);
-        $formattedJSON = json_encode($files);
-        $this->sendResponse($formattedJSON);
+        $this->sendResponse(json_encode($out, JSON_UNESCAPED_SLASHES));
     }
 
-    public function deleteImage() 
+    // Delete an image and its thumbnail; 404 if neither is present
+    public function deleteImage(): void
     {
-        $imageName = strtolower($_GET['imageName']);
+        $name = $this->safeFileName(strtolower((string)($_GET['imageName'] ?? '')), ['png','jpg','jpeg']);
+        if ($name === '') $this->sendHTTPResponse('Missing imageName.', 400);
 
-        $imageThumbnailFolder = $this->overlayPath . "/imagethumbnails/";
-        $imageFolder = $this->overlayPath . "/images/";
+        $img   = $this->joinPath($this->overlayPath . '/images/', $name);
+        $thumb = $this->joinPath($this->overlayPath . '/imagethumbnails/', $name);
 
-        $imagePath = $imageFolder . $imageName;
-        $thumbnailPath = $imageThumbnailFolder . $imageName;
+        $ok = true;
+        if (is_file($img))   $ok = $ok && @unlink($img);
+        if (is_file($thumb)) $ok = $ok && @unlink($thumb);
 
-        if (is_file($imagePath) && is_file($thumbnailPath)) {
-            unlink($imagePath);
-            unlink($thumbnailPath);
-            $this->sendResponse();
-        } else {
-            $this->sendHTTPResponse(500);
+        if ($ok) $this->sendResponse(['ok' => true]);
+        $this->sendHTTPResponse('Image not found.', 404);
+    }
+
+    /* ================================ Formats =============================== */
+
+    /**
+     * Return formats.json with attribute keys expanded from format_attributes.json.
+     * Supports "dpN" shorthand (e.g., dp2) which maps to the "dp" attribute with value N.
+     */
+    public function getFormats(): void
+    {
+        $formatsPath = $this->overlayConfigPath . '/formats.json';
+        $attrsPath   = $this->overlayConfigPath . '/format_attributes.json';
+
+        $formats    = (is_file($formatsPath) && is_readable($formatsPath)) ? json_decode(file_get_contents($formatsPath) ?: '[]', true) : [];
+        $attributes = (is_file($attrsPath)   && is_readable($attrsPath))   ? json_decode(file_get_contents($attrsPath)   ?: '[]', true) : [];
+
+        if (!isset($formats['data']) || !is_array($formats['data'])) {
+            $this->sendResponse(json_encode(['data' => []], JSON_UNESCAPED_SLASHES));
         }
 
-    }
-
-    public function getFormats() 
-    {
-        $formats = json_decode(file_get_contents($this->overlayConfigPath . "/formats.json"), true);
-        $attributes = json_decode(file_get_contents($this->overlayConfigPath . "/format_attributes.json"), true);
-
-        foreach ($formats["data"] as &$format) {
-            if (isset($format['attribute']) && is_array($format['attribute'])) {
+        foreach ($formats['data'] as &$fmt) {
+            if (isset($fmt['attribute']) && is_array($fmt['attribute'])) {
                 $expanded = [];
-                foreach ($format['attribute'] as $attrKey) {
-                    if (isset($attributes[$attrKey])) {
-                        $expanded[$attrKey] = $attributes[$attrKey];
-                    } else {
-                        if (substr($attrKey, 0, 2) === 'dp') {
-                            $number = (int)substr($attrKey, 2);
+                foreach ($fmt['attribute'] as $key) {
+                    if (isset($attributes[$key])) {
+                        $expanded[$key] = $attributes[$key];
+                    } elseif (strpos($key, 'dp') === 0) {
+                        $n = (int)substr($key, 2);
+                        if (isset($attributes['dp'])) {
                             $expanded['dp'] = $attributes['dp'];
-                            $expanded['dp']['value']= $number;
+                            $expanded['dp']['value'] = $n;
                         }
                     }
                 }
-                $format['attribute'] = $expanded;
+                $fmt['attribute'] = $expanded;
             }
         }
-        unset($format);
+        unset($fmt);
 
-        $this->sendResponse(json_encode($formats));
+        $this->sendResponse(json_encode($formats, JSON_UNESCAPED_SLASHES));
     }
 
-    public function getConfigs() 
+    /* ======================= Overlay selection & loading ====================== */
+
+    /**
+     * Bundle everything the designer needs: current overlay config, fields,
+     * live overlay data, and app-config.
+     */
+    public function getConfigs(): void
     {
         $result = [];
 
-        $tod = getenv('DAY_OR_NIGHT');
-        if ($tod === false) {
-            $tod = 'night';
-        }
-        if ($tod == 'day') {
-            $overlayFilename = $this->getSetting('daytimeoverlay');
-        } else {
-            $overlayFilename = $this->getSetting('nighttimeoverlay');
-        }
+        $tod   = getenv('DAY_OR_NIGHT') ?: 'night';
+        $fname = ($tod === 'day') ? $this->getSetting('daytimeoverlay') : $this->getSetting('nighttimeoverlay');
 
-        $template = null;
-        $fileName = $this->overlayConfigPath . '/' . $overlayFilename;
-        if (file_exists($fileName)) {
-            $template = file_get_contents($fileName);
-        } else {
-            $fileName = $this->allskyOverlays . $overlayFilename;
-            if (file_exists($fileName)) {            
-                $template = file_get_contents($fileName);
-            }
-        }
-        $templateData = json_decode($template);      
-        $this->fixMetaData($templateData);     
-        $result['config'] = $templateData;
-
-        $data = $this->getData(true);
-        $result['data'] = $data;
-
-        $data = $this->getOverlayData(true);
-        $result['overlaydata'] = $data;        
-
-        $data = $this->getAppConfig(true);
-        $result['appconfig'] = $data;        
-        
-        $result = json_encode($result);
-        $this->sendResponse($result);
-    }
-    public function getLoadOverlay($overlayName=null, $return=false) 
-    {
-        if ($overlayName === null) {
-            $overlayName = $_GET['overlay'];
-        }
-        $fileName = $this->overlayConfigPath . '/' . $overlayName;
-
+        // Prefer core overlay; fall back to user overlay folder
         $overlay = null;
-        if (file_exists($fileName)) {
-            $overlay = file_get_contents($fileName);
+        $core    = $this->joinPath($this->overlayConfigPath, $this->safeFileName((string)$fname, ['json']));
+        if (is_file($core)) {
+            $overlay = file_get_contents($core);
         } else {
-            $fileName = $this->allskyOverlays . $overlayName;
-            if (file_exists($fileName)) {
-                $overlay = file_get_contents($fileName);
-            }
-        }     
+            $user = $this->joinPath($this->allskyOverlays, $this->safeFileName((string)$fname, ['json']));
+            if (is_file($user)) $overlay = file_get_contents($user);
+        }
+
+        $template = json_decode($overlay ?: '{}');
+        $this->fixMetaData($template);
+        $result['config']      = $template;
+        $result['data']        = $this->getData(true);
+        $result['overlaydata'] = $this->getOverlayData(true);
+        $result['appconfig']   = $this->getAppConfig(true);
+
+        $this->sendResponse(json_encode($result, JSON_UNESCAPED_SLASHES));
+    }
+
+    /**
+     * Load a specific overlay JSON by name from core or user directories.
+     * If $return is true, return the raw JSON; otherwise send it to the client.
+     */
+    public function getLoadOverlay($overlayName = null, $return = false)
+    {
+        $name = $overlayName ?? ($_GET['overlay'] ?? '');
+        if ($name === '') {
+            if (!$return) $this->sendHTTPResponse('Missing overlay.', 400);
+            return null;
+        }
+
+        $safe = $this->safeFileName((string)$name, ['json']);
+        $paths = [
+            $this->joinPath($this->overlayConfigPath, $safe),
+            $this->joinPath($this->allskyOverlays, $safe),
+        ];
+
+        $raw = null;
+        foreach ($paths as $p) {
+            if (is_file($p) && is_readable($p)) { $raw = file_get_contents($p); break; }
+        }
 
         if (!$return) {
-            $this->sendResponse($overlay);
+            if ($raw === null) $this->sendHTTPResponse('Overlay not found.', 404);
+            $this->sendResponse($raw ?? '{}');
         } else {
-            return $overlay;
+            return $raw;
         }
-
     }
 
-    private function getSetting($name, $swapSpaces='') 
+    /**
+     * Read a value from the global settings array prepared by initialize_variables().
+     * Optionally swap spaces with a given character for filename-ish values.
+     */
+    private function getSetting(string $name, string $swapSpaces = '')
     {
+        /** @var array $settings_array */
         global $settings_array;
-        $name = getVariableOrDefault($settings_array, $name, 'overlay.json');
-        if ($swapSpaces !== '') {
-            $name = str_replace(' ',$swapSpaces, $name);
-        }
-        return $name;
+        $val = getVariableOrDefault($settings_array, $name, 'overlay.json');
+        if ($swapSpaces !== '') $val = str_replace(' ', $swapSpaces, (string)$val);
+        return $val;
     }
 
-    public function getOverlays() 
+    /**
+     * Build a catalog of core and user overlays along with current day/night selections
+     * and some camera metadata to avoid extra roundtrips from the UI.
+     */
+    public function getOverlays(): void
     {
-        $overlayData = [];
-        $overlayData['coreoverlays'] = [];
-        $overlayData['useroverlays'] = [];
-        $overlayData['config'] = [];
-        $overlayData['config']['daytime'] = $this->getSetting('daytimeoverlay');
-        $overlayData['config']['nighttime'] = $this->getSetting('nighttimeoverlay');
-        $overlayData['brands'] = ['RPi', 'ZWO', 'Arducam'];
-        $overlayData['brand'] = $this->getSetting('cameratype');
-        $overlayData['model'] = $this->getSetting('cameramodel');
-        $overlayData['sensorWidth'] = $this->cc['sensorWidth'];
-        $overlayData['sensorHeight'] = $this->cc['sensorHeight'];
-
-        $tod = getTOD();
-        if ($tod == 'day') {
-            $overlayData['current'] = $overlayData['config']['daytime'];
-        } else {
-            $overlayData['current'] = $overlayData['config']['nighttime'];
-        }
-
-        $defaultDir = $this->overlayConfigPath . '/';
-        $entries = scandir($defaultDir);
-        foreach ($entries as $entry) {
-            if ($entry !== '.' && $entry !== '..') {
-                if (substr($entry,0, 7) === 'overlay') {
-                    $templatePath = $defaultDir . $entry;
-                    $template = file_get_contents($templatePath);
-                    $templateData = json_decode($template);
-                    $this->fixMetaData($templateData);
-                    if (!isset($templateData->metadata)) {
-                        $name = 'Unknown';
-                        switch ($entry) {
-                            case 'overlay.json':
-                                $name = 'Default Overlay';
-                                break;
-
-                            case 'overlay-RPi.json':
-                                $name = 'Default RPi Overlay';
-                                break;
-
-                            case 'overlay-ZWO.json':
-                                $name = 'Default ZWO Overlay';
-                                break;
-                        }
-                        $templateData->metadata = [];
-                        $templateData->metadata['name'] = $name;
-                    }
-                    $overlayData['coreoverlays'][$entry] = $templateData;
-                    
-                }
-            }
-        }
-
-
-        $userDir = $this->allskyOverlays;
-        $entries = scandir($userDir);
-        foreach ($entries as $entry) {
-            if ($entry !== '.' && $entry !== '..') {
-                if (substr($entry,0, 7) === 'overlay') {
-                    $templatePath = $userDir . $entry;
-                    if (is_file($templatePath)) {
-                        $template = file_get_contents($templatePath);
-                        $templateData = json_decode($template);
-                        $this->fixMetaData($templateData);
-                        $overlayData['useroverlays'][$entry] = $templateData;
-                    }
-                }
-            }
-        }
-
-        $settingsFile = ALLSKY_CONFIG . '/settings.json';
-        $settings = file_get_contents($settingsFile);
-        $settings = json_decode($settings);
-        $overlayData['settings'] = $settings;
-
-        $overlayData = json_encode($overlayData);
-        $this->sendResponse($overlayData);
-    }
-    public function getValidateFilename() 
-    {
-        $fileName = $_GET['filename'];
-        $userDir = $this->allskyOverlays;
-        $filePath = $userDir . $fileName;
-        $fileExists = false;
-
-        if (is_file($filePath)) {
-            $fileExists = true;
-        }
-
-        $result = [
-            'error' => $fileExists
+        $data = [
+            'coreoverlays' => [],
+            'useroverlays' => [],
+            'config'       => [
+                'daytime'   => $this->getSetting('daytimeoverlay'),
+                'nighttime' => $this->getSetting('nighttimeoverlay'),
+            ],
+            'brands'       => ['RPi', 'ZWO', 'Arducam'],
+            'brand'        => $this->getSetting('cameratype'),
+            'model'        => $this->getSetting('cameramodel'),
+            'sensorWidth'  => $this->cc['sensorWidth']  ?? null,
+            'sensorHeight' => $this->cc['sensorHeight'] ?? null,
         ];
-        $result = json_encode($result);
-        $this->sendResponse($result);
+
+        $tod = function_exists('getTOD') ? getTOD() : 'night';
+        $data['current'] = ($tod === 'day') ? $data['config']['daytime'] : $data['config']['nighttime'];
+
+        // Core overlays
+        foreach (scandir($this->overlayConfigPath) ?: [] as $entry) {
+            if ($entry === '.' || $entry === '..' || strpos($entry, 'overlay') !== 0) continue;
+            $path = $this->joinPath($this->overlayConfigPath, $entry);
+            if (!is_file($path)) continue;
+
+            $obj = json_decode(file_get_contents($path) ?: '{}') ?: (object)[];
+            $this->fixMetaData($obj);
+
+            if (!isset($obj->metadata)) {
+                $name = 'Unknown';
+                if ($entry === 'overlay.json')     $name = 'Default Overlay';
+                if ($entry === 'overlay-RPi.json') $name = 'Default RPi Overlay';
+                if ($entry === 'overlay-ZWO.json') $name = 'Default ZWO Overlay';
+                $obj->metadata = (object)['name' => $name];
+            }
+            $data['coreoverlays'][$entry] = $obj;
+        }
+
+        // User overlays
+        if (is_dir($this->allskyOverlays)) {
+            foreach (scandir($this->allskyOverlays) ?: [] as $entry) {
+                if ($entry === '.' || $entry === '..' || strpos($entry, 'overlay') !== 0) continue;
+                $path = $this->joinPath($this->allskyOverlays, $entry);
+                if (!is_file($path)) continue;
+
+                $obj = json_decode(file_get_contents($path) ?: '{}') ?: (object)[];
+                $this->fixMetaData($obj);
+                $data['useroverlays'][$entry] = $obj;
+            }
+        }
+
+        // Attach settings blob so the UI doesn’t need another request
+        $settingsFile = rtrim(ALLSKY_CONFIG, '/') . '/settings.json';
+        $data['settings'] = (is_file($settingsFile) && is_readable($settingsFile))
+            ? json_decode(file_get_contents($settingsFile) ?: '{}')
+            : (object)[];
+
+        $this->sendResponse(json_encode($data, JSON_UNESCAPED_SLASHES));
     }
 
-    public function getSuggest() 
+    // Validate whether a proposed user overlay filename already exists
+    public function getValidateFilename(): void
     {
-        $userDir = $this->allskyOverlays;
-        $maxFound = 0;
+        $name = $this->safeFileName((string)($_GET['filename'] ?? ''), []);
+        if ($name === '') $this->sendHTTPResponse('Missing filename.', 400);
+        $path = $this->joinPath($this->allskyOverlays, $name);
+        $this->sendResponse(json_encode(['error' => is_file($path)], JSON_UNESCAPED_SLASHES));
+    }
 
-        $entries = scandir($userDir);
-        foreach ($entries as $entry) {
-            if ($entry !== '.' && $entry !== '..') {
-                $entryBits = explode('-', $entry);
-                if (count($entryBits) > 0) {
-                    if (substr($entryBits[0],0,7) === 'overlay') {
-                        $num = intval(substr($entryBits[0],7));
-                        if ($num > $maxFound) {
-                            $maxFound = $num;
-                        }
+    /**
+     * Suggest the next overlay number by scanning user overlay filenames
+     * that follow the "overlayN-..." pattern.
+     */
+    public function getSuggest(): void
+    {
+        $dir = $this->allskyOverlays;
+        $max = 0;
 
-                    }
+        if (is_dir($dir)) {
+            foreach (scandir($dir) ?: [] as $entry) {
+                if ($entry === '.' || $entry === '..') continue;
+                $parts = explode('-', $entry);
+                if (!empty($parts) && strpos($parts[0], 'overlay') === 0) {
+                    $n = (int) substr($parts[0], 7);
+                    if ($n > $max) $max = $n;
                 }
             }
         }
-        $maxFound++;
-
-        $this->sendResponse($maxFound);        
+        $this->sendResponse($max + 1);
     }
-    public function postNewOverlay() 
+
+    /**
+     * Create a new overlay file, optionally by copying an existing one.
+     * Ensures required top-level keys exist so the designer can open it safely.
+     */
+    public function postNewOverlay(): void
     {
+        @mkdir($this->allskyOverlays, 0775, true);
 
-        if (!file_exists($this->allskyOverlays)) {
-            mkdir($this->allskyOverlays);
-        }
-
-        $copyOverlay = $_POST['data']['copy'];
-        if ($copyOverlay !== 'none') {
-            $newOverlay = $this->getLoadOverlay($copyOverlay, true);
-            $newOverlay = json_decode($newOverlay);
+        $copy = (string)($_POST['data']['copy'] ?? 'none');
+        if ($copy !== 'none') {
+            $raw = $this->getLoadOverlay($copy, true);
+            $overlay = json_decode($raw ?: '{}') ?: (object)[];
         } else {
-            $newOverlay = (object)null;
-            $this->fixMetaData($newOverlay);
+            $overlay = (object)[];
+            $this->fixMetaData($overlay);
         }
 
-        $newOverlay->metadata = $_POST['fields'];
-
-        if (!isset($newOverlay->fields)) {
-            $newOverlay->fields = [];
-        }
-        if (!isset($newOverlay->images)) {
-            $newOverlay->images = [];
-        }
-        if (!isset($newOverlay->fonts)) {
-            $newOverlay->fonts = [
-                'moon_phases' => [
-                    'fontPath' => 'fonts/moon_phases.ttf'
-                ]
-            ];
-        }
-        if (!isset($newOverlay->settings)) {
-            $newOverlay->settings = [
+        $overlay->metadata = $_POST['fields'] ?? (object)[];
+        if (!isset($overlay->fields))   $overlay->fields = [];
+        if (!isset($overlay->images))   $overlay->images = [];
+        if (!isset($overlay->fonts))    $overlay->fonts  = ['moon_phases' => ['fontPath' => 'fonts/moon_phases.ttf']];
+        if (!isset($overlay->settings)) {
+            $overlay->settings = [
                 'defaultdatafileexpiry' => '550',
                 'defaultincludeplanets' => false,
-                'defaultincludesun' => false,
-                'defaultincludemoon' => false,
-                'defaultimagetopacity' => 0.63,
-                'defaultimagerotation' => 0,
-                'defaulttextrotation' => 0,
-                'defaultfontopacity' => 1,
-                'defaultfontcolour' => 'white',
-                'defaultfont' => 'Arial',
-                'defaultfontsize' => 52,
-                'defaultimagescale' => 1,
-                'defaultnoradids' => ''                
+                'defaultincludesun'     => false,
+                'defaultincludemoon'    => false,
+                'defaultimagetopacity'  => 0.63,
+                'defaultimagerotation'  => 0,
+                'defaulttextrotation'   => 0,
+                'defaultfontopacity'    => 1,
+                'defaultfontcolour'     => 'white',
+                'defaultfont'           => 'Arial',
+                'defaultfontsize'       => 52,
+                'defaultimagescale'     => 1,
+                'defaultnoradids'       => '',
             ];
-        }            
-                
-        $newOverlay = json_encode($newOverlay, JSON_PRETTY_PRINT);
-
-        $overlayFile = $this->allskyOverlays . $_POST['data']['filename'] . '.json';
-        $msg = updateFile($overlayFile, $newOverlay, $overlayFile, false, true);
-		if ($msg === "") {
-        	chmod($overlayFile, 0775);
-            $this->sendResponse();
-        } else {
-            $this->sendResponse($msg);
         }
+
+        $fileOnly = $this->safeFileName((string)($_POST['data']['filename'] ?? ''), []);
+        if ($fileOnly === '') $this->sendHTTPResponse('Missing filename.', 400);
+
+        $dest = $this->joinPath($this->allskyOverlays, $fileOnly);
+        $pretty = json_encode($overlay, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        $msg = updateFile($dest, $pretty, $dest, false, true);
+        if ($msg !== '') $this->sendHTTPResponse($msg, 500);
+        @chmod($dest, 0775);
+
+        $this->sendResponse(['ok' => true]);
     }
 
-    public function getDeleteOverlay() 
+    // Remove a user overlay; missing file is treated as success to keep UX simple
+    public function deleteOverlay(): void
     {
-        $fileName = $_GET['filename'];        
-        $overlayFile = $this->allskyOverlays . $fileName;
-        if (file_exists($overlayFile)) {
-            unlink($overlayFile);
+        $name = $this->safeFileName((string)($_GET['filename'] ?? ''), ['json']);
+        if ($name === '') $this->sendHTTPResponse('Missing filename.', 400);
+
+        $path = $this->joinPath($this->allskyOverlays, $name);
+        if (is_file($path) && is_writable($path)) {
+            @unlink($path);
         }
-        $this->sendResponse();
+        $this->sendResponse(['ok' => true]);
     }
 
-    public function postSaveSettings() 
+    /**
+     * Save day/night overlay selections back into settings.json.
+     * Filenames are validated and the file is rewritten in pretty format.
+     */
+    public function postSaveSettings(): void
     {
-        $dayTime = $_POST['daytime'];
-        $nightTime = $_POST['nighttime'];
+        $day   = (string)($_POST['daytime']   ?? '');
+        $night = (string)($_POST['nighttime'] ?? '');
+        if ($day === '' || $night === '') $this->sendHTTPResponse('Missing settings.', 400);
 
-        $settingsFile = getSettingsFile();
-        $data = file_get_contents($settingsFile, true);
-        $settingsData = json_decode($data, true);
-        $settingsData['daytimeoverlay'] = $dayTime;
-        $settingsData['nighttimeoverlay'] = $nightTime;
+        $file = getSettingsFile();
+        if (!is_file($file) || !is_readable($file)) $this->sendHTTPResponse('Settings not readable.', 500);
 
-        $mode = JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_NUMERIC_CHECK|JSON_PRESERVE_ZERO_FRACTION;
-        $data = json_encode($settingsData, $mode);
+        $raw  = file_get_contents($file) ?: '{}';
+        $cfg  = json_decode($raw, true) ?: [];
+        $cfg['daytimeoverlay']   = $this->safeFileName($day, ['json']);
+        $cfg['nighttimeoverlay'] = $this->safeFileName($night, ['json']);
 
-        $msg = updateFile($settingsFile, $data, $settingsFile, false, true);
-		if ($msg === "") {
-            $this->sendResponse();
-        } else {
-            $this->sendResponse($msg);
-        }
+        $mode = JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK | JSON_PRESERVE_ZERO_FRACTION;
+        $pretty = json_encode($cfg, $mode);
+
+        $msg = updateFile($file, $pretty, $file, false, true);
+        if ($msg !== '') $this->sendHTTPResponse($msg, 500);
+        $this->sendResponse(['ok' => true]);
     }
 
-    private function fixMetaData(&$overlay) 
+    /**
+     * Ensure overlay JSON objects have the keys the UI expects,
+     * providing minimal defaults for older or partial files.
+     */
+    private function fixMetaData(&$overlay): void
     {
-        if ($overlay !== null) {
-            if (!isset($overlay->metadata)) {
-                $overlay->metadata = (object)null;
-            }
-            if (!isset($overlay->metadata->name)) {
-                $overlay->metadata->name = '???';
-            }
-            if (!isset($overlay->metadata->camerabrand)) {
-                $overlay->metadata->camerabrand = '???';
-            }
-            if (!isset($overlay->metadata->cameramodel)) {
-                $overlay->metadata->cameramodel = '???';
-            }
-            if (!isset($overlay->metadata->tod)) {
-                $overlay->metadata->tod = 'both';
-            }
-        }
+        if ($overlay === null) $overlay = (object)[];
+        if (!isset($overlay->metadata))              $overlay->metadata = (object)[];
+        if (!isset($overlay->metadata->name))        $overlay->metadata->name        = '???';
+        if (!isset($overlay->metadata->camerabrand)) $overlay->metadata->camerabrand = '???';
+        if (!isset($overlay->metadata->cameramodel)) $overlay->metadata->cameramodel = '???';
+        if (!isset($overlay->metadata->tod))         $overlay->metadata->tod         = 'both';
     }
 
-    public function getOverlayList() 
+    /**
+     * Flatten core and user overlays into a table-friendly list.
+     * Useful for admin UIs that don’t need nested structures.
+     */
+    public function getOverlayList(): void
     {
-        
-        $overlays = [];
+        $rows = [];
 
-        $defaultDir = $this->overlayConfigPath . '/';
-        $entries = scandir($defaultDir);
-        foreach ($entries as $entry) {
-            if ($entry !== '.' && $entry !== '..') {
-                if (substr($entry,0, 7) === 'overlay') {
-                    $templatePath = $defaultDir . $entry;
-                    $template = file_get_contents($templatePath);
-                    $templateData = json_decode($template);
-                    $this->fixMetaData($templateData);
-                    $overlays[] = [
-                        'type' => 'Allsky',
-                        'name' => $templateData->metadata->name,
-                        'brand' => $templateData->metadata->camerabrand,
-                        'model' => $templateData->metadata->cameramodel,
-                        'tod' => $templateData->metadata->tod,
-                        'filename' => $entry
-                    ];
+        // Core overlays
+        foreach (scandir($this->overlayConfigPath) ?: [] as $entry) {
+            if ($entry === '.' || $entry === '..' || strpos($entry, 'overlay') !== 0) continue;
+            $path = $this->joinPath($this->overlayConfigPath, $entry);
+            if (!is_file($path)) continue;
+
+            $obj = json_decode(file_get_contents($path) ?: '{}') ?: (object)[];
+            $this->fixMetaData($obj);
+
+            $rows[] = [
+                'type'     => 'Allsky',
+                'name'     => $obj->metadata->name,
+                'brand'    => $obj->metadata->camerabrand,
+                'model'    => $obj->metadata->cameramodel,
+                'tod'      => $obj->metadata->tod,
+                'filename' => $entry,
+            ];
+        }
+
+        // User overlays
+        if (is_dir($this->allskyOverlays)) {
+            foreach (scandir($this->allskyOverlays) ?: [] as $entry) {
+                if ($entry === '.' || $entry === '..' || strpos($entry, 'overlay') !== 0) continue;
+                $path = $this->joinPath($this->allskyOverlays, $entry);
+                if (!is_file($path)) continue;
+
+                $obj = json_decode(file_get_contents($path) ?: '{}') ?: (object)[];
+                $this->fixMetaData($obj);
+
+                $rows[] = [
+                    'type'     => 'User',
+                    'name'     => $obj->metadata->name,
+                    'brand'    => $obj->metadata->camerabrand,
+                    'model'    => $obj->metadata->cameramodel,
+                    'tod'      => $obj->metadata->tod,
+                    'filename' => $entry,
+                ];
+            }
+        }
+
+        $this->sendResponse(json_encode(['data' => $rows], JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
+    }
+
+    // Lightweight status probe; translates the producer’s status file into {running, status}
+    public function getStatus(): void
+    {
+        $out = ['running' => true, 'status' => 'Unknown'];
+
+        if (is_file($this->allskyStatus) && is_readable($this->allskyStatus)) {
+            $raw = file_get_contents($this->allskyStatus) ?: '';
+            if (function_exists('mb_convert_encoding')) {
+                $raw = mb_convert_encoding($raw, 'UTF-8', 'UTF-8, ISO-8859-1, ASCII');
+            }
+
+            $st = json_decode($raw, true);
+            if (is_array($st) && isset($st['status'])) {
+                $status = (string)$st['status'];
+                $status = str_replace("\0", '', $status);
+                if (function_exists('mb_convert_encoding')) {
+                    $status = mb_convert_encoding($status, 'UTF-8', 'UTF-8, ISO-8859-1, ASCII');
+                } else {
+                    $status = @iconv('UTF-8', 'UTF-8//IGNORE', $status) ?: $status;
                 }
+
+                $out['status']  = $status;
+                $out['running'] = (strtolower($status) === 'running');
             }
         }
 
-        $userDir = $this->allskyOverlays;
-        $entries = scandir($userDir);
-        foreach ($entries as $entry) {
-            if ($entry !== '.' && $entry !== '..') {
-                if (substr($entry,0, 7) === 'overlay') {
-                    $templatePath = $userDir . $entry;
-                    $template = file_get_contents($templatePath);
-                    $templateData = json_decode($template);
-                    $this->fixMetaData($templateData);
-                    $overlays[] = [
-                        'type' => 'User',
-                        'name' => $templateData->metadata->name,
-                        'brand' => $templateData->metadata->camerabrand,
-                        'model' => $templateData->metadata->cameramodel,
-                        'tod' => $templateData->metadata->tod,
-                        'filename' => $entry
-                    ];
-                }
-            }
+        $this->sendResponse($out);
+    }
+
+    /* ============================ Shell execution ============================ */
+
+    /**
+     * Minimal wrapper around proc_open() to run a shell command and collect output.
+     * Arguments should already be escaped; this is just for capturing stdout/stderr.
+     */
+    private function runShellCommand(string $command): array
+    {
+        $desc = [ 1 => ['pipe', 'w'], 2 => ['pipe', 'w'] ];
+        $proc = @proc_open($command, $desc, $pipes);
+        if (!is_resource($proc)) {
+            return ['error' => true, 'message' => 'Failed to start process.'];
         }
 
-        $data = array(
-            'data' => $overlays
+        $stdout = stream_get_contents($pipes[1]) ?: '';
+        $stderr = stream_get_contents($pipes[2]) ?: '';
+        fclose($pipes[1]); fclose($pipes[2]);
+
+        $rc = proc_close($proc);
+        if ($rc !== 0) {
+            return ['error' => true, 'message' => trim($stdout . "\n" . $stderr)];
+        }
+        return ['error' => false, 'message' => $stdout];
+    }
+
+    /**
+     * Return a formatted current time string using Python’s strftime.
+     * The format string is whitelisted to a safe subset of characters.
+     */
+    public function postPythonDate(): void
+    {
+        $fmt = (string)($_POST['format'] ?? '');
+        if ($fmt === '') $this->sendHTTPResponse('Missing format.', 400);
+
+        if (!preg_match('/^[%A-Za-z0-9_\-\s:.,\/]+$/', $fmt)) {
+            $this->sendHTTPResponse('Invalid format.', 400);
+        }
+
+        $arg = escapeshellarg($fmt);
+        $cmd = 'python3 -c "from datetime import datetime; print(datetime.now().strftime(' . $arg . '))"';
+
+        $res = $this->runShellCommand($cmd);
+        if ($res['error']) $this->sendHTTPResponse('Python error.', 500);
+        $this->sendResponse(trim($res['message']));
+    }
+
+    /**
+     * Ask the test_overlay.sh script to render a preview with a posted overlay JSON.
+     * The JSON is written to a temp file atomically; arguments are escaped.
+     */
+    public function postSample(): void
+    {
+        $overlay = (string)($_POST['overlay'] ?? '');
+        if ($overlay === '') $this->sendHTTPResponse('Missing overlay.', 400);
+
+        $tmp = $this->allskyTmp . '/test_overlay.json';
+        $msg = updateFile($tmp, $overlay, $tmp, false, true);
+        if ($msg !== '') $this->sendHTTPResponse($msg, 500);
+
+        $cmd = sprintf(
+            'sudo %s/test_overlay.sh --allsky_home %s --allsky_scripts %s --allsky_tmp %s --overlay %s',
+            escapeshellarg($this->allsky_scripts),
+            escapeshellarg($this->allsky_home),
+            escapeshellarg($this->allsky_scripts),
+            escapeshellarg($this->allskyTmp),
+            escapeshellarg($tmp)
         );
-        
-        $data = json_encode($data, JSON_PRETTY_PRINT);
-        $this->sendResponse($data);            
+
+        $res = $this->runShellCommand($cmd);
+        if ($res['error']) $this->sendHTTPResponse($res['message'], 500);
+        $this->sendResponse($res['message']);
     }
-
-    public function getStatus() 
-    {
-        $running = [
-            'running' => true,
-            'status' => 'Unknown'
-        ];
-        if (is_file($this->allskyStatus)) {
-            try {
-                $statusTxt = file_get_contents($this->allskyStatus, true);
-                $status = json_decode($statusTxt, true);
-                if ($status !== null) {
-                    if (isset($status['status'])) {
-                        $running['status'] = $status['status'];
-                        if (strtolower($status['status']) != 'running') {
-                            $running['running'] = false;
-                        }
-                    }
-                }
-            } catch(Exception $e) {
-            }
-        }
-
-        $this->sendResponse(json_encode($running));
-    }
-
-	private function runShellCommand($command) 
-    {
-		$descriptors = [
-			1 => ['pipe', 'w'],
-			2 => ['pipe', 'w'],
-		];
-		$process = proc_open($command, $descriptors, $pipes);
-		
-		if (is_resource($process)) {
-			$stdout = stream_get_contents($pipes[1]);
-			$stderr = stream_get_contents($pipes[2]);
-			fclose($pipes[1]);
-			fclose($pipes[2]);
-		
-			$returnCode = proc_close($process);
-			if ($returnCode > 0) {
-				$result = [
-					'error' => true,
-					'message' =>  $stdout . $stderr					
-				];
-			} else {
-				$result = [
-					'error' => false,
-					'message' => $stdout					
-				];				
-			}
-		}
-
-		return $result;
-	}
-
-    public function postPythonDate() {
-        $formatString = $_POST['format'];
-        $escapedFormat = escapeshellarg($formatString);
-
-        $cmd = "python3 -c \"from datetime import datetime; print(datetime.now().strftime({$escapedFormat}))\"";
-
-        $result = $this->runShellCommand($cmd);
-
-        if ($result['error']) {
-            $this->sendHTTPResponse(500);
-        } else {
-		    $this->sendResponse($result['message']);
-        }
-    }
-
-	public function postSample() 
-    {
-		$overlay = $_POST['overlay'];
-
-        $fileName = ALLSKY_TMP . '/test_overlay.json';
-        file_put_contents($fileName,  $overlay);
-        $msg = updateFile($fileName, $overlay, $fileName, false, true);
-		if ($msg !== "") {
-            $this->sendHTTPResponse(500);
-        }
-
-        $command = 'sudo ' . $this->allsky_scripts  . '/test_overlay.sh --allsky_home ' . $this->allsky_home  . ' --allsky_scripts ' . $this->allsky_scripts  . ' --allsky_tmp ' . $this->allskyTmp . " --overlay '$fileName'";
-
-        $result = $this->runShellCommand($command);
-
-        if ($result['error']) {
-            die($result['message']);
-            $this->sendHTTPResponse(500);
-        } else {
-		    $this->sendResponse($result['message']);
-        }
-
-	}
 }
 
 $overlayUtil = new OVERLAYUTIL();

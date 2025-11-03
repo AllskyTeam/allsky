@@ -280,4 +280,23 @@ class UTILBASE
         }
         return ['error' => false, 'message' => (string)$stdout];
     }
+
+    protected function startsWith ($string, $startString) {
+        $len = strlen($startString);
+        return (substr($string, 0, $len) === $startString);
+    }
+
+    protected function endsWith($string, $endString) {
+        $len = strlen($endString);
+        if ($len == 0) {
+            return true;
+        }
+        return (substr($string, -$len) === $endString);
+    }
+
+    protected function changeOwner($filename) {
+        $user = get_current_user();
+        exec("sudo chown " . $user . " " . $filename);
+    }
+
 }

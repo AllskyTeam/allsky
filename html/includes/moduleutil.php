@@ -1,15 +1,37 @@
 <?php
+declare(strict_types=1);
 
 include_once('functions.php');
 initialize_variables();		// sets some variables
-
 include_once('authenticate.php');
+include_once('utilbase.php');
 
-class MODULEUTIL
-{
-    protected $request;
-    protected $method;
-    protected $jsonResponse = false;
+class MODULEUTIL extends UTILBASE {
+    protected function getRoutes(): array
+    {
+        return [
+            'AllskyVariables' => ['get'],
+            'CheckModuleDependencies' => ['post'],
+            'GetExtraDataFile' => ['post'],
+            'HassSensors' => ['post'],
+            'ModuleBaseData' => ['get'],
+            'Modules' => ['delete', 'get', 'post'],
+            'ModulesSettings' => ['get', 'post'],
+            'Onewire' => ['get'],
+            'Reset' => ['get'],
+            'Restore' => ['get'],
+            'SerialPorts' => ['get'],
+            'Template' => ['get'],
+            'TemplateList' => ['get'],
+            'TestModule' => ['post'],
+            'UrlCheck' => ['get'],
+            'ValidateMask' => ['post'],
+            'VariableList' => ['get'],
+            'WatchdogManageService' => ['get'],
+            'WatchdogStatus' => ['get'],
+        ];
+    }
+
     protected $allskyModules;
     protected $userModules;
 	protected $myFiles;
@@ -36,60 +58,6 @@ class MODULEUTIL
         $this->allsky_config = ALLSKY_CONFIG;
         $this->extra_data = ALLSKY_EXTRA;
         $this->extra_legacy_data = ALLSKY_EXTRA_LEGACY;
-    }
-
-    public function run()
-    {
-        //$this->checkXHRRequest();
-        $this->sanitizeRequest();
-        $this->runRequest();
-    }
-
-    private function checkXHRRequest()
-    {
-        if (empty($_SERVER['HTTP_X_REQUESTED_WITH']) || strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) != 'xmlhttprequest') {
-            $this->send404();
-        }
-    }
-
-    private function sanitizeRequest()
-    {
-        $this->request = $_GET['request'];
-        $this->method = strtolower($_SERVER['REQUEST_METHOD']);
-
-        $accepts = $_SERVER['HTTP_ACCEPT'];
-        if (stripos($accepts, 'application/json') !== false) {
-            $this->jsonResponse = true;
-        }
-    }
-
-    private function send404()
-    {
-        header('HTTP/1.0 404 Not Found');
-        die();
-    }
-
-    private function send500($error = "Internal Server Error")
-    {
-        header('HTTP/1.0 500 ' . $error);
-        die();
-    }
-
-    protected function sendResponse($response = 'ok')
-    {
-        echo ($response);
-        die();
-    }
-
-
-    private function runRequest() {
-        $action = $this->method . $this->request;
-
-        if (is_string($action) && method_exists($this, $action) && is_callable([$this, $action])) {
-            $this->{$action}();
-        } else {
-            $this->send404();
-        }
     }
 
     private function getMetaDataFromFile($fileName) {
@@ -138,35 +106,6 @@ class MODULEUTIL
         return $metaData;
     }
 
-    private function getMetaDataFromFileByName1($fileName, $metaName) {
-        $fileContents = file($fileName);
-        $metaData = "";
-        $found = False;
-
-        foreach ($fileContents as $sourceLine) {
-            $line = str_replace(" ", "", $sourceLine);
-            $line = str_replace("\n", "", $line);
-            $line = str_replace("\r", "", $line);
-            $line = strtolower($line);
-            if ($line == "metadata={") {
-                $found = true;
-                $sourceLine = str_ireplace("metadata","", $sourceLine);
-                $sourceLine = str_ireplace("=","", $sourceLine);
-                $sourceLine = str_ireplace(" ","", $sourceLine);
-            }
-
-            if ($found) {
-                $metaData .= $sourceLine;
-            }
-
-            if (substr($sourceLine,0,1) == "}" && $found) {;
-                break;
-            }
-        }
-
-        return $metaData;
-    }
-
     private function getModuleMetaData($modulelName) {
         $fileName = $this->myFiles . '/' . $modulelName;
 
@@ -183,7 +122,7 @@ class MODULEUTIL
         return $metaData;
     }
 
-    protected function readModuleData($moduleDirectory, $type, $event) {
+    public function readModuleData($moduleDirectory, $type, $event) {
         $arrFiles = array();
 
         if (is_dir($moduleDirectory)) {
@@ -224,24 +163,6 @@ class MODULEUTIL
             closedir($handle);
         }
         return $arrFiles;
-    }
-
-    private function startsWith ($string, $startString) {
-        $len = strlen($startString);
-        return (substr($string, 0, $len) === $startString);
-    }
-
-    private function endsWith($string, $endString) {
-        $len = strlen($endString);
-        if ($len == 0) {
-            return true;
-        }
-        return (substr($string, -$len) === $endString);
-    }
-
-    private function changeOwner($filename) {
-        $user = get_current_user();
-        exec("sudo chown " . $user . " " . $filename);
     }
 
     public function getModulesSettings() {
@@ -312,7 +233,7 @@ class MODULEUTIL
 
     public function getModules() {
         $result = $this->readModules();
-        $result = json_encode($result, false);
+        $result = json_encode($result);
         $this->sendResponse($result);
     }
 
@@ -620,36 +541,6 @@ class MODULEUTIL
         $this->sendResponse();
     }
 
-	private function runShellCommand($command) {
-		$descriptors = [
-			1 => ['pipe', 'w'],
-			2 => ['pipe', 'w'],
-		];
-		$process = proc_open($command, $descriptors, $pipes);
-		
-		if (is_resource($process)) {
-			$stdout = stream_get_contents($pipes[1]);
-			$stderr = stream_get_contents($pipes[2]);
-			fclose($pipes[1]);
-			fclose($pipes[2]);
-		
-			$returnCode = proc_close($process);
-			if ($returnCode > 0) {
-				$result = [
-					'error' => true,
-					'message' =>  $stdout . $stderr					
-				];
-			} else {
-				$result = [
-					'error' => false,
-					'message' => $stdout					
-				];				
-			}
-		}
-
-		return $result;
-	}
-
 	private function addSecretsToFlow($configData) {
 		$configDataJson = json_decode($configData);
 		$envData = null;
@@ -670,41 +561,59 @@ class MODULEUTIL
 		return $configData;
 	}
 
-	public function postTestModule() {
-        $module=trim(filter_input(INPUT_POST, 'module', FILTER_SANITIZE_STRING));
-        $dayNight=trim(filter_input(INPUT_POST, 'dayNight', FILTER_SANITIZE_STRING));        
-        $flow = $_POST['flow'];
+    public function postTestModule(): void
+    {
+        // Read and sanitize inputs
+        $module   = trim((string)filter_input(INPUT_POST, 'module', FILTER_UNSAFE_RAW));
+        $dayNight = trim((string)filter_input(INPUT_POST, 'dayNight', FILTER_UNSAFE_RAW));
+        $flow     = (string)($_POST['flow'] ?? '');
 
-		$flow = $this->addSecretsToFlow($flow);
+        // Inject any required secrets into the flow
+        $flow = $this->addSecretsToFlow($flow);
 
+        // Save the flow definition to a temp JSON file
         $fileName = ALLSKY_MODULES . '/test_flow.json';
-        file_put_contents($fileName,  $flow);
-
-        $command = 'sudo ' . $this->allsky_scripts  . '/test_flow.sh --allsky_home ' . $this->allsky_home  . ' --allsky_scripts ' . $this->allsky_scripts  . ' --day_night ' . $dayNight;
-        $result = $this->runShellCommand($command);
-
-		$jsonFlow = json_decode($flow, true);
-		
-		$extraData = '';
-		$moduleKey = array_key_first($jsonFlow);
-		if (isset($jsonFlow[$moduleKey]['metadata']['extradatafilename'])) {
-			$filePath = $this->extra_data . '/' . $jsonFlow[$moduleKey]['metadata']['extradatafilename'];
-			if (file_exists($filePath)) {
-				$extraData = file_get_contents($filePath);
-			}			
-		}
-
-        if ($result['error']) {
-            die($result['message']);
-            $this->send500();
-        } else {
-			$result = [
-				'message' => $result['message'],
-				'extradata' => json_decode($extraData)
-			];
-            $this->sendResponse(json_encode($result));
+        if (file_put_contents($fileName, $flow) === false) {
+            $this->send500('Failed to write test_flow.json');
         }
-	}
+
+        // Build the command arguments safely for runProcess()
+        $argv = [
+            '/usr/bin/sudo',
+            $this->allsky_scripts . '/test_flow.sh',
+            '--allsky_home',    $this->allsky_home,
+            '--allsky_scripts', $this->allsky_scripts,
+            '--day_night',      $dayNight,
+        ];
+
+        // Execute via runProcess() to capture stdout/stderr safely
+        $result = $this->runProcess($argv);
+
+        // Try to load extradata if the flow references a file
+        $jsonFlow  = json_decode($flow, true);
+        $extraData = '';
+        $moduleKey = is_array($jsonFlow) ? array_key_first($jsonFlow) : null;
+
+        if ($moduleKey && isset($jsonFlow[$moduleKey]['metadata']['extradatafilename'])) {
+            $filePath = $this->extra_data . '/' . $jsonFlow[$moduleKey]['metadata']['extradatafilename'];
+            if (is_file($filePath) && is_readable($filePath)) {
+                $extraData = file_get_contents($filePath) ?: '';
+            }
+        }
+
+        // Handle process result
+        if ($result['error']) {
+            $this->send500('Module test failed: ' . trim($result['message']));
+        }
+
+        // Bundle both script output and any extra data into the response
+        $payload = [
+            'message'   => trim($result['message']),
+            'extradata' => json_decode($extraData ?: '{}'),
+        ];
+
+        $this->sendResponse(json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
+    }
 
     public function getAllskyVariables($return=false) {
         $sourceDir = ALLSKY_OVERLAY . '/extra';
@@ -758,34 +667,44 @@ class MODULEUTIL
         return $value;
     }
 
-    public function getVariableList() {
-        $showEmpty=trim(filter_input(INPUT_GET, 'showempty', FILTER_SANITIZE_STRING));
-        if (empty($showEmpty)) {
+    public function getVariableList()
+    {
+        $showEmpty = trim((string)filter_input(INPUT_GET, 'showempty', FILTER_UNSAFE_RAW));
+        if ($showEmpty === '') {
             $showEmpty = 'no';
         }
-        $module=trim(filter_input(INPUT_GET, 'module', FILTER_SANITIZE_STRING));
+        $module = trim((string)filter_input(INPUT_GET, 'module', FILTER_UNSAFE_RAW));
 
-		//TODO: remove hard coding
-		$params = '--empty';
-		if ($showEmpty == 'no') {
-			$params = '';
-		}
+        // Build argv for runProcess (no shell)
+        $argv = [
+            '/usr/bin/python3',
+            ALLSKY_HOME . '/scripts/modules/allskyvariables/allskyvariables.py',
+            '--print',
+        ];
 
-		if ($module !== '') {
-			$params .= ' --module ' . $module;
-		}
-		$pythonScript = ALLSKY_HOME . '/scripts/modules/allskyvariables/allskyvariables.py --print ' . $params . ' --allskyhome ' . ALLSKY_HOME;
-		$output = [];
-		$returnValue = 0;
-		exec("python3 $pythonScript 2>&1", $output, $returnValue);
+        // Include --empty unless explicitly "no"
+        if (strcasecmp($showEmpty, 'no') !== 0) {
+            $argv[] = '--empty';
+        }
 
-		//$string = implode('', $output);
+        if ($module !== '') {
+            $argv[] = '--module';
+            $argv[] = $module;
+        }
 
-		$jsonString = json_encode($output[0], JSON_UNESCAPED_SLASHES);
-		$data = json_encode($jsonString);
+        $argv[] = '--allskyhome';
+        $argv[] = ALLSKY_HOME;
 
-        $this->sendResponse($output[0]);
+        // Execute
+        $result = $this->runProcess($argv);
+        if ($result['error']) {
+            $this->send500('Variable list retrieval failed: ' . trim($result['message']));
+        }
 
+        // Preserve original behavior: send first line of stdout
+        $stdout = trim($result['message']);
+        $firstLine = strtok($stdout, "\r\n");
+        $this->sendResponse($firstLine !== false ? $firstLine : $stdout);
     }
 
     public function postValidateMask() {
@@ -1089,7 +1008,6 @@ class MODULEUTIL
         $this->sendResponse(json_encode($result));        
     }
 
-    
     private function getAllskySetting($setting) {
         if ($this->allskySettings == null) {
             $file = $this->allsky_config . '/settings.json';

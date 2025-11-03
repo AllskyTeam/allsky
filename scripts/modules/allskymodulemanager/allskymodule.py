@@ -21,6 +21,9 @@ if sys.executable != venv_python:
 import json
 import ast
 import argparse
+import py_compile
+import traceback
+import linecache
 from pathlib import Path
 from packaging import version
 from json import JSONDecodeError
@@ -65,6 +68,9 @@ class ALLSKYMODULE:
         self._source_info = None
         self._valid = False
         self._installed = False
+        self._deprecated = False
+        self._description = ""
+        
         self._module_errors = {
             "source": [],
             "installed": []
@@ -227,7 +233,7 @@ class ALLSKYMODULE:
             tree = ast.parse(src, filename=str(module_path))
         except SyntaxError:
             return False
-
+                
         for node in tree.body:
             if isinstance(node, ast.FunctionDef) and node.name == func_name:
                 arg_names = []
@@ -262,7 +268,7 @@ class ALLSKYMODULE:
             if "deprecation" in meta_data:
                 if "deprecated" in meta_data["deprecation"]:
                     self.deprecated = shared.to_bool(meta_data["deprecation"]["deprecated"])
-                    
+                   
         if meta_data is None:
             status["valid"] = False
             status["message"].append('No valid meta data found')
@@ -278,6 +284,36 @@ class ALLSKYMODULE:
                 
         return status
     
+    def _check_python_syntax(self, filepath: str) -> bool:
+        """
+        Check syntax of a Python file without executing it.
+        Returns True if syntax is OK, False otherwise.
+        """
+        try:
+            py_compile.compile(filepath, doraise=True)
+            return True
+
+        except py_compile.PyCompileError as e:
+            # Extract and parse SyntaxError info
+            tb = e.exc_value
+            if isinstance(tb, SyntaxError):
+                filename = tb.filename
+                lineno = tb.lineno
+                offset = tb.offset
+                text = linecache.getline(filename, lineno).rstrip()
+                msg = tb.msg
+
+                print(f"\nSyntax error in: {filename}")
+                print(f"   → Line {lineno}, Column {offset}: {msg}")
+                if text:
+                    print(f"     {text}")
+                    if offset:
+                        print("     " + " " * (offset - 1) + "^")
+            else:
+                print(f"Compilation error:\n{traceback.format_exc()}")
+
+            return False
+        
     def _init_module(self):
         
         self._installed_info = []
@@ -291,6 +327,7 @@ class ALLSKYMODULE:
             installed_file_path = os.path.join(path, self.name + ".py")
             if os.path.exists(installed_file_path) and os.path.isfile(installed_file_path):
                 self._installed = True
+                self._check_python_syntax(installed_file_path)
                 status = self._validate_module(installed_file_path)
                 if status["valid"]:
                     self._installed_info = status
@@ -308,15 +345,19 @@ class ALLSKYMODULE:
         if self._install_source is not None:
             if os.path.exists(self._install_source):
                 source_file_path = os.path.join(self._install_source, self.name , self.name + ".py")
-                if shared.is_file_readable(source_file_path):
-                    status = self._validate_module(source_file_path)
-                    if status["valid"]:
-                        self._source_info = status
-                        self._source_info["path"] = os.path.join(self._install_source, self.name)
-                        self._valid = True                        
- 
-                    if status["message"]:
-                        self._module_errors["source"] += status["message"]
+                if shared.is_file_readable(source_file_path):                 
+                    if self._check_python_syntax(source_file_path):
+                        status = self._validate_module(source_file_path)
+                        if status["valid"]:
+                            self._source_info = status
+                            self._source_info["path"] = os.path.join(self._install_source, self.name)
+                            self._valid = True                        
+    
+                        if status["message"]:
+                            self._module_errors["source"] += status["message"]
+                            self._valid = False
+                    else:
+                        self._module_errors["source"] += [f"Module - ({source_file_path}) is not valid python"]
                         self._valid = False
                 else:
                     self._module_errors["source"] += [f"Unable to locate module file to install - ({source_file_path})"]
@@ -341,7 +382,6 @@ class ALLSKYMODULE:
         meta_data = self._get_meta_data_from_file_by_name(file_path, "meta_data")
         if meta_data is None:
             meta_data = self._get_meta_data_from_file_by_name(file_path, "metaData")
-
                 
         if meta_data is not None:
             try:

@@ -556,13 +556,13 @@ if [[ ${CHECK_WARNINGS} == "true" ]]; then
 
 	if [[ ${S_startrailsgenerate} == "true" && ${S_startrailsupload} == "false" && ${USE_SOMETHING} == "true" ]]; then
 		heading "Warning"
-		echo -ne "Startrails are being created (${WSNs}${S_startrailsgenerate}${WSNe} = Yes)"
+		echo -ne "Startrails are being created (${WSNs}${S_startrailsgenerate_label}${WSNe} = Yes)"
 		echo -ne " but not uploaded (${WSNs}${S_startrailsupload_label}${WSNe} = No)${wBR}"
 		echo -ne "${FIX}: Either disable startrails generation or (more likely) enable upload.${wBR}"
 	fi
 	if [[ ${S_startrailsgenerate} == "false" && ${S_startrailsupload} == "true" ]]; then
 		heading "Warning"
-		echo -ne "Startrails are not being created (${WSNs}${S_startrailsgenerate}${WSNe} = No)"
+		echo -ne "Startrails are not being created (${WSNs}${S_startrailsgenerate_label}${WSNe} = No)"
 		echo -ne " but ${WSNs}${S_startrailsupload_label}${WSNe} = Yes${wBR}"
 		echo -ne "${FIX}: Either enable startrails generation or disable upload.${wBR}"
 	fi

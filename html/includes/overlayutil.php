@@ -468,17 +468,23 @@ class OVERLAYUTIL extends UTILBASE {
      * Call fc-scan on a font file and parse key/value lines into a simple map.
      * Failures return a compact error object rather than throwing.
      */
-    private function scanFont(string $fontPath)
+    private function scanFont(string $fontPath): array
     {
-        $cmd = 'fc-scan ' . escapeshellarg($fontPath);
-        $res = $this->runShellCommand($cmd);
-        if ($res['error']) {
-            return ['error' => 'fc-scan failed: ' . $res['message']];
+        // Run fc-scan safely with runProcess (no shell interpretation)
+        $res = $this->runProcess(['fc-scan', $fontPath]);
+
+        if (!empty($res['error'])) {
+            return ['error' => 'fc-scan failed: ' . trim((string)$res['message'])];
         }
+
         $parsed = [];
-        foreach (preg_split('/\R/', trim($res['message'])) as $line) {
+        $output = trim((string)$res['message']);
+
+        foreach (preg_split('/\R/', $output) as $line) {
             if (preg_match('/^\s*([a-zA-Z0-9_]+):\s+(.+)$/', trim($line), $m)) {
-                $key = $m[1]; $raw = $m[2];
+                $key = $m[1];
+                $raw = $m[2];
+
                 if (preg_match('/"([^"]+)"/', $raw, $vm)) {
                     $parsed[$key] = $vm[1];
                 } else {
@@ -486,6 +492,7 @@ class OVERLAYUTIL extends UTILBASE {
                 }
             }
         }
+
         return $parsed;
     }
 
@@ -1202,31 +1209,6 @@ class OVERLAYUTIL extends UTILBASE {
         $this->sendResponse($out);
     }
 
-    /* ============================ Shell execution ============================ */
-
-    /**
-     * Minimal wrapper around proc_open() to run a shell command and collect output.
-     * Arguments should already be escaped; this is just for capturing stdout/stderr.
-     */
-    private function runShellCommand(string $command): array
-    {
-        $desc = [ 1 => ['pipe', 'w'], 2 => ['pipe', 'w'] ];
-        $proc = @proc_open($command, $desc, $pipes);
-        if (!is_resource($proc)) {
-            return ['error' => true, 'message' => 'Failed to start process.'];
-        }
-
-        $stdout = stream_get_contents($pipes[1]) ?: '';
-        $stderr = stream_get_contents($pipes[2]) ?: '';
-        fclose($pipes[1]); fclose($pipes[2]);
-
-        $rc = proc_close($proc);
-        if ($rc !== 0) {
-            return ['error' => true, 'message' => trim($stdout . "\n" . $stderr)];
-        }
-        return ['error' => false, 'message' => $stdout];
-    }
-
     /**
      * Return a formatted current time string using Python’s strftime.
      * The format string is whitelisted to a safe subset of characters.
@@ -1240,17 +1222,21 @@ class OVERLAYUTIL extends UTILBASE {
             $this->sendHTTPResponse('Invalid format.', 400);
         }
 
-        $arg = escapeshellarg($fmt);
-        $cmd = 'python3 -c "from datetime import datetime; print(datetime.now().strftime(' . $arg . '))"';
+        // Use runProcess with argv so we avoid the shell entirely
+        $res = $this->runProcess([
+            'python3',
+            '-c',
+            'from datetime import datetime; import sys; print(datetime.now().strftime(sys.argv[1]))',
+            $fmt
+        ]);
 
-        $res = $this->runShellCommand($cmd);
-        if ($res['error']) $this->sendHTTPResponse('Python error.', 500);
-        $this->sendResponse(trim($res['message']));
+        if (!empty($res['error'])) $this->sendHTTPResponse('Python error.', 500);
+        $this->sendResponse(trim((string)$res['message']));
     }
 
     /**
      * Ask the test_overlay.sh script to render a preview with a posted overlay JSON.
-     * The JSON is written to a temp file atomically; arguments are escaped.
+     * The JSON is written to a temp file atomically; arguments are passed without a shell.
      */
     public function postSample(): void
     {
@@ -1261,18 +1247,21 @@ class OVERLAYUTIL extends UTILBASE {
         $msg = updateFile($tmp, $overlay, $tmp, false, true);
         if ($msg !== '') $this->sendHTTPResponse($msg, 500);
 
-        $cmd = sprintf(
-            'sudo %s/test_overlay.sh --allsky_home %s --allsky_scripts %s --allsky_tmp %s --overlay %s',
-            escapeshellarg($this->allsky_scripts),
-            escapeshellarg($this->allsky_home),
-            escapeshellarg($this->allsky_scripts),
-            escapeshellarg($this->allskyTmp),
-            escapeshellarg($tmp)
-        );
+        // Build argv array; prefer --flag=value to avoid ambiguity without a shell
+        $script = $this->allsky_scripts . '/test_overlay.sh';
+        $argv = [
+            'sudo',
+            $script,
+            '--allsky_home='   . $this->allsky_home,
+            '--allsky_scripts='. $this->allsky_scripts,
+            '--allsky_tmp='    . $this->allskyTmp,
+            '--overlay='       . $tmp,
+        ];
 
-        $res = $this->runShellCommand($cmd);
-        if ($res['error']) $this->sendHTTPResponse($res['message'], 500);
-        $this->sendResponse($res['message']);
+        $res = $this->runProcess($argv);
+
+        if (!empty($res['error'])) $this->sendHTTPResponse((string)$res['message'], 500);
+        $this->sendResponse((string)$res['message']);
     }
 }
 

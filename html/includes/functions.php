@@ -1169,15 +1169,12 @@ function getCPUTemp()
 	} else {
 		$temperature_status = "";
 	}
-	$display_temperature = "";
-	if ($temptype == "C" || $temptype == "B") {
-		$display_temperature = number_format($temperature, 1, '.', '') . "&deg;C";
-	}
-	if ($temptype == "F" || $temptype == "B") {
-		$t = (($temperature * 1.8) + 32);
-		$t = number_format($t, 1, '.', '');
-		$display_temperature .= "&nbsp; &nbsp; $t &deg;F";
-	}
+
+	$C = number_format($temperature, 1, '.', '');
+	$display_temperature =  "$C&deg; C";
+	$F = (($temperature * 1.8) + 32);
+	$F = number_format($F, 1, '.', '');
+	$display_temperature .= "&nbsp; &nbsp; $F&deg; F";
 
 	return array(
 		'temperature' => $temperature,

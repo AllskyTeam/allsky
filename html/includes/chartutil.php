@@ -1,12 +1,49 @@
 <?php
+declare(strict_types=1);
 
+include_once('functions.php');
+initialize_variables();		// sets some variables
+include_once('authenticate.php');
+include_once('utilbase.php');
 include_once('moduleutil.php');
 
-class CHARTUTIL extends MODULEUTIL
+class CHARTUTIL extends UTILBASE
 {
+    protected function getRoutes(): array
+    {
+        return [
+            'ModuleGraphData' => ['post'],
+            'GraphData' => ['post'],
+            'AvailableGraphs' => ['get'],
+            'SaveCharts' => ['post', 'get'],
+            'LoadCustomChart' => ['get'],
+            'DeleteCustomChart' => ['post'],
+            'SaveCustomChart' => ['post'],
+            'VariableSeriesData' => ['post'],
+            'AvailableVariables' => ['get']
+        ];
+    }
+
+    private $moduleUtil;
+    private $allskyModules;
+    private $userModules;
+    private $allskyMyFiles;
+    private $myFilesBase;
+    private $myFilesData;    
+    private $myFiles;
+    private $allsky_config;
 
     public function __construct() {
-        parent::__construct();
+        $this->allskyModules = ALLSKY_SCRIPTS . '/modules';
+        $this->userModules = ALLSKY_MODULE_LOCATION . '/modules';
+		$this->allskyMyFiles = ALLSKY_MYFILES_DIR;   
+        $this->myFiles = ALLSKY_MYFILES_DIR . '/modules';
+		$this->allskyMyFiles = ALLSKY_MYFILES_DIR;        
+		$this->myFilesBase = ALLSKY_MYFILES_DIR;
+		$this->myFilesData = ALLSKY_MYFILES_DIR . '/modules/moduledata'; 
+        $this->allsky_config = ALLSKY_CONFIG;
+
+        $this->moduleUtil = new MODULEUTIL();
     }
 
     /**
@@ -456,12 +493,11 @@ class CHARTUTIL extends MODULEUTIL
      * - Uses `DirectoryIterator` and `glob()` to efficiently traverse directories.
      * - Declares no explicit return type (should ideally be `void`).
      */
-    function postModuleGraphData()
+    protected function postModuleGraphData()
     {
         // List of potential chart directories to search (in priority order)
         $chartDirs = [];
-        $requestedModule = $_POST['module'];
-
+        $requestedModule = trim((string)filter_input(INPUT_POST, 'module', FILTER_UNSAFE_RAW));
         $chartDirs[] = $this->myFilesBase . '/charts';
         $chartDirs[] = $this->allsky_config . '/modules/charts';
         $chartDirs[] = $this->myFilesData . '/charts';
@@ -540,14 +576,12 @@ class CHARTUTIL extends MODULEUTIL
      * - Sends cache-control headers and JSON content-type headers.
      * - Opens a PDO connection via $this->makePdo().
      *
-     * @return array Declared as array, but this method sends an HTTP response and does not actually return data.
-     *               Consider changing the signature to : void for correctness.
      *
      * @throws InvalidArgumentException on bad JSON body or missing/invalid config.
      * @throws RuntimeException on unreadable config file or invalid file JSON.
      * @throws PDOException bubble-up from downstream DB calls (except where handled).
      */
-    public function postGraphData(): array
+    public function postGraphData(): void
     {
         // --- Response headers: JSON body, disable caching ---
         header('Content-Type: application/json; charset=utf-8');
@@ -1970,9 +2004,9 @@ class CHARTUTIL extends MODULEUTIL
     public function getAvailableVariables() 
     {
         // --- Step 1: Load modules from all known sources ---
-        $coreModules = $this->readModuleData($this->allskyModules, "system", null);
-        $userModules = $this->readModuleData($this->userModules, "user", null);
-        $myModules   = $this->readModuleData($this->myFiles, "user", null);
+        $coreModules = $this->moduleUtil->readModuleData($this->allskyModules, "system", null);
+        $userModules = $this->moduleUtil->readModuleData($this->userModules, "user", null);
+        $myModules   = $this->moduleUtil->readModuleData($this->myFiles, "user", null);
 
         // Merge into one flat array of modules
         $allModules = array_merge($coreModules, $userModules, $myModules);

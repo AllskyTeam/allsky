@@ -78,9 +78,31 @@ class ALLSKY {
 	};
 
 	constructor(page) {
+		this.#setupajaxIntercept();
 		this.#allskyPage = page;
 	}
 
+	#setupajaxIntercept() {
+
+		$.ajaxSetup({
+			beforeSend: function (xhr, settings) {
+				if (window.csrfToken) {
+					xhr.setRequestHeader('X-CSRF-Token', window.csrfToken);
+				}
+			}
+		});
+
+		$(document).ajaxComplete(function(event, xhr, settings) {
+				try {
+						var response = xhr.responseJSON || JSON.parse(xhr.responseText);
+						if (response && response.redirect) {
+								window.location.href = response.redirect;
+						}
+				} catch (e) {
+				}
+		});
+
+	}
 	#setupTheme() {
 		if (!localStorage.getItem("theme")) {
 			localStorage.setItem("theme", "light")

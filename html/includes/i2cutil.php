@@ -1,128 +1,109 @@
 <?php
 
+declare(strict_types=1);
+
 include_once('functions.php');
 initialize_variables();
-
 include_once('authenticate.php');
+include_once('utilbase.php');
 
-class I2CUTIL
+/**
+ * I2CUTIL
+ *
+ * Small utility API for I²C management:
+ *  - Build: generate/refresh the I²C device database (Python helper)
+ *  - Devices: scan the I²C bus and return results
+ *  - Data: read the merged I²C config JSON (no subprocess)
+ *  - DeviceManager: launch the external device manager helper
+ */
+class I2CUTIL extends UTILBASE
 {
-    private $request;
-    private $method;
-    private $jsonResponse = false;
-
-    function __construct() {
-        $this->allskyHome = ALLSKY_HOME;
+    /** Declare the public endpoints and allowed verbs */
+    protected function getRoutes(): array
+    {
+        return [
+            'Build'         => ['get'],
+            'Data'          => ['get'],
+            'DeviceManager' => ['get'],
+            'Devices'       => ['get'],
+        ];
     }
 
-    public function run()
-    {
-        $this->checkXHRRequest();
-        $this->sanitizeRequest();
-        $this->runRequest();
-    }
+    /** Nothing to initialize here; paths come from constants */
+    function __construct() {}
 
-    private function checkXHRRequest()
+    /**
+     * GET /?request=Build
+     * Run the Python script that (re)builds the I²C database.
+     */
+    public function getBuild(): void
     {
-        if (empty($_SERVER['HTTP_X_REQUESTED_WITH']) || strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) != 'xmlhttprequest') {
-            $this->send404();
+        // Build an argv list instead of a shell string
+        $argv = [
+            '/usr/bin/python3',
+            ALLSKY_SCRIPTS . '/i2cdatabase.py',
+            '--allskyhome',
+            ALLSKY_HOME
+        ];
+
+        $result = $this->runProcess($argv);
+        if ($result['error']) {
+            $this->send500('Failed to build I2C database: ' . trim($result['message']));
         }
+        $this->sendResponse(trim($result['message']));
     }
 
-    private function sanitizeRequest()
+    /**
+     * GET /?request=Devices
+     * Scan the I²C bus and return raw output from the helper.
+     */
+    public function getDevices(): void
     {
-        $this->request = $_GET['request'];
-        $this->method = strtolower($_SERVER['REQUEST_METHOD']);
+        // Execute with sudo via argv to avoid shell interpolation
+        $argv = [
+            '/usr/bin/sudo',
+            ALLSKY_SCRIPTS . '/i2cbus.py'
+        ];
 
-        $accepts = $_SERVER['HTTP_ACCEPT'];
-        if (stripos($accepts, 'application/json') !== false) {
-            $this->jsonResponse = true;
+        $result = $this->runProcess($argv);
+        if ($result['error']) {
+            $this->send500('I2C bus scan failed: ' . trim($result['message']));
         }
+        $this->sendResponse(trim($result['message']));
     }
 
-    private function send404()
+    /**
+     * GET /?request=Data
+     * Return the current i2c.json contents; no subprocess required.
+     */
+    public function getData(): void
     {
-        header('HTTP/1.0 404 Not Found');
-        die();
+        $filename = ALLSKY_CONFIG . '/i2c.json';
+        $data = @file_get_contents($filename) ?: '{}';
+        $this->sendResponse($data);
     }
 
-    private function send500()
+    /**
+     * GET /?request=DeviceManager
+     * Launch the external device manager shell helper.
+     */
+    public function getDeviceManager(): void
     {
-        header('HTTP/1.0 500 Internal Server Error');
-        die();
-    }
+        // Pass flags as separate argv items for safety
+        $argv = [
+            '/usr/bin/sudo',
+            ALLSKY_SCRIPTS . '/run_devicemanager.sh',
+            '--allsky_home',
+            ALLSKY_HOME
+        ];
 
-    private function sendResponse($response = 'ok')
-    {
-        echo ($response);
-        die();
-    }
-
-    private function runRequest()
-    {
-        $action = $this->method . $this->request;
-        if (is_callable(array('I2CUTIL', $action))) {
-            call_user_func(array($this, $action));
-        } else {
-            $this->send404();
+        $result = $this->runProcess($argv);
+        if ($result['error']) {
+            $this->send500('Device manager launch failed: ' . trim($result['message']));
         }
+        $this->sendResponse(trim($result['message']));
     }
-
-	private function runShellCommand($command) {
-		$descriptors = [
-			1 => ['pipe', 'w'],
-			2 => ['pipe', 'w'],
-		];
-		$process = proc_open($command, $descriptors, $pipes);
-		
-		if (is_resource($process)) {
-			$stdout = stream_get_contents($pipes[1]);
-			$stderr = stream_get_contents($pipes[2]);
-			fclose($pipes[1]);
-			fclose($pipes[2]);
-		
-			$returnCode = proc_close($process);
-			if ($returnCode > 0) {
-				$result = [
-					'error' => true,
-					'message' => ($stdout !== '') ? $stdout : $stderr					
-				];
-			} else {
-				$result = [
-					'error' => false,
-					'message' => $stdout					
-				];				
-			}
-		}
-
-		return $result;
-	}
-
-    public function getBuild() {
-		$command = ALLSKY_SCRIPTS . "/i2cdatabase.py --allskyhome " . ALLSKY_HOME;
-		$result = $this->runShellCommand($command);
-        $this->sendResponse($result['message']);
-    }
-
-    public function getDevices() {
-		$command = 'sudo ' . ALLSKY_SCRIPTS . "/i2cbus.py";
-		$result = $this->runShellCommand($command);
-        $this->sendResponse($result['message']);
-	}
-
-	public function getData() {
-		$filename = ALLSKY_CONFIG . '/i2c.json';
-		$data = file_get_contents($filename);
-        $this->sendResponse($data);		
-	}
-
-    public function getDeviceManager() {
-		$command = 'sudo ' . ALLSKY_SCRIPTS . "/run_devicemanager.sh --allsky_home " . ALLSKY_HOME;
-		$result = $this->runShellCommand($command);
-        $this->sendResponse($result['message']);	
-	}
 }
-
 
 $i2cUtil = new I2CUTIL();
 $i2cUtil->run();

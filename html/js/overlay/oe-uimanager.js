@@ -1561,7 +1561,7 @@ class OEUIMANAGER {
                     'id': fieldName,
                     'name': name,
                     'field': field,
-                    'type': result.fieldType
+                    'type': result.type
                 });
             }
         }

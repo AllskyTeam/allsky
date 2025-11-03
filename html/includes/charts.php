@@ -1,5 +1,9 @@
 <?php
 
+if (basename(__FILE__) === basename($_SERVER['SCRIPT_FILENAME'])) {
+    include_once('functions.php');
+    redirect("/index.php");
+}
 function DisplayCharts()
 {
   global $pageHeaderTitle, $pageIcon;

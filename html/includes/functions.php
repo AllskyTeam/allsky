@@ -1,4 +1,8 @@
 <?php
+if (basename(__FILE__) === basename($_SERVER['SCRIPT_FILENAME'])) {
+    include_once('functions.php');
+    redirect("/index.php");
+}
 
 /**
  *
@@ -148,7 +152,6 @@ $endSetting = "XX_END_XX";
 $saveChangesLabel = "Save changes";		// May be overwritten
 $forceRestart = false;					// Restart even if no changes?
 $hostname = null;
-$focusMode = false;
 
 $test_directory = "test";	// directories that start with this are "non-standard"
 
@@ -200,7 +203,7 @@ function update_allsky_status($newStatus) {
 	}
 }
 
-function get_allsky_status() {
+function output_allsky_status() {
 	global $allsky_status, $allsky_status_timestamp;
 
 	$retMsg = "";
@@ -211,14 +214,6 @@ function get_allsky_status() {
 	} else {
 		$allsky_status = getVariableOrDefault($s, 'status', "Unknown");
 		$allsky_status_timestamp = getVariableOrDefault($s, 'timestamp', null);
-	}
-}
-
-function output_allsky_status() {
-	global $allsky_status, $allsky_status_timestamp, $focusMode;
-
-	if ($allsky_status === null) {
-		get_allsky_status();		// sets global variables
 	}
 
 	if ($allsky_status_timestamp === null) {
@@ -237,17 +232,10 @@ function output_allsky_status() {
 			$class = "alert-warning";
 		}
 	}
-
-	if ($focusMode) {
-		$f = " - FOCUS MODE";
-	} else {
-		$f = "";
-	}
-	return("<span class='nowrap $class' $title>Status: $allsky_status$f</span><br>");
+	return("<span class='nowrap $class' $title>Status: $allsky_status</span><br>");
 }
 
 function initialize_variables($website_only=false) {
-	global $focusMode;
 	global $status;
 	global $image_name;
 	global $showUpdatedMessage, $delay, $daydelay, $daydelay_postMsg, $nightdelay, $nightdelay_postMsg;
@@ -260,8 +248,6 @@ function initialize_variables($website_only=false) {
 	global $hostname;
 
 	$settings_array = readSettingsFile();
-
-	$focusMode = toBool(getVariableOrDefault($settings_array, 'focusmode', "false"));
 
 	// See if there are any Website configuration files.
 	// The "has" variables just mean the associated configuration file exists,
@@ -370,14 +356,6 @@ function initialize_variables($website_only=false) {
 	// Lessen the delay between a new picture and when we check.
 	$delay /= 5;
 	$delay = max($delay, 2 * $ms_per_sec);
-	if ($focusMode) {
-		// In focusMode update the image very quickly.
-		// This overrides the code above.
-# TODO: Is 1/2 sec ok?
-		$delay = 0.5 * $ms_per_sec;
-		$daydelay = $delay;
-		$nightdelay = $delay;
-	}
 
 	exec("hostname -f", $hostarray);
 	$hostname = $hostarray[0];
@@ -443,7 +421,7 @@ function CSRFToken() {
 	global $useLogin;
 	if (! $useLogin) return;
 ?>
-<input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>" />
+<input type="hidden" name="csrf_token" id="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>" />
 <?php
 }
 
@@ -452,15 +430,21 @@ function CSRFToken() {
 * Validate CSRF Token
 *
 */
-function CSRFValidate() {
-  global $useLogin;
-  if (! $useLogin) return true;
-  if (isset($_POST['csrf_token']) && hash_equals($_POST['csrf_token'], $_SESSION['csrf_token']) ) {
-    return true;
-  } else {
-    error_log('CSRF violation');
-    return false;
-  }
+function CSRFValidate(): bool {
+  	global $useLogin;
+
+  	if (! $useLogin) return true;
+
+    if (session_status() !== PHP_SESSION_ACTIVE) { 
+			@session_start(); 
+		}
+
+    $session = $_SESSION['csrf_token'] ?? '';
+    $header  = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+    $field   = $_POST['csrf_token'] ?? '';
+
+    $provided = $header ?: $field;
+    return is_string($session) && is_string($provided) && hash_equals($session, $provided);
 }
 
 /**
@@ -697,27 +681,9 @@ function ListFileType($dir, $imageFileName, $formalImageTypeName, $type, $listNa
 		if (count($imageTypes) == 0) {
 			echo "<span class='alert-warning'>There are no $formalImageTypeName for this day.</span>";
 		} else {
-			$num = 0;
 			foreach ($imageTypes as $imageType) {
 				$imageType_name = basename($imageType);
-				$pre = "$images_dir/$chosen_day/$dir";
-
-				if ($type == "picture") {
-				} else {		// video
-					$ext = pathinfo($imageType_name, PATHINFO_EXTENSION);
-					if ($ext != "mp4") continue;
-
-					$thumb = str_replace(".mp4", ".jpg", $imageType_name);
-					$thumb_file = ALLSKY_IMAGES . "/$chosen_day/$dir$thumb";
-					if (file_exists($thumb_file)) {
-						$thumb = "$pre$thumb";
-					} else {
-						$thumb = "";
-					}
-				}
-				$num += 1;
-
-				$fullFilename = "$pre$imageType_name";
+				$fullFilename = "$images_dir/$chosen_day/$dir$imageType_name";
 				if ($listNames) {
 					$class = "left center-text";
 					$name = "<br><span style='font-size: 125%;'>";
@@ -744,22 +710,16 @@ function ListFileType($dir, $imageFileName, $formalImageTypeName, $type, $listNa
 					}
 					echo "\n";
 				} else {	//video
-					if ($num > 1) echo "&nbsp;<br><br>";
 				    echo "<a href='$fullFilename'>";
-					if ($thumb !== "") {
-						$poster = "poster='$thumb$ts'";
-					} else {
-						$poster = "";
-					}
 				    echo "<div class='$class' style='width: 100%'>";
-					echo "<video width='85%' height='85%' controls $poster>
+					echo "<video width='85%' height='85%' controls>
 						<source src='$fullFilename$ts' type='video/mp4'>
 						Your browser does not support the video tag.
-					</video>";
+					</video>
+					</div></a>";
 					if ($listNames) {
 						echo $name;
 					}
-					echo "</div></a>";
 					echo "\n";
 				}
 			}
@@ -1374,6 +1334,122 @@ function getHTTPResponseCodeString($responseCode)
         $result = "HTTP/1.1 500 Internal Server Error";
     }
 	return $result;
+}
+
+
+/**
+ * Determine if the current HTTP request should be treated as an AJAX/API call.
+ *
+ * Heuristics used (in order):
+ *  1) X-Requested-With header set to "XMLHttpRequest" (classic jQuery convention)
+ *  2) Accept header indicates JSON is acceptable (typical for API/fetch clients)
+ *  3) Explicit query/body flag `ajax=1` (manual override/fallback)
+ *
+ * @return bool True if the request should be considered AJAX-like; otherwise false.
+ */
+function is_ajax_request(): bool
+{
+    // 1) jQuery and some libraries send this header automatically.
+    if (
+        !empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&
+        strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest'
+    ) {
+        return true;
+    }
+
+    // 2) If the client explicitly accepts JSON, we treat it as an API/AJAX intent.
+    //    Using stripos(...) !== false so it's case-insensitive and matches anywhere.
+    if (
+        !empty($_SERVER['HTTP_ACCEPT']) &&
+        stripos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false
+    ) {
+        return true;
+    }
+
+    // 3) Manual override: allow callers to force AJAX handling by passing ajax=1.
+    //    Works for both GET and POST because we check $_REQUEST.
+    if (isset($_REQUEST['ajax']) && $_REQUEST['ajax'] === '1') {
+        return true;
+    }
+
+    // None of the heuristics matched; treat as a normal (non-AJAX) request.
+    return false;
+}
+
+/**
+ * Redirect helper that is "AJAX-aware".
+ *
+ * Behavior:
+ * - Normal browser request: send a 302 Location redirect.
+ * - AJAX-like request (per is_ajax_request()):
+ *     a) If $useJsonForAjax === true: return HTTP 200 JSON {redirect, message}.
+ *     b) Else: return custom HTTP status 278 with Location header (clients can act on it).
+ *
+ * If a flash message is provided, it is stored in session for retrieval after navigation.
+ *
+ * @param string      $url             Absolute or relative URL to redirect to.
+ * @param string|null $flashMessage    Optional flash message to store in session.
+ * @param bool        $useJsonForAjax  If true, respond with JSON payload for AJAX calls; otherwise use 278 + Location.
+ * @return void
+ */
+function redirect(string $url, ?string $flashMessage = null, bool $useJsonForAjax = false): void
+{
+    // Stash an optional flash message so the next page can display it.
+    if ($flashMessage) {
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            @session_start(); // Suppress notice if headers already started; adjust to your logging policy.
+        }
+        $_SESSION['flash_message'] = $flashMessage;
+    }
+
+    // AJAX-aware branch
+    if (is_ajax_request()) {
+        if ($useJsonForAjax) {
+            // JSON mode: clients parse and redirect themselves.
+            http_response_code(200);
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode([
+                'redirect' => $url,
+                'message'  => $flashMessage,
+            ]);
+        } else {
+            // Header mode: emit a Location header with a non-standard status so browsers do NOT auto-follow in XHR.
+            header('Location: ' . $url);
+            http_response_code(278); // Custom code; client-side JS should check for this and redirect.
+        }
+        exit; // Always stop execution after emitting a redirect response.
+    }
+
+    // Standard browser redirect (non-AJAX): 302 Found
+    header('Location: ' . $url, true, 302);
+    exit;
+}
+
+
+/** Is the user logged in? */
+function is_logged_in(): bool {
+    return !empty($_SESSION['auth']) && $_SESSION['auth'] === true;
+}
+
+
+function useLogin() {
+	global $useLogin;
+
+	$csrf_token = '';
+	if ($useLogin) {
+		if (session_status() === PHP_SESSION_NONE) {
+			session_start();
+		}
+		if (empty($_SESSION['csrf_token'])) {
+			if (function_exists('mcrypt_create_iv')) {
+				$_SESSION['csrf_token'] = bin2hex(mcrypt_create_iv(32, MCRYPT_DEV_URANDOM));
+			} else {
+				$_SESSION['csrf_token'] = bin2hex(openssl_random_pseudo_bytes(32));
+			}
+		}
+		$csrf_token = $_SESSION['csrf_token'];
+	}
+	return $csrf_token;
 }
 
 ?>

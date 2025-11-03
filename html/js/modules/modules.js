@@ -397,6 +397,9 @@ class MODULESEDITOR {
 				check: $('#modules-selected').sortable('toArray'),
 				flow: this.#eventName
 			},
+			beforeSend: function (xhr, settings) {
+				xhr.setRequestHeader('X-CSRF-Token', window.csrfToken);
+			},			
 			dataType: 'json',
 			cache: false,
 			async: false,
@@ -1567,7 +1570,7 @@ class MODULESEDITOR {
 
 		Object.entries(controls['chart']).forEach(([id, value]) => {
 			$.ajax({
-				url: 'includes/moduleutil.php?request=ModuleGraphData',
+				url: 'includes/chartutil.php?request=ModuleGraphData',
 				type: 'POST',
 				data: {
 					'module': value.module
@@ -1576,7 +1579,14 @@ class MODULESEDITOR {
 				success: function (chartInfo) {
 					if (chartInfo.path !== undefined && chartInfo.filename !== undefined) {
 						$(`#${value.id}`).allskyChart({
-							configUrl: 'includes/moduleutil.php?request=GraphData&filename=' + encodeURIComponent(chartInfo.path) + '/' + chartInfo.filename,
+							configUrl: 'includes/chartutil.php?request=GraphData',
+							configAjax: {
+								method: 'POST',
+								data: JSON.stringify({filename: chartInfo.path + '/' + chartInfo.filename}),
+								contentType: 'application/json; charset=utf-8',
+								dataType: 'json',
+								cache: false
+							},
 							filename: chartInfo.filename,
 							startPos: { top: 0, left: 0 },
 							showDeleteButton: false,

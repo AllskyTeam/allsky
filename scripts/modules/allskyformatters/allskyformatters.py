@@ -291,7 +291,7 @@ class AllskyFormatters:
 			processed = True
    
 		if 'deg' in formats:
-			value = f'{value}Â°'
+			value = f'{value}°'
 			processed = True    
         
         # If we havn't processed the value yet, try to format it using the legacy formats.
@@ -411,7 +411,7 @@ class AllskyFormatters:
 			value = self._format_number(value, dp, use_locale)
          
 			if 'deg' in formats or do_deg:
-				value = f'{value}Â°'
+				value = f'{value}°'
 	
 			if 'temp_unit' in formats or do_unit:
 				value = f'{value} {unit}'
@@ -504,7 +504,7 @@ class AllskyFormatters:
 			minutes_decimal = abs(float_value - degrees) * 60
 			minutes = int(minutes_decimal)
 			seconds = round((minutes_decimal - minutes) * 60, 2)
-			value = f"{degrees}Â° {minutes}' {seconds}\""
+			value = f"{degrees}° {minutes}' {seconds}\""
 		else:
 			match = re.search(r'\bdp=(\d+)\b', format)
 			if match:
@@ -520,7 +520,7 @@ class AllskyFormatters:
 			value = self._format_number(float_value, dp, use_locale)
 			
 			if 'deg' in formats:
-				value = f'{value}Â°'
+				value = f'{value}°'
 
 		value = str(value)
 
@@ -562,7 +562,7 @@ class AllskyFormatters:
 		value = self._format_number(float_value, dp, use_locale)
 		
 		if 'deg' in formats:
-			value = f'{value}Â°'
+			value = f'{value}°'
     
 		value = str(value)
 
@@ -655,7 +655,7 @@ class AllskyFormatters:
 		Returns:
 			(string): The formatted value
 		"""
-		value = f'{str(value)}Â°'
+		value = f'{str(value)}°'
 
 
 		return value

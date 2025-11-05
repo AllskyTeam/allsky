@@ -2,6 +2,7 @@ numpy==1.26.*
 opencv-python<4.10
 Adafruit-Blinka
 flask
+flaks-login
 gunicorn
 flask-jwt-extended
 bcrypt

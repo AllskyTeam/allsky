@@ -3661,7 +3661,11 @@ install_modules()
 	if [[ "$BRANCH" == "$ALLSKY_GITHUB_MAIN_BRANCH" ]]; then
 			"${ALLSKY_MODULE_INSTALLER}" --welcome
 	else
-			"${ALLSKY_MODULE_INSTALLER}" --welcome --setbranch "$BRANCH"
+			#"${ALLSKY_MODULE_INSTALLER}" --welcome --setbranch "$BRANCH"
+			#
+			# TODO: For testing ONLY
+			#
+			"${ALLSKY_MODULE_INSTALLER}" --welcome --setbranch v2025.xx.xx
 	fi
 
 	RET=$?
@@ -3679,7 +3683,11 @@ update_modules()
 	if [[ "$BRANCH" == "$ALLSKY_GITHUB_MAIN_BRANCH" ]]; then
 			"${ALLSKY_MODULE_INSTALLER}" --auto
 	else
-			"${ALLSKY_MODULE_INSTALLER}" --auto --setbranch "$BRANCH"
+			#"${ALLSKY_MODULE_INSTALLER}" --auto --setbranch "$BRANCH"
+			#
+			# TODO: For testing ONLY
+			#			
+			"${ALLSKY_MODULE_INSTALLER}" --auto --setbranch v2025.xx.xx
 	fi
 
 	

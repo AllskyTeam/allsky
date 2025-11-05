@@ -280,7 +280,7 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" || ${1} == "--force" ]]; then
 
 	# Python virtual environments
 	ALLSKY_PYTHON_VENV="${ALLSKY_HOME}/venv"
-	ALLSKY_PYTHON_SERVER_VENV="${ALLSKY_HOME}/venv"
+	ALLSKY_PYTHON_SERVER_VENV="${ALLSKY_HOME}/venv_server"
 
 	# These EXIT codes from the capture programs must match what's in src/include/allsky_common.h
 	ALLSKY_EXIT_OK=0

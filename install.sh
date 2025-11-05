@@ -3266,6 +3266,18 @@ install_Python()
 	fi
 	[[ ${SKIP} == "true" ]] && return
 
+
+	#
+	# Install the server venv. NOTE this needs older versions of some packages like numpy so cannot use
+	# the main allsky venv
+	#
+	if [[ ${ALLSKY_PI_OS} == "bookworm" ]]; then
+		python3 -m venv "${ALLSKY_PYTHON_SERVER_VENV}" --system-site-packages
+		activate_python_server_venv
+		install_dependencies "${ALLSKY_REPO}/requirements-server.txt" "Python_server_dependencies"
+		deactivate_python_server_venv
+	fi
+	
 	local PREFIX  REQUIREMENTS_FILE  M  R  NUM_TO_INSTALL
 	local NAME  PKGs  TMP  COUNT  C  PACKAGE  STATUS_NAME  L  M  MSG
 
@@ -3296,17 +3308,6 @@ install_Python()
 
 	NUM_TO_INSTALL=$( wc -l < "${REQUIREMENTS_FILE}" )
 
-	#
-	# Install the server venv. NOTE this needs older versions of some packages like numpy so cannot use
-	# the main allsky venv
-	#
-	if [[ ${ALLSKY_PI_OS} == "bookworm" ]]; then
-		python3 -m venv "${ALLSKY_PYTHON_SERVER_VENV}" --system-site-packages
-		activate_python_server_venv
-		install_dependencies "${ALLSKY_REPO}/requirements-server.txt" "Python_server_dependencies"
-		deactivate_python_server_venv
-	fi
-
 	if [[ ${ALLSKY_PI_OS} == "bookworm" ]]; then
 		PKGs="python3-full libgfortran5 libopenblas0-pthread"
 		display_msg --logonly progress "Installing ${PKGs}."
@@ -3318,13 +3319,6 @@ install_Python()
 
 		python3 -m venv "${ALLSKY_PYTHON_VENV}" --system-site-packages
 		activate_python_venv
-	fi
-
-	# Temporary fix to ensure that all dependencies are available for the Allsky modules as the
-	# flow upgrader needs to load each module and if the dependencies are missing this will fail.
-	if [[ -d "${ALLSKY_PYTHON_VENV}" && -d "${PRIOR_PYTHON_VENV}" ]]; then
-		display_msg --logonly info "Copying '${PRIOR_PYTHON_VENV}' to '${ALLSKY_PYTHON_VENV}'"
-		cp -arn "${PRIOR_PYTHON_VENV}" "${ALLSKY_PYTHON_VENV}/"
 	fi
 
 	NAME="Python_dependencies"

@@ -29,7 +29,7 @@
   .module-version, .module-enable-text {
     display: none;
   }
-  .btn-sm {
+  .btn1-sm {
     padding: .25rem .5rem;
     font-size: .875rem;
     line-height: 1.5;
@@ -276,4 +276,53 @@ blockquote footer {
   font-size: 90%;
   color: #777;
   margin-top: 10px;
+}
+
+/* Lift the navbar and its collapsed panel above the lists */
+.panel-allsky .navbar,
+#oe-module-editor-navbar {
+  position: relative;
+  z-index: 1039;              /* < Bootstrap modal (1050), > typical content */
+}
+
+#oe-module-editor-navbar .dropdown-menu {
+  position: absolute;
+  z-index: 1044;
+}
+
+/* Lower the module list layer and prevent clipping */
+.row.module-lists {
+  position: relative;         /* keep layout stable */
+  z-index: 1;                 /* ensure it's below the navbar */
+  overflow: visible;          /* don't clip the expanded menu */
+  */
+}
+
+/* In case the panel body is clipping */
+.panel-allsky .panel-body {
+  overflow: visible;
+}
+
+/* Revert our earlier absolute positioning */
+#oe-module-editor-navbar.collapse.in {
+  position: static;     /* no absolute */
+  width: auto;
+  left: auto;
+  top: auto;
+}
+
+/* Give the collapsed area an opaque background */
+.navbar-default .navbar-collapse,
+.navbar-default .navbar-form {
+  background: #fff;             /* or your panel bg */
+  border-top: 1px solid #ddd;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+  z-index: 1046;
+}
+
+/* Dark theme variant */
+body.dark .navbar-default .navbar-collapse,
+body.dark .navbar-default .navbar-form {
+  background: #2c2c2c;
+  border-color: #444;
 }

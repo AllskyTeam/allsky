@@ -1399,7 +1399,7 @@ function redirect(string $url, ?string $flashMessage = null, bool $useJsonForAja
         if (session_status() !== PHP_SESSION_ACTIVE) {
             @session_start(); // Suppress notice if headers already started; adjust to your logging policy.
         }
-        $_SESSION['flash_message'] = $flashMessage;
+        $_SESSION['flash'] = $flashMessage;
     }
 
     // AJAX-aware branch

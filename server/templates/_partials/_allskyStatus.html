@@ -1,0 +1,17 @@
+{% if (status.allsky.status|lower) == "running" %}
+<div class="alert alert-danger d-flex justify-content-between align-items-center" role="alert">
+  <span class="fw-bold">Running</span>
+  <div class="btn-group">
+    <button type="button" class="btn btn-success asf-allsky-start" disabled>Start</button>
+    <button type="button" class="btn btn-danger asf-allsky-stop">Stop</button>
+  </div>
+</div>
+{% else %}
+<div class="alert alert-success d-flex justify-content-between align-items-center" role="alert">
+  <span class="fw-bold">Stopped</span>
+  <div class="btn-group">
+    <button type="button" class="btn btn-success asf-allsky-start">Start</button>
+    <button type="button" class="btn btn-danger asf-allsky-stop" disabled>Stop</button>
+  </div>
+</div>
+{% endif %}

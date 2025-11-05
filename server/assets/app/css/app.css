@@ -163,3 +163,31 @@
 	border-radius: 1rem;
 	box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
 }
+
+[data-bs-theme="dark"]  aside {
+	background-color: rgb(36, 34, 34) !important;
+}
+
+/* Collapsible Card */
+.toggle-btn {
+	border: 0;
+	background: transparent;
+	line-height: 1
+}
+
+.toggle-btn .fa-chevron-down {
+	transition: transform .2s ease
+}
+
+/* when expanded, Bootstrap adds .collapsed=false => rotate icon */
+.toggle-btn:not(.collapsed) .fa-chevron-down {
+	transform: rotate(180deg)
+}
+
+/* End collapsible Card */
+
+/* Focuser */
+#asf-allsky-status {
+	padding-bottom: 0px !important;
+}
+/* End Focuser */

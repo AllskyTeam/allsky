@@ -1284,7 +1284,7 @@ function indent()
 }
 
 
-# Python virtual environment
+# Python virtual environments
 PYTHON_VENV_ACTIVATED="false"
 function activate_python_venv()
 {
@@ -1306,6 +1306,30 @@ function deactivate_python_venv()
 {
 	[[ ${PYTHON_VENV_ACTIVATED} == "true" ]] && deactivate
 }
+
+
+PYTHON_SERVER_VENV_ACTIVATED="false"
+function activate_python_server_venv()
+{
+	# TODO: will need to change when the OS after Bookworm is released.
+	# Maybe check for != bullseye  ?
+
+	local ACTIVATE="${ALLSKY_PYTHON_SERVER_VENV}/bin/activate"
+
+	if [[ ${ALLSKY_PI_OS} == "bookworm" && -s ${ACTIVATE} ]]; then
+		#shellcheck disable=SC1090,SC1091
+		source "${ACTIVATE}" || exit 1
+		PYTHON_SERVER_VENV_ACTIVATED="true"
+		return 0	# Successfully activated
+	fi
+	return 1
+}
+
+function deactivate_python_server_venv()
+{
+	[[ ${PYTHON_SERVER_VENV_ACTIVATED} == "true" ]] && deactivate
+}
+
 
 
 # Determine if the specified value is a number.

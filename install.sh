@@ -3247,6 +3247,17 @@ install_Python()
 
 	NUM_TO_INSTALL=$( wc -l < "${REQUIREMENTS_FILE}" )
 
+	#
+	# Install the server venv. NOTE this needs older versions of some packages like numpy so cannot use
+	# the main allsky venv
+	#
+	if [[ ${ALLSKY_PI_OS} == "bookworm" ]]; then
+		python3 -m venv "${ALLSKY_PYTHON_SERVER_VENV}" --system-site-packages
+		activate_python_server_venv
+		pip3 install --upgrade --no-warn-script-location -r "${ALLSKY_REPO}/requirements-server.txt" 2>&1
+		deactivate_python_server_venv
+	fi
+
 	if [[ ${ALLSKY_PI_OS} == "bookworm" ]]; then
 		PKGs="python3-full libgfortran5 libopenblas0-pthread"
 		display_msg --logonly progress "Installing ${PKGs}."

@@ -7,23 +7,143 @@ from flask_jwt_extended import get_jwt_identity, get_jwt, verify_jwt_in_request
 from functools import wraps
 from flask import jsonify, request
 
+def is_local_request():
+    # Honour X-Forwarded-For if present (take first IP)
+    xff = request.headers.get("X-Forwarded-For", "")
+    client_ip = (xff.split(",")[0].strip() if xff else request.remote_addr) or ""
+    return client_ip in ("127.0.0.1", "::1")
+
+def web_login_required_or_local(fn):
+    from flask_login import current_user
+    from functools import wraps as _wraps
+    @_wraps(fn)
+    def _w(*a, **kw):
+        if is_local_request():
+            return fn(*a, **kw)
+        if current_user.is_authenticated:
+            return fn(*a, **kw)
+        from flask import redirect, url_for, request as _req
+        return redirect(url_for("webauth.login", next=_req.path))
+    return _w
+
+def api_auth_required(module: str, action: str):
+    """
+    Allow if:
+      - Local request, OR
+      - Logged-in Flask-Login session, OR
+      - Valid JWT with required permission.
+    Otherwise: return JSON 401/403 (no redirects).
+    """
+    def decorator(fn):
+        @wraps(fn)
+        def wrapper(*args, **kwargs):
+            # 1) Local bypass
+            if is_local_request():
+                return fn(*args, **kwargs)
+
+            # 2) Session (dashboard)
+            try:
+                from flask_login import current_user
+            except ImportError:
+                current_user = None
+
+            if current_user:
+                try:
+                    if getattr(current_user, "is_authenticated", False):
+                        return fn(*args, **kwargs)
+                except RuntimeError:
+                    # e.g., called outside an app/request context
+                    pass
+
+            # 3) JWT
+            try:
+                verify_jwt_in_request()
+            except Exception:
+                return jsonify({"error": "Authentication required"}), 401
+
+            if not get_jwt_identity():
+                return jsonify({"error": "Authentication failed"}), 401
+
+            claims = get_jwt()
+            perms = claims.get("permissions", {})
+            allowed = perms.get(module, []) or perms.get("*", [])
+            if action not in allowed and "*" not in allowed:
+                return jsonify({"error": f"Access denied for {action} on {module}"}), 403
+
+            return fn(*args, **kwargs)
+        return wrapper
+    return decorator
+
+
+def load_env_credentials():
+    """Try to load username/password from env.json.
+    Search order:
+      - ENV_JSON_PATH env var (full path)
+      - $ALLSKY_HOME/config/env.json
+    Accept keys: username/password or WEB_USERNAME/WEB_PASSWORD.
+    Returns tuple (username, password) or (None, None) if not found.
+    """
+    import json, os
+    candidates = []
+    if os.environ.get("ENV_JSON_PATH"):
+        candidates.append(os.environ["ENV_JSON_PATH"])
+    if os.environ.get("ALLSKY_HOME"):
+        candidates.append(os.path.join(os.environ["ALLSKY_HOME"], "env.json"))
+    for path in candidates:
+        try:
+            with open(path, "r") as f:
+                data = json.load(f)
+            u = data.get("username") or data.get("WEBUI_USERNAME")
+            p = data.get("password") or data.get("WEBUI_PASSWORD")
+            if u and p:
+                return u, p
+        except Exception:
+            continue
+    return None, None
+
 def validate_user(user_name, password):
+    """
+    Validate user credentials against either:
+    - env.json (hashed or plain bcrypt-compatible password)
+    - SQLite secrets.db fallback
+    """
+    env_u, env_p = load_env_credentials()
+
+    # --- 1. ENV-based credentials (take priority) ---
+    if env_u and env_p:
+        if user_name == env_u:
+            try:
+                # Check if env_p looks like a bcrypt hash (starts with $2y$ or $2b$)
+                if env_p.startswith("$2y$") or env_p.startswith("$2b$"):
+                    if bcrypt.checkpw(password.encode(), env_p.encode()):
+                        return {"*": ["*"]}  # grant all perms
+                else:
+                    # fallback if plain text stored
+                    if password == env_p:
+                        return {"*": ["*"]}
+            except Exception as e:
+                print(f"Env password validation error: {e}")
+        # if username doesn't match env user, fall through to DB
+
+    # --- 2. SQLite user DB fallback ---
     db_path = get_db_path()
     conn = sqlite3.connect(db_path)
     cur = conn.cursor()
     cur.execute('SELECT password, permissions FROM users WHERE username = ?', (user_name,))
     row = cur.fetchone()
     conn.close()
-             
+
     if not row:
         return False
 
-    stored_hash, role = row
+    stored_hash, perms = row
+    try:
+        if bcrypt.checkpw(password.encode(), stored_hash.encode()):
+            return json.loads(perms)
+    except Exception as e:
+        print(f"DB password validation error: {e}")
 
-    if not bcrypt.checkpw(password.encode(), stored_hash.encode()):
-        return False
-    
-    return json.loads(row[1])
+    return False
                             
 
 def permission_required(module, action):
@@ -31,7 +151,7 @@ def permission_required(module, action):
         @wraps(fn)
         def wrapper(*args, **kwargs):
             print(request.remote_addr )
-            if request.remote_addr in ('127.0.0.1', '::1'):
+            if is_local_request():
                 return fn(*args, **kwargs)
 
             try:
@@ -45,7 +165,7 @@ def permission_required(module, action):
 
             claims = get_jwt()
             perms = claims.get("permissions", {})
-            allowed = perms.get(module, [])
+            allowed = perms.get(module, []) or perms.get("*", [])
 
             if action not in allowed and "*" not in allowed:
                 return jsonify({"error": f"Access denied for {action} on {module}"}), 403

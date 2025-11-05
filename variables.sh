@@ -278,8 +278,9 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" || ${1} == "--force" ]]; then
 	ALLSKY_MINITIMELAPSE_FILE="/${ALLSKY_CURRENT_DIR}/${ALLSKY_MINITIMELAPSE_NAME}"
 	ALLSKY_MINITIMELAPSE_URL="/${ALLSKY_IMG_DIR}/${ALLSKY_MINITIMELAPSE_NAME}"
 
-	# Python virtual environment
+	# Python virtual environments
 	ALLSKY_PYTHON_VENV="${ALLSKY_HOME}/venv"
+	ALLSKY_PYTHON_SERVER_VENV="${ALLSKY_HOME}/venv"
 
 	# These EXIT codes from the capture programs must match what's in src/include/allsky_common.h
 	ALLSKY_EXIT_OK=0

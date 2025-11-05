@@ -2576,98 +2576,6 @@ restore_prior_files()
 		display_msg --logonly info "${ITEM}: ${NOT_RESTORED}"
 	fi
 
-	#ITEM="${SPACE}'config/modules' directory"
-	#if [[ -d ${PRIOR_CONFIG_DIR}/modules ]]; then
-	#	display_msg --log progress "${ITEM} (merging)"
-
-	#	# Copy the user's prior data to the new file which may contain new fields.
-	#	activate_python_venv
-	#	local MSG="$( python3 "${ALLSKY_SCRIPTS}"/flowupgrade.py \
-	#			--prior "${PRIOR_CONFIG_DIR}" --config "${ALLSKY_CONFIG}" )"
-	#	if [[ $? -ne 0 ]]; then
-	#		display_msg --log error "Copying 'modules' directory failed: ${RET}"
-	#	fi
-	#else
-	#	display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
-	#fi
-
-	#ITEM="${SPACE}'config/overlay' directory"
-	#if [[ -d ${PRIOR_CONFIG_DIR}/overlay ]]; then
-	#	display_msg --log progress "${ITEM} (copying)"
-# TODO: ALEX: FIX:
-# Copying everying in these 3 directories means we can never release new versions, correct?
-
-	#	cp -a -r "${PRIOR_CONFIG_DIR}/overlay/fonts" "${ALLSKY_OVERLAY}"
-	#	cp -a -r "${PRIOR_CONFIG_DIR}/overlay/images" "${ALLSKY_OVERLAY}"
-	#	cp -a -r "${PRIOR_CONFIG_DIR}/overlay/imagethumbnails" "${ALLSKY_OVERLAY}"
-
-	#	cp -a    "${PRIOR_CONFIG_DIR}/overlay/config/userfields.json" "${ALLSKY_OVERLAY}/config"
-	#	cp -a    "${PRIOR_CONFIG_DIR}/overlay/config/oe-config.json" "${ALLSKY_OVERLAY}/config"
-	#else
-	#	display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
-	#fi
-
-	#X="${PRIOR_CONFIG_DIR}${ALLSKY_MY_OVERLAY_TEMPLATES/${ALLSKY_CONFIG}/}"
-	#local Z="$( dirname "${ALLSKY_MY_OVERLAY_TEMPLATES}" )"
-	#ITEM="${SPACE}'config/$( basename "${Z}" )/$( basename "${X}" )' directory"
-	#if [[ -d ${X} ]]; then
-	#	display_msg --log progress "${ITEM} (copying)"
-	#	cp -ar "${X}" "$( dirname "${ALLSKY_MY_OVERLAY_TEMPLATES}" )"
-	#else
-	#	display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
-	#fi
-
- 	# Globals: SENSOR_WIDTH, SENSOR_HEIGHT, FULL_OVERLAY_NAME, SHORT_OVERLAY_NAME, OVERLAY_NAME, PRIOR_CAMERA_TYPE
-
-	# PRIOR_OVERLAY_FILE is no longer used, but if it exists,
-	# convert it to the new name/format.
-	#PRIOR_OVERLAY_FILE="${PRIOR_CONFIG_DIR}/overlay/config/overlay.json"
-	#PRIOR_OVERLAY_REPO_FILE="${ALLSKY_PRIOR_DIR}/config_repo/overlay/config/overlay-${PRIOR_CAMERA_TYPE}.json"
-
-	# If no prior overlay.json exists or the user never changed it (i.e., it's the same
-	# as the prior confi_repo file), use the new format if its not been setup before.
-
-    #local DAYTIME_OVERLAY="$( settings ".daytimeoverlay" "${PRIOR_SETTINGS_FILE}" )"
-    #local NIGHTTIME_OVERLAY="$( settings ".nighttimeoverlay" "${PRIOR_SETTINGS_FILE}" )"
-
-    #if [[ -z ${DAYTIME_OVERLAY} && -z ${NIGHTTIME_OVERLAY} ]]; then
-    #    ITEM="${SPACE}Overlay configuration file"
-    #    if [[ ! -f ${PRIOR_OVERLAY_FILE} ]] ||
-    #            cmp -s "${PRIOR_OVERLAY_FILE}" "${PRIOR_OVERLAY_REPO_FILE}" ; then
-    #        MSG="${SPACE}User didn't change prior overlay file; using new '${OVERLAY_NAME}'"
-    #        display_msg --logonly info "${MSG}"
-    #    else
-            # The user changed the old overlay file so copy it to the new format and
-            # save its location in the settings file.
-            # NOTE: we add a 1 to the overlay name here so that the overay manager can
-            # pick it up and increment it as new overlays are created.
-    #        OVERLAY_NAME="${FULL_OVERLAY_NAME/overlay/overlay1}"
-    #        OVERLAY_NAME="${OVERLAY_NAME:-unknown.json}"
-    #        display_msg --log progress "${ITEM} (renamed to '${OVERLAY_NAME}')"
-
-    #        DEST_FILE="${ALLSKY_MY_OVERLAY_TEMPLATES}/${OVERLAY_NAME}"
-
-            # Add the metadata for the overlay manager
-            # shellcheck disable=SC2086
-    #        jq '. += {"metadata": {
-    #            "camerabrand": "'${CAMERA_TYPE}'",
-    #            "cameramodel": "'${CAMERA_MODEL}'",
-    #            "cameraresolutionwidth": "'${SENSOR_WIDTH}'",
-    #            "cameraresolutionheight": "'${SENSOR_HEIGHT}'",
-    #            "tod": "both",
-    #            "name": "'${CAMERA_TYPE}' '${CAMERA_MODEL}'"
-    #        }}' "${PRIOR_OVERLAY_FILE}"  > "${DEST_FILE}"
-    #    fi
-
-    #    for s in daytimeoverlay nighttimeoverlay
-    #    do
-    #        doV "" "OVERLAY_NAME" "${s}" "text" "${ALLSKY_SETTINGS_FILE}"
-    #    done
-    #else
-	#	doV "" "DAYTIME_OVERLAY" "daytimeoverlay" "text" "${ALLSKY_SETTINGS_FILE}"
-	#	doV "" "NIGHTTIME_OVERLAY" "nighttimeoverlay" "text" "${ALLSKY_SETTINGS_FILE}"
-    #fi
-
 	if [[ ${PRIOR_ALLSKY_STYLE} == "${NEW_STYLE_ALLSKY}" ]]; then
 		D="${PRIOR_CONFIG_DIR}"
 	else
@@ -3206,6 +3114,55 @@ install_PHP_modules()
 }
 
 
+install_dependencies()
+{
+		local REQUIREMENTS_FILE="$1"
+		local NAME="$2"
+		local NUM_TO_INSTALL=$( wc -l < "${REQUIREMENTS_FILE}" )
+
+		TMP="${ALLSKY_LOGS}/${NAME}"
+		display_msg --log progress "Installing ${NAME}${M}:"
+		COUNT=0
+		rm -f "${STATUS_FILE_TEMP}"
+		while read -r package
+		do
+			((COUNT++))
+			echo "${package}" > /tmp/package
+			# Make the numbers line up.
+			if [[ ${COUNT} -lt 10 ]]; then
+				C=" ${COUNT}"
+			else
+				C="${COUNT}"
+			fi
+
+			PACKAGE="   === Package # ${C} of ${NUM_TO_INSTALL}: [${package}]"
+			STATUS_NAME="${NAME}_${COUNT}"
+			# Need indirection since the ${STATUS_NAME} is the variable name and we want its value.
+			if [[ ${!STATUS_NAME} == "true" ]]; then
+				display_msg --log progress "${PACKAGE} - already installed."
+				continue
+			fi
+			display_msg --log progress "${PACKAGE}"
+
+			L="${TMP}.${COUNT}.log"
+			M="${NAME} [${package}] failed"
+			pip3 install --upgrade --no-warn-script-location -r /tmp/package > "${L}" 2>&1
+			# These files are too big to display so pass in "0" instead of ${DEBUG}.
+			if ! check_success $? "${M}" "${L}" 0 ; then
+				rm -fr "${PIP3_BUILD}"
+
+				# Add current status
+				update_status_from_temp_file
+
+				exit_with_image 1 "${STATUS_ERROR}" "${M}."
+			fi
+			echo "${STATUS_NAME}='true'"  >> "${STATUS_FILE_TEMP}"
+		done < "${REQUIREMENTS_FILE}"
+
+		# Add the status back in.
+		update_status_from_temp_file
+}
+
 ####
 # Install all the Python packages
 install_Python()
@@ -3217,6 +3174,18 @@ install_Python()
 	fi
 	[[ ${SKIP} == "true" ]] && return
 
+
+	#
+	# Install the server venv. NOTE this needs older versions of some packages like numpy so cannot use
+	# the main allsky venv
+	#
+	if [[ ${ALLSKY_PI_OS} == "bookworm" ]]; then
+		python3 -m venv "${ALLSKY_PYTHON_SERVER_VENV}" --system-site-packages
+		activate_python_server_venv
+		install_dependencies "${ALLSKY_REPO}/requirements-server.txt" "Python_server_dependencies"
+		deactivate_python_server_venv
+	fi
+	
 	local PREFIX  REQUIREMENTS_FILE  M  R  NUM_TO_INSTALL
 	local NAME  PKGs  TMP  COUNT  C  PACKAGE  STATUS_NAME  L  M  MSG
 
@@ -3260,13 +3229,6 @@ install_Python()
 		activate_python_venv
 	fi
 
-	# Temporary fix to ensure that all dependencies are available for the Allsky modules as the
-	# flow upgrader needs to load each module and if the dependencies are missing this will fail.
-	if [[ -d "${ALLSKY_PYTHON_VENV}" && -d "${PRIOR_PYTHON_VENV}" ]]; then
-		display_msg --logonly info "Copying '${PRIOR_PYTHON_VENV}' to '${ALLSKY_PYTHON_VENV}'"
-		cp -arn "${PRIOR_PYTHON_VENV}" "${ALLSKY_PYTHON_VENV}/"
-	fi
-
 	NAME="Python_dependencies"
 
 	# If the requirements file is the same as the in the prior Allsky version,
@@ -3275,47 +3237,7 @@ install_Python()
 	if [[ ${WILL_USE_PRIOR} == "true" && ${SKIP} == "true" && -f ${PRIOR_REQ} ]] && cmp --silent "${REQUIREMENTS_FILE}" "${PRIOR_REQ}" ; then
 		display_msg --log progress "Skipping installation of ${NAME} - already installed."
 	else
-		TMP="${ALLSKY_LOGS}/${NAME}"
-		display_msg --log progress "Installing ${NAME}${M}:"
-		COUNT=0
-		rm -f "${STATUS_FILE_TEMP}"
-		while read -r package
-		do
-			((COUNT++))
-			echo "${package}" > /tmp/package
-			# Make the numbers line up.
-			if [[ ${COUNT} -lt 10 ]]; then
-				C=" ${COUNT}"
-			else
-				C="${COUNT}"
-			fi
-
-			PACKAGE="   === Package # ${C} of ${NUM_TO_INSTALL}: [${package}]"
-			STATUS_NAME="${NAME}_${COUNT}"
-			# Need indirection since the ${STATUS_NAME} is the variable name and we want its value.
-			if [[ ${!STATUS_NAME} == "true" ]]; then
-				display_msg --log progress "${PACKAGE} - already installed."
-				continue
-			fi
-			display_msg --log progress "${PACKAGE}"
-
-			L="${TMP}.${COUNT}.log"
-			M="${NAME} [${package}] failed"
-			pip3 install --upgrade --no-warn-script-location -r /tmp/package > "${L}" 2>&1
-			# These files are too big to display so pass in "0" instead of ${DEBUG}.
-			if ! check_success $? "${M}" "${L}" 0 ; then
-				rm -fr "${PIP3_BUILD}"
-
-				# Add current status
-				update_status_from_temp_file
-
-				exit_with_image 1 "${STATUS_ERROR}" "${M}."
-			fi
-			echo "${STATUS_NAME}='true'"  >> "${STATUS_FILE_TEMP}"
-		done < "${REQUIREMENTS_FILE}"
-
-		# Add the status back in.
-		update_status_from_temp_file
+		install_dependencies "${REQUIREMENTS_FILE}" "${NAME}"
 	fi
 
 	# On Pi 5 models we need to replace rpi.gpi with lgpio.
@@ -3643,7 +3565,13 @@ update_overlays()
 # Allow the user to install modules.
 install_modules()
 {
-	"${ALLSKY_MODULE_INSTALLER}" --welcome
+
+	if [[ "$BRANCH" == "$ALLSKY_GITHUB_MAIN_BRANCH" ]]; then
+			"${ALLSKY_MODULE_INSTALLER}" --welcome
+	else
+			"${ALLSKY_MODULE_INSTALLER}" --welcome --setbranch "$BRANCH"
+	fi
+
 	RET=$?
 	if [[ ${RET} -eq ${EXIT_PARTIAL_OK} ]]; then
 		add_to_post_actions "To install and remove modules, execute 'allsky-config manage_modules'."
@@ -3656,29 +3584,11 @@ install_modules()
 update_modules()
 {
 
-	"${ALLSKY_MODULE_INSTALLER}" --auto
-
-#	local X  MSG
-
-	# Nothing to do if the extra modules aren't installed.
-#	X="$( find "${ALLSKY_MODULE_LOCATION}/modules" -type f -name "*.py" -print -quit 2> /dev/null )"
-#	[[ -z ${X} ]] && return
-
-# xxxxxx    ALEX TODO: check the CURRENT ${ALLSKY_PYTHON_VENV} or ${PRIOR_PYTHON_VENV} ?
-
-	# If a venv isn't already installed then the install/update will create it,
-	# but warn the user to reinstall the extra modules.
-#	if [[ -d ${ALLSKY_PYTHON_VENV} && ! -d ${PRIOR_PYTHON_VENV} ]]; then
-#		MSG="You appear to have the Allsky Extra modules installed."
-#		MSG+="\nPlease reinstall these using the normal instructions at"
-#		MSG+="\n   https://github.com/AllskyTeam/allsky-modules"
-#		MSG+="\nThe extra modules will not function until you have reinstalled them."
-#		whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
-
-#		display_msg info "Don't forget to re-install your Allsky extra modules."
-#		display_msg --logonly info "Reminded user to re-install the extra modules."
-#		add_to_post_actions "${MSG}"
-#	fi
+	if [[ "$BRANCH" == "$ALLSKY_GITHUB_MAIN_BRANCH" ]]; then
+			"${ALLSKY_MODULE_INSTALLER}" --auto
+	else
+			"${ALLSKY_MODULE_INSTALLER}" --auto --setbranch "$BRANCH"
+	fi
 
 	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
 }

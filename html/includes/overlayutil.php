@@ -1252,10 +1252,10 @@ class OVERLAYUTIL extends UTILBASE {
         $argv = [
             'sudo',
             $script,
-            '--allsky_home='   . $this->allsky_home,
-            '--allsky_scripts='. $this->allsky_scripts,
-            '--allsky_tmp='    . $this->allskyTmp,
-            '--overlay='       . $tmp,
+            '--allsky_home'    , $this->allsky_home,
+            '--allsky_scripts' , $this->allsky_scripts,
+            '--allsky_tmp'     , $this->allskyTmp,
+            '--overlay'        , $tmp,
         ];
 
         $res = $this->runProcess($argv);

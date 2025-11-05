@@ -1,0 +1,405 @@
+{% extends "base.html" %}
+{% block content %}
+
+
+<div class="container-fluid">
+  <div class="row flex-nowrap">
+    <!-- Sidebar -->
+    <aside class="col-12 col-md-5 col-lg-4 col-xl-3 border-end bg-light p-0">
+      <div class="d-md-block position-sticky top-0 vh-100 overflow-auto">
+        <div class="p-1">
+
+          <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <strong>Allsky Status</strong>
+              <button class="toggle-btn" type="button" data-bs-toggle="collapse" data-bs-target="#cardCollapseAllsky">
+                <i class="fa-solid fa-chevron-down fs-5"></i>
+              </button>
+            </div>
+            <div id="cardCollapseAllsky" class="collapse show">
+              <div id="asf-allsky-status" class="card-body">
+                {% include "_partials/_allskyStatus.html" %}
+              </div>
+            </div>
+          </div>
+
+
+          <div class="card mt-2">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <strong>Camera</strong>
+              <button class="toggle-btn" type="button" data-bs-toggle="collapse"
+                data-bs-target="#asf-allsky-camera-card">
+                <i class="fa-solid fa-chevron-down fs-5"></i>
+              </button>
+            </div>
+            <div id="asf-allsky-camera-card" class="collapse show">
+              <div class="card-body">
+                <div class="row mb-3">
+                  <label for="asf-camera" class="col-4 col-form-label">Camera</label>
+                  <div class="col-8">
+                    <select class="form-select asf-disable-when-running" id="asf-camera" name="camera">
+                      {% for key, values in cameras.items() %}
+                      <option value="{{ values.value }}">{{ values.camera_hr }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-7">
+                    <div class="form-floating mb-6">
+                      <input type="number" class="form-control asf-disable-when-running" id="asf-exposure-time"
+                        name="exposure" min="1" max="500000" step="10" value="25000" placeholder="">
+                      <label for="asf-exposure-time" id="asf-exposure-time-placeholder">
+                        Exposure length
+                      </label>
+                    </div>
+                  </div>
+                  <div class="col-5">
+                    <div class="form-floating mb-3">
+                      <input type="number" class="form-control asf-disable-when-running" id="asf-gain" name="gain"
+                        min="1" max="500" step="1" value="120" placeholder="">
+                      <label for="asf-gain" id="asf-gain-placeholder">Gain</label>
+                    </div>
+                  </div>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                  <button type="button" class="btn btn-sm btn-primary asf-disable-when-running" id="asf-grab-image"
+                    title="Grab Image">
+                    <i class="fa-solid fa-camera"></i>
+                  </button>
+                  <button type="button" class="btn btn-sm btn-success asf-disable-when-running" id="asf-start"
+                    title="Start">
+                    <i class="fa-solid fa-play"></i>
+                  </button>
+                  <button type="button" class="btn btn-sm btn-danger asf-disable-when-running" id="asf-stop"
+                    title="Stop">
+                    <i class="fa-solid fa-stop"></i>
+                  </button>
+                  <button type="button" class="btn btn-sm btn-info asf-disable-when-running ms-auto" id="asf-advanced">
+                    <i class="fa-solid fa-gear"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card mt-2">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <strong>Motor Control</strong>
+              <button class="toggle-btn" type="button" data-bs-toggle="collapse"
+                data-bs-target="#asf-allsky-motor-card">
+                <i class="fa-solid fa-chevron-down fs-5"></i>
+              </button>
+            </div>
+            <div id="asf-allsky-motor-card" class="collapse show">
+              <div class="card-body">
+
+                <div class="row">
+                  <div class="col-12">
+                    <div class="mb-3 d-inline-flex align-items-center gap-2">
+                      <label class="el-switch el-switch-sm el-switch-green m-0">
+                        <input type="checkbox" name="asf-motor-enable" id="asf-motor-enable">
+                        <span class="el-switch-style"></span>
+                      </label>
+                      <label class="m-0" for="asf-motor-enable">Enable Motor</label>
+                    </div>
+                  </div>
+                </div>
+
+
+                <div class="row">
+                  <div class="col-6">
+                    <div class="form-floating mb-3">
+                      <input type="number" class="form-control asf-disable-when-running asf-motor-step"
+                        id="asf-motor-slow-step" name="motor_slow_step" min="1" max="100" step="1" value="5"
+                        placeholder="">
+                      <label for="asf-motor-slow-step">Slow Steps</label>
+                    </div>
+                  </div>
+                  <div class="col-6">
+                    <div class="form-floating mb-3">
+                      <input type="number" class="form-control asf-disable-when-running asf-motor-step"
+                        id="asf-motor-fast-step" name="motor_fast_step" min="1" max="2000" step="10" value="10"
+                        placeholder="">
+                      <label for="asf-motor-fast-step">Fast Steps</label>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="d-flex align-items-center gap-2">
+                  <button type="button" class="btn btn-sm btn-success asf-motor-move asf-disable-when-running"
+                    data-direction="out" data-speed="fast" id="asf-motor-fast-back" title="Fast Back">
+                    <i class="fa-solid fa-backward-fast"></i>
+                  </button>
+                  <button type="button" class="btn btn-sm btn-success asf-motor-move asf-disable-when-running"
+                    data-direction="out" data-speed="slow" id="asf-motor-back" title="Back">
+                    <i class="fa-solid fa-backward-step"></i>
+                  </button>
+                  <button type="button" class="btn btn-sm btn-success asf-motor-move asf-disable-when-running"
+                    data-direction="in" data-speed="slow" id="asf-motor-forward" title="Forward">
+                    <i class="fa-solid fa-forward-step"></i>
+                  </button>
+                  <button type="button" class="btn btn-sm btn-success asf-motor-move asf-disable-when-running"
+                    data-direction="in" data-speed="fast" id="asf-motor-fast-forward" title="Fast Forward">
+                    <i class="fa-solid fa-forward-fast"></i>
+                  </button>
+                  <button type="button"
+                    class="btn btn-sm btn-info asf-motor-settings-button asf-disable-when-running ms-auto"
+                    id="asf-motor-settings-button" title="Settings">
+                    <i class="fa-solid fa-gear"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+
+          <div class="card mt-2">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <strong>Image Data</strong>
+              <button class="toggle-btn" type="button" data-bs-toggle="collapse" data-bs-target="#asf-allsky-exif">
+                <i class="fa-solid fa-chevron-down fs-5"></i>
+              </button>
+            </div>
+            <div id="asf-allsky-exif" class="collapse show">
+            </div>
+          </div>
+
+
+          <div class="card mt-2">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <strong>Image Score</strong>
+              <button id="asf-focus-reset" type="button" class="btn btn-sm btn-outline-secondary"><i
+                  class="fa-solid fa-trash"></i></button>
+              <button class="toggle-btn" type="button" data-bs-toggle="collapse"
+                data-bs-target="#asf-allsky-image-score">
+                <i class="fa-solid fa-chevron-down fs-5"></i>
+              </button>
+            </div>
+            <div id="asf-allsky-image-score" class="collapse show">
+              <canvas id="asf-focus-chart" height="120"></canvas>
+            </div>
+          </div>
+
+
+          <div class="card mt-2">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <strong>Image Zoom</strong>
+              <button class="toggle-btn" type="button" data-bs-toggle="collapse"
+                data-bs-target="#asf-allsky-image-zoom">
+                <i class="fa-solid fa-chevron-down fs-5"></i>
+              </button>
+            </div>
+            <div id="asf-allsky-image-zoom" class="collapse show">
+              <div class="card-body">
+
+
+                <div class="row">
+                  <div class="col-12">
+                    <div class="mb-3 d-inline-flex align-items-center gap-2">
+                      <label class="el-switch el-switch-sm el-switch-green m-0">
+                        <input type="checkbox" name="asf-zoom-enable" id="asf-zoom-enable">
+                        <span class="el-switch-style"></span>
+                      </label>
+                      <label class="m-0" for="asf-motor-enable">Enable Zoom</label>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="row">
+                  <div class="col-9">
+                    <div class="form-floating mb-3">
+                      <input type="number" class="form-control" id="asf-magnifier-scale" placeholder=" " min="1" max="5"
+                        step="1" value="1" aria-describedby="asf-magnifier-scale-help">
+                      <label for="asf-magnifier-scale" id="asf-magnifier-scale-placeholder">Magnifier Scale</label>
+                    </div>
+                  </div>
+                </div>
+
+
+
+                <div class="row mt-3">
+                  <div class="col-10 mx-auto d-flex gap-2 justify-content-center">
+                    <button type="button" class="btn btn-primary asf-disable-when-running asf-zoom" data-type="in"
+                      id="asf-zoom-in" aria-label="Zoom in">
+                      <i class="fa-solid fa-magnifying-glass-plus"></i>
+                    </button>
+                    <button type="button" class="btn btn-primary asf-disable-when-running asf-zoom" data-type="out"
+                      id="asf-zoom-out" aria-label="Zoom out">
+                      <i class="fa-solid fa-magnifying-glass-minus"></i>
+                    </button>
+                    <button type="button" class="btn btn-success asf-disable-when-running asf-zoom" data-type="full"
+                      id="asf-zoom-full" aria-label="Full size">
+                      <i class="fa-solid fa-maximize"></i>
+                    </button>
+                    <button type="button" class="btn btn-success asf-disable-when-running asf-zoom" data-type="fit"
+                      id="asf-zoom-fit" aria-label="Fit to view">
+                      <i class="fa-solid fa-minimize"></i>
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </aside>
+
+
+
+
+    <!-- Motor Settings Modal -->
+    <div class="modal fade" id="asf-motor-settings" tabindex="-1" aria-labelledby="asfMotorSettingsLbl"
+      aria-hidden="true">
+      <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+
+          <div class="modal-header">
+            <h5 class="modal-title" id="asfMotorSettingsLbl">Motor Settings</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+
+          <div class="modal-body">
+            <!-- Driver profile / motor type / step sizes -->
+            <div class="row g-3 align-items-end">
+              <div class="col-md-3">
+                <label for="asf-driver-profile" class="form-label">Driver profile</label>
+                <select id="asf-driver-profile" class="form-select">
+                  <option value="custom" selected>Custom</option>
+                  <option value="titan">Titan Astro</option>
+                </select>
+              </div>
+
+              <div class="col-md-3">
+                <label for="asf-motor-type" class="form-label">Motor type</label>
+                <select id="asf-motor-type" class="form-select">
+                  <option value="a4988">A4988 (dir / step / enable)</option>
+                  <option value="uln2003">ULN2003 (IN1 – IN4)</option>
+                </select>
+              </div>
+
+              <div class="col-md-3">
+                <label for="asf-step-fast" class="form-label">Step size (fast)</label>
+                <input type="number" class="form-control" id="asf-step-fast" min="1" step="1" value="500">
+              </div>
+
+              <div class="col-md-3">
+                <label for="asf-step-slow" class="form-label">Step size (slow)</label>
+                <input type="number" class="form-control" id="asf-step-slow" min="1" step="1" value="50">
+              </div>
+            </div>
+
+            <!-- A4988 pins -->
+            <div id="asf-a4988-fields" class="mt-4">
+              <div class="row g-3">
+                <div class="col-md-4">
+                  <label for="asf-a4988-dir" class="form-label">Direction (GPIO BCM)</label>
+                  <div class="input-group">
+                    <input type="number" class="form-control" id="asf-a4988-dir" readonly>
+                    <button class="btn btn-outline-primary asf-pick-gpio" type="button" data-target="#asf-a4988-dir"
+                      title="Select GPIO">
+                      <i class="fa-solid fa-microchip"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="col-md-4">
+                  <label for="asf-a4988-step" class="form-label">Step (GPIO BCM)</label>
+                  <div class="input-group">
+                    <input type="number" class="form-control" id="asf-a4988-step" readonly>
+                    <button class="btn btn-outline-primary asf-pick-gpio" type="button" data-target="#asf-a4988-step"
+                      title="Select GPIO">
+                      <i class="fa-solid fa-microchip"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="col-md-4">
+                  <label for="asf-a4988-en" class="form-label">Enable (GPIO BCM)</label>
+                  <div class="input-group">
+                    <input type="number" class="form-control" id="asf-a4988-en" readonly>
+                    <button class="btn btn-outline-primary asf-pick-gpio" type="button" data-target="#asf-a4988-en"
+                      title="Select GPIO">
+                      <i class="fa-solid fa-microchip"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ULN2003 pins -->
+            <div id="asf-byj-fields" class="mt-4" style="display:none;">
+              <div class="row g-3">
+                <div class="col-sm-6 col-md-3">
+                  <label for="asf-byj-in1" class="form-label">ULN2003 IN1 (GPIO BCM)</label>
+                  <div class="input-group">
+                    <input type="number" class="form-control" id="asf-byj-in1" readonly>
+                    <button class="btn btn-outline-primary asf-pick-gpio" type="button" data-target="#asf-byj-in1"
+                      title="Select GPIO">
+                      <i class="fa-solid fa-microchip"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="col-sm-6 col-md-3">
+                  <label for="asf-byj-in2" class="form-label">ULN2003 IN2 (GPIO BCM)</label>
+                  <div class="input-group">
+                    <input type="number" class="form-control" id="asf-byj-in2" readonly>
+                    <button class="btn btn-outline-primary asf-pick-gpio" type="button" data-target="#asf-byj-in2"
+                      title="Select GPIO">
+                      <i class="fa-solid fa-microchip"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="col-sm-6 col-md-3">
+                  <label for="asf-byj-in3" class="form-label">ULN2003 IN3 (GPIO BCM)</label>
+                  <div class="input-group">
+                    <input type="number" class="form-control" id="asf-byj-in3" readonly>
+                    <button class="btn btn-outline-primary asf-pick-gpio" type="button" data-target="#asf-byj-in3"
+                      title="Select GPIO">
+                      <i class="fa-solid fa-microchip"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="col-sm-6 col-md-3">
+                  <label for="asf-byj-in4" class="form-label">ULN2003 IN4 (GPIO BCM)</label>
+                  <div class="input-group">
+                    <input type="number" class="form-control" id="asf-byj-in4" readonly>
+                    <button class="btn btn-outline-primary asf-pick-gpio" type="button" data-target="#asf-byj-in4"
+                      title="Select GPIO">
+                      <i class="fa-solid fa-microchip"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div><!-- /modal-body -->
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" id="asf-save-motor-settings" class="btn btn-primary">Save</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+
+    <!-- Main -->
+    <main class="col p-4">
+      <div id="asf-running-alert" class="alert alert-danger {% if (status.allsky.status|lower) != 'running' %}d-none{% endif %}" role="alert">
+        Allsky is running. Stop it to continue
+      </div>
+      <img src="{{ image_url }}?t={{ time }}"
+        class="img-fluid img-thumbnail {% if (status.allsky.status|lower) == 'running' %}d-none{% endif %}"
+        id="asf-preview-image" alt="Captured image">
+    </main>
+  </div>
+</div>
+
+
+{% endblock %}

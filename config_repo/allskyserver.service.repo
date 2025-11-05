@@ -7,9 +7,9 @@ After=allsky.service
 
 [Service]
 User=XX_ALLSKY_OWNER_XX
-WorkingDirectory=/home/XX_ALLSKY_OWNER_XX/allsky/server
-Environment=ALLSKY_HOME=/home/XX_ALLSKY_OWNER_XX/allsky
-ExecStart=/home/XX_ALLSKY_OWNER_XX/allsky/venv/bin/gunicorn --workers 1 --threads 4 --bind 0.0.0.0:8090 app:app
+WorkingDirectory=XX_ALLSKY_HOME_XX/server
+Environment=ALLSKY_HOME=XX_ALLSKY_HOME_XX
+ExecStart=XX_ALLSKY_HOME_XX/venv_server/bin/gunicorn --workers 1 --threads 4 --bind 0.0.0.0:8090 app:app
 Restart=always
 RestartSec=5
 

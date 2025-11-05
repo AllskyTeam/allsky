@@ -54,7 +54,7 @@ WEBSITE_FILE="${WORKING_DIR}/${ALLSKY_FULL_FILENAME}"	# The file name the websit
 CURRENT_ALLSKY_STATUS="$( get_allsky_status )"
 # Only update if different so we don't loose original timestamp
 if [[ ${CURRENT_ALLSKY_STATUS} != "${ALLSKY_STATUS_RUNNING}" ]]; then
-	set_allsky_status "${ALLSKY_STATUS_RUNNING}" || echo "Unsable to set Allsky Status"
+	set_allsky_status "${ALLSKY_STATUS_RUNNING}" || echo "Unable to set Allsky Status"
 fi
 
 if [[ ${1} == "--focus-mode" ]]; then

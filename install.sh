@@ -3657,7 +3657,13 @@ update_overlays()
 # Allow the user to install modules.
 install_modules()
 {
-	"${ALLSKY_MODULE_INSTALLER}" --welcome
+
+	if [[ "$BRANCH" == "$ALLSKY_GITHUB_MAIN_BRANCH" ]]; then
+			"${ALLSKY_MODULE_INSTALLER}" --welcome
+	else
+			"${ALLSKY_MODULE_INSTALLER}" --welcome --setbranch "$BRANCH"
+	fi
+
 	RET=$?
 	if [[ ${RET} -eq ${EXIT_PARTIAL_OK} ]]; then
 		add_to_post_actions "To install and remove modules, execute 'allsky-config manage_modules'."
@@ -3670,7 +3676,13 @@ install_modules()
 update_modules()
 {
 
-	"${ALLSKY_MODULE_INSTALLER}" --auto
+	if [[ "$BRANCH" == "$ALLSKY_GITHUB_MAIN_BRANCH" ]]; then
+			"${ALLSKY_MODULE_INSTALLER}" --auto
+	else
+			"${ALLSKY_MODULE_INSTALLER}" --auto --setbranch "$BRANCH"
+	fi
+
+	
 
 #	local X  MSG
 

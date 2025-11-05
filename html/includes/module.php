@@ -117,6 +117,14 @@ function DisplayModule()
                                 </div>
                             </form>
                         </li>
+                        <li class="btn ml-4">
+                            <form id="oe-item-filter-dialog-form" class="form-horizontal">
+                                <div class="form-group">                            
+                                    <select class="form-control navbar-form" name="module-filters" id="module-filters">
+                                    </select>
+                                </div>
+                            </form>
+                        </li>
                     </ul>
                     <ul class="nav navbar-nav navbar-right">
                         <li>
@@ -143,16 +151,12 @@ function DisplayModule()
                 <h4 class="text-center">Available Modules
                     <form class="form-horizontal mt-3">
                         <div class="form-group">
-                            <label for="module-module-filter" class="col-sm-2 control-label">Search</label>
-                            <div class="col-sm-4">
+                            <label for="module-module-filter" class="col-sm-3 col-xs-3 control-label hidden-xs">Search</label>
+                            <div class="col-sm-5 col-xs-4">
                                 <input type="text" class="form-control" id="module-available-filter">
                             </div>
-                            <div class="col-sm-2">
+                            <div class="col-sm-4 col-xs-2">
                                 <button type="button" class="btn btn-primary btn-sm pull-left" id="module-available-filter-clear" title="Clear filter"><i class="fa-solid fa-xmark"></i></button>
-                            </div>
-                            <div class="col-sm-2">
-                                <select name="cars" id="module-filters">
-                                </select>
                             </div>                                    
                         </div>
                     </form>
@@ -168,11 +172,11 @@ function DisplayModule()
                 <h4 class="text-center">Selected Modules
                     <form class="form-horizontal mt-3">
                         <div class="form-group">
-                            <label for="module-module-filter" class="col-sm-2 control-label">Search</label>
-                            <div class="col-sm-6">
+                            <label for="module-module-filter" class="col-sm-3 control-label hidden-xs">Search</label>
+                            <div class="col-sm-5 col-xs-4">
                                 <input type="text" class="form-control" id="module-selected-filter">
                             </div>
-                            <div class="col-sm-4">
+                            <div class="col-sm-4 col-xs-2">
                                 <button type="button" class="btn btn-primary btn-sm pull-left" id="module-selected-filter-clear" title="Clear filter"><i class="fa-solid fa-xmark"></i></button>
                             </div>
                         </div>

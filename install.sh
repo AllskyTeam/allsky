@@ -3206,6 +3206,55 @@ install_PHP_modules()
 }
 
 
+install_dependencies()
+{
+		local REQUIREMENTS_FILE="$1"
+		local NAME="$2"
+		local NUM_TO_INSTALL=$( wc -l < "${REQUIREMENTS_FILE}" )
+
+		TMP="${ALLSKY_LOGS}/${NAME}"
+		display_msg --log progress "Installing ${NAME}${M}:"
+		COUNT=0
+		rm -f "${STATUS_FILE_TEMP}"
+		while read -r package
+		do
+			((COUNT++))
+			echo "${package}" > /tmp/package
+			# Make the numbers line up.
+			if [[ ${COUNT} -lt 10 ]]; then
+				C=" ${COUNT}"
+			else
+				C="${COUNT}"
+			fi
+
+			PACKAGE="   === Package # ${C} of ${NUM_TO_INSTALL}: [${package}]"
+			STATUS_NAME="${NAME}_${COUNT}"
+			# Need indirection since the ${STATUS_NAME} is the variable name and we want its value.
+			if [[ ${!STATUS_NAME} == "true" ]]; then
+				display_msg --log progress "${PACKAGE} - already installed."
+				continue
+			fi
+			display_msg --log progress "${PACKAGE}"
+
+			L="${TMP}.${COUNT}.log"
+			M="${NAME} [${package}] failed"
+			pip3 install --upgrade --no-warn-script-location -r /tmp/package > "${L}" 2>&1
+			# These files are too big to display so pass in "0" instead of ${DEBUG}.
+			if ! check_success $? "${M}" "${L}" 0 ; then
+				rm -fr "${PIP3_BUILD}"
+
+				# Add current status
+				update_status_from_temp_file
+
+				exit_with_image 1 "${STATUS_ERROR}" "${M}."
+			fi
+			echo "${STATUS_NAME}='true'"  >> "${STATUS_FILE_TEMP}"
+		done < "${REQUIREMENTS_FILE}"
+
+		# Add the status back in.
+		update_status_from_temp_file
+}
+
 ####
 # Install all the Python packages
 install_Python()
@@ -3254,7 +3303,7 @@ install_Python()
 	if [[ ${ALLSKY_PI_OS} == "bookworm" ]]; then
 		python3 -m venv "${ALLSKY_PYTHON_SERVER_VENV}" --system-site-packages
 		activate_python_server_venv
-		pip3 install --upgrade --no-warn-script-location -r "${ALLSKY_REPO}/requirements-server.txt" 2>&1
+		install_dependencies "${ALLSKY_REPO}/requirements-server.txt" "Python_server_dependencies"
 		deactivate_python_server_venv
 	fi
 
@@ -3286,47 +3335,7 @@ install_Python()
 	if [[ ${WILL_USE_PRIOR} == "true" && ${SKIP} == "true" && -f ${PRIOR_REQ} ]] && cmp --silent "${REQUIREMENTS_FILE}" "${PRIOR_REQ}" ; then
 		display_msg --log progress "Skipping installation of ${NAME} - already installed."
 	else
-		TMP="${ALLSKY_LOGS}/${NAME}"
-		display_msg --log progress "Installing ${NAME}${M}:"
-		COUNT=0
-		rm -f "${STATUS_FILE_TEMP}"
-		while read -r package
-		do
-			((COUNT++))
-			echo "${package}" > /tmp/package
-			# Make the numbers line up.
-			if [[ ${COUNT} -lt 10 ]]; then
-				C=" ${COUNT}"
-			else
-				C="${COUNT}"
-			fi
-
-			PACKAGE="   === Package # ${C} of ${NUM_TO_INSTALL}: [${package}]"
-			STATUS_NAME="${NAME}_${COUNT}"
-			# Need indirection since the ${STATUS_NAME} is the variable name and we want its value.
-			if [[ ${!STATUS_NAME} == "true" ]]; then
-				display_msg --log progress "${PACKAGE} - already installed."
-				continue
-			fi
-			display_msg --log progress "${PACKAGE}"
-
-			L="${TMP}.${COUNT}.log"
-			M="${NAME} [${package}] failed"
-			pip3 install --upgrade --no-warn-script-location -r /tmp/package > "${L}" 2>&1
-			# These files are too big to display so pass in "0" instead of ${DEBUG}.
-			if ! check_success $? "${M}" "${L}" 0 ; then
-				rm -fr "${PIP3_BUILD}"
-
-				# Add current status
-				update_status_from_temp_file
-
-				exit_with_image 1 "${STATUS_ERROR}" "${M}."
-			fi
-			echo "${STATUS_NAME}='true'"  >> "${STATUS_FILE_TEMP}"
-		done < "${REQUIREMENTS_FILE}"
-
-		# Add the status back in.
-		update_status_from_temp_file
+		install_dependencies "${REQUIREMENTS_FILE}" "${NAME}"
 	fi
 
 	# On Pi 5 models we need to replace rpi.gpi with lgpio.

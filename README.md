@@ -33,6 +33,7 @@ Built by enthusiasts for enthusiasts, Allsky is open, extensible, and endlessly 
    * Add custom functions via user-defined buttons
    * Get support
    * Access documentation
+   * Light / Dark modes
 * Remote website / server for storing images
    * Automatically upload capture images, timelapses, keograms
    * Allows easier sharing of your data with others
@@ -137,8 +138,8 @@ Built by enthusiasts for enthusiasts, Allsky is open, extensible, and endlessly 
 
 In order to run the Allsky software you need:
 
- * A Raspberry Pi Zero 2, Pi 2, Pi 3, Pi 4, Pi 5, or Le Potato.
- * Raspberry Pi OS Bullseys, Bookworm or Pixie.  Non-Pi OS operating systems like Ubuntu are NOT supported.  If possible use the "Desktop" version of the Pi OS Bookworm 64-bit release.
+ * A Raspberry Pi Zero 2, Pi Zero 2 W, Pi 2, Pi 3, Pi 4, Pi 5, or Le Potato.
+ * Raspberry Pi OS Bullseye, Bookworm or Pixie.  Non-Pi OS operating systems like Ubuntu are NOT supported.  If possible use the "Desktop" version of the Pi OS Bookworm 64-bit release.
  * A camera:
     * Any ZWO camera sold before August 21, 2025,
     * or one of the following cameras:
@@ -160,21 +161,18 @@ In order to run the Allsky software you need:
 > __NOTES:__
 >	- The ZWO ASI120-series cameras are __not__ recommended due to their tendency to produce poor-quality images.
 >	- The Pi Zero with its limited memory and _very_ limited CPU power is not recommended.  You probably won't be able to create keograms, startrails, or timelapse videos.
->	- The Pi Zero 2 with its limited memory and somewhat limited CPU power is not recommended unless cost is the only concern.  Creating keograms, startrails, and timelapse videos may or may not be possible.
+>	- The Pi Zero 2 / Pi Zero 2 W with their limited memory and somewhat limited CPU power is not recommended unless cost is the only concern.  Creating keograms, startrails, and timelapse videos may or may not be possible.
+>	- The CM4 and CM5 modules will work if mounted in a duaghter board.
 >	- The Le Potato is the only "Pi-compatible" board that we've found to actually be compatible, so buyer beware.
 
 
-&nbsp;
 <!-- =============================================================================== --> 
 ## Software Installation
 
-See the [detailed installation instructions](https://htmlpreview.github.io/?https://raw.githubusercontent.com/AllskyTeam/allsky/master/html/documentation/installations/Allsky.html).
+See the [detailed installation instructions](./html/documentation/installations/Allsky.html).
 
 ---
 
-
-&nbsp;
-<!-- =============================================================================== --> 
 ## Web User Interface (WebUI)
 
 ![](./html/documentation/settings//AllskySettingsPage.png)
@@ -190,13 +188,17 @@ http://your_raspberry_IP/public.php
 Make sure this page is publicly viewable.
 If it is behind a firewall consult the documentation for your network equipment for information on allowing inbound connections.
 
+> __NOTES:__
+>  * If you intend to expose the Pi to the internet then please ensure 
+>    - You fully understand the implications of doing this
+>    - You are NOT using the default password
+>    - You have set a secure password
+
 The WebUI has a link to the Allsky Documentation which describes all the settings Allsky uses as well as troubleshooting information.
 It should be used before requesting support on GitHub.
 
 ---
 
-&nbsp;
-<!-- =============================================================================== --> 
 ## Allsky Website
 
 The local Allsky Website (i.e., on the Pi) is installed with Allsky but must be enabled in the WebUI in order to use it.
@@ -204,8 +206,8 @@ You can also install the Allsky Website on a remote server so it can be viewable
 
 See [Installation / Upgrading --> Website](https://htmlpreview.github.io/?https://raw.githubusercontent.com/AllskyTeam/allsky/master/html/documentation/installations/AllskyWebsite.html) for information on how to install and configure an Allsky Website.
 
-&nbsp;
-<!-- =============================================================================== --> 
+
+
 ## Remote server
 Allsky images, keograms, startrails, and timelapse videos can optionally be uploaded to a remote server __not__ running an Allsky Website.  This is useful if you have a personal website and want to include the most recent Allsky images.
 
@@ -213,9 +215,6 @@ See [Installation / Upgrading --> Remote server](https://htmlpreview.github.io/?
 
 ---
 
-
-&nbsp;
-<!-- =============================================================================== --> 
 ## Post-capture processing
 
 Captured images can be resized, cropped, and stretched, and bad images (i.e., too light or too dark) can be removed automatically.
@@ -228,9 +227,6 @@ See [Explanations / How To -> Overlays](https://htmlpreview.github.io/?https://r
 
 ---
 
-
-&nbsp;
-<!-- =============================================================================== --> 
 ## Dark frame subtraction
 
 Dark frame subtraction removes white (i.e., "hot") pixels from images by taking images with a cover over the camera lens and subtracting those images from images.
@@ -239,9 +235,6 @@ See [Explanations / How To -> Dark frames](https://htmlpreview.github.io/?https:
 
 ---
 
-
-&nbsp;
-<!-- =============================================================================== --> 
 ## Timelapse and mini timelapse
 
 By default, a timelapse video is generated at the end of nighttime from all of the images captured in the last 24 hours.
@@ -252,9 +245,6 @@ See [Explanations / How To --> Timelapses](https://htmlpreview.github.io/?https:
 
 ---
 
-
-&nbsp;
-<!-- =============================================================================== --> 
 ## Keograms
 
 <p align="center">
@@ -268,9 +258,6 @@ See [Explanations / How To --> Keograms](https://htmlpreview.github.io/?https://
 
 ---
 
-
-&nbsp;
-<!-- =============================================================================== --> 
 ## Startrails
 
 <p align="center">
@@ -285,8 +272,6 @@ See [Explanations / How To --> Startrails](https://htmlpreview.github.io/?https:
 ---
 
 
-&nbsp;
-<!-- =============================================================================== --> 
 ## Automatic deletion of old data
 
 You can specify how many days worth of images to keep in order to keep the Raspberry Pi SD card from filling up.  If you are using the Allsky Website on your Pi, you can specify how many days worth of its imags to keep.
@@ -296,10 +281,6 @@ See the __Days to Keep on Pi Website__ and __Web Days To Keep on Remote Website_
 
 ---
 
-
-
-&nbsp;
-<!-- =============================================================================== --> 
 ## Share your sky
 
 
@@ -316,8 +297,6 @@ If you know anyone in Greenland or Antartica, send them a camera!!
 ---
 
 
-&nbsp;
-<!-- =============================================================================== --> 
 ## Release changes
 
 See the
@@ -326,9 +305,7 @@ for a list of changes in this release and all prior releases.
 
 ---
 
-
-&nbsp;
-<!-- =============================================================================== --> 
+ 
 ## Donation
 If you found this project useful, here's a link to send Thomas a cup of coffee :)
 

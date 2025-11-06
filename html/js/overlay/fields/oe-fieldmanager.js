@@ -424,7 +424,7 @@ class OEFIELDMANAGER {
 		$.LoadingOverlay('show', {text : 'Calculating field values'});
 		let loadingTimer = setTimeout(() => {
             $.LoadingOverlay('text', 'Sorry this is taking longer than expected ...');
-        }, 3000);
+        }, 5000);
 
         $('#oe-test-mode').addClass('red pulse');
 

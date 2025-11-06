@@ -15,53 +15,119 @@ The web-based interface lets you monitor your system live, review captured event
 
 Built by enthusiasts for enthusiasts, Allsky is open, extensible, and endlessly curious — a fusion of astrophotography, automation, and discovery.
 
-## Key Features
+> ### Ready to capture the sky?
+> Skip the details and **[head straight to the setup guide](#requirements)** to begin installing Allsky.
 
-* Runs on a variety of raspberry Pi Single Board Computers (SBC)
-* A Web based User Interface (WebUI)
-* Remote website / Server for storing images
-* Timelapse
-* Mini Timelapse
-* Keogram
-* Keolapse
+## Key Features Summary
+
+> <br>
+> Below is a list of key features. See later in this document for more details on each.
+> <br><br>
+
+* Runs on a variety of Raspberry Pi Single Board Computers (SBCs)
+* Web-based User Interface (WebUI)
+   * View captured images, timelapses, and keograms
+   * Control capture and image-processing settings
+   * Manage Allsky services
+   * Control the Pi directly
+   * Add custom functions via user-defined buttons
+   * Get support
+   * Access documentation
+* Remote website / server for storing images
+   * Automatically upload capture images, timelapses, keograms
+   * Allows easier sharing of your data with others
+* Timelapse creation
+* Mini-timelapse
+   * Create a mini timelapse from the last X captured images
+* Keogram generation
+* Keolapse creation
+* Allsky Website
+   * A global map of Allsky cameras
+   * Share your camera with others
 * Overlay System
-   * Design fully custom overlays tailored to your setup.
-	* Use separate overlays for day and night captures for maximum flexibility.
-	* Enjoy an intuitive drag-and-drop interface for effortless layout editing.
-	* Choose exactly which data fields to display from a rich, dynamic list.
-	* Group related fields together for easier movement and organization.
-	* Fine-tune layouts with precise alignment and spacing controls.
-	* Insert predefined blocks — such as all Sun-related data — with a single click.
-	* Use any font to style your overlays your way.
-	* Customize the format of every field for consistent presentation.
-	* Add your own images, logos, or icons to any overlay for a personal touch.
+   * Design fully custom overlays tailored to your setup
+   * Use separate overlays for day and night captures
+   * Enjoy an intuitive drag-and-drop interface for effortless layout editing
+   * Choose exactly which data fields to display from a rich, dynamic list
+   * Group related fields together for easier movement and organization
+   * Fine-tune layouts with precise alignment and spacing controls
+   * Insert predefined blocks — such as all Sun-related data — with a single click
+   * Use any font to style your overlays your way
+   * Customize the format of every field for consistent presentation
+   * Add your own images, logos, or icons to any overlay for a personal touch
 * Module System
-   * A modular system allowing you to add the additional features you need to Allsky
-   * Developers can create new modules using the provided developer module documentation
-   * Developers can contrinute modules to the main Allsky project to help benefit others
-   * Various 'flows' are available
-      * Daytime capture - Modules that run dueing the day
-      * Nighttime capture - Modules that run during the night
-      * Day to Night - Modules that run in the day to night transition
-      * Night to Day - Modules that run in the night to day transition
-      * Periodic - Modules that run periodically
-   * Some key modules, this is not an exhaustive list
-      > NOTE: Some modules require external hardware
-      * Star count - Counts stras in an image
-      * Meteor detection - Detects meteors in an image
-      * Environment - Capture data on the local environment. This can use hadware sensors or 3rd party API's
-      * Dew Heater - Allows control of a dew heater
-      * Hardware Status - Capture data from the Pi, for example cpu temp and memory / disk usage
-      * Cloud detection - using various methods, Hardware sensors, AI ...
-      * ADSB - Capture data on aicraft flying around you
-      * Fans - Control external fans, typically used to cool or vent the enclosure
-      * Solar System - Calculate data for Solar System objects such as the Sun, Moon, Panets and Satellites
-      * Power - Mesaure power consumption, typically used to measure power consumption of the dew heater
-      * SQM - A Sky quality meter, returns Lux and esitmated Bortle
-* Charts
+   * Modular architecture allowing you to add only the features you need
+   * Developers can create new modules using the provided developer documentation
+   * Developers can contribute modules to the main Allsky project for the community
+   * Multiple “flows” determine when modules run:
+      * Daytime Capture – Modules that run during the day
+      * Nighttime Capture – Modules that run during the night
+      * Day → Night – Modules that run during the day-to-night transition
+      * Night → Day – Modules that run during the night-to-day transition
+      * Periodic – Modules that run at regular intervals
+   * Key Modules (include but not limited to):
+      > <br>
+      > **NOTE:** Some modules require external hardware or third-party services.
+      > <br><br>
+      * Star Count – Counts stars in captured images
+      * Meteor Detection – Detects meteors automatically
+      * Environment – Captures environmental data using sensors or APIs
+      * Dew Heater – Controls an external dew-heater system
+      * Hardware Status – Monitors CPU temperature, memory, and disk usage
+      * Cloud Detection – Determines sky clarity via sensors or AI methods
+      * ADSB – Displays aircraft data from local or online sources
+      * Fans – Controls external cooling or ventilation fans
+      * Solar System – Calculates data for the Sun, Moon, planets, and satellites
+      * Power – Measures power consumption (e.g., dew-heater usage)
+      * SQM – Sky Quality Meter reporting Lux and estimated Bortle class
+      * GPS – Sets location and time from an external GPS receiver
+   * Supported Sensors / 3rd-Party Integrations
+      * SHT31 – Temperature Sensor
+      * SHT4x – Temperature Sensor
+      * DHT22 – Temperature Sensor
+      * DHT11 – Temperature Sensor
+      * AM2302 – Temperature Sensor
+      * BME280 – Temperature Sensor
+      * HTU21 – Temperature Sensor
+      * AHTx0 – Temperature Sensor
+      * DS18B20 – Temperature Sensor
+      * SCD30 – Temperature Sensor
+      * BME680 – Temperature Sensor
+      * OpenWeather – Weather Data Provider
+      * Ecowitt / Ecowitt Local – Weather Sensors
+      * Home Assistant – External Integration
+      * S.M.A.R.T – Hard-disk Monitoring
+      * INA219 – 1-Channel Power Sensor
+      * INA3221 – 3-Channel Power Sensor
+      * TSL2591 – Light Sensor
+      * TSL2561 – Light Sensor
+      * LTR390 – Light Sensor
+      * MLX90640 – Infrared Camera
+      * PMS5003 / PMS7003 / PMSA003 – Air-Quality Sensors
+      * AS3935 – Lightning Sensor
+      * 28BYJ-48 – Stepper Motor
+      * A4988 – Stepper Motor Driver
+      * Titan Astro – Allsky Shield Integration
+      * ADS-B Sources – Local SDR, OpenSky, AirplanesLive, adsb.fi
+      * Discord – Send images to Discord channels
+      * InfluxDB – Send data to an InfluxDB instance
+      * MQTT – Publish data to an MQTT broker
+      * Redis – Send data to a Redis server
+      * OpenWeather – Retrieve weather data
+      * Weather Underground – Retrieve weather data
+      * NOAA – Access space-weather data
+      * *And more…*
+      > <br>
+      > If you have a sensor that isn’t currently supported, please contact us.
+      > <br><br>
+   * Charts System
+      * Display data from various sources such as:
+         * Camera Sensor
+         * Environment
+         * Dew Heater
+         * *And more…*
+      * Create your own custom charts
 
-* Meteor Detection
-* Star count
 
 <!-- =============================================================================== --> 
 ## Requirements

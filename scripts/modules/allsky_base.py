@@ -39,7 +39,7 @@ class ALLSKYMODULEBASE:
 						env_file = os.path.join(allsky_shared.ALLSKYPATH, 'env.json')
 						with open(env_file, 'r', encoding='utf-8') as file:
 							env_data = json.load(file)
-							env_key = f"{self.meta_data['module'].upper()}.{param.upper()}"
+							env_key = f"{self.meta_data['module'].upper()}_{param.upper()}"
 							if env_key in env_data:
 								result = env_data[env_key]
 							else:

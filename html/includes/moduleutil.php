@@ -312,7 +312,7 @@ class MODULEUTIL extends UTILBASE {
 						if (isset($moduleData["metadata"]->argumentdetails->$argument->secret)) {
 							if ($moduleData["metadata"]->argumentdetails->$argument->secret !== null) {
 								if ($moduleData["metadata"]->argumentdetails->$argument->secret === 'true') {
-									$secretKey = strtoupper($data->metadata->module) . '.' . strtoupper($argument);
+									$secretKey = strtoupper($data->metadata->module) . '_' . strtoupper($argument);
 									if (isset($secrets->$secretKey)) {
 										$data->metadata->arguments->$argument = $secrets->$secretKey;
 									}
@@ -452,7 +452,7 @@ class MODULEUTIL extends UTILBASE {
                         if ($envData === null) {
                             $envData = json_decode(file_get_contents(ALLSKY_ENV));
                         }
-                        $secretKey = strtoupper($moduleConfig->metadata->module) . '.' . strtoupper($argument);
+                        $secretKey = strtoupper($moduleConfig->metadata->module) . '_' . strtoupper($argument);
                         $envData->$secretKey = $moduleConfig->metadata->arguments->$argument;
                         $moduleConfig->metadata->arguments->$argument = '';
                     }
@@ -550,7 +550,7 @@ class MODULEUTIL extends UTILBASE {
 					if ($envData === null) {
 						$envData = json_decode(file_get_contents(ALLSKY_ENV));
 					}
-					$secretKey = strtoupper($moduleConfig->metadata->module) . '.' . strtoupper($argument);
+					$secretKey = strtoupper($moduleConfig->metadata->module) . '_' . strtoupper($argument);
 					if (isset($envData->$secretKey)) {
 						$moduleConfig->metadata->arguments->$argument = $envData->$secretKey;
 					} 

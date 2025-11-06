@@ -2,11 +2,66 @@
 
 
 This is the source code for the Allsky Camera project.  <!-- described [on Instructables](http://www.instructables.com/id/Wireless-All-Sky-Camera/). -->
-&nbsp;  
-<p align="center">
-<img src="![](./assets/allsky_camera.png)"  width="50%" title="Example of an allsky camera">
-</p>
 
+
+![](./assets/allsky_camera.png)
+
+Allsky transforms a camera into a tireless, intelligent observer of the night sky — an automated system that watches, records, and analyses everything that happens above you.
+
+Using a high-sensitivity camera, powerful Raspberry Pi-based software, and modular extensions, Allsky captures meteors, satellites, aurora, and passing cloud, 24 hours a day. Each frame is processed in real time to reveal events invisible to the naked eye — and every night becomes its own story told through data, images, and motion.
+
+But Allsky is more than just a camera — it’s an ecosystem.
+The web-based interface lets you monitor your system live, review captured events, design custom overlays, visualize sensor data, and automate your setup with a flexible module system. From temperature and dew-heater control to star detection and meteor analytics, every feature works together in a single, polished dashboard.
+
+Built by enthusiasts for enthusiasts, Allsky is open, extensible, and endlessly curious — a fusion of astrophotography, automation, and discovery.
+
+## Key Features
+
+* Runs on a variety of raspberry Pi Single Board Computers (SBC)
+* A Web based User Interface (WebUI)
+* Remote website / Server for storing images
+* Timelapse
+* Mini Timelapse
+* Keogram
+* Keolapse
+* Overlay System
+   * Design fully custom overlays tailored to your setup.
+	* Use separate overlays for day and night captures for maximum flexibility.
+	* Enjoy an intuitive drag-and-drop interface for effortless layout editing.
+	* Choose exactly which data fields to display from a rich, dynamic list.
+	* Group related fields together for easier movement and organization.
+	* Fine-tune layouts with precise alignment and spacing controls.
+	* Insert predefined blocks — such as all Sun-related data — with a single click.
+	* Use any font to style your overlays your way.
+	* Customize the format of every field for consistent presentation.
+	* Add your own images, logos, or icons to any overlay for a personal touch.
+* Module System
+   * A modular system allowing you to add the additional features you need to Allsky
+   * Developers can create new modules using the provided developer module documentation
+   * Developers can contrinute modules to the main Allsky project to help benefit others
+   * Various 'flows' are available
+      * Daytime capture - Modules that run dueing the day
+      * Nighttime capture - Modules that run during the night
+      * Day to Night - Modules that run in the day to night transition
+      * Night to Day - Modules that run in the night to day transition
+      * Periodic - Modules that run periodically
+   * Some key modules, this is not an exhaustive list
+      > NOTE: Some modules require external hardware
+      * Star count - Counts stras in an image
+      * Meteor detection - Detects meteors in an image
+      * Environment - Capture data on the local environment. This can use hadware sensors or 3rd party API's
+      * Dew Heater - Allows control of a dew heater
+      * Hardware Status - Capture data from the Pi, for example cpu temp and memory / disk usage
+      * Cloud detection - using various methods, Hardware sensors, AI ...
+      * ADSB - Capture data on aicraft flying around you
+      * Fans - Control external fans, typically used to cool or vent the enclosure
+      * Solar System - Calculate data for Solar System objects such as the Sun, Moon, Panets and Satellites
+      * Power - Mesaure power consumption, typically used to measure power consumption of the dew heater
+      * SQM - A Sky quality meter, returns Lux and esitmated Bortle
+* Charts
+
+* Meteor Detection
+* Star count
 
 <!-- =============================================================================== --> 
 ## Requirements

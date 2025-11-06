@@ -4,7 +4,7 @@
 This is the source code for the Allsky Camera project.  <!-- described [on Instructables](http://www.instructables.com/id/Wireless-All-Sky-Camera/). -->
 &nbsp;  
 <p align="center">
-<img src="https://github.com/AllskyTeam/allsky/blob/master/assets/allsky_camera.png" width="50%" title="Example of an allsky camera">
+<img src="![](./assets/allsky_camera.png)"  width="50%" title="Example of an allsky camera">
 </p>
 
 
@@ -14,7 +14,7 @@ This is the source code for the Allsky Camera project.  <!-- described [on Instr
 In order to run the Allsky software you need:
 
  * A Raspberry Pi Zero 2, Pi 2, Pi 3, Pi 4, Pi 5, or Le Potato.
- * Raspberry Pi OS Bullseys or Bookworm.  Non-Pi OS operating systems like Ubuntu are NOT supported.  If possible use the "Desktop" version of the Pi OS Bookworm 64-bit release.
+ * Raspberry Pi OS Bullseys, Bookworm or Pixie.  Non-Pi OS operating systems like Ubuntu are NOT supported.  If possible use the "Desktop" version of the Pi OS Bookworm 64-bit release.
  * A camera:
     * Any ZWO camera sold before August 21, 2025,
     * or one of the following cameras:
@@ -32,8 +32,7 @@ In order to run the Allsky software you need:
           * OneInchEye IMX283 (IMX283 sensor)
           * IMX290 60.00 fps
 
-
-&nbsp;  
+ 
 > __NOTES:__
 >	- The ZWO ASI120-series cameras are __not__ recommended due to their tendency to produce poor-quality images.
 >	- The Pi Zero with its limited memory and _very_ limited CPU power is not recommended.  You probably won't be able to create keograms, startrails, or timelapse videos.

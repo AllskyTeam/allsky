@@ -67,7 +67,7 @@ Built by enthusiasts for enthusiasts, Allsky is open, extensible, and endlessly 
       * Periodic – Modules that run at regular intervals
    * Key Modules (include but not limited to):
       > <br>
-      > **NOTE:** Some modules require external hardware or third-party services.
+      > NOTE: Some modules require external hardware or third-party services.
       > <br><br>
       * Star Count – Counts stars in captured images
       * Meteor Detection – Detects meteors automatically
@@ -82,40 +82,43 @@ Built by enthusiasts for enthusiasts, Allsky is open, extensible, and endlessly 
       * SQM – Sky Quality Meter reporting Lux and estimated Bortle class
       * GPS – Sets location and time from an external GPS receiver
    * Supported Sensors / 3rd-Party Integrations
-      * SHT31 – Temperature Sensor
-      * SHT4x – Temperature Sensor
-      * DHT22 – Temperature Sensor
-      * DHT11 – Temperature Sensor
-      * AM2302 – Temperature Sensor
-      * BME280 – Temperature Sensor
-      * HTU21 – Temperature Sensor
-      * AHTx0 – Temperature Sensor
-      * DS18B20 – Temperature Sensor
-      * SCD30 – Temperature Sensor
-      * BME680 – Temperature Sensor
-      * OpenWeather – Weather Data Provider
-      * Ecowitt / Ecowitt Local – Weather Sensors
-      * Home Assistant – External Integration
-      * S.M.A.R.T – Hard-disk Monitoring
-      * INA219 – 1-Channel Power Sensor
-      * INA3221 – 3-Channel Power Sensor
-      * TSL2591 – Light Sensor
-      * TSL2561 – Light Sensor
-      * LTR390 – Light Sensor
-      * MLX90640 – Infrared Camera
-      * PMS5003 / PMS7003 / PMSA003 – Air-Quality Sensors
-      * AS3935 – Lightning Sensor
-      * 28BYJ-48 – Stepper Motor
-      * A4988 – Stepper Motor Driver
-      * Titan Astro – Allsky Shield Integration
-      * ADS-B Sources – Local SDR, OpenSky, AirplanesLive, adsb.fi
-      * Discord – Send images to Discord channels
-      * InfluxDB – Send data to an InfluxDB instance
-      * MQTT – Publish data to an MQTT broker
-      * Redis – Send data to a Redis server
-      * OpenWeather – Retrieve weather data
-      * Weather Underground – Retrieve weather data
-      * NOAA – Access space-weather data
+      | Integration / Sensor | Description |
+      |:----------------------|:-------------|
+      | **SHT31** | Temperature Sensor |
+      | **SHT4x** | Temperature Sensor |
+      | **DHT22** | Temperature Sensor |
+      | **DHT11** | Temperature Sensor |
+      | **AM2302** | Temperature Sensor |
+      | **BME280** | Temperature Sensor |
+      | **HTU21** | Temperature Sensor |
+      | **AHTx0** | Temperature Sensor |
+      | **DS18B20** | Temperature Sensor |
+      | **SCD30** | Temperature Sensor |
+      | **BME680** | Temperature Sensor |
+      | **OpenWeather** | Weather Data Provider |
+      | **Ecowitt / Ecowitt Local** | Weather Sensors |
+      | **Home Assistant** | External Integration |
+      | **S.M.A.R.T** | Hard-disk Monitoring |
+      | **INA219** | 1-Channel Power Sensor |
+      | **INA3221** | 3-Channel Power Sensor |
+      | **TSL2591** | Light Sensor |
+      | **TSL2561** | Light Sensor |
+      | **LTR390** | Light Sensor |
+      | **MLX90640** | Infrared Camera |
+      | **PMS5003 / PMS7003 / PMSA003** | Air-Quality Sensors |
+      | **AS3935** | Lightning Sensor |
+      | **28BYJ-48** | Stepper Motor |
+      | **A4988** | Stepper Motor Driver |
+      | **Titan Astro** | Allsky Shield Integration |
+      | **ADS-B Sources** | Local SDR, OpenSky, AirplanesLive, adsb.fi |
+      | **Discord** | Send images to Discord channels |
+      | **InfluxDB** | Send data to an InfluxDB instance |
+      | **MQTT** | Publish data to an MQTT broker |
+      | **Redis** | Send data to a Redis server |
+      | **OpenWeather** | Retrieve weather data |
+      | **Weather Underground** | Retrieve weather data |
+      | **NOAA** | Access space-weather data |
+
       * *And more…*
       > <br>
       > If you have a sensor that isn’t currently supported, please contact us.
@@ -174,9 +177,7 @@ See the [detailed installation instructions](https://htmlpreview.github.io/?http
 <!-- =============================================================================== --> 
 ## Web User Interface (WebUI)
 
-<p align="center">
-<img src="https://github.com/AllskyTeam/allsky/blob/master/html/documentation/settings/AllskySettingsPage.png" width="90%">
-</p>
+![](./html/documentation/settings//AllskySettingsPage.png)
 
 The WebUI is used to administer Allsky, and to a lesser extent, your Pi. It can also be used to view the current image as well as all saved images, keograms, startrails, and timelapse videos.
 

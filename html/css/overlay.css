@@ -401,3 +401,7 @@ div.dtsp-searchPane div.dtsp-topRow {
 .dt-paging {
     margin-top: 5px !important;
 }
+
+#pgtextlabel, #pgtextformat {
+    width: 80%;
+}

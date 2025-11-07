@@ -1,6 +1,0 @@
-*.local*
-*.log
-*.map
-.DS_Store
-coverage
-node_modules

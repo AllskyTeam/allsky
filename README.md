@@ -38,7 +38,7 @@ Skip the details and **[head straight to the setup guide](#requirements)** to be
 
 * Runs on a variety of Raspberry Pi Single Board Computers (SBCs)
 * Web-based User Interface (WebUI)
-   * View captured images, timelapses, and keograms
+   * View captured images, timelapses, startrails and keograms
    * Control capture and image-processing settings
    * Manage Allsky services
    * Control the Pi directly
@@ -47,14 +47,16 @@ Skip the details and **[head straight to the setup guide](#requirements)** to be
    * Access documentation
    * Light / Dark modes
 * Remote website / server for storing images
-   * Automatically upload capture images, timelapses, keograms
+   * Automatically upload capture images, timelapses, startrails and keograms
    * Allows easier sharing of your data with others
 * Timelapse creation
 * Mini-timelapse
    * Create a mini timelapse from the last X captured images
-* Keogram generation
+* Keogram creation
 * Keolapse creation
-* Allsky Website
+* Keolapse creation
+* Startrails creation
+* Allsky Map
    * A global map of Allsky cameras
    * Share your camera with others
 * Overlay System
@@ -187,7 +189,7 @@ See the [detailed installation instructions](./html/documentation/installations/
 
 ## Web User Interface (WebUI)
 
-![](./html/documentation/settings//AllskySettingsPage.png)
+![](./assets/webui.png)
 
 The WebUI is used to administer Allsky, and to a lesser extent, your Pi. It can also be used to view the current image as well as all saved images, keograms, startrails, and timelapse videos.
 
@@ -208,6 +210,45 @@ If it is behind a firewall consult the documentation for your network equipment 
 
 The WebUI has a link to the Allsky Documentation which describes all the settings Allsky uses as well as troubleshooting information.
 It should be used before requesting support on GitHub.
+
+---
+
+## The Overlay Editor
+
+![](./assets/overlay.png)
+
+The overlay editor allows you to add custom data to your captured images. This data can include:
+
+   * Plain text fields
+      * These can use any font you upload
+   * Images
+      * You can upload new images for use in your overlays
+   * Data from Allsky or its modules
+      * Core Allsky generates a large amount of data, which is further extended by additional modules. All of this data is available for display on your overlays
+   * Simple graphics to highlight or group related fields
+
+Since you may not want the same data on daytime and nighttime captures — for example, displaying a star count during the day doesn’t make sense — you can create separate overlays for day and night. In fact, you can build a library of overlays and switch between them as needed.
+
+All data captured by Allsky is stored internally in precise formats. The overlay editor allows you to format this data however you wish. For example, if temperature is stored to three decimal places but you only want to show one, simply set the appropriate format in the format editor.
+
+You can upload TrueType or OpenType fonts for use in your overlays.
+
+If you’d like to add images — such as a compass or logo — a core set of images is included, and you can also upload your own.
+
+Several modules require masks, which are applied to images to blank out regions before processing. This is important for tasks like meteor detection, where false positives must be avoided. The overlay editor includes a built-in mask drawing tool so you can create and save masks directly — no need for GIMP or Photoshop anymore.
+
+Aligning fields on the overlay can be tricky, so the editor provides alignment tools to help. Fields can also be grouped, allowing you to move aligned items together as one unit.
+
+Allsky and several modules provide “blocks” of fields. When you add one of these blocks to the overlay, all relevant fields are automatically added. For example, adding the Sun block inserts all sun-related times in one step — a quick way to add multiple fields at once.
+
+There are many more features available so please see the main documentation for full details.
+
+---
+
+## Module Manager
+
+![](./assets/modulemanager.png)
+
 
 ---
 

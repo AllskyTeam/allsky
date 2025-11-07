@@ -1,9 +1,6 @@
 # Allsky Camera ![Release](https://img.shields.io/badge/Version-v2025.xx.xx-green.svg) [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=MEBU2KN75G2NG&source=url)
 
 
-This is the source code for the Allsky Camera project.  <!-- described [on Instructables](http://www.instructables.com/id/Wireless-All-Sky-Camera/). -->
-
-
 ![](./assets/allsky_camera.png)
 
 Allsky transforms a camera into a tireless, intelligent observer of the night sky — an automated system that watches, records, and analyses everything that happens above you.
@@ -11,12 +8,27 @@ Allsky transforms a camera into a tireless, intelligent observer of the night sk
 Using a high-sensitivity camera, powerful Raspberry Pi-based software, and modular extensions, Allsky captures meteors, satellites, aurora, and passing cloud, 24 hours a day. Each frame is processed in real time to reveal events invisible to the naked eye — and every night becomes its own story told through data, images, and motion.
 
 But Allsky is more than just a camera — it’s an ecosystem.
-The web-based interface lets you monitor your system live, review captured events, design custom overlays, visualize sensor data, and automate your setup with a flexible module system. From temperature and dew-heater control to star detection and meteor analytics, every feature works together in a single, polished dashboard.
+The web-based interface lets you monitor your system live, review captured events, design custom overlays, visualise sensor data, and automate your setup with a flexible module system. From temperature and dew heater control to star detection and meteor analytics, every feature works together in a single, polished dashboard.
 
 Built by enthusiasts for enthusiasts, Allsky is open, extensible, and endlessly curious — a fusion of astrophotography, automation, and discovery.
 
-> ### Ready to capture the sky?
-> Skip the details and **[head straight to the setup guide](#requirements)** to begin installing Allsky.
+
+
+> The Allsky Camera software was originally created by Thomas Jacquin, a developer and astrophotography  enthusiast based in Canada.
+>
+> Thomas released the first version of Allsky around 2018, designed to run on a Raspberry Pi with a ZWO ASI or Raspberry Pi HQ camera to capture images of the entire sky — automatically creating timelapses, keograms, and detecting meteors.
+>
+>Since then, the project has grown into a large open-source community effort on GitHub under the Allsky Team￼ organisation, with contributions from many developers and users:
+>
+>Thomas continues to be recognised as the founder and original author, while the Allsky Team now maintains and evolves the software collaboratively.
+>
+> The current maintainers are
+>  * Eric Claeys - @EricClaeys 
+>  * Alex Greenland - @Alex-developer 
+
+
+### Ready to capture the sky?
+Skip the details and **[head straight to the setup guide](#requirements)** to begin installing Allsky.
 
 ## Key Features Summary
 

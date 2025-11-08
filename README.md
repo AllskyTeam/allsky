@@ -249,6 +249,40 @@ There are many more features available so please see the main documentation for 
 
 ![](./assets/modulemanager.png)
 
+Modules are essentially plugins for Allsky that extend its functionality. The Module Manager allows you to enable, configure, and manage these modules.
+
+The processing engine in Allsky uses what we call **Flows**, or **pipelines**. Modules are executed within these flows during image capture. There are five defined flows:
+
+| Flow | Description |
+|:---------|:-------------|
+| Daytime | This flow runs after each image is captured during the day |
+| Nighttime | This flow runs after each image is captured during the night |
+| Day to Night | This flow runs during the transition from daytime to nighttime capture |
+| Night to Day | This flow runs during the transition from nighttime to daytime capture |
+| Periodic | This flow runs on a periodic timer |
+
+In general, we aim to keep the **image capture flows** as fast as possible to maintain consistent intervals between images. The **Periodic** flow allows modules that take longer to execute to run independently, without affecting the main capture process.
+
+Allsky includes a **core set of modules**, and there is also a collection of **extra modules** that provide additional features. These extra modules are developed both by the Allsky Team and by community contributors.
+
+Many modules communicate with **hardware sensors**, and to assist with this, the Module Manager includes a **Device Manager** that displays all devices currently connected to the Pi.
+
+Contributions to the extra modules are always welcome. Details on how to **develop and contribute modules** can be found in the **Module Developer Documentation**.
+
+For details on available modules and their configuration, please see the **main documentation**.
+
+---
+
+## Chart Manager
+
+![](./assets/charts.png)
+
+Allsky and its associated modules generate a lot of data that can be visualised using the chart manager.
+
+Allsky contains a predefined library of charts and modules can add additional charts to this list.
+
+You can also create custom charts from all of the available data in a variety of formats such as line, bar, gauge and yes/no
+
 
 ---
 

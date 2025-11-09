@@ -612,6 +612,10 @@ class MODULEUTIL extends UTILBASE {
             'extradata' => json_decode($extraData ?: '{}'),
         ];
 
+        @unlink($fileName);
+        $debugFileName = ALLSKY_MODULES . '/test_flow-debug.json';
+        @unlink($debugFileName);
+
         $this->sendResponse(json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
     }
 

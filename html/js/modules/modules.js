@@ -893,13 +893,17 @@ class MODULESEDITOR {
 					if (fieldType == 'variable') {
 						inputHTML = '<input id="' + key + '" name="' + key + '" class="form-control" disabled="disabled" value="' + fieldValue + '"' + required + fieldDescription + '>';
 						extraClass = 'input-group1';
+						let selectType = 'single';
+						if ('select' in fieldTypeData) {
+							selectType = fieldTypeData.select
+						}
 						inputHTML = '\
 							<div class="row">\
 								<div class="col-xs-4">\
 								' + inputHTML + '\
 								</div>\
 								<div class="col-xs-3">\
-									<button type="button" class="btn btn-default" id="open-var-' + key + '" data-source="' + key + '">...</button>\
+									<button type="button" class="btn btn-default" id="open-var-' + key + '" data-source="' + key + '" data-select="' + selectType + '">...</button>\
 									<button type="button" class="btn btn-default" id="reset-var-' + key + '" data-source="' + key + '"><i class="fa-solid fa-rotate-right"></i></button>\
 								</div>\
 								<div class="col-xs-4" id="' + key + '_value">\
@@ -917,9 +921,11 @@ class MODULESEDITOR {
 						$(document).on('click', '#open-var-' + key, (event) => {
 							let el = $(event.target).data('source');
 							let data = $('#' + el).val();
+							let selectType = $(event.target).data('select');
 							$.allskyVariable({
 								id: key,
 								variable: data,
+								selectStyle: selectType,
 								valueDiv: key + '_value',
 								variableSelected: function (variable) {
 									$('#' + key).val(variable)

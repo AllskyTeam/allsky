@@ -12,6 +12,7 @@ import shutil
 import psutil
 from vcgencmd import Vcgencmd
 from gpiozero import CPUTemperature, Device
+from datetime import timedelta
 
 class ALLSKYPISTATUS(ALLSKYMODULEBASE):
  
@@ -196,6 +197,17 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 					"database": {
 						"include" : "true"
 					}
+				},
+				"AS_UPTIME": {
+					"name": "${UPTIME}",
+					"format": "",
+					"sample": "",
+					"group": "Pi",
+					"description": "System uptime",
+					"type": "string",
+					"database": {
+						"include": "true"
+					}
 				}
 			}
 		},
@@ -321,6 +333,19 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 			extra_data['AS_MEMORYAVAILABLE'] = available_memory
 			extra_data['AS_MEMORYUSEDPERCENTAGE'] = percent
 			extra_data['AS_MEMORYFREEPERCENTAGE'] = (available_memory / total_memory) * 100
+
+			try:
+				with open("/proc/uptime", "r") as f:
+					uptime_seconds = float(f.readline().split()[0])
+				total_uptime = timedelta(
+					seconds=int(uptime_seconds)
+				)
+				uptime_str = str(total_uptime)
+				extra_data['AS_UPTIME'] = uptime_str
+
+				self.log(4, f'INFO: Uptime {uptime_str}')
+			except Exception as e:
+				self.log(0, f"INFO: ERROR reading /proc/uptime: {e}")
    
 			allsky_shared.setLastRun('pistatus')
 			allsky_shared.dbUpdate('pistatus', extra_data)

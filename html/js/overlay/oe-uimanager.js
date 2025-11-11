@@ -214,6 +214,8 @@ class OEUIMANAGER {
         $(document).off('oe-config-updated');
         $(document).off('click','#oe-show-overlay-manager');
         $(document).off('addFields');
+        $('#textpropgrid').off('focusin', '#pgtextlabel, #pgtextformat, #pgtextsample, #pgtextempty');
+        $('#textpropgrid').off('focusout', '#pgtextlabel, #pgtextformat, #pgtextsample, #pgtextempty');
 
         this.#overlayLayer.destroyChildren();
         this.#transformer = new Konva.Transformer({
@@ -503,6 +505,22 @@ class OEUIMANAGER {
             this.updateToolbar();
         });        
         
+        $('#textpropgrid')
+        .on('focusin', '#pgtextlabel, #pgtextformat, #pgtextsample, #pgtextempty', function () {
+            $(this).data('original', $(this).val());
+        })
+        .on('focusout', '#pgtextlabel, #pgtextformat, #pgtextsample, #pgtextempty', (e) => {
+            const original = $(e.currentTarget).data('original');
+            const current = $(e.currentTarget).val();
+
+            if (original !== current) {
+                if (this.testMode) {
+                    this.enableTestMode();
+                }
+            }
+        });
+
+
     }
 
     setupVariableManagerEvents() {
@@ -2591,12 +2609,7 @@ class OEUIMANAGER {
             }
             uiManager.checkFieldBounds(field.shape, uiManager.editorStage , uiManager.transformer);
 
-            // If we are in test mode then re enable it after the field has ben updated
-            if (uiManager.testMode) {
-                uiManager.enableTestMode();
-            }
             uiManager.updateToolbar();
-
         }
 
         var options = {
@@ -2881,7 +2894,7 @@ class OEUIMANAGER {
 					url: 'includes/overlayutil.php?request=Formats',
 					dataType: 'json'
 				},
-                order: [[3, 'asc']],
+                order: [[4, 'asc']],
                 paging: false,
 				scrollY: '25vh',
 				scrollCollapse: true,
@@ -2907,11 +2920,8 @@ class OEUIMANAGER {
 						width: '20%'					
 					},                  
 					{ 
-						// Was: data: 'type',
-						// ECC: Set fType to the current filter.
                         data: function(data, type) {
                             fType = data.type.charAt(0).toUpperCase() + data.type.slice(1);
-	//x console.log("fType now=", fType);
 							return fType;
 						},
 						visible: false

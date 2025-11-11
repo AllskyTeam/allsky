@@ -143,15 +143,6 @@
 		"group": "Image Data",
 		"description": "Time of last image"
 	},
-	"AS_FLIP": {
-		"name": "${FLIP}",
-		"format": "",
-		"sample": "",
-		"source": "Allsky",
-		"type": "flip",
-		"group": "Image Data",
-		"description": "Image flip value"
-	},
 	"AS_MEAN": {
 		"name": "${MEAN}",
 		"format": "",

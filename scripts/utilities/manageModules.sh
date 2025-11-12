@@ -74,7 +74,7 @@ done
 [[ ${OK} == "false" ]] && usage_and_exit 1
 
 if [[ ${BRANCH_SPECIFIED} == "false" ]]; then
-	BRANCH="$( get_branch )"
+	BRANCH="$( get_branch "" )"
 	if [[ ${BRANCH} != "${ALLSKY_GITHUB_MAIN_BRANCH}" ]]; then
 		ARGS+=" --setbranch ${BRANCH}"
 	fi

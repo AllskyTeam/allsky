@@ -230,6 +230,12 @@
 		echo "</div>";
 	}
 
+	// Optional user footer.
+	$footer = "myFiles/footer.php";
+	if (file_exists($footer)) {
+		include_once($footer);
+	}
+
 	if ($includeGoogleAnalytics && file_exists("myFiles/analyticsTracking.js")) {
 		include_once("myFiles/analyticsTracking.js");
 	}

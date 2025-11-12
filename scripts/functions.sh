@@ -1316,13 +1316,11 @@ function activate_python_server_venv()
 
 	local ACTIVATE="${ALLSKY_PYTHON_SERVER_VENV}/bin/activate"
 
-	if [[ ${ALLSKY_PI_OS} == "bookworm" && -s ${ACTIVATE} ]]; then
-		#shellcheck disable=SC1090,SC1091
-		source "${ACTIVATE}" || exit 1
-		PYTHON_SERVER_VENV_ACTIVATED="true"
-		return 0	# Successfully activated
-	fi
-	return 1
+	#shellcheck disable=SC1090,SC1091
+	source "${ACTIVATE}" || exit 1
+	PYTHON_SERVER_VENV_ACTIVATED="true"
+	return 0	# Successfully activated
+
 }
 
 function deactivate_python_server_venv()

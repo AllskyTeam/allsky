@@ -3179,12 +3179,10 @@ install_Python()
 	# Install the server venv. NOTE this needs older versions of some packages like numpy so cannot use
 	# the main allsky venv
 	#
-	if [[ ${ALLSKY_PI_OS} == "bookworm" ]]; then
-		python3 -m venv "${ALLSKY_PYTHON_SERVER_VENV}" --system-site-packages
-		activate_python_server_venv
-		install_dependencies "${ALLSKY_REPO}/requirements-server.txt" "Python_server_dependencies"
-		deactivate_python_server_venv
-	fi
+	python3 -m venv "${ALLSKY_PYTHON_SERVER_VENV}" --system-site-packages
+	activate_python_server_venv
+	install_dependencies "${ALLSKY_REPO}/requirements-server.txt" "Python_server_dependencies"
+	deactivate_python_server_venv
 	
 	local PREFIX  REQUIREMENTS_FILE  M  R  NUM_TO_INSTALL
 	local NAME  PKGs  TMP  COUNT  C  PACKAGE  STATUS_NAME  L  M  MSG
@@ -3216,18 +3214,17 @@ install_Python()
 
 	NUM_TO_INSTALL=$( wc -l < "${REQUIREMENTS_FILE}" )
 
-	if [[ ${ALLSKY_PI_OS} == "bookworm" ]]; then
-		PKGs="python3-full libgfortran5 libopenblas0-pthread"
-		display_msg --logonly progress "Installing ${PKGs}."
-		TMP="${ALLSKY_LOGS}/python3-full.log"
-		# shellcheck disable=SC2086
-		run_aptGet ${PKGs} > "${TMP}" 2>&1
-		check_success $? "${PKGs} install failed" "${TMP}" "${DEBUG}" ||
-			exit_with_image 1 "${STATUS_ERROR}" "${PKGs} install failed."
+	PKGs="python3-full libgfortran5 libopenblas0-pthread"
+	display_msg --logonly progress "Installing ${PKGs}."
+	TMP="${ALLSKY_LOGS}/python3-full.log"
+	# shellcheck disable=SC2086
+	run_aptGet ${PKGs} > "${TMP}" 2>&1
+	check_success $? "${PKGs} install failed" "${TMP}" "${DEBUG}" ||
+		exit_with_image 1 "${STATUS_ERROR}" "${PKGs} install failed."
 
-		python3 -m venv "${ALLSKY_PYTHON_VENV}" --system-site-packages
-		activate_python_venv
-	fi
+	python3 -m venv "${ALLSKY_PYTHON_VENV}" --system-site-packages
+	activate_python_venv
+
 
 	NAME="Python_dependencies"
 
@@ -3336,7 +3333,7 @@ check_if_supported_OS()
 {
 	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
 
-	local SUPPORTED_OSES="bullseye bookworm"
+	local SUPPORTED_OSES="bullseye bookworm trixie"
 	[[ ${SUPPORTED_OSES} =~ ${ALLSKY_PI_OS} ]] && return
 
 	local OS="${ALLSKY_PI_OS^}"		# uppercase 1st letter for looks
@@ -3345,12 +3342,12 @@ check_if_supported_OS()
 	for i in ${SUPPORTED_OSES}; do
 		MSG+="\n  ${i^}"
 	done
-	MSG+="\n\nIf you are running an operating system that is NEWER than Bookworm,"
+	MSG+="\n\nIf you are running an operating system that is NEWER than Trixie,"
 	MSG+=" please run 'cat /etc/os-release' and copy/paste the results into"
 	MSG+=" a new GitHub Discussion item."
 	MSG+="  The Allsky team will need to test Allsky with the new operating system."
 	MSG+="\n\nIf you are running an older operating system we recommend doing"
-	MSG+=" a fresh install of the Desktop version of Bookworm 64-bit on a clean SD card."
+	MSG+=" a fresh install of the Desktop version of Trixie 64-bit on a clean SD card."
 	whiptail --title "${TITLE}" --msgbox --ok-button "Exit" "${MSG}" 20 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 
 	MSG="Unsupported OS: ${ALLSKY_PI_OS}."

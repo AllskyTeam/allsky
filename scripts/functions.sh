@@ -1364,7 +1364,7 @@ function activate_python_venv()
 
 	local ACTIVATE="${ALLSKY_PYTHON_VENV}/bin/activate"
 
-	if [[ ${PI_OS} == "bookworm" && -s ${ACTIVATE} ]]; then
+	if [[ ( ${PI_OS} == "bookworm" || ${PI_OS} == "trixie" ) && -s ${ACTIVATE} ]]; then
 		#shellcheck disable=SC1090,SC1091
 		source "${ACTIVATE}" || exit 1
 		PYTHON_VENV_ACTIVATED="true"

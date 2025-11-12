@@ -1,10 +1,12 @@
-import cgi
+#import cgi
 import os
+import sys
 import json
 import re
 import time
 import locale
 from datetime import datetime, timedelta, date
+import urllib.parse
 
 class ALLSKYFORMAT:
 
@@ -25,13 +27,24 @@ class ALLSKYFORMAT:
         except:
             pass
 
-        formData = cgi.FieldStorage()
-
-        self._config = formData["config"].value
-        self._fields = formData["fields"].value
+        #formData = cgi.FieldStorage()
+        formData = self._get_params()
+                
+        self._config = formData.get("config", [None])[0]
+        self._fields  = formData.get("fields", [None])[0]
+        
         self._jsonConfig = json.loads(self._config)
         self._jsonFields = json.loads(self._fields)
         self._getAllSkyVariables()
+        
+    def _get_params(self):
+        if os.environ.get("REQUEST_METHOD", "") == "POST":
+            length = int(os.environ.get("CONTENT_LENGTH", "0"))
+            data = sys.stdin.read(length)
+        else:
+            data = os.environ.get("QUERY_STRING", "")
+        return urllib.parse.parse_qs(data)
+
 
     def _getAllSkyVariables(self):
         # Can't use ALLSKY_TMP since it's not defined

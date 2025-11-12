@@ -7,6 +7,8 @@ ME="$( basename "${BASH_ARGV0}" )"
 source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
+#shellcheck source-path=scripts
+source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"
 
 usage_and_exit()
 {
@@ -36,6 +38,7 @@ usage_and_exit()
 OK="true"
 DO_HELP="false"
 ARGS=""
+BRANCH_SPECIFIED="false"
 # There are more command-line arguments, but the ones below are most likely to
 # be used by a user.
 while [[ $# -gt 0 ]]; do
@@ -46,9 +49,14 @@ while [[ $# -gt 0 ]]; do
 			;;
 		--setbranch)
 			ARGS+=" ${ARG} ${2}"
+			BRANCH_SPECIFIED="true"
 			shift
 			;;
-		--branch | --welcome)
+		--branch)
+			ARGS+=" ${ARG}"
+			BRANCH_SPECIFIED="true"
+			;;
+		--welcome)
 			ARGS+=" ${ARG}"
 			;;
 		-*)
@@ -65,5 +73,11 @@ done
 [[ ${DO_HELP} == "true" ]] && usage_and_exit 0
 [[ ${OK} == "false" ]] && usage_and_exit 1
 
+if [[ ${BRANCH_SPECIFIED} == "false" ]]; then
+	BRANCH="$( get_branch )"
+	if [[ ${BRANCH} != "${ALLSKY_GITHUB_MAIN_BRANCH}" ]]; then
+		ARGS+=" --setbranch ${BRANCH}"
+	fi
+fi
 # shellcheck disable=SC2068,SC2086
 "${ALLSKY_MODULE_INSTALLER}" "${@}" ${ARGS}

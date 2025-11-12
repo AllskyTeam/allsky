@@ -1035,7 +1035,7 @@ install_webserver_et_al()
 		display_msg --log progress "Installing the web server."
 		TMP="${ALLSKY_LOGS}/lighttpd.install.log"
 		run_aptGet \
-			lighttpd  php8.4-fpm  php-gd  hostapd  dnsmasq  avahi-daemon  hwinfo tree i2c-tools \
+			lighttpd  php-fpm  php-gd  hostapd  dnsmasq  avahi-daemon  hwinfo tree i2c-tools \
 			> "${TMP}" 2>&1
 		check_success $? "lighttpd installation failed" "${TMP}" "${DEBUG}" \
 			|| exit_with_image 1 "${STATUS_ERROR}" "lighttpd installation failed"

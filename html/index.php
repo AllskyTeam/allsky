@@ -727,8 +727,8 @@ if (DHCP_ENABLED) {
 						insertMenuItem('check_allsky', "", "dropdown");
 						insertMenuItem('startrails_settings', "", "dropdown");
 						insertMenuItem('stretch_settings', "", "dropdown");
-						// TODO: uncomment when scripts are created
 						insertMenuItem('timelapse_settings', "", "dropdown");
+						// TODO: uncomment when scripts are created
 						// insertMenuItem('bad_images_settings', "", "dropdown");
 						// insertMenuItem('constellation_overlay', "", "dropdown");
 ?>

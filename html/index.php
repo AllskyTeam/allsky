@@ -666,7 +666,7 @@ if ($page=="logout") {
 		<!-- Header -->
 		<div class="header">
 			<div class="navbar-brand valign-center">
-					<img id="toggleNav" src="documentation/img/logo.png" title="Allsky logo">
+					<img id="toggleNav" src="documentation/img/logo.png" title="Click to minimize/maximize menu bar">
 				<div class="version-title version-title-color">
 					<span id="allskyStatus"><?php echo $allskyStatus; ?></span>
 					<?php insertVersions(); ?>

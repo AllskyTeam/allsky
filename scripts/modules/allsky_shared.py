@@ -1792,7 +1792,10 @@ def get_gpio_pin(gpio_pin, pi=None, show_errors=False):
     return read_gpio_pin(gpio_pin, pi=None, show_errors=False)
 def read_gpio_pin(gpio_pin, pi=None, show_errors=False):
     api_url = get_api_url()
-    response = requests.get(f'{api_url}/gpio/digital/{gpio_pin}')
+    response = requests.get(
+        f'{api_url}/gpio/digital/{gpio_pin}',
+        timeout= 2
+    )
     response.raise_for_status()
     data = response.json()
 
@@ -1801,21 +1804,29 @@ def read_gpio_pin(gpio_pin, pi=None, show_errors=False):
 def set_gpio_pin(gpio_pin, state, pi=None, show_errors=False):
     api_url = get_api_url()    
     state = normalise_on_off(state)
-    response = requests.post(f'{api_url}/gpio/digital', json={
-        'pin': str(gpio_pin),
-        'state': state.lower()
-    })
+    response = requests.post(
+        f'{api_url}/gpio/digital', 
+        json={
+            'pin': str(gpio_pin),
+            'state': state.lower()
+        },
+        timeout= 2
+    )
     response.raise_for_status()
     return response.json()
 
 def set_pwm(gpio_pin, duty_cycle, pi=None, show_errors=False):
     api_url = get_api_url()    
     frequency = 1000
-    response = requests.post(f'{api_url}/gpio/pwm', json={
-        'pin': str(gpio_pin),
-        'duty': duty_cycle,
-        'frequency': frequency
-    })
+    response = requests.post(
+        f'{api_url}/gpio/pwm', 
+        json={
+            'pin': str(gpio_pin),
+            'duty': duty_cycle,
+            'frequency': frequency
+        },
+        timeout= 2
+    )
     response.raise_for_status()
     return response.json()
 
@@ -1823,11 +1834,15 @@ def stop_pwm(gpio_pin):
     api_url = get_api_url()    
     frequency = 1000
     duty_cycle = 0
-    response = requests.post(f'{api_url}/gpio/pwm', json={
-        'pin': str(gpio_pin),
-        'duty': duty_cycle,
-        'frequency': frequency
-    })
+    response = requests.post(
+        f'{api_url}/gpio/pwm',
+        json={
+            'pin': str(gpio_pin),
+            'duty': duty_cycle,
+            'frequency': frequency
+        },
+        timeout= 2        
+    )
     response.raise_for_status()
     return response.json()
     

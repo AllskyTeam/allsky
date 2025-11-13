@@ -11,7 +11,7 @@ from modules.auth import auth_bp
 from modules.dashboard import dashboard_bp
 from modules.webauth import webauth_bp, SimpleUser
 from modules.auth_utils import init_auth_db
-from modules.focuser import focuser_bp
+#from modules.focuser import focuser_bp
 
 home = os.environ.get("ALLSKY_HOME")
 if not home:
@@ -62,7 +62,7 @@ app.register_blueprint(webauth_bp)
 app.register_blueprint(dashboard_bp)
 app.register_blueprint(gpio_bp, url_prefix='/gpio')
 app.register_blueprint(allsky_bp, url_prefix='/allsky')
-app.register_blueprint(focuser_bp, url_prefix="/focuser")
+#app.register_blueprint(focuser_bp, url_prefix="/focuser")
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8090, debug=True)

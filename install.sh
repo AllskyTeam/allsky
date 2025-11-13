@@ -3180,6 +3180,10 @@ install_Python()
 	# the main allsky venv
 	#
 	python3 -m venv "${ALLSKY_PYTHON_SERVER_VENV}" --system-site-packages
+	if [[ ${PI_OS} == "trixie" ]]; then
+		run_aptGet python3-dev python3.13-dev build-essential pkg-config > "${TMP}" 2>&1	
+	fi
+
 	activate_python_server_venv
 	install_dependencies "${ALLSKY_REPO}/requirements-server.txt" "Python_server_dependencies"
 	deactivate_python_server_venv

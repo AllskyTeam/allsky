@@ -2329,6 +2329,10 @@ class MODULESEDITOR {
 			this.#showDebug()
 		});
 
+		$(document).on('click', '#module-editor-periodic', (e) => {
+			$('#module-editor-config').val('periodic').trigger('change');
+		});
+
 		$(document).on('change', '#module-editor-config', (e) => {
 			let val = $("#module-editor-config option").filter(":selected").val();
 			let oldVal = $("#module-editor-config").data("current");

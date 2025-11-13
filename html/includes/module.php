@@ -117,6 +117,9 @@ function DisplayModule()
                                 </div>
                             </form>
                         </li>
+                        <li class="ml-4">
+                            <div class="btn btn-lg navbar-btn" id="module-editor-periodic" data-toggle="tooltip" data-container="body" data-placement="top" title="Periodic Flow"><i class="fa-solid fa-clock"></i></div>
+                        </li>
                         <li class="btn ml-4">
                             <form id="oe-item-filter-dialog-form" class="form-horizontal">
                                 <div class="form-group">                            

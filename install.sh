@@ -939,7 +939,7 @@ install_webserver_et_al()
 		display_msg --log progress "Installing the web server."
 		TMP="${ALLSKY_LOGS}/lighttpd.install.log"
 		run_aptGet \
-			lighttpd  php-cgi  php-gd  avahi-daemon  hwinfo tree python3-picamera2 i2c-tools \
+			lighttpd  php-fpm  php-gd  avahi-daemon  hwinfo tree python3-picamera2 i2c-tools \
 			> "${TMP}" 2>&1
 # TODO: Remove in next major release: Used to install: dnsmasq
 		check_success $? "lighttpd installation failed" "${TMP}" "${DEBUG}" \
@@ -950,7 +950,7 @@ install_webserver_et_al()
 	create_lighttpd_log_file
 
 	# Ignore output since it may already be enabled.
-	sudo lighty-enable-mod fastcgi-php > /dev/null 2>&1
+	sudo lighty-enable-mod fastcgi-php-fpm > /dev/null 2>&1
 
 	TMP="${ALLSKY_LOGS}/lighttpd.start.log"
 	sudo systemctl start lighttpd > "${TMP}" 2>&1

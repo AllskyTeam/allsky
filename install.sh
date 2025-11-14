@@ -1754,9 +1754,9 @@ install_dependencies_etc()
 
 	display_msg --log progress "Installing dependencies."
 
-	if [[ ${PI_OS} != "trixie" ]]; then
+	if [[ ${PI_OS} == "trixie" ]]; then
 		display_msg --log progress "Trixie deteced, installing python build packages."
-		run_aptGet python3.13-dev build-essential > "${TMP}" 2>&1		
+		run_aptGet python3.13-dev build-essential > "${TMP}" 2>&1
 	fi
 
 	local T="${ALLSKY_SCRIPTS}/allsky-config"

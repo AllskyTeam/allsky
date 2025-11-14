@@ -36,7 +36,6 @@ from pathlib import Path
 from functools import reduce
 from allskyvariables.allskyvariables import ALLSKYVARIABLES
 from allskydatabasemanager.allskydatabasemanager import ALLSKYDATABASEMANAGER, ConnType
-import pigpio
 import numpy as np
 import numpy.typing as npt
 from typing import Union, List, Dict, Any, Tuple, Sequence, Optional, Iterable

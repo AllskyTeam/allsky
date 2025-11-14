@@ -3196,7 +3196,7 @@ install_Python()
 	M=" for ${ALLSKY_PI_OS^}"
 	R="-${ALLSKY_PI_OS}"
 
-	if [[ ${PI_OS} == "trixie" ]]; then
+	if [[ ${ALLSKY_PI_OS} == "trixie" ]]; then
 		display_msg --log progress "Trixie deteced, installing python build packages."
 		run_aptGet python3.13-dev build-essential > "${TMP}" 2>&1
 	fi

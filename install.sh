@@ -1754,11 +1754,6 @@ install_dependencies_etc()
 
 	display_msg --log progress "Installing dependencies."
 
-	if [[ ${PI_OS} == "trixie" ]]; then
-		display_msg --log progress "Trixie deteced, installing python build packages."
-		run_aptGet python3.13-dev build-essential > "${TMP}" 2>&1
-	fi
-
 	local T="${ALLSKY_SCRIPTS}/allsky-config"
 	if [[ ! -f "${T}" ]]; then
 		local F="${ALLSKY_UTILITIES}/allsky-config.sh"
@@ -3235,6 +3230,11 @@ install_Python()
 	activate_python_venv
 
 
+	if [[ ${PI_OS} == "trixie" ]]; then
+		display_msg --log progress "Trixie deteced, installing python build packages."
+		run_aptGet python3.13-dev build-essential > "${TMP}" 2>&1
+	fi
+	
 	NAME="Python_dependencies"
 
 	# If the requirements file is the same as the in the prior Allsky version,

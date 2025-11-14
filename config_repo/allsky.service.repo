@@ -11,6 +11,7 @@ Restart=on-success
 RestartSec=2
 ; These exit code are fatal.
 RestartPreventExitStatus=XX_NO_RESTART_CODES_XX
+NoNewPrivileges=no
 
 ; TODO: Not sure if RestartKillSignal is recognized by the systemd that comes with Bullseye,
 ; so use ExecReload instead.

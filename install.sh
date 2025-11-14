@@ -3196,7 +3196,12 @@ install_Python()
 	M=" for ${ALLSKY_PI_OS^}"
 	R="-${ALLSKY_PI_OS}"
 
-    display_msg --logonly info "Locating Python dependency file"
+	if [[ ${PI_OS} == "trixie" ]]; then
+		display_msg --log progress "Trixie deteced, installing python build packages."
+		run_aptGet python3.13-dev build-essential > "${TMP}" 2>&1
+	fi
+	
+  display_msg --logonly info "Locating Python dependency file"
 	PREFIX="${ALLSKY_REPO}/requirements"
 	REQUIREMENTS_FILE=""
 	for file in "${PREFIX}${R}-${LONG_BITS}.txt" \
@@ -3229,12 +3234,6 @@ install_Python()
 	python3 -m venv "${ALLSKY_PYTHON_VENV}" --system-site-packages
 	activate_python_venv
 
-
-	if [[ ${PI_OS} == "trixie" ]]; then
-		display_msg --log progress "Trixie deteced, installing python build packages."
-		run_aptGet python3.13-dev build-essential > "${TMP}" 2>&1
-	fi
-	
 	NAME="Python_dependencies"
 
 	# If the requirements file is the same as the in the prior Allsky version,

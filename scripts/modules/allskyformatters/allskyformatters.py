@@ -372,7 +372,7 @@ class AllskyFormatters:
 		"""
 		try:
 			formats = self._split_format(format)
-# TODO: get unit from the type the variable is (which requires another field); don't assume it's "C".
+
 			unit = "C"			# Default, and is what's used internally in code.
 			dp = 0				# Default is 0 decimal points (i.e., an int).
 			do_deg = False
@@ -393,7 +393,7 @@ class AllskyFormatters:
 				self._debug(f'INFO: Converting temperature to C. ({value_f}F -> {value}C)')
 				unit = 'C'
 
-			if 'defaults' in formats:
+			if any('default' in s.lower() for s in formats):
 				dp = 1
 				do_deg = True
 				do_unit = True

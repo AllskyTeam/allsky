@@ -476,31 +476,31 @@ def dbGet(key):
         return None
 
 def write_env_to_db():
-	global ALLSKY_TMP
+    global ALLSKY_TMP
 
-	dbFile = os.path.join(ALLSKY_TMP, 'allskydebugdb.py')
-	if not os.path.isfile(dbFile):
-		file = open(dbFile, 'w+')
-		file.write('DataBase = {}')
-		file.close()
+    dbFile = os.path.join(ALLSKY_TMP, 'allskydebugdb.py')
+    if not os.path.isfile(dbFile):
+        file = open(dbFile, 'w+')
+        file.write('DataBase = {}')
+        file.close()
         set_permissions(dbFile)
         
-	try:
-		sys.path.insert(1, ALLSKY_TMP)
-		database = __import__('allskydebugdb')
-		DBDEBUGDATA = database.DataBase
-	except:
-		DBDEBUGDATA = {}
-		log(3, f"ERROR: Resetting corrupted Allsky database '{dbFile}'")
+    try:
+        sys.path.insert(1, ALLSKY_TMP)
+        database = __import__('allskydebugdb')
+        DBDEBUGDATA = database.DataBase
+    except:
+        DBDEBUGDATA = {}
+        log(3, f"ERROR: Resetting corrupted Allsky database '{dbFile}'")
 
-	DBDEBUGDATA['os'] = {}	
-	for key, value in os.environ.items():            
-		DBDEBUGDATA['os'][key] = value
+    DBDEBUGDATA['os'] = {}	
+    for key, value in os.environ.items():            
+        DBDEBUGDATA['os'][key] = value
 
-	file = open(dbFile, 'w+')
-	file.write('DataBase = ')
-	file.write(str(DBDEBUGDATA))
-	file.close()
+    file = open(dbFile, 'w+')
+    file.write('DataBase = ')
+    file.write(str(DBDEBUGDATA))
+    file.close()
     
 def writeDB():
     global DBDATA, ALLSKY_TMP

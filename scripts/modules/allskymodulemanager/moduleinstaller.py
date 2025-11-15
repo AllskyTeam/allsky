@@ -376,19 +376,20 @@ Would you like to review and install any available modules now?\
             opt_module_dependencies_folder_base = os.path.join(opt_module_folder, "dependencies")
             opt_module_folder = Path(opt_module_folder)
 
-            for opt_module in opt_module_folder.iterdir():
-                if opt_module.is_file():
-                    allsky_module = allsky_module_folder / opt_module.name
-                    if allsky_module.exists():
-                        module_name = os.path.splitext(os.path.basename(opt_module))[0]
-                        self._log(True, f"INFO: Removing {opt_module} and its info and dependencies folders")
-                        if not args.dryrun:
-                            os.remove(opt_module)
-                            opt_module_info_folder = os.path.join(opt_module_info_folder_base, module_name)
-                            opt_module_dependencies_folder = os.path.join(opt_module_dependencies_folder_base, module_name)
-                            shared.remove_path(opt_module_info_folder)
-                            shared.remove_path(opt_module_dependencies_folder)
-                        did_something = True
+            if os.path.isdir(opt_module_folder):
+                for opt_module in opt_module_folder.iterdir():
+                    if opt_module.is_file():
+                        allsky_module = allsky_module_folder / opt_module.name
+                        if allsky_module.exists():
+                            module_name = os.path.splitext(os.path.basename(opt_module))[0]
+                            self._log(True, f"INFO: Removing {opt_module} and its info and dependencies folders")
+                            if not args.dryrun:
+                                os.remove(opt_module)
+                                opt_module_info_folder = os.path.join(opt_module_info_folder_base, module_name)
+                                opt_module_dependencies_folder = os.path.join(opt_module_dependencies_folder_base, module_name)
+                                shared.remove_path(opt_module_info_folder)
+                                shared.remove_path(opt_module_dependencies_folder)
+                            did_something = True
 
             
             if os.path.isdir(opt_module_info_folder_base):        

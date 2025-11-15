@@ -18,3 +18,8 @@ photutils
 psutil
 gitpython
 whiptail-dialogs
+flask
+flask-login
+gunicorn
+flask-jwt-extended
+bcrypt

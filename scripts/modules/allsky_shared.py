@@ -8,14 +8,13 @@ This module is a common dumping ground for shared variables and functions.
 '''
 import time
 import os
+import traceback
 import pprint
 import shlex
 import subprocess
 import requests
 import json
 import sqlite3
-import mysql.connector
-import math
 import shutil
 import re
 import sys
@@ -429,6 +428,7 @@ def initDB():
         file = open(dbFile, 'w+')
         file.write('DataBase = {}')
         file.close()
+        set_permissions(dbFile)
 
     try:
         sys.path.insert(1, ALLSKY_TMP)
@@ -436,7 +436,7 @@ def initDB():
         DBDATA = database.DataBase
     except:
         DBDATA = {}
-        log(0, f"ERROR: Resetting corrupted Allsky database '{dbFile}'")
+        log(3, f"ERROR: Resetting corrupted Allsky database '{dbFile}'")
 
 def db_add(key, value):
     dbAdd(key, value) 
@@ -483,14 +483,15 @@ def write_env_to_db():
 		file = open(dbFile, 'w+')
 		file.write('DataBase = {}')
 		file.close()
-
+        set_permissions(dbFile)
+        
 	try:
 		sys.path.insert(1, ALLSKY_TMP)
 		database = __import__('allskydebugdb')
 		DBDEBUGDATA = database.DataBase
 	except:
 		DBDEBUGDATA = {}
-		log(0, f"ERROR: Resetting corrupted Allsky database '{dbFile}'")
+		log(3, f"ERROR: Resetting corrupted Allsky database '{dbFile}'")
 
 	DBDEBUGDATA['os'] = {}	
 	for key, value in os.environ.items():            
@@ -653,19 +654,34 @@ def remove_folder(path: str) -> bool:
         
     return result
 
-def set_permissions(file_name, uid=None, gid=None):                
+
+def set_permissions(file_name, uid=None, gid=None):
     if uid is None:
         allsky_owner = get_environment_variable("ALLSKY_OWNER")
         try:
             uid = pwd.getpwnam(allsky_owner).pw_uid
-        except KeyError:
+        except Exception:
             uid = os.getuid()
-    if gid is None:
-        if (group := get_environment_variable("ALLSKY_WEBSERVER_GROUP")) is None:
-            group = 'www-data'
-        gid = grp.getgrnam(group).gr_gid
 
-    os.chown(file_name, uid, gid)
+    if gid is None:
+        group = get_environment_variable("ALLSKY_WEBSERVER_GROUP") or "www-data"
+        try:
+            gid = grp.getgrnam(group).gr_gid
+        except KeyError:
+            gid = os.getgid()
+
+    try:
+        if os.getuid() == 0:
+            os.chown(file_name, uid, gid)
+        else:
+            # Non-root: only group change is allowed in theory
+            os.chown(file_name, -1, gid)
+    except PermissionError as e:
+        log(0, f"WARNING: set_permissions: cannot chown {file_name}: {e}")
+        traceback.print_exc()
+    except OSError as e:
+        log(0, f"WARNING: set_permissions: OS error on {file_name}: {e}")
+        traceback.print_exc()
     
 def create_and_set_file_permissions(file_name, uid=None, gid=None, permissions=None, is_sqlite=False, file_data = '')-> bool:
     result = True

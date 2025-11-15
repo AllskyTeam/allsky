@@ -41,7 +41,7 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 			"values": {
 				"AS_CPUTEMP": {
 					"name": "${CPUTEMP}",
-					"format": "{dp2|deg|unit}",
+					"format": "{dp2|deg|temp_unit}",
 					"sample": "43.2",
 					"group": "Pi",
 					"description": "CPU Temperature (In C or F)",

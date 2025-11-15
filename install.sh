@@ -3552,6 +3552,13 @@ add_to_post_actions()
 # Manage installation and setup of the Allsky database
 setup_database()
 {
+	#
+	# Create the sqlite database to prevent permission errors
+	#
+	sqlite3 "${ALLSKY_DATABASES}" ".databases"
+	sudo chown "${ALLSKY_OWNER}":"${ALLSKY_WEBSERVER_OWNER}" "${ALLSKY_DATABASES}"
+	sudo chmod 664 "${ALLSKY_DATABASES}"
+
 	sudo "${ALLSKY_UTILITIES}/database_manager.py" --auto
 }
 

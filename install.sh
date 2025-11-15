@@ -3572,10 +3572,16 @@ update_overlays()
 install_modules()
 {
 
+	#
+	# NOTE: We need to use sudo here as the ALLSKY_USER has had various groups added but they will
+	#       not be activated until the user logs out and in or reboots. The module. installer needs
+	#       these groups otherwise it cannot change the permissions of various files.
+	# NOTE: There is no way to reload the groups for the user, this is a limitation of the Linux Kernel
+	#
 	if [[ "$BRANCH" == "$ALLSKY_GITHUB_MAIN_BRANCH" ]]; then
-			"${ALLSKY_MODULE_INSTALLER}" --welcome
+		sudo su - "${ALLSKY_OWNER}" -c "\"${ALLSKY_MODULE_INSTALLER}\" --welcome"
 	else
-			"${ALLSKY_MODULE_INSTALLER}" --welcome --setbranch "$BRANCH"
+		sudo su - "${ALLSKY_OWNER}" -c "\"${ALLSKY_MODULE_INSTALLER}\" --welcome --setbranch \"${BRANCH}\""		
 	fi
 
 	RET=$?

@@ -9,8 +9,6 @@ function DisplayOverlay($image_name)
 	global $settings_array;
 	global $pageHeaderTitle, $pageIcon;
 
-	$displayMaskTab = false;		// Should the "Mask" tab appear?
-	$numTabs = 1 + ($displayMaskTab ? 1 : 0);
 	$myStatus = new StatusMessages();
 ?>
 
@@ -21,6 +19,7 @@ function DisplayOverlay($image_name)
     <script src="/js/overlay/oe-overlayeditor.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
     <script src="/js/overlay/oe-config.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
     <script src="/js/overlay/oe-uimanager.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+    <script src="/js/overlay/oe-startup.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
     <script src="/js/overlay/fields/oe-fieldmanager.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
     <script src="/js/overlay/fields/oe-field.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
@@ -756,52 +755,6 @@ function DisplayOverlay($image_name)
             </div>
         </div>
     </div>
-
-    <img id="oe-background-image" class="oe-background-image" alt="Overlay Image" src="<?php echo $image_name ?>" style="width:100%">
-
-    <script>
-        startOverlayManager();
-
-        function startOverlayManager() {
-            let result = $.ajax({
-                url: 'includes/overlayutil.php?request=Status',
-                type: 'GET',
-                dataType: 'json',
-                cache: false,
-                async: false,                
-                context: this
-            });
-
-            let startOverlay = true;
-            if (result.responseJSON !== undefined) {
-                if (result.responseJSON.running !== undefined) {
-                    startOverlay = result.responseJSON.running;
-                    $('#oe-overlay-not-running-status').html('Status: <em>' + result.responseJSON.status + '</em>');
-                }
-            }
-            
-            if (startOverlay) {
-                $('#oe-overlay-not-running').addClass('hidden');
-                var imageObj = new Image();
-                    imageObj.src = $('#oe-background-image').attr('src') + '?_ts=' + new Date().getTime();
-
-                    let that = this;
-                    imageObj.onload = function() {
-                        var overlayEditor = new OVERLAYEDITOR($("#overlay_container"), this);
-                        overlayEditor.buildUI();
-
-                        <?php if ($displayMaskTab) { ?>
-                            var exposureEditor = new OEEXPOSURE();
-                            exposureEditor.start();
-                        <?php } ?>
-                    };                    
-            } else {
-                $('#oe-overlay-not-running').removeClass('hidden');
-                setTimeout(startOverlayManager, 1000);
-            }
-        }
-        
-    </script>
 
     <?php
 }

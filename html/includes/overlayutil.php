@@ -45,6 +45,7 @@ class OVERLAYUTIL extends UTILBASE {
             'Sample'           => ['post'],
             'SaveSettings'     => ['post'],
             'Status'           => ['get'],
+            'ImageName'        => ['get'],
             'Suggest'          => ['get'],
             'ValidateFilename' => ['get'],
         ];
@@ -850,6 +851,13 @@ class OVERLAYUTIL extends UTILBASE {
         }
         unset($fmt);
 
+        usort($formats['data'], function($a, $b) {
+            $aIsLegacy = isset($a['legacy']);
+            $bIsLegacy = isset($b['legacy']);
+            if ($aIsLegacy === $bIsLegacy) return 0;
+            return $aIsLegacy ? 1 : -1;
+        });
+
         $this->sendResponse(json_encode($formats, JSON_UNESCAPED_SLASHES));
     }
 
@@ -1207,6 +1215,13 @@ class OVERLAYUTIL extends UTILBASE {
         }
 
         $this->sendResponse($out);
+    }
+
+    public function getImageName(): void
+    {
+        global $image_name;
+
+        $this->sendResponse($image_name);
     }
 
     /**

@@ -19,6 +19,7 @@ import subprocess
 import shlex
 import re
 import time
+import html
 from pathlib import Path
 
 try:
@@ -362,11 +363,6 @@ class ALLSKYOVERLAYDATA:
 						self._debug('INFO: Field value is empty but no empty value provided')
 				else:
 					self._debug('INFO: Field value is empty but no empty value provided')
-
-			if value:
-				field_label = field_label.replace('&deg;', '\u00B0')
-			else:
-				field_label = field_label.replace('&deg;', '')
     
 			field_label = field_label.replace(raw_variable, str(value), 1)
 
@@ -374,6 +370,8 @@ class ALLSKYOVERLAYDATA:
 
 		self._debug(f'INFO: Final formatted label "{field_label}"')
 		self._debug('')
+
+		field_label = html.unescape(field_label)
 
 		return field_label
 

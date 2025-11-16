@@ -671,46 +671,6 @@ class MODULEUTIL extends UTILBASE {
         return $value;
     }
 
-    public function getVariableList()
-    {
-        $showEmpty = trim((string)filter_input(INPUT_GET, 'showempty', FILTER_UNSAFE_RAW));
-        if ($showEmpty === '') {
-            $showEmpty = 'no';
-        }
-        $module = trim((string)filter_input(INPUT_GET, 'module', FILTER_UNSAFE_RAW));
-
-        // Build argv for runProcess (no shell)
-        $argv = [
-            '/usr/bin/python3',
-            ALLSKY_HOME . '/scripts/modules/allskyvariables/allskyvariables.py',
-            '--print',
-        ];
-
-        // Include --empty unless explicitly "no"
-        if (strcasecmp($showEmpty, 'no') !== 0) {
-            $argv[] = '--empty';
-        }
-
-        if ($module !== '') {
-            $argv[] = '--module';
-            $argv[] = $module;
-        }
-
-        $argv[] = '--allskyhome';
-        $argv[] = ALLSKY_HOME;
-
-        // Execute
-        $result = $this->runProcess($argv);
-        if ($result['error']) {
-            $this->send500('Variable list retrieval failed: ' . trim($result['message']));
-        }
-
-        // Preserve original behavior: send first line of stdout
-        $stdout = trim($result['message']);
-        $firstLine = strtok($stdout, "\r\n");
-        $this->sendResponse($firstLine !== false ? $firstLine : $stdout);
-    }
-
     public function postValidateMask() {
         $error = false;
         $message='';

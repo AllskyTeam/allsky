@@ -312,6 +312,26 @@
                 plugin.templateTable.draw(false);
             });
 
+            $(document).off('click', '.oe-add-field-template');
+            $(document).on('click', '.oe-add-field-template', (e) =>{
+                let block = $(e.currentTarget).data('block');
+                let filename = $(e.currentTarget).data('filename');
+                let group = $(e.currentTarget).data('group');
+                $.ajax({
+                    url: 'includes/moduleutil.php?request=Template&block=' + block + '&filename=' + filename + "&group=" + group,
+                    type: 'GET',
+                    dataType: 'json',
+                    cache: false,             
+                    context: this
+                }).done((fields) => {
+                    let result = {
+                        fields: fields,
+                        font: $('#block-font').val(),
+                        fontSize: $('#block-font-size').val()
+                    }
+                    $(document).trigger('addFields', result);
+                });                 
+            });
 
             var collapsedGroups = {};
             plugin.variableTable = $('#' + plugin.mmId + '-table')
@@ -445,8 +465,10 @@
                                     toolTip = toolTip.slice(0, -2)
                                     result = data.value + '&nbsp;<a href="#" data-toggle="tooltip" title="' + toolTip + '">Options</a>'
                                 }
-                                if (type === 'display' && data.length > 10) {
-                                    result = '<span data-toggle="tooltip" title="' + data + '">' + data.substr(0, 10) + '…</span>';
+                                if (data !== null) {
+                                    if (type === 'display' && data.length > 10) {
+                                        result = '<span data-toggle="tooltip" title="' + data + '">' + data.substr(0, 10) + '…</span>';
+                                    }
                                 }
 
                                 return result

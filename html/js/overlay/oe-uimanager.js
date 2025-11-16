@@ -537,7 +537,9 @@ class OEUIMANAGER {
                 defaultFontSize: this.#configManager.getValue('settings.defaultfontsize'),
                 showBlocks: true,
                 variableSelected: (variable) => {
-                    let name = '${' + variable.replace('AS_', '') + '}'
+                    //let name = '${' + variable.replace('AS_', '') + '}'
+                    variable = '${' + variable + '}';
+                    let name = variable.replace(/^\$\{[^_]+_/, '${');
                     let field = this.#configManager.findFieldByName(name)
                     let shape = this.#fieldManager.addField('text', field.name, null, field.format, field.sample)
                     this.setFieldOpacity(true)

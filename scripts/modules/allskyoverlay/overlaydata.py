@@ -21,6 +21,8 @@ import re
 import time
 import html
 from pathlib import Path
+from pprint import pprint
+
 
 try:
 	import allsky_shared as shared
@@ -274,6 +276,19 @@ class ALLSKYOVERLAYDATA:
 				variable = raw_variable.replace('${','').replace('}', '')
 				if variable in self.extra_fields:
 					value = self.extra_fields[variable]['value']
+				else:
+					#
+     			# Cant find variable assume it doesnt have an AS_ prefix so ignore
+					# prefix and just try and find a match
+					#
+					for var_name in self.extra_fields:
+						if '_' in var_name:
+							check_var = var_name.split("_", 1)[1]
+							variable = raw_variable.replace('${','').replace('}', '')
+							if check_var == variable:
+								value = self.extra_fields[var_name]['value']
+								break
+      
 			self._debug(f'INFO: Using Value "{value}"')
 			pre_formatted_value = value
 

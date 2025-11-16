@@ -299,6 +299,9 @@ class OVERLAYUTIL extends UTILBASE {
         $systemData = (is_file($systemPath) && is_readable($systemPath)) ? json_decode(file_get_contents($systemPath) ?: '{}') : (object)['data' => []];
         $userData   = (is_file($userPath)   && is_readable($userPath))   ? json_decode(file_get_contents($userPath)   ?: '{}') : (object)['data' => []];
 
+        $vars = $this->getVariableList(true, true, true);
+        $userData = json_decode($vars);
+
         $counter = 1;
         $merged  = [];
 
@@ -317,19 +320,17 @@ class OVERLAYUTIL extends UTILBASE {
             }
         }
 
-        foreach (($userData->data ?? []) as $f) {
+        foreach (($userData ?? []) as $f) {
             if (!isset($f->name)) continue;
-            if ($this->includeField($f->name)) {
-                $merged[] = [
-                    "id"          => $counter++,
-                    "name"        => (string)($f->name ?? ''),
-                    "description" => (string)($f->description ?? ''),
-                    "format"      => (string)($f->format ?? ''),
-                    "sample"      => (string)($f->sample ?? ''),
-                    "type"        => (string)($f->type ?? ''),
-                    "source"      => (string)($f->source ?? ''),
-                ];
-            }
+            $merged[] = [
+                "id"          => $counter++,
+                "name"        => (string)($f->name ?? ''),
+                "description" => (string)($f->description ?? ''),
+                "format"      => (string)($f->format ?? ''),
+                "sample"      => (string)($f->sample ?? ''),
+                "type"        => (string)($f->type ?? ''),
+                "source"      => (string)($f->source ?? ''),
+            ];
         }
 
         $payload = ["data" => $merged];

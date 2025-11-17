@@ -67,12 +67,12 @@
 						<span class="WebUISetting">Dark Frame Upper Threshold</span>
 						value, which is <code>0.05</code>.
 						This threshold was <code>0.10</code> in the prior release.
-					<li>The AS_TEMPERATURE_C and AS_TEMPERATURE_F values (sensor temperature) now has 1 digit after the decimal
+					<li>The AS_TEMPERATURE_C and AS_TEMPERATURE_F values (sensor temperature) now support 1 digit after the decimal
 						point.
 						This may require you to change the format of those variables in the Overlay Editor.
 				</ul>
 
-				<!--
+<!--
 				<h4>Deleted capabilities</h4>
 				<ul>
 					<li>
@@ -95,10 +95,10 @@
 							</li>
 							<li>Improved Login System
 								<ul>
-									<li>The old login system has been removed and a new version implemented</li>
-									<li>Existing login details are not affected</li>
-									<li>Only used if WEBUI login is enabled</li>
-									<li>Provides stronger passwords if the Pi will be exposed to the internet</li>
+									<li>The old login system has been removed and a new version implemented.</li>
+									<li>Existing login details are not affected.</li>
+									<li>Only used if WEBUI login is enabled.</li>
+									<li>Provides stronger passwords if the Pi will be exposed to the internet.</li>
 								</ul>
 							</li>
 							<li>New Database
@@ -106,14 +106,14 @@
 									<li>The database stores information on every image taken, such as exposure time, whether or not it's a daytime or nighttime image, and much more.</li>
 									<li>Several Allsky modules add data such as number of stars or meteors detected.</li>
 									<li>Easier to limit startrails to nighttime images only, or to display all images with meteors.</li>
-									<li>Choice of inbuilt database, zero configuration or for more advanced users you can configure the database in more detail</li>
+									<li>Choice of inbuilt database, zero configuration or for more advanced users you can configure the database in more detail.</li>
 								</ul>
 							</li>							
 							<li><span class="WebUILink">Images</span> page:
 								<ul>
 									<li>Now only shows the
 										<a href="" style="pointer-events: none;"><i class="fa fa-image fa-fw"></i></a>
-										icon if there is at least one image for the day
+										icon if there is at least one image for the day,
 										otherwise "none" is displayed.
 									<li>The timelapse and mini-timelapse icons on this page
 										as well as on the Allsky Website home page on the left side changed to
@@ -134,11 +134,11 @@
 										<span class="WebUILink">Startrails</span>
 										and
 										<span class="WebUILink">Image Stretch</span>
-										helper tools create directories that are visible.
+										helper tools create directories that are also visible.
 									<li>The icons indicating there are images, a timelapse,
 										a keogram, and/or a startrails are now the same
 										height as the "Delete" button to give them a "cleaner" look.
-										<!--
+<!--
 									<li>If a timelapse, keogram, and/or startrails thumbnail
 										exists for a day, it is displayed instead of the
 										generic icon.
@@ -167,13 +167,13 @@
 									<li>You can now draw rectangles on the overlay with customizable border and background colours —
 										perfect for highlighting or grouping fields visually.</li>
 									<li>Removed the sun/moon/planets and satellite calculations from the overlay and moved then to the new
-										Solar System module</li>
-									<li>The Font manager now auto detects fonts used in an overlay</li>
+										"Solar System" module.</li>
+									<li>The Font manager now auto detects fonts used in an overlay.</li>
 									<li>Mask Editor:
 										<ul>
 											<li>Added a new <strong>Mask Editor</strong> to create and edit image masks directly within the WebUI. No more GiMP or Photoshop :-)</li>
-											<li>This can be access from the image manager by clicking the create mask button</li>
-											<li>Provides an easy set of tools for creating masks that can be used in other modules such as the star count and meteor detection</li>
+											<li>This can be access from the image manager by clicking the create mask button.</li>
+											<li>Provides an easy set of tools for creating masks that can be used in other modules such as the star count and meteor detection.</li>
 										</ul>
 									</li>
 								</ul>
@@ -183,7 +183,7 @@
 
 							<li><span class="WebUILink">Module Manager</span> page:
 								<ul>
-									<li>User Interface Improvements
+									<li>User Interface Improvements:
 										<ul>
 											<li>The UI now dynamically responds to field selections — for example, choosing an I²C device
 												automatically displays only the relevant configuration fields.</li>
@@ -219,45 +219,45 @@
 									<li>Modules are now automatically upgraded during Allsky upgrades.</li>
 									<li>Added a new <strong>Device Manager</strong> to display all hardware devices connected to the
 										Raspberry Pi.</li>
-									<li>Modules have moved - Module are no longer stored in /opt/allskymodukes. The are now stored within
-										the main Allsky directory system. This allows for easier upogrades to Allsky</li>
+									<li>Modules have moved - Module are no longer stored in /opt/allsky/modules. The are now stored within
+										the main Allsky directory system. This allows for easier upgrades to Allsky.</li>
 									<li>New and Updated Modules
 										<ul>
 											<li>ADSB — generates aircraft data for overlay display (no local ADS-B receiver
 												required).</li>
 											<li>AI - This module had been <span class="EXPIRED">deprecated</span> by the Author. Please remove
-												it if you have it installed</li>
+												it if you have it installed.</li>
 											<li>Dew Heater
 												<ul>
 													<li>now supports PWM-based heater control.</li>
-													<li><span class="EXPIRED">IMPORTANT:</span> We have introduced an new module (Environment)
+													<li><span class="EXPIRED">IMPORTANT:</span> We have introduced a new "Environment" module
 														that should be used to obtain the temperature/humidity etc. Whilst the dew heater module can
 														still access individual devices this will be removed in a future release. Please enable the
-														Environment module then set the sensor type to 'Allsky' to use the values from this module
+														Environment module then set the sensor type to 'Allsky' to use the values from this module.
 													</li>
 												</ul>
 											<li>Fans — enables control of up to two fans with on/off or PWM modes.</li>
 											<li>GPIO - Fixed this module so that it works!</li>
-											<li>Boilerplate - Updated to show all new fetures, NOTE: This module is only really ouse to module
-												developers</li>
-											<li>INA3221 - This module has been <span class="EXPIRED">deprecated</span>. Please use the Power
-												module instead</li>
-											<li>Keogram - new module to generate a Keogram</li>
-											<li>LTR390 - This module has been <span class="EXPIRED">deprecated</span>. Please use the Light
-												module instead</li>
-											<li>PMSX003 - New module to measure air quality</li>
-											<li>Power - New module to combine the INA219 and INA3221 sensors</li>
+											<li>Boilerplate - Updated to show all new fetures, NOTE: This module is only really useful to module
+												developers.</li>
+											<li>INA3221 - This module has been <span class="EXPIRED">deprecated</span>. Please use the "Power"
+												module instead.</li>
+											<li>Keogram - new module to generate a Keogram.</li>
+											<li>LTR390 - This module has been <span class="EXPIRED">deprecated</span>. Please use the "Light"
+												module instead.</li>
+											<li>PMSX003 - New module to measure air quality.</li>
+											<li>Power - New module to combine the INA219 and INA3221 sensors.</li>
 											<li>Rain Detector - A new module contributed by <a external="true"
-													href="https://github.com/MCH0202">Muchen Han</a> to detect rain using a YOLO model</li>
+													href="https://github.com/MCH0202">Muchen Han</a> to detect rain using a YOLO model.</li>
 											<li>Solar System - New module to calculate data for Solar System objects such as the Sun, Moon,
-												Planets and Satellites</li>
+												Planets and Satellites.</li>
 											<li>Environment - A new module to read sensors to obtain enviroment data such as temperature and
 												humidity. This data can then be used in other Modules such as the Dew Heate or Fan module. NOTE:
-												This module should be plced first in any flow to ensure other modules have upto date data</li>
+												This module should be plced first in any flow to ensure other modules have up-to-date data.</li>
 											<li>TPHBME680 - This module has been <span class="EXPIRED">deprecated</span>. Please use the
-												Environment module instead</li>
+												"Environment" module instead.</li>
 											<li>S3 Upload - A new module provided by <a external="true" href="https://titanastro.com">Titan
-													Astro</a> for the SkyVault project</li>
+													Astro</a> for the SkyVault project.</li>
 										</ul>
 									</li>
 
@@ -315,8 +315,8 @@
 
 							<li><span class="WebUILink">System</span> page
 								<ul>
-									<li>Add auto refresh to the page so there is no longer any need to refresh the page</li>
-									<li>Added watchdog page to control the Allksy services</li>
+									<li>Add auto refresh to the page so there is no longer any need to refresh the page.</li>
+									<li>Added watchdog page to control the Allksy services.</li>
 								</ul>
 							</li>
 
@@ -335,7 +335,7 @@
 										settings which you can then view to decide which
 										setting you prefer.
 										<br>
-										This page is a front end to
+										This page is a WebUI front end to
 										<code>allsky-config  compare_startrails</code>.
 									</li>
 									<li><span class="WebUILink">Image Stretch</span>
@@ -345,7 +345,7 @@
 										<span class="WebUISetting">Stretch Mid Point</span>
 										settings to use.
 										<br>
-										This page is a front end to
+										This page is a WebUI front end to
 										<code>allsky-config  compare_stretches</code>.
 									</li>
 									<li><span class="WebUILink">Timelapse</span>
@@ -355,12 +355,13 @@
 										<span class="WebUISetting">FPS</span>
 										settings to use when creating timelapse videos.
 										<br>
-										This page is a front end to
+										This page is a WebUI front end to
 										<code>allsky-config  compare_timelapse</code>.
 									</li>
 								</ul>
 							<li>The menu on the left side of the WebUI can now be
-								collapsed to show just icons on smaller screens.
+								collapsed to show just icons on smaller screens,
+								by clicking on the new Allsky logo.
 							</li>
 						</ul>
 					</li>
@@ -407,9 +408,9 @@
 						<span class="WebUISetting">Remove Bad Images Threshold</span>
 						settings.
 					</li>
-					<!--
-							<li>When called at end of night, startrails creates
-								saves information on the run in the Allsky database.
+<!--
+					<li>When called at end of night, startrails creates
+						saves information on the run in the Allsky database.
 -->
 					<li>Updated to ZWO SDK v1.39 which adds supports for the
 						ASI582MC, Seestar 585MC, 4400MC Pro, 585MM Mini, 662MM Mini, and 992MM Pro cameras.
@@ -445,7 +446,7 @@
 				<h4>New Settings</h4>
 				<ul>
 					<li>The <span class="WebUISetting">Focus Mode</span> setting helps you focus
-						by temporarily changes settings to the Pi can take and display pictures
+						by temporarily changes settings so the Pi can take and display pictures
 						as fast as possible, about once a second.</li>
 					<li>The <span class="WebUISetting">Dark Frame Upper Threshold</span>
 						setting specifies when a dark frame is "too bright",

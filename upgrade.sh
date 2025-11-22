@@ -194,9 +194,6 @@ if [[ ! -d ${ALLSKY_CONFIG} ]]; then
 	echo
 	exit 2
 fi
-# Make sure we can upgrade:
-#	If config/ does NOT exist, the user hasn't installed Allsky.
-#		Warn the user but let them continue (won't be able to restore from prior).
 
 ##### Calculate whiptail sizes
 WT_WIDTH="$( calc_wt_size )"

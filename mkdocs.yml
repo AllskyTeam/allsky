@@ -1,0 +1,85 @@
+site_name: Allsky Documentation
+site_url: ""
+site_dir: "html/documentation/api"
+
+theme:
+  name: material
+  icon:
+    repo: fontawesome
+  features:
+    - navigation.tabs
+    #- navigation.sections
+    - navigation.expand
+    - toc.integrate
+    - content.code.annotate
+
+plugins:
+  - search
+  #- glightbox
+  - mkdocstrings:
+      handlers:
+        python:
+          paths:
+            - .
+            - server
+          options:
+            docstring_style: google
+            show_source: true
+            show_root_heading: true
+            show_root_full_path: false
+            merge_init_into_class: true
+            filters: public
+
+markdown_extensions:
+  - admonition
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.superfences
+  - toc:
+      permalink: true
+  - footnotes
+  - pymdownx.highlight
+  - pymdownx.tabbed
+  - pymdownx.snippets
+  - pymdownx.details
+  - pymdownx.arithmatex
+  - pymdownx.blocks.caption
+  - def_list
+  - attr_list
+  - md_in_html
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
+nav:
+  - Home: 
+    - Overview: index.md
+  - Allsky Guide:
+    - Introduction: allsky_guide/introduction.md
+    - Installation: allsky_guide/installation.md
+    - Configuration: allsky_guide/configuration.md
+  - Developer Guide:
+    - Introduction: developer_guide/introduction.md
+    - Glossary: developer_guide/glossary.md
+    - Overview: developer_guide/overview.md
+    - Modules:
+      - Folder Strucuture: developer_guide/folder_structure.md
+      - Module Structure: developer_guide/module_structure.md
+      - Meta Data Structure: developer_guide/meta_data_structure.md
+      - Meta Data Example: developer_guide/meta_data_example.md
+      - Available Fields: developer_guide/available_fields.md
+      - Shared Libraries: developer_guide/shared_libraries.md
+      - Charts: developer_guide/charts.md
+      - Blocks: developer_guide/blocks.md
+      - Dependencies: developer_guide/dependencies.md
+      - Debugging: developer_guide/debugging.md
+      - Best Practices: developer_guide/best_practices.md
+      - Module Tutorial: developer_guide/module_tutorial.md
+    - Contributing: developer_guide/contributing.md
+  - SDK Reference:
+    - shared: allsky_shared.md
+    - base: allsky_base.md
+    - Allsky Server API: allsky_api.md

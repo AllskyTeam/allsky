@@ -2,20 +2,47 @@ site_name: Allsky Documentation
 site_url: ""
 site_dir: "html/documentation/api"
 
+repo_url: https://github.com/AllskyTeam
+repo_name: Allsky
+
 theme:
   name: material
+  logo: assets/images/logo.png
   icon:
-    repo: fontawesome
+    repo: fontawesome/brands/github
+  palette: 
+
+    # Palette toggle for light mode
+    - scheme: default
+      toggle:
+        icon: material/brightness-7 
+        name: Switch to dark mode
+
+    # Palette toggle for dark mode
+    - scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
   features:
     - navigation.tabs
-    #- navigation.sections
     - navigation.expand
     - toc.integrate
     - content.code.annotate
+    - header.autohide
+    - navigation.footer
+    - search.suggest
+
+
+extra_css:
+  - assets/css/extra.css
+
 
 plugins:
   - search
-  #- glightbox
+  - offline
+  - glightbox:
+      skip_classes:
+        - skip-lightbox  
   - mkdocstrings:
       handlers:
         python:
@@ -38,6 +65,11 @@ markdown_extensions:
   - pymdownx.superfences
   - toc:
       permalink: true
+  - pymdownx.critic
+  - pymdownx.caret
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.tilde  
   - footnotes
   - pymdownx.highlight
   - pymdownx.tabbed
@@ -55,12 +87,22 @@ markdown_extensions:
           format: !!python/name:pymdownx.superfences.fence_code_format
 
 nav:
-  - Home: 
-    - Overview: index.md
+  - Home: index.md
   - Allsky Guide:
-    - Introduction: allsky_guide/introduction.md
-    - Installation: allsky_guide/installation.md
+    - Installation: 
+      - allsky_guide/allsky.md
+      - allsky_guide/website.md
+      - allsky_guide/server.md
     - Configuration: allsky_guide/configuration.md
+    - Settings:
+      - allsky_guide/settings/allsky.md
+      - allsky_guide/settings/website.md
+    - Overlays:
+      - Overview: allsky_guide/overlays/overview.md
+      - How They Work: allsky_guide/overlays/how.md
+      - Fields And Variables: allsky_guide/overlays/fieldsandvariables.md
+      - Extra Data: allsky_guide/overlays/extra.md
+      - Interface: allsky_guide/overlays/interface.md
   - Developer Guide:
     - Introduction: developer_guide/introduction.md
     - Glossary: developer_guide/glossary.md
@@ -75,9 +117,6 @@ nav:
       - Charts: developer_guide/charts.md
       - Blocks: developer_guide/blocks.md
       - Dependencies: developer_guide/dependencies.md
-      - Debugging: developer_guide/debugging.md
-      - Best Practices: developer_guide/best_practices.md
-      - Module Tutorial: developer_guide/module_tutorial.md
     - Contributing: developer_guide/contributing.md
   - SDK Reference:
     - shared: allsky_shared.md

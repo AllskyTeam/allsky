@@ -22,13 +22,35 @@ Each pipeline can run a series of modules in sequence. By default, the Daytime a
 
 
 ``` mermaid
-flowchart TD
-    A[Capture Image] --> B[Remove Bad Images] --> C[Resize] --> D[Crop] --> E[Stretch]
-    E --> J{Flow Type}
-    J -->|Daytime Pipeline| K[Load Image] --> K1[Load Modules] --> K2[Run Modules] --> K3[Save Image]  --> P
-    J -->|Nighttime Pipeline| L[Load Image] --> L1[Load Modules] --> L2[Run Modules] --> L3[Save Image] --> P
-    J -->|Periodic Pipeline| M[Load Modules] --> MM[Run Modules] --> P
-    J -->|End Of Night Pipeline| N[Load Modules] --> NN[Run Modules] --> P
-    J -->|Start Of Day Pipeline| O[Load Modules] --> OO[Run Modules] --> P
-    P[Create Thumbnail] --> Q[Create Mini Timelapse] --> R[Upload Image]
+flowchart TB
+    A["Capture Image"] --> B["Remove Bad Images"]
+    B --> C["Resize"] & A
+    C --> D["Crop"]
+    D --> E["Stretch"]
+    E --> F{"Flow Type"}
+    F -- Daytime Pipeline --> FDL["Load Image"]
+    FDL --> FDM["Load Modules"]
+    FDM --> FDR["Run Modules"]
+    FDR --> FDS["Save Image"]
+    FDS --> P["Create Thumb"]
+    F -- Nighttime Pipeline --> FNL["Load Image"]
+    FNL --> FNM["Load Modules"]
+    FNM --> FNR["Run Modules"]
+    FNR --> FNS["Save Image"]
+    FNS --> P
+    PTE["Perodic Timer"] -- Periodic Pipeline --> FPM["Load Modules"]
+    FPM --> FPR["Run Modules"]
+    F -- End Of Night Pipeline --> FEONM["Load Modules"]
+    FEONM --> FEONR["Run Modules"]
+    FEONR --> FEONCS["Create Startrails"]
+    FEONCS --> FEONCT["Create Timelapse"]
+    FEONCT --> FEONCK["Create Keogram"]
+    FEONCK --> FEONU["Upload Images / Videos"]
+    FEONU --> A
+    F -- Start Of Day Pipeline --> FEODM["Load Modules"]
+    FEODM --> FEODR["Run Modules"]
+    FEODR --> P
+    P --> Q["Create Mini Timelapse"]
+    Q --> R["Upload Image"]
+    R --> A
 ```

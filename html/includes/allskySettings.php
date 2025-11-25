@@ -135,7 +135,7 @@ function setValue($name, $value, $type) {
 	}
 }
 
-// Return the file name after accounting for any ${} variables.
+// Return the file name after accounting for any ${} shell variables.
 // Since there will often only be one file used by multiple settings,
 // as an optimization save the last name.
 $lastFileName = null;
@@ -656,11 +656,11 @@ if ($debug) {
 							$moreArgs .= " --allFiles";
 
 						// postData.sh will output necessary messages.
-						$cmd = "${CMD}/postData.sh --from WebUI $cmdDebugArg $moreArgs";
+						$cmd = "{$CMD}/postData.sh --from WebUI $cmdDebugArg $moreArgs";
 						$worked = runCommand($cmd, "", "success", false);
 
 						if ($fromConfiguration) {
-							$cmd = "${CMD}/checkAllsky.sh --fromWebUI";
+							$cmd = "{$CMD}/checkAllsky.sh --fromWebUI";
 							echo '<script>console.log(`Running: ' . $cmd . '`);</script>';
 							exec("$cmd 2>&1", $result, $return_val);
 							// Only 1 line is just an "ok" line so don't record.
@@ -770,7 +770,7 @@ if ($debug) {
 			$status->showMessages();
 		echo "</div>";
 		$t = time();
-		echo "<form method='POST' action='${ME}?_ts=${t}' name='conf_form'>";
+		echo "<form method='POST' action='{$ME}?_ts={$t}' name='conf_form'>";
 ?>
 		<div class="sticky settings-nav">
 			<div class="settings-buttons container-fluid">
@@ -941,7 +941,7 @@ if ($debug) { echo ": &nbsp; value=$value"; }
 					$shortMsg = getVariableOrDefault($error_array_short, $name, "");
 
 					if ($shortMsg == "" && $value !== "") {
-//x echo "<br>=== Checking $name: value=$value, type=${type_array[$name]}";
+//x echo "<br>=== Checking $name: value=$value, type={$type_array[$name]}";
 						$e = checkType($name,
 								$value,
 								$value,

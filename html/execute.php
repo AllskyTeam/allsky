@@ -57,7 +57,7 @@ if ($use_TEXT) {
 }
 
 if ($ID === null) {
-	echo "${eS}No 'id' specified!${eE}";
+	echo "{$eS}No 'id' specified!{$eE}";
 	exit(1);
 }
 
@@ -84,13 +84,12 @@ switch ($ID) {
 	case "AM_RM_ABORTS":	// Remove the specified "have been aborted" file
 		$file = ALLSKY_ABORTS_DIR . "/$ARGS";
 		rm_object($file, "File removed.");
-
 		rm_msg($ID);
 		break;
 
 	case "AM_NOT_SUPPORTED":		# Not supported camera
 		if ($ARGS === "") {
-			echo "${eS}ERROR: Argument not given to command ID: '${ID}'.${eE}";
+			echo "{$eS}ERROR: Argument not given to command ID: '{$ID}'.{$eE}";
 			exit(1);
 		}
 		$CMD = ALLSKY_SCRIPTS . "/allsky-config show_supported_cameras";
@@ -102,7 +101,7 @@ switch ($ID) {
 	case "AM_ALLSKY_CONFIG":
 	case "allsky-config":
 		if ($ARGS === "") {
-			echo "${eS}ERROR: Argument not given to command ID: '${ID}'.${eE}";
+			echo "{$eS}ERROR: Argument not given to command ID: '{$ID}'.{$eE}";
 			exit(1);
 		}
 		$CMD = ALLSKY_SCRIPTS . "/allsky-config";
@@ -110,7 +109,7 @@ switch ($ID) {
 		break;
 
 	default:
-		echo "${eS}ERROR: Unknown command ID: '${ID}'.${eE}";
+		echo "{$eS}ERROR: Unknown command ID: '{$ID}'.{$eE}";
 		break;
 }
 
@@ -127,7 +126,7 @@ function checkRet($cmd, $return_code, $return_string)
 	global $use_TEXT, $eS, $eE, $sep;
 
 	if ($return_code !== 0) {
-		echo "${eS}ERROR while executing:${sep}${cmd}${eE}";
+		echo "{$eS}ERROR while executing:{$sep}{$cmd}{$eE}";
 	}
 	if ($return_string != null) {
 		if ($use_TEXT) {
@@ -175,7 +174,7 @@ function execute($cmd, $args="", $outputToConsole=false)
 function rm_msg($ID)
 {
 	$cmd = ALLSKY_SCRIPTS .  "/addMessage.sh";
-	$args = "--id '${ID}' --delete";
+	$args = "--id '{$ID}' --delete";
 	execute($cmd, $args, false);
 }
 
@@ -189,7 +188,7 @@ function rm_object($item, $successMsg=null)
 	$ret = execute($cmd, $args, true);
 	if ($ret === "") {
 		if ($successMsg === null) {
-			$msg = "Removed '${item}'";
+			$msg = "Removed '{$item}'";
 		} else {
 			$msg = $successMsg;
 		}
@@ -200,7 +199,7 @@ function rm_object($item, $successMsg=null)
 		}
 		$msg .= "Return to the WebUI and refresh the window.";
 	} else {
-		$msg = "${eS}Unable to remove '${item}': ${ret}${eE}";
+		$msg = "{$eS}Unable to remove '{$item}': {$ret}{$eE}";
 	}
 
 	if ($use_TEXT) {

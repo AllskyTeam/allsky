@@ -3025,7 +3025,7 @@ class OEUIMANAGER {
             const table = $('#formatlisttable').DataTable();
             const rowData = table.row(index).data();
 
-            if (rowData.format === 'customdate') {
+            if (rowData.format === 'customdate' || rowData.format === 'Custom date') {
                 $.fn.dateFormatBuilder({
                     onSave: function (format) {
                         let uiManager = window.oedi.get('uimanager')

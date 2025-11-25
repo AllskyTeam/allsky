@@ -1,9 +1,11 @@
 site_name: Allsky Documentation
-site_url: ""
-site_dir: "html/documentation/api"
+site_url: "https://docs.allsky.local"
+site_dir: "html/docs"
 
 repo_url: https://github.com/AllskyTeam
 repo_name: Allsky
+
+use_directory_urls: false
 
 theme:
   name: material
@@ -36,10 +38,9 @@ theme:
 extra_css:
   - assets/css/extra.css
 
-
 plugins:
   - search
-  - offline
+  #- offline
   - glightbox:
       skip_classes:
         - skip-lightbox  
@@ -103,6 +104,9 @@ nav:
       - Fields And Variables: allsky_guide/overlays/fieldsandvariables.md
       - Extra Data: allsky_guide/overlays/extra.md
       - Interface: allsky_guide/overlays/interface.md
+      - Formatting Variables: allsky_guide/overlays/formatting.md
+      - Tips: allsky_guide/overlays/tips.md
+      - Sun and Moon: allsky_guide/overlays/sunmoon.md         
   - Developer Guide:
     - Introduction: developer_guide/introduction.md
     - Glossary: developer_guide/glossary.md

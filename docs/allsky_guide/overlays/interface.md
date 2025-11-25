@@ -55,6 +55,30 @@ There are various keyboard and mouse shortcuts used by the overlay manager
 - Holding the alt key and dragging will draw a rectange
 
 ### Variable Manager
+The variable manager allows you to select variables and add them to overlays as a field. I also allows block of fields to be added
+
+![Variable Manager](/assets/overlay_images/variable-manager.png)
+
+/// caption
+The Variable Manager Dialog
+///
+
+1. Allows the columns displayed in the variable manager to be selected
+2. The available variables that can be added
+3. Display all variables, by default oly variables with a value are displayed
+
+To add a variable either double click it or single click it and click the 'Select' button
+
+![Variable Manager Blocks](/assets/overlay_images/variable-manager-blocks.png)
+
+/// caption
+The Variable Manager Blocks Dialog
+///
+
+This dialog allows blocks to be added to the overlay, blocks are a collection of fields in a predefined layout. 
+
+1. Select he font details for the block. **NOTE** This must be selected BEFORE adding the block
+2. Click the add button to add the block
 
 ### Overlay Manager
 The Overlay Manager is used to create and enable overlays for day and nighttime capture.
@@ -164,10 +188,147 @@ To delete an overlay select the required overlay and click the delete buttton.
 ### Overlay Errors
 
 ### Font Manager
+The Font Manager allows you to manage fonts used in overlays. It supports all mainstream browser fonts and allows you to upload any TrueType font for use in text fields. You only need to use the Font Manager if you intend to use any non built in fonts.
+
+!!! info  ""
+
+    In version 2024.12.06_06 and before you were required to add fonts to the overlay in the Fonat Manager before they could be used. This is no longer a requirement and the fonts used in an overlay are automatically managed
+
+
+![Font Manager](/assets/overlay_images/font-manager.png)
+
+/// caption
+The Font Manager Dialog
+///
+
+1. Lists all the fonts that can be used. System Fonts are marked as such in the Path column.
+2. Deletes a font.
+3. Adds a font from daFont.com by entering a URL. See below.
+4. Uploads a zip file to install fonts. See below.
+
+!!! warning  ""
+    
+    - It is not possible to delete a System Font and they will not have a delete icon as shown for the first several fonts above.
+    - If a font is in use when deleted then any fields using the font will revert to the default font as specified in the overlay settings.
+
+#### Font Preview
+The Font Preview dialog allows you to preview any installed font, including system fonts.
+
+![Font Preview](/assets/overlay_images/font-manager-preview.png)
+
+/// caption
+The Font Manager Preview Dialog
+///
+
+1. Selects the font you wish to preview
+2. Select the font size for the preview
+3. Enter some text to preview
+4. The previewd text
 
 ### Image Manager
+The Image Manager allows you to upload images for use on overlays and create masks for certain functions such as star and meteor detection. Allsky comes with several basic images.
+
+![Image manager](/assets/overlay_images/image-manager.png)
+
+/// caption
+The Image Manager Dialog
+///
+
+1. Adds the selected image to the overlay
+2. Deleted the selected image
+3. The image library
+4. Area to drop images onto to upload them, clicking this area will present an upload dialog
+5. Starte the Mask Editor
+
+
+### The Mask Editor
+Some modules with Allsky benefit from having a mask applied to them prior to running the module. The Starcount module us a good example of this. To prevent false positives a mask is applied that removes the areas of the image you are not interested in counting stars in.
+
+Masks can also be used to mask out areas outside of the image circle thay mak have light leaks. This give syou a nice dark area to place th eoverlays on.
+
+Masks consist of two colours
+
+- **Black** - Any black areas will be masked out of the image i.e. set to black
+- **White** - Any white areas will be preserved
+
+For more complex masks its possible to blend the black to white transisiotn in the mask to prevent false positives in modules that may be looking for edges such as the Meteor detection module.
+
+The Mask Editor has two modes, Easy and Expert, the default is Easy mode. In Easy mode all you do is draw a white ellipse to capture the areas you wish to keep, when you ssave the mask the bacl areas will be automatically added. In Expert mode you have a series of drawing tools you can use to create much more detailed masks including blended edges on shapes to help with false positives on edge detection.
+
+![Mask editor](/assets/overlay_images/mask-editor.png)
+
+/// caption
+The Mask Editor Dialog
+///
+
+1. Start creating a new mask
+2. Switch between easy and export mode
+3. In Expert mode select the type of drawing tool to use
+4. Undo and Redo buttons
+5. Sets the opactity of the mask being created, useful for fine details work where you need to see thru the mask
+6. Set the brightnedd of the background image
+7. For the brush tool set the thickness of the brush
+8. Zoom controls
+
+Once you are happy with the mask click the 'Save' button and you will be prompted to give the mask a name and it will then be saved. There are a few rules around names
+
+1. The name must be unique to all other images
+2. Do not use spaces in the name
+
 
 ### Overlay Settings
+The overlay Editor has three tabs for settings
+
+- **Overlay Settings** Settings that affect new fields added to an Overlay
+- **Editor Settings** Settings that apply the the Overlay Editor
+- **Overlays** - Available overlays to edit
+
+![Overlay Settings layout](/assets/overlay_images/overlay-settings-layout.png)
+
+/// caption
+The Overlay Settings
+///
+
+1. The default opacity for new images.
+2. The default rotation for new images.
+3. The default font for new text fields.
+4. The default font size for new text fields.
+5. The default font opacity for new text fields.
+6. The default font color for new text fields.
+7. The default rotation for new text fields.
+8. The default colour used for the font stroke.
+9. The default expiration time in seconds for "extra" data files that do not specify an expiry time. This applies to all variables in .txt files and entries in .json files that don't have an "expires" attribute.
+10. The default text used when a field has expired.
 
 
+![Overlay Settings editor](/assets/overlay_images/overlay-settings-editor.png)
 
+/// caption
+The Overlay Editor Settings
+///
+
+1. When enabled, displays a grid for easier alignment of fields on the overlay. The grid is used to 'snap' fields making their placement easier.
+2. The size of the grid in pixels. **NOTE** Changing the grid size on an existin glayout will not adjust any fields
+3. The colour to use for the grid.
+4. The grid brightness. Values range from 0 (lowest brightness) to 100 (brightest).
+5. When enabled, moving a field will cause a rectangle to be displayed showing where the field will snap to if dropped.
+6. The number of variables to show per page in the Variable Manager.
+7. When adding a new field all other fields will be set to this brightness to make the new field easier to see. Values range from 0 (darkest) to 100 (each field's full brightness).
+8. When selecting a field all other fields will be set to this opacity to make the new field easier to see. Values range from 0 (darkest) to 100 (each field's full brightness).
+9. When enabled, scrolling the mouse wheel will zoom the overlay.
+10. Brightness of the captured image being overlayed. Lower this if the captured image is bright to make it easier to see the overlay fields. Values range from 0 (black background) to 100 (full brightness of captured image).
+
+!!! info  ""
+        
+        When changing the brightness settings you may need to click somewhere in the overlay in order for the change to take affect.
+
+
+![Overlay Settings overlays](/assets/overlay_images/overlay-settings-overlays.png)
+
+/// caption
+The Overlay Editor Overlays
+///
+
+1. Displays a table showing all of the overlays available.
+2. This icon is displayed when the overlay is not editable, these are overlays provided by the Allsky team. Clicking the button will view the overlay but not allow it to be edited
+3. This icon is displayed when the overlay is editable. Clicking the button will view the overlay and allow it to be edited

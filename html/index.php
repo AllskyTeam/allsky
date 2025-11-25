@@ -97,22 +97,22 @@ $pageInfo = [
 	],
 	"list_videos" => [
 		"title" => "Timelapse",
-		"icon" => "fa fa-video fa-${fa_size} fa-fw",
+		"icon" => "fa fa-video fa-{$fa_size} fa-fw",
 		"AllTitle" => "All Timelapse (CAN BE SLOW TO LOAD)",
 	],
 	"list_keograms" => [
 		"title" => "Keogram",
-		"icon" => "fa fa-barcode fa-${fa_size} fa-fw",
+		"icon" => "fa fa-barcode fa-{$fa_size} fa-fw",
 		"AllTitle" => "All Keograms",
 	],
 	"list_startrails" => [
 		"title" => "Startrails",
-		"icon" => "fa fa-star fa-${fa_size} fa-fw",
+		"icon" => "fa fa-star fa-{$fa_size} fa-fw",
 		"AllTitle" => "All Startrails",
 	],
 	"list_meteors" => [
 		"title" => "Meteors",
-		"icon" => "fa fa-meteor fa-${fa_size} fa-fw",
+		"icon" => "fa fa-meteor fa-{$fa_size} fa-fw",
 		"AllTitle" => "All Meteors",
 	],
 	"configuration" => [
@@ -434,7 +434,7 @@ function insertVersions() {
 			}
 			$msg .= "<br><br>";
 			$cmd = ALLSKY_SCRIPTS . "/addMessage.sh";
-			$cmd .= " --no-date --type success --msg '${msg}'";
+			$cmd .= " --no-date --type success --msg '{$msg}'";
 			runCommand($cmd, "", "");
 		}
 	} else {
@@ -529,13 +529,13 @@ function displayStatusMessages($p) {
 						$m1 = "<a href='$url' title='Click for more information' target='_messages'>";
 						$m2 = "<i class='fa fa-external-link-alt fa-fw'></i>";
 						$m2 = "<span class='externalSmall'>$m2</span>";
-						$message = "${m1}${message}${m2}</a>";
+						$message = "{$m1}{$message}{$m2}</a>";
 					}
 
 					if ($id !== "") {
 						$m1 = "<br><a href='/execute.php?ID=" . urlencode($id) . "'";
 						$m1 .= " class='executeAction' title='Click to perform action' target='_actions'>";
-						$message .= "${m1}${cmd_txt}</a>";
+						$message .= "{$m1}{$cmd_txt}</a>";
 					}
 
 					if ($count == 1) {

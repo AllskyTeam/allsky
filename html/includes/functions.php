@@ -159,7 +159,7 @@ $test_directory = "test";	// directories that start with this are "non-standard"
 	// A directory in ${ALLSKY_IMAGES}.
 	// Either: 2YYYMMDD  or  $test_directory (which is used for non-standard images)
 	// Start with "2" for the 2000's.
-$re_image_directory = "/^(2\d{7}|${test_directory}\w*)$/";
+$re_image_directory = "/^(2\d{7}|{$test_directory}\w*)$/";
 	// An image:  "image-YYYYMMDDHHMMSS.jpg" or .jpe or .png
 $re_image_name = '/^\w+-.*\d{14}[.](jpe?g|png)$/i';
 	// An image in a "test*" directory:  "*.jpg" or .jpe or .png
@@ -387,7 +387,7 @@ function check_if_configured($page, $calledFrom) {
 		}
 
 		$msg2 = "When done, click on the";
-		$msg2 .= " <span class='btn-primary btn-fake'>${saveChangesLabel}</span> button.";
+		$msg2 .= " <span class='btn-primary btn-fake'>{$saveChangesLabel}</span> button.";
 
 		if ($page === "configuration")
 			$msg .= $msg2;
@@ -661,7 +661,7 @@ function ListFileType($dir, $imageFileName, $formalImageTypeName, $type, $listNa
 			}
 		}
 	} else {
-		$expr = ALLSKY_IMAGES . "/${chosen_day}/${dir}";
+		$expr = ALLSKY_IMAGES . "/{$chosen_day}/{$dir}";
 		if (substr($imageFileName, 0, 1) == "X") {
 			// If the file name begins with a "X" the look for files whose names
 			// begin with the filename (without the "X").
@@ -671,7 +671,7 @@ function ListFileType($dir, $imageFileName, $formalImageTypeName, $type, $listNa
 			$expr .= substr($imageFileName, 1) . "*";
 			$ts = "?_ts=" . time();
 		} else {
-			$expr .= "${imageFileName}-${chosen_day}*";
+			$expr .= "{$imageFileName}-{$chosen_day}*";
 			$ts = "";
 		}
 		$imageTypes = array();
@@ -861,7 +861,7 @@ function updateFile($file, $contents, $fileName, $toConsole, $silent=false) {
 				$cl1 = "<br>";
 				$cl2 = "";
 			}
-			echo "${cl1}Note: Unable to update $file 1st time: ${e}${cl2}\n";
+			echo "{$cl1}Note: Unable to update $file 1st time: {$e}{$cl2}\n";
 		}
 
 		// Assumed it failed due to lack of permissions,
@@ -885,9 +885,9 @@ function updateFile($file, $contents, $fileName, $toConsole, $silent=false) {
 			if (! $silent) {
 				$e = error_get_last()['message'];
 				$err = "Failed to save '$file': $e";
-				echo "${cl1}Unable to update file for 2nd time: ${e}${cl2}";
+				echo "{$cl1}Unable to update file for 2nd time: {$e}{$cl2}";
 				$x = str_replace("\n", "", shell_exec("ls -l '$file'"));
-				echo "${cl1}ls -l returned: ${x}${cl2}";
+				echo "{$cl1}ls -l returned: {$x}{$cl2}";
 			}
 
 			// Save a temporary copy of the file in a place the webserver can write to,
@@ -903,7 +903,7 @@ function updateFile($file, $contents, $fileName, $toConsole, $silent=false) {
 
 			$cmd = "x=\$(sudo cp '$tempFile' '$file' 2>&1) || echo 'Unable to copy [$tempFile] to [$file]': \${x}";
 			$err = str_replace("\n", "", shell_exec($cmd));
-			if ($err !== "") echo "${cl1}cp returned: [$err]${cl2}";
+			if ($err !== "") echo "{$cl1}cp returned: [$err]{$cl2}";
 			return $err;
 		}
 	}

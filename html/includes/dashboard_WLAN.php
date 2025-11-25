@@ -15,7 +15,7 @@ function DisplayDashboard_WLAN()
 	$num_interfaces = 0;
 
 	$dq = '"';		// double quote
-	$cmd = "hwinfo --network --short | gawk '{ if ($2 == ${dq}WLAN${dq}) print $1; }' ";
+	$cmd = "hwinfo --network --short | gawk '{ if ($2 == {$dq}WLAN{$dq}) print $1; }' ";
 	if (exec($cmd, $output, $retval) === false || $retval !== 0) {
 		echo "<div class='errorMsgBig'>Unable to get list of network devices</div>";
 		return;

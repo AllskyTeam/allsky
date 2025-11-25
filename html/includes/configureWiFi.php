@@ -56,7 +56,7 @@ function DisplayWPAConfig()
 
 				$key = strtolower($lineArr[0]);
 				$value = trim($lineArr[1], '"');
-				if ($debug) echo "<br>&nbsp; &nbsp; data line, key=${key}";
+				if ($debug) echo "<br>&nbsp; &nbsp; data line, key={$key}";
 				switch($key) {
 					case 'ssid':
 						$ssid = $value;

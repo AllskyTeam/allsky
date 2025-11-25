@@ -113,7 +113,7 @@ foreach ($days as $day) {
 
 	echo "\t\t\t<td>";
 	if ($has_images) {
-		$icon = "<i class='fa fa-image fa-${fa_size} fa-fw'></i>";
+		$icon = "<i class='fa fa-image fa-{$fa_size} fa-fw'></i>";
 		echo "<a href='index.php?page=list_images&day=$day' title='Images'>$icon</a>";
 	} else {
 		echo "none";
@@ -131,7 +131,7 @@ foreach ($days as $day) {
 				$images_dir = "/images";
 				$thumb = str_replace(ALLSKY_IMAGES, "/images", $thumb[0]);
 				// 22px is roughly the width of a "fa-lg fa-fw" icon.
-				$icon = "<img src='$thumb' width='${fa_size_px}px'>";
+				$icon = "<img src='$thumb' width='{$fa_size_px}px'>";
 			}
 		}
 		insertHref("list_videos", $day, false, $icon);

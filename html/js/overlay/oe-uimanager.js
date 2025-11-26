@@ -1913,10 +1913,7 @@ class OEUIMANAGER {
                 dataType: 'json',
                 cache: false,
                 processData:false,
-                context: this,
-                beforeSend: function( xhr ) {
-                    $('#oe-fontupload-submit').addClass('disabled');
-                }                
+                context: this               
             }).done( (fontData) => {
                 $('#oe-fontupload-submit').removeClass('disabled');
                 for (let i = 0; i < fontData.length; i++) {

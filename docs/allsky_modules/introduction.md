@@ -117,3 +117,58 @@ The modules are run in the order they appear in the Selected Modules column. To 
 !!! info  "Module Order"
 
     The order modules run is important. For example dont put the overlay module before a module that generates data for it. If you do this the overlay will display the data from the previous run of the pipeline
+
+## Module Settings
+Each module provides a dialog where its settings can be managed. These settings are divided into tabs. Each module will have different tabs but there are a few that are consistent across all modules
+
+### The History Tab
+If the module produces any graphs then the main graph will be displayed in the history tab
+
+![](/assets/module_images/module_history.png) 
+
+/// caption
+The History tab
+///
+
+### The Variables Tab
+This tab shows what variables the module will generate, these can then be used in the VAriable manager to add fields to the overlays. This is really only for information purposes.
+
+![](/assets/module_images/module_variables.png) 
+
+/// caption
+The Variables tab
+///
+
+### The Changelog Tab
+This tab shows a history of the changes that have been mad to the module
+
+![](/assets/module_images/module_changelog.png) 
+
+/// caption
+The Change Log tab
+///
+
+### The 'Important' tab
+If this module or any portions of it are deprecated then this tab will display information about those deprecations
+
+![](/assets/module_images/module_dep.png) 
+
+/// caption
+The Deprecation tab
+///
+
+## Testing Modules
+Some modules provide the ability to test the module rather than waiting for it to run and reviewing the Allsky logs. 
+
+![](/assets/module_images/module_test.png) 
+
+/// caption
+The Test button
+///
+
+clicking the test button will run the module with the current settings you have configured and display a results dialog with two tabs
+
+| ![](/assets/module_images/module_test_result.png) | ![](/assets/module_images/module_test_result_data.png) |
+|-------------------------------------------------------|-------------------------------------------------|
+| Teh test results | The Extra Data the test generated |
+

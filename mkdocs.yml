@@ -2,7 +2,7 @@ site_name: Allsky Documentation
 site_url: "https://docs.allsky.local"
 site_dir: "html/docs"
 
-repo_url: https://github.com/AllskyTeam
+repo_url: https://github.com/AllskyTeam/allsky
 repo_name: Allsky
 
 use_directory_urls: false
@@ -40,7 +40,7 @@ extra_css:
 
 plugins:
   - search
-  #- offline
+  - offline
   - glightbox:
       skip_classes:
         - skip-lightbox  
@@ -63,9 +63,10 @@ markdown_extensions:
   - pymdownx.emoji:
       emoji_index: !!python/name:material.extensions.emoji.twemoji
       emoji_generator: !!python/name:material.extensions.emoji.to_svg
-  - pymdownx.superfences
   - toc:
       permalink: true
+  - pymdownx.tabbed:
+      alternate_style: true
   - pymdownx.critic
   - pymdownx.caret
   - pymdownx.keys
@@ -98,15 +99,36 @@ nav:
     - Settings:
       - allsky_guide/settings/allsky.md
       - allsky_guide/settings/website.md
-    - Overlays:
-      - Overview: allsky_guide/overlays/overview.md
-      - How They Work: allsky_guide/overlays/how.md
-      - Fields And Variables: allsky_guide/overlays/fieldsandvariables.md
-      - Extra Data: allsky_guide/overlays/extra.md
-      - Interface: allsky_guide/overlays/interface.md
-      - Formatting Variables: allsky_guide/overlays/formatting.md
-      - Tips: allsky_guide/overlays/tips.md
-      - Sun and Moon: allsky_guide/overlays/sunmoon.md         
+    - 3d Printables: allsky_guide/3d.md   
+    - Alternatives: allsky_guide/alternatives.md
+  - Overlays:
+    - Overview: allsky_guide/overlays/overview.md
+    - How They Work: allsky_guide/overlays/how.md
+    - Fields And Variables: allsky_guide/overlays/fieldsandvariables.md
+    - Extra Data: allsky_guide/overlays/extra.md
+    - Interface: allsky_guide/overlays/interface.md
+    - Formatting Variables: allsky_guide/overlays/formatting.md
+    - Tips: allsky_guide/overlays/tips.md
+    - Sun and Moon: allsky_guide/overlays/sunmoon.md    
+  - Modules:
+    - Introduction: allsky_modules/introduction.md
+    - Core Modules: 
+      - Modules:
+        - Load Image: allsky_modules/core/load_image.md
+        - Save Image: allsky_modules/core/save_image.md
+        - Mask Image: allsky_modules/core/mask_image.md
+        - Overlay: allsky_modules/core/overlay.md
+        - Exposure Rect: allsky_modules/core/exposure_rect.md
+        - Histogram: allsky_modules/core/histogram.md
+        - Star Count: allsky_modules/core/star_count.md
+        - Meteor Count: allsky_modules/core/meteor_count.md
+        - Clear Sky: allsky_modules/core/clear_sky.md
+        - Export: allsky_modules/core/export.md
+        - Pi Status: allsky_modules/core/pi_status.md
+        - Imtermediate Image: allsky_modules/core/imtermediate_image.md
+    - Extra Modules:
+      - Environment: allsky_modules/extra/environment.md    
+      - Dew Heater: allsky_modules/extra/dew_heater.md
   - Developer Guide:
     - Introduction: developer_guide/introduction.md
     - Glossary: developer_guide/glossary.md
@@ -121,8 +143,9 @@ nav:
       - Charts: developer_guide/charts.md
       - Blocks: developer_guide/blocks.md
       - Dependencies: developer_guide/dependencies.md
+    - SDK Reference:
+      - Shared Module: allsky_shared.md
+      - Base Class: allsky_base.md
+      - Allsky Server API: allsky_api.md
     - Contributing: developer_guide/contributing.md
-  - SDK Reference:
-    - shared: allsky_shared.md
-    - base: allsky_base.md
-    - Allsky Server API: allsky_api.md
+

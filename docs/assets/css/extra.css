@@ -37,7 +37,7 @@ img.center {
 }
 
 .camera-dependent,
-.allsky-website-dependent {
+.allsky-website-dependent, .red {
   color: rgb(155, 0, 0);
   font-weight: bold;
 }

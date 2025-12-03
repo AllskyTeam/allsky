@@ -16,7 +16,7 @@ To make managing the overlay easy group logic filds together, this will make mov
 
 Use the Preview option to check that the data is formatted as you expect
 
-**Be Sinsible With Fonts**
+**Be Sensible With Fonts**
 
 Use fonts sparingly. Try to keep to a consisten font and use different weights of the same font for headings and data
 

@@ -238,7 +238,7 @@ The Image Manager Dialog
 2. Deleted the selected image
 3. The image library
 4. Area to drop images onto to upload them, clicking this area will present an upload dialog
-5. Starte the Mask Editor
+5. Starts the Mask Editor
 
 
 ### The Mask Editor
@@ -275,6 +275,13 @@ Once you are happy with the mask click the 'Save' button and you will be prompte
 1. The name must be unique to all other images
 2. Do not use spaces in the name
 
+!!! info  "Other ways to create masks"
+
+    You can create a mask in any drawing application, shuch as Gimp or Photoshop. To do so create a Mono image and paint areas you wanto to keep white and those you want to mask black
+
+!!! info  "Tip"
+
+    When creating a mask turn off all modules that may add to the image, overlays etc to ensure you have a clean image to create the mask with
 
 ### Overlay Settings
 The overlay Editor has three tabs for settings

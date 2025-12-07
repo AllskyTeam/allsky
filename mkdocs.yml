@@ -129,6 +129,14 @@ nav:
     - Extra Modules:
       - Environment: allsky_modules/extra/environment.md    
       - Dew Heater: allsky_modules/extra/dew_heater.md
+      - ADSB: allsky_modules/extra/adsb.md
+      - Border: allsky_modules/extra/border.md
+      - Discord: allsky_modules/extra/discord.md
+      - Round Displays: allsky_modules/extra/esp32round.md
+      - Fans: allsky_modules/extra/fans.md
+      - GPIO: allsky_modules/extra/gpio.md
+      - Hard Disk Temp: allsky_modules/extra/hddtemp.md
+      - Image Tuning: allsky_modules/extra/image_tuning.md
   - Developer Guide:
     - Introduction: developer_guide/introduction.md
     - Glossary: developer_guide/glossary.md

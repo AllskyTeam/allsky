@@ -94,6 +94,13 @@ You will see other examples of people using relays to drive the heater but this 
 	  - GPIO pin gets hit with high voltage
 	  - Pi can lock up, reset, or permanently die
 
+## Blocks
+
+Several blocks are provide to make adding data to the overlays easier. These can be access from the variable manager in the overlay editor
+
+## Charts
+
+A variety of charts are available, see the chart manager for details
 
 ## Available in
 

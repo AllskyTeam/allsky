@@ -45,25 +45,68 @@ img.center {
 
 /* Width classes for tables */
 .w-5p {
-  width: 5%;
+  width: 5% !important;
+}
+.w-10p {
+  width: 10% !important;
 }
 .w-20p {
-  width: 20%;
+  width: 20% !important;
 }
 .w-25p {
-  width: 25%;
+  width: 25% !important;
 }
 .w-30p {
-  width: 30%;
+  width: 30% !important;
 }
 .w-100 {
-  width: 100px;
+  width: 100px !important;
 }
 
 .w-150 {
-  width: 150px;
+  width: 150px !important;
 }
 
 .w-200 {
-  width: 200px;
+  width: 200px !important;
+}
+
+/* Add external link icon to links marked with class "external" */
+a.external::after {
+  content: "";
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  margin-left: 0.25em;
+
+  background-color: currentColor;
+
+  /* SVG external-link icon as a mask */
+  -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='currentColor' d='M5 5h6v2H7v10h10v-4h2v6H5z'/><path fill='currentColor' d='M13 5V3h8v8h-2V7.414l-7.293 7.293-1.414-1.414L17.586 6H13z'/></svg>") no-repeat center / contain;
+          mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='currentColor' d='M5 5h6v2H7v10h10v-4h2v6H5z'/><path fill='currentColor' d='M13 5V3h8v8h-2V7.414l-7.293 7.293-1.414-1.414L17.586 6H13z'/></svg>") no-repeat center / contain;
+}
+
+/* Make the table wrapper full width */
+.md-typeset .md-typeset__table {
+  width: 100%;
+}
+
+/* Make Markdown tables behave like real tables and span 100% */
+.md-typeset table:not([class]) {
+  display: table;          /* override Material's display:block */
+  width: 100%;
+  table-layout: fixed;     /* or 'auto' if you prefer natural widths */
+  border-collapse: collapse;
+}
+
+/* Optional: make the first/second columns take specific proportions */
+.md-typeset table:not([class]) th:first-child,
+.md-typeset table:not([class]) td:first-child {
+  width: 15%;
+  white-space: nowrap;
+}
+
+.md-typeset table:not([class]) td:first-child {
+  font-style: italic;
+  font-weight: bolder;
 }

@@ -34,7 +34,7 @@ ADS-B Overview
       - A SDR dongle, some dongles are specific to ads-b
       - A 1090MHz antenna
 
-Details on howto set this up are beyond the scope of this document but there are a lot of resources available online to help, some examples
+Details on how-to set this up are beyond the scope of this document but there are a lot of resources available online to help, some examples
 
   - [FlightRadar24](https://www.flightradar24.com/share-your-data){ target="_blank" rel="noopener" } Contributing to Flightradar24 will give you a 'Contributor Plan' with access to a lot of the paid features.
   - [ADS-B Exchange](https://www.adsbexchange.com/ways-to-join-the-exchange/){ target="_blank" rel="noopener" } Contributing to ADS-B Exchange will remove all ads
@@ -56,9 +56,9 @@ To use a local installation select 'Local' from the data source dropdown
 |--------|-------------|
 | Local Address | The local address of your data |
 
-To obtain this address find the ip address of your ads-b installation and use it in teh following URL
+To obtain this address find the ip address of your ads-b installation and use it in the following URL
 
-http://&lt;ADSB INSTALLTION IP&gt;:8080/data/aircraft.json
+http://&lt;ADSB INSTALLATION IP&gt;:8080/data/aircraft.json
 
 ## Online API's
 The module supports three online API's for accessing ADS-B data
@@ -89,7 +89,7 @@ Before using OpenSky you will need either a paid subscription or to be contribut
 
 **API Limits**
 
-API credits are  used for all endpoints except /states/own. Credit usage is lower in general for restricted/smaller areas (/states/all) and shorter time frames (/flights and /tracks). For /states/all the credit calculation is done by square degrees. The area can be restricted by using the lamin, lamax, lomin, lomax query parameters. The area square deg column in the table below indicates the square degree limit - e.g. a box extending over latitude 10 degress and longitude 5 degrees, would equal 50 square degrees:
+API credits are  used for all endpoints except /states/own. Credit usage is lower in general for restricted/smaller areas (/states/all) and shorter time frames (/flights and /tracks). For /states/all the credit calculation is done by square degrees. The area can be restricted by using the lamin, lamax, lomin, lomax query parameters. The area square deg column in the table below indicates the square degree limit - e.g. a box extending over latitude 10 degrees and longitude 5 degrees, would equal 50 square degrees:
 
 Most unpaid accounts will start with 4000 credits
 
@@ -129,13 +129,13 @@ Aside from the data source the following settings are available on the settings 
 
 | Setting | Description |
 |--------|-------------|
-| Aircrafty Type Source| The data source for determining the aircraft type, see notes below |
+| Aircraft Type Source| The data source for determining the aircraft type, see notes below |
 | Get Flight Route | If enabled will use an external API to try and get the flight route for the aircraft |
 | Limit Distance | For all datasources except Open Sky, limits the distance for aircraft |
 | Altitude | The altitude of your station in metres |
 | Read Every | Only access the API's every this number of seconds, this helps to reduce hitting rate limits on API's |
 
-### Aicraft Type Data Source
+### Aircraft Type Data Source
 ADS-B does not provide an aircraft type in its data but it does provide a unique hex code for the aircraft. Contributors on the internet have built an database that maps these hex code to aicraft types. The module provides two different ways to get more detailed information about an aircraft
 
   - Local. This uses a local database but be aware that this may not be uptodate and will contain incorrect data. Its fine for most purposes
@@ -153,23 +153,23 @@ The Rate limits are calculated over a rolling 60 second time period.
 
 ## Overlay Data
 
-For each aicraft the following data is available for use in overlays, (X) in the table below relates to the aircraft number. The aircraft are sorted with the first being the closest to your location
+For each aircraft the following data is available for use in overlays, (X) in the table below relates to the aircraft number. The aircraft are sorted with the first being the closest to your location
 
-| VAriable | Description |
+| Variable | Description |
 |--------|-------------|
 | AS_DISTANCE_AIRCRAFT(X) | The distance of the aircraft from your station in miles |
-| AS_HEX_AIRCRAFT(X) | The hex code of the aircarft |
+| AS_HEX_AIRCRAFT(X) | The hex code of the aircraft |
 | AS_AZIMUTH_AIRCRAFT(X) | The azimuth of the aircraft from your location |
 | AS_ELEVATION_AIRCRAFT(X) | The elevation of the aircraft from your location |
 | AS_ALTITUDE_AIRCRAFT(X) | The raw altitude of the aircraft |
-| AS_TYPE_AIRCRAFT(X) | The aicraft type |
+| AS_TYPE_AIRCRAFT(X) | The aircraft type |
 | AS_OWNER_AIRCRAFT(X) | The owner of the aircraft |
 | AS_REGISTRATION_AIRCRAFT(X) | The registration of the aircraft |
-| AS_MANUFACTURER_AIRCRAFT(X) | The aicrafts manufacturer |
-| AS_MILITARY_AIRCRAFT(X) | Flag to indicate if the aicraft is military |
+| AS_MANUFACTURER_AIRCRAFT(X) | The aircraft manufacturer |
+| AS_MILITARY_AIRCRAFT(X) | Flag to indicate if the aircraft is military |
 | AS_TEXT_AIRCRAFT(X) | The flight number and azimuth of the aircraft |
 | AS_LONGTEXT_AIRCRAFT(X) | The flight number, type, azimuth, distance, altitude and speed |
-| AS_SHORT_ROUTE_AIRCRAFT(X) | Short route text of the aicraft ICAO -> ICAO |
+| AS_SHORT_ROUTE_AIRCRAFT(X) | Short route text of the aircraft ICAO -> ICAO |
 | AS_MEDIUM_ROUTE_AIRCRAFT(X) | Medium route text of the aircraft CITY -> CITY |
 | AS_LONG_ROUTE_AIRCRAFT(X) | Long route text of the aircraft (ICAO) AIRPORT -> (ICAO) Airport |
 
@@ -185,4 +185,4 @@ Several blocks are provide to make adding data to the overlays easier. These can
 
 ## Charts
 
-A chart and guage showing the number of aircraft received are available. These can be found in the Chart Manager
+A chart and gauge showing the number of aircraft received are available. These can be found in the Chart Manager

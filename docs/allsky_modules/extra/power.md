@@ -47,7 +47,7 @@ When selecting the ina3221 as the Sensor type the following settings are availab
 
 The ina219 produces the following variables for use in overlays
 
-| VAriable | Description |
+| Variable | Description |
 |--------|-------------|
 | AS_POWER_VOLTAGE1 | Channel 1 Voltage |
 | AS_POWER_CURRENT1 | Channel 1 Current |
@@ -59,7 +59,7 @@ The ina219 produces the following variables for use in overlays
 
 The ina3221 produces the following variables for use in overlays
 
-| VAriable | Description |
+| Variable | Description |
 |--------|-------------|
 | AS_POWER_VOLTAGE1 | Channel 1 Voltage |
 | AS_POWER_CURRENT1 | Channel 1 Current |

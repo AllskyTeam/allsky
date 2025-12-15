@@ -1,0 +1,1 @@
+This module obtains data from given MQTT topic for use in overlays

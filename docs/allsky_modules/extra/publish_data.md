@@ -104,4 +104,29 @@ Billing systems, transactions, state changes where duplicates cannot be tolerate
 |--------|-------------|
 | Publish to endpoint | Enable to publish data to the enspoint |
 | Endpoint | The endpoint to publish data to |
- 
+
+## Available in
+
+=== "Pipelines available In"
+    
+    <div class="grid cards" markdown>
+
+    -   :fontawesome-solid-sun:{ .lg .middle } __Daytime__
+
+        ---
+
+          - The Day time pipeline
+
+    -   :fontawesome-solid-moon:{ .lg .middle } __Nighttime__
+
+        ---
+
+          - The Night time pipeline
+
+    -   :fontawesome-solid-clock:{ .lg .middle } __Periodic__
+
+        ---
+
+          - The Periodic pipeline
+
+    </div>

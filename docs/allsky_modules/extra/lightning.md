@@ -48,3 +48,29 @@ The AS3935 is a dedicated lightning detection integrated circuit designed to ide
 /// caption
 Example using the as3935
 ///
+
+## Available in
+
+=== "Pipelines available In"
+    
+    <div class="grid cards" markdown>
+
+    -   :fontawesome-solid-sun:{ .lg .middle } __Daytime__
+
+        ---
+
+          - The Day time pipeline
+
+    -   :fontawesome-solid-moon:{ .lg .middle } __Nighttime__
+
+        ---
+
+          - The Night time pipeline
+
+    -   :fontawesome-solid-clock:{ .lg .middle } __Periodic__
+
+        ---
+
+          - The Periodic pipeline
+
+    </div>

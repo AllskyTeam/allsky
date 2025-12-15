@@ -102,7 +102,7 @@ a.external::after {
 /* Optional: make the first/second columns take specific proportions */
 .md-typeset table:not([class]) th:first-child,
 .md-typeset table:not([class]) td:first-child {
-  width: 15%;
+  width: 18%;
   white-space: nowrap;
 }
 

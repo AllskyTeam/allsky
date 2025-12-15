@@ -113,3 +113,23 @@ These sensors are delicate and cannot be exposed to the elements, however they d
 | **Glass**                     | ⭐          | Variable (depends on type)         | Hard, scratch-resistant                           | Absorbs IR/UV; heavy; condensation issues          | Not recommended unless using optical-grade glass |
 | **Silicone sealant (over sensor)** | 🚫 No | Poor                               | Waterproof                                        | Strong spectral distortion; fogging; uneven layer | Do not apply directly over sensor                 |
 | **3D-printed plastics (PLA/PETG)** | 🚫 No | Poor                               | Easy to fabricate                                 | Not optically clear; scatter light; UV issues     | Not suitable as a light-transmitting cover        |
+
+## Available in
+
+=== "Pipelines available In"
+    
+    <div class="grid cards" markdown>
+
+    -   :fontawesome-solid-sun:{ .lg .middle } __Daytime__
+
+        ---
+
+          - The Day time pipeline
+
+    -   :fontawesome-solid-moon:{ .lg .middle } __Nighttime__
+
+        ---
+
+          - The Night time pipeline
+
+    </div>

@@ -28,3 +28,29 @@ var3 will be ignored as its an object which cannot be imported
 | URL | The url that returns the data, note this must be unprotected i.e no username or password required |
 | Prefix | The prefix to add to variables when imported so for example var1 becomes AS_{PREFIX}VAR1 |
 | Filename | The name of the xtra data file to update |
+
+## Available in
+
+=== "Pipelines available In"
+    
+    <div class="grid cards" markdown>
+
+    -   :fontawesome-solid-sun:{ .lg .middle } __Daytime__
+
+        ---
+
+          - The Day time pipeline
+
+    -   :fontawesome-solid-moon:{ .lg .middle } __Nighttime__
+
+        ---
+
+          - The Night time pipeline
+
+    -   :fontawesome-solid-clock:{ .lg .middle } __Periodic__
+
+        ---
+
+          - The Periodic pipeline
+
+    </div>

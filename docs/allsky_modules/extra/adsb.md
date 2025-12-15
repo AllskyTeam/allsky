@@ -186,3 +186,29 @@ Several blocks are provide to make adding data to the overlays easier. These can
 ## Charts
 
 A chart and gauge showing the number of aircraft received are available. These can be found in the Chart Manager
+
+## Available in
+
+=== "Pipelines available In"
+    
+    <div class="grid cards" markdown>
+
+    -   :fontawesome-solid-sun:{ .lg .middle } __Daytime__
+
+        ---
+
+          - The Day time pipeline
+
+    -   :fontawesome-solid-moon:{ .lg .middle } __Nighttime__
+
+        ---
+
+          - The Night time pipeline
+
+    -   :fontawesome-solid-clock:{ .lg .middle } __Periodic__
+
+        ---
+
+          - The Periodic pipeline
+
+    </div>

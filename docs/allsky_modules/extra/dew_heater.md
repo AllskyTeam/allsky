@@ -1,3 +1,14 @@
+---
+tags:
+  - Extra Module
+  - Overlay Data
+  - Pipeline Day
+  - Pipeline Night
+  - Pipeline Periodic
+  - Hardware Required
+  - API Required
+---
+
 !!! warning  "Important"
  
     This module requires external hardware and some basic knowledge of electronics

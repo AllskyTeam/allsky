@@ -1,3 +1,10 @@
+---
+tags:
+  - Core Module
+  - Pipeline Night
+  - Pipeline Day  
+---
+
 ## Description
 
 This module counts stars in an image. It utilises a couple of algorithms to acheive this. It makes a 

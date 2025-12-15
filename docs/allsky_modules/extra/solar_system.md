@@ -1,3 +1,10 @@
+---
+tags:
+  - Extra Module
+  - Overlay Data
+  - Pipeline Periodic
+---
+
 This module calculates data for Solar System objects, the Sun, planets satellites etc. These are called ephemeris, or ephemeris the plural
 
 Data used in this modules calculations is obtained from a variety of sources

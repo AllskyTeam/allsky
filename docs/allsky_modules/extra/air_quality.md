@@ -1,3 +1,12 @@
+---
+tags:
+  - Extra Module
+  - Pipeline Day
+  - Pipeline Night
+  - Pipeline Periodic
+  - Hardware Required 
+---
+
 Monitor air quality using a pms5003, pms7003 or pmsa003. All three of thsese sensors provide digital particulate matter measurements and are best suited for trend monitoring and relative air quality assessment rather than regulatory-grade measurements. Proper airflow design, dust protection, and periodic cleaning are important to maintain long-term accuracy regardless of the model used.
 
 **PMS5003**

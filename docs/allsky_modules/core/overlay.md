@@ -1,3 +1,10 @@
+---
+tags:
+  - Core Module
+  - Pipeline Night
+  - Pipeline Day  
+---
+
 ## Description
 
 This module is responsible for drawing the overlay on the captured image.

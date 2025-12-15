@@ -1,3 +1,13 @@
+---
+tags:
+  - Extra Module
+  - Overlay Data
+  - Pipeline Day
+  - Pipeline Night
+  - Pipeline Periodic
+  - API Required
+---
+
 This module allows you to display information on Aircraft in your vicinity on overlays. It utilises a system called ADS-B or, Automatic Dependent Surveillance–Broadcast. There are two methods for obtaining the ADS-B data.
 
   - Installing an ADS-B reception station at home

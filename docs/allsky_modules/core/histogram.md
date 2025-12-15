@@ -1,3 +1,10 @@
+---
+tags:
+  - Core Module
+  - Pipeline Night
+  - Pipeline Day  
+---
+
 ## Description
 
 This module draws a histogram on the image

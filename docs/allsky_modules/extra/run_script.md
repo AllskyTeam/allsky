@@ -1,3 +1,11 @@
+---
+tags:
+  - Extra Module
+  - Pipeline Day
+  - Pipeline Night
+  - Pipeline Periodic
+---
+
 This module allows you to run a script. This can be useful if you want to perform custom actions. 
 
 Be careful when running a script in the day or night time pipelines as the time your script takes to run will affect the time duration between captured images. Ideally only use this module in the periodic pipeline

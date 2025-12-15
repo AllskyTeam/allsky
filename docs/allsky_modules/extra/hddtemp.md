@@ -1,3 +1,12 @@
+---
+tags:
+  - Extra Module
+  - Pipeline Day
+  - Pipeline Night
+  - Pipeline Periodic  
+  - Hardware Required 
+---
+
 This module uses SMART (Self-Monitoring, Analysis and Reporting Technology) to monitor the temperature of a hard drive.
 
 SMART is a diagnostic and monitoring system used by HDDs and SSDs to track internal health conditions. The drive keeps a set of counters, error logs, temperature records, and performance measurements. These indicators help the drive (and the operating system) detect when the hardware is starting to fail. The goal of SMART is not just to report current problems, but to predict future failure, giving users time to back up data before the drive becomes unusable.

@@ -1,3 +1,12 @@
+---
+tags:
+  - Extra Module
+  - Pipeline Day
+  - Pipeline Night
+  - Pipeline Periodic
+  - Hardware Required 
+---
+
 This module produces a Lux level and estimation of Bortle value from various light sensors. The following sensors are supported
 
 - TSL2561

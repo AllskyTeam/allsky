@@ -1,3 +1,11 @@
+---
+tags:
+  - Extra Module
+  - Image Adjustments
+  - Pipeline Day
+  - Pipeline Night
+---
+
 This module allows you to draw a border around the captured image, this can be useful for creating a blank area to draw overlay data on. The borders are drawn on the top, left, bottom and right had side of the image. Each border can be a different size
 
 ## Settings

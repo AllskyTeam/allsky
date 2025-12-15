@@ -1,3 +1,12 @@
+---
+tags:
+  - Extra Module
+  - Pipeline Day
+  - Pipeline Night
+  - Pipeline Periodic
+  - Hardware Required 
+---
+
 This module can detect lightning using a AS3935 sensor
 
 The AS3935 is a dedicated lightning detection integrated circuit designed to identify the characteristic electromagnetic signatures produced by lightning activity. Operating around the 500 kHz sferic band, it uses an internal tuned antenna and digital signal processing to distinguish real lightning strikes from man-made electrical noise and other transient RF events. The device can detect cloud-to-ground, cloud-to-cloud, and intra-cloud lightning and provides an estimated storm distance from approximately 40 km down to 1 km, allowing systems to track whether a storm is approaching or directly overhead. It features configurable sensitivity levels, automatic noise-floor adaptation, and “disturber” rejection to reduce false positives, while communicating via either I²C or SPI and signalling events through an interrupt pin. The AS3935 requires correct antenna calibration and should be positioned away from high-noise electronics to ensure reliable detection. Widely used in weather stations, outdoor monitoring systems, and IoT nodes, the AS3935 offers a compact and low-power method of adding accurate lightning detection capabilities to embedded applications.

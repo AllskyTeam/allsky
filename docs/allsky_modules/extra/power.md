@@ -1,3 +1,12 @@
+---
+tags:
+  - Extra Module
+  - Pipeline Day
+  - Pipeline Night
+  - Pipeline Periodic  
+  - Hardware Required 
+---
+
 This module is used to measure voltage and current. It supports the ina219 (Single channel) or the ina3221 (Three channels).
 
 This can typically be used to monitor the voltage and current being applied to a dew heater, its a pretty reliable way to know if its actually working !

@@ -1,3 +1,12 @@
+---
+tags:
+  - Extra Module
+  - Pipeline Day
+  - Pipeline Night
+  - Pipeline Periodic
+  - API Required
+---
+
 This module allows data from Allsky to be published to a variety of destinations.
 
   - **[Redis](https://redis.io){ target="_blank" rel="noopener" .external }** - an in-memory, key–value data store designed for extreme speed, used both as a cache and as a primary database for real-time applications. Unlike traditional relational databases, Redis stores data structures directly—such as strings, lists, sets, sorted sets, hashes, bitmaps, streams, and geospatial indexes—allowing efficient operations with minimal latency. It supports persistence to disk, replication, clustering, and high-availability configurations, making it suitable for large-scale systems. Because Redis operations are atomic and single-threaded per shard, it provides predictable performance while avoiding complex locking. Its combination of speed, versatile data structures, and robust ecosystem makes Redis popular for caching, session storage, message queues, real-time analytics, and pub/sub systems.

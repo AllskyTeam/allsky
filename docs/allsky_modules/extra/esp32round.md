@@ -1,3 +1,11 @@
+---
+tags:
+  - Extra Module
+  - Pipeline Day
+  - Pipeline Night
+  - Hardware Required 
+---
+
 This module resizes and image for display on round screens, specifically the [Waveshare](https://www.waveshare.com/esp32-p4-wifi6-touch-lcd-3.4c.htm){ target="_blank" rel="noopener" } Displays. These displays required additional software that can be found on [Github](https://github.com/chvvkumar/ESP32-P4-Allsky-Display){ target="_blank" rel="noopener" }
 
 Thanks to [Kumar Challa](https://github.com/chvvkumar/ESP32-P4-Allsky-Display){ target="_blank" rel="noopener" } for all of the hard work on the ESP32 software to drive the screen

@@ -1,3 +1,12 @@
+---
+tags:
+  - Extra Module
+  - Pipeline Day
+  - Pipeline Night
+  - Pipeline Periodic  
+  - Hardware Required 
+---
+
 This module allows you to control fans based upon either the internal CPU temperature of the pi or from an external sensor configure in the environment module.
 
 This can be useful for controlling a cpu cooler or venting air from the Allsky enclosure.

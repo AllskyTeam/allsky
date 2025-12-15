@@ -1,3 +1,11 @@
+---
+tags:
+  - Extra Module
+  - Pipeline Day
+  - Pipeline Night
+  - Pipeline Periodic
+---
+
 This module reads JSON data from a URl and creates and extra data file containing variables that can be used in overlays.
 
 As an example if an url returns the following data

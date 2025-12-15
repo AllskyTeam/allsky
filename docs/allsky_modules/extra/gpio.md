@@ -1,3 +1,12 @@
+---
+tags:
+  - Extra Module
+  - Pipeline Day
+  - Pipeline DayToNight
+  - Pipeline NightToDay  
+---
+
+
 This module allows a GPIO pin to be toggled during the transition from day to night and night to day. This can be used to signal other hadrware that the transition has happened, for example an automated cover that protects the camera during daylight hours in very hot environments
 
 

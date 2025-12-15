@@ -1,3 +1,11 @@
+---
+tags:
+  - Extra Module
+  - Pipeline Periodic
+  - Hardware Required 
+---
+
+
 This module allows you to read latitude, longitude and time from a GPS attached to the pi. This module requires gpsd to be installed, the module installer will install this if its not present.
 
 !!! warning  "Pi Noise"

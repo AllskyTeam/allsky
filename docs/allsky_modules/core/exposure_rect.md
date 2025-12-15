@@ -1,3 +1,10 @@
+---
+tags:
+  - Core Module
+  - Pipeline Night
+  - Pipeline Day  
+---
+
 ## Description
 
 This module draws the exposure rectangle definied in the main settings on the image

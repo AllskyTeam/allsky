@@ -1,3 +1,14 @@
+---
+tags:
+  - Extra Module
+  - Overlay Data
+  - Pipeline Day
+  - Pipeline Night
+  - Pipeline Periodic
+  - Hardware Required
+  - API Required
+---
+
 This module reads a variety of external sensors to provide temperature, humidity and dewpoint information for the overlays and other modules.
 
 The module can read upto 4 sensors
@@ -5,7 +16,7 @@ The module can read upto 4 sensors
   - **Core** - This is used to provide data to overlays and other Allsky modules
   - **Sensor 1 - 3** - These can be used for any purpose, for example you may have a temperature sensor insode the dome and one external. These sensors can alos be used to drive a GPIO pin
    
-# Settings
+## Settings
 The following settings are available in the module
 
 ## Home Tab

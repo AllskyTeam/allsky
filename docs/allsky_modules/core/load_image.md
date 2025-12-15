@@ -1,3 +1,10 @@
+---
+tags:
+  - Core Module
+  - Pipeline Night
+  - Pipeline Day  
+---
+
 ## Description
 This module is responsible for loading the last captured image for the daytime and nighttime pipelines.
 

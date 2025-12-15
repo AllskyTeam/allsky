@@ -1,3 +1,12 @@
+---
+tags:
+  - Extra Module
+  - Pipeline Day
+  - Pipeline Night
+  - Pipeline Periodic
+  - API Required 
+---
+
 This module obtains weather data from the Open Weather Map service
 
 [OpenWeatherMap](https://openweathermap.org){ target="_blank" rel="noopener" .external  } is a widely used weather data service that provides real-time and historical meteorological information through a simple web-based API. It aggregates data from thousands of weather stations, radars, satellites, and global models, then makes it available to developers for use in applications, dashboards, and IoT devices. The platform offers current conditions, forecasts, air-quality information, severe-weather alerts, and detailed hourly data. Access is provided through RESTful API endpoints, typically returning JSON, and supports both free and paid tiers depending on the level of precision, frequency, and features required.

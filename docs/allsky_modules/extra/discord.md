@@ -1,3 +1,12 @@
+---
+tags:
+  - Extra Module
+  - Pipeline Day
+  - Pipeline Night
+  - Pipeline Periodic  
+  - API Required  
+---
+
 This module allows you to send data to [Discord](https://discord.com){ target="_blank" rel="noopener" } server. You can send the following
 
   - Daytime image

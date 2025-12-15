@@ -12,6 +12,26 @@ theme:
   logo: assets/images/logo.png
   icon:
     repo: fontawesome/brands/github
+    tag:
+      default: material/tag
+      hw: material/chip
+      sw: material/code-tags
+      overlay: material/layers
+      module: material/puzzle
+      sensor: material/radar
+      mqtt: material/access-point
+      weather: material/weather-partly-cloudy
+      power: material/power-plug
+      network: material/lan
+      experimental: material/flask 
+      data: material/data-matrix
+      extra: material/code-braces-box
+      day: material/weather-sunny
+      night: material/weather-night
+      clock: material/clock-outline
+      hardware: material/hammer
+      api: material/api
+      image: material/image
   palette: 
 
     # Palette toggle for light mode
@@ -34,6 +54,27 @@ theme:
     - navigation.footer
     - search.suggest
 
+extra:
+  tags:
+    Hardware: hw
+    Software: sw
+    Overlays: overlay
+    Modules: module
+    Sensors: sensor
+    MQTT: mqtt
+    Weather: weather
+    Power: power
+    Networking: network
+    Experimental: experimental
+    Data Capture: data
+    Extra Module: extra
+    Overlay Data: overlay
+    Pipeline Day: day
+    Pipeline Night: night
+    Pipeline Periodic: clock
+    Hardware Required: hardware
+    API Required: api
+    Image Adjustments: image
 
 extra_css:
   - assets/css/extra.css
@@ -41,6 +82,8 @@ extra_css:
 plugins:
   - search
   - offline
+  - tags:
+      tags_file: tags.md
   - glightbox:
       skip_classes:
         - skip-lightbox  
@@ -99,8 +142,22 @@ nav:
     - Settings:
       - allsky_guide/settings/allsky.md
       - allsky_guide/settings/website.md
+    - Troubleshootings:
+      - Reporting Problems: allsky_guide/troubleshooting/reporting.md
+      - Tools: allsky_guide/troubleshooting/tools.md
+      - Uploads (ftp, scp etc) :  allsky_guide/troubleshooting/uploads.md
+      - Startrails: allsky_guide/troubleshooting/startrails.md
+      - Timelapse: allsky_guide/troubleshooting/timelapse.md
+      - Image Flicker: allsky_guide/troubleshooting/flicker.md
+      - WebUI: allsky_guide/troubleshooting/webui.md
+      - Website: allsky_guide/troubleshooting/website.md
+      - Increase Swap Space: allsky_guide/troubleshooting/swap.md
+      - ZWO Cameras: allsky_guide/troubleshooting/zwo.md
+      - RPi Cameras: allsky_guide/troubleshooting/rpicam.md
+    - Things we love: allsky_guide/things.md 
     - 3d Printables: allsky_guide/3d.md   
     - Alternatives: allsky_guide/alternatives.md
+    - Tags: tags.md    
   - Overlays:
     - Overview: allsky_guide/overlays/overview.md
     - How They Work: allsky_guide/overlays/how.md
@@ -137,6 +194,24 @@ nav:
       - GPIO: allsky_modules/extra/gpio.md
       - Hard Disk Temp: allsky_modules/extra/hddtemp.md
       - Image Tuning: allsky_modules/extra/image_tuning.md
+      - Power:  allsky_modules/extra/power.md
+      - Publish Data: allsky_modules/extra/publish_data.md
+      - JSON Import: allsky_modules/extra/json_import.md
+      - Light Meter: allsky_modules/extra/light.md
+      - Lightning: allsky_modules/extra/lightning.md
+      - MLX90640: allsky_modules/extra/mlx90640.md
+      - Open Weather Map: allsky_modules/extra/owm.md
+      - GPS: allsky_modules/extra/gps.md
+      - Air Quality: allsky_modules/extra/air_quality.md
+      - Detect Rain: allsky_modules/extra/rain.md
+      - Run Script: allsky_modules/extra/run_script.md
+      - Solar System: allsky_modules/extra/solar_system.md
+      - Sky Quality: allsky_modules/extra/sky_quality.md
+      - Deprecated Modules:
+        - INA3221: allsky_modules/extra/ina3221.md
+        - MQTT Subscribe: allsky_modules/extra/mqtt_subscribe.md    
+        - InfluxDB: allsky_modules/extra/influxdb.md
+        - LTR390: allsky_modules/extra/ltr390.md          
   - Developer Guide:
     - Introduction: developer_guide/introduction.md
     - Glossary: developer_guide/glossary.md

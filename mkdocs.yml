@@ -154,6 +154,13 @@ nav:
       - Increase Swap Space: allsky_guide/troubleshooting/swap.md
       - ZWO Cameras: allsky_guide/troubleshooting/zwo.md
       - RPi Cameras: allsky_guide/troubleshooting/rpicam.md
+      - Other Hardware: allsky_guide/troubleshooting/hardware.md
+      - Others: allsky_guide/troubleshooting/others.md
+    - FAQ: allsky_guide/faq.md
+    - Hardware:
+      - Pi Options: allsky_guide/hardware/pi.md
+      - Camera Options: allsky_guide/hardware/camera.md
+      - Lens Options: allsky_guide/hardware/lens.md
     - Things we love: allsky_guide/things.md 
     - 3d Printables: allsky_guide/3d.md   
     - Alternatives: allsky_guide/alternatives.md

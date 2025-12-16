@@ -111,4 +111,9 @@ a.external::after {
   font-weight: bolder;
 }
 
-
+.web-ui-setting {
+  font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+  color: #00009b;
+  font-weight: bold;
+  font-size: 95%;
+}

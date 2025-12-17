@@ -79,6 +79,9 @@ extra:
 extra_css:
   - assets/css/extra.css
 
+extra_javascript:
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+
 plugins:
   - search
   - offline
@@ -125,6 +128,8 @@ markdown_extensions:
   - def_list
   - attr_list
   - md_in_html
+  - pymdownx.arithmatex:
+      generic: true  
   - pymdownx.superfences:
       custom_fences:
         - name: mermaid
@@ -142,6 +147,11 @@ nav:
     - Settings:
       - allsky_guide/settings/allsky.md
       - allsky_guide/settings/website.md
+    - Howtos:
+      - Allsky layout: allsky_guide/howtos/layout.md
+      - Helper Tools: 
+        - Startrails: allsky_guide/howtos/helper_tools/startrails.md
+        - Image Stretch:  allsky_guide/howtos/helper_tools/image_stretch.md
     - Troubleshootings:
       - Reporting Problems: allsky_guide/troubleshooting/reporting.md
       - Tools: allsky_guide/troubleshooting/tools.md
@@ -161,6 +171,8 @@ nav:
       - Pi Options: allsky_guide/hardware/pi.md
       - Camera Options: allsky_guide/hardware/camera.md
       - Lens Options: allsky_guide/hardware/lens.md
+    - Known Issues: allsky_guide/known_issues.md
+    - ChangeLog: allsky_guide/changelog.md
     - Things we love: allsky_guide/things.md 
     - 3d Printables: allsky_guide/3d.md   
     - Alternatives: allsky_guide/alternatives.md

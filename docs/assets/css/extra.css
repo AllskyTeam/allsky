@@ -117,3 +117,22 @@ a.external::after {
   font-weight: bold;
   font-size: 95%;
 }
+
+/* Left sidebar: top-level section headers (Allsky Guide, Installation, etc) */
+.md-sidebar--primary 
+.md-nav--primary 
+.md-nav__list 
+> .md-nav__item--nested 
+> label.md-nav__link {
+  font-weight: 800 !important;
+}
+
+/* Left sidebar: top-level pages within the current section (FAQ, Known Issues, etc) */
+.md-sidebar--primary 
+.md-nav--primary 
+.md-nav[data-md-level="1"] 
+> .md-nav__list 
+> .md-nav__item 
+> a.md-nav__link {
+  font-weight: 800 !important;
+}

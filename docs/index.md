@@ -10,7 +10,7 @@ The web-based interface lets you monitor your system live, review captured event
 Built by enthusiasts for enthusiasts, Allsky is open, extensible, and endlessly curious — a fusion of astrophotography, automation, and discovery.
 
 
-!!! intro ""
+!!! info "Allsky Developers"
     The Allsky Camera software was originally created by Thomas Jacquin, a developer and astrophotography  enthusiast based in Canada.
 
     Thomas released the first version of Allsky around 2018, designed to run on a Raspberry Pi with a ZWO ASI or Raspberry Pi HQ camera to capture images of the entire sky — automatically creating timelapses, keograms, and detecting meteors.
@@ -23,17 +23,27 @@ Built by enthusiasts for enthusiasts, Allsky is open, extensible, and endlessly 
     - Eric Claeys - @EricClaeys  
     - Alex Greenland - @Alex-developer 
 
-There are Three sections to the documentation
+There are several sections to the documentation
 
 - **Allsky Guide** Information for installing, configuring, and running the Allsky software, including describing what various features like overlays and keograms are, and how to troubleshoot and fix problems.
+- **Overlays** Information on how the overlay system works and how to configure it
+- **Modules** Details all of the modules both core and extra available for Allsky
 - **Developer Guide** Information for developers on howto extend Allsky by creating custom modules
 - **SDK Reference** Information for developers on the available libraries within Allsky
 
-## Questions and Feature Requests
-If you have a QUESTION or want to REQUEST A NEW FEATURE create a new Discussion by clicking on the Discussions link on any Allsky GitHub page. Please do NOT create an Issue.
+## Installing Allsky
 
-## Issues
-If you have a problem first look in the "Documentation -> Troubleshooting" pages for a solution - most known problems are listed there. If you can't find a similar problem look in the Discussions (it may be a closed discussion). If you still can't find your problem, read the Reporting Problems page and then create a new Issue.
+To install Allsky please refer the the [Installation](/allsky_guide/allsky.html) Guide.
+
+## Getting Help
+
+If you have a QUESTION or want to REQUEST A NEW FEATURE create a new [Discussions](https://github.com/AllskyTeam/allsky-modules/discussions){ target="_blank" rel="noopener" .external } on the GitHub page. 
+
+!!! danger "Discussions vs Issues"
+
+    Please do NOT create an Issue in Github, these are reserved for the Allsky development team. YOur discussion may be converted to an issue by the team if required
+
+If you have a problem first look in the "Allsky Guide -> Troubleshooting" pages for a solution - most known problems are listed there. If you can't find a similar problem look in the Discussions (it may be a closed discussion). If you still can't find your problem, read the Reporting Problems page and then create a new Issue.
 
 ## Contributing
 If you would like to contribute code to Allsky then please see the [Contributing Guide](developer_guide/contributing.md)

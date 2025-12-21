@@ -50,6 +50,9 @@ img.center {
 .w-10p {
   width: 10% !important;
 }
+.w-15p {
+  width: 15% !important;
+}
 .w-20p {
   width: 20% !important;
 }
@@ -69,6 +72,23 @@ img.center {
 
 .w-200 {
   width: 200px !important;
+}
+
+/* Allow table cells to wrap */
+td, th {
+  white-space: wrap !important;
+}
+
+/* Reduce cell padding */
+.md-typeset table:not([class]) td {
+    padding: .9em 1em !important;
+}
+
+/* Highjack markdown 'mark' for settings indicator */
+.md-typeset mark {
+  color: #00009b !important;
+  font-weight: bold !important;
+  background-color: transparent !important;
 }
 
 /* Add external link icon to links marked with class "external" */
@@ -135,4 +155,27 @@ a.external::after {
 > .md-nav__item 
 > a.md-nav__link {
   font-weight: 800 !important;
+}
+
+/** Editor Setting styles */
+.shSetting, .editorShell, .editorShellComment, .editorSetting, .editorString, .editorNum, .editorSign, .editorBool, .editorSpecial, .editorBracketsJSON {
+  font-family: monospace;
+  background-color: #272822;
+  padding: 1px 2px;
+}
+
+.editorSetting {
+  color: #a6e22e;
+}
+.editorString {
+  color: #e6db74;
+}
+.editorNum, .editorBool {
+  color: #deb1ff;
+}
+.editorSpecial {
+  color: white;
+}
+.editorBracketsJSON {
+  color: rgb(253, 151, 31);
 }

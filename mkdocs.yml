@@ -139,6 +139,7 @@ markdown_extensions:
 nav:
   - Home: index.md
   - Allsky Guide:
+    - Glossary: allsky_guide/glossary.md
     - Installation: 
       - allsky_guide/allsky.md
       - allsky_guide/website.md

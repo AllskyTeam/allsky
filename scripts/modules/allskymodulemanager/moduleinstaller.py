@@ -324,6 +324,58 @@ Would you like to review and install any available modules now?\
 
         return modules_to_install
 
+    def _display_uninstall_dialog(self):
+        import shutil, textwrap
+
+        def _wrap_items(triples, box_width=70, min_desc_width=30, pad=4):
+            max_tag = max((len(tag) for tag, _, _ in triples), default=0)
+            tag_col = max_tag + 6
+            desc_width = max(min_desc_width, box_width - tag_col - pad)
+
+            wrapped = []
+            for tag, desc, state in triples:
+                d = (desc or "").replace("\t", " ")
+                d = textwrap.fill(d, width=desc_width, break_long_words=True, break_on_hyphens=False)
+                wrapped.append((tag, d, state))
+
+            return wrapped
+
+        module_triples = []
+        for module in self._module_list:
+            try:
+                if module.installed:
+                    module_triples.append((module.name, module.description, "OFF"))
+            except (ModuleError, NoVersionError):
+                continue
+            except Exception as e:
+                tb = e.__traceback__
+                print(f"Error {getattr(module, 'name', '?')} on line {tb.tb_lineno}: {e}")
+                sys.exit(1)
+
+        if not module_triples:
+            return None
+
+        cols, _rows = shutil.get_terminal_size(fallback=(120, 30))
+        desired_width = min(180, max(80, cols - 10))
+        module_triples = _wrap_items(module_triples, box_width=desired_width)
+
+        w = Whiptail(
+            title=f"Select Modules",
+            backtitle=f"{self._main_backtitle}",
+            width=desired_width,
+        )
+
+        selected, rc = w.checklist(
+            "Select the Modules To Uninstall",
+            module_triples,
+            prefix=" "
+        )
+
+        if rc != 0 or not selected:
+            return None
+
+        return list(selected)
+
     def auto_upgrade_modules(self, args):
         self._log(False, f"Auto upgrade modules started")
         self._log(False, f"============================\n")
@@ -481,14 +533,24 @@ Would you like to review and install any available modules now?\
                     elif menu_option == 'Uninstall Modules':
                         if self._pre_checks():
                             self._read_modules()
-# TODO: FIX: _display_uninstall_dialog() does not exist.
                             try:
                                 modules_to_uninstall = self._display_uninstall_dialog()
                             except:
                                 modules_to_uninstall = None
                             if modules_to_uninstall is not None:
-# TODO: FIX: _do_uninstall_dialog() does not exist.
-                                self._do_uninstall(modules_to_uninstall)
+                                for module_name in modules_to_uninstall:
+                                    module = self._find_module(module_name)
+                                    if module is None:
+                                        self._log(True, f"WARNING: Module {module_name} not found; skipping uninstall")
+                                        continue
+                                    try:
+                                        module.uninstall_module()
+                                    except Exception as e:
+                                        tb = e.__traceback__
+                                        self._log(False, f"ERROR: uninstall_module on line {tb.tb_lineno}: {e}")
+                                if modules_to_uninstall:
+                                    print("\n\nUninstall complete")
+                                    input("\nPress Enter to continue...")
                             else:
                                 w = Whiptail(title='Uninstall Modules', backtitle='Allsky Module Manager', height=8, width=50)
                                 w.msgbox("There are no modules available to uninstall.")

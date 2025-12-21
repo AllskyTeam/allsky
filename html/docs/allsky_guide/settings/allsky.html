@@ -1,0 +1,6101 @@
+<!DOCTYPE html><html lang="en" class="no-js"><head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://docs.allsky.local/allsky_guide/settings/allsky.html">
+      
+      
+        <link rel="prev" href="../server.html">
+      
+      
+        <link rel="next" href="website.html">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.0">
+    
+    
+      
+        <title>Allsky - Allsky Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.618322db.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+  
+  
+    
+      
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+  
+  <style>:root{.md-tag{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M5.5%207A1.5%201.5%200%200%201%204%205.5%201.5%201.5%200%200%201%205.5%204%201.5%201.5%200%200%201%207%205.5%201.5%201.5%200%200%201%205.5%207m15.91%204.58-9-9C12.05%202.22%2011.55%202%2011%202H4c-1.11%200-2%20.89-2%202v7c0%20.55.22%201.05.59%201.41l8.99%209c.37.36.87.59%201.42.59s1.05-.23%201.41-.59l7-7c.37-.36.59-.86.59-1.41%200-.56-.23-1.06-.59-1.42%22/%3E%3C/svg%3E');}.md-tag.md-tag--hw{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M6%204h12v1h3v2h-3v2h3v2h-3v2h3v2h-3v2h3v2h-3v1H6v-1H3v-2h3v-2H3v-2h3v-2H3V9h3V7H3V5h3zm5%2011v3h1v-3zm2%200v3h1v-3zm2%200v3h1v-3z%22/%3E%3C/svg%3E');}.md-tag.md-tag--sw{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22m14.6%2016.6%204.6-4.6-4.6-4.6L16%206l6%206-6%206zm-5.2%200L4.8%2012l4.6-4.6L8%206l-6%206%206%206z%22/%3E%3C/svg%3E');}.md-tag.md-tag--overlay{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22m12%2016%207.36-5.73L21%209l-9-7-9%207%201.63%201.27M12%2018.54l-7.38-5.73L3%2014.07l9%207%209-7-1.63-1.27z%22/%3E%3C/svg%3E');}.md-tag.md-tag--module{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M20.5%2011H19V7a2%202%200%200%200-2-2h-4V3.5A2.5%202.5%200%200%200%2010.5%201%202.5%202.5%200%200%200%208%203.5V5H4a2%202%200%200%200-2%202v3.8h1.5c1.5%200%202.7%201.2%202.7%202.7S5%2016.2%203.5%2016.2H2V20a2%202%200%200%200%202%202h3.8v-1.5c0-1.5%201.2-2.7%202.7-2.7s2.7%201.2%202.7%202.7V22H17a2%202%200%200%200%202-2v-4h1.5a2.5%202.5%200%200%200%202.5-2.5%202.5%202.5%200%200%200-2.5-2.5%22/%3E%3C/svg%3E');}.md-tag.md-tag--sensor{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22m19.07%204.93-1.41%201.41A8.01%208.01%200%200%201%2020%2012a8%208%200%200%201-8%208%208%208%200%200%201-8-8c0-4.08%203.05-7.44%207-7.93v2.02C8.16%206.57%206%209.03%206%2012a6%206%200%200%200%206%206%206%206%200%200%200%206-6c0-1.66-.67-3.16-1.76-4.24l-1.41%201.41C15.55%209.9%2016%2010.9%2016%2012a4%204%200%200%201-4%204%204%204%200%200%201-4-4c0-1.86%201.28-3.41%203-3.86v2.14c-.6.35-1%20.98-1%201.72a2%202%200%200%200%202%202%202%202%200%200%200%202-2c0-.74-.4-1.38-1-1.72V2h-1A10%2010%200%200%200%202%2012a10%2010%200%200%200%2010%2010%2010%2010%200%200%200%2010-10c0-2.76-1.12-5.26-2.93-7.07%22/%3E%3C/svg%3E');}.md-tag.md-tag--mqtt{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M4.93%204.93A9.97%209.97%200%200%200%202%2012c0%202.76%201.12%205.26%202.93%207.07l1.41-1.41A7.94%207.94%200%200%201%204%2012c0-2.21.89-4.22%202.34-5.66zm14.14%200-1.41%201.41A7.96%207.96%200%200%201%2020%2012c0%202.22-.89%204.22-2.34%205.66l1.41%201.41A9.97%209.97%200%200%200%2022%2012c0-2.76-1.12-5.26-2.93-7.07M7.76%207.76A5.98%205.98%200%200%200%206%2012c0%201.65.67%203.15%201.76%204.24l1.41-1.41A4%204%200%200%201%208%2012c0-1.11.45-2.11%201.17-2.83zm8.48%200-1.41%201.41A4%204%200%200%201%2016%2012c0%201.11-.45%202.11-1.17%202.83l1.41%201.41A5.98%205.98%200%200%200%2018%2012c0-1.65-.67-3.15-1.76-4.24M12%2010a2%202%200%200%200-2%202%202%202%200%200%200%202%202%202%202%200%200%200%202-2%202%202%200%200%200-2-2%22/%3E%3C/svg%3E');}.md-tag.md-tag--weather{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M12.74%205.47c2.36%201.03%203.61%203.56%203.18%205.99A6%206%200%200%201%2018%2016v.17a3%203%200%200%201%201-.17%203%203%200%200%201%203%203%203%203%200%200%201-3%203H6a4%204%200%200%201-4-4%204%204%200%200%201%204-4h.27C5%2012.45%204.6%2010.24%205.5%208.26a5.49%205.49%200%200%201%207.24-2.79m-.81%201.83c-1.77-.8-3.84.01-4.62%201.77-.46%201.02-.38%202.15.1%203.06A5.99%205.99%200%200%201%2012%2010c.7%200%201.38.12%202%20.34a3.51%203.51%200%200%200-2.07-3.04m1.62-3.66c-.55-.24-1.1-.41-1.67-.52l2.49-1.3.9%202.89a7.7%207.7%200%200%200-1.72-1.07m-7.46.8c-.49.35-.92.75-1.29%201.19l.11-2.81%202.96.68c-.62.21-1.22.53-1.78.94M18%209.71c-.09-.59-.22-1.16-.41-1.71l2.38%201.5-2.05%202.23c.11-.65.13-1.33.08-2.02M3.04%2011.3c.07.6.2%201.17.39%201.7l-2.37-1.5L3.1%209.28c-.1.65-.13%201.33-.06%202.02M19%2018h-3v-2a4%204%200%200%200-4-4%204%204%200%200%200-4%204H6a2%202%200%200%200-2%202%202%202%200%200%200%202%202h13a1%201%200%200%200%201-1%201%201%200%200%200-1-1%22/%3E%3C/svg%3E');}.md-tag.md-tag--power{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M16%207V3h-2v4h-4V3H8v4C7%207%206%208%206%209v5.5L9.5%2018v3h5v-3l3.5-3.5V9c0-1-1-2-2-2%22/%3E%3C/svg%3E');}.md-tag.md-tag--network{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M10%202c-1.11%200-2%20.89-2%202v3c0%201.11.89%202%202%202h1v2H2v2h4v2H5c-1.11%200-2%20.89-2%202v3c0%201.11.89%202%202%202h4c1.11%200%202-.89%202-2v-3c0-1.11-.89-2-2-2H8v-2h8v2h-1c-1.11%200-2%20.89-2%202v3c0%201.11.89%202%202%202h4c1.11%200%202-.89%202-2v-3c0-1.11-.89-2-2-2h-1v-2h4v-2h-9V9h1c1.11%200%202-.89%202-2V4c0-1.11-.89-2-2-2zm0%202h4v3h-4zM5%2017h4v3H5zm10%200h4v3h-4z%22/%3E%3C/svg%3E');}.md-tag.md-tag--experimental{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M6%2022a3%203%200%200%201-3-3c0-.6.18-1.16.5-1.63L9%207.81V6a1%201%200%200%201-1-1V4a2%202%200%200%201%202-2h4a2%202%200%200%201%202%202v1a1%201%200%200%201-1%201v1.81l5.5%209.56c.32.47.5%201.03.5%201.63a3%203%200%200%201-3%203zm-1-3a1%201%200%200%200%201%201h12a1%201%200%200%200%201-1c0-.21-.07-.41-.18-.57l-2.29-3.96L14%2017l-5.07-5.07-3.75%206.5c-.11.16-.18.36-.18.57m8-9a1%201%200%200%200-1%201%201%201%200%200%200%201%201%201%201%200%200%200%201-1%201%201%200%200%200-1-1%22/%3E%3C/svg%3E');}.md-tag.md-tag--data{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M2%202v20h20v-2h-2v-2h2v-2h-2v-2h2v-2h-4v-2h-2v2h-2v-2h-2V8H8v4h4v4h-2v2h2v2h-2v-2H8v-2H6v-2H4v-2h2V6H4V2zm4%204h2V2H6zm2%2010h2v-2H8zm10-6h4V8h-4zm0-2V4h-2v2h-2v2zm-2-4V2h-2v2zm2%200h2V2h-2zm2%200v2h2V4zM10%202v4h2V2zm4%2012h2v2h2v4h-4zM4%2018h2v2H4z%22/%3E%3C/svg%3E');}.md-tag.md-tag--extra{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M19%203H5c-1.1%200-2%20.9-2%202v14c0%201.1.9%202%202%202h14c1.1%200%202-.9%202-2V5c0-1.1-.9-2-2-2m-8%205H9v2c0%201.1-.9%202-2%202%201.1%200%202%20.9%202%202v2h2v2H9c-1.1%200-2-.9-2-2v-1c0-1.1-.9-2-2-2v-2c1.1%200%202-.9%202-2V8c0-1.1.9-2%202-2h2zm8%205c-1.1%200-2%20.9-2%202v1c0%201.1-.9%202-2%202h-2v-2h2v-2c0-1.1.9-2%202-2-1.1%200-2-.9-2-2V8h-2V6h2c1.1%200%202%20.9%202%202v1c0%201.1.9%202%202%202z%22/%3E%3C/svg%3E');}.md-tag.md-tag--day{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M12%207a5%205%200%200%201%205%205%205%205%200%200%201-5%205%205%205%200%200%201-5-5%205%205%200%200%201%205-5m0%202a3%203%200%200%200-3%203%203%203%200%200%200%203%203%203%203%200%200%200%203-3%203%203%200%200%200-3-3m0-7%202.39%203.42C13.65%205.15%2012.84%205%2012%205s-1.65.15-2.39.42zM3.34%207l4.16-.35A7.2%207.2%200%200%200%205.94%208.5c-.44.74-.69%201.5-.83%202.29zm.02%2010%201.76-3.77a7.131%207.131%200%200%200%202.38%204.14zM20.65%207l-1.77%203.79a7.02%207.02%200%200%200-2.38-4.15zm-.01%2010-4.14.36c.59-.51%201.12-1.14%201.54-1.86.42-.73.69-1.5.83-2.29zM12%2022l-2.41-3.44c.74.27%201.55.44%202.41.44.82%200%201.63-.17%202.37-.44z%22/%3E%3C/svg%3E');}.md-tag.md-tag--night{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22m17.75%204.09-2.53%201.94.91%203.06-2.63-1.81-2.63%201.81.91-3.06-2.53-1.94L12.44%204l1.06-3%201.06%203zm3.5%206.91-1.64%201.25.59%201.98-1.7-1.17-1.7%201.17.59-1.98L15.75%2011l2.06-.05L18.5%209l.69%201.95zm-2.28%204.95c.83-.08%201.72%201.1%201.19%201.85-.32.45-.66.87-1.08%201.27C15.17%2023%208.84%2023%204.94%2019.07c-3.91-3.9-3.91-10.24%200-14.14.4-.4.82-.76%201.27-1.08.75-.53%201.93.36%201.85%201.19-.27%202.86.69%205.83%202.89%208.02a9.96%209.96%200%200%200%208.02%202.89m-1.64%202.02a12.08%2012.08%200%200%201-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81%203.14-2.7%207.96.31%2010.98%203.02%203.01%207.84%203.12%2010.98.31%22/%3E%3C/svg%3E');}.md-tag.md-tag--clock{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M12%2020a8%208%200%200%200%208-8%208%208%200%200%200-8-8%208%208%200%200%200-8%208%208%208%200%200%200%208%208m0-18a10%2010%200%200%201%2010%2010%2010%2010%200%200%201-10%2010C6.47%2022%202%2017.5%202%2012A10%2010%200%200%201%2012%202m.5%205v5.25l4.5%202.67-.75%201.23L11%2013V7z%22/%3E%3C/svg%3E');}.md-tag.md-tag--hardware{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M2%2019.63%2013.43%208.2l-.71-.7%201.42-1.43L12%203.89c1.2-1.19%203.09-1.19%204.27%200l3.6%203.61-1.42%201.41h2.84l.71.71-3.55%203.59-.71-.71V9.62l-1.47%201.42-.71-.71L4.13%2021.76z%22/%3E%3C/svg%3E');}.md-tag.md-tag--api{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M7%207H5a2%202%200%200%200-2%202v8h2v-4h2v4h2V9a2%202%200%200%200-2-2m0%204H5V9h2m7-2h-4v10h2v-4h2a2%202%200%200%200%202-2V9a2%202%200%200%200-2-2m0%204h-2V9h2m6%200v6h1v2h-4v-2h1V9h-1V7h4v2Z%22/%3E%3C/svg%3E');}.md-tag.md-tag--image{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22m8.5%2013.5%202.5%203%203.5-4.5%204.5%206H5m16%201V5a2%202%200%200%200-2-2H5a2%202%200%200%200-2%202v14a2%202%200%200%200%202%202h14a2%202%200%200%200%202-2%22/%3E%3C/svg%3E');}}</style>
+
+    
+    
+      
+        <script src="https://unpkg.com/iframe-worker/shim"></script>
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../../assets/css/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  <link href="../../assets/stylesheets/glightbox.min.css" rel="stylesheet"><script src="../../assets/javascripts/glightbox.min.js"></script><style id="glightbox-style">
+            html.glightbox-open { overflow: initial; height: 100%; }
+            .gslide-title { margin-top: 0px; user-select: text; }
+            .gslide-desc { color: #666; user-select: text; }
+            .gslide-image img { background: white; }
+            .gscrollbar-fixer { padding-right: 15px; }
+            .gdesc-inner { font-size: 0.75rem; }
+            body[data-md-color-scheme="slate"] .gdesc-inner { background: var(--md-default-bg-color); }
+            body[data-md-color-scheme="slate"] .gslide-title { color: var(--md-default-fg-color); }
+            body[data-md-color-scheme="slate"] .gslide-desc { color: var(--md-default-fg-color); }
+        </style></head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#daytime" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../index.html" title="Allsky Documentation" class="md-header__button md-logo" aria-label="Allsky Documentation" data-md-component="logo">
+      
+  <img src="../../assets/images/logo.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"></path></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Allsky Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Allsky
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo" aria-label="Switch to dark mode" type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"></path></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo" aria-label="Switch to light mode" type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"></path></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"></path></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/AllskyTeam/allsky" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"></path></svg>
+  </div>
+  <div class="md-source__repository">
+    Allsky
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../index.html" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../glossary.html" class="md-tabs__link">
+          
+  
+  
+  Allsky Guide
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../overlays/overview.html" class="md-tabs__link">
+          
+  
+  
+  Overlays
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../allsky_modules/introduction.html" class="md-tabs__link">
+          
+  
+  
+  Modules
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../developer_guide/introduction.html" class="md-tabs__link">
+          
+  
+  
+  Developer Guide
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../index.html" title="Allsky Documentation" class="md-nav__button md-logo" aria-label="Allsky Documentation" data-md-component="logo">
+      
+  <img src="../../assets/images/logo.png" alt="logo">
+
+    </a>
+    Allsky Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/AllskyTeam/allsky" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"></path></svg>
+  </div>
+  <div class="md-source__repository">
+    Allsky
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Allsky Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Allsky Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../glossary.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_2">
+        
+          
+          <label class="md-nav__link" for="__nav_2_2" id="__nav_2_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Installation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../allsky.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Allsky
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../website.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Website
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../server.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Server
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configuration.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2_4" id="__nav_2_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Settings
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Settings
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Allsky
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="allsky.html" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Allsky
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#daytime" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Daytime
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#nighttime" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Nighttime
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#day-and-night" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Day and Night
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#post-capture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Post Capture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#timelapse" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Timelapse
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#keogram-and-startrails" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Keogram and Startrails
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#websites-and-remote-server" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Websites and Remote Server
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#allsky-map" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Allsky Map
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#webui" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        WebUI
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#database" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Database
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#camera" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Camera
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="website.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Website
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_5">
+        
+          
+          <label class="md-nav__link" for="__nav_2_5" id="__nav_2_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Howtos
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Howtos
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../howtos/layout.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Allsky layout
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_5_2">
+        
+          
+          <label class="md-nav__link" for="__nav_2_5_2" id="__nav_2_5_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Helper Tools
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_5_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_5_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Helper Tools
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../howtos/helper_tools/startrails.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Startrails
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../howtos/helper_tools/image_stretch.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Image Stretch
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../howtos/helper_tools/timelapse.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Timelapse
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../howtos/constellation_overlay.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Constellation Overlay
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../howtos/dark_frames.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dark Frames
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../howtos/keograms.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Keograms
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../howtos/startrails.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Startrails
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../howtos/timelapse.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Timelapse
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../howtos/system_page.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    System Page Additions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../howtos/angle_sunrise_sunset.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Angle, Sunrise and Sunset
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../howtos/exposure_settings.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exposure Settings
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../howtos/ssl.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Using SSL
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../howtos/managing_files.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Managing Files
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../howtos/new_camera.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Support For A New Camers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../howtos/mapping_server_locations.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mapping Server Locations To URLs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../howtos/cleanup_website.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cleanup A Website
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../howtos/allsky_map.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The Allsky map
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_6">
+        
+          
+          <label class="md-nav__link" for="__nav_2_6" id="__nav_2_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshootings
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Troubleshootings
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../troubleshooting/reporting.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reporting Problems
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../troubleshooting/tools.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tools
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../troubleshooting/uploads.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Uploads (ftp, scp etc)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../troubleshooting/startrails.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Startrails
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../troubleshooting/timelapse.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Timelapse
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../troubleshooting/flicker.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Image Flicker
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../troubleshooting/webui.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    WebUI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../troubleshooting/website.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Website
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../troubleshooting/swap.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Increase Swap Space
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../troubleshooting/zwo.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ZWO Cameras
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../troubleshooting/rpicam.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RPi Cameras
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../troubleshooting/hardware.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Other Hardware
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../troubleshooting/others.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Others
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../faq.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FAQ
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_8">
+        
+          
+          <label class="md-nav__link" for="__nav_2_8" id="__nav_2_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hardware
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Hardware
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../hardware/pi.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pi Options
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../hardware/camera.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Camera Options
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../hardware/lens.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lens Options
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../known_issues.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Known Issues
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../changelog.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ChangeLog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../things.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Things we love
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../3d.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    3d Printables
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../alternatives.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Alternatives
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tags.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tags
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3">
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overlays
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Overlays
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../overlays/overview.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../overlays/how.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    How They Work
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../overlays/fieldsandvariables.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fields And Variables
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../overlays/extra.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Extra Data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../overlays/interface.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Interface
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../overlays/formatting.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Formatting Variables
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../overlays/tips.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tips
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../overlays/sunmoon.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sun and Moon
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4">
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Modules
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Modules
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_modules/introduction.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_2">
+        
+          
+          <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Core Modules
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Core Modules
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_2_1">
+        
+          
+          <label class="md-nav__link" for="__nav_4_2_1" id="__nav_4_2_1_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Modules
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_2_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Modules
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_modules/core/load_image.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Load Image
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_modules/core/save_image.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Save Image
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_modules/core/mask_image.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mask Image
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_modules/core/overlay.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overlay
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_modules/core/exposure_rect.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exposure Rect
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_modules/core/histogram.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Histogram
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_modules/core/star_count.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Star Count
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_modules/core/meteor_count.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Meteor Count
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_modules/core/clear_sky.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Clear Sky
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_modules/core/export.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Export
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_modules/core/pi_status.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pi Status
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_modules/core/imtermediate_image.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Imtermediate Image
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_3">
+        
+          
+          <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Extra Modules
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Extra Modules
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_modules/extra/environment.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Environment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_modules/extra/dew_heater.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dew Heater
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_modules/extra/adsb.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADSB
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_modules/extra/border.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Border
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_modules/extra/discord.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Discord
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_modules/extra/esp32round.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Round Displays
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_modules/extra/fans.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fans
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_modules/extra/gpio.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GPIO
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_modules/extra/hddtemp.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hard Disk Temp
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_modules/extra/image_tuning.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Image Tuning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_modules/extra/power.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Power
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_modules/extra/publish_data.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Publish Data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_modules/extra/json_import.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    JSON Import
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_modules/extra/light.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Light Meter
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_modules/extra/lightning.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lightning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_modules/extra/mlx90640.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MLX90640
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_modules/extra/owm.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Open Weather Map
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_modules/extra/gps.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GPS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_modules/extra/air_quality.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Air Quality
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_modules/extra/rain.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Detect Rain
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_modules/extra/run_script.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Run Script
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_modules/extra/solar_system.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Solar System
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_modules/extra/sky_quality.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sky Quality
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_3_24">
+        
+          
+          <label class="md-nav__link" for="__nav_4_3_24" id="__nav_4_3_24_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Deprecated Modules
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_3_24_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3_24">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Deprecated Modules
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_modules/extra/ina3221.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    INA3221
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_modules/extra/mqtt_subscribe.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MQTT Subscribe
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_modules/extra/influxdb.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    InfluxDB
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_modules/extra/ltr390.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LTR390
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5">
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Developer Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer_guide/introduction.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer_guide/glossary.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer_guide/overview.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_4">
+        
+          
+          <label class="md-nav__link" for="__nav_5_4" id="__nav_5_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Modules
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Modules
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer_guide/folder_structure.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Folder Strucuture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer_guide/module_structure.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Module Structure
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer_guide/meta_data_structure.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Meta Data Structure
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer_guide/meta_data_example.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Meta Data Example
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer_guide/available_fields.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Available Fields
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer_guide/shared_libraries.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Shared Libraries
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer_guide/charts.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Charts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer_guide/blocks.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Blocks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer_guide/dependencies.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dependencies
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_5">
+        
+          
+          <label class="md-nav__link" for="__nav_5_5" id="__nav_5_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SDK Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    SDK Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_shared.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Shared Module
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_base.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Base Class
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_api.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Allsky Server API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer_guide/contributing.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+  <h1>Allsky</h1>
+
+<p>After you install Allsky for the first time there are many settings you must modify via the WebUI's Allsky Settings page. If you are upgrading from a recent prior release those settings can optionally be brought to the new release. Settings that change the look and feel of an Allsky Website are described <a href="settings/website.md">here</a>  .</p>
+<p>The list of settings available in the WebUI depends on your camera model; settings specific to a camera type (e.g., RPi or ZWO) are indicated as such in the table below. Where appropriate, the WebUI displays the minimum, maximum, and default values when you hover over a value, and only displays settings the camera supports, like cooler temperature for cooled cameras.</p>
+<figure>
+<p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="/docs/assets/settings_images/AllskySettingsPage.png" data-desc-position="bottom"><img alt="settings page" src="/docs/assets/settings_images/AllskySettingsPage.png"></a></p>
+<figcaption>
+<p>The Allsky Settings Page</p>
+</figcaption>
+</figure>
+<p>AllskySettings</p>
+<div class="admonition note">
+<p class="admonition-title">Legend</p>
+<ul>
+<li><span class="red">CD</span> indicates the setting's default is Camera Dependent and is displayed in the WebUI by hovering your cursor over the value.</li>
+<li><span class="red">AW</span> indicates a setting who's value is uploaded to your Allsky Website(s) when changed.</li>
+</ul>
+</div>
+<h2 id="daytime">Daytime<a class="headerlink" href="#daytime" title="Permanent link">¶</a></h2>
+<details class="info" open="open">
+<summary>Settings</summary>
+<table>
+<thead>
+<tr>
+<th class="w-20p">WebUI Setting</th>
+<th class="w-10p" style="text-align: right;">Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><mark>Daytime Capture</mark></td>
+<td style="text-align: right;">Yes</td>
+<td>Enable to <mark>capture</mark> images during the day.</td>
+</tr>
+<tr>
+<td><mark>Daytime Save</mark> <span class="red">AW</span></td>
+<td style="text-align: right;">No</td>
+<td>Enable to <mark>save</mark> images during the day (they are always saved at night). Only applies if <mark>Daytime Capture</mark> is enabled.</td>
+</tr>
+<tr>
+<td><mark>Auto-Exposure</mark></td>
+<td style="text-align: right;">Yes</td>
+<td>Turns on/off Auto-Exposure, which delivers properly exposed images even if the overall brightness of the sky changes due to cloud cover, sun, etc.</td>
+</tr>
+<tr>
+<td><mark>Max Auto-Exposure</mark> <span class="red">CD</span></td>
+<td style="text-align: right;"><span class="red">CD</span></td>
+<td>The maximum exposure in milliseconds when <mark>Auto-Exposure</mark> is enabled. Ignored if <mark>Auto-Exposure</mark> is disabled.  <br><br>When <mark>Auto-Exposure</mark> and <mark>Consistent Delays Between Images</mark> are both on, the time between the start of one image and the start of the next images is the <mark>Max Auto-Exposure + Delay</mark>.</td>
+</tr>
+<tr>
+<td><mark>Manual Exposure</mark></td>
+<td style="text-align: right;">0.5</td>
+<td>Manual exposure time in milliseconds. If <mark>Auto-Exposure</mark> is on this value is used as a starting exposure.  <br><br>The time between the start of one image and the start of the next images will be the <mark>Manual Exposure + Delay</mark>, regardless of the status of <mark>Consistent Delays Between Images</mark>.</td>
+</tr>
+<tr>
+<td><mark>Mean Target</mark></td>
+<td style="text-align: right;">0.5</td>
+<td>The target mean brightness level when <mark>Auto-Exposure</mark> is on. Ranges from 0.0 (pure black) to 1.0 (pure white). Best used when both <mark>Auto-Exposure</mark> and <mark>Auto-Gain</mark> are enabled.</td>
+</tr>
+<tr>
+<td><mark>Mean Threshold</mark></td>
+<td style="text-align: right;">0.1</td>
+<td>When using <mark>Mean Target</mark>, this specifies how close (plus or minus) the target brightness should be to the <mark>Mean Target</mark>.  <br><br>For example, if <mark>Mean Target</mark> is <code>0.4</code> and <mark>Mean Threshold</mark> is <code>0.1</code> then the target brightness ranges from <code>0.3</code> to <code>0.5</code>.</td>
+</tr>
+<tr>
+<td><mark>Delay</mark></td>
+<td style="text-align: right;">5000</td>
+<td>Time in milliseconds to wait between the end of one image and the start of the next.</td>
+</tr>
+<tr>
+<td><mark>Auto-Gain</mark></td>
+<td style="text-align: right;">No</td>
+<td>Turns on/off Auto-Gain which delivers properly exposed images even if the overall brightness of the sky changes. With RPi cameras, this should typically be turned on. With ZWO cameras you'll probably want this off and use the lowest gain possible since daytime images are bright and don't need any gain.</td>
+</tr>
+<tr>
+<td><mark>Max Auto-Gain</mark> <span class="red">CD</span></td>
+<td style="text-align: right;"><span class="red">CD</span></td>
+<td>Maximum gain when using <mark>Auto-Gain</mark>. Ignored if <mark>Auto-Gain</mark> is off.</td>
+</tr>
+<tr>
+<td><mark>Gain</mark> <span class="red">CD</span></td>
+<td style="text-align: right;"><span class="red">CD</span></td>
+<td>Gain is similar to ISO on regular cameras. When <mark>Auto-Gain</mark> is on, this value is used as a starting gain. When <mark>Auto-Gain</mark> is off, increasing this produces brighter images, but with more noise.  <br><br>The default daytime gain is the minimum possible for the camera since daytime images are normally bright and don't need any additional gain.</td>
+</tr>
+<tr>
+<td><mark>Stretch Amount</mark></td>
+<td style="text-align: right;">0</td>
+<td>Stretching increases the contrast of an image without saturating the bright parts or making the dark parts turn black. It is most often used to lighten an image so isn't normally used during the day. This setting determines how much to change the image: 3 is typical and 20 is a lot.  <br><br>Set to <code>0</code> to disable stretching.  <br><br>See <a href="../explanations/exposureGainSaturation.html#stretch">this page</a> for more information on stretching images.</td>
+</tr>
+<tr>
+<td><mark>Stretch Mid Point</mark></td>
+<td style="text-align: right;">10</td>
+<td>Determines what brightness level in the image should be stretched: 0 stretches black pixels, 50 stretches middle-gray, etc.</td>
+</tr>
+<tr>
+<td><mark>Binning</mark></td>
+<td style="text-align: right;">1x1</td>
+<td>Bin 2x2 collects the light from 4 pixels to form one larger pixel on the image. Bin 3x3 uses 9 pixels, etc. Increasing the bin results in smaller, lower-resolution images and reduces the need for long exposure. Look up your camera specifications to know what values are supported.  <br><br>During the day this setting is usually only changed for testing.  <br><br> Binning on CCD cameras normally produces brighter images. CMOS camera may, or may not produce brighter images, depending on the camera model.</td>
+</tr>
+<tr>
+<td><mark>Auto White Balance</mark></td>
+<td style="text-align: right;">No</td>
+<td>Sets daytime auto white balance. When used, <mark>Red Balance</mark> and <mark>Blue Balance</mark> are used as starting points.</td>
+</tr>
+<tr>
+<td><mark>Red Balance</mark> <span class="red">CD</span></td>
+<td style="text-align: right;"><span class="red">CD</span></td>
+<td>The intensity of the red component of the image.</td>
+</tr>
+<tr>
+<td><mark>Blue Balance</mark> <span class="red">CD</span></td>
+<td style="text-align: right;"><span class="red">CD</span></td>
+<td>The intensity of the blue component of the image.</td>
+</tr>
+<tr>
+<td><mark>Frames To Skip</mark></td>
+<td style="text-align: right;">5</td>
+<td>When starting Allsky during the day, skip <em>up to</em> this many images while the auto-exposure software gets to the correct exposure.  <br><br>Only applies if daytime <mark>Auto-Exposure</mark> is enabled.</td>
+</tr>
+<tr>
+<td><mark>Cooling</mark></td>
+<td style="text-align: right;">No</td>
+<td>(ZWO cooled cameras only) Enable to use cooling on cameras that support it.</td>
+</tr>
+<tr>
+<td><mark>Target Temp</mark></td>
+<td style="text-align: right;">0</td>
+<td>(ZWO cooled cameras only) Sensor's target temperature <em>when cooler is enabled</em>. In degrees Celsius.</td>
+</tr>
+<tr>
+<td><mark>Tuning File</mark></td>
+<td style="text-align: right;">No</td>
+<td>(RPi on Bookworm and Bullseye only) Full path name of the optional daytime tuning file. See the <a href="https://www.raspberrypi.com/documentation/computers/camera_software.html#tuning-files">Raspberry Pi Documentation</a> for more information.  <br><br> System-supplied tuning files on Raspberry Pi models prior to 5 are in <code>/usr/share/libcamera/ipa/rpi/vc4</code>. New Pi's files are in <code>/usr/share/libcamera/ipa/rpi/pisp</code>.</td>
+</tr>
+</tbody>
+</table>
+</details>
+<h2 id="nighttime">Nighttime<a class="headerlink" href="#nighttime" title="Permanent link">¶</a></h2>
+<details class="info" open="open">
+<summary>Settings</summary>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Unless otherwise specified, these settings are the same as the Daytime ones.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th class="w-20p">WebUI Setting</th>
+<th class="w-10p" style="text-align: right;">Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><mark>Auto-Exposure</mark></td>
+<td style="text-align: right;">Yes</td>
+<td></td>
+</tr>
+<tr>
+<td><mark>Max Auto-Exposure</mark> <span class="red">CD</span></td>
+<td style="text-align: right;"><span class="red">CD</span></td>
+<td></td>
+</tr>
+<tr>
+<td><mark>Manual Exposure</mark></td>
+<td style="text-align: right;">10000</td>
+<td></td>
+</tr>
+<tr>
+<td><mark>Mean Target</mark></td>
+<td style="text-align: right;">0.2</td>
+<td></td>
+</tr>
+<tr>
+<td><mark>Mean Threshold</mark></td>
+<td style="text-align: right;">0.1</td>
+<td></td>
+</tr>
+<tr>
+<td><mark>Delay</mark></td>
+<td style="text-align: right;">10</td>
+<td></td>
+</tr>
+<tr>
+<td><mark>Auto-Gain</mark></td>
+<td style="text-align: right;">No</td>
+<td>With ZWO cameras enabling <mark>Auto-Exposure</mark> and <mark>Auto-Gain</mark> together can produce unpredictable results so testing is needed.</td>
+</tr>
+<tr>
+<td><mark>Max Auto-Gain</mark> <span class="red">CD</span></td>
+<td style="text-align: right;"><span class="red">CD</span></td>
+<td></td>
+</tr>
+<tr>
+<td><mark>Gain</mark> <span class="red">CD</span></td>
+<td style="text-align: right;"><span class="red">CD</span></td>
+<td>The default is one-half the maximum for the camera.</td>
+</tr>
+<tr>
+<td><mark>Stretch Amount</mark></td>
+<td style="text-align: right;">0</td>
+<td></td>
+</tr>
+<tr>
+<td><mark>Stretch Mid Point</mark></td>
+<td style="text-align: right;">10</td>
+<td></td>
+</tr>
+<tr>
+<td><mark>Binning</mark></td>
+<td style="text-align: right;">1x1</td>
+<td></td>
+</tr>
+<tr>
+<td><mark>Auto White Balance</mark></td>
+<td style="text-align: right;">No</td>
+<td></td>
+</tr>
+<tr>
+<td><mark>Red Balance</mark> <span class="red">CD</span></td>
+<td style="text-align: right;"><span class="red">CD</span></td>
+<td></td>
+</tr>
+<tr>
+<td><mark>Blue Balance</mark> <span class="red">CD</span></td>
+<td style="text-align: right;"><span class="red">CD</span></td>
+<td></td>
+</tr>
+<tr>
+<td><mark>Frames To Skip</mark></td>
+<td style="text-align: right;">1</td>
+<td>Only applies if nighttime <mark>Auto-Exposure</mark> is enabled.</td>
+</tr>
+<tr>
+<td><mark>Cooling</mark></td>
+<td style="text-align: right;">No</td>
+<td>(ZWO cooled cameras only)</td>
+</tr>
+<tr>
+<td><mark>Target Temp</mark></td>
+<td style="text-align: right;">0</td>
+<td>(ZWO cooled cameras only)</td>
+</tr>
+<tr>
+<td><mark>Tuning File</mark></td>
+<td style="text-align: right;">No</td>
+<td>(RPi on Bookworm and Bullseye only)</td>
+</tr>
+</tbody>
+</table>
+</details>
+<h2 id="day-and-night">Day and Night<a class="headerlink" href="#day-and-night" title="Permanent link">¶</a></h2>
+<details class="info" open="open">
+<summary>Settings</summary>
+<table>
+<thead>
+<tr>
+<th class="w-20p">WebUI Setting</th>
+<th class="w-10p" style="text-align: right;">Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><mark>Days To Keep</mark></td>
+<td style="text-align: right;">14</td>
+<td>Number of days of images and videos in <code>~/allsky/images</code> to keep. Any directory older than this many days will be deleted at each end of night. Set to <code>0</code> to keep <mark>ALL</mark> days' data; you will need to manually manage disk space.</td>
+</tr>
+<tr>
+<td><mark>Configuration File</mark></td>
+<td style="text-align: right;">[none]</td>
+<td>Configuration file to use for settings. Not currently used.</td>
+</tr>
+<tr>
+<td><mark>Extra Parameters</mark></td>
+<td style="text-align: right;"></td>
+<td>(RPi only) Any additional parameters to send to the <code>libcamera-still</code> image capture program. It supports a lot of settings that Allsky doesn't (e.g., auto-focus options), and this field allows you to enter those settings.</td>
+</tr>
+<tr>
+<td><mark>Saturation</mark> <span class="red">CD</span></td>
+<td style="text-align: right;"><span class="red">CD</span></td>
+<td>(RPi only) Sets saturation from black and white to extra saturated.</td>
+</tr>
+<tr>
+<td><mark>Contrast</mark> <span class="red">CD</span></td>
+<td style="text-align: right;"><span class="red">CD</span></td>
+<td>(RPi only) Changes the difference between blacks and whites in an image.</td>
+</tr>
+<tr>
+<td><mark>Sharpness</mark> <span class="red">CD</span></td>
+<td style="text-align: right;"><span class="red">CD</span></td>
+<td>(RPi only) Changes the sharpness of an imgage. Images that are too sharp look unnatural.</td>
+</tr>
+<tr>
+<td><mark>Aggression</mark></td>
+<td style="text-align: right;">75%</td>
+<td>(ZWO only) Specifies how much of a calculated exposure change should be made during auto-exposure. Lower numbers smooth out brightness changes but take longer to react to changes.</td>
+</tr>
+<tr>
+<td><mark>Gain Transition Time</mark></td>
+<td style="text-align: right;">15</td>
+<td>(ZWO only) Number of <mark>minutes</mark> over which to increase or decrease the gain when going from day-to-night or night-to-day images. This helps smooth brightness differences. Only works if nighttime <mark>Auto-Gain</mark> is off. <code>0</code> disables transitions.</td>
+</tr>
+<tr>
+<td><mark>Image Type</mark></td>
+<td style="text-align: right;">auto</td>
+<td>Image format: <mark>auto</mark> automatically picks the best type of image based on the camera. If you have a color camera it will use RGB24; mono cameras use RAW16 if the output file is a .png, otherwise RAW8 is used. <mark>RAW8</mark>: 8-bit mono. <mark>RGB24</mark>: color (red, green, blue), 8 bits per channel. <mark>RAW16</mark>: 16-bit mono.</td>
+</tr>
+<tr>
+<td><mark>Quality / Compression</mark></td>
+<td style="text-align: right;">95</td>
+<td>For JPG images, this specifies the quality - 0 (low quality) to 100 (high quality). Larger numbers produce higher-quality, but larger, files. For PNG, this is the amount of compression - 0 for no compression (but quicker to save) to 9 for highest compression (but slowest to save). If you use very short delays between pictures you may want to play with these numbers to get the quickest delay possible.</td>
+</tr>
+<tr>
+<td><mark>Auto USB Bandwidth</mark></td>
+<td style="text-align: right;">Yes</td>
+<td>(ZWO only) Automatically sets the <mark>USB Bandwidth</mark>.</td>
+</tr>
+<tr>
+<td><mark>USB Bandwidth</mark> <span class="red">CD</span></td>
+<td style="text-align: right;"><span class="red">CD</span></td>
+<td>(ZWO only) How much of the USB bandwidth to use.</td>
+</tr>
+<tr>
+<td><mark>Filename</mark> <span class="red">AW</span></td>
+<td style="text-align: right;">image.jpg</td>
+<td>The name of the image file. Supported extensions are <mark>jpg</mark> and <mark>png</mark>.</td>
+</tr>
+<tr>
+<td><mark>Rotation</mark></td>
+<td style="text-align: right;">None</td>
+<td>(RPi on Bookworm and Bullseye only) How to rotate the image. Choices are 0 and 180 degrees.</td>
+</tr>
+<tr>
+<td><mark>Flip</mark></td>
+<td style="text-align: right;">No flip</td>
+<td>How to flip the image (No flip, Horizontal, Vertical, or Both).</td>
+</tr>
+<tr>
+<td><mark>Focus Mode</mark></td>
+<td style="text-align: right;">No</td>
+<td>Enable to have images created and displayed as fast as possible, to aid in focusing. Other than adding the focus metric (see next setting) to each image, no other post-processing is performed - no resizing, no overlay or other modules are run, images aren't permanently saved or uploaded, and there is no delay between images - as soon as an image is available and the focus metric added, the next image is taken.  <br><br>The WebUI's <mark>Live View</mark> refreshes the image every second or so. Because this happens so quickly, it's possible the Live View page will try to read the image as it's being updated, so you may see occasional "glitches".</td>
+</tr>
+<tr>
+<td><mark>Record Focus</mark></td>
+<td style="text-align: right;">No</td>
+<td>Enable to have the overall focus of the image determined and output via the <code>FOCUS</code> variable, which can then be used in an overlay. Unless you are focusing in "Focus Mode" (in which case this setting is enabled), it's not all that useful to see the metric since it can change depending on image brightness and other factors.</td>
+</tr>
+<tr>
+<td><mark>Consistent Delays Between Images</mark></td>
+<td style="text-align: right;">Yes</td>
+<td>Enabling this makes the time between the <mark>start</mark> of one auto-exposure and the <mark>start</mark> of the next exposure a consistent length (<mark>Max Auto-Exposure + Delay</mark>). Timelapse video frames will be equally spaced.  <br><br>For example, if the <mark>Max Auto-Exposure</mark> is 60 seconds and the <mark>Delay</mark> is 30 seconds, the start of an exposure will be exactly 90 seconds after the prior exposure's start time, regardless of how long an individual frame's exposure is. So if the first exposure was only 3 seconds, the second exposure will still start 90 seconds after the first one.  <br><br>Disabling this means the time between exposure starts varies depending on the actual length of each exposure. At nighttime when most exposure are at their maximum length this setting doesn't make a difference, but during the day or at twilight the exposure length is usually not at the maximum.  <br><br>Note that if manual exposure is used this setting doesn't apply since the time between exposures (<mark>Manual Exposure + Delay</mark>) is always the same.</td>
+</tr>
+<tr>
+<td><mark>Time Format</mark></td>
+<td style="text-align: right;"><code>%Y%m%d %H:%M:%S</code></td>
+<td>Determines the format of the displayed time. Run <code>man 3 strftime</code> to see the options.</td>
+</tr>
+<tr>
+<td><mark>Temperature Units</mark></td>
+<td style="text-align: right;">Celsius</td>
+<td>Determines what unit(s) the temperature will be displayed in (Celsius, Fahrenheit, or Both).</td>
+</tr>
+<tr>
+<td><mark>Latitude</mark> <span class="red">AW</span></td>
+<td style="text-align: right;"></td>
+<td>Latitude of the camera. Formats include: <code>123.4N</code>, <code>123.4S</code>, <code>+123.4</code>, or <code>-123.4</code>. Southern hemisphere is negative. The <code>+</code> is needed for positive numbers.</td>
+</tr>
+<tr>
+<td><mark>Longitude</mark> <span class="red">AW</span></td>
+<td style="text-align: right;"></td>
+<td>Longitude of the camera. Formats include: <code>123.4E</code>, <code>123.4W</code>, <code>+123.4</code>, or <code>-123.4</code>. West is negative. The <code>+</code> is needed for positive numbers.  <br><br> The actual values for latitude and longitude are not displayed on the map, but users can zoom in to see exactly where your camera is. If that bothers you, change the latitude and/or longitude values slightly. Allsky itself only uses them to determine when daytime and nighttime begin so you can change the values a fair amount and not impact anything.  <br><br> When installing Allsky the first time, the installation script will attempt to determine your rough <mark>Latitude</mark> and <mark>Longitude</mark> based on your IP address. These values may be "close enough" in most cases but you may want to check them anyhow.</td>
+</tr>
+<tr>
+<td><mark>Angle</mark> <span class="red">AW</span></td>
+<td style="text-align: right;">-6</td>
+<td>Altitude of the Sun above or below the horizon at which daytime and nighttime switch. Can be negative (Sun below horizon) or positive (Sun above horizon).  <br><br>- <code>0</code> = Sunset  <br>- <code>-6</code> = Civil twilight  <br>- <code>-12</code> = Nautical twilight  <br>- <code>-18</code> = Astronomical twilight  <br><br><a href="/documentation/explanations/angleSunriseSunset.html">Click here</a> for a more detailed description of <mark>Angle</mark>.</td>
+</tr>
+<tr>
+<td><mark>Take Dark Frames</mark></td>
+<td style="text-align: right;">No</td>
+<td>Enable to take dark frames which are use to decrease noise in images.  <br><br>See the <a href="/documentation/explanations/darkFrames.html">in-depth explanation</a> of dark frames, including how to take and use them.</td>
+</tr>
+<tr>
+<td><mark>Dark Frame Upper Threshold</mark></td>
+<td style="text-align: right;">0.05</td>
+<td>Any dark frame that has a mean brightness higher than this number is not saved.  <br><br>If you're getting messages about "bad images" while taking dark frames, first make sure your lens is <mark>FULLY covered</mark> and <mark>NO</mark> light is getting in.  <br><br>If you are positive no light is getting in and your camera is noisy, then increase this to <code>0.1</code> and see if it helps. If not, then increase it more.</td>
+</tr>
+<tr>
+<td><mark>Use Dark Frames</mark></td>
+<td style="text-align: right;">No</td>
+<td>Enable to perform dark frame subtraction at night. Requires that you first took dark frames using <mark>Take Dark Frames</mark>.</td>
+</tr>
+<tr>
+<td><mark>Locale</mark></td>
+<td style="text-align: right;"></td>
+<td>The locale is used to determine what the thousands and decimal separators are as well as the language to use for many non-Allsky commands. If you have never set the locale in Allsky, the installation script will display a list of locales installed on your Pi, highlighting the current one. If it's the correct one, press TAB until the cursor is over <code>&lt;Ok&gt;</code>, then press ENTER.  <br><br> The locale only needs to be set once and won't change unless you reinstall the Pi OS. Changing the locale requires a reboot, which <mark>must</mark> be done before continuing the installation.  <br><br>If the correct locale isn't in the list it needs to be installed, so cancel out of the installation and run <code>sudo raspi-config</code>, selecting <code>Localisation Options</code>, followed by the <code>Locale</code> option. You will be shown a drop-down list with hundreds of locales; when you find the correct one for your language and country, press SPACE, then TAB to the <code>&lt;Ok&gt;</code> button. When done, re-run the installation script selecting the locale you just installed.</td>
+</tr>
+<tr>
+<td><mark>ZWO Exposure Type</mark></td>
+<td style="text-align: right;">Snapshot</td>
+<td>(ZWO only) Determines what type of exposures to take:  <br><br>1. <mark>Snapshot</mark> takes pictures one at a time like a "normal" camera. Note that <mark>Auto-Gain</mark> and <mark>Auto White Balance</mark> do not work when <mark>Snapshot</mark> is used.  <br>2. <mark>Video Off</mark> takes pictures like a video camera that is turned off after every picture. This is the same as the old <mark>Version 0.8 exposure</mark> setting.  <br>3. <mark>Video (original)</mark> takes pictures like a video camera that is always on. This is the original exposure method.  <br><br>The first two types decrease the sensor temperature between 5 - 15 degrees Celsius.</td>
+</tr>
+<tr>
+<td><mark>Histogram Box</mark></td>
+<td style="text-align: right;">500 500 50 50</td>
+<td>(ZWO only) X and Y size of histogram box in pixels and the middle point of the box in percent. This box is used to determine the average brightness of the image for auto-exposure compensation. If the Sun goes through the center of your image you may want to move the box.</td>
+</tr>
+<tr>
+<td><mark>Debug Level</mark></td>
+<td style="text-align: right;">1</td>
+<td>Determines the amount of output in the Allsky log file:  <br><br>- <code>0</code> outputs error messages only.  <br>- <code>1</code> outputs "what's happening" type messages.  <br>- <code>2</code> outputs more "what's happening" messages.  <br>- <code>3</code> outputs debugging information. <mark>Use this level when debugging problems.</mark>  <br>- <code>4</code> outputs a LOT of INFO messages. Use only if directed to by an Allsky developer.</td>
+</tr>
+</tbody>
+</table>
+</details>
+<h2 id="post-capture">Post Capture<a class="headerlink" href="#post-capture" title="Permanent link">¶</a></h2>
+<details class="info" open="open">
+<summary>Settings</summary>
+<table>
+<thead>
+<tr>
+<th class="w-20p">WebUI Setting</th>
+<th class="w-10p" style="text-align: right;">Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><mark>Remove Bad Images Threshold Low</mark></td>
+<td style="text-align: right;">0.1</td>
+<td>Images whose mean brightness is below this will be removed. Useful values range from <code>0.01</code> to around <code>0.2</code>. Set to <code>0</code> to disable this check.</td>
+</tr>
+<tr>
+<td><mark>Remove Bad Images Threshold High</mark></td>
+<td style="text-align: right;">0.9</td>
+<td>Images whose mean brightness is above this will be removed. Useful values range from <code>0.8</code> to around <code>0.95</code>. Set to <code>0</code> to disable this check.</td>
+</tr>
+<tr>
+<td><mark>Remove Bad Images Threshold Count</mark></td>
+<td style="text-align: right;">5</td>
+<td>Display a System Message when this many consecutive "bad images" are taken. A notification image will also be displayed telling you how many consecutive bad images there are. Once a "good" image is taken, the notification image will be replaced by the good image.</td>
+</tr>
+<tr>
+<td><mark>Create Image Thumbnails</mark></td>
+<td style="text-align: right;">Yes</td>
+<td>Create thumbnails of the images and save in <code>~/allsky/images</code>? If you never look at them via the WebUI's <mark>Images</mark> page, consider changing this to "No".</td>
+</tr>
+<tr>
+<td><mark>Thumbnail Width</mark></td>
+<td style="text-align: right;">100</td>
+<td>Sets the width of image and video thumbnails.</td>
+</tr>
+<tr>
+<td><mark>Thumbnail Height</mark></td>
+<td style="text-align: right;">75</td>
+<td>Sets the height of image and video thumbnails. These numbers determine the size of the thumbnails in <code>~/allsky/images</code> as well as any thumbnails created by the Allsky Website.  <br><br> Although changing these will change the size of the thumbnails, no testing has been done to see if there are negative side effects.</td>
+</tr>
+<tr>
+<td><mark>Image Resize Width</mark></td>
+<td style="text-align: right;">0</td>
+<td>The width to resize images to. Large sensor cameras like the RPi HQ may need to be resized (shrunken) in order for timelapses to work. Resizing is done before cropping. Must be an even number and <code>0</code> disables resizing.</td>
+</tr>
+<tr>
+<td><mark>Image Resize Height</mark></td>
+<td style="text-align: right;">0</td>
+<td>Same as <mark>Image Resize Width</mark> but for the image height. Typically you'll want the Width/Height ratio to be the same as the sensor's width/height ratio, otherwise images will be distorted.</td>
+</tr>
+<tr>
+<td><mark>Image Crop Top</mark></td>
+<td style="text-align: right;">0</td>
+<td>Number of pixels to crop off the top of an image. This is often used to remove the dark areas around an image when using a fisheye lens. All the Crop numbers should either be <code>0</code> to disable cropping that side of an image, or a positive number.</td>
+</tr>
+<tr>
+<td><mark>Image Crop Right</mark></td>
+<td style="text-align: right;">0</td>
+<td>Number of pixels to crop off the right side of an image.</td>
+</tr>
+<tr>
+<td><mark>Image Crop Bottom</mark></td>
+<td style="text-align: right;">0</td>
+<td>Number of pixels to crop off the bottom an image.</td>
+</tr>
+<tr>
+<td><mark>Image Crop Left</mark></td>
+<td style="text-align: right;">0</td>
+<td>Number of pixels to crop off the left side of an image.</td>
+</tr>
+</tbody>
+</table>
+</details>
+<h2 id="timelapse">Timelapse<a class="headerlink" href="#timelapse" title="Permanent link">¶</a></h2>
+<details class="info" open="open">
+<summary>Settings</summary>
+<details class="note" open="open">
+<summary>Daily Timelapse</summary>
+<table>
+<thead>
+<tr>
+<th class="w-20p">WebUI Setting</th>
+<th class="w-10p" style="text-align: right;">Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><mark>Generate</mark></td>
+<td style="text-align: right;">Yes</td>
+<td>Enable to generate a timelapse video at the end of the night.</td>
+</tr>
+<tr>
+<td><mark>Width</mark></td>
+<td style="text-align: right;">0</td>
+<td>Changes the width of the generated timelapse; must be an even number. <code>0</code> uses the image's full size. Large sensor cameras like the RPi HQ often need the timelapse to be shrunk in order for timelapses to work (or the individual images need to be shrunk).</td>
+</tr>
+<tr>
+<td><mark>Height</mark></td>
+<td style="text-align: right;">0</td>
+<td>Changes the height of the generated timelapse; must be an even number. <code>0</code> uses the image's full size. If you change the width and height you'll probably want the resulting aspect ratio to match the original images.</td>
+</tr>
+<tr>
+<td><mark>Bitrate</mark></td>
+<td style="text-align: right;">5000</td>
+<td>Bitrate the timelapse video will be created with, in kilobytes. Higher values produce better quality video but larger files. Do <mark>NOT</mark> add a trailing <code>k</code>.</td>
+</tr>
+<tr>
+<td><mark>FPS</mark></td>
+<td style="text-align: right;">25</td>
+<td>The timelapse video ==F==rames ==P==er ==S==econd. Higher numbers produce smoother, but shorter, videos.</td>
+</tr>
+<tr>
+<td><mark>Keep Sequence</mark></td>
+<td style="text-align: right;">No</td>
+<td>Keep the sequence of symbolic links created when creating a timelapse? Primarily used when debugging.</td>
+</tr>
+<tr>
+<td><mark>Extra Parameters</mark></td>
+<td style="text-align: right;"></td>
+<td>Any additional timelapse parameters. If video quality is poor or videos don't play on Apple devices, try adding <code>-level 3.1</code>. Run <code>ffmpeg -?</code> to see the options.</td>
+</tr>
+</tbody>
+</table>
+</details>
+<details class="note" open="open">
+<summary>Mini-Timelapse</summary>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Several of these settings are similar to the setting with the same name for daily timelapses. In those cases, only differences are noted.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th class="w-20p">WebUI Setting</th>
+<th class="w-10p" style="text-align: right;">Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><mark>Number Of Images</mark></td>
+<td style="text-align: right;">0</td>
+<td>A "mini-timelapse" only includes the most recent images and is created often. It's a good way to see "recent" activity. This setting determines the number of images in the mini-timelapse. Keep in mind the more images you have the longer it'll take to create the video. 30 is a good starting point. <code>0</code> disables mini-timelapse creation.  <br><br><mark>Note that each mini-timelapse overwrites the prior one.</mark>  <br><br>The following settings only apply if this setting is greater than 0.</td>
+</tr>
+<tr>
+<td><mark>Force Creation</mark></td>
+<td style="text-align: right;">No</td>
+<td>Should a mini-timelapse be created even if <mark>Number Of Images</mark> images haven't been taken yet? For example, you want 15 images in each mini-timelapse but only 5 have been taken; should a mini-timelapse still be created?</td>
+</tr>
+<tr>
+<td><mark>Frequency</mark></td>
+<td style="text-align: right;">5</td>
+<td>After how many images should the mini-timelapse be created? Slower machines and machines with slow networks should use higher numbers. 3–5 works well on a Pi 4 with 4 GB memory. Every <mark>Frequency</mark> images a new mini-timelapse is created using the last <mark>Number Of Images</mark> images.  <br><br> ⚠️ Be <mark>very</mark> careful when setting <mark>Number Of Images</mark> and <mark>Frequency</mark>. If either or both numbers are too high, or the daytime/nighttime <mark>Delay</mark> is too short, there may not be enough time to finish one mini timelapse creation before the next one starts. If this happens the second one will be aborted and you'll see a System Message in the WebUI.</td>
+</tr>
+<tr>
+<td><mark>Width</mark></td>
+<td style="text-align: right;">0</td>
+<td></td>
+</tr>
+<tr>
+<td><mark>Height</mark></td>
+<td style="text-align: right;">0</td>
+<td></td>
+</tr>
+<tr>
+<td><mark>Bitrate</mark></td>
+<td style="text-align: right;">2000</td>
+<td>This is normally smaller than a full timelapse to save on processing time.</td>
+</tr>
+<tr>
+<td><mark>FPS</mark></td>
+<td style="text-align: right;">5</td>
+<td>Mini-timelapses contain a small number of images so this setting should be low to avoid very short videos.</td>
+</tr>
+</tbody>
+</table>
+</details>
+<details class="note" open="open">
+<summary>Both Timelapses</summary>
+<table>
+<thead>
+<tr>
+<th class="w-20p">WebUI Setting</th>
+<th class="w-10p" style="text-align: right;">Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><mark>VCODEC</mark></td>
+<td style="text-align: right;">libx264</td>
+<td>Encoder used to create the timelapse video. Rarely changed. Run <code>allsky-config encoders</code> for a (long) list.</td>
+</tr>
+<tr>
+<td><mark>Pixel format</mark></td>
+<td style="text-align: right;">yuv420p</td>
+<td>Pixel format. Rarely changed. Run <code>allsky-config pix_fmts</code> for a (long) list.</td>
+</tr>
+<tr>
+<td><mark>Log Level</mark></td>
+<td style="text-align: right;">Warning</td>
+<td>Level of debugging information output when creating a timelapse. Set to <mark>Info + Warnings + Errors</mark> for more output. Primarily used for debugging or when tuning the algorithm.</td>
+</tr>
+</tbody>
+</table>
+</details>
+</details>
+<h2 id="keogram-and-startrails">Keogram and Startrails<a class="headerlink" href="#keogram-and-startrails" title="Permanent link">¶</a></h2>
+<details class="info" open="open">
+<summary>Settings</summary>
+<details class="note" open="open">
+<summary>Keograms</summary>
+<table>
+<thead>
+<tr>
+<th class="w-20p">WebUI Setting</th>
+<th class="w-10p" style="text-align: right;">Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><mark>Generate</mark></td>
+<td style="text-align: right;">Yes</td>
+<td>Enable to generate a keogram image at the end of the night.</td>
+</tr>
+<tr>
+<td><mark>Expand</mark></td>
+<td style="text-align: right;">Yes</td>
+<td>Enable to expand keograms to the image width. Same as the <code>--image-expand</code> and <code>-x</code> options.</td>
+</tr>
+<tr>
+<td><mark>Font Name</mark></td>
+<td style="text-align: right;">Simplex</td>
+<td>Font name.</td>
+</tr>
+<tr>
+<td><mark>Font Color</mark></td>
+<td style="text-align: right;">#ffffff (white)</td>
+<td>Color of the date/time label on the keogram. Same as the <code>--font-color</code> and <code>-C</code> options.  <br><br>The color can be specified using one of the following:  <br>1. Three comma- or space-separated numbers between <code>0</code> and <code>255</code> in RGB order. Example: <code>0,255,0</code> (green), <code>255 0 1</code> (red with a tiny bit of blue).  <br>2. <code>#</code> followed by <mark>six</mark> hex digits <code>00</code> to <code>ff</code> in RGB order. Example: <code>#00ff00</code> (green), <code>#ff0001</code> (red with a tiny bit of blue).  <br>3. <code>#</code> followed by <mark>three</mark> hex digits <code>0</code> to <code>f</code> in RGB order. Example: <code>#0f0</code> == <code>#00ff00</code> (green), <code>#f00</code> == <code>#ff0011</code> (red with a little bit of blue).  <br><br>Hex digits include 0–9 and a–f, where hex <code>a</code> = decimal <code>10</code>, … hex <code>f</code> = decimal <code>15</code>. Hex <code>10</code> = decimal <code>16</code> and hex <code>ff</code> = decimal <code>255</code>.  <br><br>Larger values mean more of that color: <code>#000000</code> is black, <code>255 255 255</code> is white, <code>128,128,128</code> is middle gray.</td>
+</tr>
+<tr>
+<td><mark>Font Size</mark></td>
+<td style="text-align: right;">2</td>
+<td>Font size. Same as the <code>--font-size</code> and <code>-S</code> options.</td>
+</tr>
+<tr>
+<td><mark>Font Line Thickness</mark></td>
+<td style="text-align: right;">3</td>
+<td>Thickness of the font's line. Same as the <code>--font-line</code> and <code>-L</code> options.</td>
+</tr>
+<tr>
+<td><mark>Extra Parameters</mark></td>
+<td style="text-align: right;"></td>
+<td>Optional additional keogram creation parameters. Execute <code>~/allsky/bin/keogram --help</code> for a list of options.</td>
+</tr>
+</tbody>
+</table>
+</details>
+<details class="note" open="open">
+<summary>Startrails</summary>
+<table>
+<thead>
+<tr>
+<th class="w-20p">WebUI Setting</th>
+<th class="w-10p" style="text-align: right;">Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><mark>Generate</mark></td>
+<td style="text-align: right;">Yes</td>
+<td>Enable to generate a startrails image at the end of night.</td>
+</tr>
+<tr>
+<td><mark>Brightness Threshold</mark></td>
+<td style="text-align: right;">0.1</td>
+<td>Average brightness level above which images are discarded (moon, headlights, aurora, etc.). If you are only getting very short trails, or none at all, adjust this number. Values are 0.0 (pure black, filters out nothing) to 1.0 (pure white, uses every image).</td>
+</tr>
+<tr>
+<td><mark>Extra Parameters</mark></td>
+<td style="text-align: right;"></td>
+<td>Optional additional startrails creation parameters. Execute <code>~/allsky/bin/startrails --help</code> for a list of options.</td>
+</tr>
+</tbody>
+</table>
+</details>
+</details>
+<h2 id="websites-and-remote-server">Websites and Remote Server<a class="headerlink" href="#websites-and-remote-server" title="Permanent link">¶</a></h2>
+<details class="info" open="open">
+<summary>Settings</summary>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Allsky supports uploading files to a local (on your Pi) Website, a remote Website, and/or a remote server that is <mark>NOT</mark> an Allsky Website.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th class="w-20p">WebUI Setting</th>
+<th class="w-10p" style="text-align: right;">Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><mark>Resize Uploaded Images Width</mark></td>
+<td style="text-align: right;">0</td>
+<td>Set to an even number to resize images that will be uploaded. This decreases the size of uploaded files and saves network bandwidth. Further, images from cameras with large sensors won't fit on most monitors at full resolution, so in effect it's a waste to have large images. Set to <code>0</code> to disable resizing.</td>
+</tr>
+<tr>
+<td><mark>Resize Uploaded Images Height</mark></td>
+<td style="text-align: right;">0</td>
+<td>Same as <mark>Resize Uploaded Images Width</mark> but for the height. If that setting is <code>0</code> this setting must be as well.</td>
+</tr>
+<tr>
+<td><mark>Upload Every X Images</mark></td>
+<td style="text-align: right;">1</td>
+<td>How often should the current image be uploaded? This is useful for slow or costly networks. <code>0</code> disables uploading images. Note that startrails, keograms, and timelapse videos have their own upload settings.</td>
+</tr>
+<tr>
+<td><mark>Upload Daily Timelapse</mark></td>
+<td style="text-align: right;">Yes</td>
+<td>Enable to upload the timelapse video to an Allsky Website and/or remote server. If not set, the timelapse videos can still be viewed via the WebUI. Ignored if you do not have an Allsky Website or remote server.</td>
+</tr>
+<tr>
+<td><mark>Upload Daily Timelapse Thumbnail</mark></td>
+<td style="text-align: right;">Yes</td>
+<td>Enable to upload the timelapse video's thumbnail to your Allsky Website. Many remote servers don't support thumbnail creation so the thumbnail needs to be created on the Pi and uploaded. Not needed if your only Allsky Website is on your Pi.</td>
+</tr>
+<tr>
+<td><mark>Upload Keogram</mark></td>
+<td style="text-align: right;">Yes</td>
+<td>Enable to upload the keogram image to an Allsky Website and/or remote server.</td>
+</tr>
+<tr>
+<td><mark>Upload Startrails</mark></td>
+<td style="text-align: right;">Yes</td>
+<td>Enable to upload the startrails image to an Allsky Website and/or remote server.</td>
+</tr>
+<tr>
+<td><mark>Upload Mini-Timelapse</mark></td>
+<td style="text-align: right;">Yes</td>
+<td></td>
+</tr>
+<tr>
+<td><mark>Upload Mini-Timelapse Thumbnail</mark></td>
+<td style="text-align: right;">Yes</td>
+<td></td>
+</tr>
+<tr>
+<td><mark>Display Settings</mark></td>
+<td style="text-align: right;">No</td>
+<td>People sometimes ask others what settings they are using. Enable this setting to add a link to your Allsky Website's right-side popout that displays your settings. This only works if you are running the Allsky Website.</td>
+</tr>
+</tbody>
+</table>
+<details class="note" open="open">
+<summary>Local Website</summary>
+<table>
+<thead>
+<tr>
+<th class="w-20p">WebUI Setting</th>
+<th class="w-10p" style="text-align: right;">Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><mark>Use Local Website</mark></td>
+<td style="text-align: right;">No</td>
+<td>Enable to use a <mark>local</mark> Allsky Website. No other settings are needed for a local Website. If you were using a local Website and disable it you will be asked if you want to keep or remove the saved images, keograms, startrails, and timelapse videos. Either way, the Website itself is not removed nor are its settings so you can easily re-enable it and pick up where you left off.</td>
+</tr>
+<tr>
+<td><mark>Days To Keep on Pi Website</mark></td>
+<td style="text-align: right;">14</td>
+<td>Any image, video, or thumbnail older than this many days will be deleted at each end of night. <code>0</code> disables the check and keeps ALL days' web data; you will need to manually manage disk space.</td>
+</tr>
+</tbody>
+</table>
+</details>
+<details class="note" open="open">
+<summary>Remote Website</summary>
+<table>
+<thead>
+<tr>
+<th class="w-20p">WebUI Setting</th>
+<th class="w-10p" style="text-align: right;">Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><mark>Use Remote Website</mark></td>
+<td style="text-align: right;">No</td>
+<td>Enable to use a <mark>remote</mark> Allsky Website. Enable the Website <mark>BEFORE</mark> you <a href="/documentation/installations/AllskyWebsite.html">install</a> it since the installation needs the settings below.</td>
+</tr>
+<tr>
+<td><mark>Image Directory</mark></td>
+<td style="text-align: right;"></td>
+<td>Name of the directory the current image should be uploaded to.  <br><br> This setting is a major cause of confusion for many users. If you don't know what to enter, ask the person or company supporting the server or look in <a href="/documentation/troubleshooting/uploads.html">Troubleshooting → Uploads</a> for more information.</td>
+</tr>
+<tr>
+<td><mark>Protocol</mark></td>
+<td style="text-align: right;">ftps</td>
+<td>Specifies how files should be uploaded to the remote Website.  <br><br>- <code>ftps</code>: secure FTP  <br>- <code>sftp</code>: SSH file transfer  <br>- <code>ftp</code>: insecure FTP <em>(not recommended)</em>  <br>- <code>scp</code>: secure copy  <br>- <code>rsync</code>: rsync copy  <br>- <code>s3</code>: Amazon Web Services  <br>- <code>gcs</code>: Google Cloud Storage  <br><br> ⚠️ <code>ftp</code> is unsecure; please use <code>ftps</code> or <code>sftp</code> instead.  <br><br>Some of the settings below only apply to certain protocols.</td>
+</tr>
+<tr>
+<td><mark>Server Name</mark></td>
+<td style="text-align: right;"></td>
+<td>Name of the remote server. Note this is normally <mark>NOT</mark> the same as the URL used to access the server.</td>
+</tr>
+<tr>
+<td><mark>Port</mark></td>
+<td style="text-align: right;"></td>
+<td>(ftp protocols only) Optional port required by the server. Rarely needed.</td>
+</tr>
+<tr>
+<td><mark>User Name</mark></td>
+<td style="text-align: right;"></td>
+<td>The username of the login on the remote Website.</td>
+</tr>
+<tr>
+<td><mark>Password</mark></td>
+<td style="text-align: right;"></td>
+<td>The password of the login on the remote Website.</td>
+</tr>
+<tr>
+<td><mark>FTP Commands</mark></td>
+<td style="text-align: right;"></td>
+<td>(ftp protocols only) Optional command(s) to send to the ftp server prior to transferring files. If you need multiple commands, separate them with a semi-colon. See <a href="/documentation/troubleshooting/uploads.html">Troubleshooting → Uploads</a>.</td>
+</tr>
+<tr>
+<td><mark>SSH Public Key File</mark></td>
+<td style="text-align: right;"></td>
+<td>(scp and rsync protocols only) Path to the SSH public key file.  <br><br>You need to set up SSH key authentication on your server. First generate a key on your Pi:  <br><br><code>bash&lt;br&gt;ssh-keygen -t rsa&lt;br&gt;</code><br><br>Leave the default filename and use an empty passphrase. Then copy the key to your server:  <br><br><code>bash&lt;br&gt;ssh-copy-id remote_username@remote_server&lt;br&gt;</code><br><br>Replace <code>remote_username</code> and <code>remote_server</code> appropriately. If prompted to continue connecting, enter <code>yes</code>.  <br><br>The private key will be stored in <code>~/.ssh/id_rsa</code>.  <br><br>If you are using SSH Key with Amazon Lightsail, copy <code>ssh-key.pem</code> to your Pi (e.g., in <code>~</code>), run:  <br><br><code>bash&lt;br&gt;chmod 400 ~/ssh-key.pem&lt;br&gt;</code><br><br>and set:  <br><br>- Protocol: <code>sftp</code>  <br>- Server Name: <code>remote host name</code>  <br>- User Name: <code>remote user name</code>  <br>- Password: <code>n/a</code>  <br>- FTP Commands: <code>set sftp:connect-program 'ssh -a -x -i /home/pi/ssh-key.pem'</code></td>
+</tr>
+<tr>
+<td><mark>AWS CLI Directory</mark></td>
+<td style="text-align: right;"></td>
+<td>(s3 protocol only) Directory on the Pi where the AWS CLI tools are installed, typically <code>${HOME}/.local/bin</code>. Install and configure:  <br><br><code>bash&lt;br&gt;pip3 install awscli --upgrade --user&lt;br&gt;export PATH=\"${HOME}/.local/bin:${PATH}\"&lt;br&gt;aws configure&lt;br&gt;</code><br><br>Enter a valid access key ID, Secret Access Key, Default region name (e.g., <code>us-west-2</code>), and set Default output format to <code>json</code>.</td>
+</tr>
+<tr>
+<td><mark>S3 Bucket</mark></td>
+<td style="text-align: right;"></td>
+<td>(s3 protocol only) Name of the S3 bucket where files will be uploaded to (must be in the Default region above). Suggested name: <code>allskybucket</code>. Consider turning off/limiting bucket versioning to avoid consuming lots of space with multiple versions of <code>image.jpg</code>.</td>
+</tr>
+<tr>
+<td><mark>S3 ACL</mark></td>
+<td style="text-align: right;">private</td>
+<td>(s3 protocol only) S3 Access Control List (ACL). If you want to serve your uploaded files via http(s), change to <code>public-read</code> and ensure bucket policy allows public access. You may need CORS if accessed by JavaScript from a different domain.</td>
+</tr>
+<tr>
+<td><mark>GCS Bucket</mark></td>
+<td style="text-align: right;"></td>
+<td>(gcs protocol only) Name of the GCS bucket where files will be uploaded to. Suggested name: <code>allskybucket</code>. You need <code>gsutil</code> (Google Cloud SDK). See <a href="https://cloud.google.com/storage/docs/gsutil_install">installation instructions</a>. The <code>gsutil</code> command must be in standard <code>$PATH</code> (usually <code>/usr/bin</code>). Authenticate the CLI tool with the correct user.</td>
+</tr>
+<tr>
+<td><mark>GCS ACL</mark></td>
+<td style="text-align: right;">private</td>
+<td>(gcs protocol only) GCS Access Control List (ACL). Use a predefined ACL rule from <a href="https://cloud.google.com/storage/docs/access-control/lists#predefined-acl">here</a>. To access files over https, set this to <code>publicRead</code>.</td>
+</tr>
+<tr>
+<td><mark>Upload With Original Name</mark></td>
+<td style="text-align: right;">No</td>
+<td>Determines the name of the uploaded image: <code>image.jpg</code> (No) or <code>image-YYYYMMDDHHMMSS.jpg</code> (Yes). This is rarely used since changing the image name will make it unviewable.</td>
+</tr>
+<tr>
+<td><mark>Website URL</mark></td>
+<td style="text-align: right;"></td>
+<td>Your website's URL, e.g. <code>https://www.mywebsite.com/allsky</code>.  <br><br>- If <mark>Website URL</mark> is specified, <mark>Image URL</mark> must also be specified, and vice versa.  <br>- Both URLs must begin with <code>http</code> or <code>https</code>.</td>
+</tr>
+<tr>
+<td><mark>Image URL</mark></td>
+<td style="text-align: right;"></td>
+<td>The URL to your allsky image, e.g. <code>https://www.mywebsite.com/allsky/image.jpg</code>. Normally this will be the Website URL followed by <code>image.jpg</code>. Use https if possible.</td>
+</tr>
+</tbody>
+</table>
+</details>
+<details class="note" open="open">
+<summary>Remote Server</summary>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>These settings are the same as for the Remote Website so are not described.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th class="w-20p">WebUI Setting</th>
+<th class="w-15p" style="text-align: right;">Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><mark>Use Remote Server</mark></td>
+<td style="text-align: right;">No</td>
+<td>Enable to use a remote server which is <mark>NOT</mark> running the Allsky Website software. Files will be copied to this server which normally will be a private website where you want to display the most recent images along with other, non-Allsky information.</td>
+</tr>
+<tr>
+<td><mark>Image Directory</mark></td>
+<td style="text-align: right;"></td>
+<td></td>
+</tr>
+<tr>
+<td><mark>Protocol</mark></td>
+<td style="text-align: right;">ftps</td>
+<td></td>
+</tr>
+<tr>
+<td><mark>Server Name</mark></td>
+<td style="text-align: right;"></td>
+<td></td>
+</tr>
+<tr>
+<td><mark>Port</mark></td>
+<td style="text-align: right;"></td>
+<td></td>
+</tr>
+<tr>
+<td><mark>User Name</mark></td>
+<td style="text-align: right;"></td>
+<td></td>
+</tr>
+<tr>
+<td><mark>Password</mark></td>
+<td style="text-align: right;"></td>
+<td></td>
+</tr>
+<tr>
+<td><mark>FTP Commands</mark></td>
+<td style="text-align: right;"></td>
+<td></td>
+</tr>
+<tr>
+<td><mark>SSH Public Key File</mark></td>
+<td style="text-align: right;"></td>
+<td></td>
+</tr>
+<tr>
+<td><mark>AWS CLI Directory</mark></td>
+<td style="text-align: right;"></td>
+<td></td>
+</tr>
+<tr>
+<td><mark>S3 Bucket</mark></td>
+<td style="text-align: right;"></td>
+<td></td>
+</tr>
+<tr>
+<td><mark>S3 ACL</mark></td>
+<td style="text-align: right;">private</td>
+<td></td>
+</tr>
+<tr>
+<td><mark>GCS Bucket</mark></td>
+<td style="text-align: right;"></td>
+<td></td>
+</tr>
+<tr>
+<td><mark>GCS ACL</mark></td>
+<td style="text-align: right;">private</td>
+<td></td>
+</tr>
+<tr>
+<td><mark>Upload With Original Name</mark></td>
+<td style="text-align: right;">No</td>
+<td>Unless you are using the remote server as a backup, this is <mark>rarely</mark> used since changing the image name will make it unviewable.</td>
+</tr>
+<tr>
+<td><mark>Remote Video File Name</mark></td>
+<td style="text-align: right;">allsky.mp4</td>
+<td>Unless you are using the remote server as a backup, this is <mark>usually</mark> used so the server knows the file name.</td>
+</tr>
+<tr>
+<td><mark>Remote Keogram File Name</mark></td>
+<td style="text-align: right;">keogram.jpg</td>
+<td>Unless you are using the remote server as a backup, this is <mark>usually</mark> used so the server knows the file name.</td>
+</tr>
+<tr>
+<td><mark>Remote Startrails File Name</mark></td>
+<td style="text-align: right;">startrails.jpg</td>
+<td>Unless you are using the remote server as a backup, this is <mark>usually</mark> used so the server knows the file name.</td>
+</tr>
+</tbody>
+</table>
+</details>
+</details>
+<h2 id="allsky-map">Allsky Map<a class="headerlink" href="#allsky-map" title="Permanent link">¶</a></h2>
+<details class="info" open="open">
+<summary>Settings</summary>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you want your allsky camera's location to display on the <a href="https://www.thomasjacquin.com/allsky-map">Allsky map</a>, the information in this section will be sent to the map server every other morning to ensure it's fresh. The server automatically removes old data. Only a limited number of updates per day are allowed.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th class="w-20p">WebUI Setting</th>
+<th class="w-10p" style="text-align: right;">Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><mark>Show on Map</mark></td>
+<td style="text-align: right;">No</td>
+<td>Enable to have your camera appear on the <a href="https://www.thomasjacquin.com/allsky-map">Allsky map</a>. <mark>If off, the following settings are ignored.</mark></td>
+</tr>
+<tr>
+<td><mark>Location</mark> <span class="red">AW</span></td>
+<td style="text-align: right;"></td>
+<td>The location of your camera. You can put any level of detail you want.</td>
+</tr>
+<tr>
+<td><mark>Owner</mark> <span class="red">AW</span></td>
+<td style="text-align: right;"></td>
+<td>The owner of the camera - your name, an association name, an observatory, etc.</td>
+</tr>
+<tr>
+<td><mark>Lens</mark> <span class="red">AW</span></td>
+<td style="text-align: right;"></td>
+<td>The lens you're using on your camera, for example: <mark>Arecont 1.55</mark>.</td>
+</tr>
+<tr>
+<td><mark>Equipment Info</mark> <span class="red">AW</span></td>
+<td style="text-align: right;"></td>
+<td>Any optional information you want to add about the equipment you are using. For example, if you are using a camera with no infrared filter (a "NoIR" camera).</td>
+</tr>
+</tbody>
+</table>
+</details>
+<h2 id="webui">WebUI<a class="headerlink" href="#webui" title="Permanent link">¶</a></h2>
+<details class="info" open="open">
+<summary>Settings</summary>
+<table>
+<thead>
+<tr>
+<th class="w-20p">WebUI Setting</th>
+<th class="w-10p" style="text-align: right;">Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><mark>Images Sort Order</mark></td>
+<td style="text-align: right;">Ascending</td>
+<td>Determines how the images for a day in the WebUI's <mark>Images</mark> page are displayed. <mark>Ascending</mark> sorts oldest → newest. <mark>Descending</mark> sorts newest → oldest.</td>
+</tr>
+<tr>
+<td><mark>Show Updated Message</mark></td>
+<td style="text-align: right;">Yes</td>
+<td>Determines whether the <code>Daytime images updated every...</code> message in the <mark>Live View</mark> page is shown.</td>
+</tr>
+<tr>
+<td><mark>Require WebUI Login</mark></td>
+<td style="text-align: right;">Yes</td>
+<td>Determines if you need to log into the WebUI. <mark>If your Pi is accessible on the Internet, do NOT disable this!!</mark></td>
+</tr>
+<tr>
+<td><mark>System Page Additions</mark></td>
+<td style="text-align: right;"></td>
+<td>One or more colon-separated full path names to text files that contain user-supplied data to display on the WebUI's <mark>System</mark> page. See <a href="/documentation/explanations/SystemPageAdditions.html">System Page Additions</a> for more information and an example.</td>
+</tr>
+</tbody>
+</table>
+</details>
+<h2 id="database">Database<a class="headerlink" href="#database" title="Permanent link">¶</a></h2>
+<details class="info" open="open">
+<summary>Settings</summary>
+<blockquote>
+<p>⚠️ Only change the database settings if you know what you are doing.</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th class="w-20p">WebUI Setting</th>
+<th class="w-10p" style="text-align: right;">Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><mark>Enable Database</mark></td>
+<td style="text-align: right;">Yes</td>
+<td>Enables the Allsky database, which keeps information on images taken like exposure time and a day/night flag. Some Allsky modules update these records (e.g., meteor detection adds the number of meteors). The database enables features like using only nighttime images in startrails. Disabling it will keep many new features from working properly.</td>
+</tr>
+<tr>
+<td><mark>Database</mark></td>
+<td style="text-align: right;">allsky</td>
+<td>The name of the database.</td>
+</tr>
+<tr>
+<td><mark>Database Type</mark></td>
+<td style="text-align: right;">SQLite</td>
+<td>The type of database. MySQL has more features but uses a lot more CPU and memory than SQLite. It would typically only be used if you already have a MySQL database on your Pi (extremely rare).</td>
+</tr>
+<tr>
+<td><mark>Database Host</mark></td>
+<td style="text-align: right;"></td>
+<td>(MySQL only) The IP address or hostname of the server running the database. By default the database runs on your Pi.</td>
+</tr>
+<tr>
+<td><mark>Database User</mark></td>
+<td style="text-align: right;"></td>
+<td>(MySQL only) The username used to connect to the database. Suggest using the same as your Pi login so you have one less thing to remember.</td>
+</tr>
+<tr>
+<td><mark>User Password</mark></td>
+<td style="text-align: right;"></td>
+<td>(MySQL only) The password used to connect to the database.  <br><br> Keep track of the User and Password - if <code>~/allsky/env.json</code> is accidently removed you'll need to enter the User and Password in order for the database to work.</td>
+</tr>
+</tbody>
+</table>
+</details>
+<h2 id="camera">Camera<a class="headerlink" href="#camera" title="Permanent link">¶</a></h2>
+<details class="info" open="open">
+<summary>Settings</summary>
+<table>
+<thead>
+<tr>
+<th class="w-20p">WebUI Setting</th>
+<th class="w-10p" style="text-align: right;">Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><mark>Camera Type</mark></td>
+<td style="text-align: right;"></td>
+<td>The type of camera you are using: ZWO or RPi. To select a camera of a different <mark>Camera Type</mark>:  <br>1. Select the Type.  <br>2. Save the change via the <mark>Save changes</mark> button.  <br>3. Update the <mark>Camera Model</mark> as desired.  <br><br>If you connect or disconnect a camera on the Pi, select <mark>Refresh</mark> to update the list of camera types and models.</td>
+</tr>
+<tr>
+<td><mark>Camera Model</mark></td>
+<td style="text-align: right;"></td>
+<td>The model of camera you are using. Note this list is only the models of the current <mark>Camera Type</mark>.</td>
+</tr>
+</tbody>
+</table>
+</details>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer">
+        
+          
+          <a href="../server.html" class="md-footer__link md-footer__link--prev" aria-label="Previous: Server">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"></path></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Server
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="website.html" class="md-footer__link md-footer__link--next" aria-label="Next: Website">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Website
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"></path></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.expand", "toc.integrate", "content.code.annotate", "header.autohide", "navigation.footer", "search.suggest"], "search": "../../assets/javascripts/workers/search.7a47a382.min.js", "tags": {"API Required": "api", "Data Capture": "data", "Experimental": "experimental", "Extra Module": "extra", "Hardware": "hw", "Hardware Required": "hardware", "Image Adjustments": "image", "MQTT": "mqtt", "Modules": "module", "Networking": "network", "Overlay Data": "overlay", "Overlays": "overlay", "Pipeline Day": "day", "Pipeline Night": "night", "Pipeline Periodic": "clock", "Power": "power", "Sensors": "sensor", "Software": "sw", "Weather": "weather"}, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.e71a0d61.min.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  
+<script id="init-glightbox">const lightbox = GLightbox({"touchNavigation": true, "loop": false, "zoomable": true, "draggable": true, "openEffect": "zoom", "closeEffect": "zoom", "slideEffect": "slide"});
+document$.subscribe(()=>{ lightbox.reload(); });
+</script></body></html>

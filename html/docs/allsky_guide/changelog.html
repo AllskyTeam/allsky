@@ -1,0 +1,6746 @@
+<!DOCTYPE html><html lang="en" class="no-js"><head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://docs.allsky.local/allsky_guide/changelog.html">
+      
+      
+        <link rel="prev" href="known_issues.html">
+      
+      
+        <link rel="next" href="things.html">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.0">
+    
+    
+      
+        <title>ChangeLog - Allsky Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.618322db.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+  
+  
+    
+      
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+  
+  <style>:root{.md-tag{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M5.5%207A1.5%201.5%200%200%201%204%205.5%201.5%201.5%200%200%201%205.5%204%201.5%201.5%200%200%201%207%205.5%201.5%201.5%200%200%201%205.5%207m15.91%204.58-9-9C12.05%202.22%2011.55%202%2011%202H4c-1.11%200-2%20.89-2%202v7c0%20.55.22%201.05.59%201.41l8.99%209c.37.36.87.59%201.42.59s1.05-.23%201.41-.59l7-7c.37-.36.59-.86.59-1.41%200-.56-.23-1.06-.59-1.42%22/%3E%3C/svg%3E');}.md-tag.md-tag--hw{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M6%204h12v1h3v2h-3v2h3v2h-3v2h3v2h-3v2h3v2h-3v1H6v-1H3v-2h3v-2H3v-2h3v-2H3V9h3V7H3V5h3zm5%2011v3h1v-3zm2%200v3h1v-3zm2%200v3h1v-3z%22/%3E%3C/svg%3E');}.md-tag.md-tag--sw{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22m14.6%2016.6%204.6-4.6-4.6-4.6L16%206l6%206-6%206zm-5.2%200L4.8%2012l4.6-4.6L8%206l-6%206%206%206z%22/%3E%3C/svg%3E');}.md-tag.md-tag--overlay{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22m12%2016%207.36-5.73L21%209l-9-7-9%207%201.63%201.27M12%2018.54l-7.38-5.73L3%2014.07l9%207%209-7-1.63-1.27z%22/%3E%3C/svg%3E');}.md-tag.md-tag--module{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M20.5%2011H19V7a2%202%200%200%200-2-2h-4V3.5A2.5%202.5%200%200%200%2010.5%201%202.5%202.5%200%200%200%208%203.5V5H4a2%202%200%200%200-2%202v3.8h1.5c1.5%200%202.7%201.2%202.7%202.7S5%2016.2%203.5%2016.2H2V20a2%202%200%200%200%202%202h3.8v-1.5c0-1.5%201.2-2.7%202.7-2.7s2.7%201.2%202.7%202.7V22H17a2%202%200%200%200%202-2v-4h1.5a2.5%202.5%200%200%200%202.5-2.5%202.5%202.5%200%200%200-2.5-2.5%22/%3E%3C/svg%3E');}.md-tag.md-tag--sensor{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22m19.07%204.93-1.41%201.41A8.01%208.01%200%200%201%2020%2012a8%208%200%200%201-8%208%208%208%200%200%201-8-8c0-4.08%203.05-7.44%207-7.93v2.02C8.16%206.57%206%209.03%206%2012a6%206%200%200%200%206%206%206%206%200%200%200%206-6c0-1.66-.67-3.16-1.76-4.24l-1.41%201.41C15.55%209.9%2016%2010.9%2016%2012a4%204%200%200%201-4%204%204%204%200%200%201-4-4c0-1.86%201.28-3.41%203-3.86v2.14c-.6.35-1%20.98-1%201.72a2%202%200%200%200%202%202%202%202%200%200%200%202-2c0-.74-.4-1.38-1-1.72V2h-1A10%2010%200%200%200%202%2012a10%2010%200%200%200%2010%2010%2010%2010%200%200%200%2010-10c0-2.76-1.12-5.26-2.93-7.07%22/%3E%3C/svg%3E');}.md-tag.md-tag--mqtt{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M4.93%204.93A9.97%209.97%200%200%200%202%2012c0%202.76%201.12%205.26%202.93%207.07l1.41-1.41A7.94%207.94%200%200%201%204%2012c0-2.21.89-4.22%202.34-5.66zm14.14%200-1.41%201.41A7.96%207.96%200%200%201%2020%2012c0%202.22-.89%204.22-2.34%205.66l1.41%201.41A9.97%209.97%200%200%200%2022%2012c0-2.76-1.12-5.26-2.93-7.07M7.76%207.76A5.98%205.98%200%200%200%206%2012c0%201.65.67%203.15%201.76%204.24l1.41-1.41A4%204%200%200%201%208%2012c0-1.11.45-2.11%201.17-2.83zm8.48%200-1.41%201.41A4%204%200%200%201%2016%2012c0%201.11-.45%202.11-1.17%202.83l1.41%201.41A5.98%205.98%200%200%200%2018%2012c0-1.65-.67-3.15-1.76-4.24M12%2010a2%202%200%200%200-2%202%202%202%200%200%200%202%202%202%202%200%200%200%202-2%202%202%200%200%200-2-2%22/%3E%3C/svg%3E');}.md-tag.md-tag--weather{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M12.74%205.47c2.36%201.03%203.61%203.56%203.18%205.99A6%206%200%200%201%2018%2016v.17a3%203%200%200%201%201-.17%203%203%200%200%201%203%203%203%203%200%200%201-3%203H6a4%204%200%200%201-4-4%204%204%200%200%201%204-4h.27C5%2012.45%204.6%2010.24%205.5%208.26a5.49%205.49%200%200%201%207.24-2.79m-.81%201.83c-1.77-.8-3.84.01-4.62%201.77-.46%201.02-.38%202.15.1%203.06A5.99%205.99%200%200%201%2012%2010c.7%200%201.38.12%202%20.34a3.51%203.51%200%200%200-2.07-3.04m1.62-3.66c-.55-.24-1.1-.41-1.67-.52l2.49-1.3.9%202.89a7.7%207.7%200%200%200-1.72-1.07m-7.46.8c-.49.35-.92.75-1.29%201.19l.11-2.81%202.96.68c-.62.21-1.22.53-1.78.94M18%209.71c-.09-.59-.22-1.16-.41-1.71l2.38%201.5-2.05%202.23c.11-.65.13-1.33.08-2.02M3.04%2011.3c.07.6.2%201.17.39%201.7l-2.37-1.5L3.1%209.28c-.1.65-.13%201.33-.06%202.02M19%2018h-3v-2a4%204%200%200%200-4-4%204%204%200%200%200-4%204H6a2%202%200%200%200-2%202%202%202%200%200%200%202%202h13a1%201%200%200%200%201-1%201%201%200%200%200-1-1%22/%3E%3C/svg%3E');}.md-tag.md-tag--power{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M16%207V3h-2v4h-4V3H8v4C7%207%206%208%206%209v5.5L9.5%2018v3h5v-3l3.5-3.5V9c0-1-1-2-2-2%22/%3E%3C/svg%3E');}.md-tag.md-tag--network{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M10%202c-1.11%200-2%20.89-2%202v3c0%201.11.89%202%202%202h1v2H2v2h4v2H5c-1.11%200-2%20.89-2%202v3c0%201.11.89%202%202%202h4c1.11%200%202-.89%202-2v-3c0-1.11-.89-2-2-2H8v-2h8v2h-1c-1.11%200-2%20.89-2%202v3c0%201.11.89%202%202%202h4c1.11%200%202-.89%202-2v-3c0-1.11-.89-2-2-2h-1v-2h4v-2h-9V9h1c1.11%200%202-.89%202-2V4c0-1.11-.89-2-2-2zm0%202h4v3h-4zM5%2017h4v3H5zm10%200h4v3h-4z%22/%3E%3C/svg%3E');}.md-tag.md-tag--experimental{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M6%2022a3%203%200%200%201-3-3c0-.6.18-1.16.5-1.63L9%207.81V6a1%201%200%200%201-1-1V4a2%202%200%200%201%202-2h4a2%202%200%200%201%202%202v1a1%201%200%200%201-1%201v1.81l5.5%209.56c.32.47.5%201.03.5%201.63a3%203%200%200%201-3%203zm-1-3a1%201%200%200%200%201%201h12a1%201%200%200%200%201-1c0-.21-.07-.41-.18-.57l-2.29-3.96L14%2017l-5.07-5.07-3.75%206.5c-.11.16-.18.36-.18.57m8-9a1%201%200%200%200-1%201%201%201%200%200%200%201%201%201%201%200%200%200%201-1%201%201%200%200%200-1-1%22/%3E%3C/svg%3E');}.md-tag.md-tag--data{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M2%202v20h20v-2h-2v-2h2v-2h-2v-2h2v-2h-4v-2h-2v2h-2v-2h-2V8H8v4h4v4h-2v2h2v2h-2v-2H8v-2H6v-2H4v-2h2V6H4V2zm4%204h2V2H6zm2%2010h2v-2H8zm10-6h4V8h-4zm0-2V4h-2v2h-2v2zm-2-4V2h-2v2zm2%200h2V2h-2zm2%200v2h2V4zM10%202v4h2V2zm4%2012h2v2h2v4h-4zM4%2018h2v2H4z%22/%3E%3C/svg%3E');}.md-tag.md-tag--extra{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M19%203H5c-1.1%200-2%20.9-2%202v14c0%201.1.9%202%202%202h14c1.1%200%202-.9%202-2V5c0-1.1-.9-2-2-2m-8%205H9v2c0%201.1-.9%202-2%202%201.1%200%202%20.9%202%202v2h2v2H9c-1.1%200-2-.9-2-2v-1c0-1.1-.9-2-2-2v-2c1.1%200%202-.9%202-2V8c0-1.1.9-2%202-2h2zm8%205c-1.1%200-2%20.9-2%202v1c0%201.1-.9%202-2%202h-2v-2h2v-2c0-1.1.9-2%202-2-1.1%200-2-.9-2-2V8h-2V6h2c1.1%200%202%20.9%202%202v1c0%201.1.9%202%202%202z%22/%3E%3C/svg%3E');}.md-tag.md-tag--day{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M12%207a5%205%200%200%201%205%205%205%205%200%200%201-5%205%205%205%200%200%201-5-5%205%205%200%200%201%205-5m0%202a3%203%200%200%200-3%203%203%203%200%200%200%203%203%203%203%200%200%200%203-3%203%203%200%200%200-3-3m0-7%202.39%203.42C13.65%205.15%2012.84%205%2012%205s-1.65.15-2.39.42zM3.34%207l4.16-.35A7.2%207.2%200%200%200%205.94%208.5c-.44.74-.69%201.5-.83%202.29zm.02%2010%201.76-3.77a7.131%207.131%200%200%200%202.38%204.14zM20.65%207l-1.77%203.79a7.02%207.02%200%200%200-2.38-4.15zm-.01%2010-4.14.36c.59-.51%201.12-1.14%201.54-1.86.42-.73.69-1.5.83-2.29zM12%2022l-2.41-3.44c.74.27%201.55.44%202.41.44.82%200%201.63-.17%202.37-.44z%22/%3E%3C/svg%3E');}.md-tag.md-tag--night{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22m17.75%204.09-2.53%201.94.91%203.06-2.63-1.81-2.63%201.81.91-3.06-2.53-1.94L12.44%204l1.06-3%201.06%203zm3.5%206.91-1.64%201.25.59%201.98-1.7-1.17-1.7%201.17.59-1.98L15.75%2011l2.06-.05L18.5%209l.69%201.95zm-2.28%204.95c.83-.08%201.72%201.1%201.19%201.85-.32.45-.66.87-1.08%201.27C15.17%2023%208.84%2023%204.94%2019.07c-3.91-3.9-3.91-10.24%200-14.14.4-.4.82-.76%201.27-1.08.75-.53%201.93.36%201.85%201.19-.27%202.86.69%205.83%202.89%208.02a9.96%209.96%200%200%200%208.02%202.89m-1.64%202.02a12.08%2012.08%200%200%201-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81%203.14-2.7%207.96.31%2010.98%203.02%203.01%207.84%203.12%2010.98.31%22/%3E%3C/svg%3E');}.md-tag.md-tag--clock{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M12%2020a8%208%200%200%200%208-8%208%208%200%200%200-8-8%208%208%200%200%200-8%208%208%208%200%200%200%208%208m0-18a10%2010%200%200%201%2010%2010%2010%2010%200%200%201-10%2010C6.47%2022%202%2017.5%202%2012A10%2010%200%200%201%2012%202m.5%205v5.25l4.5%202.67-.75%201.23L11%2013V7z%22/%3E%3C/svg%3E');}.md-tag.md-tag--hardware{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M2%2019.63%2013.43%208.2l-.71-.7%201.42-1.43L12%203.89c1.2-1.19%203.09-1.19%204.27%200l3.6%203.61-1.42%201.41h2.84l.71.71-3.55%203.59-.71-.71V9.62l-1.47%201.42-.71-.71L4.13%2021.76z%22/%3E%3C/svg%3E');}.md-tag.md-tag--api{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M7%207H5a2%202%200%200%200-2%202v8h2v-4h2v4h2V9a2%202%200%200%200-2-2m0%204H5V9h2m7-2h-4v10h2v-4h2a2%202%200%200%200%202-2V9a2%202%200%200%200-2-2m0%204h-2V9h2m6%200v6h1v2h-4v-2h1V9h-1V7h4v2Z%22/%3E%3C/svg%3E');}.md-tag.md-tag--image{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22m8.5%2013.5%202.5%203%203.5-4.5%204.5%206H5m16%201V5a2%202%200%200%200-2-2H5a2%202%200%200%200-2%202v14a2%202%200%200%200%202%202h14a2%202%200%200%200%202-2%22/%3E%3C/svg%3E');}}</style>
+
+    
+    
+      
+        <script src="https://unpkg.com/iframe-worker/shim"></script>
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../assets/css/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  <link href="../assets/stylesheets/glightbox.min.css" rel="stylesheet"><script src="../assets/javascripts/glightbox.min.js"></script><style id="glightbox-style">
+            html.glightbox-open { overflow: initial; height: 100%; }
+            .gslide-title { margin-top: 0px; user-select: text; }
+            .gslide-desc { color: #666; user-select: text; }
+            .gslide-image img { background: white; }
+            .gscrollbar-fixer { padding-right: 15px; }
+            .gdesc-inner { font-size: 0.75rem; }
+            body[data-md-color-scheme="slate"] .gdesc-inner { background: var(--md-default-bg-color); }
+            body[data-md-color-scheme="slate"] .gslide-title { color: var(--md-default-fg-color); }
+            body[data-md-color-scheme="slate"] .gslide-desc { color: var(--md-default-fg-color); }
+        </style></head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#v2025xxxx" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../index.html" title="Allsky Documentation" class="md-header__button md-logo" aria-label="Allsky Documentation" data-md-component="logo">
+      
+  <img src="../assets/images/logo.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"></path></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Allsky Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              ChangeLog
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo" aria-label="Switch to dark mode" type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"></path></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo" aria-label="Switch to light mode" type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"></path></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"></path></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/AllskyTeam/allsky" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"></path></svg>
+  </div>
+  <div class="md-source__repository">
+    Allsky
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../index.html" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="glossary.html" class="md-tabs__link">
+          
+  
+  
+  Allsky Guide
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="overlays/overview.html" class="md-tabs__link">
+          
+  
+  
+  Overlays
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../allsky_modules/introduction.html" class="md-tabs__link">
+          
+  
+  
+  Modules
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../developer_guide/introduction.html" class="md-tabs__link">
+          
+  
+  
+  Developer Guide
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../index.html" title="Allsky Documentation" class="md-nav__button md-logo" aria-label="Allsky Documentation" data-md-component="logo">
+      
+  <img src="../assets/images/logo.png" alt="logo">
+
+    </a>
+    Allsky Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/AllskyTeam/allsky" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"></path></svg>
+  </div>
+  <div class="md-source__repository">
+    Allsky
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Allsky Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Allsky Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="glossary.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_2">
+        
+          
+          <label class="md-nav__link" for="__nav_2_2" id="__nav_2_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Installation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="allsky.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Allsky
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="website.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Website
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="server.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Server
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="configuration.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_4">
+        
+          
+          <label class="md-nav__link" for="__nav_2_4" id="__nav_2_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Settings
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Settings
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="settings/allsky.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Allsky
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="settings/website.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Website
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_5">
+        
+          
+          <label class="md-nav__link" for="__nav_2_5" id="__nav_2_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Howtos
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Howtos
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="howtos/layout.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Allsky layout
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_5_2">
+        
+          
+          <label class="md-nav__link" for="__nav_2_5_2" id="__nav_2_5_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Helper Tools
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_5_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_5_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Helper Tools
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="howtos/helper_tools/startrails.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Startrails
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="howtos/helper_tools/image_stretch.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Image Stretch
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="howtos/helper_tools/timelapse.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Timelapse
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="howtos/constellation_overlay.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Constellation Overlay
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="howtos/dark_frames.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dark Frames
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="howtos/keograms.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Keograms
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="howtos/startrails.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Startrails
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="howtos/timelapse.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Timelapse
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="howtos/system_page.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    System Page Additions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="howtos/angle_sunrise_sunset.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Angle, Sunrise and Sunset
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="howtos/exposure_settings.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exposure Settings
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="howtos/ssl.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Using SSL
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="howtos/managing_files.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Managing Files
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="howtos/new_camera.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Support For A New Camers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="howtos/mapping_server_locations.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mapping Server Locations To URLs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="howtos/cleanup_website.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cleanup A Website
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="howtos/allsky_map.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The Allsky map
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_6">
+        
+          
+          <label class="md-nav__link" for="__nav_2_6" id="__nav_2_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshootings
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Troubleshootings
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="troubleshooting/reporting.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reporting Problems
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="troubleshooting/tools.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tools
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="troubleshooting/uploads.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Uploads (ftp, scp etc)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="troubleshooting/startrails.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Startrails
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="troubleshooting/timelapse.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Timelapse
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="troubleshooting/flicker.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Image Flicker
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="troubleshooting/webui.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    WebUI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="troubleshooting/website.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Website
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="troubleshooting/swap.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Increase Swap Space
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="troubleshooting/zwo.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ZWO Cameras
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="troubleshooting/rpicam.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RPi Cameras
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="troubleshooting/hardware.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Other Hardware
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="troubleshooting/others.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Others
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="faq.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FAQ
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_8">
+        
+          
+          <label class="md-nav__link" for="__nav_2_8" id="__nav_2_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hardware
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Hardware
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="hardware/pi.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pi Options
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="hardware/camera.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Camera Options
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="hardware/lens.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lens Options
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="known_issues.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Known Issues
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ChangeLog
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="changelog.html" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ChangeLog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#v2025xxxx" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v2025.xx.xx
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="v2025.xx.xx">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#changes-that-may-require-action-upgrades-only" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changes that may require action (upgrades only)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#enhancements-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Enhancements / Changes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bug-fixes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bug Fixes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#deleted-settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deleted Settings
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#new-settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        New Settings
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#v20241206" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v2024.12.06
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="v2024.12.06">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#v20241206_06" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v2024.12.06_06
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="v2024.12.06_06">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#important-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IMPORTANT NOTES:
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#enhancements-changes_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Enhancements / Changes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bug-fixes_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bug Fixes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#new-settings_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        New Settings
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#v20241206_05" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v2024.12.06_05
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="v2024.12.06_05">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#changes-that-may-require-action-upgrades-only_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changes that may require action (upgrades only)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#enhancements-changes_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Enhancements / Changes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bug-fixes_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bug Fixes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#new-settings_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        New Settings
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#v20241206_04" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v2024.12.06_04
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="v2024.12.06_04">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#changes-that-may-require-action-upgrades-only_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changes that may require action (upgrades only)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#enhancements-changes_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Enhancements / Changes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bug-fixes_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bug Fixes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#new-settings_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        New Settings
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#v20241206_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v2024.12.06_04
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="v2024.12.06_04">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#enhancements-changes_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Enhancements / Changes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bug-fixes_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bug Fixes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#deleted-settings_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deleted Settings
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#new-settings_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        New Settings
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#v20241206_03" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v2024.12.06_03
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="v2024.12.06_03">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#enhancements-changes_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Enhancements / Changes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bug-fixes_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bug Fixes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#deleted-settings_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deleted Settings
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#new-settings_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        New Settings
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#v20241206_02" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v2024.12.06_02
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="v2024.12.06_02">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#enhancements-changes_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Enhancements / Changes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bug-fixes_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bug Fixes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#new-settings_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        New Settings
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#deleted-settings_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deleted Settings
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#v20241206_01" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v2024.12.06_01
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="v2024.12.06_01">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#enhancements-changes_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Enhancements / Changes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#new-settings_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        New Settings
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#deleted-settings_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deleted Settings
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bug-fixes_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bug Fixes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#v20241206-base-release" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v2024.12.06 - Base Release
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="v2024.12.06 - Base Release">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#changes-that-may-require-action-upgrades-only_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changes that may require action (upgrades only)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#enhancements-changes_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Enhancements / Changes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#new-settings_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        New Settings
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#deleted-settings_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deleted Settings
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bug-fixes_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bug Fixes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#maintenance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Maintenance
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#v20230501" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v2023.05.01
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="v2023.05.01">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#v20230501_04" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v2023.05.01_04
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="v2023.05.01_04">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#enhancements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Enhancements
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bug-fixes_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bug Fixes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#v20230501_03" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v2023.05.01_03
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="v2023.05.01_03">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#enhancements_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Enhancements
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bug-fixes_10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bug Fixes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#v20230501_02" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v2023.05.01_02
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="v2023.05.01_02">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#enhancements_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Enhancements
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bug-fixes_11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bug Fixes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#v20230501_01" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v2023.05.01_01
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="v2023.05.01_01">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#enhancements_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Enhancements
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bug-fixes_12" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bug Fixes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#v20230501_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v2023.05.01
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="v2023.05.01">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#core-allsky" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Core Allsky
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#webui" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        WebUI
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#allsky-website" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Allsky Website
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#v20220301" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v2022.03.01
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="v2022.03.01">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#08-base-release" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        0.8 Base Release
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#07" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        0.7
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#06" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        0.6
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#05" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        0.5
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#04" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        0.4
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#03" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        0.3
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#02" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        0.2
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#01" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        0.1
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="things.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Things we love
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="3d.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    3d Printables
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="alternatives.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Alternatives
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tags.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tags
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3">
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overlays
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Overlays
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="overlays/overview.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="overlays/how.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    How They Work
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="overlays/fieldsandvariables.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fields And Variables
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="overlays/extra.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Extra Data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="overlays/interface.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Interface
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="overlays/formatting.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Formatting Variables
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="overlays/tips.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tips
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="overlays/sunmoon.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sun and Moon
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4">
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Modules
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Modules
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../allsky_modules/introduction.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_2">
+        
+          
+          <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Core Modules
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Core Modules
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_2_1">
+        
+          
+          <label class="md-nav__link" for="__nav_4_2_1" id="__nav_4_2_1_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Modules
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_2_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Modules
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../allsky_modules/core/load_image.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Load Image
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../allsky_modules/core/save_image.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Save Image
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../allsky_modules/core/mask_image.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mask Image
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../allsky_modules/core/overlay.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overlay
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../allsky_modules/core/exposure_rect.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exposure Rect
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../allsky_modules/core/histogram.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Histogram
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../allsky_modules/core/star_count.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Star Count
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../allsky_modules/core/meteor_count.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Meteor Count
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../allsky_modules/core/clear_sky.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Clear Sky
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../allsky_modules/core/export.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Export
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../allsky_modules/core/pi_status.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pi Status
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../allsky_modules/core/imtermediate_image.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Imtermediate Image
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_3">
+        
+          
+          <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Extra Modules
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Extra Modules
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../allsky_modules/extra/environment.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Environment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../allsky_modules/extra/dew_heater.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dew Heater
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../allsky_modules/extra/adsb.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADSB
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../allsky_modules/extra/border.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Border
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../allsky_modules/extra/discord.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Discord
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../allsky_modules/extra/esp32round.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Round Displays
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../allsky_modules/extra/fans.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fans
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../allsky_modules/extra/gpio.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GPIO
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../allsky_modules/extra/hddtemp.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hard Disk Temp
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../allsky_modules/extra/image_tuning.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Image Tuning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../allsky_modules/extra/power.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Power
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../allsky_modules/extra/publish_data.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Publish Data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../allsky_modules/extra/json_import.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    JSON Import
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../allsky_modules/extra/light.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Light Meter
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../allsky_modules/extra/lightning.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lightning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../allsky_modules/extra/mlx90640.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MLX90640
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../allsky_modules/extra/owm.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Open Weather Map
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../allsky_modules/extra/gps.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GPS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../allsky_modules/extra/air_quality.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Air Quality
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../allsky_modules/extra/rain.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Detect Rain
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../allsky_modules/extra/run_script.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Run Script
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../allsky_modules/extra/solar_system.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Solar System
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../allsky_modules/extra/sky_quality.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sky Quality
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_3_24">
+        
+          
+          <label class="md-nav__link" for="__nav_4_3_24" id="__nav_4_3_24_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Deprecated Modules
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_3_24_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3_24">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Deprecated Modules
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../allsky_modules/extra/ina3221.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    INA3221
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../allsky_modules/extra/mqtt_subscribe.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MQTT Subscribe
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../allsky_modules/extra/influxdb.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    InfluxDB
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../allsky_modules/extra/ltr390.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LTR390
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5">
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Developer Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../developer_guide/introduction.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../developer_guide/glossary.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../developer_guide/overview.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_4">
+        
+          
+          <label class="md-nav__link" for="__nav_5_4" id="__nav_5_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Modules
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Modules
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../developer_guide/folder_structure.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Folder Strucuture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../developer_guide/module_structure.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Module Structure
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../developer_guide/meta_data_structure.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Meta Data Structure
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../developer_guide/meta_data_example.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Meta Data Example
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../developer_guide/available_fields.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Available Fields
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../developer_guide/shared_libraries.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Shared Libraries
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../developer_guide/charts.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Charts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../developer_guide/blocks.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Blocks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../developer_guide/dependencies.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dependencies
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_5">
+        
+          
+          <label class="md-nav__link" for="__nav_5_5" id="__nav_5_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SDK Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    SDK Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../allsky_shared.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Shared Module
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../allsky_base.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Base Class
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../allsky_api.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Allsky Server API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../developer_guide/contributing.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+  <h1>ChangeLog</h1>
+
+<p>This page lists the major changes to all Allsky releases.
+You can also see the
+<a href="knownIssues.html">Known Issues and Limitations</a>
+of the current release.</p>
+<hr>
+<h2 id="v2025xxxx">v2025.xx.xx<a class="headerlink" href="#v2025xxxx" title="Permanent link">¶</a></h2>
+<details open="open">
+<summary>v2025.xx.xx</summary>
+<h4 id="changes-that-may-require-action-upgrades-only">Changes that may require action (upgrades only)<a class="headerlink" href="#changes-that-may-require-action-upgrades-only" title="Permanent link">¶</a></h4>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The changes in this section may require settings changes;
+after upgrading, check that your settings and images look right.</p>
+</div>
+<ul>
+<li>The Buster operating system is no longer supported.</li>
+<li>The "legacy" overlay method and the <strong>Image Overlay Settings</strong> section of the WebUI no longer exist. All overlays are now done via the <strong>Overlay Editor</strong> in the WebUI.</li>
+<li>If your camera is very noisy it may create dark frames that are brighter than the new <mark>Dark Frame Upper Threshold</mark> value, which is <code>0.05</code>. This threshold was <code>0.10</code> in the prior release.</li>
+<li>The AS_TEMPERATURE_C and AS_TEMPERATURE_F values (sensor temperature) now have 1 digit after the decimal point. This may require you to change the format of those variables in the Overlay Editor.</li>
+</ul>
+<h4 id="enhancements-changes">Enhancements / Changes<a class="headerlink" href="#enhancements-changes" title="Permanent link">¶</a></h4>
+<ul>
+<li>
+<ul>
+<li>Several menu items are now grouped together; putting your cursor over them or clicking on them shows a list of choices.<br>
+  For example, the <strong>Settings</strong> group contains <strong>Allsky Settings</strong> and <strong>Editor</strong>.</li>
+</ul>
+<p><strong>WebUI changes:</strong></p>
+<ul>
+<li>
+<p><strong>Improved Login System</strong></p>
+<ul>
+<li>The old login system has been removed and a new version implemented</li>
+<li>Existing login details are not affected</li>
+<li>Only used if WebUI login is enabled</li>
+<li>Provides stronger passwords if the Pi will be exposed to the internet</li>
+</ul>
+</li>
+<li>
+<p><strong>New Database</strong></p>
+<ul>
+<li>Stores information on every image taken (exposure, day/night, etc.)</li>
+<li>Modules can add derived data such as star and meteor counts</li>
+<li>Makes it easier to filter images (e.g. only nighttime startrails)</li>
+<li>Choice of zero-configuration internal DB or advanced configuration</li>
+</ul>
+</li>
+<li>
+<p><strong>Images page</strong></p>
+<ul>
+<li>Shows the image icon only if at least one image exists for the day</li>
+<li>Timelapse and mini-timelapse icons have been updated</li>
+<li>Days with no images, startrails, keograms, or timelapses are no longer shown</li>
+<li>Directories in the <code>images</code> directory starting with <code>test</code> are now displayed</li>
+<li>Image, timelapse, keogram, and startrail icons are now aligned with the Delete button</li>
+</ul>
+</li>
+<li>
+<p>You can now view the mini-timelapse (if it exists) from the top of the <strong>Live View</strong> page</p>
+</li>
+<li>
+<p><strong>Overlay Editor</strong></p>
+<ul>
+<li>Enhanced Variable Manager for easier variable handling</li>
+<li>Introduced <strong>Blocks</strong> for adding related fields in one step</li>
+<li>New, more flexible variable formatting system</li>
+<li>Fields can be grouped and moved together</li>
+<li>New alignment tools:<ul>
+<li>Left alignment</li>
+<li>Equal vertical spacing</li>
+<li>Equal horizontal alignment</li>
+</ul>
+</li>
+<li>Rectangles can now be drawn with configurable border and background colours</li>
+<li>Solar calculations moved to the new <strong>Solar System</strong> module</li>
+<li>Font Manager now auto-detects fonts in use</li>
+<li><strong>Mask Editor</strong><ul>
+<li>Create and edit masks directly in the WebUI</li>
+<li>Accessible from the Image Manager</li>
+<li>Masks can be reused by other modules (e.g. star count, meteor detection)</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>Module Manager</strong></p>
+<ul>
+<li>UI now dynamically adapts to selected devices</li>
+<li>Search and filter modules by type</li>
+<li>New configuration field types:<ul>
+<li><strong>Secret</strong></li>
+<li><strong>I²C Input</strong></li>
+<li><strong>1-Wire Input</strong></li>
+<li><strong>AJAX Select</strong></li>
+<li><strong>GPIO</strong></li>
+<li><strong>Image</strong></li>
+<li><strong>Variable</strong></li>
+<li><strong>Position</strong></li>
+<li><strong>URL</strong></li>
+<li><strong>Host</strong></li>
+<li><strong>Graph</strong></li>
+</ul>
+</li>
+<li>Refactored module system for easier development</li>
+<li>New module installer (no git clone required)</li>
+<li>Modules are automatically upgraded</li>
+<li>New <strong>Device Manager</strong> for connected hardware</li>
+<li>Modules moved into the main Allsky directory tree</li>
+<li>
+<p><strong>New / Updated Modules</strong></p>
+<ul>
+<li>ADSB</li>
+<li>AI (deprecated)</li>
+<li>Dew Heater (PWM support; sensor data moving to Environment module)</li>
+<li>Fans</li>
+<li>GPIO (fixed)</li>
+<li>Boilerplate</li>
+<li>INA3221 (deprecated)</li>
+<li>Keogram</li>
+<li>LTR390 (deprecated)</li>
+<li>PMSX003</li>
+<li>Power</li>
+<li>Rain Detector (YOLO-based, by Muchen Han)</li>
+<li>Solar System</li>
+<li>Environment</li>
+<li>TPHBME680 (deprecated)</li>
+<li>S3 Upload (Titan Astro)</li>
+</ul>
+</li>
+<li>
+<p><strong>For Developers</strong></p>
+<ul>
+<li>Class-based module architecture (backward compatible)</li>
+<li>Reusable blocks and charts</li>
+<li>Overlay and chart helper functions</li>
+<li>Expanded metadata support:<ul>
+<li>Conditional fields</li>
+<li>Advanced DB control</li>
+<li>Overlay data exposure</li>
+<li>Install/uninstall hooks</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>Charts</strong></p>
+<ul>
+<li>Create and manage charts for camera, hardware, and analysis data</li>
+<li>Supports predefined and custom charts</li>
+<li>Tab grouping and date-range selection</li>
+<li>Auto-refresh support</li>
+<li>Chart types:<ul>
+<li>Line, Spline, Area</li>
+<li>Column, Bar</li>
+<li>3D Column, 3D Area</li>
+<li>Gauge</li>
+<li>Yes/No</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>System page</strong></p>
+<ul>
+<li>Auto refresh</li>
+<li>Watchdog service control</li>
+</ul>
+</li>
+<li>
+<p><strong>Helper Tools</strong></p>
+<ul>
+<li><strong>Check Allsky</strong> — runs <code>checkAllsky.sh</code></li>
+<li><strong>Startrails</strong> — brightness threshold tuning</li>
+<li><strong>Image Stretch</strong> — stretch comparison</li>
+<li><strong>Timelapse</strong> — bitrate and FPS tuning</li>
+</ul>
+</li>
+<li>
+<p>Left-hand menu can now collapse to icon-only mode</p>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>Startrails</strong></p>
+<ul>
+<li><code>generateForDay.sh</code> now accepts a file list</li>
+<li><code>allsky-config get_startrails_info</code> shows brightness thresholds used</li>
+</ul>
+</li>
+<li>
+<p>Camera images now save to <code>~/allsky/tmp/current_images</code>
+  and Live View reads from there.
+  The website <code>imageName</code> is now <code>/current/image.jpg</code>.</p>
+</li>
+<li>
+<p><code>generateForDay.sh</code> accepts additional arguments for keogram,
+  startrails, and timelapse creation.</p>
+</li>
+<li>
+<p><code>allsky-config bad_images_info --show_bad_images</code>
+  helps tune <strong>Remove Bad Images Threshold</strong> values.</p>
+</li>
+<li>
+<p>Updated to ZWO SDK v1.39 (new camera support, 366MC Pro removed)</p>
+</li>
+<li>Improved security for internet-connected Allsky cameras</li>
+</ul>
+<h4 id="bug-fixes">Bug Fixes<a class="headerlink" href="#bug-fixes" title="Permanent link">¶</a></h4>
+<ul>
+<li>Fixed missing thumbnails on days with thousands of images</li>
+<li>Fixed notification images not uploading to remote servers</li>
+<li>Fixed Allsky Map update failures with improved error reporting</li>
+</ul>
+<h4 id="deleted-settings">Deleted Settings<a class="headerlink" href="#deleted-settings" title="Permanent link">¶</a></h4>
+<ul>
+<li><strong>Image Overlay Settings</strong> removed from <strong>Allsky Settings</strong>
+  For ZWO cameras, <strong>Show Histogram Box</strong> is now handled by the
+  <strong>ZWO Exposure Box</strong> module.</li>
+</ul>
+<h4 id="new-settings">New Settings<a class="headerlink" href="#new-settings" title="Permanent link">¶</a></h4>
+<ul>
+<li><mark>Focus Mode</mark> — temporarily optimizes capture speed for focusing</li>
+<li><mark>Dark Frame Upper Threshold</mark></li>
+<li><mark>Remove Bad Images Threshold Count</mark></li>
+</ul>
+<hr>
+</details>
+<h2 id="v20241206">v2024.12.06<a class="headerlink" href="#v20241206" title="Permanent link">¶</a></h2>
+<details>
+<summary>v2024.12.06</summary>
+<h3 id="v20241206_06">v2024.12.06_06<a class="headerlink" href="#v20241206_06" title="Permanent link">¶</a></h3>
+<details open="open">
+<summary>v2024.12.06_06 - Point Release # 6</summary>
+<h4 id="important-notes">IMPORTANT NOTES:<a class="headerlink" href="#important-notes" title="Permanent link">¶</a></h4>
+<ul>
+<li>This is the LAST major release that supports Buster.</li>
+<li>This is the LAST major release that contains the "legacy" overlay method.</li>
+</ul>
+<h4 id="enhancements-changes_1">Enhancements / Changes<a class="headerlink" href="#enhancements-changes_1" title="Permanent link">¶</a></h4>
+<ul>
+<li>When 4 consecutive errors occur while capturing images with an RPi camera, the last error is now shown in the WebUI's "System Messages" section.</li>
+<li>The <code>allsky-config get_brightness_info</code> command now outputs the number of images used and not used in the startrails.</li>
+<li>Added a <a href="/documentation/troubleshooting/troubleshootingTools.html">Troubleshooting Tools</a> documentation page to list tools to aid in troubleshooting.</li>
+</ul>
+<h4 id="bug-fixes_1">Bug Fixes<a class="headerlink" href="#bug-fixes_1" title="Permanent link">¶</a></h4>
+<ul>
+<li>Fixed an issue where downloading the support log from the <strong>Getting Support</strong> page would hang the page.</li>
+<li>Fixed a couple issues with WebUI "System Messages":<ol>
+<li>Some messages were displayed hundreds or thousands of times rather than being displayed once with a number of occurrences greater than 1.</li>
+<li>A message was truncated when unable to download the <code>de421.bsp</code> file.</li>
+</ol>
+</li>
+<li>Fixed an issue with updates to the Allsky Map server failing because multiple double quotes were in a field.</li>
+<li>Fixed a rare situation where the <strong>Module Manager</strong> will fail to display any modules due to corruption in a module's metaData.</li>
+</ul>
+<h4 id="new-settings_1">New Settings<a class="headerlink" href="#new-settings_1" title="Permanent link">¶</a></h4>
+<ul>
+<li>None</li>
+</ul>
+</details>
+<h3 id="v20241206_05">v2024.12.06_05<a class="headerlink" href="#v20241206_05" title="Permanent link">¶</a></h3>
+<details>
+<summary>v2024.12.06_05 - Point Release # 5</summary>
+<h4 id="changes-that-may-require-action-upgrades-only_1">Changes that may require action (upgrades only)<a class="headerlink" href="#changes-that-may-require-action-upgrades-only_1" title="Permanent link">¶</a></h4>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The changes in this section may require settings changes;
+after upgrading, check that your settings and images look right.</p>
+</div>
+<ul>
+<li>If your Keogram <strong>Font Color</strong> contained three numbers you'll need to reverse the order of the numbers.<br>
+  This setting previously accepted two formats:<ol>
+<li><code>blue_number green_number red_number</code> (with spaces or commas separating the numbers) where each number is from <code>0</code> to <code>255</code>.</li>
+<li><code>#RRGGBB</code> where each two-digit pair goes from hex <code>00</code> to <code>ff</code>.</li>
+</ol>
+</li>
+</ul>
+<p>To be consistent with the hex order and with web pages, the order of the first format is now:
+  <code>red_number green_number blue_number</code> (red and blue switched places).<br>
+  The order of the second format did not change but it now accepts either 3 or 6 hex digits.<br>
+  See <a href="/documentation/settings/allsky.html#keogramfontcolor">the documentation</a> for more details on this setting.</p>
+<h4 id="enhancements-changes_2">Enhancements / Changes<a class="headerlink" href="#enhancements-changes_2" title="Permanent link">¶</a></h4>
+<ul>
+<li>The <code>allsky-config get_brightness_info</code> command now displays how many images were used, and not used, in each startrail image.
+  This is useful when setting the <strong>Brightness Threshold</strong>.</li>
+</ul>
+<h4 id="bug-fixes_2">Bug Fixes<a class="headerlink" href="#bug-fixes_2" title="Permanent link">¶</a></h4>
+<ul>
+<li>For RPi cameras, the length of time Allsky waits before timing out an image was increased.
+  For some Pi's, the prior 30-second timeout was too short when the Pi was extremely busy such as during timelapse creation.</li>
+<li>Entering a <strong>Locale</strong> in the WebUI that is not installed on the Pi displays an error message and lists the locales that ARE installed and tells the user how to install other locales.</li>
+<li>Mono cameras were calculating the mean image brightness twice: once prior to the initial save of the image and a second time when determining if the image was too dark or too bright.
+  The second time used a different formula than the first time.</li>
+</ul>
+<h4 id="new-settings_2">New Settings<a class="headerlink" href="#new-settings_2" title="Permanent link">¶</a></h4>
+<ul>
+<li><strong>None</strong></li>
+</ul>
+</details>
+<h3 id="v20241206_04">v2024.12.06_04<a class="headerlink" href="#v20241206_04" title="Permanent link">¶</a></h3>
+<details>
+<summary>v2024.12.06_04 - Point Release # 4</summary>
+<h4 id="changes-that-may-require-action-upgrades-only_2">Changes that may require action (upgrades only)<a class="headerlink" href="#changes-that-may-require-action-upgrades-only_2" title="Permanent link">¶</a></h4>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The changes in this section may require settings changes;
+after upgrading, check that your settings and images look right.</p>
+</div>
+<ul>
+<li>If your Keogram <strong>Font Color</strong> contained three numbers you'll need to reverse the order of the numbers.<br>
+  This setting previously accepted two formats:<ol>
+<li><code>blue_number green_number red_number</code> (with spaces or commas separating the numbers) where each number is from <code>0</code> to <code>255</code>.</li>
+<li><code>#RRGGBB</code> where each two-digit pair goes from hex <code>00</code> to <code>ff</code>.</li>
+</ol>
+</li>
+</ul>
+<p>To be consistent with the hex order and with web pages, the order of the first format is now:
+  <code>red_number green_number blue_number</code> (red and blue switched places).<br>
+  The order of the second format did not change but it now accepts either 3 or 6 hex digits.<br>
+  See <a href="/documentation/settings/allsky.html#keogramfontcolor">the documentation</a> for more details on this setting.</p>
+<h4 id="enhancements-changes_3">Enhancements / Changes<a class="headerlink" href="#enhancements-changes_3" title="Permanent link">¶</a></h4>
+<ul>
+<li>The <code>allsky-config get_brightness_info</code> command now displays how many images were used, and not used, in each startrails image.
+  This is useful when setting the <strong>Brightness Threshold</strong>.</li>
+</ul>
+<h4 id="bug-fixes_3">Bug Fixes<a class="headerlink" href="#bug-fixes_3" title="Permanent link">¶</a></h4>
+<ul>
+<li>For RPi cameras, the length of time Allsky waits before timing out an image was increased.
+  For some Pi's, the prior 30-second timeout was too short when the Pi was extremely busy such as during timelapse creation.</li>
+<li>Entering a <strong>Locale</strong> in the WebUI that is not installed on the Pi displays an error message and lists the locales that ARE installed and tells the user how to install other locales.</li>
+<li>Mono cameras were calculating the mean image brightness twice: once prior to the initial save of the image and a second time when determining if the image was too dark or too bright.
+  The second time used a different formula than the first time.</li>
+</ul>
+<h4 id="new-settings_3">New Settings<a class="headerlink" href="#new-settings_3" title="Permanent link">¶</a></h4>
+<ul>
+<li><strong>None</strong></li>
+</ul>
+</details>
+<h3 id="v20241206_5">v2024.12.06_04<a class="headerlink" href="#v20241206_5" title="Permanent link">¶</a></h3>
+<details>
+<summary>v2024.12.06_04 - Point Release # 4</summary>
+<h4 id="enhancements-changes_4">Enhancements / Changes<a class="headerlink" href="#enhancements-changes_4" title="Permanent link">¶</a></h4>
+<ul>
+<li>When upgrading from a recent version from Allsky you'll likely just need to restart Allsky without having to review the settings.
+  The installation script will tell you what to do.</li>
+<li>In addition to the WebUI telling you when a new Allsky version is available, an optional note about the new version will be displayed, such as
+  "Contains an important security update; please install".</li>
+<li>The Allsky "Status:" on the top of the WebUI now updates automatically every few seconds.</li>
+<li>The <strong>System</strong> WebUI page now appears very quickly and some of the data is automatically updated every few seconds.<br>
+  Usage of <code>~/allsky/tmp</code> is now displayed.<br>
+  The "Refresh" button is no longer needed so was removed.</li>
+<li>The <strong>Editor</strong> WebUI page will display a message in the unlikely event that the file is corrupted.</li>
+<li>RPi cameras sometimes hang while taking pictures. This used to hang Allsky, but it now times out instead.</li>
+<li>When RPi cameras are unable to take an image, an error message from the camera is added to the log file.
+  Previously the error message was written to a temporary file that was overwritten every exposure, thereby losing prior messages.</li>
+<li>A message is added to the WebUI if creation of a timelapse, startrails, or keogram fails during end-of-night processing.</li>
+<li>If the <strong>Keograms Font Color</strong> begins with a <strong>0</strong> and does not have 6 characters after it (e.g. <code>#fff</code>),
+  an error message is displayed in the WebUI.
+  Those values didn't produce the color expected (e.g. <code>#fff</code> produced blue labels, not white).</li>
+<li>The name of the Pi is shown at the top of the WebUI. This is useful for people with multiple Pi's.</li>
+</ul>
+<h4 id="bug-fixes_4">Bug Fixes<a class="headerlink" href="#bug-fixes_4" title="Permanent link">¶</a></h4>
+<ul>
+<li>The <strong>Getting Support</strong> WebUI page (and the related <code>support.sh</code> command) no longer fail with an "Argument list too long" message.<br>
+  They also provide more information to aid in troubleshooting.</li>
+<li>Setting a target temperature for cooled ZWO cameras now works.</li>
+<li><code>install.sh</code> no longer corrupts the Website configuration file when adding meteor fields.</li>
+<li><code>remoteWebsiteInstall.sh</code> now handles servers that don't return anything under certain circumstances.</li>
+<li>Permission denied errors from <code>moduleutil.php</code> when it tried to overwrite files ending in <code>-last</code> have been fixed.</li>
+<li>The Allsky Website now correctly colors aurora forecasts.</li>
+<li><code>upload.sh</code> no longer finds files that don't exist.</li>
+<li>During installation, the amount of RAM for non-Raspberry Pi boards is now determined correctly.
+  This is used to size swap space and populate the <strong>Computer</strong> setting.</li>
+</ul>
+<h4 id="deleted-settings_1">Deleted Settings<a class="headerlink" href="#deleted-settings_1" title="Permanent link">¶</a></h4>
+<ul>
+<li><strong>Notification Images</strong><br>
+  Notification images (e.g. "Allsky is starting up") provide valuable status and troubleshooting information so can no longer be disabled.</li>
+</ul>
+<h4 id="new-settings_4">New Settings<a class="headerlink" href="#new-settings_4" title="Permanent link">¶</a></h4>
+<ul>
+<li><strong>None</strong></li>
+</ul>
+</details>
+<h3 id="v20241206_03">v2024.12.06_03<a class="headerlink" href="#v20241206_03" title="Permanent link">¶</a></h3>
+<details>
+<summary>v2024.12.06_03 - Point Release # 3</summary>
+<h4 id="enhancements-changes_5">Enhancements / Changes<a class="headerlink" href="#enhancements-changes_5" title="Permanent link">¶</a></h4>
+<ul>
+<li>RPi cameras that report sensor temperature now support <strong>dark frames</strong>.<br>
+  The TEMPERATURE_C and TEMPERATURE_F variables can be displayed in overlays for these cameras.</li>
+</ul>
+<p>??? "Supported RPi cameras"</p>
+<div class="highlight"><pre><span></span><code>  - RPi cameras that report sensor temperature and support dark frames:
+      - HQ
+      - Module 3
+      - Arducam 16 MP
+  - These cameras do not support darks:
+      - Version 1
+      - imx290 60.00 fps
+      - Arducam 64 MP
+      - Arducam 462
+      - Waveshare imx219-d160
+      - Arducam 64 MB Owlsight
+      - OneInchEye IMX283
+</code></pre></div>
+<ul>
+<li>Dark frames are now saved as <code>.png</code> files for better quality.</li>
+</ul>
+<blockquote>
+<p>If you have any <code>.jpg</code> darks in <code>~/allsky/darks</code> we suggest re-doing your darks then removing the old <code>.jpg</code> darks.</p>
+</blockquote>
+<h4 id="bug-fixes_5">Bug Fixes<a class="headerlink" href="#bug-fixes_5" title="Permanent link">¶</a></h4>
+<ul>
+<li>MOON variables work in the <strong>Overlay Editor</strong> (<code>de421.bsp</code> downloads correctly).</li>
+<li>All the "Click here to ..." messages in the WebUI now work.</li>
+<li>Using <code>analyticsTracking.js</code> in an Allsky Website now works.</li>
+<li>An issue with adding images in overlays was fixed.</li>
+<li>The <code>remoteWebsiteInstall.sh</code> command now works if the <strong>Image Directory</strong> setting is empty.</li>
+<li>Duplicate System Messages now have the correct count of the number of times the problem occurred.</li>
+</ul>
+<h4 id="deleted-settings_2">Deleted Settings<a class="headerlink" href="#deleted-settings_2" title="Permanent link">¶</a></h4>
+<ul>
+<li><strong>Camera</strong> and <strong>Computer</strong><br>
+  These values are automatically set during installation so no longer need to be prompted for.</li>
+</ul>
+<h4 id="new-settings_5">New Settings<a class="headerlink" href="#new-settings_5" title="Permanent link">¶</a></h4>
+<ul>
+<li><mark>Equipment Info</mark><br>
+  Optional setting to add information about your equipment (e.g. NoIR camera).
+  This appears on any Allsky Website you have.</li>
+</ul>
+</details>
+<h3 id="v20241206_02">v2024.12.06_02<a class="headerlink" href="#v20241206_02" title="Permanent link">¶</a></h3>
+<details>
+<summary>v2024.12.06_02 - Point Release # 2</summary>
+<h4 id="enhancements-changes_6">Enhancements / Changes<a class="headerlink" href="#enhancements-changes_6" title="Permanent link">¶</a></h4>
+<ul>
+<li>The WebUI will now notify you when a new Allsky version is available.</li>
+<li><code>remoteWebsiteInstall.sh</code> does a better job explaining failures and fixes.</li>
+<li>
+<p>Additions to the <code>allsky-config</code> command:</p>
+<ul>
+<li>If you see a <strong>Multiple consecutive bad images</strong> message, run <code>allsky-config bad_images_info</code> to get suggestions.</li>
+<li>If a Website has trouble reading <code>data.json</code>, run <code>allsky-config check_post_data</code>.</li>
+<li><code>allsky-config move_images</code> is more robust and can move images back to <code>~/allsky/images</code>.</li>
+</ul>
+</li>
+<li>
+<p>If a Website is stuck on "Loading ..." because it can't find the current image, you’ll get a message telling you how to fix it.</p>
+</li>
+<li>Several Website files are now in subdirectories (e.g. <code>css</code>). No user action needed.</li>
+<li>You can now have custom notification images:
+  create <code>~/allsky/config/myFiles/notificationImages</code> and place files matching the names in <code>~/allsky/notificationImages</code>.</li>
+</ul>
+<h4 id="bug-fixes_6">Bug Fixes<a class="headerlink" href="#bug-fixes_6" title="Permanent link">¶</a></h4>
+<ul>
+<li>The problem with <code>de421.bsp</code> is fixed.</li>
+<li>Timelapse thumbnails now have the correct name.</li>
+<li>A security issue was fixed.</li>
+<li>Installing/upgrading is less likely to hang when there's a problem with an RPi camera.</li>
+<li>Fixed a typo in the <strong>ssl:check-hostname</strong> command in <code>testUpload.sh</code>.</li>
+<li><code>removeBadImages.sh</code> now works with mean values that have a comma in them.</li>
+</ul>
+<h4 id="new-settings_6">New Settings<a class="headerlink" href="#new-settings_6" title="Permanent link">¶</a></h4>
+<ul>
+<li><strong>None</strong></li>
+</ul>
+<h4 id="deleted-settings_3">Deleted Settings<a class="headerlink" href="#deleted-settings_3" title="Permanent link">¶</a></h4>
+<ul>
+<li><strong>None</strong></li>
+</ul>
+</details>
+<h3 id="v20241206_01">v2024.12.06_01<a class="headerlink" href="#v20241206_01" title="Permanent link">¶</a></h3>
+<details>
+<summary>v2024.12.06_01 - Point Release # 1</summary>
+<h4 id="enhancements-changes_7">Enhancements / Changes<a class="headerlink" href="#enhancements-changes_7" title="Permanent link">¶</a></h4>
+<ul>
+<li>
+<p>You can no longer enter <strong>Issues</strong> in GitHub (you can still enter <strong>Discussions</strong>).
+  Instead, use the <strong>Getting Support</strong> page in the WebUI to collect info needed to troubleshoot.
+  No private information is sent; it is kept in <code>~/allsky/env.json</code> and should never be uploaded.</p>
+</li>
+<li>
+<p>The WebUI <strong>Editor</strong> page now:</p>
+<ul>
+<li>Warns you about formatting errors (e.g. missing comma) and prevents saving until fixed.</li>
+<li>Highlights placeholders like <code>XX_NEED_TO_UPDATE_XX</code>.</li>
+</ul>
+</li>
+<li>
+<p>The WebUI now displays the status of Allsky (Running, Stopped, etc.).</p>
+</li>
+<li>You can specify a location to store images outside <code>~/allsky/images</code> (e.g. SSD) via <code>allsky-config move_images</code>.</li>
+<li><code>allsky-config get_brightness_info</code> helps tune the <strong>Brightness Threshold</strong>. See <a href="/documentation/explanations/startrails.html#brightnessthreshold">Startrails settings</a>.</li>
+<li><code>allsky-config compare_paths</code> helps map upload locations to URLs. See <a href="/documentation/explanations/serverLocationToURL.html">Mapping Server Locations to URLs</a>.</li>
+<li><code>allsky-config</code> can also adjust <code>~/allsky/tmp</code> size and swap; run <code>allsky-config</code> for options.</li>
+<li>New <code>meteors</code> directory exists in Websites (upload support added in a future release).</li>
+<li><code>remoteWebsiteInstall.sh</code> now prompts to upload startrails/keograms/timelapse and is more robust.</li>
+<li>Websites now show a detailed message when they can't find the image.</li>
+</ul>
+<h4 id="new-settings_7">New Settings<a class="headerlink" href="#new-settings_7" title="Permanent link">¶</a></h4>
+<ul>
+<li><strong>None</strong></li>
+</ul>
+<h4 id="deleted-settings_4">Deleted Settings<a class="headerlink" href="#deleted-settings_4" title="Permanent link">¶</a></h4>
+<ul>
+<li>Remote naming overrides were removed:
+  <strong>Remote Video File Name</strong>, <strong>Remote Keogram File Name</strong>, <strong>Remote Startrails File Name</strong>
+  were deleted from the <strong>Remote Website</strong> section.</li>
+</ul>
+<h4 id="bug-fixes_7">Bug Fixes<a class="headerlink" href="#bug-fixes_7" title="Permanent link">¶</a></h4>
+<ul>
+<li>Website icon sorting by date now works.</li>
+<li><code>remoteWebsiteInstall.sh</code> no longer fails if you have commands in the <strong>FTP Commands</strong> setting.</li>
+<li>Image resize setting changes are now saved.</li>
+<li><code>allsky.sh --help</code> now works and displays capture options.</li>
+<li>Many others including with modules and overlays.</li>
+</ul>
+</details>
+<h3 id="v20241206-base-release">v2024.12.06 - Base Release<a class="headerlink" href="#v20241206-base-release" title="Permanent link">¶</a></h3>
+<details>
+<summary>v2024.12.06 - Base Release</summary>
+<h4 id="changes-that-may-require-action-upgrades-only_3">Changes that may require action (upgrades only)<a class="headerlink" href="#changes-that-may-require-action-upgrades-only_3" title="Permanent link">¶</a></h4>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The changes in this section may require settings changes;
+after upgrading, check that your settings and images look right.</p>
+</div>
+<ul>
+<li>
+<p>The <code>config.sh</code> and <code>ftp-settings.sh</code> files are gone — their settings are now in the WebUI.<br>
+<strong>Possible action:</strong> The upgrade should migrate your prior settings unless you have a very old version.</p>
+</li>
+<li>
+<p>The <strong>CROP</strong> settings have been simplified to pixels from top/right/bottom/left.<br>
+<strong>Possible action:</strong> If you used crop, the upgrade will tell you to re-enter values.</p>
+</li>
+<li>
+<p><strong>Remove Bad Images Thresholds</strong> are now 0.0–1.0 (instead of 0–100).<br>
+<strong>Possible action:</strong> Upgrade should convert values, but verify.</p>
+</li>
+<li>
+<p>Mean brightness is now used to determine too bright/too dark (matches auto-exposure).<br>
+<strong>Possible action:</strong> You may need to adjust <strong>Remove Bad Images Thresholds</strong>.</p>
+</li>
+<li>
+<p>(ZWO only) Mean brightness is now 0.0–1.0 (was 0–255).<br>
+<strong>Possible action:</strong> If <strong>MEAN</strong> is on your overlay, adjust formatting.</p>
+</li>
+<li>
+<p>WebUI now hides settings within sections unless that section has an error.
+  Click the chevron-down icon to expand.<br>
+<strong>Possible action:</strong> Expect an adjustment period.</p>
+</li>
+<li>
+<p><code>check_allsky.sh</code> is now <code>checkAllsky.sh</code>.<br>
+<strong>Possible action:</strong> None.</p>
+</li>
+</ul>
+<h4 id="enhancements-changes_8">Enhancements / Changes<a class="headerlink" href="#enhancements-changes_8" title="Permanent link">¶</a></h4>
+<ul>
+<li>Local Website setup is now trivial: enable <strong>Use Local Website</strong> and optionally set <strong>Days To Keep on Pi Website</strong>.</li>
+<li>Remote Website setup is easier: only specify the top-level <strong>Image Directory</strong>.</li>
+<li>Remote install is easier using <code>remoteWebsiteInstall.sh</code> (uploads files and removes old ones).</li>
+<li>Images/videos/keograms/startrails can be written to a remote server in addition to (or instead of) a remote Website.</li>
+<li>New <code>allsky-config</code> command (similar to <code>raspi-config</code>); run it to see options.</li>
+<li><code>allsky-config samba</code> helps mount <code>~/allsky</code> on a PC/Mac. See <a href="/documentation/explanations/SAMBA.html">Copy files to / from a Pi</a>.</li>
+<li><code>testUpload.sh</code> uploads a test file and attempts to explain failures and fixes.</li>
+<li>Allsky only restarts when needed; tooltips indicate what will happen after changing settings.</li>
+<li><strong>Overlay Method</strong> <code>module</code> is now default for new installs; <code>legacy</code> will be removed in the next major release.</li>
+<li>Multiple ZWO cameras (and on Pi 5 multiple RPi cameras) are supported; install shows all attached cameras.</li>
+<li>If you swap cameras without telling Allsky, it won’t start and will tell you what to do.</li>
+<li>Unsupported cameras trigger a message on how to proceed / request support.</li>
+<li>All ZWO cameras as of September 7, 2024 are supported (library version 1.36).</li>
+<li>Support for new third-party RPi cameras added.</li>
+</ul>
+<blockquote>
+<p>Run <code>allsky-config show_supported_cameras</code> to see supported cameras.<br>
+ZWO list is large; check with:<br>
+<code>allsky-config show_supported_cameras --zwo | grep -i "CAMERA_NAME"</code><br>
+RPi list:<br>
+<code>allsky-config show_supported_cameras --rpi</code></p>
+</blockquote>
+<ul>
+<li><strong>LAN Dashboard</strong> and <strong>WLAN Dashboard</strong> now display all network adapters.</li>
+<li><code>endOfNight_additionalSteps.sh</code> is no longer supported (use the night-to-day module flow).</li>
+<li>Too-bright dark frames are deleted during capture (e.g. lens not covered).</li>
+<li>
+<p>DHCP can be configured via the <strong>Configure DHCP</strong> page (advanced option).</p>
+</li>
+<li>
+<p>Overlay changes:</p>
+<ul>
+<li>Overlay module debugging output is easier to read.</li>
+<li>Separate daytime and nighttime overlays are supported via the new <strong>Overlay Manager</strong> in the <strong>Overlay Editor</strong>.</li>
+<li><strong>Overlay Editor</strong> warns if fields are outside the image and can fix them.
+  See <a href="https://github.com/AllskyTeam/allsky/issues/3317">Ensure overlay fields stay within bounds</a>.</li>
+<li><strong>Overlay Editor</strong> won’t start if images aren’t being captured (prevents using notification image as background).</li>
+</ul>
+</li>
+<li>
+<p>See <a href="/documentation/modules/modules.html">Modules Documentation</a> for details on Extra Module changes.</p>
+</li>
+<li>
+<p>New Modules:</p>
+<ul>
+<li><strong>Allsky AI</strong> — Detects cloud cover using AI</li>
+<li><strong>Allsky Fans</strong> — Controls a fan based on CPU temperature</li>
+<li><strong>Allsky Border</strong> — Expands an image to include additional borders</li>
+<li><strong>Allsky HDD Temp</strong> — Retrieves hard drive temperatures using SMART</li>
+<li><strong>Allsky ina3221</strong> — Current and voltage measurements</li>
+<li><strong>Allsky influxdb</strong> — Writes data to influxdb</li>
+<li><strong>Allsky light</strong> — Determines light levels using a TSL2591</li>
+<li><strong>Allsky LightGraph</strong> — Displays a graph of day and night</li>
+<li><strong>Allsky ltr390</strong> — Measures UV levels</li>
+<li><strong>Allsky mlx90640</strong> — Captures an IR image of the sky (experimental)</li>
+<li><strong>Allsky Publish Data</strong> — Publish to Redis, MQTT, or REST</li>
+<li><strong>Allsky Temp</strong> — Reads up to three temperature sensors and controls a GPIO pin</li>
+</ul>
+</li>
+</ul>
+<h4 id="new-settings_8">New Settings<a class="headerlink" href="#new-settings_8" title="Permanent link">¶</a></h4>
+<ul>
+<li><mark>Images Sort Order</mark> — sort order for the <strong>Images</strong> page</li>
+<li><mark>Show Updated Message</mark> — hides the “Daytime images updated every...” message on <strong>Live View</strong></li>
+<li><mark>Nighttime Capture</mark> and <strong>Nighttime Save</strong> — nighttime equivalents of daytime settings</li>
+<li><mark>ZWO Exposure Type</mark> — how images should be taken (see docs)</li>
+</ul>
+<h4 id="deleted-settings_5">Deleted Settings<a class="headerlink" href="#deleted-settings_5" title="Permanent link">¶</a></h4>
+<ul>
+<li>Image <strong>Width</strong> and <strong>Height</strong> removed (use crop/resize)</li>
+<li><strong>Version 0.8 Exposure</strong> removed (now part of <strong>ZWO Exposure Type</strong>)</li>
+<li><strong>New Exposure Algorithm</strong> removed (always used now)</li>
+<li><code>REMOVE_BAD_IMAGES</code> removed; set <strong>Remove Bad Images Thresholds</strong> to <strong>0</strong> to disable brightness checks</li>
+<li><strong>Brightness</strong> settings removed; use <strong>Target Mean</strong></li>
+<li>(ZWO only) <strong>Offset</strong> removed</li>
+</ul>
+<h4 id="bug-fixes_8">Bug Fixes<a class="headerlink" href="#bug-fixes_8" title="Permanent link">¶</a></h4>
+<ul>
+<li><code>ASI_ERROR_TIMEOUT</code> messages are mostly gone. <strong>Yea!!!</strong></li>
+<li>ROI editor now uses the correct image name based on settings.
+  See <a href="https://github.com/AllskyTeam/allsky/pull/3337">Ensure the ROI editor uses the correct image</a>.</li>
+<li>Date formats in the overlay editor now work correctly</li>
+</ul>
+<h4 id="maintenance">Maintenance<a class="headerlink" href="#maintenance" title="Permanent link">¶</a></h4>
+<ul>
+<li>Setting names are now lowercase and boolean settings use <code>true</code>/<code>false</code> rather than <code>1</code>/<code>0</code>.
+  No user impact expected.</li>
+</ul>
+</details>
+<hr>
+</details>
+<h2 id="v20230501">v2023.05.01<a class="headerlink" href="#v20230501" title="Permanent link">¶</a></h2>
+<details>
+<summary>v2023.05.01</summary>
+<h3 id="v20230501_04">v2023.05.01_04<a class="headerlink" href="#v20230501_04" title="Permanent link">¶</a></h3>
+<details>
+<summary>v2023.05.01_04 - Point Release # 4</summary>
+<h4 id="enhancements">Enhancements<a class="headerlink" href="#enhancements" title="Permanent link">¶</a></h4>
+<ul>
+<li>Added support for <strong>Bookworm</strong>, the Pi Operating System released in October 2023.</li>
+</ul>
+<blockquote>
+<p>Support for the Buster Operating System will be removed after the next major Allsky release.</p>
+</blockquote>
+<ul>
+<li>Added support for the <strong>Pi 5</strong>.</li>
+<li>Increased suggested amount of swap by <strong>1 GB</strong> to help minimize timelapse creation problems.</li>
+<li>New camera support:<ul>
+<li>Arducam IMX462 camera (inexpensive 1920×1080 camera)</li>
+<li>All ZWO cameras as of October 19, 2023 (ZWO SDK 1.32)</li>
+</ul>
+</li>
+<li>The concept of <strong>Advanced Options</strong> no longer exists — <strong>all settings are always shown</strong>.</li>
+</ul>
+<h4 id="bug-fixes_9">Bug Fixes<a class="headerlink" href="#bug-fixes_9" title="Permanent link">¶</a></h4>
+<ul>
+<li>Uploads of mini-timelapse could fail if an image upload frequency was used.</li>
+<li>Multiple concurrent timelapse creations now work.</li>
+<li>Fixed reversed width/height for RPi Version 1 and IMX290 cameras.</li>
+<li>GCS uploads now correctly use <code>image.jpg</code> instead of <code>image-YYYYMMDDHHMMSS.jpg</code>.</li>
+<li>GCS uploads now error correctly if <code>gsutil</code> is missing.</li>
+<li><strong>Camera Model</strong> is no longer shown since it cannot be manually changed.
+  To change cameras, select <strong>Refresh</strong> in the <strong>Camera Model</strong> field.</li>
+<li><code>~/allsky/scripts</code> is now added to <code>PATH</code> (reboot may be required).</li>
+<li>Documentation clarified setting <code>IMAGE_DIR=${ALLSKY_WEBSITE}</code> for local-only Websites.</li>
+<li><strong>Images</strong> page now only shows icons when at least one file exists.</li>
+<li>Mean brightness is now calculated correctly for ZWO cameras in RAW16 mode.</li>
+</ul>
+</details>
+<hr>
+<h3 id="v20230501_03">v2023.05.01_03<a class="headerlink" href="#v20230501_03" title="Permanent link">¶</a></h3>
+<details>
+<summary>v2023.05.01_03 - Point Release # 3</summary>
+<h4 id="enhancements_1">Enhancements<a class="headerlink" href="#enhancements_1" title="Permanent link">¶</a></h4>
+<ul>
+<li>Added support for RPi Version 1 (ov5647) camera.</li>
+<li>Added FAQ explaining how to copy files to and from the Pi.</li>
+</ul>
+<h4 id="bug-fixes_10">Bug Fixes<a class="headerlink" href="#bug-fixes_10" title="Permanent link">¶</a></h4>
+<ul>
+<li><code>AUTO_STRETCH</code> now works.</li>
+<li>Improved latitude/longitude handling and fixed bugs.</li>
+<li>Allsky Map no longer updates when “Show on map” is disabled.</li>
+<li>Nighttime delays on ZWO cameras now work.</li>
+<li>Fixed missing-file error when installing a remote Website.</li>
+<li>Corrected default WebUI values for RPi cameras.</li>
+<li><strong>Overlay Editor fixes:</strong><ul>
+<li>Moon altitude corrected.</li>
+<li>Text no longer shifts when content changes.</li>
+<li>Snap rectangle alignment fixed.</li>
+<li>Editor works correctly when grid is disabled.</li>
+<li>Text alignment improved.</li>
+<li>Missing error for fields outside image dimensions added.</li>
+<li>Default stroke color fixed.</li>
+<li>X position no longer resets to 0.</li>
+<li>Sensor temperature variables hidden for unsupported cameras.</li>
+<li>Font ZIP handling fixed on macOS.</li>
+<li>Extra directory processing restricted to <code>.txt</code> and <code>.json</code>.</li>
+<li>Removed bottom margin.</li>
+<li>Visual warnings for out-of-bounds fields added.</li>
+<li>Fixed incorrect planet positions.</li>
+</ul>
+</li>
+</ul>
+</details>
+<hr>
+<h3 id="v20230501_02">v2023.05.01_02<a class="headerlink" href="#v20230501_02" title="Permanent link">¶</a></h3>
+<details>
+<summary>v2023.05.01_02 - Point Release # 2</summary>
+<h4 id="enhancements_2">Enhancements<a class="headerlink" href="#enhancements_2" title="Permanent link">¶</a></h4>
+<ul>
+<li><strong>Mean Threshold</strong> now has separate daytime and nighttime settings.</li>
+<li>Installer resumes from last step if interrupted.</li>
+<li>Installer skips unnecessary steps and may skip reboot when possible.</li>
+<li><em>(RPi Bullseye only)</em> Sensor temperature display support:<ul>
+<li>Add<br>
+<code>--metadata /home/pi/allsky/config/overlay/extra/libcamera.json</code>
+  to <strong>Extra Arguments</strong></li>
+<li>Add <code>AS_SensorTemperature</code> via the <strong>Overlay Editor → Variable Manager</strong></li>
+<li>Save and enable the field</li>
+</ul>
+</li>
+</ul>
+<h4 id="bug-fixes_11">Bug Fixes<a class="headerlink" href="#bug-fixes_11" title="Permanent link">¶</a></h4>
+<ul>
+<li>Day/night <strong>Mean Target</strong> values now apply correctly.</li>
+<li>Keograms, startrails, and timelapse generation at end-of-night fixed.</li>
+</ul>
+</details>
+<hr>
+<h3 id="v20230501_01">v2023.05.01_01<a class="headerlink" href="#v20230501_01" title="Permanent link">¶</a></h3>
+<details>
+<summary>v2023.05.01_01 - Point Release # 1</summary>
+<h4 id="enhancements_3">Enhancements<a class="headerlink" href="#enhancements_3" title="Permanent link">¶</a></h4>
+<ul>
+<li>Multiple consecutive bad images now trigger a visible warning image and system message.</li>
+<li><strong>Editor</strong> page buttons are fixed to the top with a quick “Top” button.</li>
+<li>Camera refresh allows swapping cameras of the same type.</li>
+<li>Installation speed significantly improved using prebuilt binaries.</li>
+<li>Camera changes reuse shared settings where appropriate.</li>
+<li>Hostname prompt only appears if hostname is still default.</li>
+<li>Startup now verifies camera-specific settings linkage.</li>
+<li><strong>ZWO only:</strong><ul>
+<li>New <strong>ZWO Experimental Exposure</strong> setting for nighttime auto-exposure.</li>
+<li><strong>Target Mean</strong> now configurable for day and night.</li>
+<li><strong>Mean Threshold</strong> now configurable.</li>
+</ul>
+</li>
+<li>All Wi-Fi interfaces are displayed.</li>
+<li>WebUI now validates numeric fields.</li>
+</ul>
+<h4 id="bug-fixes_12">Bug Fixes<a class="headerlink" href="#bug-fixes_12" title="Permanent link">¶</a></h4>
+<ul>
+<li>Improved bad-image detection defaults (do not disable; tune thresholds instead).</li>
+<li><code>s3</code> uploads now use <code>image.jpg</code>.</li>
+<li><code>scp</code> uploads now respect <code>REMOTE_USER</code>.</li>
+<li>Overlay bounds indicators added when fields move out of bounds.</li>
+<li>Compilation fixed on i386 platforms.</li>
+</ul>
+</details>
+<hr>
+<h3 id="v20230501_1">v2023.05.01<a class="headerlink" href="#v20230501_1" title="Permanent link">¶</a></h3>
+<details>
+<summary>v2023.05.01 - Base Release</summary>
+<h4 id="core-allsky">Core Allsky<a class="headerlink" href="#core-allsky" title="Permanent link">¶</a></h4>
+<ul>
+<li>New camera support:<ul>
+<li>All ZWO cameras as of May 1, 2023</li>
+<li>RPi HQ and Module 3</li>
+<li>ArduCam 16 &amp; 64 MP</li>
+<li>Global Shutter Camera not supported</li>
+</ul>
+</li>
+<li>Mini-timelapse videos supported.</li>
+<li>Installation improvements:<ul>
+<li>Swap size checks</li>
+<li>Memory-resident <code>/allsky/tmp</code></li>
+<li>Migration from <code>~/allsky-OLD</code></li>
+</ul>
+</li>
+<li>Added <code>check_allsky.sh</code> sanity-check script.</li>
+<li>Latitude/Longitude accept decimal or N/S/E/W formats.</li>
+<li>Removed obsolete <code>config.sh</code> settings.</li>
+<li>Added SCP and GCS upload support.</li>
+<li>Documentation consolidated and expanded.</li>
+<li>AUTO_STRETCH fully functional.</li>
+<li>Optional original filename uploads supported.</li>
+</ul>
+<h4 id="webui">WebUI<a class="headerlink" href="#webui" title="Permanent link">¶</a></h4>
+<ul>
+<li>WebUI is now mandatory for configuration.</li>
+<li>New links:<ul>
+<li><strong>Overlay Editor</strong></li>
+<li><strong>Module Manager</strong></li>
+<li><strong>Allsky Documentation</strong></li>
+</ul>
+</li>
+<li>Validation and defaults corrected.</li>
+<li>Extensive new settings added (camera type, exposure, overlays, login, focus metrics, etc.).</li>
+<li>Debug levels standardized.</li>
+<li>System messages now surface required actions.</li>
+</ul>
+<h4 id="allsky-website">Allsky Website<a class="headerlink" href="#allsky-website" title="Permanent link">¶</a></h4>
+<ul>
+<li>Website installed to <code>~/allsky/html/allsky</code>.</li>
+<li>Full customization of layout, icons, and appearance.</li>
+<li>Thumbnail creation now handled on the Pi.</li>
+<li>Configuration unified into <code>configuration.json</code>.</li>
+<li>Editor enforces configuration validity for local and remote Websites.</li>
+</ul>
+</details>
+<hr>
+</details>
+<h2 id="v20220301">v2022.03.01<a class="headerlink" href="#v20220301" title="Permanent link">¶</a></h2>
+<details>
+<summary>v2022.03.01</summary>
+<ul>
+<li>Switched to date-based release names.</li>
+<li>Added ability to have your allsky camera added to the Allsky Map by configuring:<ul>
+<li><a external="external" href="http://www.thomasjacquin.com/allsky-map">Allsky Map</a></li>
+<li><a external="external" href="https://github.com/AllskyTeam/allsky/wiki/allsky-Settings/_edit#map-settings">Map settings</a>
+  Added an <strong>Allsky Map Setup</strong> section to the WebUI to configure the map settings.
+  The <strong>Lens</strong> field now shows in the popout on the Allsky Website (if installed).</li>
+</ul>
+</li>
+<li>Significantly enhanced Wiki — more pages and more information, including known issues and fixes/workarounds.</li>
+<li>Added an option to keograms to make them full width, even if few images were used.
+  In <code>config.sh</code>, set <code>KEOGRAM_EXTRA_PARAMETERS="--image-expand"</code>.</li>
+<li>Added/changed/deleted settings (in <code>config.sh</code> unless otherwise noted):<ul>
+<li>Added <code>WEBUI_DATA_FILES</code> — one or more files whose contents are shown on the WebUI <strong>System</strong> page.
+  See <a external="external" href="https://github.com/AllskyTeam/allsky/wiki/WEBUI_DATA_FILES">this Wiki page</a>.</li>
+<li>Renamed <code>NIGHTS_TO_KEEP</code> to <code>DAYS_TO_KEEP</code> since it keeps <strong>days</strong>, not just nights.
+  If blank (<code>""</code>), <strong>all</strong> days are kept.</li>
+<li>Deleted <code>AUTO_DELETE</code> — replaced by <code>DAYS_TO_KEEP</code>.
+  <code>DAYS_TO_KEEP=""</code> is similar to the old <code>AUTO_DELETE=false</code>.</li>
+<li>Added <code>WEB_DAYS_TO_KEEP</code> — how many days of Allsky Website images/videos to keep when hosted on the Pi.</li>
+<li>Added <code>WEB_IMAGE_DIR</code> in <code>ftp-settings.sh</code> — allows copying images to a local Pi location (often the Website)
+  as well as to a remote machine (timelapse/startrails/keogram already supported this).</li>
+</ul>
+</li>
+<li>The RPi camera now supports the same text overlay features as ZWO, including the <strong>Extra Text</strong> file.</li>
+<li>Removed the harmless “deprecated pixel format used” message from the timelapse log (it confused people).</li>
+<li>Improved auto-exposure for RPi cameras.</li>
+<li>Refactored ZWO and RPi camera code to simplify maintenance and future features.</li>
+<li>Upload reliability improvements:<ul>
+<li>If Allsky is stopped/restarted during an upload, the upload continues (fewer temp files left behind).</li>
+<li>Additional cases where temp files were left on remote servers were reduced.</li>
+<li>Uploads now do extra error checking to aid debugging.</li>
+<li>Only one upload runs at a time; additional uploads log a message and exit.</li>
+</ul>
+</li>
+<li>Added <code>--debug</code> option to <code>allsky/scripts/upload.sh</code> to aid upload debugging.</li>
+<li>Upload log files are now only created on error (reduces SD card writes).</li>
+<li><code>removeBadImages.sh</code> also only creates a log file on error (saves a write per image).</li>
+<li>Allsky now stops with an error message on unrecoverable errors (e.g., no camera found), instead of restarting forever.</li>
+<li>More meaningful on-image messages:<ul>
+<li>Replaced generic “ERROR. See /var/log/allsky.log” with more specific messages
+  (e.g., “*** ERROR *** Allsky Stopped! ZWO camera not found!”).</li>
+<li>On restart, shows “Allsky software is restarting” instead of “stopping” then “starting”.</li>
+</ul>
+</li>
+<li>Timelapse debug output no longer prints a line for each of thousands of images, making real errors easier to spot.</li>
+<li>WebUI improvements:<ul>
+<li><strong>Camera Settings</strong> page now shows min/max/default values in a popup for numerical fields.</li>
+</ul>
+</li>
+<li>Startrails and Keogram creation no longer crash if invalid files are found.</li>
+<li>Removed <code>allsky/scripts/filename.sh</code>.</li>
+<li>
+<p>RPi WebUI setting <strong>Gamma</strong> renamed to <strong>Saturation</strong> (Gamma name was incorrect).</p>
+</li>
+<li>
+<p>Known issues:</p>
+<ul>
+<li>Startrails and keogram programs don’t work well if you bin differently during day vs night.
+  If you don’t save daytime images this won’t be a problem.</li>
+<li>Min/max/default values shown in the WebUI <strong>Camera Settings</strong> page (especially RPi) aren’t always correct,
+  particularly on Bullseye where many settings changed.</li>
+</ul>
+</li>
+</ul>
+</details>
+<h3 id="08-base-release">0.8 Base Release<a class="headerlink" href="#08-base-release" title="Permanent link">¶</a></h3>
+<details>
+<summary>0.8 Base Release</summary>
+<ul>
+<li>Workaround for ZWO daytime auto-exposure bug.</li>
+<li>Improved exposure transitions between day and night to avoid large brightness jumps.</li>
+<li>Decrease in ZWO sensor temperature.</li>
+<li>Many new settings, including splitting some settings into day and night versions.</li>
+<li>Added error checking and log messages in many areas to aid debugging.</li>
+<li>Support for <strong>notification images</strong>, such as “Allsky is starting up” and “Taking dark frames”.</li>
+<li>Ability to resize uploaded images.</li>
+<li>Ability to set thumbnail size.</li>
+<li>Ability to delete bad images (corrupt, too light, or too dark).</li>
+<li>Ability to set an image file name prefix.</li>
+<li>Ability to reset the USB bus if a ZWO camera isn’t found (requires the <code>uhubctl</code> command).</li>
+<li>Ability to specify the format of the time displayed on images.</li>
+<li>Ability to display temperature in Celsius, Fahrenheit, or both.</li>
+<li>Ability to set the bitrate on timelapse videos.</li>
+</ul>
+</details>
+<hr>
+<h2 id="07">0.7<a class="headerlink" href="#07" title="Permanent link">¶</a></h2>
+<details>
+<summary>0.7</summary>
+<ul>
+<li>Added Raspberry Pi HQ camera support based on Rob Musquetier’s fork.</li>
+<li>Added support for x86 architecture (Ubuntu, etc.).</li>
+<li>Temperature-dependent dark frame library.</li>
+<li>Added browser-based script editor.</li>
+<li>Added configuration variables to crop black areas around images.</li>
+<li>Added timelapse frame-rate setting.</li>
+<li>Changed default font size.</li>
+</ul>
+</details>
+<hr>
+<h2 id="06">0.6<a class="headerlink" href="#06" title="Permanent link">¶</a></h2>
+<details>
+<summary>0.6</summary>
+<ul>
+<li>Added daytime exposure and auto-exposure capability.</li>
+<li>Added <code>-maxexposure</code>, <code>-autoexposure</code>, <code>-maxgain</code>, and <code>-autogain</code> options.<br>
+  Using auto-exposure and auto-gain together may produce unexpected results (black frames).</li>
+<li>Autostart is now based on <strong>systemd</strong> and works on all Raspbian-based systems, including headless setups.
+  Remote control will not start multiple instances.</li>
+<li>Replaced the <code>nodisplay</code> option with the <code>preview</code> argument.
+  No preview is shown in autostart mode.</li>
+<li>When using the WebUI, camera options can be saved without rebooting the Pi.</li>
+<li>Added a publicly accessible preview to the WebUI: <code>public.php</code>.</li>
+<li>Changed exposure units to milliseconds instead of microseconds.</li>
+</ul>
+</details>
+<hr>
+<h2 id="05">0.5<a class="headerlink" href="#05" title="Permanent link">¶</a></h2>
+<details>
+<summary>0.5</summary>
+<ul>
+<li>Added <strong>Startrails</strong> (image stacking) with brightness control.</li>
+<li>Keogram and Startrails generation is now much faster thanks to a rewrite by Jarno Paananen.</li>
+</ul>
+</details>
+<hr>
+<h2 id="04">0.4<a class="headerlink" href="#04" title="Permanent link">¶</a></h2>
+<details>
+<summary>0.4</summary>
+<ul>
+<li>Added <strong>Keograms</strong> (a summary of the night in a single image).</li>
+</ul>
+</details>
+<hr>
+<h2 id="03">0.3<a class="headerlink" href="#03" title="Permanent link">¶</a></h2>
+<details>
+<summary>0.3</summary>
+<ul>
+<li>Added dark frame subtraction.</li>
+</ul>
+</details>
+<hr>
+<h2 id="02">0.2<a class="headerlink" href="#02" title="Permanent link">¶</a></h2>
+<details>
+<summary>0.2</summary>
+<ul>
+<li>Separated camera settings from code logic.</li>
+</ul>
+</details>
+<hr>
+<h2 id="01">0.1<a class="headerlink" href="#01" title="Permanent link">¶</a></h2>
+<details>
+<summary>0.1</summary>
+<ul>
+<li>Initial release.</li>
+</ul>
+</details>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer">
+        
+          
+          <a href="known_issues.html" class="md-footer__link md-footer__link--prev" aria-label="Previous: Known Issues">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"></path></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Known Issues
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="things.html" class="md-footer__link md-footer__link--next" aria-label="Next: Things we love">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Things we love
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"></path></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.expand", "toc.integrate", "content.code.annotate", "header.autohide", "navigation.footer", "search.suggest"], "search": "../assets/javascripts/workers/search.7a47a382.min.js", "tags": {"API Required": "api", "Data Capture": "data", "Experimental": "experimental", "Extra Module": "extra", "Hardware": "hw", "Hardware Required": "hardware", "Image Adjustments": "image", "MQTT": "mqtt", "Modules": "module", "Networking": "network", "Overlay Data": "overlay", "Overlays": "overlay", "Pipeline Day": "day", "Pipeline Night": "night", "Pipeline Periodic": "clock", "Power": "power", "Sensors": "sensor", "Software": "sw", "Weather": "weather"}, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.e71a0d61.min.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  
+<script id="init-glightbox">const lightbox = GLightbox({"touchNavigation": true, "loop": false, "zoomable": true, "draggable": true, "openEffect": "zoom", "closeEffect": "zoom", "slideEffect": "slide"});
+document$.subscribe(()=>{ lightbox.reload(); });
+</script></body></html>

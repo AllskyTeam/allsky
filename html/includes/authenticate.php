@@ -41,7 +41,7 @@ if ($useLogin) {
                 session_regenerate_id(true);
                 $_SESSION['auth'] = true;
                 $_SESSION['user'] = $adminUser;
-                unset($_SESSION['csrf']);
+                unset($_SESSION['csrf_token']);
                 redirect("/index.php?page=live_view");
             } else {
                 $throttle->fail();

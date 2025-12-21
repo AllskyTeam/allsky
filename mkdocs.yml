@@ -159,6 +159,14 @@ nav:
       - Startrails: allsky_guide/howtos/startrails.md
       - Timelapse: allsky_guide/howtos/timelapse.md
       - System Page Additions: allsky_guide/howtos/system_page.md
+      - Angle, Sunrise and Sunset: allsky_guide/howtos/angle_sunrise_sunset.md
+      - Exposure Settings: allsky_guide/howtos/exposure_settings.md
+      - Using SSL: allsky_guide/howtos/ssl.md
+      - Managing Files: allsky_guide/howtos/managing_files.md
+      - Support For A New Camers: allsky_guide/howtos/new_camera.md
+      - Mapping Server Locations To URLs: allsky_guide/howtos/mapping_server_locations.md
+      - Cleanup A Website: allsky_guide/howtos/cleanup_website.md
+      - The Allsky map: allsky_guide/howtos/allsky_map.md
     - Troubleshootings:
       - Reporting Problems: allsky_guide/troubleshooting/reporting.md
       - Tools: allsky_guide/troubleshooting/tools.md

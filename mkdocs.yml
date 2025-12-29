@@ -189,7 +189,10 @@ nav:
       - Lens Options: allsky_guide/hardware/lens.md
     - Known Issues: allsky_guide/known_issues.md
     - ChangeLog: allsky_guide/changelog.md
-    - Things we love: allsky_guide/things.md 
+    - Things we love:
+      - Introduction: allsky_guide/things/things.md
+      - Round Displays: allsky_guide/things/esp32.md
+      - Allskykamera: allsky_guide/things/allskykamera.md
     - 3d Printables: allsky_guide/3d.md   
     - Alternatives: allsky_guide/alternatives.md
     - Tags: tags.md    

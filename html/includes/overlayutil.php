@@ -48,6 +48,7 @@ class OVERLAYUTIL extends UTILBASE {
             'ImageName'        => ['get'],
             'Suggest'          => ['get'],
             'ValidateFilename' => ['get'],
+            'DeleteOverlay'    => ['get']
         ];
     }
 
@@ -1086,7 +1087,7 @@ class OVERLAYUTIL extends UTILBASE {
     }
 
     // Remove a user overlay; missing file is treated as success to keep UX simple
-    public function deleteOverlay(): void
+    public function getDeleteOverlay(): void
     {
         $name = $this->safeFileName((string)($_GET['filename'] ?? ''), ['json']);
         if ($name === '') $this->sendHTTPResponse('Missing filename.', 400);

@@ -46,18 +46,37 @@ Data used in this modules calculations is obtained from a variety of sources
 | Enable Pluto | Enable this to calculate ephemeris for Pluto |
 | Min Elevation | Above this elevation the planet will be considered visible |
 
+### ISS
+| Setting | Description |
+|--------|-------------|
+| Enable ISS | Select this to calculate ISS data |
+| Visible Only | When calculating passes only show those where ISS is visible |
+| Debug Passes | Enabling this will display the pass information when testing the module, only useful for diagnosing issues |
+| Pass Days | The number of days to look ahead for passes |
+| Number Of Passes | The number of passes to return |
+| AOS/LOS Elevation | The elevation at which Acquisition and Loss of satellite times are calculated |
+| Min Elevation | Only return passes where the max elevation is above this value |
+
+
+Calculating passes for ISS can be fairly slow so be careful with the number of days ahead you look. A sensible value is 5 to 15 days. Also note that the TLE data will become less accurate the further out you look.
+
 ### Satellites
 | Setting | Description |
 |--------|-------------|
 | NORAD Id's | List of Norad Id's for satellites, see below for more details |
-| Min Elevation | Above this elevation the psatelliteslanet will be considered visible |
+| Min Elevation | Above this elevation the satellites will be considered visible |
+
+!!! warning  "International Space Station"
+
+    Do not add ISS to the list of Norad Id's. Instead use the iSS tab to manage the space station.
+
 
 **NORAD ID's**
-You can enter norad ID's as a comma separated list of the numeric Id's or enter a group.
+Enter norad ID's as a comma separated list of the numeric Id's.
 
-So if for example you just want ISS then enter 25544 as the Norad Id. If however you want all weather satllites then enter 'weather' as the norad id.
+So if for example you just want ISS then enter 25544 as the Norad Id.
 
-Calculating large numbers of satellites can be slow, i.e. if you are using groups so be careful
+Calculating large numbers of satellites can be slow so be careful
 
 !!! info  "Element Set Data formats"
 
@@ -114,21 +133,43 @@ In the examples below replace Mercury with the relevant planet name
 
 ### The Satellites Variables
 
-In the examples below replace 25544 with the Norad Id
+In the examples below replace 66645 with the Norad Id.
 
 | Variable | Sample | Description |
 |--------|-----| -------------|
-| AS_25544_NAME | ISS (ZARYA) | The name of the Satellite |
-| AS_25544_ALT | -14deg 52' 59.3" | The altitude of the Satellite in Human readable text |
-| AS_25544_ALTD | -14 | The degrees portion of the altitude |
-| AS_25544_ALTM | 52 | The minutes portion of the altitude |
-| AS_25544_ALTS | 59 | The seconds portion of the altitude |
-| AS_25544_AZ | 107deg 35' 18.5" | The azimuth of the Satellite in Human readable text |
-| AS_25544_AZD | 107 | The degrees portion of the azimuth |
-| AS_25544_AZM | 35 | The minutes portion of the azimuth |
-| AS_25544_AZS | 18 | The seconds portion of the azimuth |
-| AS_25544_DISTANCE	| 4494.53506453087 | The planets distance from Earth in Kilometers |
-| AS_25544VISIBLE | No | Is the satellite visible |
+| AS_66645_NAME | ISS (ZARYA) | The name of the Satellite |
+| AS_66645_ALT | -14deg 52' 59.3" | The altitude of the Satellite in Human readable text |
+| AS_66645_ALTD | -14 | The degrees portion of the altitude |
+| AS_66645_ALTM | 52 | The minutes portion of the altitude |
+| AS_66645_ALTS | 59 | The seconds portion of the altitude |
+| AS_66645_AZ | 107deg 35' 18.5" | The azimuth of the Satellite in Human readable text |
+| AS_66645_AZD | 107 | The degrees portion of the azimuth |
+| AS_66645_AZM | 35 | The minutes portion of the azimuth |
+| AS_66645_AZS | 18 | The seconds portion of the azimuth |
+| AS_66645_DISTANCE	| 4494.53506453087 | The planets distance from Earth in Kilometers |
+| AS_66645VISIBLE | No | Is the satellite visible |
+
+If ISS passes are enabled then the following variables are generated
+
+| Variable | Sample | Description |
+|--------|-----| -------------|
+| AS_25544_VISIBLE_PASSES | None Found | A text variable that can be used on overlays if no passes are available ||
+| AS_25544_PASS1_RISE_TIME | Date | The date and time ISS rises above the 'Min Elevation' setting |
+| AS_25544_PASS1_CUL_TIME | Date | The date and time of the maximum elevation of the pass |
+| AS_25544_PASS1_SET_TIME | Date | The date and time ISS sets below the 'Min Elevation' setting |
+| AS_25544_PASS1_DURATION | Number | The duration of the pass in seconds |
+| AS_25544_PASS1_MAX_ELE | Number | The maximum elevation of the pass |
+| AS_25544_PASS1_VISIBLE | Boolean | Flag to indicate if any part of the pass will be visible Z
+
+If you add a table of pass information, or use one of the provided blocks, then you can place the AS_25544_VISIBLE_PASSES on top of the table. If there are no passes this will be displayed, useful for indicating that there are no passes
+
+## Blocks
+
+Several blocks are provide to make adding data to the overlays easier. These can be access from the variable manager in the overlay editor
+
+## Charts
+
+Several charts are available that display Moon related information. These can be found in the Chart Manager
 
 
 ## Available in

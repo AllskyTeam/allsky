@@ -153,7 +153,7 @@ def getEnvironmentVariable(name, fatal=False, debug=False, try_allsky_debug_file
 
     if not debug:
         result = read_environment_variable(name)
-        if result == None:    
+        if result == None:
             if try_allsky_debug_file:
                 result = get_value_from_debug_data(name)
             else:
@@ -836,7 +836,12 @@ def var_dump(variable):
     """
     pprint.PrettyPrinter(indent=2, width=128).pprint(variable)
 
-
+def dump_type(variable):
+    """
+    Helper function to display a variable type, prevents the front end consuming the output as a dom element
+    """
+    print(f"type({variable})={type(variable).__name__}", flush=True)
+    
 def log(level, text, preventNewline = False, exitCode=None, sendToAllsky=False):
     """ Very simple method to log data if in verbose mode
 
@@ -2050,7 +2055,6 @@ def update_database(structure, extra_data, event, source):
     """
     save_daytime = get_setting('savedaytimeimages')
     save_nighttime = get_setting('savenighttimeimages')
-
     tod = get_environment_variable('DAY_OR_NIGHT')
     if tod is None:
         tod = get_environment_variable('DAY_OR_NIGHT', debug=True)
@@ -2062,7 +2066,7 @@ def update_database(structure, extra_data, event, source):
         tod = tod.lower()
 
     update_database_flag = False
-
+ 
     if event == 'postcapture':
         if tod == 'day':
             mode = structure.get('database',{}).get('time_of_day_save', {}).get('day', 'enabled')
@@ -2083,6 +2087,7 @@ def update_database(structure, extra_data, event, source):
 
         if tod == 'night':
             mode = structure.get('database',{}).get('time_of_day_save', {}).get('night', 'enabled')
+
             if mode == 'enabled':        
                 if save_nighttime:
                     update_database_flag = True

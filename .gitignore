@@ -33,3 +33,31 @@ venv/
 
 # macOS Finder metadata
 .DS_Store
+# Local configuration files (instance-specific)
+config/
+env.json
+variables.json
+html/allsky/configuration.json
+html/allsky/viewSettings/
+scripts/allsky-config
+scripts/functions.php
+
+# Runtime data files
+html/allsky/data.json
+
+
+# Generated outputs
+# keep .php files there
+html/allsky/keograms/*.jpg
+html/allsky/keograms/thumbnails/
+html/allsky/videos/*.mp4
+html/allsky/videos/thumbnails/
+
+# Compiled binaries and build artifacts
+src/capture_RPi
+src/uhubctl
+src/include/allsky_common.h
+bin/
+
+# Temporary files
+tmp/

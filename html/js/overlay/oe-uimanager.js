@@ -541,6 +541,9 @@ class OEUIMANAGER {
                     variable = '${' + variable + '}';
                     let name = variable.replace(/^\$\{[^_]+_/, '${');
                     let field = this.#configManager.findFieldByName(name)
+                    if (field === null) {
+                        field = this.#configManager.findFieldByName(variable)
+                    }
                     let shape = this.#fieldManager.addField('text', field.name, null, field.format, field.sample)
                     this.setFieldOpacity(true)
                     this.#overlayLayer.add(shape)

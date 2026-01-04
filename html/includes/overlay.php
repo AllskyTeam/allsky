@@ -497,6 +497,8 @@ function DisplayOverlay($image_name)
                                             <p class="help-block">If blank then any expired fields will be removed. If non blank the value of an expired field will be replaced with this text</p>
                                         </div>
                                     </div>
+
+                                    <div class="alert alert-warning" role="alert">INFO: the sun, moon, planet and satellite options have been moved to a new module. Please install the 'Solar System' module to gain access to these.</div>
                                 </form>
 
                             </div>

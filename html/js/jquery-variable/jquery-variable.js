@@ -14,6 +14,7 @@
             selectStyle: 'single',
             showBlocks: false,
             fonts: [],
+            showBlocks: true,
             variableSelected: function (variable) { }
         }
 
@@ -107,7 +108,30 @@
 
         var buildUI = function () {
             $('#' + plugin.mmId + '-table').DataTable().destroy()
-
+            
+            let blocksHTMl = '';
+            let blocksTabHTML = '';
+            if (plugin.settings.showBlocks) {
+                blocksHTMl = `
+                    <div class="tab-pane" id="templates">
+                        <div class="as-var" id="${plugin.templatecontainer}">
+                            <div>
+                                <table id="${plugin.mmtemplateId}-table" class="display compact as-variable-list" style="width:98%;">
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Group</th>
+                                            <th>Description</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                </table>
+                            </div>
+                        </div>
+                    </div>                
+                `
+                blocksTabHTML = `<li><a href="#templates" role="tab" data-toggle="tab">Blocks</a></li>`;
+            }
             let variableHTML = `
                 <div class="modal as-variables" role="dialog" id="${plugin.mmId}">
                     <div class="modal-dialog modal-lg" role="document">
@@ -119,7 +143,7 @@
                             <div class="modal-body">
                                 <ul class="nav nav-tabs" role="tablist">
                                     <li class="active"><a href="#variables" role="tab" data-toggle="tab">Variables</a></li>
-                                    <li><a href="#templates" role="tab" data-toggle="tab">Blocks</a></li>
+                                    ${blocksTabHTML}
                                 </ul>
                                 <div class="tab-content" style="margin-top:15px;">
                                     <div class="tab-pane active" id="variables">
@@ -142,22 +166,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="tab-pane" id="templates">
-                                        <div class="as-var" id="${plugin.templatecontainer}">
-                                            <div>
-                                                <table id="${plugin.mmtemplateId}-table" class="display compact as-variable-list" style="width:98%;">
-                                                    <thead>
-                                                        <tr>
-                                                            <th>Name</th>
-                                                            <th>Group</th>
-                                                            <th>Description</th>
-                                                            <th></th>
-                                                        </tr>
-                                                    </thead>
-                                                </table>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    ${blocksHTMl}
                                 </div>
                             </div>
                             <div class="modal-footer">
@@ -205,134 +214,137 @@
             $('#' + plugin.mmId + '-table').DataTable().destroy()
             $('#' + plugin.mmtemplateId + '-table').DataTable().destroy()
 
-            plugin.templateTable = $('#' + plugin.mmtemplateId + '-table')
-                .DataTable({
+            if (plugin.settings.showBlocks) {
+                plugin.templateTable = $('#' + plugin.mmtemplateId + '-table')
+                    .DataTable({
+                        initComplete: function () {
+                            const searchDiv = $('#' + plugin.mmtemplateId + '-table_wrapper').find('.dt-search');
 
-                    initComplete: function () {
-                        const searchDiv = $('#' + plugin.mmtemplateId + '-table_wrapper').find('.dt-search');
+                            if (searchDiv.length) {
+                                searchDiv.css({
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '10px',
+                                    flexWrap: 'nowrap'
+                                });
 
-                        if (searchDiv.length) {
-                            searchDiv.css({
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '10px',
-                                flexWrap: 'nowrap'
-                            });
+                                const spinnerGroup = $(`
+                                    <div style="display: flex; align-items: center;">
+                                        <label for="dt-font-size" style="margin-right: 5px;">Font Size</label>
+                                        <input type="number" id="block-font-size" class="form-control input-sm" value="10" min="1" style="width: 80px;">
+                                    </div>
+                                `);
 
-                            const spinnerGroup = $(`
-                                <div style="display: flex; align-items: center;">
-                                    <label for="dt-font-size" style="margin-right: 5px;">Font Size</label>
-                                    <input type="number" id="block-font-size" class="form-control input-sm" value="10" min="1" style="width: 80px;">
-                                </div>
-                            `);
+                                spinnerGroup.find('input').val(plugin.settings.defaultFontSize);
 
-                            spinnerGroup.find('input').val(plugin.settings.defaultFontSize);
+                                const fontDropdown = $(`
+                                    <div style="display: flex; align-items: center; margin-right: 10px;">
+                                        <label for="dt-font-family" style="margin-right: 5px;">Font</label>
+                                        <select id="block-font" class="form-control input-sm">
+                                        </select>
+                                    </div>
+                                `);
 
-                            const fontDropdown = $(`
-                                <div style="display: flex; align-items: center; margin-right: 10px;">
-                                    <label for="dt-font-family" style="margin-right: 5px;">Font</label>
-                                    <select id="block-font" class="form-control input-sm">
-                                    </select>
-                                </div>
-                            `);
+                                plugin.settings.fonts.forEach(f => {
+                                    const $option = $('<option>').val(f.value).text(f.text);
+                                    if (f.value === plugin.settings.defaultFont) {
+                                        $option.prop('selected', true);
+                                    }
+                                    fontDropdown.find('select').append($option);
+                                });
 
-                            plugin.settings.fonts.forEach(f => {
-                                const $option = $('<option>').val(f.value).text(f.text);
-                                if (f.value === plugin.settings.defaultFont) {
-                                    $option.prop('selected', true);
+                                searchDiv.prepend(fontDropdown).prepend(spinnerGroup);
+                            }
+                        },
+                        ajax: {
+                            url: 'includes/moduleutil.php?request=TemplateList',
+                            dataSrc: '',
+                            type: 'GET',
+                            dataType: 'json',
+                            cache: false
+                        },
+                        order: [[1, 'asc'], [0, 'asc']],
+                        paging: false,
+                        scrollY: '50vh',
+                        scrollCollapse: true,
+                        autoWidth: true,
+                        columns: [
+                            {
+                                data: 'name',
+                                render: function (data, type, row, meta) {
+                                    let result = data
+                                    if (row.value !== '') {
+                                        result = '<b class="as-variable-has-value">' + data + '</b>'
+                                    }
+                                    return result
                                 }
-                                fontDropdown.find('select').append($option);
-                            });
+                            }, {
+                                data: 'group',
+                                visible: false
+                            }, {
+                                data: 'description'
+                            }, {
+                                data: null,
+                                width: '100px',
+                                render: function (item, type, row, meta) {
+                                    let buttons = `
+                                        <button type="button" class="btn btn-success btn-xs oe-add-field-template" data-group="${row.group}" data-block="${row.blockname}" data-filename="${row.filename}">Add</button>
+                                    `;
 
-                            searchDiv.prepend(fontDropdown).prepend(spinnerGroup);
+                                    return buttons;
+                                }
+                            }
+                        ],
+                        rowGroup: {
+                            dataSrc: 'group',
+                            startRender: function (rows, group) {
+                                var collapsed = !!templateCollapsedGroups[group];
+
+                                let icon = collapsed ? '<i class="fa-solid fa-angles-right"></i>' : '<i class="fa-solid fa-angles-down"></i>';
+                                rows.nodes().each(function (r) {
+                                    r.style.display = collapsed ? 'none' : '';
+                                });
+
+                                group = group.replace(/^allsky_/, '').toUpperCase();
+                                return $('<tr/>')
+                                    .append('<td colspan="9">' + icon + ' ' + group + ' (' + rows.count() + ' Blocks)</td>')
+                                    .attr('data-name', group)
+                                    .toggleClass('collapsed', collapsed);
+                            }
                         }
-                    },
-                    ajax: {
-                        url: 'includes/moduleutil.php?request=TemplateList',
-                        dataSrc: '',
+                    })
+
+                var templateCollapsedGroups = {};
+                $('#' + plugin.mmtemplateId + '-table tbody').on('click', 'tr.dtrg-start', function () {
+                    var name = $(this).data('name');
+                    templateCollapsedGroups[name] = !templateCollapsedGroups[name];
+                    plugin.templateTable.draw(false);
+                });
+
+                $(document).off('click', '.oe-add-field-template');
+                $(document).on('click', '.oe-add-field-template', (e) =>{
+                    let block = $(e.currentTarget).data('block');
+                    let filename = $(e.currentTarget).data('filename');
+                    let group = $(e.currentTarget).data('group');
+                    $.ajax({
+                        url: 'includes/moduleutil.php?request=Template&block=' + block + '&filename=' + filename + "&group=" + group,
                         type: 'GET',
                         dataType: 'json',
-                        cache: false
-                    },
-                    order: [[1, 'asc'], [0, 'asc']],
-                    paging: false,
-                    scrollY: '50vh',
-                    scrollCollapse: true,
-                    autoWidth: true,
-                    columns: [
-                        {
-                            data: 'name',
-                            render: function (data, type, row, meta) {
-                                let result = data
-                                if (row.value !== '') {
-                                    result = '<b class="as-variable-has-value">' + data + '</b>'
-                                }
-                                return result
-                            }
-                        }, {
-                            data: 'group',
-                            visible: false
-                        }, {
-                            data: 'description'
-                        }, {
-                            data: null,
-                            width: '100px',
-                            render: function (item, type, row, meta) {
-                                let buttons = `
-                                    <button type="button" class="btn btn-success btn-xs oe-add-field-template" data-group="${row.group}" data-block="${row.blockname}" data-filename="${row.filename}">Add</button>
-                                `;
-
-                                return buttons;
-                            }
+                        cache: false,             
+                        context: this
+                    }).done((fields) => {
+                        let result = {
+                            fields: fields,
+                            font: $('#block-font').val(),
+                            fontSize: $('#block-font-size').val()
                         }
-                    ],
-                    rowGroup: {
-                        dataSrc: 'group',
-                        startRender: function (rows, group) {
-                            var collapsed = !!templateCollapsedGroups[group];
-
-                            let icon = collapsed ? '<i class="fa-solid fa-angles-right"></i>' : '<i class="fa-solid fa-angles-down"></i>';
-                            rows.nodes().each(function (r) {
-                                r.style.display = collapsed ? 'none' : '';
-                            });
-
-                            group = group.replace(/^allsky_/, '').toUpperCase();
-                            return $('<tr/>')
-                                .append('<td colspan="9">' + icon + ' ' + group + ' (' + rows.count() + ' Blocks)</td>')
-                                .attr('data-name', group)
-                                .toggleClass('collapsed', collapsed);
-                        }
-                    }
-                })
-
-            var templateCollapsedGroups = {};
-            $('#' + plugin.mmtemplateId + '-table tbody').on('click', 'tr.dtrg-start', function () {
-                var name = $(this).data('name');
-                templateCollapsedGroups[name] = !templateCollapsedGroups[name];
-                plugin.templateTable.draw(false);
-            });
-
-            $(document).off('click', '.oe-add-field-template');
-            $(document).on('click', '.oe-add-field-template', (e) =>{
-                let block = $(e.currentTarget).data('block');
-                let filename = $(e.currentTarget).data('filename');
-                let group = $(e.currentTarget).data('group');
-                $.ajax({
-                    url: 'includes/moduleutil.php?request=Template&block=' + block + '&filename=' + filename + "&group=" + group,
-                    type: 'GET',
-                    dataType: 'json',
-                    cache: false,             
-                    context: this
-                }).done((fields) => {
-                    let result = {
-                        fields: fields,
-                        font: $('#block-font').val(),
-                        fontSize: $('#block-font-size').val()
-                    }
-                    $(document).trigger('addFields', result);
-                });                 
-            });
-
+                        $(document).trigger('addFields', result);
+                    });                 
+                });
+            } else {
+                $('#templates').hide();
+            }
+            
             var collapsedGroups = {};
             plugin.variableTable = $('#' + plugin.mmId + '-table')
                 .on('preXhr.dt', function (e, settings, data) {

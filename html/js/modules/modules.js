@@ -973,6 +973,7 @@ class MODULESEDITOR {
 								variable: data,
 								selectStyle: selectType,
 								valueDiv: key + '_value',
+								showBlocks: false,
 								variableSelected: function (variable) {
 									$('#' + key).val(variable)
 								}

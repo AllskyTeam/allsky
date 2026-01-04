@@ -84,6 +84,9 @@ function DisplayModule()
 
 <link rel="stylesheet" href="/css/charts.css?c=<?php echo ALLSKY_VERSION; ?>" />
 
+<script src="/js/jquery-satpicker/jquery-satpicker.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+
+
 <div class="panel panel-allsky">
 	<div class="panel-heading"><i class="<?php echo $pageIcon ?>"></i> <?php echo $pageHeaderTitle ?></div>
     <div class="panel-body">

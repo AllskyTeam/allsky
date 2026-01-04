@@ -639,7 +639,8 @@ class MODULESEDITOR {
 			'select2': [],
 			'position': [],
 			'urlcheck': [],
-			'chart': []
+			'chart': [],
+			'satpicker': []
 		}
 
 		target = $(target)
@@ -852,6 +853,51 @@ class MODULESEDITOR {
 								preferredFormat: 'hex3'
 							}
 						})
+					}
+
+					if (fieldType == 'satpicker') {
+						inputHTML = '<input id="' + key + '" name="' + key + '" class="form-control" disabled="disabled" value="' + fieldValue + '"' + required + fieldDescription + '>';
+						extraClass = 'input-group';
+						inputHTML = '\
+							<div class="row">\
+								<div class="col-xs-7">\
+								' + inputHTML + '\
+								</div>\
+								<div class="col-xs-5">\
+									<button type="button" class="btn btn-default" id="open-satpicker-' + key + '" data-source="' + key + '">...</button>\
+									<button type="button" class="btn btn-default" id="reset-satpicker-' + key + '" data-source="' + key + '"><i class="fa-solid fa-rotate-right"></i></button>\
+								</div>\
+							</div>\
+						';
+
+
+						var picker = $.satellitePicker({
+							dataUrl: "/includes/satutil.php?request=Satellites",
+							preselected: fieldValue,
+							onSubmit: function (csv, selected) {
+								$(`#${key}`).val(csv);
+							}
+						});
+
+						jQuery(document).on("click", "#pickSatBtn", function () {
+							picker.open();
+						});
+
+
+						$(document).off('click', '#reset-satpicker-' + key)
+						$(document).on('click', '#reset-satpicker-' + key, (event) => {
+							let el = $(event.target).data('source');
+							$('#' + el).val('');
+						});
+
+						$(document).off('click', '#open-satpicker-' + key)
+						$(document).on('click', '#open-satpicker-' + key, (event) => {
+							let el = $(event.target).data('source');
+							let data = $('#' + el).val();
+
+							picker.open();
+						});
+
 					}
 
 					if (fieldType == 'gpio') {

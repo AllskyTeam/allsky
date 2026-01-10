@@ -1527,6 +1527,15 @@ class MODULESEDITOR {
 		}
 		let popover = 'data-toggle="popover" data-delay=\'{"show": ' + delay + ', "hide": 200}\' data-placement="top" data-trigger="hover" title="' + testTitle + '"'
 
+		let dayChecked = ''
+		let nightChecked = ''
+		if (this.#settings.tod !== undefined) {
+			if (this.#settings.tod == 'day') {
+				dayChecked = 'checked'
+			} else {
+				nightChecked = 'checked'
+			}
+		}
 
 		let testButton = `
         	<div class="hidden as-module-test">
@@ -1536,9 +1545,9 @@ class MODULESEDITOR {
                 <div class="pull-left hidden ml-3 as-module-test" id="module-settings-dialog-test-tod-wrapper">
 										<form id="module-test-form" autocomplete="off">
 											<div class="switch-field boxShadow as-module-test-option-wrapper">
-													<input id="switch_day_as-module-test-option" class="form-control" type="radio" name="as-module-test-option" value="day" checked  ${testDisabled}/>
+													<input id="switch_day_as-module-test-option" class="form-control" type="radio" name="as-module-test-option" value="day" ${dayChecked}  ${testDisabled}/>
 													<label style="margin-bottom: 0px;" for="switch_day_as-module-test-option">Day</label>
-													<input id="switch_night_as-module-test-option" class="form-control" type="radio" name="as-module-test-option" value="night"  ${testDisabled}/>
+													<input id="switch_night_as-module-test-option" class="form-control" type="radio" name="as-module-test-option" value="night"  ${nightChecked} ${testDisabled}/>
 													<label style="margin-bottom: 0px;" for="switch_night_as-module-test-option">Night</label>
 											</div>
 										</form>

@@ -63,9 +63,10 @@ The section is a list of values, the table below just shows the available fields
 |sample	|This is a sample value used in the Overlay manager, typically this is not needed as you can preview live data in the overlay manager|
 |group	|This the group the variable belongs to. This is used in the variable manager to group variables.|
 |description	|The description of the variable, used in the variable manager|
+|type | The type of the variable. To find all of the available options look at the 'type' field on the 'Text Properties' editor in the overlay manager, diblue click on a field to display this |
 |dbtype	|(Optional). If writing this field to the database this specifies the type of column created|
 |**database** || 
-|Include_true	|If the database is enabled but include_all is ‘false’ then setting this to ‘true’ will write this value to the database|
+|include	|If the database is enabled but include_all is ‘false’ then setting this to ‘true’ will write this value to the database|
 
 ## The ‘arguments’ section
 

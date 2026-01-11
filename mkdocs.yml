@@ -264,6 +264,11 @@ nav:
       - Charts: developer_guide/charts.md
       - Blocks: developer_guide/blocks.md
       - Dependencies: developer_guide/dependencies.md
+      - Building a Module:
+        - Overview: developer_guide/building_module/overview.md
+        - Simple Module: developer_guide/building_module/simple_module.md
+        - Accessing A sensor: developer_guide/building_module/accessing_sensor.md
+        - 3rd Party API: developer_guide/building_module/3rd_party_api.md      
     - SDK Reference:
       - Shared Module: allsky_shared.md
       - Base Class: allsky_base.md

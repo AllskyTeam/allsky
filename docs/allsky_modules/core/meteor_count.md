@@ -6,7 +6,7 @@ tags:
 
 ## Description
 
-This module counts stars in an image. It utilises a couple of algorithms to acheive this.
+This module counts meteors in an image. It utilises a couple of algorithms to acheive this.
 
 
 !!! warning  "Create a mask"
@@ -30,9 +30,7 @@ The following settings are available in the module
 |--------|-------------|
 | Use clearsky| If the clearsky module is enabled then this will be used to determine if the star count module should even run |
 | Mask Path | The mask to apply to the image |
-| Detection Method | Either fast or slow. The Fast detection is a lot faster but less accurate |
-| Scale Factor | Amount to scale the image by before detecting stars. Reducing the image size will speed up both detection methods |
-| Min Star Size | The minimum size of a star in the image |
+| Min Length | The minimum length of a streak|
 
 ### The Debug Options
 The debug options allow you to fine tune the settings and annotate the main image so see what the algorithms are detecting.
@@ -41,10 +39,6 @@ The debug options allow you to fine tune the settings and annotate the main imag
 |--------|-------------|
 | Enable Debug Mode | Enables debug mode |
 | Annotate Main | If enabled any detected stars will be circled on the captured image |
-| Colour | The colour for the circle when annotating the main image |
-| Debug Image | The path to a file used to test the algorithms. This path must be on the local pi |
-| Debug Image Name | When using a debug image the resulting detected image will be saved as this name |
-
 
 !!! info  "Tip"
  

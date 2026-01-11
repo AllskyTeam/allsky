@@ -15,3 +15,4 @@ The following points should be considered when developing modules
 - DO NOT write modules that take a long time to execute and put them in the capture pipelines, this can cause delays in capturing imgages
 - Make use of the functions available in the [Shared Module](../../allsky_shared.md){ target="_blank" rel="noopener" .external } module
 - Make use of the env.json file, by setting ```"secret": "true"``` where required for module arguments, This ensures that sensitive data is never passed outside of Allsky
+- If you are using the database ensure you setup the required purging

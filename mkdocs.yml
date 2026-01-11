@@ -220,7 +220,7 @@ nav:
         - Clear Sky: allsky_modules/core/clear_sky.md
         - Export: allsky_modules/core/export.md
         - Pi Status: allsky_modules/core/pi_status.md
-        - Imtermediate Image: allsky_modules/core/imtermediate_image.md
+        - Intermediate Image: allsky_modules/core/intermediate_image.md
     - Extra Modules:
       - Environment: allsky_modules/extra/environment.md    
       - Dew Heater: allsky_modules/extra/dew_heater.md
@@ -261,6 +261,7 @@ nav:
       - Meta Data Example: developer_guide/meta_data_example.md
       - Available Fields: developer_guide/available_fields.md
       - Shared Libraries: developer_guide/shared_libraries.md
+      - Allsky Database: developer_guide/database.md
       - Charts: developer_guide/charts.md
       - Blocks: developer_guide/blocks.md
       - Dependencies: developer_guide/dependencies.md
@@ -268,7 +269,8 @@ nav:
         - Overview: developer_guide/building_module/overview.md
         - Simple Module: developer_guide/building_module/simple_module.md
         - Accessing A sensor: developer_guide/building_module/accessing_sensor.md
-        - 3rd Party API: developer_guide/building_module/3rd_party_api.md      
+        - 3rd Party API: developer_guide/building_module/3rd_party_api.md
+        - The database: developer_guide/building_module/database.md   
     - SDK Reference:
       - Shared Module: allsky_shared.md
       - Base Class: allsky_base.md

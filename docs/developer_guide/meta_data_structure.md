@@ -39,17 +39,14 @@ This section defines what data the module will generate for use in the overlays.
 
 |Name	|Description|
 |-----|-----------|
-|**database**	|See the updating the database section for details|
-|enabled	|(Optional) “true” if this module will write data to the database|
-|table	|(Optional) If enable then this field IS required and contains the name of the table to write data to. The convention is the module name|
-|pk	|(Optional) If enable then this field IS required and contains the primary key for the database. This is either ‘id’ or an Allsky variable name|
+|enabled	|(Optional) “true” if this module will write data to the database. Normally you would set this to true, typically on setting it to false when developing or testing |
+|table	|(Optional) If enable then this field IS required and contains the name of the table to write data to. The convention is the module name. |
+|pk	|(Optional) If enable then this field IS required and contains the name of the primary key for the database. This should always be 'id' |
+|pk_source | (Optional) If enable then this field IS required and contains the variable that the primary key (id) will be obtained from, If omitted the last ime timestamp or current timestamp will be used |
 |pk_type	|(Optional) If enable then this field IS required and contains the primary key. Set this to ‘int’|
-|Include_all	|(Optional) If enable then this field IS required and determines if all extra data values are written to the database. If “false” then you can specify which data is written against the |extra data fields definitions|
+|Include_all	|(Optional) If enable then this field IS required and determines if all extra data values are written to the database. If “false” then you can specify which data is written against the extra data fields definitions|
 |time_of_day_save	|(Optional) Determines how  data is saved for each pipeline.  |
-|**info**	|(Options) This section is reserved for use by the Allsky team. If you feel you need to use it please create a discussion on Gihub|
-|count	|(Optional) Some modules will write multiple versions of the same variable i.e. AS_FAN1, AS_FAN2. This determines how many of these will be created. Its an n-1 so setting to 5 will allow for 4 variables|
-|firstblank	|(Optional) If set to true then the first value will not have a suffix i.e. AS_FAN, AS_FAN1|
-  
+
 ### The ‘values’ section
 
 This section defines all of the extra data that the module will generate for use in overlays. The information defined here is used throughout core Allsky to format and present the data.

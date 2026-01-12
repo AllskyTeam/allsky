@@ -17,12 +17,12 @@ This module allows you to control a GPIO pin that can in turn be used to drive a
 
 Whilst the electronics to do this are beyond the scope of this documentation some examples are provided as is.
 
-The Environment module is also required to provide the temperatire and humidity for this module. The environment module should be placed before this module in the pipeline.
+The Environment module is also required to provide the temperature and humidity for this module. The environment module should be placed before this module in the pipeline.
 
 There are two modes of operation for the dew heater
 
   - Digital - The heater is either on or off
-  - Pulse Width Modulation (PWM) - The heater voltage is 'controlled' by the mosfet as required
+  - Pulse Width Modulation (PWM) - The heater voltage is 'controlled' by the mosfet between 0 and 100%. This allows for finer control of the heater
    
 ## Settings
 The following settings are available in the module
@@ -64,8 +64,8 @@ The settings on this tab determine when the heater is enabled or disabled
 | Setting | Description |
 |--------|-------------|
 | Delay | The number of seconds between reading the sensors, 0 switches this off and the sensor is read every time the module runs |
-| Limit | If the temperature is within this many degrees of the dew point, the heater will be enabled or disabled. |
-| Forced | Always enable the heater when the ambient termperature is below this value; 0 disables this. |
+| Limit | If the temperature is within this many degrees of the dew point, the heater will be enabled or disabled. This is probably the most important setting as it determines if the heater is on or off |
+| Forced | Always enable the heater when the ambient termperature is below this value; 0 disables this. This is useful as a quick override if you are going to have prolonged dew |
 | Max Time | The maximum time in seconds for the heater to be on. 0 disables this. |
 | Daytime Disable | Disable the dew heater during the daytime |
 
@@ -78,6 +78,7 @@ The settings on this tab are used to help test the module
 | Temperature | The temperature to use for testing |
 | Dewpoint | The depoint to use for testing |
 
+You can use these values to force the temperature and dewpoint values used by the module. This is useful for testing that the other settings are producing the results you expect.
 
 ## Schematics
 
@@ -87,6 +88,32 @@ The settings on this tab are used to help test the module
 /// caption
 Example Mosfet driven dew heater
 ///
+
+## Tips
+Setting up the dew heater can be a little tricky so this section provides some tips on gettin git all running.
+
+Its best to start without PWM enabled just to confirm that your hardware is all working so to do this;
+
+  - Ensure that ALL PWN options are off
+  - Set the correct GPIO pin for your heater
+  - Set the limit to 5
+
+These setting will enable the dew heater when the temperature is within 5 degrees or less of the dew point
+
+## FAQ
+
+- My heater stays on all of the time
+  - Set the Allsky debug level to 4 and use the 'Test Module' button in the dew heater settings. This will display some debug messages explaining why the heater is in the state it is
+  - Check the limit value is not too large. Since the heater is enabled when the dewpoint is within this many degrees of the temeprature large values will cause the heater to stay on
+  - Check the 'Forced Temperature' value is not set. Setting this to a low value will also cause the heater to remain on
+  - Check your hardware. If you are using a relay, not recommended, then some require an inverted output. The 'Invert relay' option will enable or disable this.
+
+- My heater never switches on
+  - Set the Allsky debug level to 4 and use the 'Test Module' button in the dew heater settings. This will display some debug messages explaining why the heater is in the state it is
+  - Check your hardware. If you are using a relay, not recommended, then some require an inverted output. The 'Invert relay' option will enable or disable this.
+
+- My heater switches on but doesnt clear the dew
+  - Confirm that the heater has sufficient power
 
 ## Important Notes
 

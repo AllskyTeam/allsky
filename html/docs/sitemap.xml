@@ -2,434 +2,490 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://docs.allsky.local/index.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_api.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_base.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_shared.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/tags.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_guide/3d.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_guide/allsky.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_guide/alternatives.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_guide/changelog.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_guide/faq.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_guide/glossary.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_guide/known_issues.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_guide/server.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_guide/things.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_guide/website.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_guide/hardware/camera.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_guide/hardware/lens.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_guide/hardware/pi.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_guide/howtos/allsky_map.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_guide/howtos/angle_sunrise_sunset.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_guide/howtos/cleanup_website.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_guide/howtos/constellation_overlay.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_guide/howtos/dark_frames.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_guide/howtos/exposure_settings.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_guide/howtos/keograms.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_guide/howtos/layout.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_guide/howtos/managing_files.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_guide/howtos/mapping_server_locations.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_guide/howtos/new_camera.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_guide/howtos/ssl.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_guide/howtos/startrails.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_guide/howtos/system_page.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_guide/howtos/timelapse.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_guide/howtos/helper_tools/image_stretch.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_guide/howtos/helper_tools/startrails.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_guide/howtos/helper_tools/timelapse.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_guide/overlays/extra.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_guide/overlays/fieldsandvariables.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_guide/overlays/formatting.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_guide/overlays/how.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_guide/overlays/interface.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_guide/overlays/overview.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_guide/overlays/sunmoon.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_guide/overlays/tips.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_guide/settings/allsky.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_guide/settings/website.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
+    </url>
+    <url>
+         <loc>https://docs.allsky.local/allsky_guide/things/allskykamera.html</loc>
+         <lastmod>2026-01-12</lastmod>
+    </url>
+    <url>
+         <loc>https://docs.allsky.local/allsky_guide/things/esp32.html</loc>
+         <lastmod>2026-01-12</lastmod>
+    </url>
+    <url>
+         <loc>https://docs.allsky.local/allsky_guide/things/things.html</loc>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_guide/troubleshooting/flicker.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_guide/troubleshooting/hardware.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_guide/troubleshooting/others.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_guide/troubleshooting/reporting.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_guide/troubleshooting/rpicam.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_guide/troubleshooting/startrails.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_guide/troubleshooting/swap.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_guide/troubleshooting/timelapse.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_guide/troubleshooting/tools.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_guide/troubleshooting/uploads.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_guide/troubleshooting/website.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_guide/troubleshooting/webui.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_guide/troubleshooting/zwo.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_modules/introduction.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
+    </url>
+    <url>
+         <loc>https://docs.allsky.local/allsky_modules/core/clear_sky.html</loc>
+         <lastmod>2026-01-12</lastmod>
+    </url>
+    <url>
+         <loc>https://docs.allsky.local/allsky_modules/core/export.html</loc>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_modules/core/exposure_rect.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_modules/core/histogram.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
+    </url>
+    <url>
+         <loc>https://docs.allsky.local/allsky_modules/core/intermediate_image.html</loc>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_modules/core/load_image.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_modules/core/mask_image.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
+    </url>
+    <url>
+         <loc>https://docs.allsky.local/allsky_modules/core/meteor_count.html</loc>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_modules/core/overlay.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
+    </url>
+    <url>
+         <loc>https://docs.allsky.local/allsky_modules/core/pi_status.html</loc>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_modules/core/save_image.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_modules/core/star_count.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_modules/extra/adsb.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_modules/extra/air_quality.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_modules/extra/border.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_modules/extra/dew_heater.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_modules/extra/discord.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_modules/extra/environment.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_modules/extra/esp32round.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_modules/extra/fans.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_modules/extra/gpio.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_modules/extra/gps.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_modules/extra/hddtemp.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_modules/extra/image_tuning.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_modules/extra/ina3221.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_modules/extra/influxdb.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_modules/extra/introduction.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_modules/extra/json_import.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_modules/extra/light.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_modules/extra/lightning.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_modules/extra/ltr390.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_modules/extra/mlx90640.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_modules/extra/mqtt_subscribe.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_modules/extra/owm.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_modules/extra/power.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_modules/extra/publish_data.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_modules/extra/rain.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_modules/extra/run_script.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_modules/extra/sky_quality.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_modules/extra/solar_system.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/developer_guide/available_fields.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/developer_guide/blocks.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/developer_guide/charts.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/developer_guide/contributing.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
+    </url>
+    <url>
+         <loc>https://docs.allsky.local/developer_guide/database.html</loc>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/developer_guide/dependencies.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/developer_guide/folder_structure.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/developer_guide/glossary.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/developer_guide/introduction.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/developer_guide/meta_data_example.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/developer_guide/meta_data_structure.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/developer_guide/module_structure.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/developer_guide/overview.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
     </url>
     <url>
          <loc>https://docs.allsky.local/developer_guide/shared_libraries.html</loc>
-         <lastmod>2025-12-21</lastmod>
+         <lastmod>2026-01-12</lastmod>
+    </url>
+    <url>
+         <loc>https://docs.allsky.local/developer_guide/building_module/3rd_party_api.html</loc>
+         <lastmod>2026-01-12</lastmod>
+    </url>
+    <url>
+         <loc>https://docs.allsky.local/developer_guide/building_module/accessing_sensor.html</loc>
+         <lastmod>2026-01-12</lastmod>
+    </url>
+    <url>
+         <loc>https://docs.allsky.local/developer_guide/building_module/database.html</loc>
+         <lastmod>2026-01-12</lastmod>
+    </url>
+    <url>
+         <loc>https://docs.allsky.local/developer_guide/building_module/overview.html</loc>
+         <lastmod>2026-01-12</lastmod>
+    </url>
+    <url>
+         <loc>https://docs.allsky.local/developer_guide/building_module/simple_module.html</loc>
+         <lastmod>2026-01-12</lastmod>
     </url>
 </urlset>

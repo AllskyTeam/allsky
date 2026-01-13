@@ -53,10 +53,6 @@
          <lastmod>2026-01-13</lastmod>
     </url>
     <url>
-         <loc>https://docs.allsky.local/allsky_guide/things.html</loc>
-         <lastmod>2026-01-13</lastmod>
-    </url>
-    <url>
          <loc>https://docs.allsky.local/allsky_guide/website.html</loc>
          <lastmod>2026-01-13</lastmod>
     </url>
@@ -253,10 +249,6 @@
          <lastmod>2026-01-13</lastmod>
     </url>
     <url>
-         <loc>https://docs.allsky.local/allsky_modules/pwm.html</loc>
-         <lastmod>2026-01-13</lastmod>
-    </url>
-    <url>
          <loc>https://docs.allsky.local/allsky_modules/core/clear_sky.html</loc>
          <lastmod>2026-01-13</lastmod>
     </url>
@@ -361,10 +353,6 @@
          <lastmod>2026-01-13</lastmod>
     </url>
     <url>
-         <loc>https://docs.allsky.local/allsky_modules/extra/introduction.html</loc>
-         <lastmod>2026-01-13</lastmod>
-    </url>
-    <url>
          <loc>https://docs.allsky.local/allsky_modules/extra/json_import.html</loc>
          <lastmod>2026-01-13</lastmod>
     </url>
@@ -414,6 +402,22 @@
     </url>
     <url>
          <loc>https://docs.allsky.local/allsky_modules/extra/solar_system.html</loc>
+         <lastmod>2026-01-13</lastmod>
+    </url>
+    <url>
+         <loc>https://docs.allsky.local/allsky_modules/interfaces/i2c.html</loc>
+         <lastmod>2026-01-13</lastmod>
+    </url>
+    <url>
+         <loc>https://docs.allsky.local/allsky_modules/interfaces/introduction.html</loc>
+         <lastmod>2026-01-13</lastmod>
+    </url>
+    <url>
+         <loc>https://docs.allsky.local/allsky_modules/interfaces/onewire.html</loc>
+         <lastmod>2026-01-13</lastmod>
+    </url>
+    <url>
+         <loc>https://docs.allsky.local/allsky_modules/interfaces/pwm.html</loc>
          <lastmod>2026-01-13</lastmod>
     </url>
     <url>

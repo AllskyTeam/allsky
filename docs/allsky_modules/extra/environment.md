@@ -46,7 +46,7 @@ See the [Sensor Fields](#sensor-fields) Section for details of each sensor that 
 
     !!! info  "Enable The I^2^C Interface"
 
-        Before using any I^2^C devices you must enable the I^2^C interface using the raspi-config utility. To enable the interface run raspi-config and navigate to Interface Options->I2C and enable the interface. You may need to reboot the pi before the interface works
+        Before using any I^2^C devices you must enable the I^2^C interface using the raspi-config utility. To enable the interface run raspi-config and navigate to Interface Options->I²C and enable the interface. You may need to reboot the pi before the interface works
 
     === "Select -->"
 

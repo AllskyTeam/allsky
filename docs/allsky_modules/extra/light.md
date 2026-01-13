@@ -70,7 +70,7 @@ The values the module calculates are estimates based upon the table below
 
 | Setting | Description |
 |--------|-------------|
-| I2C Address | The I2C address of the sensor, leave blank for the default |
+| I²C Address | The I²C address of the sensor, leave blank for the default |
 | Gain | The gain to use |
 | Integration Time | The time taken to take a reading |
 
@@ -78,7 +78,7 @@ The values the module calculates are estimates based upon the table below
 
 | Setting | Description |
 |--------|-------------|
-| I2C Address | The I2C address of the sensor, leave blank for the default |
+| I²C Address | The I²C address of the sensor, leave blank for the default |
 | Gain | The gain to use |
 | Integration Time | The time taken to take a reading |
 
@@ -86,7 +86,7 @@ The values the module calculates are estimates based upon the table below
 
 | Setting | Description |
 |--------|-------------|
-| I2C Address | The I2C address of the sensor, leave blank for the default |
+| I²C Address | The I²C address of the sensor, leave blank for the default |
 | Gain | The gain to use |
 | Sensor Resolution  | The resolution of the internal DAC, if in doubt leave at default |
 | Gain | The gain to use |

@@ -110,7 +110,7 @@ So in the example below the ‘input’ field will be shown if the ‘type’ fi
 "inputpin": {
     "required": "false",
     "description": "Input Pin",
-    "help": "The input pin for DHT type sensors, not required for i2c devices.",
+    "help": "The input pin for DHT type sensors, not required for I²C devices.",
     "tab": "Core",
     "type": {
         "fieldtype": "gpio"
@@ -135,20 +135,20 @@ This section is optional and defines which buses on the Pi the module uses.
 
 ```
 "businfo": [
-    "i2c"
+    "I²C"
 ]
 ```
 
-In this example the module uses the i2c bus
+In this example the module uses the I²C bus
 
 ```
 "businfo": [
-    "i2c",
+    "I²C",
     "onewire"
 ]  
 ```
 
-In this example the module uses both the i2c bus and the onewire bus
+In this example the module uses both the I²C bus and the onewire bus
 
 
 ## The ‘changelog’ section

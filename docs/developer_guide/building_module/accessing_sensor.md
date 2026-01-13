@@ -1,4 +1,4 @@
-In this tutorial we will write a module that accesses an i2c sensor to get temperature data. We will use the [Adafruit sht40](https://learn.adafruit.com/adafruit-sht40-temperature-humidity-sensor/overview){ target="_blank" rel="noopener" .external } sensor.
+In this tutorial we will write a module that accesses an I²C sensor to get temperature data. We will use the [Adafruit sht40](https://learn.adafruit.com/adafruit-sht40-temperature-humidity-sensor/overview){ target="_blank" rel="noopener" .external } sensor.
 
 !!! important  "Important"
  
@@ -23,7 +23,7 @@ from allsky_base import ALLSKYMODULEBASE
 class ALLSKYEXAMPLE2(ALLSKYMODULEBASE):
 
   meta_data = {
-    "name": "Allsky Example i2c Module",
+    "name": "Allsky Example I²C Module",
     "description": "A simple example module to read an sht40 sensor.",
     "module": "allsky_example1",    
     "version": "v1.0.0",
@@ -83,13 +83,13 @@ def example2_cleanup():
       allsky_shared.cleanupModule(moduleData)
 ```
 
-The next thing we need to do is to add any settings we need for the sensor. We will only require one settings that allows the i2c address to be changed if needed. Noramlly you would not need to do this but adding the setting will show how the i2c device can be selected from a list.
+The next thing we need to do is to add any settings we need for the sensor. We will only require one settings that allows the I²C address to be changed if needed. Noramlly you would not need to do this but adding the setting will show how the I²C device can be selected from a list.
 
-Modify the meta data to include the i2c address field
+Modify the meta data to include the I²C address field
 
 ```python
   meta_data = {
-    "name": "Allsky Example i2c Module",
+    "name": "Allsky Example I²C Module",
     "description": "A simple example module to read an sht40 sensor.",
     "module": "allsky_example1",    
     "version": "v1.0.0",
@@ -105,15 +105,15 @@ Modify the meta data to include the i2c address field
     "extradata": {
     },
     "arguments":{
-      "i2caddress": ""     
+      "I²Caddress": ""     
     },
     "argumentdetails": {           
-      "i2caddress": {
+      "I²Caddress": {
         "required": "false",
-        "description": "I2C Address",
-        "help": "Override the standard i2c address for a device. NOTE: This value must be hex, i.e., 0x76.",
+        "description": "I²C Address",
+        "help": "Override the standard I²C address for a device. NOTE: This value must be hex, i.e., 0x76.",
         "type": {
-          "fieldtype": "i2c"
+          "fieldtype": "I²C"
         }           
       }             
     },
@@ -150,17 +150,17 @@ Next add a method to read the sensor
 
       try:
         if not isinstance(address, int) or not (0x03 <= address <= 0x77):
-          return None, f"Invalid I2C address: {address}"
+          return None, f"Invalid I²C address: {address}"
 
         try:
-          i2c = busio.I2C(board.SCL, board.SDA)
+          I²C = busio.I²C(board.SCL, board.SDA)
         except Exception as e:
-          return None, f"Failed to initialise I2C bus: {e}"
+          return None, f"Failed to initialise I²C bus: {e}"
 
         try:
-          sensor = adafruit_sht4x.SHT4x(i2c, address=address)
+          sensor = adafruit_sht4x.SHT4x(I²C, address=address)
         except Exception as e:
-          return None, f"SHT40 not found at I2C address 0x{address:02X}: {e}"
+          return None, f"SHT40 not found at I²C address 0x{address:02X}: {e}"
 
         try:
           sensor.mode = adafruit_sht4x.Mode.NOHEAT_HIGHPRECISION
@@ -194,9 +194,9 @@ Now modify the run function to use it
     result = ""
     extra_data = {}
 
-    i2c_address = self.get_param("i2caddress", 0x44, int) 
+    I²C_address = self.get_param("I²Caddress", 0x44, int) 
     
-    data, error = self._read_sht40(i2c_address)
+    data, error = self._read_sht40(I²C_address)
 
     if error:
         result = f"ERROR: SHT40 error: {error}"
@@ -215,7 +215,7 @@ And finally add the extra data config to the meta_data
 
 ```python
   meta_data = {
-    "name": "Allsky Example i2c Module",
+    "name": "Allsky Example I²C Module",
     "description": "A simple example module to read an sht40 sensor.",
     "module": "allsky_example1",    
     "version": "v1.0.0",
@@ -249,15 +249,15 @@ And finally add the extra data config to the meta_data
       }
     },
     "arguments":{
-      "i2caddress": ""     
+      "I²Caddress": ""     
     },
     "argumentdetails": {           
-      "i2caddress": {
+      "I²Caddress": {
         "required": "false",
-        "description": "I2C Address",
-        "help": "Override the standard i2c address for a device. NOTE: This value must be hex, i.e., 0x76.",
+        "description": "I²C Address",
+        "help": "Override the standard I²C address for a device. NOTE: This value must be hex, i.e., 0x76.",
         "type": {
-          "fieldtype": "i2c"
+          "fieldtype": "I²C"
         }           
       }             
     },

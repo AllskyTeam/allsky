@@ -20,14 +20,14 @@ When selecting the ina219 as the Sensor type the following settings are availabl
 | Setting | Description |
 |--------|-------------|
 | Temperature Variable | The variable to use for temperature. Do not change this unless you know what yo are doing |
-| i2c Address | The i2c address of the ina219 |
+| I²C Address | The I²C address of the ina219 |
 | Channel Name | The name of the channel, this will be available in a variable for use in the overlay |
 
-!!! warning  "I2C Address"
+!!! warning  "I²C Address"
 
-    The INA219 uses a base I2C address of 0x40, but it has 16 possible addresses (0x40 to 0x4F) determined by setting pins A0 and A1, commonly by soldering jumpers on breakout boards. The default address (no jumpers) is often 0x40, while bridging both A0 and A1 sets it to 0x45, allowing multiple sensors on the same bus.
+    The INA219 uses a base I²C address of 0x40, but it has 16 possible addresses (0x40 to 0x4F) determined by setting pins A0 and A1, commonly by soldering jumpers on breakout boards. The default address (no jumpers) is often 0x40, while bridging both A0 and A1 sets it to 0x45, allowing multiple sensors on the same bus.
 
-    Refer to your board for the i2c address
+    Refer to your board for the I²C address
 
 ### ina3221 settings
 When selecting the ina3221 as the Sensor type the following settings are available
@@ -35,7 +35,7 @@ When selecting the ina3221 as the Sensor type the following settings are availab
 | Setting | Description |
 |--------|-------------|
 | Temperature Variable | The variable to use for temperature. Do not change this unless you know what yo are doing |
-| i2c Address | The i2c address of the ina3221 |
+| I²C Address | The I²C address of the ina3221 |
 | Enable Channel 1 | When selected channel 1 will be enabled |
 | Channel 1 Name | The name ofd the channel, this will be available in a variable for use in the overlay |
 | Enable Channel 2 | When selected channel 2 will be enabled |
@@ -43,11 +43,11 @@ When selecting the ina3221 as the Sensor type the following settings are availab
 | Enable Channel 3 | When selected channel 3 will be enabled |
 | Channel 3 Name | The name ofd the channel, this will be available in a variable for use in the overlay |
 
-!!! warning  "I2C Address"
+!!! warning  "I²C Address"
 
-    The INA3221 has a default I2C address of 0x40, but it's configurable to three other addresses (0x41, 0x42, 0x43) by connecting the address pin (A0) to different logic levels (GND, VCC, SDA, or SCL) or by using solder jumpers on breakout boards. This allows multiple sensors on one I2C bus, with 0x40 being the standard setting. 
+    The INA3221 has a default I²C address of 0x40, but it's configurable to three other addresses (0x41, 0x42, 0x43) by connecting the address pin (A0) to different logic levels (GND, VCC, SDA, or SCL) or by using solder jumpers on breakout boards. This allows multiple sensors on one I²C bus, with 0x40 being the standard setting. 
 
-    Refer to your board for the i2c address
+    Refer to your board for the I²C address
 
 
 ## Available Variables

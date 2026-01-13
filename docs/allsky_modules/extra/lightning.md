@@ -26,7 +26,7 @@ The AS3935 is a dedicated lightning detection integrated circuit designed to ide
 
 | Setting | Description |
 |--------|-------------|
-| i2c Address | The i2c address of the as3935, leave blank for the default |
+| I²C Address | The I²C address of the as3935, leave blank for the default |
 | Input Pin | The pin the as3935 irq pin is connected to, this is set high when lightning is detected
 
 ### Advanced

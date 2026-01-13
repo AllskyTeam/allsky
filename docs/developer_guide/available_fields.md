@@ -80,28 +80,28 @@ This uses the HTML5 spinner control to allow a number to be entered. You can set
 
 ```
 
-## I2c Field
-This displays a dialog allowing the user to select an i2c address. The dialog will display all detected devices on bus zero. A library, courtesy of Adafruit, is also available.
+## I²C Field
+This displays a dialog allowing the user to select an I²C address. The dialog will display all detected devices on bus zero. A library, courtesy of Adafruit, is also available.
 
 ```
-"i2c": {
+"I²C": {
     "required": "false",
-    "description": "I2C Address",
-    "help": "Example field to select an i2c address.",
+    "description": "I²C Address",
+    "help": "Example field to select an I²C address.",
     "tab": "Field Types",           
     "type": {
-        "fieldtype": "i2c"
+        "fieldtype": "I²C"
     }            
 }
 ```
 
-![i2c Dialog](/assets/developer_images/i2c.png)
+![I²C Dialog](/assets/developer_images/I²C.png)
 
 /// caption
-The i2c device selection dialog
+The I²C device selection dialog
 ///
 
-When Allsky is first installed the i2c database has to be built. The ‘Update Database’ button in the dialog will rebuild the database.
+When Allsky is first installed the I²C database has to be built. The ‘Update Database’ button in the dialog will rebuild the database.
 
 ## GPIO Field
 This field will allow the user to select a gpio pin using a graphical interface. The user simple needs to click on the pin they require.

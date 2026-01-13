@@ -144,7 +144,6 @@ nav:
       - allsky_guide/allsky.md
       - allsky_guide/website.md
       - allsky_guide/server.md
-    - Configuration: allsky_guide/configuration.md
     - Settings:
       - allsky_guide/settings/allsky.md
       - allsky_guide/settings/website.md
@@ -207,7 +206,11 @@ nav:
     - Sun and Moon: allsky_guide/overlays/sunmoon.md    
   - Modules:
     - Introduction: allsky_modules/introduction.md
-    - PWM: allsky_modules/pwm.md
+    - Interfaces:
+      - Introduction: allsky_modules/interfaces/introduction.md
+      - I2C: allsky_modules/interfaces/i2c.md
+      - One Wire: allsky_modules/interfaces/onewire.md      
+      - PWM: allsky_modules/interfaces/pwm.md
     - Core Modules: 
       - Modules:
         - Load Image: allsky_modules/core/load_image.md

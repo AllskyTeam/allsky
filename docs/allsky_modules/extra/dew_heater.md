@@ -102,18 +102,21 @@ These setting will enable the dew heater when the temperature is within 5 degree
 
 ## FAQ
 
-- My heater stays on all of the time
-  - Set the Allsky debug level to 4 and use the 'Test Module' button in the dew heater settings. This will display some debug messages explaining why the heater is in the state it is
-  - Check the limit value is not too large. Since the heater is enabled when the dewpoint is within this many degrees of the temeprature large values will cause the heater to stay on
-  - Check the 'Forced Temperature' value is not set. Setting this to a low value will also cause the heater to remain on
-  - Check your hardware. If you are using a relay, not recommended, then some require an inverted output. The 'Invert relay' option will enable or disable this.
+  - My heater stays on all of the time
 
-- My heater never switches on
-  - Set the Allsky debug level to 4 and use the 'Test Module' button in the dew heater settings. This will display some debug messages explaining why the heater is in the state it is
-  - Check your hardware. If you are using a relay, not recommended, then some require an inverted output. The 'Invert relay' option will enable or disable this.
+    - Set the Allsky debug level to 4 and use the 'Test Module' button in the dew heater settings. This will display some debug messages explaining why the heater is in the state it is
+    - Check the limit value is not too large. Since the heater is enabled when the dewpoint is within this many degrees of the temeprature large values will cause the heater to stay on
+    - Check the 'Forced Temperature' value is not set. Setting this to a low value will also cause the heater to remain on
+    - Check your hardware. If you are using a relay, not recommended, then some require an inverted output. The 'Invert relay' option will enable or disable this.
 
-- My heater switches on but doesnt clear the dew
-  - Confirm that the heater has sufficient power
+  - My heater never switches on
+
+    - Set the Allsky debug level to 4 and use the 'Test Module' button in the dew heater settings. This will display some debug messages explaining why the heater is in the state it is
+    - Check your hardware. If you are using a relay, not recommended, then some require an inverted output. The 'Invert relay' option will enable or disable this.
+
+  - My heater switches on but doesnt clear the dew
+
+    - Confirm that the heater has sufficient power
 
 ## Important Notes
 

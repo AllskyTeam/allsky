@@ -207,6 +207,7 @@ nav:
     - Sun and Moon: allsky_guide/overlays/sunmoon.md    
   - Modules:
     - Introduction: allsky_modules/introduction.md
+    - PWM: allsky_modules/pwm.md
     - Core Modules: 
       - Modules:
         - Load Image: allsky_modules/core/load_image.md

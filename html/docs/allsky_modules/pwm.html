@@ -5,31 +5,31 @@
       
       
       
-        <link rel="canonical" href="https://docs.allsky.local/allsky_modules/extra/power.html">
+        <link rel="canonical" href="https://docs.allsky.local/allsky_modules/pwm.html">
       
       
-        <link rel="prev" href="image_tuning.html">
+        <link rel="prev" href="introduction.html">
       
       
-        <link rel="next" href="publish_data.html">
+        <link rel="next" href="core/load_image.html">
       
       
         
       
       
-      <link rel="icon" href="../../assets/images/favicon.png">
+      <link rel="icon" href="../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
     
     
       
-        <title>Power - Allsky Documentation</title>
+        <title>PWM - Allsky Documentation</title>
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -205,17 +205,17 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
     
-      <link rel="stylesheet" href="../../assets/css/extra.css">
+      <link rel="stylesheet" href="../assets/css/extra.css">
     
-    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
     
     
-  <link href="../../assets/stylesheets/glightbox.min.css" rel="stylesheet"><script src="../../assets/javascripts/glightbox.min.js"></script><style id="glightbox-style">
+  <link href="../assets/stylesheets/glightbox.min.css" rel="stylesheet"><script src="../assets/javascripts/glightbox.min.js"></script><style id="glightbox-style">
             html.glightbox-open { overflow: initial; height: 100%; }
             .gslide-title { margin-top: 0px; user-select: text; }
             .gslide-desc { color: #666; user-select: text; }
@@ -244,7 +244,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#settings" class="md-skip">
+        <a href="#setting-up-pwm-on-raspberry-pi-4-and-raspberry-pi-5" class="md-skip">
           Skip to content
         </a>
       
@@ -258,9 +258,9 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../../index.html" title="Allsky Documentation" class="md-header__button md-logo" aria-label="Allsky Documentation" data-md-component="logo">
+    <a href="../index.html" title="Allsky Documentation" class="md-header__button md-logo" aria-label="Allsky Documentation" data-md-component="logo">
       
-  <img src="../../assets/images/logo.png" alt="logo">
+  <img src="../assets/images/logo.png" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -277,7 +277,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Power
+              PWM
             
           </span>
         </div>
@@ -390,7 +390,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../index.html" class="md-tabs__link">
+      <a href="../index.html" class="md-tabs__link">
         
   
   
@@ -411,7 +411,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../allsky_guide/glossary.html" class="md-tabs__link">
+        <a href="../allsky_guide/glossary.html" class="md-tabs__link">
           
   
   
@@ -431,7 +431,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../allsky_guide/overlays/overview.html" class="md-tabs__link">
+        <a href="../allsky_guide/overlays/overview.html" class="md-tabs__link">
           
   
   
@@ -453,7 +453,7 @@
     
     
       <li class="md-tabs__item md-tabs__item--active">
-        <a href="../introduction.html" class="md-tabs__link">
+        <a href="introduction.html" class="md-tabs__link">
           
   
   
@@ -473,7 +473,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../developer_guide/introduction.html" class="md-tabs__link">
+        <a href="../developer_guide/introduction.html" class="md-tabs__link">
           
   
   
@@ -509,9 +509,9 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../../index.html" title="Allsky Documentation" class="md-nav__button md-logo" aria-label="Allsky Documentation" data-md-component="logo">
+    <a href="../index.html" title="Allsky Documentation" class="md-nav__button md-logo" aria-label="Allsky Documentation" data-md-component="logo">
       
-  <img src="../../assets/images/logo.png" alt="logo">
+  <img src="../assets/images/logo.png" alt="logo">
 
     </a>
     Allsky Documentation
@@ -538,7 +538,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../index.html" class="md-nav__link">
+      <a href="../index.html" class="md-nav__link">
         
   
   
@@ -617,7 +617,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_guide/glossary.html" class="md-nav__link">
+      <a href="../allsky_guide/glossary.html" class="md-nav__link">
         
   
   
@@ -697,7 +697,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_guide/allsky.html" class="md-nav__link">
+      <a href="../allsky_guide/allsky.html" class="md-nav__link">
         
   
   
@@ -725,7 +725,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_guide/website.html" class="md-nav__link">
+      <a href="../allsky_guide/website.html" class="md-nav__link">
         
   
   
@@ -753,7 +753,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_guide/server.html" class="md-nav__link">
+      <a href="../allsky_guide/server.html" class="md-nav__link">
         
   
   
@@ -789,7 +789,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_guide/configuration.md" class="md-nav__link">
+      <a href="../allsky_guide/configuration.md" class="md-nav__link">
         
   
   
@@ -869,7 +869,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_guide/settings/allsky.html" class="md-nav__link">
+      <a href="../allsky_guide/settings/allsky.html" class="md-nav__link">
         
   
   
@@ -897,7 +897,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_guide/settings/website.html" class="md-nav__link">
+      <a href="../allsky_guide/settings/website.html" class="md-nav__link">
         
   
   
@@ -985,7 +985,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_guide/howtos/layout.html" class="md-nav__link">
+      <a href="../allsky_guide/howtos/layout.html" class="md-nav__link">
         
   
   
@@ -1065,7 +1065,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_guide/howtos/helper_tools/startrails.html" class="md-nav__link">
+      <a href="../allsky_guide/howtos/helper_tools/startrails.html" class="md-nav__link">
         
   
   
@@ -1093,7 +1093,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_guide/howtos/helper_tools/image_stretch.html" class="md-nav__link">
+      <a href="../allsky_guide/howtos/helper_tools/image_stretch.html" class="md-nav__link">
         
   
   
@@ -1121,7 +1121,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_guide/howtos/helper_tools/timelapse.html" class="md-nav__link">
+      <a href="../allsky_guide/howtos/helper_tools/timelapse.html" class="md-nav__link">
         
   
   
@@ -1157,7 +1157,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_guide/howtos/constellation_overlay.html" class="md-nav__link">
+      <a href="../allsky_guide/howtos/constellation_overlay.html" class="md-nav__link">
         
   
   
@@ -1185,7 +1185,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_guide/howtos/dark_frames.html" class="md-nav__link">
+      <a href="../allsky_guide/howtos/dark_frames.html" class="md-nav__link">
         
   
   
@@ -1213,7 +1213,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_guide/howtos/keograms.html" class="md-nav__link">
+      <a href="../allsky_guide/howtos/keograms.html" class="md-nav__link">
         
   
   
@@ -1241,7 +1241,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_guide/howtos/startrails.html" class="md-nav__link">
+      <a href="../allsky_guide/howtos/startrails.html" class="md-nav__link">
         
   
   
@@ -1269,7 +1269,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_guide/howtos/timelapse.html" class="md-nav__link">
+      <a href="../allsky_guide/howtos/timelapse.html" class="md-nav__link">
         
   
   
@@ -1297,7 +1297,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_guide/howtos/system_page.html" class="md-nav__link">
+      <a href="../allsky_guide/howtos/system_page.html" class="md-nav__link">
         
   
   
@@ -1325,7 +1325,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_guide/howtos/angle_sunrise_sunset.html" class="md-nav__link">
+      <a href="../allsky_guide/howtos/angle_sunrise_sunset.html" class="md-nav__link">
         
   
   
@@ -1353,7 +1353,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_guide/howtos/exposure_settings.html" class="md-nav__link">
+      <a href="../allsky_guide/howtos/exposure_settings.html" class="md-nav__link">
         
   
   
@@ -1381,7 +1381,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_guide/howtos/ssl.html" class="md-nav__link">
+      <a href="../allsky_guide/howtos/ssl.html" class="md-nav__link">
         
   
   
@@ -1409,7 +1409,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_guide/howtos/managing_files.html" class="md-nav__link">
+      <a href="../allsky_guide/howtos/managing_files.html" class="md-nav__link">
         
   
   
@@ -1437,7 +1437,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_guide/howtos/new_camera.html" class="md-nav__link">
+      <a href="../allsky_guide/howtos/new_camera.html" class="md-nav__link">
         
   
   
@@ -1465,7 +1465,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_guide/howtos/mapping_server_locations.html" class="md-nav__link">
+      <a href="../allsky_guide/howtos/mapping_server_locations.html" class="md-nav__link">
         
   
   
@@ -1493,7 +1493,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_guide/howtos/cleanup_website.html" class="md-nav__link">
+      <a href="../allsky_guide/howtos/cleanup_website.html" class="md-nav__link">
         
   
   
@@ -1521,7 +1521,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_guide/howtos/allsky_map.html" class="md-nav__link">
+      <a href="../allsky_guide/howtos/allsky_map.html" class="md-nav__link">
         
   
   
@@ -1609,7 +1609,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_guide/troubleshooting/reporting.html" class="md-nav__link">
+      <a href="../allsky_guide/troubleshooting/reporting.html" class="md-nav__link">
         
   
   
@@ -1637,7 +1637,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_guide/troubleshooting/tools.html" class="md-nav__link">
+      <a href="../allsky_guide/troubleshooting/tools.html" class="md-nav__link">
         
   
   
@@ -1665,7 +1665,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_guide/troubleshooting/uploads.html" class="md-nav__link">
+      <a href="../allsky_guide/troubleshooting/uploads.html" class="md-nav__link">
         
   
   
@@ -1693,7 +1693,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_guide/troubleshooting/startrails.html" class="md-nav__link">
+      <a href="../allsky_guide/troubleshooting/startrails.html" class="md-nav__link">
         
   
   
@@ -1721,7 +1721,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_guide/troubleshooting/timelapse.html" class="md-nav__link">
+      <a href="../allsky_guide/troubleshooting/timelapse.html" class="md-nav__link">
         
   
   
@@ -1749,7 +1749,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_guide/troubleshooting/flicker.html" class="md-nav__link">
+      <a href="../allsky_guide/troubleshooting/flicker.html" class="md-nav__link">
         
   
   
@@ -1777,7 +1777,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_guide/troubleshooting/webui.html" class="md-nav__link">
+      <a href="../allsky_guide/troubleshooting/webui.html" class="md-nav__link">
         
   
   
@@ -1805,7 +1805,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_guide/troubleshooting/website.html" class="md-nav__link">
+      <a href="../allsky_guide/troubleshooting/website.html" class="md-nav__link">
         
   
   
@@ -1833,7 +1833,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_guide/troubleshooting/swap.html" class="md-nav__link">
+      <a href="../allsky_guide/troubleshooting/swap.html" class="md-nav__link">
         
   
   
@@ -1861,7 +1861,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_guide/troubleshooting/zwo.html" class="md-nav__link">
+      <a href="../allsky_guide/troubleshooting/zwo.html" class="md-nav__link">
         
   
   
@@ -1889,7 +1889,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_guide/troubleshooting/rpicam.html" class="md-nav__link">
+      <a href="../allsky_guide/troubleshooting/rpicam.html" class="md-nav__link">
         
   
   
@@ -1917,7 +1917,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_guide/troubleshooting/hardware.html" class="md-nav__link">
+      <a href="../allsky_guide/troubleshooting/hardware.html" class="md-nav__link">
         
   
   
@@ -1945,7 +1945,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_guide/troubleshooting/others.html" class="md-nav__link">
+      <a href="../allsky_guide/troubleshooting/others.html" class="md-nav__link">
         
   
   
@@ -1981,7 +1981,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_guide/faq.html" class="md-nav__link">
+      <a href="../allsky_guide/faq.html" class="md-nav__link">
         
   
   
@@ -2061,7 +2061,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_guide/hardware/pi.html" class="md-nav__link">
+      <a href="../allsky_guide/hardware/pi.html" class="md-nav__link">
         
   
   
@@ -2089,7 +2089,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_guide/hardware/camera.html" class="md-nav__link">
+      <a href="../allsky_guide/hardware/camera.html" class="md-nav__link">
         
   
   
@@ -2117,7 +2117,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_guide/hardware/lens.html" class="md-nav__link">
+      <a href="../allsky_guide/hardware/lens.html" class="md-nav__link">
         
   
   
@@ -2153,7 +2153,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_guide/known_issues.html" class="md-nav__link">
+      <a href="../allsky_guide/known_issues.html" class="md-nav__link">
         
   
   
@@ -2181,7 +2181,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_guide/changelog.html" class="md-nav__link">
+      <a href="../allsky_guide/changelog.html" class="md-nav__link">
         
   
   
@@ -2261,7 +2261,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_guide/things/things.html" class="md-nav__link">
+      <a href="../allsky_guide/things/things.html" class="md-nav__link">
         
   
   
@@ -2289,7 +2289,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_guide/things/esp32.html" class="md-nav__link">
+      <a href="../allsky_guide/things/esp32.html" class="md-nav__link">
         
   
   
@@ -2317,7 +2317,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_guide/things/allskykamera.html" class="md-nav__link">
+      <a href="../allsky_guide/things/allskykamera.html" class="md-nav__link">
         
   
   
@@ -2353,7 +2353,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_guide/3d.html" class="md-nav__link">
+      <a href="../allsky_guide/3d.html" class="md-nav__link">
         
   
   
@@ -2381,7 +2381,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_guide/alternatives.html" class="md-nav__link">
+      <a href="../allsky_guide/alternatives.html" class="md-nav__link">
         
   
   
@@ -2409,7 +2409,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../tags.html" class="md-nav__link">
+      <a href="../tags.html" class="md-nav__link">
         
   
   
@@ -2496,7 +2496,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_guide/overlays/overview.html" class="md-nav__link">
+      <a href="../allsky_guide/overlays/overview.html" class="md-nav__link">
         
   
   
@@ -2524,7 +2524,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_guide/overlays/how.html" class="md-nav__link">
+      <a href="../allsky_guide/overlays/how.html" class="md-nav__link">
         
   
   
@@ -2552,7 +2552,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_guide/overlays/fieldsandvariables.html" class="md-nav__link">
+      <a href="../allsky_guide/overlays/fieldsandvariables.html" class="md-nav__link">
         
   
   
@@ -2580,7 +2580,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_guide/overlays/extra.html" class="md-nav__link">
+      <a href="../allsky_guide/overlays/extra.html" class="md-nav__link">
         
   
   
@@ -2608,7 +2608,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_guide/overlays/interface.html" class="md-nav__link">
+      <a href="../allsky_guide/overlays/interface.html" class="md-nav__link">
         
   
   
@@ -2636,7 +2636,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_guide/overlays/formatting.html" class="md-nav__link">
+      <a href="../allsky_guide/overlays/formatting.html" class="md-nav__link">
         
   
   
@@ -2664,7 +2664,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_guide/overlays/tips.html" class="md-nav__link">
+      <a href="../allsky_guide/overlays/tips.html" class="md-nav__link">
         
   
   
@@ -2692,7 +2692,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_guide/overlays/sunmoon.html" class="md-nav__link">
+      <a href="../allsky_guide/overlays/sunmoon.html" class="md-nav__link">
         
   
   
@@ -2782,7 +2782,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../introduction.html" class="md-nav__link">
+      <a href="introduction.html" class="md-nav__link">
         
   
   
@@ -2807,10 +2807,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../pwm.html" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PWM
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="pwm.html" class="md-nav__link md-nav__link--active">
         
   
   
@@ -2826,6 +2853,115 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#hardware-pwm-vs-software-pwm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hardware PWM vs Software PWM
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#raspberry-pi-4-hardware-pwm-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Raspberry Pi 4 – Hardware PWM Setup
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Raspberry Pi 4 – Hardware PWM Setup">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pwm-capable-gpios-pi-4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PWM-capable GPIOs (Pi 4)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#enable-pwm-pi-4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Enable PWM (Pi 4)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#raspberry-pi-5-hardware-pwm-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Raspberry Pi 5 – Hardware PWM Setup
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Raspberry Pi 5 – Hardware PWM Setup">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#enable-pwm-pi-5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Enable PWM (Pi 5)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hardware-warning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hardware Warning
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -2942,7 +3078,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../core/load_image.html" class="md-nav__link">
+      <a href="core/load_image.html" class="md-nav__link">
         
   
   
@@ -2970,7 +3106,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../core/save_image.html" class="md-nav__link">
+      <a href="core/save_image.html" class="md-nav__link">
         
   
   
@@ -2998,7 +3134,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../core/mask_image.html" class="md-nav__link">
+      <a href="core/mask_image.html" class="md-nav__link">
         
   
   
@@ -3026,7 +3162,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../core/overlay.html" class="md-nav__link">
+      <a href="core/overlay.html" class="md-nav__link">
         
   
   
@@ -3054,7 +3190,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../core/exposure_rect.html" class="md-nav__link">
+      <a href="core/exposure_rect.html" class="md-nav__link">
         
   
   
@@ -3082,7 +3218,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../core/histogram.html" class="md-nav__link">
+      <a href="core/histogram.html" class="md-nav__link">
         
   
   
@@ -3110,7 +3246,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../core/star_count.html" class="md-nav__link">
+      <a href="core/star_count.html" class="md-nav__link">
         
   
   
@@ -3138,7 +3274,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../core/meteor_count.html" class="md-nav__link">
+      <a href="core/meteor_count.html" class="md-nav__link">
         
   
   
@@ -3166,7 +3302,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../core/clear_sky.html" class="md-nav__link">
+      <a href="core/clear_sky.html" class="md-nav__link">
         
   
   
@@ -3194,7 +3330,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../core/export.html" class="md-nav__link">
+      <a href="core/export.html" class="md-nav__link">
         
   
   
@@ -3222,7 +3358,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../core/pi_status.html" class="md-nav__link">
+      <a href="core/pi_status.html" class="md-nav__link">
         
   
   
@@ -3250,7 +3386,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../core/intermediate_image.html" class="md-nav__link">
+      <a href="core/intermediate_image.html" class="md-nav__link">
         
   
   
@@ -3291,8 +3427,6 @@
                 
   
   
-    
-  
   
   
     
@@ -3303,11 +3437,13 @@
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_4" checked>
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_4">
         
           
           <label class="md-nav__link" for="__nav_4_4" id="__nav_4_4_label" tabindex="0">
@@ -3328,7 +3464,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_4_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_4_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_4_4">
             <span class="md-nav__icon md-icon"></span>
             
@@ -3346,7 +3482,7 @@
   
   
     <li class="md-nav__item">
-      <a href="environment.html" class="md-nav__link">
+      <a href="extra/environment.html" class="md-nav__link">
         
   
   
@@ -3374,7 +3510,7 @@
   
   
     <li class="md-nav__item">
-      <a href="dew_heater.html" class="md-nav__link">
+      <a href="extra/dew_heater.html" class="md-nav__link">
         
   
   
@@ -3402,7 +3538,7 @@
   
   
     <li class="md-nav__item">
-      <a href="adsb.html" class="md-nav__link">
+      <a href="extra/adsb.html" class="md-nav__link">
         
   
   
@@ -3430,7 +3566,7 @@
   
   
     <li class="md-nav__item">
-      <a href="border.html" class="md-nav__link">
+      <a href="extra/border.html" class="md-nav__link">
         
   
   
@@ -3458,7 +3594,7 @@
   
   
     <li class="md-nav__item">
-      <a href="discord.html" class="md-nav__link">
+      <a href="extra/discord.html" class="md-nav__link">
         
   
   
@@ -3486,7 +3622,7 @@
   
   
     <li class="md-nav__item">
-      <a href="esp32round.html" class="md-nav__link">
+      <a href="extra/esp32round.html" class="md-nav__link">
         
   
   
@@ -3514,7 +3650,7 @@
   
   
     <li class="md-nav__item">
-      <a href="fans.html" class="md-nav__link">
+      <a href="extra/fans.html" class="md-nav__link">
         
   
   
@@ -3542,7 +3678,7 @@
   
   
     <li class="md-nav__item">
-      <a href="gpio.html" class="md-nav__link">
+      <a href="extra/gpio.html" class="md-nav__link">
         
   
   
@@ -3570,7 +3706,7 @@
   
   
     <li class="md-nav__item">
-      <a href="hddtemp.html" class="md-nav__link">
+      <a href="extra/hddtemp.html" class="md-nav__link">
         
   
   
@@ -3598,7 +3734,7 @@
   
   
     <li class="md-nav__item">
-      <a href="image_tuning.html" class="md-nav__link">
+      <a href="extra/image_tuning.html" class="md-nav__link">
         
   
   
@@ -3623,35 +3759,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Power
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="power.html" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="extra/power.html" class="md-nav__link">
         
   
   
@@ -3667,124 +3778,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#settings" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Settings
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Settings">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#ina219-settings" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        ina219 settings
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#ina3221-settings" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        ina3221 settings
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#available-variables" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Available Variables
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Available Variables">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#ina219" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        INA219
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#ina3221" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        INA3221
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#schematics" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Schematics
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#available-in" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Available in
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -3797,7 +3790,7 @@
   
   
     <li class="md-nav__item">
-      <a href="publish_data.html" class="md-nav__link">
+      <a href="extra/publish_data.html" class="md-nav__link">
         
   
   
@@ -3825,7 +3818,7 @@
   
   
     <li class="md-nav__item">
-      <a href="json_import.html" class="md-nav__link">
+      <a href="extra/json_import.html" class="md-nav__link">
         
   
   
@@ -3853,7 +3846,7 @@
   
   
     <li class="md-nav__item">
-      <a href="light.html" class="md-nav__link">
+      <a href="extra/light.html" class="md-nav__link">
         
   
   
@@ -3881,7 +3874,7 @@
   
   
     <li class="md-nav__item">
-      <a href="lightning.html" class="md-nav__link">
+      <a href="extra/lightning.html" class="md-nav__link">
         
   
   
@@ -3909,7 +3902,7 @@
   
   
     <li class="md-nav__item">
-      <a href="mlx90640.html" class="md-nav__link">
+      <a href="extra/mlx90640.html" class="md-nav__link">
         
   
   
@@ -3937,7 +3930,7 @@
   
   
     <li class="md-nav__item">
-      <a href="owm.html" class="md-nav__link">
+      <a href="extra/owm.html" class="md-nav__link">
         
   
   
@@ -3965,7 +3958,7 @@
   
   
     <li class="md-nav__item">
-      <a href="gps.html" class="md-nav__link">
+      <a href="extra/gps.html" class="md-nav__link">
         
   
   
@@ -3993,7 +3986,7 @@
   
   
     <li class="md-nav__item">
-      <a href="air_quality.html" class="md-nav__link">
+      <a href="extra/air_quality.html" class="md-nav__link">
         
   
   
@@ -4021,7 +4014,7 @@
   
   
     <li class="md-nav__item">
-      <a href="rain.html" class="md-nav__link">
+      <a href="extra/rain.html" class="md-nav__link">
         
   
   
@@ -4049,7 +4042,7 @@
   
   
     <li class="md-nav__item">
-      <a href="run_script.html" class="md-nav__link">
+      <a href="extra/run_script.html" class="md-nav__link">
         
   
   
@@ -4077,7 +4070,7 @@
   
   
     <li class="md-nav__item">
-      <a href="solar_system.html" class="md-nav__link">
+      <a href="extra/solar_system.html" class="md-nav__link">
         
   
   
@@ -4105,7 +4098,7 @@
   
   
     <li class="md-nav__item">
-      <a href="sky_quality.html" class="md-nav__link">
+      <a href="extra/sky_quality.html" class="md-nav__link">
         
   
   
@@ -4185,7 +4178,7 @@
   
   
     <li class="md-nav__item">
-      <a href="ina3221.html" class="md-nav__link">
+      <a href="extra/ina3221.html" class="md-nav__link">
         
   
   
@@ -4213,7 +4206,7 @@
   
   
     <li class="md-nav__item">
-      <a href="mqtt_subscribe.html" class="md-nav__link">
+      <a href="extra/mqtt_subscribe.html" class="md-nav__link">
         
   
   
@@ -4241,7 +4234,7 @@
   
   
     <li class="md-nav__item">
-      <a href="influxdb.html" class="md-nav__link">
+      <a href="extra/influxdb.html" class="md-nav__link">
         
   
   
@@ -4269,7 +4262,7 @@
   
   
     <li class="md-nav__item">
-      <a href="ltr390.html" class="md-nav__link">
+      <a href="extra/ltr390.html" class="md-nav__link">
         
   
   
@@ -4372,7 +4365,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../developer_guide/introduction.html" class="md-nav__link">
+      <a href="../developer_guide/introduction.html" class="md-nav__link">
         
   
   
@@ -4400,7 +4393,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../developer_guide/glossary.html" class="md-nav__link">
+      <a href="../developer_guide/glossary.html" class="md-nav__link">
         
   
   
@@ -4428,7 +4421,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../developer_guide/overview.html" class="md-nav__link">
+      <a href="../developer_guide/overview.html" class="md-nav__link">
         
   
   
@@ -4508,7 +4501,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../developer_guide/folder_structure.html" class="md-nav__link">
+      <a href="../developer_guide/folder_structure.html" class="md-nav__link">
         
   
   
@@ -4536,7 +4529,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../developer_guide/module_structure.html" class="md-nav__link">
+      <a href="../developer_guide/module_structure.html" class="md-nav__link">
         
   
   
@@ -4564,7 +4557,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../developer_guide/meta_data_structure.html" class="md-nav__link">
+      <a href="../developer_guide/meta_data_structure.html" class="md-nav__link">
         
   
   
@@ -4592,7 +4585,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../developer_guide/meta_data_example.html" class="md-nav__link">
+      <a href="../developer_guide/meta_data_example.html" class="md-nav__link">
         
   
   
@@ -4620,7 +4613,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../developer_guide/available_fields.html" class="md-nav__link">
+      <a href="../developer_guide/available_fields.html" class="md-nav__link">
         
   
   
@@ -4648,7 +4641,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../developer_guide/shared_libraries.html" class="md-nav__link">
+      <a href="../developer_guide/shared_libraries.html" class="md-nav__link">
         
   
   
@@ -4676,7 +4669,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../developer_guide/database.html" class="md-nav__link">
+      <a href="../developer_guide/database.html" class="md-nav__link">
         
   
   
@@ -4704,7 +4697,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../developer_guide/charts.html" class="md-nav__link">
+      <a href="../developer_guide/charts.html" class="md-nav__link">
         
   
   
@@ -4732,7 +4725,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../developer_guide/blocks.html" class="md-nav__link">
+      <a href="../developer_guide/blocks.html" class="md-nav__link">
         
   
   
@@ -4760,7 +4753,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../developer_guide/dependencies.html" class="md-nav__link">
+      <a href="../developer_guide/dependencies.html" class="md-nav__link">
         
   
   
@@ -4840,7 +4833,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../developer_guide/building_module/overview.html" class="md-nav__link">
+      <a href="../developer_guide/building_module/overview.html" class="md-nav__link">
         
   
   
@@ -4868,7 +4861,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../developer_guide/building_module/simple_module.html" class="md-nav__link">
+      <a href="../developer_guide/building_module/simple_module.html" class="md-nav__link">
         
   
   
@@ -4896,7 +4889,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../developer_guide/building_module/accessing_sensor.html" class="md-nav__link">
+      <a href="../developer_guide/building_module/accessing_sensor.html" class="md-nav__link">
         
   
   
@@ -4924,7 +4917,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../developer_guide/building_module/3rd_party_api.html" class="md-nav__link">
+      <a href="../developer_guide/building_module/3rd_party_api.html" class="md-nav__link">
         
   
   
@@ -4952,7 +4945,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../developer_guide/building_module/database.html" class="md-nav__link">
+      <a href="../developer_guide/building_module/database.html" class="md-nav__link">
         
   
   
@@ -5048,7 +5041,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_shared.html" class="md-nav__link">
+      <a href="../allsky_shared.html" class="md-nav__link">
         
   
   
@@ -5076,7 +5069,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_base.html" class="md-nav__link">
+      <a href="../allsky_base.html" class="md-nav__link">
         
   
   
@@ -5104,7 +5097,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../allsky_api.html" class="md-nav__link">
+      <a href="../allsky_api.html" class="md-nav__link">
         
   
   
@@ -5140,7 +5133,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../developer_guide/contributing.html" class="md-nav__link">
+      <a href="../developer_guide/contributing.html" class="md-nav__link">
         
   
   
@@ -5183,313 +5176,120 @@
                 
                   
 
-  <nav class="md-tags">
-    
-      
-      
-      
-        
-        
-          
-        
-      
-      
-        <a href="../../tags.html#tag:extra-module" class="md-tag md-tag-icon md-tag--extra">Extra Module</a>
-      
-    
-      
-      
-      
-        
-        
-          
-        
-      
-      
-        <a href="../../tags.html#tag:hardware-required" class="md-tag md-tag-icon md-tag--hardware">Hardware Required</a>
-      
-    
-      
-      
-      
-        
-        
-          
-        
-      
-      
-        <a href="../../tags.html#tag:pipeline-day" class="md-tag md-tag-icon md-tag--day">Pipeline Day</a>
-      
-    
-      
-      
-      
-        
-        
-          
-        
-      
-      
-        <a href="../../tags.html#tag:pipeline-night" class="md-tag md-tag-icon md-tag--night">Pipeline Night</a>
-      
-    
-      
-      
-      
-        
-        
-          
-        
-      
-      
-        <a href="../../tags.html#tag:pipeline-periodic" class="md-tag md-tag-icon md-tag--clock">Pipeline Periodic</a>
-      
-    
-  </nav>
-
 
   
   
 
 
-  <h1>Power</h1>
-
-<p>This module is used to measure voltage and current. It supports the ina219 (Single channel) or the ina3221 (Three channels).</p>
-<p>This can typically be used to monitor the voltage and current being applied to a dew heater, its a pretty reliable way to know if its actually working !</p>
-<h2 id="settings">Settings<a class="headerlink" href="#settings" title="Permanent link">¶</a></h2>
-<p>The following settings are available in the module</p>
-<h3 id="ina219-settings">ina219 settings<a class="headerlink" href="#ina219-settings" title="Permanent link">¶</a></h3>
-<p>When selecting the ina219 as the Sensor type the following settings are available</p>
-<table>
-<thead>
-<tr>
-<th>Setting</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Temperature Variable</td>
-<td>The variable to use for temperature. Do not change this unless you know what yo are doing</td>
-</tr>
-<tr>
-<td>i2c Address</td>
-<td>The i2c address of the ina219</td>
-</tr>
-<tr>
-<td>Channel Name</td>
-<td>The name of the channel, this will be available in a variable for use in the overlay</td>
-</tr>
-</tbody>
-</table>
-<div class="admonition warning">
-<p class="admonition-title">I2C Address</p>
-<p>The INA219 uses a base I2C address of 0x40, but it has 16 possible addresses (0x40 to 0x4F) determined by setting pins A0 and A1, commonly by soldering jumpers on breakout boards. The default address (no jumpers) is often 0x40, while bridging both A0 and A1 sets it to 0x45, allowing multiple sensors on the same bus.</p>
-<p>Refer to your board for the i2c address</p>
-</div>
-<h3 id="ina3221-settings">ina3221 settings<a class="headerlink" href="#ina3221-settings" title="Permanent link">¶</a></h3>
-<p>When selecting the ina3221 as the Sensor type the following settings are available</p>
-<table>
-<thead>
-<tr>
-<th>Setting</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Temperature Variable</td>
-<td>The variable to use for temperature. Do not change this unless you know what yo are doing</td>
-</tr>
-<tr>
-<td>i2c Address</td>
-<td>The i2c address of the ina3221</td>
-</tr>
-<tr>
-<td>Enable Channel 1</td>
-<td>When selected channel 1 will be enabled</td>
-</tr>
-<tr>
-<td>Channel 1 Name</td>
-<td>The name ofd the channel, this will be available in a variable for use in the overlay</td>
-</tr>
-<tr>
-<td>Enable Channel 2</td>
-<td>When selected channel 2 will be enabled</td>
-</tr>
-<tr>
-<td>Channel 2 Name</td>
-<td>The name ofd the channel, this will be available in a variable for use in the overlay</td>
-</tr>
-<tr>
-<td>Enable Channel 3</td>
-<td>When selected channel 3 will be enabled</td>
-</tr>
-<tr>
-<td>Channel 3 Name</td>
-<td>The name ofd the channel, this will be available in a variable for use in the overlay</td>
-</tr>
-</tbody>
-</table>
-<div class="admonition warning">
-<p class="admonition-title">I2C Address</p>
-<p>The INA3221 has a default I2C address of 0x40, but it's configurable to three other addresses (0x41, 0x42, 0x43) by connecting the address pin (A0) to different logic levels (GND, VCC, SDA, or SCL) or by using solder jumpers on breakout boards. This allows multiple sensors on one I2C bus, with 0x40 being the standard setting. </p>
-<p>Refer to your board for the i2c address</p>
-</div>
-<h2 id="available-variables">Available Variables<a class="headerlink" href="#available-variables" title="Permanent link">¶</a></h2>
-<h3 id="ina219">INA219<a class="headerlink" href="#ina219" title="Permanent link">¶</a></h3>
-<p>The ina219 produces the following variables for use in overlays</p>
-<table>
-<thead>
-<tr>
-<th>Variable</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>AS_POWER_VOLTAGE1</td>
-<td>Channel 1 Voltage</td>
-</tr>
-<tr>
-<td>AS_POWER_CURRENT1</td>
-<td>Channel 1 Current</td>
-</tr>
-<tr>
-<td>AS_POWER_BUS_VOLTAGE1</td>
-<td>Channel 1 Bus Voltage</td>
-</tr>
-<tr>
-<td>AS_POWER_SHUNT_VOLTAGE1</td>
-<td>Channel 1 Shunt Voltage</td>
-</tr>
-<tr>
-<td>AS_POWER_POWER1</td>
-<td>Cannel 1 Power (w)</td>
-</tr>
-</tbody>
-</table>
-<h3 id="ina3221">INA3221<a class="headerlink" href="#ina3221" title="Permanent link">¶</a></h3>
-<p>The ina3221 produces the following variables for use in overlays</p>
-<table>
-<thead>
-<tr>
-<th>Variable</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>AS_POWER_VOLTAGE1</td>
-<td>Channel 1 Voltage</td>
-</tr>
-<tr>
-<td>AS_POWER_CURRENT1</td>
-<td>Channel 1 Current</td>
-</tr>
-<tr>
-<td>AS_POWER_BUS_VOLTAGE1</td>
-<td>Channel 1 Bus Voltage</td>
-</tr>
-<tr>
-<td>AS_POWER_SHUNT_VOLTAGE1</td>
-<td>Channel 1 Shunt Voltage</td>
-</tr>
-<tr>
-<td>AS_POWER_POWER1</td>
-<td>Cannel 1 Power (w)</td>
-</tr>
-<tr>
-<td>AS_POWER_VOLTAGE2</td>
-<td>Channel 2 Voltage</td>
-</tr>
-<tr>
-<td>AS_POWER_CURRENT2</td>
-<td>Channel 2 Current</td>
-</tr>
-<tr>
-<td>AS_POWER_BUS_VOLTAGE2</td>
-<td>Channel 2 Bus Voltage</td>
-</tr>
-<tr>
-<td>AS_POWER_SHUNT_VOLTAGE2</td>
-<td>Channel 2 Shunt Voltage</td>
-</tr>
-<tr>
-<td>AS_POWER_POWER2</td>
-<td>Cannel 2 Power (w)</td>
-</tr>
-<tr>
-<td>AS_POWER_VOLTAGE3</td>
-<td>Channel 3 Voltage</td>
-</tr>
-<tr>
-<td>AS_POWER_CURRENT3</td>
-<td>Channel 3 Current</td>
-</tr>
-<tr>
-<td>AS_POWER_BUS_VOLTAGE3</td>
-<td>Channel 3 Bus Voltage</td>
-</tr>
-<tr>
-<td>AS_POWER_SHUNT_VOLTAGE3</td>
-<td>Channel 3 Shunt Voltage</td>
-</tr>
-<tr>
-<td>AS_POWER_POWER3</td>
-<td>Cannel 3 Power (w)</td>
-</tr>
-</tbody>
-</table>
-<h2 id="schematics">Schematics<a class="headerlink" href="#schematics" title="Permanent link">¶</a></h2>
-<p>The most common use for these sensors it to monitor the dew heater to ensure its on, its not easy when using PWM (Or a relay !) to really know the heater is on</p>
-<figure>
-<p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="/docs/assets/module_images/ina219.png" data-desc-position="bottom"><img alt="" src="/docs/assets/module_images/ina219.png" width="50%"></a></p>
-<figcaption>
-<p>Example using an ina219 to measure dew heater voltage and current</p>
-</figcaption>
-</figure>
-<h2 id="available-in">Available in<a class="headerlink" href="#available-in" title="Permanent link">¶</a></h2>
-<div class="tabbed-set tabbed-alternate" data-tabs="1:1"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio"><div class="tabbed-labels"><label for="__tabbed_1_1">Pipelines available In</label></div>
-<div class="tabbed-content">
-<div class="tabbed-block">
-<div class="grid cards" markdown>
+<p>PWM (Pulse Width Modulation) is a method of controlling the power delivered to a device—such as a fan or a dew heater—by rapidly switching the power on and off instead of reducing the voltage.</p>
+<p>For a fan, PWM allows you to control the speed. The controller sends a square-wave signal (often at a fixed frequency), and by changing the duty cycle (the percentage of time the signal is “on” during each cycle), the fan receives more or less average power:</p>
+<ul>
+<li>Low duty cycle → fan spins slowly</li>
+<li>High duty cycle → fan spins faster</li>
+<li>100% duty cycle → full speed</li>
+</ul>
+<p>For a dew heater, PWM controls the amount of heat produced. Rather than running continuously, the heater is turned on and off many times per second:</p>
+<ul>
+<li>Low duty cycle → gentle warming (prevents dew with minimal power)</li>
+<li>Higher duty cycle → more heat</li>
+<li>100% duty cycle → maximum heating</li>
+</ul>
+<p>Why PWM is used instead of lowering voltage</p>
+<ul>
+<li>More efficient: Less energy wasted as heat in the controller</li>
+<li>Better control: Fine-grained adjustment of speed/temperature</li>
+<li>Consistent performance: Devices still receive full voltage during “on” pulses</li>
+<li>Reduced stress: Especially important for fans that may stall at low voltages</li>
+</ul>
+<p>In short, PWM lets you precisely and efficiently control output power without sacrificing performance or wasting energy.</p>
+<h1 id="setting-up-pwm-on-raspberry-pi-4-and-raspberry-pi-5">Setting up PWM on Raspberry Pi 4 and Raspberry Pi 5<a class="headerlink" href="#setting-up-pwm-on-raspberry-pi-4-and-raspberry-pi-5" title="Permanent link">¶</a></h1>
+<p>The Raspberry Pi provides <strong>hardware PWM</strong> (preferred for fans, heaters, and LEDs) and <strong>software PWM</strong> (less accurate, higher CPU usage). For driving a <strong>fan or dew heater</strong>, always use <strong>hardware PWM</strong>.</p>
+<hr>
+<h2 id="hardware-pwm-vs-software-pwm">Hardware PWM vs Software PWM<a class="headerlink" href="#hardware-pwm-vs-software-pwm" title="Permanent link">¶</a></h2>
 <ul>
 <li>
-<p><span class="twemoji lg middle"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M178.2-10.1c7.4-3.1 15.8-2.2 22.5 2.2l87.8 58.2 87.8-58.2c6.7-4.4 15.1-5.2 22.5-2.2S411.4-.5 413 7.3l20.9 103.2 103.2 20.9c7.8 1.6 14.4 7 17.4 14.3s2.2 15.8-2.2 22.5L494.1 256l58.2 87.8c4.4 6.7 5.2 15.1 2.2 22.5s-9.6 12.8-17.4 14.3l-103.3 20.8L413 504.7c-1.6 7.8-7 14.4-14.3 17.4s-15.8 2.2-22.5-2.2l-87.8-58.2-87.8 58.2c-6.7 4.4-15.1 5.2-22.5 2.2s-12.8-9.6-14.3-17.4L143 401.4 39.7 380.5c-7.8-1.6-14.4-7-17.4-14.3s-2.2-15.8 2.2-22.5L82.7 256l-58.2-87.8c-4.4-6.7-5.2-15.1-2.2-22.5s9.6-12.8 17.4-14.3L143 110.6 163.9 7.3c1.6-7.8 7-14.4 14.3-17.4M207.6 256a80.4 80.4 0 1 1 160.8 0 80.4 80.4 0 1 1-160.8 0m208.8 0a128.4 128.4 0 1 0-256.8 0 128.4 128.4 0 1 0 256.8 0"></path></svg></span> <strong>Daytime</strong></p>
-<hr>
-<ul>
-<li>The Day time pipeline</li>
-</ul>
+<p><strong>Hardware PWM</strong><br>
+  Generated by dedicated hardware. Stable frequency, low CPU usage, ideal for power control.</p>
 </li>
 <li>
-<p><span class="twemoji lg middle"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M256 0C114.6 0 0 114.6 0 256s114.6 256 256 256c68.8 0 131.3-27.2 177.3-71.4 7.3-7 9.4-17.9 5.3-27.1s-13.7-14.9-23.8-14.1c-4.9.4-9.8.6-14.8.6-101.6 0-184-82.4-184-184 0-72.1 41.5-134.6 102.1-164.8 9.1-4.5 14.3-14.3 13.1-24.4s-8.6-18.3-18.5-20.5C294.4 2.2 275.4 0 256 0"></path></svg></span> <strong>Nighttime</strong></p>
-<hr>
-<ul>
-<li>The Night time pipeline</li>
-</ul>
-</li>
-<li>
-<p><span class="twemoji lg middle"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M256 0a256 256 0 1 1 0 512 256 256 0 1 1 0-512m-24 120v136c0 8 4 15.5 10.7 20l96 64c11 7.4 25.9 4.4 33.3-6.7s4.4-25.9-6.7-33.3L280 243.2V120c0-13.3-10.7-24-24-24s-24 10.7-24 24"></path></svg></span> <strong>Periodic</strong></p>
-<hr>
-<ul>
-<li>The Periodic pipeline</li>
-</ul>
+<p><strong>Software PWM</strong><br>
+  Generated by the CPU. Timing can jitter under load, not recommended for heaters or fans.</p>
 </li>
 </ul>
-</div>
-</div>
-</div>
-</div>
+<hr>
+<h2 id="raspberry-pi-4-hardware-pwm-setup">Raspberry Pi 4 – Hardware PWM Setup<a class="headerlink" href="#raspberry-pi-4-hardware-pwm-setup" title="Permanent link">¶</a></h2>
+<p>The Raspberry Pi 4 uses the <strong>BCM2711 SoC</strong>, which provides two hardware PWM channels via the <code>bcm2835-pwm</code> driver.</p>
+<h3 id="pwm-capable-gpios-pi-4">PWM-capable GPIOs (Pi 4)<a class="headerlink" href="#pwm-capable-gpios-pi-4" title="Permanent link">¶</a></h3>
+<table>
+<thead>
+<tr>
+<th>GPIO</th>
+<th>Pin</th>
+<th>Channel</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GPIO12</td>
+<td>Pin 32</td>
+<td>PWM0</td>
+</tr>
+<tr>
+<td>GPIO13</td>
+<td>Pin 33</td>
+<td>PWM1</td>
+</tr>
+<tr>
+<td>GPIO18</td>
+<td>Pin 12</td>
+<td>PWM0</td>
+</tr>
+<tr>
+<td>GPIO19</td>
+<td>Pin 35</td>
+<td>PWM1</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h3 id="enable-pwm-pi-4">Enable PWM (Pi 4)<a class="headerlink" href="#enable-pwm-pi-4" title="Permanent link">¶</a></h3>
+<p>Edit the boot configuration file:</p>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>nano<span class="w"> </span>/boot/config.txt
+</code></pre></div>
+<p>Add:</p>
+<div class="highlight"><pre><span></span><code><span class="na">dtoverlay</span><span class="o">=</span><span class="s">pwm-2chan</span>
+</code></pre></div>
+<p>Reboot:</p>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>reboot
+</code></pre></div>
+<h2 id="raspberry-pi-5-hardware-pwm-setup">Raspberry Pi 5 – Hardware PWM Setup<a class="headerlink" href="#raspberry-pi-5-hardware-pwm-setup" title="Permanent link">¶</a></h2>
+<p>Raspberry Pi 5 introduces a new I/O controller (<strong>RP1</strong>), so PWM is provided by a different driver.</p>
+<h3 id="enable-pwm-pi-5">Enable PWM (Pi 5)<a class="headerlink" href="#enable-pwm-pi-5" title="Permanent link">¶</a></h3>
+<p>Edit:</p>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>nano<span class="w"> </span>/boot/config.txt
+</code></pre></div>
+<p>Add:</p>
+<div class="highlight"><pre><span></span><code><span class="na">dtoverlay</span><span class="o">=</span><span class="s">rp1-pwm</span>
+</code></pre></div>
+<p>Reboot:</p>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>reboot
+</code></pre></div>
+<h2 id="hardware-warning">Hardware Warning<a class="headerlink" href="#hardware-warning" title="Permanent link">¶</a></h2>
+<blockquote>
+<p><strong>Never connect a fan or heater directly to a GPIO pin.</strong></p>
+</blockquote>
+<p>Always use:</p>
+<ul>
+<li>A logic-level <strong>N-channel MOSFET</strong> (for heaters)  </li>
+<li>A suitable <strong>fan driver</strong> or transistor  </li>
+<li>A flyback diode (for inductive loads such as motors)</li>
+</ul>
 
 
 
 
 
 
-
-  
-  
 
 
 
@@ -5513,7 +5313,7 @@
       <nav class="md-footer__inner md-grid" aria-label="Footer">
         
           
-          <a href="image_tuning.html" class="md-footer__link md-footer__link--prev" aria-label="Previous: Image Tuning">
+          <a href="introduction.html" class="md-footer__link md-footer__link--prev" aria-label="Previous: Introduction">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"></path></svg>
@@ -5523,20 +5323,20 @@
                 Previous
               </span>
               <div class="md-ellipsis">
-                Image Tuning
+                Introduction
               </div>
             </div>
           </a>
         
         
           
-          <a href="publish_data.html" class="md-footer__link md-footer__link--next" aria-label="Next: Publish Data">
+          <a href="core/load_image.html" class="md-footer__link md-footer__link--next" aria-label="Next: Load Image">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Publish Data
+                Load Image
               </div>
             </div>
             <div class="md-footer__button md-icon">
@@ -5573,10 +5373,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.expand", "toc.integrate", "content.code.annotate", "header.autohide", "navigation.footer", "search.suggest"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": {"API Required": "api", "Data Capture": "data", "Experimental": "experimental", "Extra Module": "extra", "Hardware": "hw", "Hardware Required": "hardware", "Image Adjustments": "image", "MQTT": "mqtt", "Modules": "module", "Networking": "network", "Overlay Data": "overlay", "Overlays": "overlay", "Pipeline Day": "day", "Pipeline Night": "night", "Pipeline Periodic": "clock", "Power": "power", "Sensors": "sensor", "Software": "sw", "Weather": "weather"}, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.expand", "toc.integrate", "content.code.annotate", "header.autohide", "navigation.footer", "search.suggest"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": {"API Required": "api", "Data Capture": "data", "Experimental": "experimental", "Extra Module": "extra", "Hardware": "hw", "Hardware Required": "hardware", "Image Adjustments": "image", "MQTT": "mqtt", "Modules": "module", "Networking": "network", "Overlay Data": "overlay", "Overlays": "overlay", "Pipeline Day": "day", "Pipeline Night": "night", "Pipeline Periodic": "clock", "Power": "power", "Sensors": "sensor", "Software": "sw", "Weather": "weather"}, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

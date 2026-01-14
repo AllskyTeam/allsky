@@ -102,8 +102,17 @@ foreach ($days as $day) {
 		$i = getValidImageNames(ALLSKY_IMAGES . "/$day/meteors", true);	// true == stop after 1
 		$has_meteors = (count($i) > 0);
 	}
+	// Check for archived images in images/YYYY/YYYYMMDD/
+	$year = substr($day, 0, 4);
+	$archived_dir = ALLSKY_IMAGES . "/images/$year/$day";
+	$has_archived_images = false;
+	if (is_dir($archived_dir)) {
+		$ai = getValidImageNames($archived_dir, true);	// true == stop after 1
+		$has_archived_images = (count($ai) > 0);
+	}
 
-	if (! $has_images && ! $has_timelapse && ! $has_keogram && ! $has_startrails && ! $has_meteors) {
+
+	if (! $has_images && ! $has_timelapse && ! $has_keogram && ! $has_startrails && ! $has_meteors && ! $has_archived_images) {
 		echo "<script>console.log('Directory \"$day\" has no images, timelapse, et.al.; ignoring.');</script>";
 		continue;
 	}
@@ -119,6 +128,10 @@ foreach ($days as $day) {
 		echo "none";
 	}
 	echo "</td>\n";
+	if ($has_archived_images) {
+		$icon_archive = "<i class='fa fa-archive fa-{$fa_size} fa-fw' style='color:#888'></i>";
+		echo " <a href='index.php?page=list_images&day=$day&archived=1' title='Archived Images'>$icon_archive</a>";
+	}
 
 	echo "\t\t\t<td>";
 	if ($has_timelapse) {

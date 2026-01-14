@@ -1,4 +1,4 @@
-### Formatting Fields
+# Formatting Fields
 
 All data within Allsky is stored in consistent internal formats, so for example ALL temeopratures are stored in Degreed Centigrade. Yo will therfore probably want to format data to improve its visual appearance, typicall formatting options are
 

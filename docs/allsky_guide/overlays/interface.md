@@ -1,5 +1,4 @@
-
-## Editor Interface
+# Editor Interface
 
 The Overlay Editor web page consists of two key areas:
 

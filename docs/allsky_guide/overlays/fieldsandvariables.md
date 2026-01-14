@@ -1,4 +1,4 @@
-## Fields and Variables
+# Fields and Variables
 Fields are the heart of the Overlay Editor. They are distinct items that are added to an overlay and each field has its own properties like color, size, rotation, etc. Most people have several fields on their overlays - date and time the image was taken, the exposure length, etc.
 
 

@@ -1,4 +1,4 @@
-## How They Work
+# How They Work
 
 !!! info  ""
 

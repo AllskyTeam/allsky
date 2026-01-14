@@ -488,6 +488,89 @@ if [[ ${IMG_UPLOAD_FREQUENCY} -gt 0 ]]; then
 	fi
 fi
 
+
+# Upload archived images to remote website if enabled
+if [[ ${S_uploadimages} == "true" && ${SAVE_IMAGE} == "true" && ${IMG_UPLOAD_FREQUENCY} -gt 0 ]]; then
+	# Check if we should upload this image based on frequency
+	UPLOAD_COUNTER_FILE="${ALLSKY_TMP}/image_upload_counter.txt"
+	if [[ ! -f ${UPLOAD_COUNTER_FILE} ]]; then
+		echo "0" > "${UPLOAD_COUNTER_FILE}"
+	fi
+	UPLOAD_COUNTER=$(<"${UPLOAD_COUNTER_FILE}")
+	UPLOAD_COUNTER=$((UPLOAD_COUNTER + 1))
+	
+	if [[ ${UPLOAD_COUNTER} -ge ${IMG_UPLOAD_FREQUENCY} ]]; then
+		echo "0" > "${UPLOAD_COUNTER_FILE}"
+		
+		# Extract year from DATE_NAME (first 4 characters: YYYYMMDD -> YYYY)
+		YEAR="${DATE_NAME:0:4}"
+		REMOTE_IMAGE_DIR="images/${YEAR}/${DATE_NAME}"
+		IMAGE_BASENAME="$(basename "${CURRENT_IMAGE}")"
+		
+		# Try to upload the image directly
+		UPLOAD_SUCCESS="false"
+		if upload_all --remote-web "${CURRENT_IMAGE}" "${REMOTE_IMAGE_DIR}" "${IMAGE_BASENAME}" "ArchivedImage" 2>/dev/null; then
+			if upload_all --remote-server "${CURRENT_IMAGE}" "${REMOTE_IMAGE_DIR}" "${IMAGE_BASENAME}" "ArchivedImage" 2>/dev/null; then
+				UPLOAD_SUCCESS="true"
+			fi
+		fi
+		
+		# If upload failed, add to queue
+		if [[ ${UPLOAD_SUCCESS} == "false" ]]; then
+			# Check RAMFS available space before saving to queue
+			RAMFS_AVAILABLE=$(df -k "${ALLSKY_TMP}" | tail -1 | awk '{print $4}')
+			RAMFS_THRESHOLD=102400  # 100MB in KB
+			
+			if [[ ${RAMFS_AVAILABLE} -lt ${RAMFS_THRESHOLD} ]]; then
+				# Not enough space, log alert
+				ALERT_MSG="$(date '+%Y-%m-%d %H:%M:%S') - WARNING: RAMFS space below 100MB threshold (${RAMFS_AVAILABLE} KB available). Cannot queue image upload."
+				echo "${ALERT_MSG}" >> "${ALLSKY_TMP}/image_upload_alerts.log"
+				echo "${ALERT_MSG}" >&2
+				
+				# Call allskyNotify.sh if available
+				if [[ -x "${ALLSKY_SCRIPTS}/allskyNotify.sh" ]]; then
+					"${ALLSKY_SCRIPTS}/allskyNotify.sh" "WARNING" "RAMFS space low" "${ALERT_MSG}"
+				fi
+			else
+				# Enough space, save to queue
+				QUEUE_DIR="${ALLSKY_TMP}/image_upload_queue/${YEAR}/${DATE_NAME}"
+				mkdir -p "${QUEUE_DIR}"
+				cp "${CURRENT_IMAGE}" "${QUEUE_DIR}/${IMAGE_BASENAME}"
+			fi
+		fi
+	else
+		echo "${UPLOAD_COUNTER}" > "${UPLOAD_COUNTER_FILE}"
+	fi
+	
+	# Process the retry queue
+	QUEUE_BASE="${ALLSKY_TMP}/image_upload_queue"
+	if [[ -d ${QUEUE_BASE} ]]; then
+		# Find all queued images and try to upload them
+		while IFS= read -r -d '' QUEUED_IMAGE; do
+			# Extract path components: queue/YYYY/YYYYMMDD/filename.jpg
+			RELATIVE_PATH="${QUEUED_IMAGE#${QUEUE_BASE}/}"
+			QUEUE_YEAR="$(echo "${RELATIVE_PATH}" | cut -d'/' -f1)"
+			QUEUE_DATE="$(echo "${RELATIVE_PATH}" | cut -d'/' -f2)"
+			QUEUE_FILENAME="$(basename "${QUEUED_IMAGE}")"
+			QUEUE_REMOTE_DIR="images/${QUEUE_YEAR}/${QUEUE_DATE}"
+			
+			# Try to upload
+			if upload_all --remote-web "${QUEUED_IMAGE}" "${QUEUE_REMOTE_DIR}" "${QUEUE_FILENAME}" "QueuedImage" 2>/dev/null; then
+				if upload_all --remote-server "${QUEUED_IMAGE}" "${QUEUE_REMOTE_DIR}" "${QUEUE_FILENAME}" "QueuedImage" 2>/dev/null; then
+					# Upload successful, remove from queue
+					rm -f "${QUEUED_IMAGE}"
+					
+					# Remove empty directories
+					QUEUE_DATE_DIR="${QUEUE_BASE}/${QUEUE_YEAR}/${QUEUE_DATE}"
+					QUEUE_YEAR_DIR="${QUEUE_BASE}/${QUEUE_YEAR}"
+					[[ -d ${QUEUE_DATE_DIR} ]] && rmdir --ignore-fail-on-non-empty "${QUEUE_DATE_DIR}"
+					[[ -d ${QUEUE_YEAR_DIR} ]] && rmdir --ignore-fail-on-non-empty "${QUEUE_YEAR_DIR}"
+				fi
+			fi
+		done < <(find "${QUEUE_BASE}" -type f -name "*.jpg" -print0)
+	fi
+fi
+
 # If needed, upload the mini timelapse.  If the upload failed above, it will likely fail below.
 if [[ ${TIMELAPSE_MINI_UPLOAD_VIDEO} == "true" && ${SAVE_IMAGE} == "true" && ${RET} -eq 0 ]] ; then
 	FILE_TO_UPLOAD="${ALLSKY_MINITIMELAPSE_FILE}"

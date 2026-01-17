@@ -17,10 +17,10 @@ if ($useLogin) {
                 redirect("/index.php?page=login", "Too many failed attempts. Try again in about {$mins} minute(s).");
             }
 
-            if (!CSRFValidate()) {
+            /*if (!CSRFValidate()) {
                 $throttle->fail();
                 redirect("/index.php?page=login", "Invalid username or password.", true);
-            }
+            }*/
 
             $privateVars   = get_decoded_json_file(ALLSKY_ENV, true, "");
             $user          = trim((string)($_POST['username'] ?? ''));

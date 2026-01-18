@@ -362,14 +362,14 @@ class OEUIMANAGER {
         })
 
 
-        jQuery(window).bind('beforeunload', ()=> {
+    /*    jQuery(window).bind('beforeunload', ()=> {
             if (this.#fieldManager.dirty || this.#configManager.dirty) {
                 return ' '
             } else {
                 return undefined
             }
         })
-
+    */
         $(window).on('resize', (event) => {
             $('.modal:visible').each(this.alignModal)
         })

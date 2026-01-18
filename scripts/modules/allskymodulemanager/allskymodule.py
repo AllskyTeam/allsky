@@ -747,7 +747,7 @@ class ALLSKYMODULE:
             secrets_changed = False
             for setting, value in new_flow_data["argumentdetails"].items():
                 if shared.to_bool(value.get("secret", False)):
-                    secrets_key = f"{self.name.upper()}.{setting.upper()}"
+                    secrets_key = f"{self.name.upper()}_{setting.upper()}"
                     if not secrets_key in secrets:
                         secrets[secrets_key] = new_flow_data["arguments"].get(setting, "")
                         new_flow_data["arguments"][setting] =  ""

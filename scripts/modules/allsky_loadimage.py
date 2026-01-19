@@ -99,9 +99,25 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 					"format": "",
 					"sample": "",
 					"group": "Image Data",
-					"description": "Exposure",
+					"description": "Exposure in microseconds",
 					"type": "number"
 				},
+				"AS_EXPOSURE_MS": {
+					"name": "${EXPOSURE_MS}",
+					"format": "",
+					"sample": "",
+					"group": "Image Data",
+					"description": "Exposure in milliseconds",
+					"type": "number"
+				},
+				"AS_EXPOSURE_S": {
+					"name": "${EXPOSURE_S}",
+					"format": "",
+					"sample": "",
+					"group": "Image Data",
+					"description": "Exposure in seconds",
+					"type": "number"
+				},    
 				"AS_GAIN": {
 					"name": "${GAIN}",
 					"format": "",
@@ -179,6 +195,8 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 		extra_data['AS_RESOLUTION_X'] = int(allsky_shared.get_environment_variable('AS_RESOLUTION_X'))
 		extra_data['AS_RESOLUTION_Y'] = int(allsky_shared.get_environment_variable('AS_RESOLUTION_Y'))
 		extra_data['AS_EXPOSURE_US'] = int(allsky_shared.get_environment_variable('AS_EXPOSURE_US'))
+		extra_data['AS_EXPOSURE_MS'] = int(allsky_shared.get_environment_variable('AS_EXPOSURE_US')) / 1000.0
+		extra_data['AS_EXPOSURE_S'] = int(allsky_shared.get_environment_variable('AS_EXPOSURE_US')) / 1000.0 / 1000.0
 		extra_data['AS_GAIN'] = allsky_shared.get_camera_gain()
 		extra_data['AS_TEMPERATURE_C'] = allsky_shared.get_sensor_temperature()
 		extra_data['AS_MEAN'] = float(allsky_shared.get_environment_variable('AS_MEAN'))

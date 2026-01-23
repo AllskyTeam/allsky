@@ -4133,12 +4133,6 @@ do_legacy_password_conversion
 # Prompt user to remove any prior old-style WebUI.
 check_old_WebUI_location
 
-##### See if we should reboot when installation is done.
-# Call reboot_needed() in case an external function said we need to reboot.
-if [[ ${REBOOT_NEEDED} == "true" ]] || reboot_needed ; then
-	ask_reboot "full"			# prompts
-fi
-
 ##### Display any necessary messaged about restored / not restored settings
 # Re-run every time to possibly remind them to update their settings.
 check_restored_settings
@@ -4158,6 +4152,12 @@ setup_database
 ##### If needed, remind the user to remove any old Allsky version
 # Re-run every time to remind the user again.
 remind_old_version
+
+##### See if we should reboot when installation is done.
+# Call reboot_needed() in case an external function said we need to reboot.
+if [[ ${REBOOT_NEEDED} == "true" ]] || reboot_needed ; then
+	ask_reboot "full"			# prompts
+fi
 
 ######## All done
 do_done

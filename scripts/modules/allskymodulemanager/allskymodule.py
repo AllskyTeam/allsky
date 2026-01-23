@@ -29,6 +29,7 @@ from packaging import version
 from json import JSONDecodeError
 from functools import wraps
 from typing import Tuple
+from logging import Logger
 
 from exceptions import ModuleError, NoSourceError, NoVersionError
 
@@ -58,7 +59,7 @@ shared.setup_for_command_line()
 
 class ALLSKYMODULE:
     
-    def __init__(self, module_name: str, debug:bool=False, install_source:str|None=None):
+    def __init__(self, module_name: str, debug:bool=False, install_source:str|None=None, logger: Logger|None=None) -> None:
         self._module_paths = None
         self._debug_mode = debug
         self.name = module_name
@@ -70,6 +71,7 @@ class ALLSKYMODULE:
         self._installed = False
         self._deprecated = False
         self._description = ""
+        self._logger = logger
         
         self._module_errors = {
             "source": [],
@@ -88,6 +90,8 @@ class ALLSKYMODULE:
     def _log(self, debug_only, message):
 
         if debug_only and self._debug_mode or not debug_only:
+            if self._logger:
+                self._logger.info(message)
             print(f"\033[0;32m{message}")
     
     

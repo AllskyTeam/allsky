@@ -2582,6 +2582,17 @@ restore_prior_files()
 		# raspap.auth was in a different directory in older versions.
 		D="${OLD_RASPAP_DIR}"
 	fi
+
+
+	ITEM="${SPACE}'config/modules' directory"
+	if [[ -d ${PRIOR_CONFIG_DIR}/modules ]]; then
+		display_msg --log progress "${ITEM} (merging)"
+
+		cp -ar "${PRIOR_CONFIG_DIR}/modules" "${ALLSKY_CONFIG}"
+	else
+		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
+	fi
+
 	R="raspap.auth"
 	ITEM="${SPACE}WebUI security settings (${R})"
 	if [[ -f ${D}/${R} ]]; then
@@ -3566,11 +3577,12 @@ setup_database()
 # Manage overlay installation or updating
 update_overlays()
 {
+	local TMP="${ALLSKY_LOGS}/overlays.log"
 	local OVERLAY_MANAGER="${ALLSKY_SCRIPTS}/modules/allskyoverlaymanager/allskyoverlaymanager.py"
 	if [[ ${USE_PRIOR_ALLSKY} == "true" ]]; then
-		"${OVERLAY_MANAGER}" --auto --oldpath "${ALLSKY_PRIOR_DIR}" --camera "${PRIOR_CAMERA_TYPE}"
+		"${OVERLAY_MANAGER}" --auto --oldpath "${ALLSKY_PRIOR_DIR}" --camera "${PRIOR_CAMERA_TYPE}" > "${TMP}" 2>&1
 	else
-		"${OVERLAY_MANAGER}" --install
+		"${OVERLAY_MANAGER}" --install > "${TMP}" 2>&1
 	fi
 }
 
@@ -3585,10 +3597,11 @@ install_modules()
 	#       these groups otherwise it cannot change the permissions of various files.
 	# NOTE: There is no way to reload the groups for the user, this is a limitation of the Linux Kernel
 	#
+
 	if [[ "$BRANCH" == "$ALLSKY_GITHUB_MAIN_BRANCH" ]]; then
 		sudo su - "${ALLSKY_OWNER}" -c "\"${ALLSKY_MODULE_INSTALLER}\" --welcome"
 	else
-		sudo su - "${ALLSKY_OWNER}" -c "\"${ALLSKY_MODULE_INSTALLER}\" --welcome --setbranch \"${BRANCH}\""		
+		sudo su - "${ALLSKY_OWNER}" -c "\"${ALLSKY_MODULE_INSTALLER}\" --welcome --setbranch \"${BRANCH}\""
 	fi
 
 	RET=$?
@@ -3602,11 +3615,11 @@ install_modules()
 # Do every time as a reminder.
 update_modules()
 {
-
+	local TMP="${ALLSKY_LOGS}/modules.log"
 	if [[ "$BRANCH" == "$ALLSKY_GITHUB_MAIN_BRANCH" ]]; then
-			"${ALLSKY_MODULE_INSTALLER}" --auto
+			"${ALLSKY_MODULE_INSTALLER}" --auto  --logfile "${TMP}"
 	else
-			"${ALLSKY_MODULE_INSTALLER}" --auto --setbranch "$BRANCH"
+			"${ALLSKY_MODULE_INSTALLER}" --auto --setbranch "$BRANCH" --logfile "${TMP}"
 	fi
 
 	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )

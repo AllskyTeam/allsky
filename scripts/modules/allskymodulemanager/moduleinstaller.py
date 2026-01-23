@@ -23,6 +23,7 @@ from pathlib import Path
 from git import Repo, InvalidGitRepositoryError, GitCommandError
 from allskymodule import ALLSKYMODULE
 from whiptail import Whiptail
+import logging
 
 modules_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(modules_dir)
@@ -66,8 +67,9 @@ The official Allsky Documentation provides detailed information on each module, 
 Would you like to review and install any available modules now?\
 "
                 
-    def __init__(self, debug_mode): 
+    def __init__(self, debug_mode, log_file): 
         self._debug_mode = debug_mode
+        self._log_file = log_file
         self._allsky_path = shared.get_environment_variable("ALLSKY_HOME")
         self._branch = shared.get_environment_variable("ALLSKY_GITHUB_MAIN_BRANCH")     # master branch is default
         self._master_branch = self._branch
@@ -76,12 +78,24 @@ Would you like to review and install any available modules now?\
         repo_base = shared.get_environment_variable("ALLSKY_GITHUB_ROOT")
         modules_repo = shared.get_environment_variable("ALLSKY_GITHUB_ALLSKY_MODULES_REPO")
         self._module_repo = f"{repo_base}/{modules_repo}"
+        self._logger = None
         
+        if self._log_file:
+            self._logger = logging.getLogger("allsky_module_installer")
+            self._logger.setLevel(logging.INFO)
+
+            handler = logging.FileHandler(self._log_file)
+            formatter = logging.Formatter("%(message)s")
+            handler.setFormatter(formatter)
+            self._logger.addHandler(handler)
+            
         self._pre_checks()
 
     def _log(self, debug_only, message):
 
         if debug_only and self._debug_mode or not debug_only:
+            if self._log_file:
+                self._logger.info(message)
             print(message)
                         
     def _pre_checks(self):
@@ -206,7 +220,7 @@ Would you like to review and install any available modules now?\
         num_installed_modules = 0
         for dir in dirs:
             if dir.startswith('allsky_') and not os.path.isfile(dir):
-                mod = ALLSKYMODULE(dir, self._debug_mode, self._module_repo_path)
+                mod = ALLSKYMODULE(dir, self._debug_mode, self._module_repo_path, self._logger)
                 self._module_list.append(mod)
                 if mod.installed:
                     num_installed_modules += 1
@@ -568,9 +582,10 @@ if __name__ == "__main__":
     parser.add_argument("--auto", action="store_true", help="Auto upgrade modules, will migrate if required")    
     parser.add_argument("--dryrun", action="store_true", help="For auto mode do a dry run only, no changes will be made")    
     parser.add_argument("--welcome", action="store_true", help="Show the welcome message")    
+    parser.add_argument("--logfile", type=str, help="Log to this file rather than stdout")  
     args = parser.parse_args()    
     
-    module_installer = ALLSKYMODULEINSTALLER(args.debug)
+    module_installer = ALLSKYMODULEINSTALLER(args.debug, args.logfile)
     
     if args.auto:
         try:

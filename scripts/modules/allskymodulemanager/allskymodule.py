@@ -7,6 +7,7 @@
 # TODO - Test broken modules, incorrect meta data - DONE
 # TODO - Test bad locations passed in. - DONE
 
+from importlib import metadata
 import os
 import sys
 
@@ -728,24 +729,35 @@ class ALLSKYMODULE:
         flows = shared.get_flows_with_module(self.name_for_flow)
         for flow, flow_data in flows.items():
             self._log(True, f"INFO: Analysing flow {flow}")
-            old_flow_data = flow_data[self.name_for_flow]["metadata"]
-            new_flow_data = self._installed_info["meta_data"]
+            old_flow_data = flow_data[self.name_for_flow].get("metadata", {})
+            new_flow_data = self._installed_info.get("meta_data", {})
             
-            if not "arguments" in old_flow_data:
-                raise ModuleError(f"{flow} has corrupted meta data for module {self.name}, arguments is missing")
+            old_arguments =  old_flow_data.get("arguments", {})
+            old_argumentdetails = old_flow_data.get("argumentdetails", {})
             
-            for setting, value in old_flow_data["arguments"].items():
-                if setting in new_flow_data["arguments"]:
-                    new_flow_data["arguments"][setting] = value
+            new_arguments =  new_flow_data.get("arguments", {})
+            new_argumentdetails = new_flow_data.get("argumentdetails", {})
+
+            if not old_arguments and not new_arguments:
+                if not old_argumentdetails and not new_argumentdetails:
+                    self._log(False, f"INFO: No arguments to migrate for flow {flow}")
+                    continue
+                else:
+                    self._log(False, f"ERROR: Modules argumentdetails found but no arguments - Cannot migrate flow {flow}")
+                    continue
+                                
+            for setting, value in old_arguments.items():
+                if setting in new_arguments:
+                    new_arguments[setting] = value
                 else:
                     deprecated.append({
                         "setting": setting,
                         "value": value
                     })
             
-            for setting, value in new_flow_data["arguments"].items():
-                if setting not in old_flow_data["arguments"]:
-                    new_flow_data["arguments"][setting] = value
+            for setting, value in new_arguments.items():
+                if setting not in old_arguments:
+                    new_arguments[setting] = value
                     self._log(True, f"INFO: Additional {setting} - {value} added to flow")
                     additional.append({
                         "setting": setting,
@@ -754,16 +766,15 @@ class ALLSKYMODULE:
 
             secrets = shared.load_secrets_file()
             secrets_changed = False
-            for setting, value in new_flow_data["argumentdetails"].items():
+            for setting, value in new_arguments.items():
                 if shared.to_bool(value.get("secret", False)):
                     secrets_key = f"{self.name.upper()}_{setting.upper()}"
                     if not secrets_key in secrets:
-                        secrets[secrets_key] = new_flow_data["arguments"].get(setting, "")
-                        new_flow_data["arguments"][setting] =  ""
+                        secrets[secrets_key] = new_arguments.get(setting, "")
+                        new_arguments[setting] = ""
                         secrets_changed = True
                         self._log(True, f"INFO: Setting {setting} migrated to env.json file")
 
-                    
             if secrets_changed:
                 shared.save_secrets_file(secrets)
             

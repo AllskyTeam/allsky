@@ -372,9 +372,14 @@ class ALLSKYMODULE:
         if self.installed:
             flows = shared.get_flows_with_module(self.name_for_flow)
             for flow, flow_data in flows.items():
-                flow_module_data = flow_data[self.name_for_flow]["metadata"]["argumentdetails"]
+                flow_module_data = (
+                    flow_data
+                        .get(self.name_for_flow, {})
+                        .get("metadata", {})
+                        .get("argumentdetails", {})
+                )                
                 code_module_data = self._get_meta_data_from_file(self._installed_info["full_path"])
-                code_module_data = code_module_data["argumentdetails"]
+                code_module_data = code_module_data.get("argumentdetails", {})
                 
                 if shared.compare_flow_and_module(flow_module_data, code_module_data):
                     self._flows_differ = True

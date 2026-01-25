@@ -767,7 +767,7 @@ class ALLSKYMODULE:
 
                 secrets = shared.load_secrets_file()
                 secrets_changed = False
-                for setting, value in new_arguments.items():
+                for setting, value in new_argumentdetails.items():
                     if shared.to_bool(value.get("secret", False)):
                         secrets_key = f"{self.name.upper()}_{setting.upper()}"
                         if not secrets_key in secrets:

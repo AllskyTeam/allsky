@@ -719,86 +719,91 @@ class ALLSKYMODULE:
     
     @ensure_valid                            
     def migrate_module(self) -> bool:
-        deprecated = []
-        additional = []
-        
-        self._log(False, f"INFO: Starting module migration")
-                    
-        self._init_module() #Need to reload the source info as it will have changed if a new version was installed
-                            
-        flows = shared.get_flows_with_module(self.name_for_flow)
-        for flow, flow_data in flows.items():
-            self._log(True, f"INFO: Analysing flow {flow}")
-            old_flow_data = flow_data[self.name_for_flow].get("metadata", {})
-            new_flow_data = self._installed_info.get("meta_data", {})
+        try:
+            deprecated = []
+            additional = []
             
-            old_arguments =  old_flow_data.get("arguments", {})
-            old_argumentdetails = old_flow_data.get("argumentdetails", {})
-            
-            new_arguments =  new_flow_data.get("arguments", {})
-            new_argumentdetails = new_flow_data.get("argumentdetails", {})
-
-            if not old_arguments and not new_arguments:
-                if not old_argumentdetails and not new_argumentdetails:
-                    self._log(False, f"INFO: No arguments to migrate for flow {flow}")
-                    continue
-                else:
-                    self._log(False, f"ERROR: Modules argumentdetails found but no arguments - Cannot migrate flow {flow}")
-                    continue
-                                
-            for setting, value in old_arguments.items():
-                if setting in new_arguments:
-                    new_arguments[setting] = value
-                else:
-                    deprecated.append({
-                        "setting": setting,
-                        "value": value
-                    })
-            
-            for setting, value in new_arguments.items():
-                if setting not in old_arguments:
-                    new_arguments[setting] = value
-                    self._log(True, f"INFO: Additional {setting} - {value} added to flow")
-                    additional.append({
-                        "setting": setting,
-                        "value": value
-                    })                    
-
-            secrets = shared.load_secrets_file()
-            secrets_changed = False
-            for setting, value in new_arguments.items():
-                if shared.to_bool(value.get("secret", False)):
-                    secrets_key = f"{self.name.upper()}_{setting.upper()}"
-                    if not secrets_key in secrets:
-                        secrets[secrets_key] = new_arguments.get(setting, "")
-                        new_arguments[setting] = ""
-                        secrets_changed = True
-                        self._log(True, f"INFO: Setting {setting} migrated to env.json file")
-
-            if secrets_changed:
-                shared.save_secrets_file(secrets)
-            
-            flow_data[self.name_for_flow]["metadata"] = new_flow_data
-
-        self._log(False, f"INFO: Migrating flows containing module {self.name}")  
-        shared.save_flows_with_module(flows, self.name)
-        
-        self._log(True, f"INFO: Deprecated Settings")          
-        if deprecated:
-            for item in deprecated:
-                self._log(True, f"  Setting: {item['setting']}, Value: {item['value']}")
-        else:
-            self._log(True, "  No settings were deprecated")
-    
-        self._log(True, f"INFO: New Settings")
-        if additional:
-            for item in additional:
-                self._log(True, f"  Setting: {item['setting']}, Value: {item['value']}")
-        else:
-            self._log(True, "  No additional settings were found")
-                
-        self._log(True, f"INFO: Module migration complete")
+            self._log(False, f"INFO: Starting module migration")
                         
+            self._init_module() #Need to reload the source info as it will have changed if a new version was installed
+                                
+            flows = shared.get_flows_with_module(self.name_for_flow)
+            for flow, flow_data in flows.items():
+                self._log(True, f"INFO: Analysing flow {flow}")
+                old_flow_data = flow_data[self.name_for_flow].get("metadata", {})
+                new_flow_data = self._installed_info.get("meta_data", {})
+                
+                old_arguments =  old_flow_data.get("arguments", {})
+                old_argumentdetails = old_flow_data.get("argumentdetails", {})
+                
+                new_arguments =  new_flow_data.get("arguments", {})
+                new_argumentdetails = new_flow_data.get("argumentdetails", {})
+
+                if not old_arguments and not new_arguments:
+                    if not old_argumentdetails and not new_argumentdetails:
+                        self._log(False, f"INFO: No arguments to migrate for flow {flow}")
+                        continue
+                    else:
+                        self._log(False, f"ERROR: Modules argumentdetails found but no arguments - Cannot migrate flow {flow}")
+                        continue
+                                    
+                for setting, value in old_arguments.items():
+                    if setting in new_arguments:
+                        new_arguments[setting] = value
+                    else:
+                        deprecated.append({
+                            "setting": setting,
+                            "value": value
+                        })
+                
+                for setting, value in new_arguments.items():
+                    if setting not in old_arguments:
+                        new_arguments[setting] = value
+                        self._log(True, f"INFO: Additional {setting} - {value} added to flow")
+                        additional.append({
+                            "setting": setting,
+                            "value": value
+                        })                    
+
+                secrets = shared.load_secrets_file()
+                secrets_changed = False
+                for setting, value in new_arguments.items():
+                    if shared.to_bool(value.get("secret", False)):
+                        secrets_key = f"{self.name.upper()}_{setting.upper()}"
+                        if not secrets_key in secrets:
+                            secrets[secrets_key] = new_arguments.get(setting, "")
+                            new_arguments[setting] = ""
+                            secrets_changed = True
+                            self._log(True, f"INFO: Setting {setting} migrated to env.json file")
+
+                if secrets_changed:
+                    shared.save_secrets_file(secrets)
+                
+                flow_data[self.name_for_flow]["metadata"] = new_flow_data
+
+            self._log(False, f"INFO: Migrating flows containing module {self.name}")  
+            shared.save_flows_with_module(flows, self.name)
+            
+            self._log(True, f"INFO: Deprecated Settings")          
+            if deprecated:
+                for item in deprecated:
+                    self._log(True, f"  Setting: {item['setting']}, Value: {item['value']}")
+            else:
+                self._log(True, "  No settings were deprecated")
+        
+            self._log(True, f"INFO: New Settings")
+            if additional:
+                for item in additional:
+                    self._log(True, f"  Setting: {item['setting']}, Value: {item['value']}")
+            else:
+                self._log(True, "  No additional settings were found")
+                    
+            self._log(True, f"INFO: Module migration complete")
+
+        except Exception as e:
+            tb = e.__traceback__
+            self._log(False, f"ERROR: Function migrate_module on line {tb.tb_lineno}: {e}")
+                                    
     @ensure_valid
     def install_or_update_module(self, force:bool = False) -> bool:
         result = False

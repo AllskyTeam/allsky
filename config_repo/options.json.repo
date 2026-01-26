@@ -2151,6 +2151,15 @@
 "carryforward" : true
 },
 {
+"name" : "inlinemessages",
+"default" : true,
+"description" : "If enabled system messages are shown at the top of the page rather than via the menu.",
+"label" : "Inline System Messages",
+"type" : "boolean",
+"carryforward" : true,
+"checkchanges" : true
+},
+{
 "name" : "webuidatafiles",
 "default" : "",
 "description" : "See the documentation for a <a allsky='true' external='true' href='/documentation/settings/allsky.html'>description of this setting</a>.",

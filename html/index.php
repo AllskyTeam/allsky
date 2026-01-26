@@ -15,6 +15,7 @@
  * @version    0.0.1
  */
 
+global $inlineMessages;
 // Globals
 $lastChangedName = "lastchanged";	// json setting name
 $formReadonly = false;				// The WebUI isn't readonly
@@ -38,6 +39,7 @@ $status = new StatusMessages();
 // If no one complains we can remove everything DHCP related.
 define('DHCP_ENABLED', false);
 
+checkClearingMessages();
 
 function getRemoteWebsiteVersion() {
 	global $useRemoteWebsite, $status;
@@ -79,6 +81,13 @@ if ($fa_size == "lg") {
 }
 
 $pageInfo = [
+	"messages" => [
+		"title" => "System Messages",
+		"icon" => "fa fa-triangle-exclamation fa-fw",
+		"jshandler" => "ALLSKYSHOWMESSAGES",
+		"extraiconcss" => "text-danger",
+		"extratextcss" => "text-danger"
+	],	
 	"login" => [
 		"title" => "Login",
 		"icon" => "fa fa-right-to-bracketfa-fw"
@@ -227,7 +236,6 @@ function getPageTitle($p, $day) {
 }
 function getPageHeaderTitle($p) {
 	global $pageInfo;
-	global $pageTitle;
 
 	$t = getVariableOrDefault($pageInfo, $p, null);
 	if ($t === null) {
@@ -239,6 +247,30 @@ function getPageIcon($p) {
 	global $pageInfo;
 
 	return $pageInfo[$p]['icon'] ?? "";
+}
+function getJSHandler($p) {
+	global $pageInfo;
+
+	$t = getVariableOrDefault($pageInfo, $p, null);
+	if ($t === null) {
+		return null;
+	}
+	return $t['jshandler'] ?? null;
+}
+
+function getextraCss($p) {
+	global $pageInfo;
+
+	$t = getVariableOrDefault($pageInfo, $p, null);
+	if ($t === null) {
+		return null;
+	}
+
+	$result = [
+		"extraiconcss" => $t['extraiconcss'] ?? "",
+		"extratextcss" => $t['extratextcss'] ?? ""
+	];
+	return $result;
 }
 
 // Insert just an "<a href=''..>" with an icon.
@@ -290,14 +322,26 @@ function insertMenuItem($p, $day, $type="", $href_only=false) {
 	$title = getPageTitle($p, $day);
 	$icon = getPageIcon($p);
 	$href = getVariableOrDefault($t, "href", "index.php?page=$p");
+	$jsHandler = getJSHandler($p);
+	$extraCSS = getextraCss($p);
 
-	echo "<li>";
-	echo "<a id='$p' href='$href'><i class='$icon'></i>";
-	if ($type !== "dropdown") echo "<span class='menu-text'>";
-	echo " $title";
-	if ($type !== "dropdown") echo "</span>";
-	echo "</a>";
-	echo "</li>\n";
+	if ($jsHandler === null) {
+		echo "<li>";
+		echo "<a id='$p' href='$href'><i class='$icon'></i>";
+		if ($type !== "dropdown") echo "<span class='menu-text'>";
+		echo " $title";
+		if ($type !== "dropdown") echo "</span>";
+		echo "</a>";
+		echo "</li>\n";
+	} else {
+		$extraiconcss = $extraCSS["extraiconcss"];
+		$extratextcss = $extraCSS["extratextcss"];
+		echo "<li>";
+		echo "<a id='$p' href='$href' class='allsky-js-handler' data-jsclass='$jsHandler'><i class='$icon $extraiconcss'></i>";
+		echo "<span class='menu-text $extratextcss'>$title</span>";
+		echo "</a>";
+		echo "</li>\n";
+	}
 }
 
 function insertPage($p) {
@@ -461,10 +505,8 @@ function insertVersions() {
 	}
 }
 
-function displayStatusMessages($p) {
-	global $status, $ME;
-
-	check_if_configured($p, "main");	// It calls addMessage() on error.
+function checkClearingMessages() {
+	global $status;
 
 	if (isset($_POST['clear'])) {
 		$t = @filemtime(ALLSKY_MESSAGES);
@@ -474,7 +516,6 @@ function displayStatusMessages($p) {
 			$newT = getVariableOrDefault($_POST, "filetime", 0);
 			if ($t == $newT) {
 				$cmd = "sudo rm -f " . ALLSKY_MESSAGES;
-				echo "<script>console.log(`Executing [$cmd]`);</script>";
 				exec($cmd, $result, $retcode);
 				if ($retcode !== 0) {
 					if (count($result) > 0)
@@ -493,7 +534,25 @@ function displayStatusMessages($p) {
 				$status->addMessage("System Messages changed.  New content is:", "warning");
 			}
 		}
+		$redirect = $_SERVER['HTTP_REFERER'] ?? '/';
+		redirect($redirect);
 	}
+}
+
+function haveMessages() {
+	clearstatcache();
+	$size = @filesize(ALLSKY_MESSAGES);
+	if ($size !== false && $size > 0) {
+		return true;
+	}
+	return false;
+}
+
+function displayStatusMessages($p) {
+	global $status, $ME;
+
+	check_if_configured($p, "main");	// It calls addMessage() on error.
+
 	clearstatcache();
 	$size = @filesize(ALLSKY_MESSAGES);
 	if ($size !== false && $size > 0) {
@@ -647,7 +706,10 @@ if ($page=="logout") {
 		<script src="documentation/bower_components/jquery/dist/jquery.min.js"></script>
 		<script src="documentation/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
 		<script src="documentation/bower_components/metisMenu/dist/metisMenu.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="/js/datatables/datatables.min.css?c=<?php echo ALLSKY_VERSION; ?>" />
+    <script type="text/javascript" src="/js/datatables/datatables.js?c=<?php echo ALLSKY_VERSION; ?>"></script>		
 		<script src="js/bigscreen.min.js"></script>
+		<script src="js/allsky-messages.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 		<script src="js/allsky.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 		<script src="documentation/js/sb-admin-2.js"></script>
 		<link rel='stylesheet' href='/css/checkbox.css?c=<?php echo ALLSKY_VERSION; ?>' />
@@ -678,6 +740,9 @@ if ($page=="logout") {
 		<div class="sidebar" id="sidebar">
 			<ul class="nav nav-pills nav-stacked">
 <?php
+				if (haveMessages() && !$inlineMessages) {
+					insertMenuItem('messages', "");
+				}
 				insertMenuItem('live_view', "");
 				insertMenuItem('list_days', "");
 ?>
@@ -761,7 +826,9 @@ if (DHCP_ENABLED) {
 		<!-- Main content -->
 		<div class="content">
 			<?php
-				displayStatusMessages($page);
+				if ($inlineMessages) {
+					displayStatusMessages($page);
+				}
 				insertPage($page);
 			?>
 		</div>

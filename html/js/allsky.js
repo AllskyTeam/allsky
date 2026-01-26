@@ -103,6 +103,7 @@ class ALLSKY {
 		});
 
 	}
+
 	#setupTheme() {
 		if (!localStorage.getItem("theme")) {
 			localStorage.setItem("theme", "light")
@@ -386,6 +387,34 @@ class ALLSKY {
 		// clicks inside flyout shouldn't bubble
 		$(document).on('click', '.floating-flyout', function (e) { e.stopPropagation(); });
 	}
+1
+	#setupMenuHandlers() {
+		$(document).on('click', '.allsky-js-handler', function (e) {
+			e.preventDefault();
+			e.stopPropagation();
+
+			const className = $(this).data('jsclass');
+
+			try {
+				const Ctor = window[className];
+
+				if (typeof Ctor !== "function") {
+					throw new Error(`Menu Handler: Class not found: ${className}`);
+				}
+
+				const instance = new Ctor();
+
+				if (typeof instance.run !== "function") {
+					throw new Error(`Menu Handler:Class "${className}" has no run() method`);
+				}
+
+				instance.run();
+
+			} catch (err) {
+				alert(`Menu Handler: Unable to run handler "${className}". Please contact Allsky Support.`);
+			}
+		});
+	}
 
 	init() {
 		this.#setupTheme();
@@ -399,6 +428,7 @@ class ALLSKY {
 		this.#setupMenu();
 		this.#setupCloseSystemMessages();
 		this.#setupTruncatedText();
+		this.#setupMenuHandlers();
 		includeHTML();
 	}
 

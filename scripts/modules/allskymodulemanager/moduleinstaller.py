@@ -3,6 +3,7 @@
 import os
 import sys
 import argparse
+import traceback
 
 # Assume whoever calls us already sourced in variables.*
 # Ensure the script is running in the correct Python environment.
@@ -124,6 +125,15 @@ Would you like to review and install any available modules now?\
         except (InvalidGitRepositoryError, GitCommandError):
             return False
 
+    def _reset_repo(self, repo_path: str | Path) -> None:
+        try:
+            self._log(True, f"INFO: Resetting repository at {repo_path} to clean state")
+            repo = Repo(repo_path)
+            repo.git.reset('--hard')
+            repo.git.clean('-fdx')
+        except Exception as e:
+            shared.log_exception("_reset_repo") 
+        
     def _ensure_cloned_repo(self, repo_url: str, dest: str | Path, branch: str = "master", re_checkout:bool = False) -> bool:
         dest_path = Path(dest)
 
@@ -131,6 +141,7 @@ Would you like to review and install any available modules now?\
             try:
                 repo = Repo(dest_path)
                 self._log(True,f"INFO: Updating existing repo in {dest_path}...")
+                self._reset_repo(dest_path)             
                 repo.git.checkout(branch, force=True)
                 repo.remotes.origin.pull()
                 return True
@@ -146,6 +157,7 @@ Would you like to review and install any available modules now?\
                     self._log(True, f"INFO: {dest_path} exists but is not a repo. Removing...")
                 shutil.rmtree(dest_path)
 
+            self._log(True, f"INFO: Creating empty directory in {dest_path}")
             dest_path.parent.mkdir(parents=True, exist_ok=True)
 
             try:
@@ -157,9 +169,9 @@ Would you like to review and install any available modules now?\
                 self._log(True, f"INFO: Cloned {repo_url} into {dest_path}")
                 return True
             except GitCommandError as e:
-                print(f"INFO: Error cloning {repo_url}: {e}")
+                self._log(False, f"ERROR: Error cloning {repo_url}: {e}")
                 return False
-
+        
     def _get_remote_branches(self, repo_path: str | Path) -> list[str]:
         repo = Repo(repo_path)
         return [
@@ -185,9 +197,12 @@ Would you like to review and install any available modules now?\
         if self._branch != self._master_branch:
             self._main_backtitle = self._main_backtitle1 + f" Using '{self._branch}' branch."
 
+        #shared.remove_path(self._module_repo_path)
+        
         repo = Repo(self._module_repo_path)
 
         # checkout the branch (force to ensure working tree is updated)
+        self._reset_repo(self._module_repo_path)
         repo.git.checkout(self._branch, force=True)
 
         # try to pull latest changes
@@ -221,11 +236,22 @@ Would you like to review and install any available modules now?\
         for dir in dirs:
             if dir.startswith('allsky_') and not os.path.isfile(dir):
                 mod = ALLSKYMODULE(dir, self._debug_mode, self._module_repo_path, self._logger)
-                self._module_list.append(mod)
-                if mod.installed:
-                    num_installed_modules += 1
+                
+                include = True
+                if not args.deprecated:
+                    if mod.deprecated:
+                        include = False
+                
+                if include:                
+                    self._module_list.append(mod)
+                    
+                    if mod.installed:
+                        num_installed_modules += 1
         
         self._module_list = sorted(self._module_list, key=lambda p: p.name)
+        
+        self._reset_repo(self._module_repo_path)
+        
         return num_installed_modules
 
     def _find_module(self, module_name: str):
@@ -268,23 +294,24 @@ Would you like to review and install any available modules now?\
         # Build list with status + descriptions
         for module in self._module_list:
             try:
-                if not module.deprecated:
-                    if module.installed and getattr(module, "is_new_version_available", None) and module.is_new_version_available():
-                        status = " (Update Available) "
-                    elif module.installed:
-                        status = " (Installed) "
-                    else:
-                        status = ""
-                    # Whiptail expects triples: (tag, description, "ON"/"OFF")
-                    description = f"{status}{module.description}"
-                    module_triples.append((description, "", "OFF"))
-                    module_xref.append((module, description))
+                status = ""
+
+                if module.installed and getattr(module, "is_new_version_available", None) and module.is_new_version_available():
+                    status = " (Update Available) "
+                elif module.installed:
+                    status = "(Installed) "
+                elif module.deprecated:
+                    status = "(Deprecated) "
+                    
+                # Whiptail expects triples: (tag, description, "ON"/"OFF")
+                description = f"{status}{module.description}"
+                module_triples.append((description, "", "OFF"))
+                module_xref.append((module, description))
             except (ModuleError, NoVersionError):
                 # Skip modules that can't report status cleanly
                 continue
             except Exception as e:
-                tb = e.__traceback__
-                print(f"Error {getattr(module, 'name', '?')} on line {tb.tb_lineno}: {e}")
+                shared.log_exception("_display_install_dialog") 
                 sys.exit(1)
 
         if not module_triples:
@@ -362,8 +389,7 @@ Would you like to review and install any available modules now?\
             except (ModuleError, NoVersionError):
                 continue
             except Exception as e:
-                tb = e.__traceback__
-                print(f"Error {getattr(module, 'name', '?')} on line {tb.tb_lineno}: {e}")
+                shared.log_exception("_display_uninstall_dialog") 
                 sys.exit(1)
 
         if not module_triples:
@@ -414,13 +440,12 @@ Would you like to review and install any available modules now?\
         self._log(True, f"================\n")
                 
         for module in self._module_list:
-            #try:
-            if module.installed:
-                if not args.dryrun:
-                    module.install_or_update_module(True)
-            #except Exception as e:
-            #    tb = e.__traceback__
-            #    self._log(False, f"ERROR: Function auto_upgrade_modules on line {tb.tb_lineno}: {e}")
+            try:
+                if module.installed:
+                    if not args.dryrun:
+                        module.install_or_update_module(True)
+            except Exception as e:
+                shared.log_exception("auto_upgrade_modules") 
         
         self._log(False, "INFO: Auto upgrade modules completed\n\n")
     
@@ -487,8 +512,7 @@ Would you like to review and install any available modules now?\
                             shutil.move(str(file), str(target))
                         did_something = True                                    
         except Exception as e:  
-            tb = e.__traceback__
-            self._log(False, f"ERROR: Function cleanup_opt on line {tb.tb_lineno}: {e}")
+            shared.log_exception("cleanup_opt") 
 
         if not did_something:
             self._log(False, "INFO: No cleanup required")
@@ -502,12 +526,13 @@ Would you like to review and install any available modules now?\
                             
     def run(self, args: argparse.Namespace) -> None:
         
-        self._ensure_cloned_repo(self._module_repo, self._module_repo_path)
-        self._branches = self._get_remote_branches(self._module_repo_path)
-        
         if args.branch or args.setbranch:
             self._select_git_branch(args)
-    
+        else:
+            self._ensure_cloned_repo(self._module_repo, self._module_repo_path)
+        
+        self._branches = self._get_remote_branches(self._module_repo_path)
+            
         self._read_modules()
                     
         go_for_it = False
@@ -560,8 +585,7 @@ Would you like to review and install any available modules now?\
                                     try:
                                         module.uninstall_module()
                                     except Exception as e:
-                                        tb = e.__traceback__
-                                        self._log(False, f"ERROR: uninstall_module on line {tb.tb_lineno}: {e}")
+                                        shared.log_exception("run") 
                                 if modules_to_uninstall:
                                     print("\n\nUninstall complete")
                                     input("\nPress Enter to continue...")
@@ -583,6 +607,7 @@ if __name__ == "__main__":
     parser.add_argument("--dryrun", action="store_true", help="For auto mode do a dry run only, no changes will be made")    
     parser.add_argument("--welcome", action="store_true", help="Show the welcome message")    
     parser.add_argument("--logfile", type=str, help="Log to this file rather than stdout")  
+    parser.add_argument("--deprecated", action="store_true", help="Show deprecated modules in the install list")    
     args = parser.parse_args()    
     
     module_installer = ALLSKYMODULEINSTALLER(args.debug, args.logfile)
@@ -591,8 +616,7 @@ if __name__ == "__main__":
         try:
             module_installer.auto_upgrade_modules(args)
         except Exception as e:
-            tb = e.__traceback__
-            print(f"ERROR: Function auto_upgrade_modules on line {tb.tb_lineno}: {e}")
+            shared.log_exception("__main__ auto") 
         sys.exit(0)
                 
     if args.cleanupopt:
@@ -602,4 +626,4 @@ if __name__ == "__main__":
     try:
         module_installer.run(args)
     except Exception as e:
-        print(e)
+        shared.log_exception("__main__ install") 

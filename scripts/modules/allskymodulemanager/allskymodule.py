@@ -114,11 +114,11 @@ class ALLSKYMODULE:
 
 
     @property
-    def deprecated(self) -> str:
+    def deprecated(self) -> bool:
         return self._deprecated
 
     @deprecated.setter
-    def deprecated(self, value:str):
+    def deprecated(self, value:bool):
         self._deprecated = value
             
     @property

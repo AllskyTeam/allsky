@@ -129,6 +129,7 @@ if [[ -z ${S_lastchanged} ]]; then
 	if [[ ${STATUS} == "${ALLSKY_STATUS_REBOOT_NEEDED}" ]]; then
 		# It's been rebooted and now we need to force "lastchanged" to be set.
 		STATUS="${ALLSKY_STATUS_NEEDS_REVIEW}"
+		set_allsky_status "${STATUS}"
 	fi
 
 	if [[ ${STATUS} == "${ALLSKY_STATUS_NEEDS_REVIEW}" ]]; then

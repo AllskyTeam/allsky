@@ -104,9 +104,6 @@ else
 	mkdir -p "${ALLSKY_CURRENT_DIR}"
 	chmod 775 "${ALLSKY_CURRENT_DIR}"
 	sudo chgrp "${WEBSERVER_GROUP}" "${ALLSKY_CURRENT_DIR}"
-	MSG="Had to create '${ALLSKY_CURRENT_DIR}'."
-	MSG="${MSG}\nIf this happens again, contact the Allsky developers."
-	"${ALLSKY_CURRENT_DIR}/addMessage.sh" --type warning --msg "${ME}: ${MSG}"
 fi
 
 # Make sure they rebooted if they were supposed to.

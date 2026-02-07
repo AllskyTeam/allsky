@@ -3570,7 +3570,8 @@ setup_database()
 	sudo chown "${ALLSKY_OWNER}":"${ALLSKY_WEBSERVER_OWNER}" "${ALLSKY_DATABASES}"
 	sudo chmod 664 "${ALLSKY_DATABASES}"
 
-	sudo "${ALLSKY_UTILITIES}/database_manager.py" --auto
+	local TMP="${ALLSKY_LOGS}/database.log"
+	sudo "${ALLSKY_UTILITIES}/database_manager.py" --auto --logfile "${TMP}"
 }
 
 ####
@@ -3599,9 +3600,9 @@ install_modules()
 	#
 
 	if [[ "$BRANCH" == "$ALLSKY_GITHUB_MAIN_BRANCH" ]]; then
-		sudo su - "${ALLSKY_OWNER}" -c "\"${ALLSKY_MODULE_INSTALLER}\" --welcome"
+		sudo su - "${ALLSKY_OWNER}" -c "\"${ALLSKY_MODULE_INSTALLER}\" --welcome "${DEBUG_ARG}""
 	else
-		sudo su - "${ALLSKY_OWNER}" -c "\"${ALLSKY_MODULE_INSTALLER}\" --welcome --setbranch \"${BRANCH}\""
+		sudo su - "${ALLSKY_OWNER}" -c "\"${ALLSKY_MODULE_INSTALLER}\" --welcome --setbranch \"${BRANCH}\" "${DEBUG_ARG}""
 	fi
 
 	RET=$?
@@ -3617,9 +3618,9 @@ update_modules()
 {
 	local TMP="${ALLSKY_LOGS}/modules.log"
 	if [[ "$BRANCH" == "$ALLSKY_GITHUB_MAIN_BRANCH" ]]; then
-			"${ALLSKY_MODULE_INSTALLER}" --auto  --logfile "${TMP}"
+			"${ALLSKY_MODULE_INSTALLER}" --auto  "${DEBUG_ARG}" --logfile "${TMP}"
 	else
-			"${ALLSKY_MODULE_INSTALLER}" --auto --setbranch "$BRANCH" --logfile "${TMP}"
+			"${ALLSKY_MODULE_INSTALLER}" --auto "${DEBUG_ARG}" --setbranch "${BRANCH}" --logfile "${TMP}"
 	fi
 
 	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )

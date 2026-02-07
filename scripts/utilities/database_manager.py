@@ -65,6 +65,7 @@ import json
 import sqlite3
 from pathlib import Path
 from whiptail import Whiptail
+import logging
 
 modules_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(modules_dir)
@@ -181,7 +182,19 @@ class ALLSKYDATABASEMANAGER:
             Namespace with `debug` and other flags.
         """
         self._debug_mode = args.debug
+        self._log_file = args.logfile
+                
+        self._logger = None
         
+        if self._log_file:
+            self._logger = logging.getLogger("allsky_module_installer")
+            self._logger.setLevel(logging.INFO)
+
+            handler = logging.FileHandler(self._log_file)
+            formatter = logging.Formatter("%(message)s")
+            handler.setFormatter(formatter)
+            self._logger.addHandler(handler)
+                            
         self._mysql_installed, self._mysql_type = self._mysql_service_installed()
         self._is_sqlite3_installed()
         self._database_config = self._get_allsky_database_config()
@@ -258,21 +271,15 @@ class ALLSKYDATABASEMANAGER:
                 self._info_prompt(self._whiptail_error, self._back_title, self._whiptail_database_disabled, 11, 50)
         return wrapper
                                             
-    def _log(self, log_level, message) -> None:
+    def _log(self, debug_only, message) -> None:
         """
         Log a message via Allsky or stdout (debug).
-
-        Parameters
-        ----------
-        log_level : int
-            Allsky log level.
-        message : str
-            Message to log.
         """
-        if self._debug_mode:
+        if debug_only and self._debug_mode or not debug_only:
+            if self._log_file:
+                self._logger.info(message)
             print(message)
-        else:
-            shared.log(log_level, message)
+            
 
     def _get_pi_version(self) -> int:
         """
@@ -310,7 +317,7 @@ class ALLSKYDATABASEMANAGER:
             result = True
             self._sqlite_installed = True
         except ImportError:
-            self._log(1,"ERROR: Unable to use SQLite on this pi. Please contact the Allsky support team via GitHub")
+            self._log(False,"ERROR: Unable to use SQLite on this pi. Please contact the Allsky support team via GitHub")
             sys.exit(1)
             
         return result
@@ -913,7 +920,7 @@ class ALLSKYDATABASEMANAGER:
             return True
 
         except Exception as e:
-            self._log(4, f"ERROR: _set_allsky_options failed -> {e}")
+            self._log(False, f"ERROR: _set_allsky_options failed -> {e}")
             return False
 
     def _info_prompt(self, title:str, back_title:str, message:str, height:int=12, width:int=60):
@@ -1226,26 +1233,41 @@ class ALLSKYDATABASEMANAGER:
                 database_to_use = "sqlite"
             else:
                 database_to_use = self._select_database_server()
-                
+
+            self._log(False, f"INFO: User selected database: {database_to_use}")
+            
             if database_to_use == "mysql" and not self._mysql_installed:
                 if self._show_mysql_warning_message():
                     if not self._install_database_server(database_to_use):
                         # TODO: install failed handling
+                        self._log(False, "ERROR: MySQL installation failed.")
                         pass
+                    else:
+                        self._log(False, "INFO: MySQL installation complete.")
                 else:
+                    self._log(False, "INFO: User declined MySQL installation after warning.")
                     sys.exit(1)
                 
             if database_to_use == "mysql":
                 action, user_name, password = self._select_mysql_database_user()
                 if action == "create" or action == "select":
+                    self._log(False, f"INFO: User selected MySQL user '{user_name}' with action '{action}'.")
                     database_name = self._database_config["databasedatabase"] if "databasedatabase" in self._database_config else ""
                     result, db_name = self._select_mysql_database("localhost", user_name, password, database_name)
                     if result:
                         result = self._set_allsky_options("mysql", "localhost", user_name, password, db_name)
                         self._mysql_installed, self._mysql_type = self._mysql_service_installed()
+                        self._log(False, f"INFO: MySQL database '{db_name}' selected and configured for Allsky.")
+                    else:
+                        self._log(False, "INFO: No MySQL database selected. Switching to SQLite3.")
+                        database_to_use = "sqlite"
+                else:
+                    self._log(False, "INFO: No MySQL user selected or created. Switching to SQLite3.")
+                    database_to_use = "sqlite"
 
             if database_to_use == "sqlite":
                 result = self._set_allsky_options("sqlite", "", "", "", "allsky")
+                self._log(False, "INFO: Configured to use SQLite3 database.")
                     
     def run(self):
         """
@@ -1322,7 +1344,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Allsky database manager")
     parser.add_argument("--debug", action="store_true", help="Enable debug mode, shows more detailed errors")  
     parser.add_argument("--auto", action="store_true", help="Step through installing / configuring the database")  
-    parser.add_argument("--removemysql", action="store_true", help="For testign only remove mysql")  
+    parser.add_argument("--removemysql", action="store_true", help="For testign only remove mysql")
+    parser.add_argument("--logfile", type=str, help="Log to this file rather than stdout")  
+    
     args = parser.parse_args()    
     
     database_manager = ALLSKYDATABASEMANAGER(args)

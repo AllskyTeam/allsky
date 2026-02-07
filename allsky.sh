@@ -94,6 +94,21 @@ verify_CAMERA_TYPE "${CAMERA_TYPE}"
 
 cd "${ALLSKY_HOME}" || exit 1
 
+# Make directories that need to exist.
+if [[ -d ${ALLSKY_CURRENT_DIR} ]]; then
+	# Remove any lingering temporary old image files.
+	rm -f "${ALLSKY_CURRENT_DIR}/${ALLSKY_FILENAME}"-20*."${ALLSKY_EXTENSION}"	# "20" for 2000 and later
+else
+	# We should never get here since ${ALLSKY_CURRENT_DIR} is created during installation,
+	# but "just in case"...
+	mkdir -p "${ALLSKY_CURRENT_DIR}"
+	chmod 775 "${ALLSKY_CURRENT_DIR}"
+	sudo chgrp "${WEBSERVER_GROUP}" "${ALLSKY_CURRENT_DIR}"
+	MSG="Had to create '${ALLSKY_CURRENT_DIR}'."
+	MSG="${MSG}\nIf this happens again, contact the Allsky developers."
+	"${ALLSKY_CURRENT_DIR}/addMessage.sh" --type warning --msg "${ME}: ${MSG}"
+fi
+
 # Make sure they rebooted if they were supposed to.
 if reboot_needed ; then
 	NEEDS_REBOOT="true"

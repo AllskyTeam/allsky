@@ -3600,8 +3600,10 @@ install_modules()
 	#
 
 	if [[ "$BRANCH" == "$ALLSKY_GITHUB_MAIN_BRANCH" ]]; then
+		display_msg --log progress "Installing modules using master branch."
 		sudo su - "${ALLSKY_OWNER}" -c "${ALLSKY_MODULE_INSTALLER} --welcome ${DEBUG_ARG}"
 	else
+		display_msg --log progress "Installing modules using the ${BRANCH} branch."	
 		sudo su - "${ALLSKY_OWNER}" -c "${ALLSKY_MODULE_INSTALLER} --welcome --setbranch ${BRANCH} ${DEBUG_ARG}"
 	fi
 
@@ -3618,8 +3620,10 @@ update_modules()
 {
 	local TMP="${ALLSKY_LOGS}/modules.log"
 	if [[ "$BRANCH" == "$ALLSKY_GITHUB_MAIN_BRANCH" ]]; then
+			display_msg --log progress "Updating modules using master branch."	
 			"${ALLSKY_MODULE_INSTALLER}" --auto  "${DEBUG_ARG}" --logfile "${TMP}"
 	else
+			display_msg --log progress "Updating modules using the ${BRANCH} branch."		
 			"${ALLSKY_MODULE_INSTALLER}" --auto "${DEBUG_ARG}" --setbranch "${BRANCH}" --logfile "${TMP}"
 	fi
 

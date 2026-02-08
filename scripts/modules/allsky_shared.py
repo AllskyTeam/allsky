@@ -4889,3 +4889,125 @@ def draw_detections(image: np.ndarray,
 #
 # End Meteor detection
 #
+
+def log_exception(context: str = "", full: bool = False, logger=None) -> None:
+    """
+    Log the current exception with accurate source location.
+
+    Must be called from inside an except block.
+
+    Args:
+        context (str): Optional description of where the error occurred.
+        full (bool): If True, logs the full traceback.
+        logger (callable): Optional logging function. Defaults to print.
+    """
+    exc_type, exc_value, exc_tb = sys.exc_info()
+
+    if exc_tb is None:
+        # Called outside except block
+        msg = f"ERROR{f' in {context}' if context else ''}: log_exception() called with no active exception"
+        (logger or print)(msg)
+        return
+
+    if full:
+        msg = (
+            f"ERROR{f' in {context}' if context else ''}:\n"
+            + "".join(traceback.format_exception(exc_type, exc_value, exc_tb))
+        )
+        (logger or print)(msg)
+        return
+
+    # Walk to the deepest frame (real error origin)
+    tb = exc_tb
+    while tb.tb_next:
+        tb = tb.tb_next
+
+    frame = tb.tb_frame
+    filename = frame.f_code.co_filename
+    lineno = tb.tb_lineno
+    func = frame.f_code.co_name
+
+    msg = (
+        f"ERROR{f' in {context}' if context else ''}: "
+        f"{filename}:{lineno} in {func} -> {exc_type.__name__}: {exc_value}"
+    )
+
+    (logger or print)(msg)
+    
+def add_message(message: str, type: str) -> None:
+    """
+    Add a message to the Allsky WebUI message file.
+
+    Messages are stored as tab-separated records in the file pointed to by the
+    ALLSKY_MESSAGES environment variable. Each record has the format:
+
+        id <TAB> cmd <TAB> type <TAB> date <TAB> count <TAB> message <TAB> url
+
+    Behaviour:
+    - If the message does not already exist in the file, a new entry is appended
+      with a count of 1.
+    - If the same message text already exists, the existing entry is removed and
+      re-added with the count incremented and the date updated.
+    - Messages are matched by exact message text after basic sanitisation
+      (tabs and newlines replaced with spaces).
+
+    The message date is stored using a human-readable format consistent with the
+    original shell implementation (e.g. "January 30, 10:22:11 PM").
+
+    If the ALLSKY_MESSAGES variable is not set, the function exits silently.
+
+    Args:
+        message: The message text to display in the WebUI.
+        type:    Message severity/type (e.g. "info", "warning", "success").
+
+    Returns:
+        None
+    """
+    message_file = get_environment_variable("ALLSKY_MESSAGES")
+    if not message_file:
+        return
+
+    message_path = Path(message_file)
+    TAB = "\t"
+
+    # Normalise message content to keep the file structure intact
+    MESSAGE = message.replace("\t", " ").replace("\n", " ")
+    TYPE = type
+    DATE = datetime.now().strftime("%B %d, %I:%M:%S %p")
+
+    lines = []
+    count = 1
+
+    # Load existing messages and check for a matching entry
+    if message_path.exists():
+        for line in message_path.read_text(encoding="utf-8").splitlines():
+            parts = line.split(TAB)
+
+            # Expected fields:
+            # [id, cmd, type, date, count, message, url]
+            if len(parts) >= 6 and parts[5] == MESSAGE:
+                try:
+                    count = int(parts[4]) + 1
+                except ValueError:
+                    # Corrupt or missing count; reset safely
+                    count = 1
+                # Skip the existing entry so it can be replaced
+                continue
+
+            lines.append(line)
+
+    # Create the updated or new message entry
+    new_line = TAB.join([
+        "",                 # ID (unused)
+        "",                 # CMD_TEXT (unused)
+        TYPE,
+        DATE,
+        str(count),
+        MESSAGE,
+        ""                  # URL (unused)
+    ])
+
+    lines.append(new_line)
+
+    # Write the updated message list back to disk
+    message_path.write_text("\n".join(lines) + "\n", encoding="utf-8")

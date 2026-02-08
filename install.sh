@@ -3620,11 +3620,31 @@ update_modules()
 {
 	local TMP="${ALLSKY_LOGS}/modules.log"
 	if [[ "$BRANCH" == "$ALLSKY_GITHUB_MAIN_BRANCH" ]]; then
-			display_msg --log progress "Updating modules using master branch."	
-			"${ALLSKY_MODULE_INSTALLER}" --auto  "${DEBUG_ARG}" --logfile "${TMP}"
+			display_msg --log progress "Updating modules using master branch."
+
+			args=(
+				--auto
+				--logfile "$TMP"
+			)
+
+			if [ -n "$DEBUG_ARG" ]; then
+				args+=("$DEBUG_ARG")
+			fi
+
+			"${ALLSKY_MODULE_INSTALLER}" "${args[@]}"			
 	else
-			display_msg --log progress "Updating modules using the ${BRANCH} branch."		
-			"${ALLSKY_MODULE_INSTALLER}" --auto "${DEBUG_ARG}" --setbranch "${BRANCH}" --logfile "${TMP}"
+			display_msg --log progress "Updating modules using the ${BRANCH} branch."
+			args=(
+				--auto
+				--setbranch "$BRANCH"
+				--logfile "$TMP"
+			)
+
+			if [ -n "$DEBUG_ARG" ]; then
+				args+=("$DEBUG_ARG")
+			fi
+
+			"${ALLSKY_MODULE_INSTALLER}" "${args[@]}"			
 	fi
 
 	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )

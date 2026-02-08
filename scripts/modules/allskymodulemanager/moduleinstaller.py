@@ -441,6 +441,11 @@ Would you like to review and install any available modules now?\
                 
         for module in self._module_list:
             try:
+                if module.deprecated:
+                    self._log(False, f"INFO: Skipping deprecated module {module.name}")
+                    shared.add_message(f"Module {module.name} has been deprecated so not upgraded", "danger")
+                    continue
+                
                 if module.installed:
                     if not args.dryrun:
                         module.install_or_update_module(True)
@@ -526,10 +531,9 @@ Would you like to review and install any available modules now?\
                             
     def run(self, args: argparse.Namespace) -> None:
         
+        self._ensure_cloned_repo(self._module_repo, self._module_repo_path)
         if args.branch or args.setbranch:
             self._select_git_branch(args)
-        else:
-            self._ensure_cloned_repo(self._module_repo, self._module_repo_path)
         
         self._branches = self._get_remote_branches(self._module_repo_path)
             

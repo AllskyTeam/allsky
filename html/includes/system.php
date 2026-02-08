@@ -337,6 +337,7 @@ function DisplaySystem()
 				<ul class="nav nav-tabs">
 					<li class="active"><a href="#as-system-system" data-toggle="tab">System</a></li>
 					<li><a href="#as-system-watchdog" data-toggle="tab">Watchdogs</a></li>
+					<li><a href="#as-system-logs" data-toggle="tab">Logs</a></li>
 				</ul>
 
 				<div class="tab-content" style="margin-top:15px;">
@@ -444,12 +445,42 @@ function DisplaySystem()
 						<div id="as-system-watchdog-results">
 						</div>
 					</div>
+					<div id="as-system-logs" class="tab-pane fade">
+						<div class="row" style="margin-bottom:10px;">
+							<div class="col-xs-12 col-sm-6">
+								<label for="as-system-log-select">Select Log</label>
+								<select id="as-system-log-select" class="form-control"></select>
+							</div>
+							<div class="col-xs-12 col-sm-6 text-right" style="margin-top:25px;">
+								<div style="display:inline-flex; align-items:center; gap:8px; margin:0;">
+									<span>Follow</span>
+									<label class="el-switch el-switch-sm el-switch-green" style="margin:0;">
+										<input id="as-system-log-follow" type="checkbox" name="switch" checked>
+										<span class="el-switch-style"></span>
+									</label>
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-xs-12">
+								<div id="as-system-log-warning" class="alert alert-warning" style="display:none; margin-bottom:10px;"></div>
+								<div id="as-system-log-meta" class="text-muted" style="margin-bottom:6px;"></div>
+								<style>
+									.log-error { color: #ff6b6b; font-weight: 600; }
+									.log-warn { color: #ffd166; font-weight: 600; }
+									.log-info { color: #8fd3ff; }
+								</style>
+								<pre id="as-system-log-output" style="height: 420px; overflow-y: auto; background:#111; color:#e6e6e6; padding:10px; border-radius:4px;"></pre>
+							</div>
+						</div>
+					</div>					
 				</div>
 			</div><!-- /.panel-body -->
 		</div><!-- /.panel-primary -->
 
     	<script src="/js/jquery-loading-overlay/dist/loadingoverlay.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>		
 		<script src="js/watchdog.js"></script>
+		<script src="js/system-logs.js"></script>
 	<?php
 }
 ?>

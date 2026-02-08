@@ -5279,6 +5279,9 @@ If you have an RPi camera, run the following to make sure the camera can be seen
 <p><code>rpicam-still --list-cameras</code></p>
 <p>If camera number 0 (the first camera) is in the list, you're good to go.
 Note that some non-Raspberry Pi brand cameras may need special software installed and/or operating system configuration changes - read the camera manual.</p>
+<p>The above will only work if you run the command as the user you setup when burning the sd card image. If you have created another user then run the following command Before the <code>rpicam-still</code> command</p>
+<p><code>usermod -aG video USERNAME</code></p>
+<p>Where USERNAME is the user you created</p>
 </div>
 <h3 id="before-installing">Before installing<a class="headerlink" href="#before-installing" title="Permanent link">¶</a></h3>
 <p>The following needs to be done prior to installing Allsky the first time on your Pi:</p>

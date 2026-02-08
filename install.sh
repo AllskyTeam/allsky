@@ -3600,9 +3600,9 @@ install_modules()
 	#
 
 	if [[ "$BRANCH" == "$ALLSKY_GITHUB_MAIN_BRANCH" ]]; then
-		sudo su - "${ALLSKY_OWNER}" -c "\"${ALLSKY_MODULE_INSTALLER}\" --welcome \"${DEBUG_ARG}\""
+		sudo su - "${ALLSKY_OWNER}" -c "${ALLSKY_MODULE_INSTALLER} --welcome ${DEBUG_ARG}"
 	else
-		sudo su - "${ALLSKY_OWNER}" -c "\"${ALLSKY_MODULE_INSTALLER}\" --welcome --setbranch \"${BRANCH}\" \"${DEBUG_ARG}\""
+		sudo su - "${ALLSKY_OWNER}" -c "${ALLSKY_MODULE_INSTALLER} --welcome --setbranch ${BRANCH} ${DEBUG_ARG}"
 	fi
 
 	RET=$?

@@ -3302,6 +3302,8 @@ install_overlay()
 	cp -ar "${ALLSKY_REPO}/overlay" "${ALLSKY_REPO}/modules" "${ALLSKY_CONFIG}"
 	cp  "${ALLSKY_REPO}/allskyvariables.json.repo" "${ALLSKY_CONFIG}/allskyvariables.json"
 
+	cp  "${ALLSKY_REPO}/onewire.json.repo" "${ALLSKY_CONFIG}/onewire.json"
+	cp  "${ALLSKY_REPO}/devicemanager.json.repo" "${ALLSKY_CONFIG}/devicemanager.json"
 
 	# ALLSKY_MY_OVERLAY_TEMPLATES is not in ALLSKY_REPO and we haven't restored anything yet,
 	# so create the directory.

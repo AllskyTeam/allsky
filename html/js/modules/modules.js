@@ -334,8 +334,16 @@ class MODULESEDITOR {
 			this.#testModule()
 		})
 
-		$('#device-manager').off('click').on('click', () => {
-			$.devicemanager();
+		$('#device-manager').off('click').on('click', (e) => {
+        e.preventDefault();
+
+				if (this.#settings.devicemanager) {
+					$(document).devicemanager({
+						config: this.#settings.devicemanager
+					}).devicemanager("open");
+				} else {
+        	$(document).devicemanager("open");
+				}
 		});
 	}
 

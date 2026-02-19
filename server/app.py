@@ -6,6 +6,10 @@ from flask import Flask
 from flask_jwt_extended import JWTManager
 from flask_login import LoginManager
 from modules.gpio import gpio_bp
+from modules.onewire import onewire_bp
+from modules.i2c import i2c_bp
+from modules.serial import serial_bp
+from modules.system import system_bp
 from modules.allsky import allsky_bp
 from modules.auth import auth_bp
 from modules.dashboard import dashboard_bp
@@ -61,7 +65,11 @@ app.register_blueprint(auth_bp)
 app.register_blueprint(webauth_bp)
 app.register_blueprint(dashboard_bp)
 app.register_blueprint(gpio_bp, url_prefix='/gpio')
+app.register_blueprint(onewire_bp, url_prefix='/onewire')
+app.register_blueprint(i2c_bp, url_prefix='/i2c')
+app.register_blueprint(serial_bp, url_prefix='/serial')
 app.register_blueprint(allsky_bp, url_prefix='/allsky')
+app.register_blueprint(system_bp, url_prefix='/system')
 #app.register_blueprint(focuser_bp, url_prefix="/focuser")
 
 if __name__ == '__main__':

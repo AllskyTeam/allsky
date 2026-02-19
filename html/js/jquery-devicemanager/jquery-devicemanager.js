@@ -1,227 +1,318 @@
 (function ($) {
-    $.devicemanager = function (options) {
-        var settings = $.extend({
-            url: 'includes/i2cutil.php?request=DeviceManager'
-        }, options);
+	"use strict";
 
-        if (!$('#deviceManagerModal').length) {
-            $('body').append(`
-                <div id="deviceManagerModal" class="modal fade" tabindex="-1" role="dialog">
-                    <div class="modal-dialog modal-lg">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <button type="button" class="close" data-dismiss="modal">&times;</button>
-                                <h4 class="modal-title">Connected Devices</h4>
-                            </div>
-                            <div class="modal-body">
-                                <ul class="nav nav-tabs" role="tablist">
-                                    <li class="active"><a href="#dm-tab-i2c" role="tab" data-toggle="tab">I2C Devices</a></li>
-                                    <li><a href="#dm-tab-1wire" role="tab" data-toggle="tab">1-Wire Devices</a></li>
-                                    <li><a href="#dm-tab-serial" role="tab" data-toggle="tab">Serial Devices</a></li>
-                                    <li><a href="#dm-tab-gpio" role="tab" data-toggle="tab">GPIO Status</a></li>
-                                </ul>
-                                <div class="tab-content" style="margin-top:15px;">
-                                <div class="tab-pane active" id="dm-tab-i2c">Loading I2C devices...</div>
-                                <div class="tab-pane" id="dm-tab-1wire">Loading 1-Wire devices...</div>
-                                <div class="tab-pane" id="dm-tab-serial">Loading Serial devices...</div>
-                                <div class="tab-pane" id="dm-tab-gpio">Loading GPIO status...</div>
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button class="btn btn-default" data-dismiss="modal">Close</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `);
-        }
+	var PLUGIN = "devicemanager";
 
-        $('#deviceManagerModal')
-            .off('shown.bs.modal')
-            .on('shown.bs.modal', function () {
-                $('#dm-tab-i2c').html('Loading...');
-                $('#dm-tab-1wire').html('Loading...');
-                $('#dm-tab-serial').html('Loading...');
-                $('#dm-tab-gpio').html('Loading...');
-                let loadingTimer = setTimeout(() => {
-                    $.LoadingOverlay('show', {
-                        text: 'Loading Device Manager ...'
-                    });
-                }, 50);
+	var PROXY_URL = "/includes/moduleutil.php";
+	var PROXY_REQUEST = "ProxyLocalApi";
 
-                $.getJSON(settings.url, function (data) {
-                    clearTimeout(loadingTimer);
-                    $.LoadingOverlay('hide');
+	/* ============================================================
+	   DEFAULT CONFIG (I2C FIRST)
+	============================================================ */
+	var DEFAULT_CONFIG = {
+		"i2c": {
+			enabled: true,
+			update_interval: 0,
+			tabname: "I2C",
+			endpoint: "/i2c/devices/html"
+		},
+		"onewire": {
+			enabled: true,
+			update_interval: 0,
+			tabname: "1-Wire",
+			endpoint: "/onewire/devices/html"
+		},
+		"serial": {
+			enabled: true,
+			update_interval: 0,
+			tabname: "Serial",
+			endpoint: "/serial/sample/html"
+		},
+		"gpio": {
+			enabled: true,
+			update_interval: 0,
+			tabname: "GPIO Status",
+			endpoint: "/gpio/status/html"
+		}
+	};
 
-                    updateTabFormatted('#dm-tab-i2c', data.i2c || [], function (item) {
-                        let html = `<div class="panel panel-default panel-shadow">
-                                <div class="panel-heading">
-                                    <h4>${item.bus} ${item.address}</h4>
-                                </div>
-                                <div class="panel-body">`;
+	var defaults = {
+		title: "Device Manager",
+		modalId: null,
+		sizeClass: "modal-lg",
+		cache: false,
+		ajaxTimeout: 15000,
+		proxyUrl: PROXY_URL,
+		proxyRequest: PROXY_REQUEST,
+		config: DEFAULT_CONFIG,
+		reloadOnOpen: true,
+		reloadAllOnOpen: true
+	};
 
-                        if (Array.isArray(item.devices) && item.devices.length > 0) {
-                            const mid = Math.ceil(item.devices.length / 2);
-                            const col1 = item.devices.slice(0, mid);
-                            const col2 = item.devices.slice(mid);
+	/* ============================================================
+	   Utilities
+	============================================================ */
 
-                            html += '<div class="row">';
-                            [col1, col2].forEach(function (col) {
-                                html += '<div class="i2c-device-col">';
-                                col.forEach(function (dev) {
-                                    let devName = dev.device || "Unnamed device";
-                                    let url = dev.url ? `<a href="${dev.url}" target="_blank">${devName}</a>` : devName;
-                                    let range = dev.addresses ? ` <small>(${dev.addresses})</small>` : "";
-                                    html += `• ${url}<br>`;
-                                });
-                                html += '</div>';
-                            });
-                            html += '</div></div>';
-                        } else {
-                            html += `<div class="i2c-device text-muted">• No known devices</div>`;
-                        }
+	function uid() {
+		return "dm_" + Math.random().toString(36).substr(2, 9);
+	}
 
-                        html += `</div>`;
-                        return html;
-                    });
+	function deepClone(obj) {
+		return JSON.parse(JSON.stringify(obj || {}));
+	}
 
-                    updateTabFormatted('#dm-tab-1wire', data.onewire || [], function (item) {
+	function buildProxyUrl(proxyUrl, proxyRequest, endpoint) {
+		var query =
+			"request=" + encodeURIComponent(proxyRequest) +
+			"&endpoint=" + encodeURIComponent(endpoint || "");
 
-                        let type = item.type || "Unknown";
-                        let id = item.id || "???";
-                        let devs = Array.isArray(item.devices) && item.devices.length > 0
-                            ? ` (${item.devices.join(", ")})`
-                            : "";
+		return proxyUrl + (proxyUrl.indexOf("?") >= 0 ? "&" : "?") + query;
+	}
 
-                        let icon = '<i class="fa-solid fa-question fa-4x"></i>';
-                        if (/temperature/i.test(type)) {
-                            icon = '<i class="fa-solid fa-thermometer-half fa-4x"></i>';
-                        }
+	function getActiveTabKey(modalId, $modal) {
+		var $a = $modal.find('ul[data-role="dm-tabs"] li.active a[data-toggle="tab"]');
+		var href = $a.attr("href") || "";
+		var parts = href.split(modalId + "_pane_");
+		return parts.length === 2 ? parts[1] : null;
+	}
 
-                        let html = `
-                            <div class="panel panel-default panel-shadow">
-                                <div class="panel-heading">
-                                    <h4>${id}</h4>
-                                </div>
-                                <div class="panel-body">
-                                    <div class="dm-ow-wrapper">
-                                        <div class="dm-ow-row">
-                                            <div class="dm-ow-left">
-                                                ${icon}
-                                            </div>
-                                            <div class="dm-ow-right">
-                                                <div class="dm-ow-top-bar">
-                                                    <h2><strong>${type}</strong></h2>
-                                                </div>
-                                                <div class="dm-ow-main-content">
-                                                    <h3><small>${devs}</small></h3>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>`;
+	/* ============================================================
+	   Constructor
+	============================================================ */
 
-                        return html;
-                    });
+	function DeviceManager(element, options) {
 
-                    updateTabFormatted('#dm-tab-serial', data.serial || [], function (item) {
-                        let html = `
-                            <div class="panel panel-default panel-shadow">
-                                <div class="panel-heading">
-                                    <h4>${item.device} @ ${item.baud || "unknown"}</h4>
-                                </div>
-                                <div class="panel-body">
-                                    <pre>${item.data.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</pre>
-                                </div>
-                            </div>`;
+		this.$trigger = $(element);
 
+		var baseDefaults = $.extend(true, {}, defaults, {
+			config: deepClone(DEFAULT_CONFIG)
+		});
 
+		this.options = $.extend(true, {}, baseDefaults, options || {});
+		this.options.config = deepClone(this.options.config);
 
-                        return html;
-                    });
+		this.modalId = this.options.modalId || uid();
+		this.$modal = null;
+		this.tabs = {};
 
-                    updateTabFormatted('#dm-tab-gpio', data.gpio, function (items) {
+		this._init();
+	}
 
-                        if (items === false) {
-                            return '<div class="alert alert-danger">GPIO status not available. The GPIO server is not running. Please check the Allsky documentation</div>';
-                        } else {
-                            const grid = $('<div>');
+	DeviceManager.prototype._init = function () {
+		this._buildModal();
+		this._buildTabs();
+		this._bindModalEvents();
+		this._bindFooterButtons();
+	};
 
-                            const header = $('<div class="row">')
-                                .append('<div class="col-xs-2"><strong>Pin</strong></div>')
-                                .append('<div class="col-xs-2"><strong>Type</strong></div>')
-                                .append('<div class="col-xs-2"><strong>State</strong></div>')
-                                .append('<div class="col-xs-3"><strong>Duty Cycle</strong></div>')
-                                .append('<div class="col-xs-3"><strong>Frequency</strong></div>');
-                            grid.append(header);
+	/* ============================================================
+	   Build Modal
+	============================================================ */
 
-                            $.each(items, function (pin, cfg) {
-                                if (!cfg.mode || cfg.mode === "unused") return;
+	DeviceManager.prototype._buildModal = function () {
 
-                                const type = cfg.mode.toLowerCase().includes("pwm") ? "PWM" : "Digital I/O";
-                                const state = (type === "Digital I/O") ? (cfg.value || "") : "-";
-                                const duty = (type === "PWM") ? (cfg.duty || "") : "-";
-                                const freq = (type === "PWM") ? (cfg.frequency || "") : "-";
+		var existing = $("#" + this.modalId);
+		if (existing.length) {
+			this.$modal = existing;
+			return;
+		}
 
-                                const row = $('<div class="row" style="padding:8px 0;">')
-                                    .append(`<div class="col-xs-2">${pin}</div>`)
-                                    .append(`<div class="col-xs-2">${type}</div>`)
-                                    .append(`<div class="col-xs-2">${state}</div>`)
-                                    .append(`<div class="col-xs-3">${duty}</div>`)
-                                    .append(`<div class="col-xs-3">${freq}</div>`);
+		var html =
+			'<div class="modal fade" id="' + this.modalId + '" tabindex="-1">' +
+				'<div class="modal-dialog ' + this.options.sizeClass + '">' +
+					'<div class="modal-content">' +
+						'<div class="modal-header">' +
+							'<button type="button" class="close" data-dismiss="modal">&times;</button>' +
+							'<h4 class="modal-title">' + this.options.title + '</h4>' +
+						'</div>' +
+						'<div class="modal-body">' +
+							'<ul class="nav nav-tabs" data-role="dm-tabs"></ul>' +
+							'<div class="tab-content" style="padding-top:15px;" data-role="dm-panes"></div>' +
+						'</div>' +
+						'<div class="modal-footer">' +
+							'<div class="pull-left">' +
+								'<button type="button" class="btn btn-default" data-role="dm-refresh">Refresh</button>' +
+							'</div>' +
+							'<div class="pull-right">' +
+								'<button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>' +
+							'</div>' +
+							'<div class="clearfix"></div>' +
+						'</div>' +
+					'</div>' +
+				'</div>' +
+			'</div>';
 
-                                grid.append(row);
-                            });
-                            return grid.html();                            
-                        }
-                    });
+		this.$modal = $(html).appendTo("body");
+	};
 
-                }).fail(function (xhr, status, error) {
-                    clearTimeout(loadingTimer);
-                    $.LoadingOverlay('hide');
+	/* ============================================================
+	   Build Tabs
+	============================================================ */
 
-                    $('#dm-tab-i2c, #dm-tab-1wire, #dm-tab-serial').html(
-                        '<div class="alert alert-danger">Failed to load device data.</div>'
-                    );
-                    console.error('devicemanager AJAX error:', error);
-                });
-            });
+	DeviceManager.prototype._buildTabs = function () {
 
-        $('#deviceManagerModal').modal('show');
+		var self = this;
+		var $tabs = this.$modal.find('[data-role="dm-tabs"]');
+		var $panes = this.$modal.find('[data-role="dm-panes"]');
 
-        function sizeOf(value) {
-            if (Array.isArray(value)) {
-                return value.length;
-            } else if (typeof value === "string") {
-                return value.length;
-            } else if (value !== null && typeof value === "object") {
-                return Object.keys(value).length;
-            } else {
-                return 0;
-            }
-        }
+		$tabs.empty();
+		$panes.empty();
+		this.tabs = {};
 
-        function updateTabFormatted(selector, items, formatter) {
-            let html = '';
-            if (sizeOf(items) > 0 || items === false) {
-                if (selector === '#dm-tab-gpio') {
-                    html += formatter(items);
-                } else {
-                    if (selector === '#dm-tab-i2c') {
-                        items.forEach(function (item) {
-                            html += formatter(item);
-                        });
-                    } else {
-                        items.forEach(function (item) {
-                            html += formatter(item);
-                        });
-                    }
-                }
-            } else {
-                html = '<p>No devices found.</p>';
-            }
-            $(selector).html(html);
-        }
-    };
+		var enabledKeys = [];
+
+		$.each(this.options.config, function (key, entry) {
+			if (entry.enabled) enabledKeys.push(key);
+		});
+
+		if (!enabledKeys.length) return;
+
+		$.each(enabledKeys, function (i, key) {
+
+			var entry = self.options.config[key];
+			var paneId = self.modalId + "_pane_" + key;
+			var active = i === 0;
+
+			$tabs.append(
+				'<li class="' + (active ? 'active' : '') + '">' +
+					'<a data-toggle="tab" href="#' + paneId + '">' +
+						entry.tabname +
+					'</a>' +
+				'</li>'
+			);
+
+			var $pane = $('<div class="tab-pane dm-tab-' + key + ' ' + (active ? 'active' : '') + '" id="' + paneId + '"></div>');
+
+			$panes.append($pane);
+
+			self.tabs[key] = {
+				entry: entry,
+				$pane: $pane,
+				timer: null,
+				loaded: false
+			};
+		});
+
+		self._loadTab(enabledKeys[0]);
+	};
+
+	/* ============================================================
+	   Load Tab (LoadingOverlay version)
+	============================================================ */
+
+	DeviceManager.prototype._loadTab = function (key) {
+
+		var tab = this.tabs[key];
+		if (!tab) return;
+
+		var self = this;
+
+		var url = buildProxyUrl(
+			this.options.proxyUrl,
+			this.options.proxyRequest,
+			tab.entry.endpoint
+		);
+
+		this.$modal.find(".modal-body").LoadingOverlay("show", {
+			text: "Loading"
+		});
+
+		$.ajax({
+			url: url,
+			method: "GET",
+			dataType: "html",
+			cache: this.options.cache,
+			timeout: this.options.ajaxTimeout
+		})
+		.done(function (html) {
+			tab.$pane.html(html);
+			tab.loaded = true;
+		})
+		.fail(function () {
+			tab.$pane.html('<div class="alert alert-danger">Failed to load. Please ensure the Allsky Server is running</div>');
+		})
+		.always(function () {
+			self.$modal.find(".modal-body").LoadingOverlay("hide");
+		});
+	};
+
+	/* ============================================================
+	   Refresh Active Tab
+	============================================================ */
+
+	DeviceManager.prototype._refreshActiveTab = function () {
+		var key = getActiveTabKey(this.modalId, this.$modal);
+		if (key) {
+			this.tabs[key].loaded = false;
+			this._loadTab(key);
+		}
+	};
+
+	DeviceManager.prototype._bindFooterButtons = function () {
+		var self = this;
+		this.$modal.on("click", "[data-role='dm-refresh']", function () {
+			self._refreshActiveTab();
+		});
+	};
+
+	/* ============================================================
+	   Modal Events
+	============================================================ */
+
+	DeviceManager.prototype._bindModalEvents = function () {
+		var self = this;
+
+		this.$modal.on("shown.bs.modal", function () {
+			if (self.options.reloadOnOpen) {
+				$.each(self.tabs, function (key) {
+					self.tabs[key].loaded = false;
+				});
+				if (self.options.reloadAllOnOpen) {
+					$.each(self.tabs, function (key) {
+						self._loadTab(key);
+					});
+				}
+			}
+		});
+	};
+
+	/* ============================================================
+	   Public Methods
+	============================================================ */
+
+	DeviceManager.prototype.open = function () {
+		this.$modal.modal("show");
+	};
+
+	DeviceManager.prototype.reload = function () {
+		var self = this;
+		$.each(this.tabs, function (key) {
+			self._loadTab(key);
+		});
+	};
+
+	/* ============================================================
+	   Auto Init Wrapper
+	============================================================ */
+
+	$.fn[PLUGIN] = function (arg) {
+
+		var args = Array.prototype.slice.call(arguments, 1);
+
+		return this.each(function () {
+
+			var $this = $(this);
+			var instance = $this.data(PLUGIN);
+
+			if (!instance) {
+				instance = new DeviceManager(this, typeof arg === "object" ? arg : {});
+				$this.data(PLUGIN, instance);
+			}
+
+			if (typeof arg === "string") {
+				instance[arg].apply(instance, args);
+			}
+		});
+	};
+
 })(jQuery);

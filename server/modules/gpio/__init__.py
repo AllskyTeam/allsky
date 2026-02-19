@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify, Response
 from flask_jwt_extended import jwt_required
 import board
 import digitalio
+from micropython import const
 import pwmio
 import threading
 from modules.auth_utils import api_auth_required
@@ -292,9 +293,10 @@ def set_pwm() -> Response:
         )
 
 
-@gpio_bp.route("/status", methods=["GET"])
+@gpio_bp.route("/status", defaults={"format": "json"}, methods=["GET"])
+@gpio_bp.route("/status/<format>", methods=["GET"])
 @api_auth_required("gpio", "update")
-def status() -> Response:
+def status(format) -> Response:
     """
     GET /gpio/status
 
@@ -322,7 +324,58 @@ def status() -> Response:
                 for pin, pwm in pwm_pins.items()
             }
 
-        return jsonify({"digital": digital_status, "pwm": pwm_status})
+        if format == "json":
+            return jsonify({"digital": digital_status, "pwm": pwm_status})
+        else:
+            
+            if not digital_status and not pwm_status:
+                html = f"""
+                    <div class="panel panel-default">
+                        <div class="panel-body">
+                            <div class="text-center">
+                                <i class="fa-solid fa-ghost fa-4x"></i>
+                                <h3><strong>No active GPIO pins.</strong></h3>
+                            </div>
+                        </div>
+                    </div>                
+                """
+                return Response(html, mimetype="text/html")
+            else:
+                html = """
+                <div class="row">
+                    <div class="col-xs-2"><strong>Pin</strong></div>
+                    <div class="col-xs-2"><strong>Type</strong></div>
+                    <div class="col-xs-2"><strong>State</strong></div>
+                    <div class="col-xs-3"><strong>Duty Cycle</strong></div>
+                    <div class="col-xs-3"><strong>Frequency</strong></div>   
+                </div>
+                """
+                
+                for pin, state in digital_status.items():
+                    html += f"""
+                    <div class="row">
+                        <div class="col-xs-2">D{pin}</div>
+                        <div class="col-xs-2">Digital</div>
+                        <div class="col-xs-2">{state.upper()}</div>
+                        <div class="col-xs-3">N/A</div>
+                        <div class="col-xs-3">N/A</div>   
+                    </div>
+                    """
+
+    
+                for pin, info in pwm_status.items():
+                    duty_percent = round((info["duty"] / 65535) * 100, 2)
+                    html += f"""
+                    <div class="row">
+                        <div class="col-xs-2">D{pin}</div>
+                        <div class="col-xs-2">PWM</div>
+                        <div class="col-xs-2">N/A</div>
+                        <div class="col-xs-3">{duty_percent}%</div>
+                        <div class="col-xs-3">{info['frequency']} Hz</div>   
+                    </div>
+                    """
+
+                return Response(html, mimetype="text/html")
 
     except Exception as e:
         return (

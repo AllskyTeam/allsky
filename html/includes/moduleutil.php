@@ -29,6 +29,7 @@ class MODULEUTIL extends UTILBASE {
             'VariableList' => ['get'],
             'WatchdogManageService' => ['get'],
             'WatchdogStatus' => ['get'],
+            'ProxyLocalApi' => ['get']
         ];
     }
 
@@ -204,6 +205,7 @@ class MODULEUTIL extends UTILBASE {
         $lat = $settings_array['latitude'];
         $lon = $settings_array['longitude'];
 
+        $result = array();
         $result['lat'] = $lat;
         $result['lon'] = $lon;
         $result['filename'] = ALLSKY_IMG_DIR . '/' . $settings_array['filename'];
@@ -222,8 +224,16 @@ class MODULEUTIL extends UTILBASE {
         $configFileName = ALLSKY_MODULES . '/module-settings.json';
         $rawConfigData = file_get_contents($configFileName);
         $configData = json_decode($rawConfigData);
-
         $result['settings'] = $configData;
+
+        $configFileName = ALLSKY_CONFIG . '/devicemanager.json';
+        if (file_exists($configFileName)) {
+            $rawDeviceManagerData = @file_get_contents($configFileName);
+            $deviceManagerData = json_decode($rawDeviceManagerData);
+            $result['devicemanager'] = $deviceManagerData;
+        } else {
+            $result['devicemanager'] = null;
+        }
 
         $result['haveDatabase'] = haveDatabase();
                 
@@ -1338,7 +1348,85 @@ class MODULEUTIL extends UTILBASE {
             exit;
         }
 
-    }    
+    }
+    
+    
+/**
+ * Proxy a local API endpoint via PHP (SSRF-safe).
+ *
+ * Called like:
+ *   /includes/moduleutil.php?request=ProxyLocalApi&endpoint=/onewire/devices/html
+ *
+ * Proxies to:
+ *   http://localhost:8090/onewire/devices/html
+ *
+ * @return void Outputs response directly
+ */
+public function getProxyLocalApi(): void
+{
+    $endpoint = isset($_GET['endpoint']) ? trim((string)$_GET['endpoint']) : '';
+
+    // Must be a path starting with "/"
+    if ($endpoint === '' || strpos($endpoint, '/') !== 0) {
+        http_response_code(400);
+        echo "Invalid endpoint.";
+        return;
+    }
+
+    // SSRF protection: reject absolute or protocol-relative URLs
+    // Blocks: http://, https://, //example.com
+    if (preg_match('#^(https?:)?//#i', $endpoint)) {
+        http_response_code(400);
+        echo "Absolute URLs are not allowed.";
+        return;
+    }
+
+    // Hardening: block traversal attempts
+    if (strpos($endpoint, '..') !== false) {
+        http_response_code(400);
+        echo "Invalid endpoint.";
+        return;
+    }
+
+    $baseUrl = 'http://localhost:8090';
+    $url     = $baseUrl . $endpoint;
+
+    $ch = curl_init();
+    curl_setopt_array($ch, [
+        CURLOPT_URL            => $url,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_FOLLOWLOCATION => false,
+        CURLOPT_CONNECTTIMEOUT => 5,
+        CURLOPT_TIMEOUT        => 15,
+        CURLOPT_HTTPHEADER     => [
+            'Accept: text/html,application/json;q=0.9,*/*;q=0.8'
+        ],
+    ]);
+
+    $response = curl_exec($ch);
+
+    if ($response === false) {
+        $error = curl_error($ch);
+        curl_close($ch);
+
+        http_response_code(502);
+        echo "Upstream request failed: " . htmlspecialchars($error, ENT_QUOTES, 'UTF-8');
+        return;
+    }
+
+    $httpCode    = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $contentType = (string)curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+    curl_close($ch);
+
+    if ($contentType !== '') {
+        header('Content-Type: ' . $contentType);
+    }
+
+    http_response_code($httpCode);
+    echo $response;
+}
+
+
 }
 
 // Only run if this file is the entry point (not when included)

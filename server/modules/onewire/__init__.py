@@ -27,47 +27,60 @@ def onewire_devices(format) -> Response:
         for entry in os.listdir(base_path):
             if "-" in entry:
                 family = entry.split("-")[0].upper()
-                family_info = family_codes.get(family, {})
-                description = family_info.get("description", "Unknown type")
-                device_list = family_info.get("devices", [])
-                devices.append({
-                    "id": entry,
-                    "type": description,
-                    "devices": device_list
-                })
+                if family != "00":
+                    family_info = family_codes.get(family, {})
+                    description = family_info.get("description", "Unknown type")
+                    device_list = family_info.get("devices", [])
+                    devices.append({
+                        "id": entry,
+                        "type": description,
+                        "devices": device_list
+                    })
 
     if format == "json":
         return jsonify(devices)
     else:
         html = ""
-        for d in devices:
-            device_type = d.get("type", "Unknown")
-            id = d.get("id", "???")
-            devices = d.get("devices", [])
-            icon = '<i class="fa-solid fa-question fa-4x"></i>'
-            if "temperature" in device_type.lower():
-                icon = '<i class="fa-solid fa-thermometer-half fa-4x"></i>'
-            html += f"""
-            <div class="panel panel-default panel-shadow">
-                <div class="panel-heading">{id}
-                </div>
-                <div class="panel-body">
-                    <div class="dm-ow-wrapper">
-                        <div class="dm-ow-row">
-                            <div class="dm-ow-left">
-                                {icon}
-                            </div>
-                            <div class="dm-ow-right">
-                                <div class="dm-ow-top-bar">
-                                    <h2><strong>{device_type}</strong></h2>
+        print(type(devices))
+        if devices:
+            
+            for d in devices:
+                device_type = d.get("type", "Unknown")
+                id = d.get("id", "???")
+                devices = d.get("devices", [])
+                icon = '<i class="fa-solid fa-question fa-4x"></i>'
+                if "temperature" in device_type.lower():
+                    icon = '<i class="fa-solid fa-thermometer-half fa-4x"></i>'
+                html += f"""
+                <div class="panel panel-default panel-shadow">
+                    <div class="panel-heading">{id}
+                    </div>
+                    <div class="panel-body">
+                        <div class="dm-ow-wrapper">
+                            <div class="dm-ow-row">
+                                <div class="dm-ow-left">
+                                    {icon}
                                 </div>
-                                <div class="dm-ow-main-content">
-                                    <h3><small>{' (' + ', '.join(devices) + ')' if devices else ''}</small></h3>
+                                <div class="dm-ow-right">
+                                    <div class="dm-ow-top-bar">
+                                        <h2><strong>{device_type}</strong></h2>
+                                    </div>
+                                    <div class="dm-ow-main-content">
+                                        <h3><small>{' (' + ', '.join(devices) + ')' if devices else ''}</small></h3>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>"""
-
+                </div>"""
+        else:
+            html = """ 
+                <div class="alert alert-info alert-flex" style="margin-bottom: 20px;">
+                <i class="fa fa-info alert-icon"></i>
+                <h4 style="margin: 0;">
+                    No 1-Wire devices detected. 
+                </h4>
+                </div>      
+            """
+                
         return html, 200, {"Content-Type": "text/html"}

@@ -1580,3 +1580,9 @@ div.sticky {
   line-height: 1;
 }
 /* End Alert with icon */
+
+/* Fix for module manager dialogs */
+.mt-100 {
+	margin-top: 100px !important;
+}	
+/* End Fix for module manager dialogs */

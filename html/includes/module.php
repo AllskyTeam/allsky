@@ -227,7 +227,7 @@ function DisplayModule()
 </div>
 
 <div class="modal" role="dialog" id="module-editor-settings-dialog">
-    <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-dialog modal-lg mt-100" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -284,7 +284,7 @@ function DisplayModule()
 </div>
 
 <div class="modal" role="dialog" id="module-editor-debug-dialog">
-    <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-dialog modal-lg mt-100" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>

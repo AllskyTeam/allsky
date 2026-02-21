@@ -32,6 +32,6 @@
         "gulp-replace": "^0.6.1",
         "gulp-sourcemaps": "^2.6.5",
         "gulp-uglify": "^3.0.2",
-        "inquirer": "^7.1.0"
+        "inquirer": "^13.2.5"
     }
 }

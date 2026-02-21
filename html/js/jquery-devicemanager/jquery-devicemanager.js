@@ -76,6 +76,16 @@
 		return parts.length === 2 ? parts[1] : null;
 	}
 
+	function safeCall(fnName) {
+		// Call external helper functions if they exist in the page scope.
+		try {
+			var fn = window[fnName];
+			if (typeof fn === "function") fn();
+		} catch (e) {
+			// Intentionally ignore - button should still work even if a helper is missing.
+		}
+	}
+
 	/* ============================================================
 	   Constructor
 	============================================================ */
@@ -103,6 +113,7 @@
 		this._buildTabs();
 		this._bindModalEvents();
 		this._bindFooterButtons();
+		this._bindTabEvents();
 	};
 
 	/* ============================================================
@@ -117,6 +128,9 @@
 			return;
 		}
 
+		// Footer layout:
+		// Left: Update Database (i2c only, shown only when i2c tab active) + Refresh
+		// Right: Close
 		var html =
 			'<div class="modal fade" id="' + this.modalId + '" tabindex="-1">' +
 				'<div class="modal-dialog ' + this.options.sizeClass + '">' +
@@ -131,6 +145,8 @@
 						'</div>' +
 						'<div class="modal-footer">' +
 							'<div class="pull-left">' +
+								// Hidden by default; toggled when i2c tab becomes active
+								'<button type="button" class="btn btn-danger" data-role="dm-i2c-build" style="display:none; margin-right:8px;">Update Database</button>' +
 								'<button type="button" class="btn btn-default" data-role="dm-refresh">Refresh</button>' +
 							'</div>' +
 							'<div class="pull-right">' +
@@ -162,7 +178,7 @@
 		var enabledKeys = [];
 
 		$.each(this.options.config, function (key, entry) {
-			if (entry.enabled) enabledKeys.push(key);
+			if (entry && entry.enabled) enabledKeys.push(key);
 		});
 
 		if (!enabledKeys.length) return;
@@ -181,8 +197,8 @@
 				'</li>'
 			);
 
+			// Add dm-tab-{key} class for easy targeting
 			var $pane = $('<div class="tab-pane dm-tab-' + key + ' ' + (active ? 'active' : '') + '" id="' + paneId + '"></div>');
-
 			$panes.append($pane);
 
 			self.tabs[key] = {
@@ -194,6 +210,33 @@
 		});
 
 		self._loadTab(enabledKeys[0]);
+		self._updateFooterButtonsVisibility(); // set correct state for first tab
+	};
+
+	/* ============================================================
+	   Tab events (toggle i2c-only footer button)
+	============================================================ */
+
+	DeviceManager.prototype._bindTabEvents = function () {
+		var self = this;
+
+		// When user switches tabs, show/hide the Update Database button
+		this.$modal.off("shown.bs.tab." + this.modalId)
+			.on("shown.bs.tab." + this.modalId, 'a[data-toggle="tab"]', function () {
+				self._updateFooterButtonsVisibility();
+			});
+	};
+
+	DeviceManager.prototype._updateFooterButtonsVisibility = function () {
+		var activeKey = getActiveTabKey(this.modalId, this.$modal);
+		var hasI2cTab = !!this.tabs["i2c"]; // only show if i2c tab exists/enabled
+
+		var $btn = this.$modal.find('[data-role="dm-i2c-build"]');
+		if (hasI2cTab && activeKey === "i2c") {
+			$btn.show();
+		} else {
+			$btn.hide();
+		}
 	};
 
 	/* ============================================================
@@ -213,6 +256,7 @@
 			tab.entry.endpoint
 		);
 
+		// Overlay the modal body so content doesn't change height while loading
 		this.$modal.find(".modal-body").LoadingOverlay("show", {
 			text: "Loading"
 		});
@@ -242,17 +286,62 @@
 
 	DeviceManager.prototype._refreshActiveTab = function () {
 		var key = getActiveTabKey(this.modalId, this.$modal);
-		if (key) {
+		if (key && this.tabs[key]) {
 			this.tabs[key].loaded = false;
 			this._loadTab(key);
 		}
 	};
 
-	DeviceManager.prototype._bindFooterButtons = function () {
+	/* ============================================================
+	   I2C "Update Database" action
+	============================================================ */
+
+	DeviceManager.prototype._buildI2CDatabase = function () {
 		var self = this;
-		this.$modal.on("click", "[data-role='dm-refresh']", function () {
+
+		// Only run if i2c is the active tab
+		var activeKey = getActiveTabKey(this.modalId, this.$modal);
+		if (activeKey !== "i2c") return;
+
+		// Show full-page overlay (as per your existing pattern)
+		self.$modal.find(".modal-body").LoadingOverlay("show", {
+			background: "rgba(0, 0, 0, 0.5)",
+			imageColor: "#a94442",
+			textColor: "#a94442",
+			text: "Building i2c Database"
+		});
+
+		$.ajax({
+			url: "includes/i2cutil.php?request=Build",
+			type: "GET",
+			dataType: "json",
+			cache: false
+		})
+		.always(function () {
+
+			self.$modal.find(".modal-body").LoadingOverlay("hide");
+
+			// Finally reload the current tab contents (still active)
 			self._refreshActiveTab();
 		});
+	};
+
+	DeviceManager.prototype._bindFooterButtons = function () {
+		var self = this;
+
+		// Refresh current tab
+		this.$modal.off("click." + this.modalId + ".dmrefresh")
+			.on("click." + this.modalId + ".dmrefresh", "[data-role='dm-refresh']", function (e) {
+				e.preventDefault();
+				self._refreshActiveTab();
+			});
+
+		// I2C Update Database (only visible when i2c tab active)
+		this.$modal.off("click." + this.modalId + ".dmi2cbuild")
+			.on("click." + this.modalId + ".dmi2cbuild", "[data-role='dm-i2c-build']", function (e) {
+				e.preventDefault();
+				self._buildI2CDatabase();
+			});
 	};
 
 	/* ============================================================
@@ -262,18 +351,26 @@
 	DeviceManager.prototype._bindModalEvents = function () {
 		var self = this;
 
-		this.$modal.on("shown.bs.modal", function () {
-			if (self.options.reloadOnOpen) {
-				$.each(self.tabs, function (key) {
-					self.tabs[key].loaded = false;
-				});
-				if (self.options.reloadAllOnOpen) {
+		this.$modal.off("shown.bs.modal." + this.modalId)
+			.on("shown.bs.modal." + this.modalId, function () {
+
+				// Ensure footer button visibility matches the active tab
+				self._updateFooterButtonsVisibility();
+
+				if (self.options.reloadOnOpen) {
 					$.each(self.tabs, function (key) {
-						self._loadTab(key);
+						self.tabs[key].loaded = false;
 					});
+
+					if (self.options.reloadAllOnOpen) {
+						$.each(self.tabs, function (key) {
+							self._loadTab(key);
+						});
+					} else {
+						self._refreshActiveTab();
+					}
 				}
-			}
-		});
+			});
 	};
 
 	/* ============================================================

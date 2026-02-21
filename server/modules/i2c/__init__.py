@@ -120,7 +120,8 @@ def i2c_devices(format) -> Response:
 
                     else:
                         html += '<div class="i2c-device text-muted">• No known devices</div>'
-
+                        
+                html += '</div>'
             html += '</div>'
 
         return html, 200, {"Content-Type": "text/html"}

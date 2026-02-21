@@ -939,7 +939,7 @@ install_webserver_et_al()
 		display_msg --log progress "Installing the web server."
 		TMP="${ALLSKY_LOGS}/lighttpd.install.log"
 		run_aptGet \
-			lighttpd  php-fpm  php-gd  php-sqlite3 avahi-daemon  hwinfo tree python3-picamera2 i2c-tools \
+			lighttpd  php-fpm  php-gd  php-sqlite3 php-curl avahi-daemon  hwinfo tree python3-picamera2 i2c-tools \
 			> "${TMP}" 2>&1
 # TODO: Remove in next major release: Used to install: dnsmasq
 		check_success $? "lighttpd installation failed" "${TMP}" "${DEBUG}" \

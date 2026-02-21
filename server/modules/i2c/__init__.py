@@ -120,7 +120,9 @@ def i2c_devices(format) -> Response:
 
                     else:
                         html += '<div class="i2c-device text-muted">• No known devices</div>'
-                        
+                else:
+                    html += '<div class="i2c-device text-muted">The i2c database is missing. Please build the database</div>'
+                                                
                 html += '</div>'
             html += '</div>'
 

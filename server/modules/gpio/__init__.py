@@ -17,7 +17,7 @@ gpio_bp = Blueprint("gpio", __name__)
 gpio_lock = threading.Lock()
 digital_pins = {}
 pwm_pins = {}
-
+pin_names = {}
 
 # ---------------------------------------------------------------------------
 # Internal helpers
@@ -154,7 +154,12 @@ def read_digital(pin) -> Response:
 
             value = digital_io.value
 
-        return jsonify({"pin": pin, "value": "on" if value else "off"})
+            if pin in pin_names:
+                pin_name = pin_names[pin]
+            else:
+                pin_name = ""
+                
+        return jsonify({"pin": pin, "value": "on" if value else "off", "name": pin_name })
 
     except Exception as e:
         return (
@@ -192,7 +197,11 @@ def set_digital() -> Response:
     try:
         pin = str(request.json.get("pin")).strip()
         state = str(request.json.get("state", "off")).lower()
-
+        name = str(request.json.get("name", "")).strip()
+        print(f"Setting GPIO pin {pin} to {state.upper()} with name '{name}'")
+        if name:
+            pin_names[pin] = name
+                
         board_pin = get_board_pin(pin)
         if board_pin is None:
             return jsonify({"error": f"Invalid GPIO pin {pin}"}), 400
@@ -255,6 +264,12 @@ def set_pwm() -> Response:
         frequency = int(request.json.get("frequency", 1000))
         duty = int(request.json.get("duty", 0))
 
+        name = str(request.json.get("name", "")).strip()
+        
+        if name:
+            with gpio_lock:
+                pin_names[pin] = name
+                
         if not (0 <= duty <= 65535):
             return jsonify({"error": "Duty must be between 0 and 65535"}), 400
 
@@ -352,9 +367,14 @@ def status(format) -> Response:
                 """
                 
                 for pin, state in digital_status.items():
+                    if pin in pin_names:
+                        display_pin = f"{pin} ({pin_names[pin]})"
+                    else:
+                        display_pin = pin
+                                            
                     html += f"""
                     <div class="row">
-                        <div class="col-xs-2">D{pin}</div>
+                        <div class="col-xs-2">D{display_pin}</div>
                         <div class="col-xs-2">Digital</div>
                         <div class="col-xs-2">{state.upper()}</div>
                         <div class="col-xs-3">N/A</div>
@@ -364,10 +384,15 @@ def status(format) -> Response:
 
     
                 for pin, info in pwm_status.items():
+                    if pin in pin_names:
+                        display_pin = f"{pin} ({pin_names[pin]})"
+                    else:
+                        display_pin = pin
+                        
                     duty_percent = round((info["duty"] / 65535) * 100, 2)
                     html += f"""
                     <div class="row">
-                        <div class="col-xs-2">D{pin}</div>
+                        <div class="col-xs-2">D{display_pin}</div>
                         <div class="col-xs-2">PWM</div>
                         <div class="col-xs-2">N/A</div>
                         <div class="col-xs-3">{duty_percent}%</div>

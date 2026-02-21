@@ -3159,7 +3159,7 @@ def read_gpio_pin(gpio_pin, pi=None, show_errors=False):
     return data.get('value') == 'on'
 
 
-def set_gpio_pin(gpio_pin, state, pi=None, show_errors=False):
+def set_gpio_pin(gpio_pin, state, name="", pi=None, show_errors=False):
     """
     Set the logical state of a GPIO pin via the Allsky HTTP API.
 
@@ -3188,7 +3188,8 @@ def set_gpio_pin(gpio_pin, state, pi=None, show_errors=False):
         f'{api_url}/gpio/digital',
         json={
             'pin': str(gpio_pin),
-            'state': state.lower()
+            'state': state.lower(),
+            'name': name
         },
         timeout=2
     )
@@ -3196,7 +3197,7 @@ def set_gpio_pin(gpio_pin, state, pi=None, show_errors=False):
     return response.json()
 
 
-def set_pwm(gpio_pin, duty_cycle, pi=None, show_errors=False):
+def set_pwm(gpio_pin, duty_cycle, name="", pi=None, show_errors=False):
     """
     Set PWM output on a GPIO pin via the Allsky HTTP API.
 
@@ -3228,7 +3229,8 @@ def set_pwm(gpio_pin, duty_cycle, pi=None, show_errors=False):
         json={
             'pin': str(gpio_pin),
             'duty': duty_cycle,
-            'frequency': frequency
+            'frequency': frequency,
+            'name': name
         },
         timeout=2
     )

@@ -78,6 +78,17 @@ def i2c_devices(format) -> Response:
     else:
 
         html = ""
+        
+        if not i2c_metadata:
+            html += """ 
+                <div class="alert alert-danger alert-flex" style="margin-bottom: 20px;">
+                <i class="fa fa-exclamation-triangle alert-icon"></i>
+                <div>
+                    The i2c database is missing. <button type="button" class="btn btn-success" data-role="dm-i2c-build">Build Database</button>
+                </div>
+                </div>      
+            """
+            
         for bus in sorted(devices_by_bus.keys()):
             for device in devices_by_bus[bus]:
                 html += f"""<div class="panel panel-default panel-shadow">
@@ -119,9 +130,9 @@ def i2c_devices(format) -> Response:
                         html += '</div>'
 
                     else:
-                        html += '<div class="i2c-device text-muted">• No known devices</div>'
+                        html += '<div class="i2c-device text-muted text-enter">No known devices</div>'
                 else:
-                    html += '<div class="i2c-device text-muted">The i2c database is missing. Please build the database</div>'
+                    html += '<div class="i2c-device text-muted text-center">No known devices</div>'
                                                 
                 html += '</div>'
                 html += '</div>'

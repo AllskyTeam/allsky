@@ -1567,3 +1567,16 @@ div.sticky {
 	overflow: scroll
 }
 /* End Watchdog */
+
+/* Alert with icon */
+.alert-flex {
+  display: flex;
+  align-items: center;   /* vertical centre */
+}
+
+.alert-flex .alert-icon {
+  font-size: 36px !important;   /* force size */
+  margin-right: 15px;
+  line-height: 1;
+}
+/* End Alert with icon */

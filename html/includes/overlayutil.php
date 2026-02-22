@@ -1144,6 +1144,28 @@ class OVERLAYUTIL extends UTILBASE {
         if (!isset($overlay->metadata->tod))         $overlay->metadata->tod         = 'both';
 
         $overlay = $this->normaliseOverlayFonts($overlay);
+        $overlay = $this->fixFormats($overlay);        
+    }
+
+    /**
+     * Ensure field format strings are wrapped in curly braces if they contain placeholders,
+     */
+    private function fixFormats(object $overlay): object 
+    {
+        foreach ($overlay->fields as &$field) {
+            if (is_object($field)) {
+
+                if (!property_exists($field, 'format') || empty($field->format)) {
+                    continue;
+                }
+
+                if (!preg_match('/^\{.*\}$/s', $field->format)) {
+                    $field->format = '{' . $field->format . '}';
+                }
+            }
+        }
+
+        return $overlay;
     }
 
     /**

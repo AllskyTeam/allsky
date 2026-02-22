@@ -1147,35 +1147,36 @@ class OVERLAYUTIL extends UTILBASE {
     }
 
     /**
-     * Normalise font names in an overlay object's fields.
+     * Normalise overlay font references against actual .ttf files on disk.
      *
-     * For each field:
-     *  - If 'font' exists and is non-empty
-     *  - Look for matching .ttf in overlay fonts folder (case-insensitive)
-     *  - If found, set 'font' to actual filename (preserve case, remove .ttf)
+     * - Matches case-insensitively
+     * - Preserves real filename casing
+     * - Removes .ttf extension
+     * - Leaves value unchanged if no match found
      *
-     * @param object $overlay Object with ->fields (array of objects/arrays)
-     * @return object The same overlay object, modified in place and returned for convenience
+     * @param object $overlay
+     * @return object
      */
     private function normaliseOverlayFonts(object $overlay): object
     {
-        if (!isset($overlay->fields) || !is_array($overlay->fields)) {
-            return $overlay;
-        }
-
         $fontsDir = rtrim($this->overlayPath, '/') . '/fonts/';
 
         if (!is_dir($fontsDir)) {
             return $overlay;
         }
 
-        // Build lookup map: lowercase basename (no ext) -> actual basename (preserve case, no ext)
+        // ------------------------------------------------------------
+        // Build lookup map of available fonts
+        // key   = lowercase name (no extension)
+        // value = actual name (preserve case, no extension)
+        // ------------------------------------------------------------
         $fontMap = [];
+
         $files = glob($fontsDir . '*.ttf') ?: [];
 
         foreach ($files as $filePath) {
-            $baseName = basename($filePath);                 // e.g. "Roboto-Regular.ttf"
-            $fontName = preg_replace('/\.ttf$/i', '', $baseName); // "Roboto-Regular"
+            $baseName = basename($filePath);                       // e.g. "Roboto-Regular.ttf"
+            $fontName = preg_replace('/\.ttf$/i', '', $baseName);  // "Roboto-Regular"
             $fontMap[strtolower($fontName)] = $fontName;
         }
 
@@ -1183,38 +1184,64 @@ class OVERLAYUTIL extends UTILBASE {
             return $overlay;
         }
 
-        foreach ($overlay->fields as &$field) {
+        // ------------------------------------------------------------
+        // Normalise defaultfont in settings
+        // ------------------------------------------------------------
+        if (isset($overlay->settings) &&
+            is_object($overlay->settings) &&
+            property_exists($overlay->settings, 'defaultfont') &&
+            !empty($overlay->settings->defaultfont)) {
 
-            // Field as object
-            if (is_object($field)) {
-                if (!property_exists($field, 'font') || $field->font === null || $field->font === '') {
-                    continue;
-                }
+            $requested = preg_replace(
+                '/\.ttf$/i',
+                '',
+                (string)$overlay->settings->defaultfont
+            );
 
-                $requested = preg_replace('/\.ttf$/i', '', (string)$field->font);
-                $key = strtolower($requested);
+            $key = strtolower($requested);
 
-                if (isset($fontMap[$key])) {
-                    $field->font = $fontMap[$key];
-                }
-                continue;
-            }
-
-            // Field as array
-            if (is_array($field)) {
-                if (!array_key_exists('font', $field) || $field['font'] === null || $field['font'] === '') {
-                    continue;
-                }
-
-                $requested = preg_replace('/\.ttf$/i', '', (string)$field['font']);
-                $key = strtolower($requested);
-
-                if (isset($fontMap[$key])) {
-                    $field['font'] = $fontMap[$key];
-                }
+            if (isset($fontMap[$key])) {
+                $overlay->settings->defaultfont = $fontMap[$key];
             }
         }
-        unset($field); // break reference
+
+        // ------------------------------------------------------------
+        // Normalise field fonts
+        // ------------------------------------------------------------
+        if (isset($overlay->fields) && is_array($overlay->fields)) {
+
+            foreach ($overlay->fields as &$field) {
+
+                if (is_object($field)) {
+
+                    if (!property_exists($field, 'font') || empty($field->font)) {
+                        continue;
+                    }
+
+                    $requested = preg_replace('/\.ttf$/i', '', (string)$field->font);
+                    $key = strtolower($requested);
+
+                    if (isset($fontMap[$key])) {
+                        $field->font = $fontMap[$key];
+                    }
+
+                } elseif (is_array($field)) {
+
+                    if (!array_key_exists('font', $field) || empty($field['font'])) {
+                        continue;
+                    }
+
+                    $requested = preg_replace('/\.ttf$/i', '', (string)$field['font']);
+                    $key = strtolower($requested);
+
+                    if (isset($fontMap[$key])) {
+                        $field['font'] = $fontMap[$key];
+                    }
+                }
+            }
+
+            unset($field); // break reference
+        }
 
         return $overlay;
     }

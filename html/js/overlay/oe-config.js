@@ -548,6 +548,7 @@ class OECONFIG {
     }
 
     rebuildOverlayFonts() {
+        return;
         this.setValue('fonts', {});
         for (const field of this.#config.fields) {
             if ('font' in field) {

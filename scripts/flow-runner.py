@@ -257,13 +257,11 @@ if __name__ == "__main__":
             try:
                 result = globals()[method](arguments, shared.args.event)
             except Exception as e:
-                eType, eObject, eTraceback = sys.exc_info()
-                L = eTraceback.tb_lineno
-                nextL = eTraceback.tb_next.tb_lineno
-                message = f"ERROR: Module '{fileName}' failed on line {nextL} called from flow-runner.py line {L} - {e}"
-                shared.log(0, f"{message}.")
                 if shared.LOGLEVEL == 4:
-                    traceback.print_tb(eTraceback)
+                    shared.log_exception("flow runner", True)
+                else:
+                    shared.log_exception("flow runner", False)
+
                 if method == "loadimage":
                     shared.log(0, f"***** Stopping all module processing.")
                     sys.exit(99)

@@ -238,72 +238,53 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 			else:
 				self.log(4, f"INFO: {text} Elapsed time {elapsedTime.total_seconds():.6f} seconds")
 
-	def _get_font(self, font, fontSize):
+	def _get_font(self, font, font_size=None):
 		
-		tt = os.path.join(allsky_shared.ALLSKY_OVERLAY, 'system_fonts')
-		systemFontMapCased = {
-			'Arial':           {'fontpath': f'{tt}/Arial.ttf'},
-			'Arial Black':     {'fontpath': f'{tt}/Arial_Black.ttf'},
-			'Times New Roman': {'fontpath': f'{tt}/Times_New_Roman.ttf'},
-			'Courier New':     {'fontpath': f'{tt}/cour.ttf'},
-			'Verdana':         {'fontpath': f'{tt}/Verdana.ttf'},
-			'Trebuchet MS':    {'fontpath': f'{tt}/trebuc.ttf'},
-			'Impact':          {'fontpath': f'{tt}/Impact.ttf'},
-			'Georgia':         {'fontpath': f'{tt}/Georgia.ttf'},
-			'Comic Sans MS':   {'fontpath': f'{tt}/comic.ttf'},
+		system_font_path = os.path.join(allsky_shared.ALLSKY_OVERLAY, 'system_fonts')
+		system_font_map = {
+			'arial':           {'fontpath': f'{system_font_path}/Arial.ttf'},
+			'arial black':     {'fontpath': f'{system_font_path}/Arial_Black.ttf'},
+			'times new roman': {'fontpath': f'{system_font_path}/Times_New_Roman.ttf'},
+			'courier new':     {'fontpath': f'{system_font_path}/cour.ttf'},
+			'verdana':         {'fontpath': f'{system_font_path}/Verdana.ttf'},
+			'trebuchet ms':    {'fontpath': f'{system_font_path}/trebuc.ttf'},
+			'impact':          {'fontpath': f'{system_font_path}/Impact.ttf'},
+			'georgia':         {'fontpath': f'{system_font_path}/Georgia.ttf'},
+			'comic sans ms':   {'fontpath': f'{system_font_path}/comic.ttf'},
 		}
 
-		systemFontMap = {
-			'arial':           {'fontpath': f'{tt}/Arial.ttf'},
-			'arial black':     {'fontpath': f'{tt}/Arial_Black.ttf'},
-			'times new roman': {'fontpath': f'{tt}/Times_New_Roman.ttf'},
-			'courier new':     {'fontpath': f'{tt}/cour.ttf'},
-			'verdana':         {'fontpath': f'{tt}/Verdana.ttf'},
-			'trebuchet ms':    {'fontpath': f'{tt}/trebuc.ttf'},
-			'impact':          {'fontpath': f'{tt}/Impact.ttf'},
-			'georgia':         {'fontpath': f'{tt}/Georgia.ttf'},
-			'comic sans ms':   {'fontpath': f'{tt}/comic.ttf'},
-		}
-
-		preMsg = f"Loading '{font}' font, size {fontSize} pixels"
+		pre_msg = f"Loading '{font}' font, size {font_size} pixels"
 		fontPath = None
 
-		font = font.lower()
-		if font in self._overlay_config['fonts']:
-			fontData = self._overlay_config['fonts'][font]
-			fontConfigPath = fontData['fontPath']
-			if fontConfigPath.startswith('/'):
-				fontConfigPath = fontConfigPath[1:]
-			C = allsky_shared.getEnvironmentVariable('ALLSKY_CONFIG', fatal=True)
-			fontPath = os.path.join(C, 'overlay', fontConfigPath)
+		if font.lower() in system_font_map:
+			font_path = system_font_map[font.lower()]['fontpath']
 		else:
-			if font in systemFontMap:
-				fontPath = systemFontMap[font]['fontpath']
-			else:
-				self.log(0, f"ERROR: System font '{font}' not found in internal map.", sendToAllsky=True)
+			overlay_path = allsky_shared.get_environment_variable('ALLSKY_OVERLAY', fatal=True)
+			font_path = os.path.join(overlay_path, 'fonts', f"{font}.ttf")
+    
+			if not allsky_shared.is_file_readable(font_path):			
+				self.log(0, f"ERROR: Font '{font}' not found in internal map nor as user font", sendToAllsky=True)
+				font_path = None
 
-		if fontPath is not None:
-			if fontSize is None:
-				if fontSize in fontData:
-					fontSize = fontData['fontSize']
-				else:
-					fontSize = self._overlay_config['settings']['defaultfontsize']
+		if font_path is not None:
+			if font_size is None:
+				font_size = self._overlay_config['settings']['defaultfontsize']
 
-			fontKey = font + '_' + str(fontSize)
-			if fontKey in self._fonts:
-				font = self._fonts[fontKey]
+			font_key = font + '_' + str(font_size)
+			if font_key in self._fonts:
+				font = self._fonts[font_key]
 				# Only display this message once per font/size
-				if fontKey not in self._font_msgs:
-					self._font_msgs[fontKey] = True
-					self.log(4, f'INFO: {preMsg} from cache.')
+				if font_key not in self._font_msgs:
+					self._font_msgs[font_key] = True
+					self.log(4, f'INFO: {pre_msg} from cache.')
 			else:
 				try:
-					fontSize = allsky_shared.int(fontSize)
-					self._fonts[fontKey] = ImageFont.truetype(fontPath, fontSize)
-					font = self._fonts[fontKey]
-					self.log(4, f'INFO: {preMsg} from disk.')
+					font_size = allsky_shared.int(font_size)
+					self._fonts[font_key] = ImageFont.truetype(font_path, font_size)
+					font = self._fonts[font_key]
+					self.log(4, f'INFO: {pre_msg} from disk.')
 				except OSError as err:
-					self.log(0, f"ERROR: Could not load font '{fontPath}' from disk.", sendToAllsky=True)
+					self.log(0, f"ERROR: Could not load font '{font_path}' from disk.", sendToAllsky=True)
 					font = None
 		else:
 			font = None

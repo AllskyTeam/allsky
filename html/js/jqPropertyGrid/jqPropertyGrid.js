@@ -11,10 +11,10 @@
  */
 
 /* jshint -W089 */
-(function($) {// jscs:ignore requireNamedUnassignedFunctions
+(function ($) {// jscs:ignore requireNamedUnassignedFunctions
 	var OTHER_GROUP_NAME = 'Other';
 	var GET_VALS_FUNC_KEY = 'pg.getValues';
-	var SET_VALS_FUNC_KEY = 'pg.setValues';	
+	var SET_VALS_FUNC_KEY = 'pg.setValues';
 	var pgIdSequence = 0;
 
 	/**
@@ -22,7 +22,7 @@
 	 * @param {object} obj - The object whose properties we want to display
 	 * @param {JQPropertyGridOptions} options - Options object for the component
 	 */
-	$.fn.jqPropertyGrid = function(obj, options) {
+	$.fn.jqPropertyGrid = function (obj, options) {
 		// Check if the user called the 'get' function (to get the values back from the grid).
 		if (typeof obj === 'string' && obj === 'get') {
 			if (typeof this.data(GET_VALS_FUNC_KEY) === 'function') {
@@ -31,13 +31,13 @@
 			return null;
 		}
 		// Check if user called the 'set' method. The param meta should be an object with 
-        // property keys and values
+		// property keys and values
 		else if (typeof obj === 'string' && obj === 'set' && options !== undefined) {
-		    if (typeof this.data(SET_VALS_FUNC_KEY) === 'function') {
-		        this.data(SET_VALS_FUNC_KEY)(options);
-		        return;
-		    }
-		    return;
+			if (typeof this.data(SET_VALS_FUNC_KEY) === 'function') {
+				this.data(SET_VALS_FUNC_KEY)(options);
+				return;
+			}
+			return;
 		} else if (typeof obj === 'string' && obj === 'Destroy') {
 			$(this).children('table').first().remove();
 		}
@@ -62,7 +62,7 @@
 
 		// Seems like we are ok to create the grid
 		var meta = options.meta;
-		var propertyRowsHTML = {OTHER_GROUP_NAME: ''};
+		var propertyRowsHTML = { OTHER_GROUP_NAME: '' };
 		var groupsHeaderRowHTML = {};
 		var postCreateInitFuncs = [];
 		var getValueFuncs = {};
@@ -137,7 +137,7 @@
 		}
 
 		// Create a function that will return tha values back from the property grid
-		var getValues = function() {
+		var getValues = function () {
 			var result = {};
 			for (var prop in getValueFuncs) {
 				if (typeof getValueFuncs[prop] !== 'function') {
@@ -153,10 +153,10 @@
 		this.data(GET_VALS_FUNC_KEY, getValues);
 
 		var setValues = function (values) {
-		    for (var prop in setValueFuncs) {
-		        if (typeof setValueFuncs[prop] !== 'function' || values[prop] === undefined) { continue; }
-		        setValueFuncs[prop](values[prop]);
-		    }
+			for (var prop in setValueFuncs) {
+				if (typeof setValueFuncs[prop] !== 'function' || values[prop] === undefined) { continue; }
+				setValueFuncs[prop](values[prop]);
+			}
 		};
 		this.data(SET_VALS_FUNC_KEY, setValues);
 
@@ -211,7 +211,7 @@
 	 * @param {function[]} [postCreateInitFuncs] - An array to fill with functions to run after the grid was created
 	 * @param {object.<string, function>} [getValueFuncs] - A dictionary where the key is the property name and the value is a function to retrieve the property selected value
 	 * @param {object} options - top level options object for propertyGrid containing all options
-     * @param {object} el - the container for the property grid
+		 * @param {object} el - the container for the property grid
 	 */
 	function getPropertyRowHtml(pgId, name, value, meta, postCreateInitFuncs, getValueFuncs, setValueFuncs, options, el) {
 		if (!name) {
@@ -224,6 +224,7 @@
 		var displayName = meta.name || name;
 		var type = meta.type || '';
 		var elemId = pgId + name;
+		var postHTML = meta.postHTML || '';
 
 		var valueHTML;
 
@@ -246,7 +247,7 @@
 				} else if (customType.hasOwnProperty('valueFn')) {
 					getValueFuncs[name] = customType.valueFn;
 				} else {
-					getValueFuncs[name] = function() {
+					getValueFuncs[name] = function () {
 						return $('#' + elemId).val();
 					};
 				}
@@ -257,10 +258,10 @@
 		else if (type === 'boolean' || (type === '' && typeof value === 'boolean')) {
 			valueHTML = '<input type="checkbox" id="' + elemId + '" value="' + name + '"' + (value ? ' checked' : '') + ' />';
 			if (getValueFuncs) {
-			    getValueFuncs[name] = function () { return $('#' + elemId).prop('checked'); };
+				getValueFuncs[name] = function () { return $('#' + elemId).prop('checked'); };
 			}
 			if (setValueFuncs) {
-			    setValueFuncs[name] = function (value) { $('#' + elemId).prop('checked', value); };
+				setValueFuncs[name] = function (value) { $('#' + elemId).prop('checked', value); };
 			}
 
 			if (changedCallback) {
@@ -273,10 +274,12 @@
 		} else if (type === 'options' && Array.isArray(meta.options)) {
 			valueHTML = getSelectOptionHtml(elemId, value, meta.options);
 			if (getValueFuncs) {
-			    getValueFuncs[name] = function () { return $('#' + elemId).val(); };
+				getValueFuncs[name] = function () { return $('#' + elemId).val(); };
 			}
 			if (setValueFuncs) {
-			    setValueFuncs[name] = function (value) { $('#' + elemId).val(value); };
+				setValueFuncs[name] = function (value) {
+					$('#' + elemId).val(value);
+				};
 			}
 
 			if (changedCallback) {
@@ -293,10 +296,10 @@
 			}
 
 			if (getValueFuncs) {
-			    getValueFuncs[name] = function () { return $('#' + elemId).spinner('value'); };
+				getValueFuncs[name] = function () { return $('#' + elemId).spinner('value'); };
 			}
 			if (setValueFuncs) {
-			    setValueFuncs[name] = function (value) { $('#' + elemId).spinner('value', value); };
+				setValueFuncs[name] = function (value) { $('#' + elemId).spinner('value', value); };
 			}
 
 			// If color and we have the spectrum color picker use it
@@ -308,15 +311,15 @@
 
 			if (getValueFuncs) {
 				if (meta.options.preferredFormat === 'rgb') {
-			    	getValueFuncs[name] = function () { 
+					getValueFuncs[name] = function () {
 						return $('#' + elemId).spectrum('get').toRgbString();
 					};
 				} else {
-			    	getValueFuncs[name] = function () { return $('#' + elemId).spectrum('get').toHexString(); };
+					getValueFuncs[name] = function () { return $('#' + elemId).spectrum('get').toHexString(); };
 				}
 			}
 			if (setValueFuncs) {
-			    setValueFuncs[name] = function (value) { $('#' + elemId).spectrum('set', value); };
+				setValueFuncs[name] = function (value) { $('#' + elemId).spectrum('set', value); };
 			}
 
 			// If label (for read-only)
@@ -329,12 +332,12 @@
 
 			// Default is textbox
 		} else {
-			valueHTML = '<input type="text" id="' + elemId + '" value="' + value + '" autocomplete="off"</input>';
+			valueHTML = '<input type="text" id="' + elemId + '" value="' + value + '" autocomplete="off"</input>' + postHTML;
 			if (getValueFuncs) {
-			    getValueFuncs[name] = function () { return $('#' + elemId).val(); };
+				getValueFuncs[name] = function () { return $('#' + elemId).val(); };
 			}
 			if (setValueFuncs) {
-			    setValueFuncs[name] = function (value) { $('#' + elemId).val(value); };
+				setValueFuncs[name] = function (value) { $('#' + elemId).val(value); };
 			}
 
 			if (changedCallback) {
@@ -405,9 +408,9 @@
 	 * Gets an init function to a number textbox
 	 * @param {string} id - The number textbox id
 	 * @param {object} [options] - The spinner options
-     * @param {string} name - The name
-     * @param {function} changedCallback - Callback for when he value changes
-     * @param {object} el - the container for the property grid
+		 * @param {string} name - The name
+		 * @param {function} changedCallback - Callback for when he value changes
+		 * @param {object} el - the container for the property grid
 	 * @returns {function}
 	 */
 	function initSpinner(id, options, name, changedCallback, el) {
@@ -437,9 +440,9 @@
 	 * @param {string} id - The color textbox id
 	 * @param {string} [color] - The current color (e.g #000000)
 	 * @param {object} [options] - The color picker options
-     * @param {string} name - The name
-     * @param {function} changedCallback - Callback for when he value changes
-     * @param {object} el - the container for the property grid
+		 * @param {string} name - The name
+		 * @param {function} changedCallback - Callback for when he value changes
+		 * @param {object} el - the container for the property grid
 	 * @returns {function}
 	 */
 	function initColorPicker(id, color, options, name, changedCallback, el) {

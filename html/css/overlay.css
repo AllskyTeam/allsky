@@ -405,3 +405,12 @@ div.dtsp-searchPane div.dtsp-topRow {
 #pgtextlabel, #pgtextformat {
     width: 80%;
 }
+
+/* Buttons on property grid */
+
+.btn-oe-small {
+    margin-left: 10px;
+    font-size: 0.75em !important;
+}
+
+/* End buttons on property grid */

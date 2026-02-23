@@ -63,15 +63,17 @@
                     let selectedData = $('#' + plugin.mmId + '-table').DataTable().rows('.selected').data().toArray();
                     if (selectedData.length > 0) {
                         let selectedVariables = selectedData.map(row => row.variable).join(', ');
+                        let selectedVariableTypes = selectedData.map(row => row.type).join(', ');
                         plugin.settings.variable = selectedVariables;
-                        plugin.settings.variableSelected.call(this, selectedVariables);
+                        plugin.settings.variableSelected.call(this, selectedVariables, selectedVariableTypes);
                     }
                 } else {
                     let rowData = $('#' + plugin.mmId + '-table').DataTable().row('.selected').data()
                     if (rowData !== undefined) {
                         let selectedVariable = rowData.variable
+                        let selectedVariableType = rowData.type
                         plugin.settings.variable = selectedVariable
-                        plugin.settings.variableSelected.call(this, selectedVariable);
+                        plugin.settings.variableSelected.call(this, selectedVariable, selectedVariableType);
                     }
                 }
                 plugin.destroy()
@@ -408,8 +410,9 @@
                     var rowData = plugin.variableTable.row(this).data();
                     if (rowData !== undefined) {
                         let selectedVariable = rowData.variable
+                        let selectedVariableType = rowData.type                        
                         plugin.settings.variable = selectedVariable
-                        plugin.settings.variableSelected.call(this, selectedVariable);
+                        plugin.settings.variableSelected.call(this, selectedVariable, selectedVariableType);
                     }
                     plugin.destroy()
                 })

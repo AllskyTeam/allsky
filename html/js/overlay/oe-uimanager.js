@@ -2540,15 +2540,61 @@ class OEUIMANAGER {
 		let configManager = window.oedi.get('config')
 		let types = configManager.getTypes(true)
 
+        $(document).off('click', '#oe-swap-field');
+        $(document).on('click', '#oe-swap-field', (e) => {
+            $.allskyVariable({
+                id: 'var',
+                variable: '',
+				stateKey: 'as-oe',
+                fonts: this.#fonts,
+                defaultFont: this.#configManager.getValue('settings.defaultfont'),
+                defaultFontSize: this.#configManager.getValue('settings.defaultfontsize'),
+                showBlocks: false,
+                variableSelected: (variable, type) => {
+                    variable = '${' + variable + '}';
+                    this.#selected.label = variable;
+                    this.#selected.type = type;                    
+                    this.updatePropertyEditor()
+                    this.updateToolbar()
+                    if (this.testMode) {
+                        this.enableTestMode()
+                    }
+                }
+            })
+        });
+
+        $(document).off('click', '#oe-format-field');
+        $(document).on('click', '#oe-format-field', (e) => {
+		    let selected = this.#selected
+            let type = selected.type;
+            this.#createFormatHelpWindow(type);            
+        });
+
 		var textConfig = {
-            label: { group: 'Label', name: 'Item', type: 'text' },
-            type: { group: 'Label', name: 'type', type: 'options', options: types },
-            format: { group: 'Label', name: 'Format', type: 'text', helpcallback: function (name) {
+            label: { 
+                group: 'Label', 
+                name: 'Item', 
+                type: 'text', 
+                postHTML: '<button type="button" id="oe-swap-field" class="btn btn-primary btn-sm btn-oe-small"><i class="fa-solid fa-arrow-right-arrow-left"></i></button>' 
+            },
+            type: { 
+                group: 'Label', 
+                name: 'type', 
+                type: 'options', 
+                options: types
+            },
+            format: { 
+                group: 'Label', 
+                name: 'Format', 
+                type: 'text', 
+                postHTML: '<button type="button" id="oe-format-field" class="btn btn-primary btn-sm btn-oe-small"><i class="fa-solid fa-square-root-variable"></i></button>' 
+            },
+            /*format: { group: 'Label', name: 'Format', type: 'text', helpcallback: function (name) {
                 let uiManager = window.oedi.get('uimanager')
 				let selected = uiManager.#selected
                 let type = selected.type;
                 uiManager.#createFormatHelpWindow(type);
-            }},
+            }},*/
             sample: { group: 'Label', name: 'Sample', type: 'text' },
             empty: { group: 'Label', name: 'Empty Value', type: 'text' },
 

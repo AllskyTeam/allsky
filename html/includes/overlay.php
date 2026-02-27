@@ -119,6 +119,9 @@ function DisplayOverlay($image_name)
                                     <div class="btn btn-lg navbar-btn oe-button" id="oe-item-list" data-toggle="tooltip" data-container="body" data-placement="top" title="Variable Manager"><i class="fa-regular fa-rectangle-list"></i></div>
                                 </li>
                                 <li>
+                                    <div class="btn btn-lg navbar-btn oe-button" id="oe-split-field" data-toggle="tooltip" data-container="body" data-placement="top" title="Split Field"><i class="fa-regular fa-arrows-left-right-to-line"></i></div>
+                                </li>
+                                <li>
                                     <div class="btn btn-lg navbar-btn oe-button" id="oe-test-mode" data-toggle="tooltip" data-container="body" data-placement="top" title="Display Sample Data"><i class="fa-regular fa-square-check"></i></div>
                                 </li>
 

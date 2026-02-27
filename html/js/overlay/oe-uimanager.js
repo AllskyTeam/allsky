@@ -179,6 +179,7 @@ class OEUIMANAGER {
     
         $(document).off('dblclick', '.draggable');
         $(document).off('click', '#oe-item-list');
+        $(document).off('click', '#oe-split-field');
         $(document).off('click', '.oe-list-delete');
         $(document).off('click', '.oe-all-list-add');
         $(document).off('click', '.oe-list-add');
@@ -678,6 +679,101 @@ class OEUIMANAGER {
                 keyboard: false
             });
         })
+
+        $(document).on('click', '#oe-split-field', (event) => {
+            const scaleX = this.#stageScale
+            const gridSize = this.#configManager.gridSize
+            const margin = (gridSize * 1) | 0;
+
+            let tlx = 0
+
+            function snapToGrid(value) {
+                return Math.round(value / gridSize) * gridSize;
+            }
+
+            const calcTLX = (field) => {
+                const fieldShapeWidth = field.shape.width()
+                const fieldWidth = (fieldShapeWidth * 1) | 0
+                tlx = (field.tlx + fieldWidth + margin) | 0;
+                tlx = snapToGrid(tlx)
+
+                return tlx
+
+            }
+
+            const createField = (fieldLabel, fieldSample, fieldFormat) => {
+                let shape = this.#fieldManager.addField('text', fieldLabel, null, fieldFormat, fieldSample)
+                let newField = this.#fieldManager.findField(shape)
+
+                this.#overlayLayer.add(newField.shape)
+                
+                return newField
+            }
+
+            if (this.#selected !== null && this.#selected.fieldType === 'fields' && this.#selected.canSplit) {
+
+                let fieldInfo = this.#selected.split;
+
+                if (fieldInfo) {
+                    const oldFormats = this.#selected.format.split(/(?<=\})(?=\{)/);
+                    let prevField = this.#selected
+                    fieldInfo.forEach((variable,index) => {
+                        let name = variable.replace(/^\$\{[^_]+_/, '${');
+                        let field = this.#configManager.findFieldByName(name)
+                        if (field === null) {
+                            field = this.#configManager.findFieldByName(variable)
+                        }
+
+                        if (field) {
+                            if (index === 0) {
+                                this.#selected.label = variable;
+                                this.#selected.type = "text";
+                                this.#selected.sample = "";
+                                this.#selected.format = "";
+                                prevField = this.#selected
+                            } else {
+                                let fieldFormat = field.format
+                                if (typeof oldFormats[index] !== "undefined") {
+                                    fieldFormat = oldFormats[index];
+                                }
+                                let newField = createField(field.name, "", field.format)
+                                newField.font = this.#selected.font;
+                                newField.fontsize = this.#selected.fontsize;
+                                newField.fill = this.#selected.colour;
+                                newField.tlx = calcTLX(prevField);
+                                newField.tly = this.#selected.tly;
+                                prevField = newField
+                            }
+                        } else {
+                            if (index === 0) {
+                                this.#selected.label = variable;
+                                this.#selected.type = "text";
+                                this.#selected.sample = "";
+                                this.#selected.format = "";
+                                prevField = this.#selected
+                            }  else {
+                                let newField = createField(variable, "", "")
+                                newField.font = this.#selected.font;
+                                newField.fontsize = this.#selected.fontsize;
+                                newField.fill = this.#selected.colour;        
+                                newField.tlx = calcTLX(prevField);
+                                newField.tly = this.#selected.tly;
+                                prevField = newField
+                            }  
+                        }
+                    })
+
+                    this.updatePropertyEditor()
+                    this.updateToolbar()
+                    if (this.testMode) {
+                        this.enableTestMode()
+                    }  
+
+
+                }
+            }
+        })
+
     }
 
     setupDragAndDrop() {
@@ -1796,6 +1892,7 @@ class OEUIMANAGER {
             $('#oe-add-text').removeClass('disabled');
             $('#oe-add-image').removeClass('disabled');
             $('#oe-item-list').removeClass('disabled');
+            $('#oe-split-field').addClass('disabled');
             $('#oe-test-mode').removeClass('disabled');
             $('#oe-field-errors').removeClass('disabled');
             $('#oe-toobar-debug-button').removeClass('disabled');
@@ -1809,6 +1906,18 @@ class OEUIMANAGER {
             } else {
                 $('#oe-delete').removeClass('disabled');
                 $('#oe-delete').addClass('green');
+
+                if (this.#selected.fieldType === 'fields') {                
+                    if (!this.#fieldManager.canSplitAny()) {
+                        $('#oe-split-field').addClass('hidden');
+                    } else {
+                        if (this.#selected.canSplit) {
+                            $('#oe-split-field').removeClass('hidden');
+                            $('#oe-split-field').removeClass('disabled');
+                        }                        
+                    }
+                }
+
             }
 
             if (this.#fieldManager.dirty || this.#configManager.dirty) {

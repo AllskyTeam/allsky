@@ -134,6 +134,55 @@ class OETEXTFIELD extends OEFIELD {
     this.dirty = true;
   }
 
+  get canSplit() {
+    let str = this.label;
+    if (typeof str !== "string") return false;
+
+    const tokenMatches = str.match(/\$\{[^}]+\}/g) || [];
+    const colonIndex = str.indexOf(": ");
+
+    // Case 1: label format
+    if (colonIndex !== -1) {
+        const afterColon = str.slice(colonIndex + 2);
+        return /\$\{[^}]+\}/.test(afterColon);
+    }
+
+    // Case 2: no label, require multiple tokens
+    return tokenMatches.length > 1;
+  }
+
+  get split() {
+
+    let str = this.label;
+
+    const colonIndex = str.indexOf(": ");
+    const tokenRe = /\$\{[^}]+\}/g;
+
+    let result = [];
+
+    if (colonIndex !== -1) {
+        const label = str.slice(0, colonIndex);
+        const tokenSource = str.slice(colonIndex + 2);
+
+        const tokens = tokenSource.match(tokenRe) || [];
+
+        if (tokens.length > 0) {
+            result.push(label);
+            result = result.concat(tokens);
+        }
+
+    } else {
+        const tokens = str.match(tokenRe) || [];
+
+        if (tokens.length > 1) { // same rule as before
+            result = tokens;
+        }
+    }
+
+    return result.length > 0 ? result : null;
+
+  }
+
   getLabel() {
     return this.shape.text();
   }

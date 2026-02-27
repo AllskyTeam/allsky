@@ -208,6 +208,21 @@ class OEFIELDMANAGER {
         return result
     }
     
+    canSplitAny() {
+        let canSplitAny = false;
+
+        for (let [fieldName, field] of this.#fields.entries()) {
+            if (field.fieldType === 'fields') {
+                if (field.canSplit) {
+                    canSplitAny = true;
+                    break;
+                }
+            }
+        };
+
+        return canSplitAny;
+    }
+
     clearDirty() {
         for (let [fieldName, field] of this.#fields.entries()) {
             field.dirty = false;

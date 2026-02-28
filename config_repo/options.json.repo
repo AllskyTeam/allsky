@@ -1475,6 +1475,16 @@
 "booldependson" : "timelapsegenerate AND timelapseupload AND (uselocalwebsite OR useremotewebsite OR useremoteserver)"
 },
 {
+"name" : "uploadimages",
+"default" : false,
+"description" : "Enable to upload all images from the day to an Allsky Website and/or remote server in images/YYYY/YYYYMMDD/ format.",
+"label" : "Upload Images",
+"label_prefix" : "Daily Timelapse",
+"type" : "boolean",
+"carryforward" : true,
+"booldependson" : "timelapsegenerate AND (uselocalwebsite OR useremotewebsite OR useremoteserver)"
+},
+{
 "name" : "keogramupload",
 "default" : true,
 "description" : "Enable to upload the keogram to an Allsky Website and/or remote server.",

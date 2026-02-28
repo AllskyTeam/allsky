@@ -180,6 +180,7 @@ class OEUIMANAGER {
         $(document).off('dblclick', '.draggable');
         $(document).off('click', '#oe-item-list');
         $(document).off('click', '#oe-split-field');
+        $(document).off('click', '#oe-snap-fields');
         $(document).off('click', '.oe-list-delete');
         $(document).off('click', '.oe-all-list-add');
         $(document).off('click', '.oe-list-add');
@@ -678,6 +679,26 @@ class OEUIMANAGER {
             $('#oe-debug-dialog').modal({
                 keyboard: false
             });
+        })
+
+        $(document).on('click', '#oe-snap-fields', (event) => {
+            let fields = this.#fieldManager.fields
+            function snapToGrid(v, grid) {
+                return Math.round(v / grid) * grid;
+            }
+
+            function isSnapped(v, grid) {
+                return (v % grid) === 0;
+            }
+
+            const grid = this.#configManager.gridSize;
+
+            for (let [fieldName, field] of fields.entries()) {
+                if (!Number.isFinite(field.tlx) || !Number.isFinite(field.tly)) return;
+
+                if (!isSnapped(field.tlx, grid)) field.tlx = snapToGrid(field.tlx, grid);
+                if (!isSnapped(field.tly, grid)) field.tly = snapToGrid(field.tly, grid);
+            };
         })
 
         $(document).on('click', '#oe-split-field', (event) => {

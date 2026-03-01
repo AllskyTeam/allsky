@@ -7,6 +7,11 @@ if (basename(__FILE__) === basename($_SERVER['SCRIPT_FILENAME'])) {
 function DisplayLoginPage()
 {
     global $csrf_token; // YUK
+    $rememberedUsername = (string)($_COOKIE['allsky_remember_username'] ?? '');
+    $rememberedPassword = (string)($_COOKIE['allsky_remember_password'] ?? '');
+    $rememberedUsername = substr($rememberedUsername, 0, 128);
+    $rememberedPassword = substr($rememberedPassword, 0, 4096);
+    $rememberLoginChecked = ($rememberedUsername !== "" || $rememberedPassword !== "");
 
     $alert = "";
     if (isset($_SESSION["flash"]) && $_SESSION["flash"] !== "") {
@@ -59,11 +64,16 @@ function DisplayLoginPage()
                             <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrf_token) ?>">
                             <div class="form-group text-left">
                                 <label for="inputUsername">User Name</label>
-                                <input type="text" class="form-control" name="username" id="username" placeholder="Enter user name" required>
+                                <input type="text" class="form-control" name="username" id="username" placeholder="Enter user name" value="<?= htmlspecialchars($rememberedUsername) ?>" required>
                             </div>
                             <div class="form-group text-left mt-5">
                                 <label for="inputPassword">Password</label>
-                                <input type="password" class="form-control" name="password" id="password" placeholder="Password" required>
+                                <input type="password" class="form-control" name="password" id="password" placeholder="Password" value="<?= htmlspecialchars($rememberedPassword) ?>" required>
+                            </div>
+                            <div class="checkbox text-left mt-3">
+                                <label>
+                                    <input type="checkbox" name="remember_login" value="1" <?= $rememberLoginChecked ? "checked" : "" ?>> Remember me
+                                </label>
                             </div>
                             <button type="submit" class="btn btn-primary btn-block mt-6">Login</button>
                             <small class="flex-right mt-3"><?= $version ?></small>

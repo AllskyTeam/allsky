@@ -37,6 +37,27 @@ if ($useLogin) {
             }
 
             if ($okUser && $okPass) {
+                $rememberLogin = isset($_POST['remember_login']) && $_POST['remember_login'] === '1';
+                $secureCookie = (
+                    isset($_SERVER['HTTPS']) &&
+                    $_SERVER['HTTPS'] !== '' &&
+                    $_SERVER['HTTPS'] !== 'off'
+                );
+                $cookieOptions = [
+                    'path' => '/',
+                    'secure' => $secureCookie,
+                    'httponly' => true,
+                    'samesite' => 'Lax',
+                ];
+                if ($rememberLogin) {
+                    $rememberExpiry = time() + (30 * 24 * 60 * 60); // 30 days
+                    setcookie('allsky_remember_username', $user, $cookieOptions + ['expires' => $rememberExpiry]);
+                    setcookie('allsky_remember_password', $pass, $cookieOptions + ['expires' => $rememberExpiry]);
+                } else {
+                    setcookie('allsky_remember_username', '', $cookieOptions + ['expires' => time() - 3600]);
+                    setcookie('allsky_remember_password', '', $cookieOptions + ['expires' => time() - 3600]);
+                }
+
                 $throttle->reset();
                 session_regenerate_id(true);
                 $_SESSION['auth'] = true;

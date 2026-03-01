@@ -308,3 +308,8 @@ label.el-checkbox {
 .el-switch.el-switch-lg {
   font-size: 125%;
 }
+
+#oe-app-settings-form .checkbox label {
+  margin-left: 0px !important;
+  padding-left: 0px !important;
+}

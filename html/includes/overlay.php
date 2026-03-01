@@ -115,8 +115,20 @@ function DisplayOverlay($image_name)
                                         <div class="btn btn-lg navbar-btn oe-button disabled" id="oe-delete"><i class="fa-solid fa-xmark"></i></div>
                                     </div>
                                 </li>
+
+<!--
                                 <li>
-                                    <div class="btn btn-lg navbar-btn oe-button" id="oe-item-list" data-toggle="tooltip" data-container="body" data-placement="top" title="Variable Manager"><i class="fa-regular fa-rectangle-list"></i></div>
+                                    <div class="btn btn-lg navbar-btn oe-zoom oe-button border-left" id="oe-undo" data-toggle="tooltip" data-container="body" data-placement="top" title="Undo"><i class="fa-solid fa-rotate-left"></i></div>
+                                </li>
+                                <li>
+                                    <div class="btn btn-lg navbar-btn oe-zoom oe-button" id="oe-redo" data-toggle="tooltip" data-container="body" data-placement="top" title="Undo"><i class="fa-solid fa-rotate-right"></i></div>
+                                </li>
+-->
+
+
+
+                                <li>
+                                    <div class="btn btn-lg navbar-btn oe-button border-left" id="oe-item-list" data-toggle="tooltip" data-container="body" data-placement="top" title="Variable Manager"><i class="fa-regular fa-rectangle-list"></i></div>
                                 </li>
 
                                 <li>
@@ -515,10 +527,23 @@ function DisplayOverlay($image_name)
 
                                 <form id="oe-app-settings-form" class="form-horizontal">
                                     <div class="form-group">
-                                        <div class="col-sm-offset-4 col-sm-8">
+                                        <label for="e-app-options-show-grid" class="col-sm-4 control-label">Show Grid</label>
+                                        <div class="col-sm-8">
                                             <div class="checkbox">
-                                                <label>
-                                                    <input type="checkbox" id="oe-app-options-show-grid"> Show Grid
+                                                <label class="el-switch el-switch-sm el-switch-green">
+                                                    <input type="checkbox" id="oe-app-options-show-grid">
+                                                    <span class="el-switch-style"></span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="oe-app-options-confirm-delete" class="col-sm-4 control-label">Confirm before deleting fields</label>
+                                        <div class="col-sm-8">
+                                            <div class="checkbox">
+                                                <label class="el-switch el-switch-sm el-switch-green">
+                                                    <input type="checkbox" id="oe-app-options-confirm-delete">
+                                                    <span class="el-switch-style"></span>
                                                 </label>
                                             </div>
                                         </div>
@@ -562,10 +587,12 @@ function DisplayOverlay($image_name)
                                         </div>
                                     </div>
                                     <div class="form-group">
-                                        <div class="col-sm-offset-4 col-sm-8">
+                                        <label for="oe-app-options-snap-background" class="col-sm-4 control-label">Show Snap Rectangle</label>
+                                        <div class="col-sm-8">
                                             <div class="checkbox">
-                                                <label>
-                                                    <input type="checkbox" id="oe-app-options-snap-background"> Show Snap Rectangle
+                                                <label class="el-switch el-switch-sm el-switch-green">
+                                                    <input type="checkbox" id="oe-app-options-snap-background">
+                                                    <span class="el-switch-style"></span>
                                                 </label>
                                             </div>
                                         </div>
@@ -589,7 +616,6 @@ function DisplayOverlay($image_name)
                                             </div>
                                         </div>
                                     </div>
-
                                     <div class="form-group">
                                         <label for="oe-app-options-add-field-opacity" class="col-sm-4 control-label">Add Field Brightness</label>
                                         <div class="col-sm-8">
@@ -599,8 +625,6 @@ function DisplayOverlay($image_name)
                                             <p class="help-block">The brightness existing fields will be set to when adding a field. 0 = Lowest, 100 = Brightest</p>
                                         </div>
                                     </div>
-
-
                                     <div class="form-group">
                                         <label for="oe-app-options-select-field-opacity" class="col-sm-4 control-label">Select Field Brightness</label>
                                         <div class="col-sm-8">
@@ -611,10 +635,12 @@ function DisplayOverlay($image_name)
                                         </div>
                                     </div>
                                     <div class="form-group">
-                                        <div class="col-sm-offset-4 col-sm-8">
+                                        <label for="oe-app-options-mousewheel-zoom" class="col-sm-4 control-label">Zoom with Mouse Wheel</label>
+                                        <div class="col-sm-8">
                                             <div class="checkbox">
-                                                <label>
-                                                    <input type="checkbox" id="oe-app-options-mousewheel-zoom"> Zoom with Mouse Wheel
+                                                <label class="el-switch el-switch-sm el-switch-green">
+                                                    <input type="checkbox" id="oe-app-options-mousewheel-zoom">
+                                                    <span class="el-switch-style"></span>
                                                 </label>
                                             </div>
                                         </div>
@@ -629,7 +655,6 @@ function DisplayOverlay($image_name)
                                         </div>
                                     </div>
                                 </form>
-
                             </div>
 
                             <div role="tabpanel" class="tab-pane" id="oeeditoroverlays">

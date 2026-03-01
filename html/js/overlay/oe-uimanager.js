@@ -795,6 +795,10 @@ class OEUIMANAGER {
             }
         })
 
+        $(document).on('click', '#oe-undo', (event) => {
+            this.#fieldManager.undo()
+        })
+
     }
 
     setupDragAndDrop() {
@@ -1418,6 +1422,7 @@ class OEUIMANAGER {
             });
 
             $('#oe-app-options-show-grid').prop('checked', this.#configManager.gridVisible);
+            $('#oe-app-options-confirm-delete').prop('checked', this.#configManager.confirmDelete);
             $('#oe-app-options-grid-size option[value=' + this.#configManager.gridSize + ']').attr('selected', 'selected');
             $('#oe-app-options-grid-opacity').val(this.#configManager.gridOpacity);
             $('#oe-app-options-snap-background').prop('checked', this.#configManager.snapBackground);
@@ -1536,6 +1541,7 @@ class OEUIMANAGER {
             this.#configManager.selectFieldOpacity = $('#oe-app-options-select-field-opacity').val() | 0;
             this.#configManager.mouseWheelZoom = $('#oe-app-options-mousewheel-zoom').prop('checked');
             this.#configManager.backgroundImageOpacity = $('#oe-app-options-background-opacity').val() | 0;
+            this.#configManager.confirmDelete = $('#oe-app-options-confirm-delete').prop('checked');
 
             this.#configManager.overlayErrors = $('#oe-app-options-show-error').prop('checked');
             this.#configManager.overlayErrorsText = $('#oe-app-options-show-error').val();
@@ -1606,6 +1612,9 @@ class OEUIMANAGER {
             }
 
             if (field !== null) {
+                
+                //this.#fieldManager.saveState();
+
                 field.x = shape.x() | 0
                 field.y = shape.y() | 0
 
@@ -1623,6 +1632,7 @@ class OEUIMANAGER {
                 if (this.#configManager.snapBackground) {
                     this.#snapRectangle.visible(false);
                 }
+
             }
 
         }
@@ -1813,21 +1823,32 @@ class OEUIMANAGER {
         this.updateToolbar();
     }
 
+    #doDeleteField() {
+        this.hidePropertyEditor()
+        this.#fieldManager.deleteFields(this.#transformer)
+        this.#transformer.nodes([])
+        this.setFieldOpacity(false)
+        this.#selected = null
+        this.setFieldOpacity(false)
+        this.updateToolbar()
+    }
+
     #deleteField(event) {
-        bootbox.confirm({
-            message: 'Are you sure you wish to delete this field(s)?',
-            callback: (result) => {
-                if (result) {
-                    this.hidePropertyEditor()
-                    this.#fieldManager.deleteFields(this.#transformer)
-                    this.#transformer.nodes([])
-                    this.setFieldOpacity(false)
-                    this.#selected = null
-                    this.setFieldOpacity(false)
-                    this.updateToolbar()
+
+        if (this.#configManager.confirmDelete) {
+
+            bootbox.confirm({
+                message: 'Are you sure you wish to delete this field(s)?',
+                callback: (result) => {
+                    if (result) {
+                        this.#doDeleteField();
+                    }
                 }
-            }
-        })
+            })
+
+        } else {
+            this.#doDeleteField()
+        }
     }
 
     setZoom(type) {
@@ -1921,21 +1942,23 @@ class OEUIMANAGER {
             $('#oe-show-image-manager').removeClass('disabled');
             $('#oe-options').removeClass('disabled');            
 
-            if (this.#selected === null) {
+            if (this.#selected === null && this.#transformer.nodes().length == 0 ) {
                 $('#oe-delete').addClass('disabled');
                 $('#oe-delete').removeClass('green');
             } else {
                 $('#oe-delete').removeClass('disabled');
                 $('#oe-delete').addClass('green');
 
-                if (this.#selected.fieldType === 'fields') {                
-                    if (!this.#fieldManager.canSplitAny()) {
-                        $('#oe-split-field').addClass('hidden');
-                    } else {
-                        if (this.#selected.canSplit) {
-                            $('#oe-split-field').removeClass('hidden');
-                            $('#oe-split-field').removeClass('disabled');
-                        }                        
+                if (this.#selected !== null) {
+                    if (this.#selected.fieldType === 'fields') {                
+                        if (!this.#fieldManager.canSplitAny()) {
+                            $('#oe-split-field').addClass('hidden');
+                        } else {
+                            if (this.#selected.canSplit) {
+                                $('#oe-split-field').removeClass('hidden');
+                                $('#oe-split-field').removeClass('disabled');
+                            }                        
+                        }
                     }
                 }
 

@@ -210,6 +210,13 @@ class OECONFIG {
         }         
     }
 
+    get confirmDelete() {
+        return this.#appConfig.confirmDelete;
+    }
+    set confirmDelete(state) {
+        this.#appConfig.confirmDelete = state;
+    }
+
     get gridVisible() {
         return this.#appConfig.gridVisible;
     }

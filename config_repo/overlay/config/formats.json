@@ -65,6 +65,8 @@
                 "dp",
                 "per",
                 "deg",
+                "volts",
+                "amps",
                 "locale"
             ],
             "type": "number"

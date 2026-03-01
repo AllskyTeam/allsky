@@ -293,7 +293,19 @@ class AllskyFormatters:
 		if 'deg' in formats:
 			value = f'{value}°'
 			processed = True    
-        
+
+		if 'volts' in formats:
+			value = f'{value}V'
+			processed = True    
+
+		if 'amps' in formats:
+			value = f'{value}A'
+			processed = True    
+
+		if 'mamps' in formats:
+			value = f'{value}mA'
+			processed = True    
+           
         # If we havn't processed the value yet, try to format it using the legacy formats.
 		if not processed:
 			if format is not None and format != "":

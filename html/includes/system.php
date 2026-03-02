@@ -338,6 +338,7 @@ function DisplaySystem()
 					<li class="active"><a href="#as-system-system" data-toggle="tab">System</a></li>
 					<li><a href="#as-system-watchdog" data-toggle="tab">Watchdogs</a></li>
 					<li><a href="#as-system-logs" data-toggle="tab">Logs</a></li>
+					<li><a href="#as-system-backups" data-toggle="tab">Backups</a></li>
 				</ul>
 
 				<div class="tab-content" style="margin-top:15px;">
@@ -473,14 +474,75 @@ function DisplaySystem()
 								<pre id="as-system-log-output" style="height: 420px; overflow-y: auto; background:#111; color:#e6e6e6; padding:10px; border-radius:4px;"></pre>
 							</div>
 						</div>
-					</div>					
+					</div>
+					<div id="as-system-backups" class="tab-pane fade">
+						<div id="as-config-backup-alert" style="display:none;"></div>
+						<div class="alert alert-success" role="alert" style="margin-bottom:14px;">
+							<strong>Important:</strong> Backup archives include your <code>env.json</code> file and related configuration data.
+							Those files can contain private values such as API keys, service credentials, hostnames, network endpoints,
+							device identifiers, and other environment-specific settings that should be treated as sensitive information.
+							Before sharing any backup outside your own trusted systems, review its contents carefully, remove secrets where possible,
+							and only transfer backups through secure channels to people you trust.
+						</div>
+						<style>
+							#as-config-backup-table-wrapper {
+								border-collapse: separate;
+								border-spacing: 0 6px;
+							}
+						</style>
+
+						<div class="panel panel-default">
+							<div class="panel-heading">
+								<h3>Configuration Backups
+									<div class="pull-right">
+										<input type="file" id="as-config-backup-upload-input" accept=".tar.gz" style="display:none;">
+										<button type="button" class="btn btn-default" id="as-config-backup-upload" style="margin-right:6px;">
+											<i class="fa fa-upload"></i> Upload Backup
+										</button>
+										<button type="button" class="btn btn-primary" id="as-config-backup-create">
+											<i class="fa fa-download"></i> Create Backup
+										</button>
+									</div>
+								</h3>
+							</div>
+							<div class="panel-body">
+								<div class="table-responsive">
+									<table id="as-config-backup-table-wrapper" class="display" style="width:100%">
+										<thead><tr><th>Filename</th><th>Version</th><th>Camera Type</th><th>Camera Model</th><th>Created</th><th class="text-right">Size</th><th class="text-right">Actions</th></tr></thead>
+										<tbody id="as-config-backup-table">
+											<tr><td colspan="7">Loading backup list...</td></tr>
+										</tbody>
+									</table>
+								</div>
+							</div>
+						</div>
+
+						<div class="modal fade" id="as-config-backup-restore-modal" tabindex="-1" role="dialog" aria-labelledby="as-config-backup-restore-title">
+							<div class="modal-dialog modal-lg" role="document" style="width:90%; max-width:1200px;">
+								<div class="modal-content">
+									<div class="modal-header">
+										<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+										<h4 class="modal-title" id="as-config-backup-restore-title">Restore Backup</h4>
+									</div>
+									<div class="modal-body" style="min-height:560px;">
+										<div id="as-config-backup-restore-details"></div>
+									</div>
+									<div class="modal-footer">
+										<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+										<button type="button" class="btn btn-warning" id="as-config-backup-restore-confirm">Confirm Restore</button>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
 				</div>
 			</div><!-- /.panel-body -->
 		</div><!-- /.panel-primary -->
 
-    	<script src="/js/jquery-loading-overlay/dist/loadingoverlay.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>		
+	    	<script src="/js/jquery-loading-overlay/dist/loadingoverlay.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>		
 		<script src="js/watchdog.js"></script>
 		<script src="js/system-logs.js"></script>
+		<script src="js/system-backups.js"></script>
 	<?php
 }
 ?>

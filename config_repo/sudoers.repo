@@ -18,6 +18,7 @@ www-data ALL=(ALL) NOPASSWD:/bin/journalctl
 www-data ALL=(ALL) NOPASSWD:/bin/chgrp
 www-data ALL=(ALL) NOPASSWD:/bin/chown
 www-data ALL=(ALL) NOPASSWD:/bin/chmod
+www-data ALL=(ALL) NOPASSWD:/bin/mkdir
 www-data ALL=(ALL) NOPASSWD:/bin/rm
 www-data ALL=(ALL) NOPASSWD:/bin/cp
 www-data ALL=(ALL) NOPASSWD:/bin/mv

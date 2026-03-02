@@ -10,6 +10,7 @@ class CONFIGBACKUPUTIL extends UTILBASE
 {
     private string $allskyHome;
     private string $allskyConfig;
+    private ?string $cachedAllskyOwner = null;
 
     public function __construct()
     {
@@ -38,6 +39,32 @@ class CONFIGBACKUPUTIL extends UTILBASE
     private function getBackupMetadataFile(): string
     {
         return $this->allskyConfig . '/backup.json';
+    }
+
+    private function getConfiguredAllskyOwner(): string
+    {
+        if ($this->cachedAllskyOwner !== null) {
+            return $this->cachedAllskyOwner;
+        }
+
+        $owner = '';
+        $variablesFile = $this->allskyHome . '/variables.json';
+        if (is_file($variablesFile) && is_readable($variablesFile)) {
+            $raw = @file_get_contents($variablesFile);
+            if ($raw !== false && trim($raw) !== '') {
+                $decoded = json_decode($raw, true);
+                if (is_array($decoded) && isset($decoded['ALLSKY_OWNER'])) {
+                    $owner = trim((string)$decoded['ALLSKY_OWNER']);
+                }
+            }
+        }
+
+        if ($owner === '' && defined('ALLSKY_OWNER')) {
+            $owner = trim((string)ALLSKY_OWNER);
+        }
+
+        $this->cachedAllskyOwner = $owner;
+        return $this->cachedAllskyOwner;
     }
 
     private function getCurrentVersion(): string
@@ -337,6 +364,163 @@ class CONFIGBACKUPUTIL extends UTILBASE
         return implode("\n", $output);
     }
 
+    private function getPermissionInfoForPath(string $relativePath): ?array
+    {
+        $relativePath = ltrim($relativePath, '/');
+        if ($relativePath === '' || preg_match('/(^|\/)\.\.(\/|$)/', $relativePath)) {
+            return null;
+        }
+
+        $fullPath = $this->allskyHome . '/' . $relativePath;
+        if (!file_exists($fullPath) && !is_link($fullPath)) {
+            return null;
+        }
+
+        $perms = @fileperms($fullPath);
+        $ownerId = @fileowner($fullPath);
+        $groupId = @filegroup($fullPath);
+        if ($perms === false || $ownerId === false || $groupId === false) {
+            return null;
+        }
+
+        $owner = (string)$ownerId;
+        $group = (string)$groupId;
+        if (function_exists('posix_getpwuid')) {
+            $pw = @posix_getpwuid((int)$ownerId);
+            if (is_array($pw) && isset($pw['name']) && trim((string)$pw['name']) !== '') {
+                $owner = (string)$pw['name'];
+            }
+        }
+        if (function_exists('posix_getgrgid')) {
+            $gr = @posix_getgrgid((int)$groupId);
+            if (is_array($gr) && isset($gr['name']) && trim((string)$gr['name']) !== '') {
+                $group = (string)$gr['name'];
+            }
+        }
+
+        $allskyOwner = $this->getConfiguredAllskyOwner();
+        if ($allskyOwner !== '' && $owner === $allskyOwner) {
+            $owner = 'ALLSKY_OWNER';
+        }
+
+        return [
+            'mode' => sprintf('%04o', ($perms & 07777)),
+            'owner' => $owner,
+            'group' => $group,
+            'ownerId' => (int)$ownerId,
+            'groupId' => (int)$groupId,
+        ];
+    }
+
+    private function buildPermissionsMetadata(array $targets): array
+    {
+        $permissions = [];
+        $basePrefixLen = strlen($this->allskyHome) + 1;
+
+        foreach ($targets as $target) {
+            $target = ltrim((string)$target, '/');
+            if ($target === '' || preg_match('/(^|\/)\.\.(\/|$)/', $target)) {
+                continue;
+            }
+
+            $fullTarget = $this->allskyHome . '/' . $target;
+            if (!file_exists($fullTarget) && !is_link($fullTarget)) {
+                continue;
+            }
+
+            $info = $this->getPermissionInfoForPath($target);
+            if ($info !== null) {
+                $permissions[$target] = $info;
+            }
+
+            if (is_dir($fullTarget)) {
+                $iterator = new RecursiveIteratorIterator(
+                    new RecursiveDirectoryIterator($fullTarget, FilesystemIterator::SKIP_DOTS),
+                    RecursiveIteratorIterator::SELF_FIRST
+                );
+                foreach ($iterator as $item) {
+                    $fullPath = (string)$item->getPathname();
+                    if (strpos($fullPath, $this->allskyHome . '/') !== 0) {
+                        continue;
+                    }
+                    $relativePath = substr($fullPath, $basePrefixLen);
+                    if ($relativePath === false || $relativePath === '') {
+                        continue;
+                    }
+                    $entryInfo = $this->getPermissionInfoForPath($relativePath);
+                    if ($entryInfo !== null) {
+                        $permissions[$relativePath] = $entryInfo;
+                    }
+                }
+            }
+        }
+
+        ksort($permissions, SORT_STRING);
+        return $permissions;
+    }
+
+    private function applyPermissionsMetadata(array $permissions): array
+    {
+        $errors = [];
+        $allskyOwner = $this->getConfiguredAllskyOwner();
+        foreach ($permissions as $relativePath => $info) {
+            $relativePath = ltrim((string)$relativePath, '/');
+            if ($relativePath === '' || preg_match('/(^|\/)\.\.(\/|$)/', $relativePath)) {
+                continue;
+            }
+
+            $fullPath = $this->allskyHome . '/' . $relativePath;
+            if (!file_exists($fullPath) && !is_link($fullPath)) {
+                continue;
+            }
+
+            $owner = trim((string)($info['owner'] ?? ''));
+            if ($owner === 'ALLSKY_OWNER') {
+                if ($allskyOwner === '') {
+                    $errors[] = 'chown ' . $relativePath . ': ALLSKY_OWNER token could not be resolved from variables.json';
+                    continue;
+                }
+                $owner = $allskyOwner;
+            }
+            $group = trim((string)($info['group'] ?? ''));
+            if ($owner === '' && isset($info['ownerId'])) {
+                $owner = (string)((int)$info['ownerId']);
+            }
+            if ($group === '' && isset($info['groupId'])) {
+                $group = (string)((int)$info['groupId']);
+            }
+            if ($owner !== '' && $group !== '') {
+                $cmd = 'sudo -n /bin/chown ' . escapeshellarg($owner . ':' . $group) . ' ' . escapeshellarg($fullPath) . ' 2>&1';
+                $out = [];
+                $ret = 0;
+                exec($cmd, $out, $ret);
+                if ($ret !== 0) {
+                    $errors[] = 'chown ' . $relativePath . ': ' . trim(implode("\n", $out));
+                }
+            }
+
+            $mode = trim((string)($info['mode'] ?? ''));
+            if (preg_match('/^[0-7]{3,4}$/', $mode)) {
+                $cmd = 'sudo -n /bin/chmod ' . escapeshellarg($mode) . ' ' . escapeshellarg($fullPath) . ' 2>&1';
+                $out = [];
+                $ret = 0;
+                exec($cmd, $out, $ret);
+                if ($ret !== 0) {
+                    $errors[] = 'chmod ' . $relativePath . ': ' . trim(implode("\n", $out));
+                }
+            }
+        }
+
+        if (!empty($errors)) {
+            return [
+                'ok' => false,
+                'message' => 'Failed to restore file ownership/permissions: ' . implode(' | ', $errors),
+            ];
+        }
+
+        return ['ok' => true];
+    }
+
     private function getBackupVersionFromArchive(string $backupPath): string
     {
         $raw = $this->extractArchiveFile($backupPath, 'version');
@@ -522,6 +706,7 @@ class CONFIGBACKUPUTIL extends UTILBASE
             'created' => $created,
             'settingsfile' => $this->getSettingsFileFromArchive($backupPath),
             'ccfile' => $this->getCcFileFromArchive($backupPath),
+            'permissions' => (isset($decoded['permissions']) && is_array($decoded['permissions'])) ? $decoded['permissions'] : [],
         ];
     }
 
@@ -700,6 +885,7 @@ class CONFIGBACKUPUTIL extends UTILBASE
             'cameramodel' => $cameraInfo['cameramodel'],
             'settingsfile' => $this->getResolvedSettingsFile(),
             'ccfile' => $this->getResolvedCcFile(),
+            'permissions' => $this->buildPermissionsMetadata($targets),
             'format' => 1,
         ];
 
@@ -857,6 +1043,14 @@ class CONFIGBACKUPUTIL extends UTILBASE
                 'versionAfterRestore' => $this->getCurrentVersion(),
             ],
         ];
+
+        $permResult = ['ok' => true];
+        if (isset($backupMeta['permissions']) && is_array($backupMeta['permissions']) && !empty($backupMeta['permissions'])) {
+            $permResult = $this->applyPermissionsMetadata($backupMeta['permissions']);
+            if (empty($permResult['ok'])) {
+                return ['ok' => false, 'message' => (string)($permResult['message'] ?? 'Failed to restore file ownership/permissions.')];
+            }
+        }
 
         $warning = '';
         if ($permissionWarnings !== '') {

@@ -489,6 +489,10 @@ function DisplaySystem()
 								border-collapse: separate;
 								border-spacing: 0 6px;
 							}
+							#as-config-backup-table-container {
+								position: relative;
+								min-height: 240px;
+							}
 						</style>
 
 						<div class="panel panel-default">
@@ -506,11 +510,11 @@ function DisplaySystem()
 								</h3>
 							</div>
 							<div class="panel-body">
-								<div class="table-responsive">
+								<div id="as-config-backup-table-container" class="table-responsive">
 									<table id="as-config-backup-table-wrapper" class="display" style="width:100%">
-										<thead><tr><th>Filename</th><th>Version</th><th>Camera Type</th><th>Camera Model</th><th>Created</th><th class="text-right">Size</th><th class="text-right">Actions</th></tr></thead>
+										<thead><tr><th>Filename</th><th>Type</th><th>Version</th><th>Camera Type</th><th>Camera Model</th><th>Created</th><th class="text-right">Size</th><th class="text-right">Actions</th></tr></thead>
 										<tbody id="as-config-backup-table">
-											<tr><td colspan="7">Loading backup list...</td></tr>
+											<tr><td colspan="8">Loading backup list...</td></tr>
 										</tbody>
 									</table>
 								</div>

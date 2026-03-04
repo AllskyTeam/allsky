@@ -12,14 +12,32 @@ class ALLSKYCONFIGBACKUPS {
         this.$createModal = $('#as-config-backup-create-modal');
         this.$createModalDetails = $('#as-config-backup-create-details');
         this.$createConfirm = $('#as-config-backup-create-confirm');
+        this.$backupProgressModal = $('#as-config-backup-progress-modal');
+        this.$backupProgressBar = $('#as-config-backup-progress-bar');
+        this.$backupProgressStatus = $('#as-config-backup-progress-status');
+        this.$backupProgressSteps = $('#as-config-backup-progress-steps');
+        this.$backupProgressClose = $('#as-config-backup-progress-close');
+        this.$backupProgressError = $('#as-config-backup-progress-error');
+        this.progressTimer = null;
+        this.progressPercent = 0;
         this.$infoModal = $('#as-config-backup-info-modal');
         this.$infoModalDetails = $('#as-config-backup-info-details');
         this.$restoreModal = $('#as-config-backup-restore-modal');
         this.$restoreModalDetails = $('#as-config-backup-restore-details');
         this.$restoreConfirm = $('#as-config-backup-restore-confirm');
+        this.$restoreProgressModal = $('#as-config-backup-restore-progress-modal');
+        this.$restoreProgressBar = $('#as-config-backup-restore-progress-bar');
+        this.$restoreProgressStatus = $('#as-config-backup-restore-progress-status');
+        this.$restoreProgressSteps = $('#as-config-backup-restore-progress-steps');
+        this.$restoreProgressClose = $('#as-config-backup-restore-progress-close');
+        this.$restoreProgressError = $('#as-config-backup-restore-progress-error');
+        this.restoreProgressTimer = null;
+        this.restoreProgressPercent = 0;
         this.messageTimer = null;
         this.pendingRestoreFile = '';
+        this.pendingRestoreType = 'config';
         this.selectedRestoreSections = [];
+        this.selectedRestoreImageFolders = [];
         this.lastStatus = null;
 
         this.loadStatus = this.loadStatus.bind(this);
@@ -129,6 +147,12 @@ class ALLSKYCONFIGBACKUPS {
                 'body.dark #as-config-backup-create-modal .as-backup-type-group .btn.active strong, .dark #as-config-backup-create-modal .as-backup-type-group .btn.active strong {' +
                 'color:#e9f5ff;' +
                 '}' +
+                'body.dark #as-config-backup-create-modal #as-images-size-summary, .dark #as-config-backup-create-modal #as-images-size-summary {' +
+                'background:#2f3438; border-color:#4a535a; color:#d9e3ea;' +
+                '}' +
+                'body.dark #as-config-backup-create-modal #as-images-size-summary .text-muted, .dark #as-config-backup-create-modal #as-images-size-summary .text-muted {' +
+                'color:#b7c4ce;' +
+                '}' +
                 '</style>'
             );
         }
@@ -190,6 +214,298 @@ class ALLSKYCONFIGBACKUPS {
         }
 
         return this.$infoModal.length > 0 && this.$infoModalDetails.length > 0;
+    }
+
+    ensureBackupProgressModal() {
+        if (
+            this.$backupProgressModal.length > 0 &&
+            this.$backupProgressBar.length > 0 &&
+            this.$backupProgressStatus.length > 0 &&
+            this.$backupProgressSteps.length > 0 &&
+            this.$backupProgressClose.length > 0 &&
+            this.$backupProgressError.length > 0
+        ) {
+            return true;
+        }
+
+        if ($('#as-config-backup-progress-modal').length === 0) {
+            $('body').append(
+                '<div class="modal fade" id="as-config-backup-progress-modal" tabindex="-1" role="dialog" aria-labelledby="as-config-backup-progress-title" data-backdrop="static" data-keyboard="false">' +
+                '<div class="modal-dialog" role="document" style="max-width:680px; width:90%;">' +
+                '<div class="modal-content">' +
+                '<div class="modal-header">' +
+                '<h4 class="modal-title" id="as-config-backup-progress-title">Creating Backup</h4>' +
+                '</div>' +
+                '<div class="modal-body">' +
+                '<div id="as-config-backup-progress-status" style="margin-bottom:8px; font-weight:600;">Preparing...</div>' +
+                '<div class="progress" style="height:22px; margin-bottom:10px;">' +
+                '<div id="as-config-backup-progress-bar" class="progress-bar progress-bar-info progress-bar-striped active" role="progressbar" style="width:0%;">0%</div>' +
+                '</div>' +
+                '<div id="as-config-backup-progress-error" class="alert alert-danger" style="display:none; margin-bottom:10px;"></div>' +
+                '<ul id="as-config-backup-progress-steps" class="list-group" style="margin-bottom:0;"></ul>' +
+                '</div>' +
+                '<div class="modal-footer">' +
+                '<button type="button" class="btn btn-default" id="as-config-backup-progress-close" data-dismiss="modal" disabled>Close</button>' +
+                '</div>' +
+                '</div>' +
+                '</div>' +
+                '</div>'
+            );
+        }
+
+        this.$backupProgressModal = $('#as-config-backup-progress-modal');
+        this.$backupProgressBar = $('#as-config-backup-progress-bar');
+        this.$backupProgressStatus = $('#as-config-backup-progress-status');
+        this.$backupProgressSteps = $('#as-config-backup-progress-steps');
+        this.$backupProgressClose = $('#as-config-backup-progress-close');
+        this.$backupProgressError = $('#as-config-backup-progress-error');
+
+        if (this.$backupProgressModal.length > 0 && this.$backupProgressModal.parent().get(0) !== document.body) {
+            this.$backupProgressModal.detach().appendTo(document.body);
+        }
+
+        return (
+            this.$backupProgressModal.length > 0 &&
+            this.$backupProgressBar.length > 0 &&
+            this.$backupProgressStatus.length > 0 &&
+            this.$backupProgressSteps.length > 0 &&
+            this.$backupProgressClose.length > 0 &&
+            this.$backupProgressError.length > 0
+        );
+    }
+
+    ensureRestoreProgressModal() {
+        if (
+            this.$restoreProgressModal.length > 0 &&
+            this.$restoreProgressBar.length > 0 &&
+            this.$restoreProgressStatus.length > 0 &&
+            this.$restoreProgressSteps.length > 0 &&
+            this.$restoreProgressClose.length > 0 &&
+            this.$restoreProgressError.length > 0
+        ) {
+            return true;
+        }
+
+        if ($('#as-config-backup-restore-progress-modal').length === 0) {
+            $('body').append(
+                '<div class="modal fade" id="as-config-backup-restore-progress-modal" tabindex="-1" role="dialog" aria-labelledby="as-config-backup-restore-progress-title" data-backdrop="static" data-keyboard="false">' +
+                '<div class="modal-dialog" role="document" style="max-width:680px; width:90%;">' +
+                '<div class="modal-content">' +
+                '<div class="modal-header">' +
+                '<h4 class="modal-title" id="as-config-backup-restore-progress-title">Restoring Backup</h4>' +
+                '</div>' +
+                '<div class="modal-body">' +
+                '<div id="as-config-backup-restore-progress-status" style="margin-bottom:8px; font-weight:600;">Preparing...</div>' +
+                '<div class="progress" style="height:22px; margin-bottom:10px;">' +
+                '<div id="as-config-backup-restore-progress-bar" class="progress-bar progress-bar-info progress-bar-striped active" role="progressbar" style="width:0%;">0%</div>' +
+                '</div>' +
+                '<div id="as-config-backup-restore-progress-error" class="alert alert-danger" style="display:none; margin-bottom:10px;"></div>' +
+                '<ul id="as-config-backup-restore-progress-steps" class="list-group" style="margin-bottom:0;"></ul>' +
+                '</div>' +
+                '<div class="modal-footer">' +
+                '<button type="button" class="btn btn-default" id="as-config-backup-restore-progress-close" data-dismiss="modal" disabled>Close</button>' +
+                '</div>' +
+                '</div>' +
+                '</div>' +
+                '</div>'
+            );
+        }
+
+        this.$restoreProgressModal = $('#as-config-backup-restore-progress-modal');
+        this.$restoreProgressBar = $('#as-config-backup-restore-progress-bar');
+        this.$restoreProgressStatus = $('#as-config-backup-restore-progress-status');
+        this.$restoreProgressSteps = $('#as-config-backup-restore-progress-steps');
+        this.$restoreProgressClose = $('#as-config-backup-restore-progress-close');
+        this.$restoreProgressError = $('#as-config-backup-restore-progress-error');
+
+        if (this.$restoreProgressModal.length > 0 && this.$restoreProgressModal.parent().get(0) !== document.body) {
+            this.$restoreProgressModal.detach().appendTo(document.body);
+        }
+
+        return (
+            this.$restoreProgressModal.length > 0 &&
+            this.$restoreProgressBar.length > 0 &&
+            this.$restoreProgressStatus.length > 0 &&
+            this.$restoreProgressSteps.length > 0 &&
+            this.$restoreProgressClose.length > 0 &&
+            this.$restoreProgressError.length > 0
+        );
+    }
+
+    getRestoreProgressStepLabels(backupType) {
+        const type = String(backupType || 'config').toLowerCase();
+        if (type === 'images') {
+            return ['Validating restore options', 'Extracting selected folders', 'Applying file ownership and permissions', 'Finalising restore'];
+        }
+        return ['Validating restore options', 'Restoring configuration files', 'Applying file ownership and permissions', 'Finalising restore'];
+    }
+
+    renderRestoreProgressSteps(stepLabels) {
+        this.$restoreProgressSteps.html(
+            (stepLabels || []).map((label, idx) =>
+                '<li class="list-group-item" data-step-index="' + idx + '">' +
+                '<i class="fa fa-circle-o text-muted" style="display:inline-block; width:18px; text-align:center; margin-right:8px;"></i>' +
+                this.escapeHtml(label) +
+                '</li>'
+            ).join('')
+        );
+    }
+
+    updateRestoreProgress(percent, currentStepIdx, statusText) {
+        const safePercent = Math.max(0, Math.min(100, Math.round(Number(percent) || 0)));
+        const safeStep = Math.max(0, Number(currentStepIdx) || 0);
+        this.restoreProgressPercent = safePercent;
+        this.$restoreProgressBar.css('width', safePercent + '%').text(safePercent + '%');
+        this.$restoreProgressStatus.text(statusText || 'Restoring backup...');
+
+        this.$restoreProgressSteps.find('li').each((_, el) => {
+            const $row = $(el);
+            const idx = Number($row.data('step-index'));
+            const $icon = $row.find('i.fa');
+            $row.removeClass('list-group-item-success list-group-item-info');
+            $icon.removeClass('fa-check-circle text-success fa-spinner fa-spin text-info fa-circle-o text-muted');
+            if (idx < safeStep) {
+                $row.addClass('list-group-item-success');
+                $icon.addClass('fa-check-circle text-success');
+            } else if (idx === safeStep) {
+                $row.addClass('list-group-item-info');
+                $icon.addClass('fa-spinner fa-spin text-info');
+            } else {
+                $icon.addClass('fa-circle-o text-muted');
+            }
+        });
+    }
+
+    startRestoreProgressSimulation(backupType) {
+        this.stopRestoreProgressSimulation();
+        const steps = this.getRestoreProgressStepLabels(backupType);
+        const type = String(backupType || 'config').toLowerCase();
+        if (type === 'images') {
+            this.updateRestoreProgress(15, 0, steps[0] + '...');
+            this.restoreProgressTimer = setTimeout(() => {
+                this.updateRestoreProgress(55, 1, steps[1] + '...');
+            }, 800);
+            return;
+        }
+        this.updateRestoreProgress(20, 0, steps[0] + '...');
+    }
+
+    stopRestoreProgressSimulation() {
+        if (this.restoreProgressTimer) {
+            clearTimeout(this.restoreProgressTimer);
+            this.restoreProgressTimer = null;
+        }
+    }
+
+    showRestoreProgressModal(backupType) {
+        if (!this.ensureRestoreProgressModal()) {
+            return false;
+        }
+        const steps = this.getRestoreProgressStepLabels(backupType);
+        this.renderRestoreProgressSteps(steps);
+        this.$restoreProgressError.hide().text('');
+        this.$restoreProgressClose.prop('disabled', true);
+        this.$restoreProgressBar
+            .removeClass('progress-bar-danger progress-bar-success')
+            .addClass('progress-bar-info progress-bar-striped active');
+        this.$restoreProgressModal.modal('show');
+        this.startRestoreProgressSimulation(backupType);
+        return true;
+    }
+
+    getBackupProgressStepLabels(willStopAllskyService) {
+        if (willStopAllskyService) {
+            return ['Stopping Allsky service', 'Creating backup archive', 'Starting Allsky service', 'Finalising backup'];
+        }
+        return ['Creating backup archive', 'Finalising backup'];
+    }
+
+    renderBackupProgressSteps(stepLabels) {
+        this.$backupProgressSteps.html(
+            (stepLabels || []).map((label, idx) =>
+                '<li class="list-group-item" data-step-index="' + idx + '">' +
+                '<i class="fa fa-circle-o text-muted" style="margin-right:8px;"></i>' +
+                this.escapeHtml(label) +
+                '</li>'
+            ).join('')
+        );
+    }
+
+    updateBackupProgress(percent, currentStepIdx, statusText) {
+        const safePercent = Math.max(0, Math.min(100, Math.round(Number(percent) || 0)));
+        const safeStep = Math.max(0, Number(currentStepIdx) || 0);
+        this.progressPercent = safePercent;
+        this.$backupProgressBar.css('width', safePercent + '%').text(safePercent + '%');
+        this.$backupProgressStatus.text(statusText || 'Creating backup...');
+
+        this.$backupProgressSteps.find('li').each((_, el) => {
+            const $row = $(el);
+            const idx = Number($row.data('step-index'));
+            const $icon = $row.find('i.fa');
+            $row.removeClass('list-group-item-success list-group-item-info');
+            $icon.removeClass('fa-check-circle text-success fa-spinner fa-spin text-info fa-circle-o text-muted');
+            if (idx < safeStep) {
+                $row.addClass('list-group-item-success');
+                $icon.addClass('fa-check-circle text-success');
+            } else if (idx === safeStep) {
+                $row.addClass('list-group-item-info');
+                $icon.addClass('fa-spinner fa-spin text-info');
+            } else {
+                $icon.addClass('fa-circle-o text-muted');
+            }
+        });
+    }
+
+    startBackupProgressSimulation(willStopAllskyService, backupType) {
+        if (this.progressTimer) {
+            clearInterval(this.progressTimer);
+            this.progressTimer = null;
+        }
+        const stepLabels = this.getBackupProgressStepLabels(willStopAllskyService);
+        const stepCount = Math.max(1, stepLabels.length);
+        const type = String(backupType || 'config').toLowerCase();
+
+        // For image backups, keep progress on archive creation until completion.
+        if (type === 'images') {
+            this.updateBackupProgress(50, 0, stepLabels[0] + '...');
+            return;
+        }
+
+        let currentStep = 0;
+        const stepPercent = Math.max(1, Math.floor(100 / stepCount));
+
+        this.updateBackupProgress(stepPercent, currentStep, stepLabels[currentStep] + '...');
+        this.progressTimer = setInterval(() => {
+            if (currentStep >= stepCount - 1) {
+                return;
+            }
+            currentStep += 1;
+            const percent = Math.min(95, (currentStep + 1) * stepPercent);
+            this.updateBackupProgress(percent, currentStep, stepLabels[currentStep] + '...');
+        }, 1200);
+    }
+
+    stopBackupProgressSimulation() {
+        if (this.progressTimer) {
+            clearInterval(this.progressTimer);
+            this.progressTimer = null;
+        }
+    }
+
+    showBackupProgressModal(willStopAllskyService, backupType) {
+        if (!this.ensureBackupProgressModal()) {
+            return false;
+        }
+        const steps = this.getBackupProgressStepLabels(willStopAllskyService);
+        this.renderBackupProgressSteps(steps);
+        this.$backupProgressError.hide().text('');
+        this.$backupProgressClose.prop('disabled', true);
+        this.$backupProgressBar
+            .removeClass('progress-bar-danger progress-bar-success')
+            .addClass('progress-bar-info progress-bar-striped active');
+        this.$backupProgressModal.modal('show');
+        this.startBackupProgressSimulation(willStopAllskyService, backupType);
+        return true;
     }
 
     escapeHtml(value) {
@@ -255,7 +571,7 @@ class ALLSKYCONFIGBACKUPS {
         if (backups.length === 0) {
             this.$table.append(
                 '<tr>' +
-                '<td colspan="8" class="text-center text-muted" style="padding:24px 10px;">' +
+                '<td colspan="7" class="text-center text-muted" style="padding:24px 10px;">' +
                 '<i class="fa fa-archive" style="margin-right:8px;"></i>' +
                 '<strong>No backups found.</strong> Create one using the button above.' +
                 '</td>' +
@@ -270,51 +586,63 @@ class ALLSKYCONFIGBACKUPS {
             const typeLabel = backupType === 'images' ? 'Images' : 'Config';
             const created = backup.created || 'Unknown';
             const version = backup.version || 'unknown';
-            const cameraType = backup.cameratype || 'unknown';
-            const cameraModel = backup.cameramodel || 'unknown';
+            const cameraType = backupType === 'images' ? 'N/A' : (backup.cameratype || 'unknown');
+            const cameraModel = backupType === 'images' ? 'N/A' : (backup.cameramodel || 'unknown');
             const size = this.formatBytes(backup.sizeBytes);
 
             this.$table.append(
                 '<tr data-backup-file="' + this.escapeHtml(name) + '">' +
-                '<td>' + this.escapeHtml(name) + '</td>' +
+                '<td class="text-left">' + this.escapeHtml(created) + '</td>' +
                 '<td>' + this.escapeHtml(typeLabel) + '</td>' +
                 '<td>' + this.escapeHtml(version) + '</td>' +
                 '<td>' + this.escapeHtml(cameraType) + '</td>' +
                 '<td>' + this.escapeHtml(cameraModel) + '</td>' +
-                '<td>' + this.escapeHtml(created) + '</td>' +
                 '<td class="text-right">' + this.escapeHtml(size) + '</td>' +
                 '<td class="text-right">' +
-                '<button type="button" class="btn btn-default as-config-backup-info-row" data-file="' + this.escapeHtml(name) + '">' +
-                '<i class="fa fa-info-circle"></i> Info</button> ' +
-                '<button type="button" class="btn btn-info as-config-backup-download-row" data-file="' + this.escapeHtml(name) + '">' +
-                '<i class="fa fa-download"></i> Download</button> ' +
-                '<button type="button" class="btn btn-warning as-config-backup-restore-row" data-file="' + this.escapeHtml(name) + '">' +
-                '<i class="fa fa-upload"></i> Restore</button> ' +
-                '<button type="button" class="btn btn-danger as-config-backup-delete-row" data-file="' + this.escapeHtml(name) + '">' +
-                '<i class="fa fa-trash"></i> Delete</button>' +
+                '<button type="button" class="btn btn-default as-config-backup-info-row" data-file="' + this.escapeHtml(name) + '" title="Info" aria-label="Info">' +
+                '<i class="fa fa-info-circle"></i></button> ' +
+                '<button type="button" class="btn btn-info as-config-backup-download-row" data-file="' + this.escapeHtml(name) + '" title="Download" aria-label="Download">' +
+                '<i class="fa fa-download"></i></button> ' +
+                '<button type="button" class="btn btn-warning as-config-backup-restore-row" data-file="' + this.escapeHtml(name) + '" title="Restore" aria-label="Restore">' +
+                '<i class="fa fa-upload"></i></button> ' +
+                '<button type="button" class="btn btn-danger as-config-backup-delete-row" data-file="' + this.escapeHtml(name) + '" title="Delete" aria-label="Delete">' +
+                '<i class="fa fa-trash"></i></button>' +
                 '</td>' +
                 '</tr>'
             );
         });
 
         if ($.fn.DataTable) {
-            this.$tableWrapper.DataTable({
-                order: [[1, 'asc'], [5, 'desc']],
+            const dataTableOptions = {
+                order: [[1, 'asc'], [0, 'desc']],
                 pageLength: 10,
                 lengthChange: false,
                 autoWidth: false,
                 columnDefs: [
-                    { width: '18%', targets: 0 }, // Filename
+                    { width: '20%', className: 'dt-left', type: 'string', targets: 0 }, // Backup Date/Time
                     { width: '8%', targets: 1 }, // Type
                     { width: '10%', targets: 2 }, // Version
                     { width: '10%', targets: 3 }, // Camera Type
-                    { width: '12%', targets: 4 }, // Camera Model
-                    { width: '16%', targets: 5 }, // Created
-                    { width: '8%', className: 'text-right', targets: 6 }, // Size
-                    { width: '18%', className: 'text-right', orderable: false, targets: 7 } // Actions
+                    { width: '14%', targets: 4 }, // Camera Model
+                    { width: '10%', className: 'text-right', targets: 5 }, // Size
+                    { width: '18%', className: 'text-right', orderable: false, targets: 6 } // Actions
                 ],
                 destroy: true
-            });
+            };
+
+            if ($.fn.dataTable && $.fn.dataTable.RowGroup) {
+                dataTableOptions.rowGroup = {
+                    dataSrc: 1,
+                    startRender: function (rows, group) {
+                        return $('<span/>')
+                            .addClass('text-primary')
+                            .css('font-weight', '600')
+                            .text(group + ' Backups (' + rows.count() + ')');
+                    }
+                };
+            }
+
+            this.$tableWrapper.DataTable(dataTableOptions);
         }
     }
 
@@ -373,7 +701,24 @@ class ALLSKYCONFIGBACKUPS {
             ? status.optionalTargets
             : fallbackOptionalTargets;
         const optionalKeys = Object.keys(optionalTargets);
-        const imageFolders = (status && Array.isArray(status.imagesFolders)) ? status.imagesFolders : [];
+        let imageFolders = (status && Array.isArray(status.imagesFolders)) ? status.imagesFolders : [];
+        const imageFolderStats = (status && Array.isArray(status.imagesFolderStats)) ? status.imagesFolderStats : [];
+        const imagesTotalSizeBytes = Number(status.imagesTotalSizeBytes || 0);
+        const imagesTotalEstimatedCompressedBytes = Number(status.imagesTotalEstimatedCompressedBytes || 0);
+        const folderStatsByName = {};
+        imageFolderStats.forEach((item) => {
+            const name = String((item && item.name) || '').trim();
+            if (name === '') {
+                return;
+            }
+            folderStatsByName[name] = {
+                sizeBytes: Number(item.sizeBytes || 0),
+                estimatedCompressedBytes: Number(item.estimatedCompressedBytes || 0)
+            };
+        });
+        if (imageFolders.length === 0 && imageFolderStats.length > 0) {
+            imageFolders = imageFolderStats.map((item) => String((item && item.name) || '').trim()).filter((name) => name !== '');
+        }
 
         const typeSelector = [
             '<div class="row" style="margin:0; padding:0 0 10px 0;">',
@@ -450,6 +795,10 @@ class ALLSKYCONFIGBACKUPS {
             '<div class="panel panel-default" style="margin-bottom:10px;">' +
             '<div class="panel-heading" style="padding:8px 12px;"><strong>Images Selection</strong></div>' +
             '<div class="panel-body" style="padding:10px 12px;">' +
+            '<div id="as-images-size-summary" class="well well-sm" style="margin-top:0; margin-bottom:10px;">' +
+            '<strong>Total Selected:</strong> <span id="as-images-size-total">0 B</span>' +
+            '<span class="text-muted"> (estimated compressed: <span id="as-images-size-estimate">0 B</span>)</span>' +
+            '</div>' +
             '<div class="row" style="margin:0 0 10px 0;">' +
             '<div class="col-xs-9" style="padding-left:0; padding-right:0;">' +
             '<strong>Backup all folders</strong>' +
@@ -466,13 +815,21 @@ class ALLSKYCONFIGBACKUPS {
             '<div id="as-images-folder-list-wrapper">' +
             (imageFolders.length
                 ? ('<div class="row" style="margin:0;">' + imageFolders.map((folder) =>
+                    (() => {
+                        const stat = folderStatsByName[folder] || { sizeBytes: 0, estimatedCompressedBytes: 0 };
+                        const sizeLabel = this.formatBytes(stat.sizeBytes);
+                        const estimateLabel = this.formatBytes(stat.estimatedCompressedBytes);
+                        return (
                     '<div class="col-sm-6" style="padding:0 8px 8px 0;">' +
                     '<div class="row" style="margin:0;">' +
-                    '<div class="col-sm-3" style="padding-left:0; padding-right:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + this.escapeHtml(folder) + '</div>' +
+                    '<div class="col-sm-8" style="padding-left:0; padding-right:4px;">' +
+                    '<div style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + this.escapeHtml(folder) + '</div>' +
+                    '<div class="text-muted" style="font-size:12px;">' + this.escapeHtml(sizeLabel) + ' (est. ' + this.escapeHtml(estimateLabel) + ')</div>' +
+                    '</div>' +
                     '<div class="col-sm-2" style="padding-left:0; padding-right:0;">' +
                     '<div class="checkbox" style="margin:0;">' +
                     '<label class="el-switch el-switch-sm el-switch-green" style="margin:0;">' +
-                    '<input type="checkbox" class="as-images-folder" data-folder="' + this.escapeHtml(folder) + '" disabled autocomplete="off">' +
+                    '<input type="checkbox" class="as-images-folder" data-folder="' + this.escapeHtml(folder) + '" autocomplete="off">' +
                     '<span class="el-switch-style"></span>' +
                     '</label>' +
                     '</div>' +
@@ -480,6 +837,8 @@ class ALLSKYCONFIGBACKUPS {
                     '<div class="col-sm-7"></div>' +
                     '</div>' +
                     '</div>'
+                        );
+                    })()
                 ).join('') + '</div>')
                 : '<div class="text-muted">No image subfolders found.</div>') +
             '</div>' +
@@ -489,6 +848,27 @@ class ALLSKYCONFIGBACKUPS {
             '</div>' +
             '</div>'
         );
+        const updateImagesSizeSummary = () => {
+            const allChecked = !!this.$createModalDetails.find('#as-images-backup-all').prop('checked');
+            let totalRaw = 0;
+            let totalEstimated = 0;
+
+            if (allChecked) {
+                totalRaw = imagesTotalSizeBytes;
+                totalEstimated = imagesTotalEstimatedCompressedBytes;
+            } else {
+                this.$createModalDetails.find('.as-images-folder:checked').each((_, el) => {
+                    const name = String($(el).data('folder') || '');
+                    const stat = folderStatsByName[name] || { sizeBytes: 0, estimatedCompressedBytes: 0 };
+                    totalRaw += Number(stat.sizeBytes || 0);
+                    totalEstimated += Number(stat.estimatedCompressedBytes || 0);
+                });
+            }
+
+            this.$createModalDetails.find('#as-images-size-total').text(this.formatBytes(totalRaw));
+            this.$createModalDetails.find('#as-images-size-estimate').text(this.formatBytes(totalEstimated));
+        };
+
         this.$createModalDetails.off('change.backuptype').on('change.backuptype', 'input[name="as-config-backup-type"]', (e) => {
             const type = String($(e.currentTarget).val() || 'config');
             if (type === 'images') {
@@ -501,20 +881,35 @@ class ALLSKYCONFIGBACKUPS {
         });
         this.$createModalDetails.off('change.imagesall').on('change.imagesall', '#as-images-backup-all', () => {
             const allChecked = !!$('#as-images-backup-all').prop('checked');
-            this.$createModalDetails.find('.as-images-folder').prop('disabled', allChecked).prop('checked', false);
+            if (allChecked) {
+                this.$createModalDetails.find('.as-images-folder').prop('checked', false);
+            }
+            updateImagesSizeSummary();
+        });
+        this.$createModalDetails.off('change.imagesfolder').on('change.imagesfolder', '.as-images-folder', () => {
+            const anyFolderChecked = this.$createModalDetails.find('.as-images-folder:checked').length > 0;
+            if (anyFolderChecked) {
+                this.$createModalDetails.find('#as-images-backup-all').prop('checked', false);
+            }
+            updateImagesSizeSummary();
         });
         this.$createModalDetails.find('#as-images-backup-all').trigger('change');
+        updateImagesSizeSummary();
         this.$createConfirm.prop('disabled', false);
         this.$createModal.modal('show');
     }
 
-    createBackup(backupType, optionalTargetKeys, backupAllImages, selectedImageFolders) {
+    createBackup(backupType, optionalTargetKeys, backupAllImages, selectedImageFolders, willStopAllskyService) {
         this.hideMessage();
         this.$createButton.prop('disabled', true);
         if (this.$createConfirm.length > 0) {
             this.$createConfirm.prop('disabled', true);
         }
-        $.LoadingOverlay('show', { text: 'Creating backup' });
+        const stopFlow = !!willStopAllskyService;
+        if (this.$createModal.length > 0) {
+            this.$createModal.modal('hide');
+        }
+        this.showBackupProgressModal(stopFlow, backupType);
 
         $.ajax({
             url: 'includes/configbackuputil.php?request=Create',
@@ -527,14 +922,44 @@ class ALLSKYCONFIGBACKUPS {
             },
             dataType: 'json'
         }).done((result) => {
+            this.stopBackupProgressSimulation();
+            this.$backupProgressBar
+                .removeClass('progress-bar-info progress-bar-danger progress-bar-striped active')
+                .addClass('progress-bar-success');
+            const doneStepIdx = Math.max(0, this.$backupProgressSteps.find('li').length - 1);
+            this.updateBackupProgress(100, doneStepIdx, 'Backup complete.');
+            this.$backupProgressSteps.find('li').each((_, el) => {
+                const $row = $(el);
+                const $icon = $row.find('i.fa');
+                $row.removeClass('list-group-item-info').addClass('list-group-item-success');
+                $icon.removeClass('fa-spinner fa-spin text-info fa-circle-o text-muted').addClass('fa-check-circle text-success');
+            });
+            this.$backupProgressClose.prop('disabled', false);
+
             if (this.$createModal.length > 0) {
                 this.$createModal.modal('hide');
             }
             this.loadStatus();
             let msg = (result && result.message) ? result.message : 'Backup created.';
+            if (result && Array.isArray(result.steps) && result.steps.length > 0) {
+                msg += ' Steps: ' + result.steps.join(' -> ') + '.';
+            }
             if (result && result.warning) msg += ' ' + result.warning;
             this.showMessage((result && result.warning) ? 'warning' : 'success', msg, 5000);
+            setTimeout(() => {
+                if (this.$backupProgressModal.length > 0) {
+                    this.$backupProgressModal.modal('hide');
+                }
+            }, 800);
         }).fail((xhr) => {
+            this.stopBackupProgressSimulation();
+            this.$backupProgressBar
+                .removeClass('progress-bar-info progress-bar-success progress-bar-striped active')
+                .addClass('progress-bar-danger');
+            const failStepIdx = Math.max(0, this.$backupProgressSteps.find('li.list-group-item-info').data('step-index') || 0);
+            this.updateBackupProgress(this.progressPercent || 5, failStepIdx, 'Backup failed.');
+            this.$backupProgressClose.prop('disabled', false);
+
             let msg = 'Backup failed.';
             if (xhr && xhr.responseJSON && xhr.responseJSON.message) {
                 msg = xhr.responseJSON.message;
@@ -544,13 +969,15 @@ class ALLSKYCONFIGBACKUPS {
                     msg = text;
                 }
             }
+            if (this.$backupProgressError.length > 0) {
+                this.$backupProgressError.text(msg).show();
+            }
             this.showMessage('danger', msg);
         }).always(() => {
             this.$createButton.prop('disabled', false);
             if (this.$createConfirm.length > 0) {
                 this.$createConfirm.prop('disabled', false);
             }
-            $.LoadingOverlay('hide');
         });
     }
 
@@ -566,6 +993,8 @@ class ALLSKYCONFIGBACKUPS {
         this.moveRestoreModalToBody();
 
         this.pendingRestoreFile = selectedFile;
+        this.pendingRestoreType = 'config';
+        this.selectedRestoreImageFolders = [];
         this.$restoreModalDetails.empty();
         this.$restoreConfirm
             .removeClass('btn-success btn-danger')
@@ -588,6 +1017,7 @@ class ALLSKYCONFIGBACKUPS {
         }).done((result) => {
             const backup = result && result.backup ? result.backup : {};
             const backupType = String(backup.backupType || 'config').toLowerCase();
+            this.pendingRestoreType = backupType;
             const imageFolders = Array.isArray(backup.imageFolders) ? backup.imageFolders : [];
             const imageBackupAll = !!backup.imageBackupAll;
             const requiredModules = Array.isArray(result.requiredModules) ? result.requiredModules : [];
@@ -609,6 +1039,11 @@ class ALLSKYCONFIGBACKUPS {
                 const label = (section && typeof section === 'object')
                     ? (section.shortdescription || section.description || section.key || key)
                     : key;
+
+                if (backupType === 'images') {
+                    return '<div style="margin-bottom:4px;">' + this.escapeHtml(label) + '</div>';
+                }
+
                 const checked = defaultSelectedSections.indexOf(key) !== -1 ? ' checked' : '';
                 const disabled = (section && typeof section === 'object' && section.required) ? ' disabled' : '';
                 return [
@@ -772,35 +1207,60 @@ class ALLSKYCONFIGBACKUPS {
             };
 
             const updateForSelection = () => {
-                const selectedKeys = [];
-                this.$restoreModalDetails.find('.as-restore-section:checked').each((_, el) => {
-                    selectedKeys.push($(el).data('section-key'));
-                });
+                const selectedKeys = (backupType === 'images')
+                    ? ['images']
+                    : [];
+                if (backupType !== 'images') {
+                    this.$restoreModalDetails.find('.as-restore-section:checked').each((_, el) => {
+                        selectedKeys.push($(el).data('section-key'));
+                    });
+                }
                 this.selectedRestoreSections = selectedKeys;
 
                 if (backupType === 'images') {
-                    const imagesSelected = selectedKeys.indexOf('images') !== -1;
+                    const selectedFolders = [];
+                    this.$restoreModalDetails.find('.as-restore-image-folder:checked').each((_, el) => {
+                        selectedFolders.push(String($(el).data('folder') || ''));
+                    });
+                    const hasExistingFolderInputs = this.$restoreModalDetails.find('.as-restore-image-folder').length > 0;
+                    const effectiveSelectedFolders = (!hasExistingFolderInputs && imageFolders.length > 0)
+                        ? imageFolders.slice()
+                        : selectedFolders;
+                    this.selectedRestoreImageFolders = effectiveSelectedFolders;
+                    const hasFolderSelection = imageFolders.length === 0 ? true : effectiveSelectedFolders.length > 0;
                     const checks = [
                         imagesPresentCheck,
                         {
-                            name: 'Images section selected for restore',
-                            passed: imagesSelected,
-                            detail: imagesSelected ? 'Images will be restored.' : 'Select Images Folder to continue.',
-                        }
+                            name: 'Image folders selected',
+                            passed: hasFolderSelection,
+                            detail: hasFolderSelection
+                                ? (imageFolders.length ? (effectiveSelectedFolders.length + ' folder(s) selected.') : 'No folder list recorded; all images content will be restored.')
+                                : 'Select at least one folder to restore.',
+                        },
                     ];
-                    const canRestoreNow = !!imagesPresentCheck.passed && imagesSelected;
+                    const canRestoreNow = !!imagesPresentCheck.passed && hasFolderSelection;
                     renderChecks(checks);
                     $('#as-config-backup-module-panel-title').text('Images Restore');
-                    const folderListHtml = imageBackupAll
-                        ? (imageFolders.length
-                            ? imageFolders.map((f) => '<li class="list-group-item">' + this.escapeHtml(f) + '</li>').join('')
-                            : '<li class="list-group-item text-muted">All folders in images</li>')
-                        : (imageFolders.length
-                            ? imageFolders.map((f) => '<li class="list-group-item">' + this.escapeHtml(f) + '</li>').join('')
-                            : '<li class="list-group-item text-muted">No folder list recorded.</li>');
+                    const folderListHtml = imageFolders.length
+                        ? imageFolders.map((f) => (
+                            '<li class="list-group-item">' +
+                            '<div class="row">' +
+                            '<div class="col-xs-9" style="padding-top:4px;">' + this.escapeHtml(f) + '</div>' +
+                            '<div class="col-xs-3 text-right">' +
+                            '<div class="checkbox" style="margin:0;">' +
+                            '<label class="el-switch el-switch-sm el-switch-green" style="margin:0;">' +
+                            '<input type="checkbox" class="as-restore-image-folder" data-folder="' + this.escapeHtml(f) + '"' + (effectiveSelectedFolders.indexOf(f) !== -1 ? ' checked' : '') + '>' +
+                            '<span class="el-switch-style"></span>' +
+                            '</label>' +
+                            '</div>' +
+                            '</div>' +
+                            '</div>' +
+                            '</li>'
+                        )).join('')
+                        : '<li class="list-group-item text-muted">No folder list recorded.</li>';
                     $('#as-config-backup-module-panel-count').text(String(imageFolders.length || 0));
                     $('#as-config-backup-module-panel-body').html(
-                        '<div class="text-muted" style="margin-bottom:8px;">Folders that would be restored:</div>' +
+                        '<div class="text-muted" style="margin-bottom:8px;">Select folders to restore:</div>' +
                         '<div style="max-height:340px; overflow:auto;">' +
                         '<ul class="list-group" style="margin-bottom:0;">' + folderListHtml + '</ul>' +
                         '</div>'
@@ -877,6 +1337,9 @@ class ALLSKYCONFIGBACKUPS {
             };
 
             this.$restoreModalDetails.off('change.restoreSections').on('change.restoreSections', '.as-restore-section', () => {
+                updateForSelection();
+            });
+            this.$restoreModalDetails.off('change.restoreFolders').on('change.restoreFolders', '.as-restore-image-folder', () => {
                 updateForSelection();
             });
             updateForSelection();
@@ -985,13 +1448,11 @@ class ALLSKYCONFIGBACKUPS {
             if (backupType === 'images') {
                 rightTitle = 'Images Folders';
                 rightCount = imageFolders.length;
-                rightBody = imageBackupAll
-                    ? '<div class="well well-sm text-muted" style="margin-bottom:0;">All folders in images are included.</div>'
-                    : ('<div style="max-height:430px; overflow:auto;"><ul class="list-group" style="margin-bottom:0;">' +
-                        (imageFolders.length
-                            ? imageFolders.map((f) => '<li class="list-group-item">' + this.escapeHtml(f) + '</li>').join('')
-                            : '<li class="list-group-item text-muted">No folder list recorded.</li>') +
-                        '</ul></div>');
+                rightBody = '<div style="max-height:430px; overflow:auto;"><ul class="list-group" style="margin-bottom:0;">' +
+                    (imageFolders.length
+                        ? imageFolders.map((f) => '<li class="list-group-item">' + this.escapeHtml(f) + '</li>').join('')
+                        : '<li class="list-group-item text-muted">No folder list recorded.</li>') +
+                    '</ul></div>';
             } else if (backupHasModules) {
                 rightTitle = 'Modules In Backup';
                 rightCount = backupModules.length;
@@ -1037,25 +1498,65 @@ class ALLSKYCONFIGBACKUPS {
         if (!selectedFile) {
             return;
         }
+        const restoreType = String(this.pendingRestoreType || 'config').toLowerCase();
+        const showProgress = (restoreType === 'images');
 
         this.$restoreConfirm.prop('disabled', true);
+        if (showProgress) {
+            this.$restoreModal.modal('hide');
+            this.showRestoreProgressModal(restoreType);
+        }
         $.ajax({
             url: 'includes/configbackuputil.php?request=Restore',
             method: 'POST',
             dataType: 'json',
             data: {
                 file: selectedFile,
-                selectedSections: Array.isArray(this.selectedRestoreSections) ? this.selectedRestoreSections : []
+                selectedSections: Array.isArray(this.selectedRestoreSections) ? this.selectedRestoreSections : [],
+                selectedImageFolders: Array.isArray(this.selectedRestoreImageFolders) ? this.selectedRestoreImageFolders : []
             }
         }).done((result) => {
             this.renderStatus((result && result.status) ? result.status : {});
-            this.$restoreModal.modal('hide');
+            if (showProgress) {
+                this.stopRestoreProgressSimulation();
+                this.$restoreProgressBar
+                    .removeClass('progress-bar-info progress-bar-danger progress-bar-striped active')
+                    .addClass('progress-bar-success');
+                const stepLabels = (result && Array.isArray(result.steps) && result.steps.length > 0)
+                    ? result.steps
+                    : this.getRestoreProgressStepLabels(restoreType);
+                this.renderRestoreProgressSteps(stepLabels);
+                const lastIdx = Math.max(0, stepLabels.length - 1);
+                this.updateRestoreProgress(100, lastIdx, 'Restore complete.');
+                this.$restoreProgressSteps.find('li').each((_, el) => {
+                    const $row = $(el);
+                    const $icon = $row.find('i.fa');
+                    $row.removeClass('list-group-item-info').addClass('list-group-item-success');
+                    $icon.removeClass('fa-spinner fa-spin text-info fa-circle-o text-muted').addClass('fa-check-circle text-success');
+                });
+                this.$restoreProgressClose.prop('disabled', false);
+                setTimeout(() => {
+                    this.$restoreProgressModal.modal('hide');
+                }, 900);
+            } else {
+                this.$restoreModal.modal('hide');
+            }
         }).fail((xhr) => {
             let msg = 'Restore failed.';
             if (xhr && xhr.responseJSON && xhr.responseJSON.message) {
                 msg = xhr.responseJSON.message;
             }
-            this.$restoreModalDetails.prepend('<div class="alert alert-danger" style="margin-bottom:10px;">' + this.escapeHtml(msg) + '</div>');
+            if (showProgress) {
+                this.stopRestoreProgressSimulation();
+                this.$restoreProgressBar
+                    .removeClass('progress-bar-info progress-bar-success progress-bar-striped active')
+                    .addClass('progress-bar-danger');
+                this.updateRestoreProgress(this.restoreProgressPercent || 10, 1, 'Restore failed.');
+                this.$restoreProgressError.text(msg).show();
+                this.$restoreProgressClose.prop('disabled', false);
+            } else {
+                this.$restoreModalDetails.prepend('<div class="alert alert-danger" style="margin-bottom:10px;">' + this.escapeHtml(msg) + '</div>');
+            }
         }).always(() => {
             this.$restoreConfirm.prop('disabled', false);
         });
@@ -1155,6 +1656,8 @@ class ALLSKYCONFIGBACKUPS {
 
     run() {
         this.ensureCreateModal();
+        this.ensureBackupProgressModal();
+        this.ensureRestoreProgressModal();
         this.ensureInfoModal();
         this.ensureRestoreModal();
 
@@ -1197,10 +1700,21 @@ class ALLSKYCONFIGBACKUPS {
                         }
                     }
                 }
-                this.createBackup(backupType, selectedKeys, backupAllImages, selectedImageFolders);
+                const willStopAllskyService = (backupType === 'config' && selectedKeys.indexOf('databases') !== -1);
+                this.createBackup(backupType, selectedKeys, backupAllImages, selectedImageFolders, willStopAllskyService);
             });
             this.$createModal.on('hidden.bs.modal', () => {
                 this.$createModalDetails.empty();
+            });
+        }
+        if (this.$backupProgressModal.length > 0) {
+            this.$backupProgressModal.on('hidden.bs.modal', () => {
+                this.stopBackupProgressSimulation();
+            });
+        }
+        if (this.$restoreProgressModal.length > 0) {
+            this.$restoreProgressModal.on('hidden.bs.modal', () => {
+                this.stopRestoreProgressSimulation();
             });
         }
         if (this.$uploadButton.length > 0 && this.$uploadInput.length > 0) {
@@ -1234,7 +1748,9 @@ class ALLSKYCONFIGBACKUPS {
             this.$restoreConfirm.on('click', () => this.confirmRestore());
             this.$restoreModal.on('hidden.bs.modal', () => {
                 this.pendingRestoreFile = '';
+                this.pendingRestoreType = 'config';
                 this.selectedRestoreSections = [];
+                this.selectedRestoreImageFolders = [];
                 this.$restoreModalDetails.empty();
             });
         }

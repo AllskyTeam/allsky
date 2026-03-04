@@ -477,12 +477,15 @@ function DisplaySystem()
 					</div>
 					<div id="as-system-backups" class="tab-pane fade">
 						<div id="as-config-backup-alert" style="display:none;"></div>
-						<div class="alert alert-success" role="alert" style="margin-bottom:14px;">
-							<strong>Important:</strong> Backup archives include your <code>env.json</code> file and related configuration data.
-							Those files can contain private values such as API keys, service credentials, hostnames, network endpoints,
-							device identifiers, and other environment-specific settings that should be treated as sensitive information.
-							Before sharing any backup outside your own trusted systems, review its contents carefully, remove secrets where possible,
-							and only transfer backups through secure channels to people you trust.
+						<div class="alert alert-danger" role="alert" style="margin-bottom:14px; padding:14px 16px;">
+							<div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+								<i class="fa fa-exclamation-triangle" aria-hidden="true" style="font-size:18px;"></i>
+								<strong style="font-size:17px; line-height:1.2;">Read The Documentation Before You Continue</strong>
+							</div>
+							<div style="font-size:15px; line-height:1.45;">
+								The backup and restore system should only be used after reviewing the documentation in full.
+								It explains what is included in each backup type, prerequisites for restore, and the correct workflow to avoid data loss.
+							</div>
 						</div>
 						<style>
 							#as-config-backup-table-wrapper {
@@ -497,7 +500,7 @@ function DisplaySystem()
 
 						<div class="panel panel-default">
 							<div class="panel-heading">
-								<h3>Configuration Backups
+								<h3>Allsky Backups
 									<div class="pull-right">
 										<input type="file" id="as-config-backup-upload-input" accept=".tar.gz" style="display:none;">
 										<button type="button" class="btn btn-default" id="as-config-backup-upload" style="margin-right:6px;">
@@ -512,9 +515,9 @@ function DisplaySystem()
 							<div class="panel-body">
 								<div id="as-config-backup-table-container" class="table-responsive">
 									<table id="as-config-backup-table-wrapper" class="display" style="width:100%">
-										<thead><tr><th>Filename</th><th>Type</th><th>Version</th><th>Camera Type</th><th>Camera Model</th><th>Created</th><th class="text-right">Size</th><th class="text-right">Actions</th></tr></thead>
+										<thead><tr><th class="text-left">Backup Date/Time</th><th>Type</th><th>Version</th><th>Camera Type</th><th>Camera Model</th><th class="text-right">Size</th><th class="text-right">Actions</th></tr></thead>
 										<tbody id="as-config-backup-table">
-											<tr><td colspan="8">Loading backup list...</td></tr>
+											<tr><td colspan="7">Loading backup list...</td></tr>
 										</tbody>
 									</table>
 								</div>
@@ -547,6 +550,28 @@ function DisplaySystem()
 		<script src="js/watchdog.js"></script>
 		<script src="js/system-logs.js"></script>
 		<script src="js/system-backups.js"></script>
+		<script>
+			$(document).ready(function () {
+				var tabStorageKey = 'as-system-selected-tab';
+				var tabSelector = '.nav-tabs a[data-toggle="tab"][href^="#as-system-"]';
+				var $systemTabs = $(tabSelector);
+
+				$systemTabs.on('shown.bs.tab', function (e) {
+					var href = $(e.target).attr('href');
+					if (href) {
+						sessionStorage.setItem(tabStorageKey, href);
+					}
+				});
+
+				var storedTab = sessionStorage.getItem(tabStorageKey);
+				if (storedTab) {
+					var $storedTab = $(tabSelector + '[href="' + storedTab + '"]');
+					if ($storedTab.length > 0) {
+						$storedTab.tab('show');
+					}
+				}
+			});
+		</script>
 	<?php
 }
 ?>

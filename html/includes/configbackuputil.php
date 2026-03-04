@@ -230,6 +230,135 @@ class CONFIGBACKUPUTIL extends UTILBASE
         return $folders;
     }
 
+    private function getDirectorySizeBytes(string $path): int
+    {
+        if ($path === '' || !is_dir($path) || !is_readable($path)) {
+            return 0;
+        }
+
+        $bytes = 0;
+        try {
+            $iter = new RecursiveIteratorIterator(
+                new RecursiveDirectoryIterator($path, FilesystemIterator::SKIP_DOTS),
+                RecursiveIteratorIterator::SELF_FIRST
+            );
+            foreach ($iter as $item) {
+                if ($item->isFile()) {
+                    $bytes += (int)$item->getSize();
+                }
+            }
+        } catch (Throwable $e) {
+            return 0;
+        }
+
+        return max(0, $bytes);
+    }
+
+    private function estimateCompressedSizeBytes(int $rawBytes): int
+    {
+        if ($rawBytes <= 0) {
+            return 0;
+        }
+
+        // Images are usually already compressed, so estimate only modest reduction.
+        return (int)max(0, round($rawBytes * 0.92));
+    }
+
+    private function controlAllskyService(string $action): array
+    {
+        $action = strtolower(trim($action));
+        if ($action !== 'stop' && $action !== 'start') {
+            return ['ok' => false, 'message' => 'Invalid service action requested.'];
+        }
+
+        $cmd = 'sudo -n systemctl ' . escapeshellarg($action) . ' allsky 2>&1';
+        $output = [];
+        $ret = 0;
+        exec($cmd, $output, $ret);
+        if ($ret !== 0) {
+            $details = trim(implode("\n", $output));
+            $message = 'Unable to ' . $action . ' allsky service.';
+            if ($details !== '') {
+                $message .= ' ' . $details;
+            }
+            return ['ok' => false, 'message' => $message];
+        }
+
+        return ['ok' => true];
+    }
+
+    private function optionalTargetRequiresAllskyStop(string $targetKey): bool
+    {
+        $key = trim($targetKey);
+        if ($key === '') {
+            return false;
+        }
+
+        $optional = $this->getOptionalTargets();
+        if (!isset($optional[$key]) || !is_array($optional[$key])) {
+            return false;
+        }
+
+        $paths = $optional[$key]['path'] ?? [];
+        if (is_string($paths)) {
+            $paths = [$paths];
+        }
+        if (!is_array($paths)) {
+            return false;
+        }
+
+        foreach ($paths as $path) {
+            $normalized = $this->normalizeArchiveTarget((string)$path);
+            if ($normalized === 'config/myFiles/allsky.db') {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function selectedOptionalTargetsRequireAllskyStop(array $selectedOptionalTargetKeys): bool
+    {
+        foreach ($selectedOptionalTargetKeys as $key) {
+            if ($this->optionalTargetRequiresAllskyStop((string)$key)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private function getImagesFolderStats(): array
+    {
+        $folders = $this->getImagesFolderList();
+        $base = $this->allskyHome . '/' . $this->getImagesArchiveTarget();
+
+        $stats = [];
+        $totalSize = 0;
+        $totalEstimated = 0;
+        foreach ($folders as $folder) {
+            $folderName = trim((string)$folder);
+            if ($folderName === '') {
+                continue;
+            }
+            $fullPath = $base . '/' . $folderName;
+            $sizeBytes = $this->getDirectorySizeBytes($fullPath);
+            $estimatedBytes = $this->estimateCompressedSizeBytes($sizeBytes);
+            $stats[] = [
+                'name' => $folderName,
+                'sizeBytes' => $sizeBytes,
+                'estimatedCompressedBytes' => $estimatedBytes,
+            ];
+            $totalSize += $sizeBytes;
+            $totalEstimated += $estimatedBytes;
+        }
+
+        return [
+            'folders' => $stats,
+            'totalSizeBytes' => max(0, $totalSize),
+            'totalEstimatedCompressedBytes' => max(0, $totalEstimated),
+        ];
+    }
+
     private function listArchiveEntries(string $backupPath): array
     {
         if (!is_file($backupPath) || !is_readable($backupPath)) {
@@ -290,6 +419,37 @@ class CONFIGBACKUPUTIL extends UTILBASE
                 continue;
             }
             $modules[$name] = true;
+        }
+
+        $list = array_keys($modules);
+        sort($list, SORT_NATURAL | SORT_FLAG_CASE);
+        return $list;
+    }
+
+    private function getModulesFromLocalUserModules(): array
+    {
+        $dir = $this->allskyHome . '/config/myFiles/modules';
+        if (!is_dir($dir) || !is_readable($dir)) {
+            return [];
+        }
+
+        $modules = [];
+        $entries = @scandir($dir);
+        if ($entries === false) {
+            return [];
+        }
+        foreach ($entries as $entry) {
+            $name = trim((string)$entry);
+            if ($name === '' || $name === '.' || $name === '..') {
+                continue;
+            }
+            if (!preg_match('/\.py$/i', $name)) {
+                continue;
+            }
+            $full = $dir . '/' . $name;
+            if (is_file($full)) {
+                $modules[$name] = true;
+            }
         }
 
         $list = array_keys($modules);
@@ -602,6 +762,34 @@ class CONFIGBACKUPUTIL extends UTILBASE
         $result = array_keys($filtered);
         sort($result, SORT_STRING);
         return $result;
+    }
+
+    private function filterPermissionsForTargets(array $permissions, array $targets): array
+    {
+        if (empty($permissions) || empty($targets)) {
+            return [];
+        }
+
+        $filtered = [];
+        foreach ($permissions as $relativePath => $info) {
+            $path = ltrim((string)$relativePath, '/');
+            if ($path === '') {
+                continue;
+            }
+            foreach ($targets as $target) {
+                $target = ltrim((string)$target, '/');
+                if ($target === '') {
+                    continue;
+                }
+                if ($path === $target || strpos($path, $target . '/') === 0) {
+                    $filtered[$path] = $info;
+                    break;
+                }
+            }
+        }
+
+        ksort($filtered, SORT_STRING);
+        return $filtered;
     }
 
     private function ensureBackupDir(): array
@@ -955,6 +1143,10 @@ class CONFIGBACKUPUTIL extends UTILBASE
     {
         $errors = [];
         $allskyOwner = $this->getConfiguredAllskyOwner();
+        $chownGroups = [];
+        $chmodGroups = [];
+        $pathLabels = [];
+
         foreach ($permissions as $relativePath => $info) {
             $relativePath = ltrim((string)$relativePath, '/');
             if ($relativePath === '' || preg_match('/(^|\/)\.\.(\/|$)/', $relativePath)) {
@@ -982,24 +1174,72 @@ class CONFIGBACKUPUTIL extends UTILBASE
                 $group = (string)((int)$info['groupId']);
             }
             if ($owner !== '' && $group !== '') {
-                $cmd = 'sudo -n /bin/chown ' . escapeshellarg($owner . ':' . $group) . ' ' . escapeshellarg($fullPath) . ' 2>&1';
-                $out = [];
-                $ret = 0;
-                exec($cmd, $out, $ret);
-                if ($ret !== 0) {
-                    $errors[] = 'chown ' . $relativePath . ': ' . trim(implode("\n", $out));
+                $ownerGroup = $owner . ':' . $group;
+                if (!isset($chownGroups[$ownerGroup])) {
+                    $chownGroups[$ownerGroup] = [];
                 }
+                $chownGroups[$ownerGroup][] = $fullPath;
             }
 
             $mode = trim((string)($info['mode'] ?? ''));
             if (preg_match('/^[0-7]{3,4}$/', $mode)) {
-                $cmd = 'sudo -n /bin/chmod ' . escapeshellarg($mode) . ' ' . escapeshellarg($fullPath) . ' 2>&1';
+                if (!isset($chmodGroups[$mode])) {
+                    $chmodGroups[$mode] = [];
+                }
+                $chmodGroups[$mode][] = $fullPath;
+            }
+            $pathLabels[$fullPath] = $relativePath;
+        }
+
+        $runBatch = function (string $bin, string $arg, array $paths, string $type) use (&$errors, $pathLabels): ?array {
+            if (empty($paths)) {
+                return null;
+            }
+            $chunks = array_chunk($paths, 120);
+            foreach ($chunks as $chunk) {
+                $cmd = 'sudo -n ' . $bin . ' ' . escapeshellarg($arg);
+                foreach ($chunk as $path) {
+                    $cmd .= ' ' . escapeshellarg($path);
+                }
+                $cmd .= ' 2>&1';
                 $out = [];
                 $ret = 0;
                 exec($cmd, $out, $ret);
-                if ($ret !== 0) {
-                    $errors[] = 'chmod ' . $relativePath . ': ' . trim(implode("\n", $out));
+                if ($ret === 0) {
+                    continue;
                 }
+
+                $details = trim(implode("\n", $out));
+                if (stripos($details, 'a password is required') !== false || stripos($details, 'terminal is required') !== false) {
+                    return ['ok' => false, 'message' => 'Failed to restore file ownership/permissions: sudo requires NOPASSWD for chown/chmod.'];
+                }
+
+                // If a batch fails, retry each path individually to report precise failures.
+                foreach ($chunk as $path) {
+                    $singleCmd = 'sudo -n ' . $bin . ' ' . escapeshellarg($arg) . ' ' . escapeshellarg($path) . ' 2>&1';
+                    $singleOut = [];
+                    $singleRet = 0;
+                    exec($singleCmd, $singleOut, $singleRet);
+                    if ($singleRet !== 0) {
+                        $label = $pathLabels[$path] ?? $path;
+                        $errors[] = $type . ' ' . $label . ': ' . trim(implode("\n", $singleOut));
+                    }
+                }
+            }
+
+            return null;
+        };
+
+        foreach ($chownGroups as $ownerGroup => $paths) {
+            $fatal = $runBatch('/bin/chown', $ownerGroup, $paths, 'chown');
+            if (is_array($fatal) && empty($fatal['ok'])) {
+                return $fatal;
+            }
+        }
+        foreach ($chmodGroups as $mode => $paths) {
+            $fatal = $runBatch('/bin/chmod', $mode, $paths, 'chmod');
+            if (is_array($fatal) && empty($fatal['ok'])) {
+                return $fatal;
             }
         }
 
@@ -1158,13 +1398,21 @@ class CONFIGBACKUPUTIL extends UTILBASE
 
     private function getArchiveMetadata(string $backupPath, array $backupFileInfo = [], bool $writeSidecar = true): array
     {
-        $decoded = $this->readBackupSidecarMetadata($backupPath);
-        if (empty($decoded)) {
+        $sidecarPath = $this->getBackupSidecarPath($backupPath);
+        $hasSidecar = ($sidecarPath !== '' && is_file($sidecarPath) && is_readable($sidecarPath));
+        $decoded = [];
+        $metadataSource = 'unknown';
+
+        if ($hasSidecar) {
+            $decoded = $this->readBackupSidecarMetadata($backupPath);
+            $metadataSource = 'sidecar';
+        } else {
             $raw = $this->extractArchiveFile($backupPath, 'metadata.json');
             if ($raw !== '') {
                 $tmp = json_decode($raw, true);
                 if (is_array($tmp)) {
                     $decoded = $tmp;
+                    $metadataSource = 'archive';
                     if ($writeSidecar) {
                         $this->writeBackupSidecarMetadata($backupPath, $decoded);
                     }
@@ -1178,7 +1426,7 @@ class CONFIGBACKUPUTIL extends UTILBASE
         }
 
         $version = trim((string)($decoded['version'] ?? ''));
-        if ($version === '') {
+        if ($version === '' && !$hasSidecar) {
             $version = trim($this->getBackupVersionFromArchive($backupPath));
         }
         if ($version === '') {
@@ -1187,13 +1435,30 @@ class CONFIGBACKUPUTIL extends UTILBASE
 
         $cameraType = trim((string)($decoded['cameratype'] ?? ''));
         $cameraModel = trim((string)($decoded['cameramodel'] ?? ''));
-        if ($cameraType === '' || $cameraModel === '') {
-            $cameraInfo = $this->getBackupCameraFromArchive($backupPath);
-            if ($cameraType === '') $cameraType = $cameraInfo['cameratype'];
-            if ($cameraModel === '') $cameraModel = $cameraInfo['cameramodel'];
+        if ($backupType === 'images') {
+            if ($cameraType === '') {
+                $cameraType = 'n/a';
+            }
+            if ($cameraModel === '') {
+                $cameraModel = 'n/a';
+            }
+        } else {
+            if (($cameraType === '' || $cameraModel === '') && !$hasSidecar) {
+                $cameraInfo = $this->getBackupCameraFromArchive($backupPath);
+                if ($cameraType === '') {
+                    $cameraType = $cameraInfo['cameratype'];
+                }
+                if ($cameraModel === '') {
+                    $cameraModel = $cameraInfo['cameramodel'];
+                }
+            }
+            if ($cameraType === '') {
+                $cameraType = 'unknown';
+            }
+            if ($cameraModel === '') {
+                $cameraModel = 'unknown';
+            }
         }
-        if ($cameraType === '') $cameraType = 'unknown';
-        if ($cameraModel === '') $cameraModel = 'unknown';
 
         $created = trim((string)($decoded['created'] ?? ''));
         if ($created === '') {
@@ -1232,16 +1497,49 @@ class CONFIGBACKUPUTIL extends UTILBASE
         $imageTargets = array_values(array_unique($imageTargets));
         sort($imageTargets, SORT_STRING);
 
-        $settingsFile = trim((string)($decoded['settingsfile'] ?? ''));
-        if ($settingsFile === '') {
-            $settingsFile = $this->getSettingsFileFromArchive($backupPath);
-        }
-        $ccFile = trim((string)($decoded['ccfile'] ?? ''));
-        if ($ccFile === '') {
-            $ccFile = $this->getCcFileFromArchive($backupPath);
+        $settingsFile = '';
+        $ccFile = '';
+        if ($backupType !== 'images') {
+            $settingsFile = trim((string)($decoded['settingsfile'] ?? ''));
+            if ($settingsFile === '' && !$hasSidecar) {
+                $settingsFile = $this->getSettingsFileFromArchive($backupPath);
+            }
+            $ccFile = trim((string)($decoded['ccfile'] ?? ''));
+            if ($ccFile === '' && !$hasSidecar) {
+                $ccFile = $this->getCcFileFromArchive($backupPath);
+            }
         }
 
-        return [
+        $requiredModules = [];
+        if (isset($decoded['requiredModules']) && is_array($decoded['requiredModules'])) {
+            foreach ($decoded['requiredModules'] as $module) {
+                $name = basename(trim((string)$module));
+                if ($name !== '') {
+                    $requiredModules[] = $name;
+                }
+            }
+        }
+        $requiredModules = array_values(array_unique($requiredModules));
+        sort($requiredModules, SORT_NATURAL | SORT_FLAG_CASE);
+
+        $backupModules = [];
+        if (isset($decoded['backupModules']) && is_array($decoded['backupModules'])) {
+            foreach ($decoded['backupModules'] as $module) {
+                $name = basename(trim((string)$module));
+                if ($name !== '') {
+                    $backupModules[] = $name;
+                }
+            }
+        }
+        $backupModules = array_values(array_unique($backupModules));
+        sort($backupModules, SORT_NATURAL | SORT_FLAG_CASE);
+
+        $backupHasModules = null;
+        if (array_key_exists('backupHasModules', $decoded)) {
+            $backupHasModules = !empty($decoded['backupHasModules']);
+        }
+
+        $metadata = [
             'version' => $version,
             'backupType' => $backupType,
             'cameratype' => $cameraType,
@@ -1255,7 +1553,20 @@ class CONFIGBACKUPUTIL extends UTILBASE
             'imageBackupAll' => !empty($decoded['imageBackupAll']),
             'imageFolders' => $imageFolders,
             'imageTargets' => $imageTargets,
+            'requiredModules' => $requiredModules,
+            'backupModules' => $backupModules,
+            'backupHasModules' => $backupHasModules,
+            '_metadataSource' => $metadataSource,
         ];
+
+        // If no sidecar exists, persist derived metadata so subsequent loads don't need archive scans.
+        if ($writeSidecar && !$hasSidecar) {
+            $sidecarMeta = $metadata;
+            unset($sidecarMeta['_metadataSource']);
+            $this->writeBackupSidecarMetadata($backupPath, $sidecarMeta);
+        }
+
+        return $metadata;
     }
 
     private function getRequiredModulesFromArchive(string $backupPath): array
@@ -1290,6 +1601,46 @@ class CONFIGBACKUPUTIL extends UTILBASE
         }
 
         return array_keys($required);
+    }
+
+    private function getRequiredModulesFromLocalConfig(): array
+    {
+        $configFiles = [
+            $this->allskyHome . '/config/modules/postprocessing_day.json',
+            $this->allskyHome . '/config/modules/postprocessing_night.json',
+            $this->allskyHome . '/config/modules/postprocessing_periodic.json',
+        ];
+
+        $required = [];
+        foreach ($configFiles as $configFile) {
+            if (!is_file($configFile) || !is_readable($configFile)) {
+                continue;
+            }
+
+            $raw = @file_get_contents($configFile);
+            if ($raw === false || trim($raw) === '') {
+                continue;
+            }
+
+            $decoded = json_decode($raw, true);
+            if (!is_array($decoded)) {
+                continue;
+            }
+
+            foreach ($decoded as $entry) {
+                if (!is_array($entry)) {
+                    continue;
+                }
+                $module = trim((string)($entry['module'] ?? ''));
+                if ($module !== '') {
+                    $required[basename($module)] = true;
+                }
+            }
+        }
+
+        $list = array_keys($required);
+        sort($list, SORT_NATURAL | SORT_FLAG_CASE);
+        return $list;
     }
 
     private function findMissingModuleFiles(array $modules): array
@@ -1433,6 +1784,7 @@ class CONFIGBACKUPUTIL extends UTILBASE
         }
         $validOptionalKeys = array_values(array_unique($validOptionalKeys));
         sort($validOptionalKeys, SORT_STRING);
+        $requiresAllskyStop = $this->selectedOptionalTargetsRequireAllskyStop($validOptionalKeys);
 
         $targets = [];
         foreach ($this->getArchiveTargets($validOptionalKeys) as $target) {
@@ -1458,6 +1810,9 @@ class CONFIGBACKUPUTIL extends UTILBASE
         $backupPath = $this->getBackupDir() . '/' . $backupName;
 
         $cameraInfo = $this->getCurrentCameraInfo();
+        $modulesSectionIncluded = in_array('modules', $validOptionalKeys, true);
+        $requiredModules = $this->getRequiredModulesFromLocalConfig();
+        $backupModules = $modulesSectionIncluded ? $this->getModulesFromLocalUserModules() : [];
         $archiveMetadata = [
             'backupFile' => $backupName,
             'backupType' => 'config',
@@ -1470,6 +1825,9 @@ class CONFIGBACKUPUTIL extends UTILBASE
             'permissions' => $this->buildPermissionsMetadata($targets),
             'includedOptionalTargets' => $validOptionalKeys,
             'includedSections' => $this->getIncludedSections($validOptionalKeys, 'config'),
+            'requiredModules' => $requiredModules,
+            'backupModules' => $backupModules,
+            'backupHasModules' => $modulesSectionIncluded,
             'format' => 1,
         ];
 
@@ -1486,6 +1844,21 @@ class CONFIGBACKUPUTIL extends UTILBASE
             return ['ok' => false, 'message' => 'Unable to write backup metadata.'];
         }
 
+        $steps = [];
+        $allskyStopped = false;
+        $restartWarning = '';
+        if ($requiresAllskyStop) {
+            $steps[] = 'Stopping Allsky service';
+            $stopResult = $this->controlAllskyService('stop');
+            if (empty($stopResult['ok'])) {
+                @unlink($metaFile);
+                @rmdir($tmpDir);
+                return ['ok' => false, 'message' => (string)($stopResult['message'] ?? 'Unable to stop allsky service before backup.')];
+            }
+            $allskyStopped = true;
+        }
+
+        $steps[] = 'Creating backup archive';
         $cmd = 'tar -czf ' . escapeshellarg($backupPath) . ' -C ' . escapeshellarg($this->allskyHome);
         foreach ($targets as $target) {
             $cmd .= ' ' . escapeshellarg($target);
@@ -1496,6 +1869,14 @@ class CONFIGBACKUPUTIL extends UTILBASE
         $ret = 0;
         exec($cmd, $output, $ret);
 
+        if ($allskyStopped) {
+            $steps[] = 'Starting Allsky service';
+            $startResult = $this->controlAllskyService('start');
+            if (empty($startResult['ok'])) {
+                $restartWarning = (string)($startResult['message'] ?? 'Unable to restart allsky service after backup.');
+            }
+        }
+
         @unlink($metaFile);
         @rmdir($tmpDir);
 
@@ -1504,6 +1885,9 @@ class CONFIGBACKUPUTIL extends UTILBASE
             $message = 'Backup failed.';
             if ($details !== '') {
                 $message .= ' ' . $details;
+            }
+            if ($restartWarning !== '') {
+                $message .= ' ' . $restartWarning;
             }
             return ['ok' => false, 'message' => $message];
         }
@@ -1519,10 +1903,15 @@ class CONFIGBACKUPUTIL extends UTILBASE
                 'file' => $backupName,
                 'sizeBytes' => $size,
                 'version' => $archiveMetadata['version'],
-                'warning' => "Backup succeeded, but metadata file '" . $this->getBackupMetadataFile() . "' could not be updated.",
+                'warning' => trim(
+                    ($restartWarning !== '' ? ($restartWarning . ' ') : '') .
+                    "Backup succeeded, but metadata file '" . $this->getBackupMetadataFile() . "' could not be updated."
+                ),
+                'steps' => $steps,
             ];
         }
 
+        $warning = $restartWarning;
         return [
             'ok' => true,
             'file' => $backupName,
@@ -1531,6 +1920,8 @@ class CONFIGBACKUPUTIL extends UTILBASE
             'includedOptionalTargets' => $validOptionalKeys,
             'includedSections' => $archiveMetadata['includedSections'],
             'backupType' => 'config',
+            'warning' => $warning,
+            'steps' => $steps,
         ];
     }
 
@@ -1652,8 +2043,11 @@ class CONFIGBACKUPUTIL extends UTILBASE
         ];
     }
 
-    private function restoreBackupArchive(string $selected, array $selectedSections = []): array
+    private function restoreBackupArchive(string $selected, array $selectedSections = [], array $selectedImageFolders = []): array
     {
+        @set_time_limit(0);
+        @ini_set('max_execution_time', '0');
+        $steps = ['Validating backup and restore options'];
         $backupPath = $this->getBackupPathByName($selected);
         if ($backupPath === '') {
             return ['ok' => false, 'message' => 'Selected backup does not exist.'];
@@ -1670,14 +2064,59 @@ class CONFIGBACKUPUTIL extends UTILBASE
         $modulesSelected = in_array('modules', $selectedSectionKeys, true);
         $imagesSelected = in_array('images', $selectedSectionKeys, true);
 
-        $archiveEntries = $this->listArchiveEntries($backupPath);
+        $normalizedSelectedImageFolders = [];
+        foreach ($selectedImageFolders as $folder) {
+            $name = trim((string)$folder);
+            if ($name === '' || preg_match('/(^|\/)\.\.(\/|$)/', $name) || strpos($name, '/') !== false) {
+                continue;
+            }
+            $normalizedSelectedImageFolders[$name] = true;
+        }
+        $normalizedSelectedImageFolders = array_keys($normalizedSelectedImageFolders);
+        sort($normalizedSelectedImageFolders, SORT_NATURAL | SORT_FLAG_CASE);
+
         $targetsToExtract = [];
         foreach ($selectedSectionKeys as $sectionKey) {
             foreach ($this->getArchiveTargetsForSectionKey($sectionKey, $backupType, $backupMeta) as $target) {
                 $targetsToExtract[$target] = true;
             }
         }
-        $targetsToExtract = $this->filterTargetsByArchiveEntries(array_keys($targetsToExtract), $archiveEntries);
+        $targetsToExtract = array_values(array_unique(array_keys($targetsToExtract)));
+        sort($targetsToExtract, SORT_STRING);
+
+        if ($backupType === 'images' && $imagesSelected && !empty($normalizedSelectedImageFolders)) {
+            $folderTargets = [];
+            foreach ($normalizedSelectedImageFolders as $folder) {
+                $folderTargets[] = $this->getImagesArchiveTarget() . '/' . $folder;
+            }
+            // For images restores we rely on metadata targets first for speed.
+            // Fall back to archive listing only if metadata is incomplete.
+            if (!empty($targetsToExtract)) {
+                $valid = [];
+                foreach ($folderTargets as $target) {
+                    foreach ($targetsToExtract as $allowed) {
+                        if ($target === $allowed || strpos($target, $allowed . '/') === 0 || strpos($allowed, $target . '/') === 0) {
+                            $valid[$target] = true;
+                            break;
+                        }
+                    }
+                }
+                $folderTargets = array_keys($valid);
+            } else {
+                $archiveEntries = $this->listArchiveEntries($backupPath);
+                $folderTargets = $this->filterTargetsByArchiveEntries($folderTargets, $archiveEntries);
+            }
+            if (empty($folderTargets)) {
+                return ['ok' => false, 'message' => 'None of the selected image folders were found in this backup.'];
+            }
+            $targetsToExtract = $folderTargets;
+        }
+
+        if (empty($targetsToExtract) || $backupType !== 'images') {
+            $archiveEntries = $this->listArchiveEntries($backupPath);
+            $targetsToExtract = $this->filterTargetsByArchiveEntries($targetsToExtract, $archiveEntries);
+        }
+
         if (empty($targetsToExtract)) {
             return ['ok' => false, 'message' => 'Selected restore sections do not contain any files in this backup.'];
         }
@@ -1713,11 +2152,13 @@ class CONFIGBACKUPUTIL extends UTILBASE
             return ['ok' => false, 'message' => 'No image restore section selected.'];
         }
 
-        $cmd = 'tar -xzf ' . escapeshellarg($backupPath) .
+        $tarCmd = ($backupType === 'images') ? 'sudo -n tar' : 'tar';
+        $cmd = $tarCmd . ' -xzf ' . escapeshellarg($backupPath) .
             ' -C ' . escapeshellarg($this->allskyHome) .
             ' --no-same-owner --no-same-permissions --overwrite -m' .
             ' --exclude=' . escapeshellarg('metadata.json') .
             ' ';
+        $steps[] = 'Extracting selected files';
         foreach ($targetsToExtract as $target) {
             $cmd .= escapeshellarg($target) . ' ';
         }
@@ -1734,6 +2175,15 @@ class CONFIGBACKUPUTIL extends UTILBASE
             } else {
                 $details = trim(implode("\n", $output));
                 $message = 'Restore failed.';
+                if (
+                    $backupType === 'images' &&
+                    (
+                        stripos($details, 'a password is required') !== false ||
+                        stripos($details, 'terminal is required') !== false
+                    )
+                ) {
+                    $message .= " Configure sudoers with NOPASSWD for tar extraction during image restore.";
+                }
                 if ($details !== '') {
                     $message .= ' ' . $details;
                 }
@@ -1789,7 +2239,9 @@ class CONFIGBACKUPUTIL extends UTILBASE
 
         $permResult = ['ok' => true];
         if (isset($backupMeta['permissions']) && is_array($backupMeta['permissions']) && !empty($backupMeta['permissions'])) {
-            $permResult = $this->applyPermissionsMetadata($backupMeta['permissions']);
+            $steps[] = 'Applying file ownership and permissions';
+            $permissionsToApply = $this->filterPermissionsForTargets($backupMeta['permissions'], $targetsToExtract);
+            $permResult = $this->applyPermissionsMetadata($permissionsToApply);
             if (empty($permResult['ok'])) {
                 return ['ok' => false, 'message' => (string)($permResult['message'] ?? 'Failed to restore file ownership/permissions.')];
             }
@@ -1805,11 +2257,13 @@ class CONFIGBACKUPUTIL extends UTILBASE
             }
             $warning .= 'Backup restored, but backup metadata could not be updated.';
         }
+        $steps[] = 'Finalising restore';
 
         return [
             'ok' => true,
             'file' => $backupName,
             'warning' => $warning,
+            'steps' => $steps,
         ];
     }
 
@@ -1862,13 +2316,20 @@ class CONFIGBACKUPUTIL extends UTILBASE
         sort($defaultSelectedSections, SORT_STRING);
 
         if ($backupType === 'images') {
-            $imageEntries = [];
-            foreach ($this->listArchiveEntries($backupPath) as $entry) {
-                if ($entry === 'images' || strpos($entry, 'images/') === 0) {
-                    $imageEntries[] = $entry;
+            $hasImages = false;
+            $imageTargets = (isset($backupMeta['imageTargets']) && is_array($backupMeta['imageTargets'])) ? $backupMeta['imageTargets'] : [];
+            $imageFolders = (isset($backupMeta['imageFolders']) && is_array($backupMeta['imageFolders'])) ? $backupMeta['imageFolders'] : [];
+            if (!empty($imageTargets) || !empty($imageFolders) || !empty($backupMeta['imageBackupAll'])) {
+                $hasImages = true;
+            } else if (($backupMeta['_metadataSource'] ?? '') !== 'sidecar') {
+                // Fallback for older backups with incomplete metadata.
+                foreach ($this->listArchiveEntries($backupPath) as $entry) {
+                    if ($entry === 'images' || strpos($entry, 'images/') === 0) {
+                        $hasImages = true;
+                        break;
+                    }
                 }
             }
-            $hasImages = !empty($imageEntries);
             return [
                 'ok' => true,
                 'backup' => [
@@ -1883,7 +2344,7 @@ class CONFIGBACKUPUTIL extends UTILBASE
                     'includedOptionalTargets' => [],
                     'includedSections' => $includedSections,
                     'imageBackupAll' => !empty($backupMeta['imageBackupAll']),
-                    'imageFolders' => (isset($backupMeta['imageFolders']) && is_array($backupMeta['imageFolders'])) ? $backupMeta['imageFolders'] : [],
+                    'imageFolders' => $imageFolders,
                 ],
                 'currentCamera' => $currentCamera,
                 'requiredModules' => [],
@@ -1908,11 +2369,34 @@ class CONFIGBACKUPUTIL extends UTILBASE
             ];
         }
 
-        $backupModules = $this->getModulesFromBackupArchive($backupPath);
-        $backupHasModules = !empty($backupModules) || $this->backupContainsModulesFiles($backupPath, $backupMeta);
-
-        $requiredModules = $this->getRequiredModulesFromArchive($backupPath);
+        $requiredModules = (isset($backupMeta['requiredModules']) && is_array($backupMeta['requiredModules']))
+            ? $backupMeta['requiredModules']
+            : [];
+        if (empty($requiredModules) && ($backupMeta['_metadataSource'] ?? '') !== 'sidecar') {
+            $requiredModules = $this->getRequiredModulesFromArchive($backupPath);
+        }
+        $requiredModules = array_values(array_unique(array_map(static fn($m) => basename(trim((string)$m)), $requiredModules)));
+        $requiredModules = array_values(array_filter($requiredModules, static fn($m) => $m !== ''));
         sort($requiredModules, SORT_NATURAL | SORT_FLAG_CASE);
+
+        $backupModules = (isset($backupMeta['backupModules']) && is_array($backupMeta['backupModules']))
+            ? $backupMeta['backupModules']
+            : [];
+        $backupModules = array_values(array_unique(array_map(static fn($m) => basename(trim((string)$m)), $backupModules)));
+        $backupModules = array_values(array_filter($backupModules, static fn($m) => $m !== ''));
+        sort($backupModules, SORT_NATURAL | SORT_FLAG_CASE);
+        $hasBackupHasModulesMeta = array_key_exists('backupHasModules', $backupMeta) && $backupMeta['backupHasModules'] !== null;
+        if (empty($backupModules) && !$hasBackupHasModulesMeta && ($backupMeta['_metadataSource'] ?? '') !== 'sidecar') {
+            $backupModules = $this->getModulesFromBackupArchive($backupPath);
+        }
+
+        if ($hasBackupHasModulesMeta) {
+            $backupHasModules = !empty($backupMeta['backupHasModules']);
+        } else if (($backupMeta['_metadataSource'] ?? '') !== 'sidecar') {
+            $backupHasModules = !empty($backupModules) || $this->backupContainsModulesFiles($backupPath, $backupMeta);
+        } else {
+            $backupHasModules = !empty($backupModules);
+        }
         $classified = $this->classifyRequiredModules($requiredModules);
         $coreModules = $classified['coreModules'];
         $userModules = $classified['userModules'];
@@ -2137,6 +2621,9 @@ class CONFIGBACKUPUTIL extends UTILBASE
                 'imageBackupAll' => $meta['imageBackupAll'] ?? false,
                 'imageFolders' => $meta['imageFolders'] ?? [],
                 'imageTargets' => $meta['imageTargets'] ?? [],
+                'requiredModules' => $meta['requiredModules'] ?? [],
+                'backupModules' => $meta['backupModules'] ?? [],
+                'backupHasModules' => $meta['backupHasModules'] ?? null,
             ];
             $this->writeBackupSidecarMetadata($targetPath, $sidecarMeta);
         }
@@ -2155,6 +2642,7 @@ class CONFIGBACKUPUTIL extends UTILBASE
 
     private function getStatusData(): array
     {
+        $imagesStats = $this->getImagesFolderStats();
         $backups = [];
         foreach ($this->getBackupList() as $backup) {
             $meta = $this->getArchiveMetadata($backup['path'], $backup);
@@ -2177,6 +2665,9 @@ class CONFIGBACKUPUTIL extends UTILBASE
             'backupTargets' => $this->getBackupTargets(),
             'optionalTargets' => $this->getOptionalTargets(),
             'imagesFolders' => $this->getImagesFolderList(),
+            'imagesFolderStats' => $imagesStats['folders'],
+            'imagesTotalSizeBytes' => $imagesStats['totalSizeBytes'],
+            'imagesTotalEstimatedCompressedBytes' => $imagesStats['totalEstimatedCompressedBytes'],
             'backups' => $backups,
             'metadata' => $this->readBackupMetadata(),
         ];
@@ -2261,6 +2752,9 @@ class CONFIGBACKUPUTIL extends UTILBASE
         if (isset($result['includedOptionalTargets'])) {
             $response['includedOptionalTargets'] = $result['includedOptionalTargets'];
         }
+        if (isset($result['steps']) && is_array($result['steps'])) {
+            $response['steps'] = $result['steps'];
+        }
 
         $this->sendResponse($response);
     }
@@ -2279,6 +2773,7 @@ class CONFIGBACKUPUTIL extends UTILBASE
     {
         $selected = (string)($_POST['file'] ?? '');
         $selectedSections = [];
+        $selectedImageFolders = [];
         if (isset($_POST['selectedSections'])) {
             $raw = $_POST['selectedSections'];
             if (is_array($raw)) {
@@ -2292,7 +2787,20 @@ class CONFIGBACKUPUTIL extends UTILBASE
                 }
             }
         }
-        $result = $this->restoreBackupArchive($selected, $selectedSections);
+        if (isset($_POST['selectedImageFolders'])) {
+            $raw = $_POST['selectedImageFolders'];
+            if (is_array($raw)) {
+                $selectedImageFolders = $raw;
+            } else {
+                $decoded = json_decode((string)$raw, true);
+                if (is_array($decoded)) {
+                    $selectedImageFolders = $decoded;
+                } else {
+                    $selectedImageFolders = array_map('trim', explode(',', (string)$raw));
+                }
+            }
+        }
+        $result = $this->restoreBackupArchive($selected, $selectedSections, $selectedImageFolders);
 
         if (empty($result['ok'])) {
             $this->sendHTTPResponse((string)($result['message'] ?? 'Restore failed.'), 500);
@@ -2306,6 +2814,9 @@ class CONFIGBACKUPUTIL extends UTILBASE
 
         if (!empty($result['warning'])) {
             $response['warning'] = (string)$result['warning'];
+        }
+        if (isset($result['steps']) && is_array($result['steps'])) {
+            $response['steps'] = $result['steps'];
         }
 
         $this->sendResponse($response);

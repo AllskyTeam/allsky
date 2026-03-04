@@ -3,6 +3,7 @@
 class ALLSKYLOGS {
     constructor() {
         this.timer = null;
+        this.isActive = false;
         this.currentLogId = null;
         this.offset = null;
         this.follow = true;
@@ -33,6 +34,9 @@ class ALLSKYLOGS {
     }
 
     fetchList() {
+        if (!this.isActive) {
+            return;
+        }
         $.ajax({
             url: 'includes/logutil.php?request=LogList',
             method: 'GET',
@@ -99,7 +103,7 @@ class ALLSKYLOGS {
     }
 
     fetchTail() {
-        if (!this.currentLogId) return;
+        if (!this.isActive || !this.currentLogId) return;
 
         const params = $.param({
             request: 'LogTail',
@@ -152,8 +156,33 @@ class ALLSKYLOGS {
             this.follow = this.$follow.is(':checked');
         });
 
-        this.fetchList();
-        this.timer = setInterval(() => this.fetchTail(), 2000);
+        $('a[href="#as-system-logs"]').on('shown.bs.tab', () => {
+            this.isActive = true;
+            if (!this.currentLogId || this.$select.children().length === 0) {
+                this.fetchList();
+            } else {
+                this.fetchTail();
+            }
+            if (this.timer === null) {
+                this.timer = setInterval(() => this.fetchTail(), 2000);
+            }
+        });
+
+        $('a[href="#as-system-logs"]').on('hide.bs.tab', () => {
+            this.isActive = false;
+            if (this.timer !== null) {
+                clearInterval(this.timer);
+                this.timer = null;
+            }
+        });
+
+        if ($('#as-system-logs').hasClass('active') || $('#as-system-logs').hasClass('in')) {
+            this.isActive = true;
+            this.fetchList();
+            if (this.timer === null) {
+                this.timer = setInterval(() => this.fetchTail(), 2000);
+            }
+        }
     }
 }
 

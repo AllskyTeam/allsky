@@ -487,16 +487,28 @@ function DisplaySystem()
 								It explains what is included in each backup type, prerequisites for restore, and the correct workflow to avoid data loss.
 							</div>
 						</div>
-						<style>
-							#as-config-backup-table-wrapper {
-								border-collapse: separate;
-								border-spacing: 0 6px;
-							}
-							#as-config-backup-table-container {
-								position: relative;
-								min-height: 240px;
-							}
-						</style>
+							<style>
+								#as-config-backup-table-wrapper {
+									border-collapse: separate;
+									border-spacing: 0 6px;
+									margin-bottom: 14px !important;
+								}
+								#as-config-backup-table-container {
+									position: relative;
+									min-height: 240px;
+									padding-bottom: 10px;
+								}
+								#as-config-backup-table-wrapper_wrapper > .row:last-child {
+									margin-top: 12px;
+								}
+								#as-config-backup-table-wrapper_wrapper .dataTables_info,
+								#as-config-backup-table-wrapper_wrapper .dataTables_paginate {
+									padding-top: 4px;
+								}
+								#as-config-backup-table-wrapper_wrapper .as-backups-table-gap {
+									height: 12px;
+								}
+							</style>
 
 						<div class="panel panel-default">
 							<div class="panel-heading">

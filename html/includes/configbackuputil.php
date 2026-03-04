@@ -794,6 +794,70 @@ class CONFIGBACKUPUTIL extends UTILBASE
         return $keys;
     }
 
+    private function resolveSelectedSectionKeysForTargets(array $backupMeta, string $backupType, array $selectedTargets, array $fallbackSelectedSections = []): array
+    {
+        $targets = [];
+        foreach ($selectedTargets as $target) {
+            $clean = ltrim(trim((string)$target), '/');
+            if ($clean !== '') {
+                $targets[$clean] = true;
+            }
+        }
+        $targets = array_keys($targets);
+        if (empty($targets)) {
+            return $this->resolveSelectedSectionKeys($backupMeta, $fallbackSelectedSections);
+        }
+
+        $includedSections = $backupMeta['includedSections'] ?? $this->getIncludedSections($this->getIncludedOptionalTargetKeysFromMetadata($backupMeta));
+        $allowedKeys = [];
+        if (is_array($includedSections)) {
+            foreach ($includedSections as $section) {
+                if (!is_array($section)) {
+                    continue;
+                }
+                $key = trim((string)($section['key'] ?? ''));
+                if ($key !== '') {
+                    $allowedKeys[$key] = true;
+                }
+            }
+        }
+        if (empty($allowedKeys)) {
+            $allowedKeys['core'] = true;
+        }
+
+        $resolved = [];
+        foreach (array_keys($allowedKeys) as $sectionKey) {
+            $sectionTargets = $this->getArchiveTargetsForSectionKey((string)$sectionKey, $backupType, $backupMeta);
+            if (empty($sectionTargets)) {
+                continue;
+            }
+            foreach ($targets as $targetPath) {
+                foreach ($sectionTargets as $sectionTarget) {
+                    $base = ltrim(trim((string)$sectionTarget), '/');
+                    if ($base === '') {
+                        continue;
+                    }
+                    if (
+                        $targetPath === $base ||
+                        strpos($targetPath, $base . '/') === 0 ||
+                        strpos($base, $targetPath . '/') === 0
+                    ) {
+                        $resolved[$sectionKey] = true;
+                        break 2;
+                    }
+                }
+            }
+        }
+
+        if (empty($resolved)) {
+            return $this->resolveSelectedSectionKeys($backupMeta, $fallbackSelectedSections);
+        }
+
+        $keys = array_keys($resolved);
+        sort($keys, SORT_STRING);
+        return $keys;
+    }
+
     private function filterTargetsByArchiveEntries(array $targets, array $archiveEntries): array
     {
         if (empty($targets) || empty($archiveEntries)) {
@@ -1078,7 +1142,15 @@ class CONFIGBACKUPUTIL extends UTILBASE
         }
 
         $sections = (isset($details['selectedSections']) && is_array($details['selectedSections'])) ? $details['selectedSections'] : [];
-        $lines[] = 'Selected Sections: ' . (!empty($sections) ? implode(', ', $sections) : '(none)');
+        $sectionLabels = [];
+        foreach ($sections as $sectionKey) {
+            $key = trim((string)$sectionKey);
+            if ($key === '') {
+                continue;
+            }
+            $sectionLabels[] = $this->getRestoreSectionLabel($key);
+        }
+        $lines[] = 'Selected Sections: ' . (!empty($sectionLabels) ? implode(', ', $sectionLabels) : '(none)');
 
         $folders = (isset($details['selectedImageFolders']) && is_array($details['selectedImageFolders'])) ? $details['selectedImageFolders'] : [];
         $lines[] = 'Selected Image Folders: ' . (!empty($folders) ? implode(', ', $folders) : '(none)');
@@ -1103,29 +1175,14 @@ class CONFIGBACKUPUTIL extends UTILBASE
             }
         }
 
+        $lines[] = '';
+        $lines[] = 'Files Restored:';
         if (!empty($targets)) {
-            $lines[] = '';
-            $lines[] = 'Targets Restored:';
             foreach ($targets as $target) {
                 $lines[] = '- ' . (string)$target;
             }
-        }
-
-        $selectedFilesNormalized = array_values(array_map(static fn($v) => (string)$v, $selectedFiles));
-        $targetsNormalized = array_values(array_map(static fn($v) => (string)$v, $targets));
-        sort($selectedFilesNormalized, SORT_STRING);
-        sort($targetsNormalized, SORT_STRING);
-        $advancedMatchesTargets = (!empty($selectedFilesNormalized) && $selectedFilesNormalized === $targetsNormalized);
-
-        if (!empty($selectedFiles) && !$advancedMatchesTargets) {
-            $lines[] = '';
-            $lines[] = 'Files Restored (Advanced Selection):';
-            foreach ($selectedFiles as $file) {
-                $lines[] = '- ' . (string)$file;
-            }
-        } else if (!empty($selectedFiles) && $advancedMatchesTargets) {
-            $lines[] = '';
-            $lines[] = 'Files Restored (Advanced Selection): same as Targets Restored.';
+        } else {
+            $lines[] = '- (none)';
         }
 
         $content = implode("\n", $lines) . "\n";
@@ -1135,6 +1192,32 @@ class CONFIGBACKUPUTIL extends UTILBASE
         @chmod($path, 0664);
 
         return ['ok' => true, 'path' => $path];
+    }
+
+    private function getRestoreSectionLabel(string $sectionKey): string
+    {
+        $key = trim($sectionKey);
+        if ($key === '') {
+            return '';
+        }
+        if ($key === 'core') {
+            return 'Core Files';
+        }
+        if ($key === 'images') {
+            return 'Images Folder';
+        }
+        $optional = $this->getOptionalTargets();
+        if (isset($optional[$key]) && is_array($optional[$key])) {
+            $short = trim((string)($optional[$key]['shortdescription'] ?? ''));
+            if ($short !== '') {
+                return $short;
+            }
+            $desc = trim((string)($optional[$key]['description'] ?? ''));
+            if ($desc !== '') {
+                return $desc;
+            }
+        }
+        return ucfirst($key);
     }
 
     private function ensureBackupMetadataFile(): bool
@@ -2306,9 +2389,6 @@ class CONFIGBACKUPUTIL extends UTILBASE
         if (empty($selectedSectionKeys)) {
             return ['ok' => false, 'message' => 'No restore sections selected.'];
         }
-        $coreSelected = in_array('core', $selectedSectionKeys, true);
-        $modulesSelected = in_array('modules', $selectedSectionKeys, true);
-        $imagesSelected = in_array('images', $selectedSectionKeys, true);
 
         $normalizedSelectedImageFolders = [];
         foreach ($selectedImageFolders as $folder) {
@@ -2367,8 +2447,13 @@ class CONFIGBACKUPUTIL extends UTILBASE
             if (empty($normalizedSelectedFiles)) {
                 return ['ok' => false, 'message' => 'None of the selected files were found in this backup.'];
             }
+            $selectedSectionKeys = $this->resolveSelectedSectionKeysForTargets($backupMeta, $backupType, $normalizedSelectedFiles, $selectedSections);
             $targetsToExtract = $normalizedSelectedFiles;
         }
+
+        $coreSelected = in_array('core', $selectedSectionKeys, true);
+        $modulesSelected = in_array('modules', $selectedSectionKeys, true);
+        $imagesSelected = in_array('images', $selectedSectionKeys, true);
 
         if ($backupType === 'images' && $imagesSelected && !empty($normalizedSelectedImageFolders)) {
             $folderTargets = [];
@@ -2438,7 +2523,9 @@ class CONFIGBACKUPUTIL extends UTILBASE
             return ['ok' => false, 'message' => 'No image restore section selected.'];
         }
 
-        $tarCmd = ($backupType === 'images') ? 'sudo -n tar' : 'tar';
+        $tarBinary = is_executable('/bin/tar') ? '/bin/tar' : 'tar';
+        $useSudoTar = true;
+        $tarCmd = $useSudoTar ? ('sudo -n ' . $tarBinary) : $tarBinary;
         $cmd = $tarCmd . ' -xzf ' . escapeshellarg($backupPath) .
             ' -C ' . escapeshellarg($this->allskyHome) .
             ' --no-same-owner --no-same-permissions --overwrite -m' .
@@ -2462,13 +2549,13 @@ class CONFIGBACKUPUTIL extends UTILBASE
                 $details = trim(implode("\n", $output));
                 $message = 'Restore failed.';
                 if (
-                    $backupType === 'images' &&
+                    $useSudoTar &&
                     (
                         stripos($details, 'a password is required') !== false ||
                         stripos($details, 'terminal is required') !== false
                     )
                 ) {
-                    $message .= " Configure sudoers with NOPASSWD for tar extraction during image restore.";
+                    $message .= " Configure sudoers with NOPASSWD for tar extraction during restore.";
                 }
                 if ($details !== '') {
                     $message .= ' ' . $details;
@@ -2578,6 +2665,17 @@ class CONFIGBACKUPUTIL extends UTILBASE
             'file' => $backupName,
             'warning' => $warning,
             'steps' => $steps,
+            'backupType' => $backupType,
+            'mode' => $restoreMode,
+            'backupVersionFrom' => (string)($backupMeta['version'] ?? 'unknown'),
+            'restoreVersionTo' => $restoredToVersion,
+            'cameraFrom' => $cameraFrom,
+            'cameraTo' => $cameraTo,
+            'selectedSections' => $selectedSectionKeys,
+            'selectedImageFolders' => $normalizedSelectedImageFolders,
+            'selectedFiles' => $normalizedSelectedFiles,
+            'targetsRestored' => $targetsToExtract,
+            'logPath' => (string)($logResult['path'] ?? ''),
         ];
     }
 
@@ -3151,6 +3249,21 @@ class CONFIGBACKUPUTIL extends UTILBASE
         if (isset($result['steps']) && is_array($result['steps'])) {
             $response['steps'] = $result['steps'];
         }
+        $response['restoreSummary'] = [
+            'file' => (string)($result['file'] ?? $selected),
+            'backupType' => (string)($result['backupType'] ?? 'config'),
+            'mode' => (string)($result['mode'] ?? 'normal'),
+            'backupVersionFrom' => (string)($result['backupVersionFrom'] ?? 'unknown'),
+            'restoreVersionTo' => (string)($result['restoreVersionTo'] ?? 'unknown'),
+            'cameraFrom' => (string)($result['cameraFrom'] ?? ''),
+            'cameraTo' => (string)($result['cameraTo'] ?? ''),
+            'selectedSections' => (isset($result['selectedSections']) && is_array($result['selectedSections'])) ? $result['selectedSections'] : [],
+            'selectedImageFolders' => (isset($result['selectedImageFolders']) && is_array($result['selectedImageFolders'])) ? $result['selectedImageFolders'] : [],
+            'selectedFiles' => (isset($result['selectedFiles']) && is_array($result['selectedFiles'])) ? $result['selectedFiles'] : [],
+            'targetsRestored' => (isset($result['targetsRestored']) && is_array($result['targetsRestored'])) ? $result['targetsRestored'] : [],
+            'logPath' => (string)($result['logPath'] ?? ''),
+            'warning' => (string)($result['warning'] ?? ''),
+        ];
 
         $this->sendResponse($response);
     }

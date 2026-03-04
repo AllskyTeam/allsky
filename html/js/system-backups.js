@@ -32,6 +32,8 @@ class ALLSKYCONFIGBACKUPS {
         this.$restoreProgressSteps = $('#as-config-backup-restore-progress-steps');
         this.$restoreProgressClose = $('#as-config-backup-restore-progress-close');
         this.$restoreProgressError = $('#as-config-backup-restore-progress-error');
+        this.$restoreSummaryModal = $('#as-config-backup-restore-summary-modal');
+        this.$restoreSummaryDetails = $('#as-config-backup-restore-summary-details');
         this.restoreProgressTimer = null;
         this.restoreProgressPercent = 0;
         this.messageTimer = null;
@@ -161,6 +163,9 @@ class ALLSKYCONFIGBACKUPS {
                 'body.dark #as-restore-advanced-files .as-restore-tree-level > li:nth-child(even), .dark #as-restore-advanced-files .as-restore-tree-level > li:nth-child(even) {' +
                 'background:rgba(255,255,255,0.045);' +
                 '}' +
+                '#as-config-backup-table-wrapper_wrapper .dataTables_info, #as-config-backup-table-wrapper_wrapper .dataTables_paginate {' +
+                'margin-top:10px;' +
+                '}' +
                 '</style>'
             );
         }
@@ -222,6 +227,145 @@ class ALLSKYCONFIGBACKUPS {
         }
 
         return this.$infoModal.length > 0 && this.$infoModalDetails.length > 0;
+    }
+
+    ensureRestoreSummaryModal() {
+        if (this.$restoreSummaryModal.length > 0 && this.$restoreSummaryDetails.length > 0) {
+            return true;
+        }
+
+        if ($('#as-config-backup-restore-summary-modal').length === 0) {
+            $('body').append(
+                '<div class="modal fade" id="as-config-backup-restore-summary-modal" tabindex="-1" role="dialog" aria-labelledby="as-config-backup-restore-summary-title">' +
+                '<div class="modal-dialog modal-lg" role="document" style="max-width:900px; width:90%;">' +
+                '<div class="modal-content">' +
+                '<div class="modal-header">' +
+                '<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
+                '<h4 class="modal-title" id="as-config-backup-restore-summary-title"><i class="fa fa-check-circle text-success" style="margin-right:8px;"></i>Restore Completed</h4>' +
+                '</div>' +
+                '<div class="modal-body" id="as-config-backup-restore-summary-details"></div>' +
+                '<div class="modal-footer">' +
+                '<button type="button" class="btn btn-primary" data-dismiss="modal">Done</button>' +
+                '</div>' +
+                '</div>' +
+                '</div>' +
+                '</div>'
+            );
+        }
+
+        this.$restoreSummaryModal = $('#as-config-backup-restore-summary-modal');
+        this.$restoreSummaryDetails = $('#as-config-backup-restore-summary-details');
+        if (this.$restoreSummaryModal.length > 0 && this.$restoreSummaryModal.parent().get(0) !== document.body) {
+            this.$restoreSummaryModal.detach().appendTo(document.body);
+        }
+
+        return this.$restoreSummaryModal.length > 0 && this.$restoreSummaryDetails.length > 0;
+    }
+
+    showRestoreSummaryModal(result) {
+        if (!this.ensureRestoreSummaryModal()) {
+            return;
+        }
+        const summary = (result && result.restoreSummary && typeof result.restoreSummary === 'object')
+            ? result.restoreSummary
+            : {};
+        const backupType = String(summary.backupType || this.pendingRestoreType || 'config').toLowerCase();
+        const mode = String(summary.mode || 'normal');
+        const selectedSections = Array.isArray(summary.selectedSections) ? summary.selectedSections : [];
+        const selectedImageFolders = Array.isArray(summary.selectedImageFolders) ? summary.selectedImageFolders : [];
+        const selectedFiles = Array.isArray(summary.selectedFiles) ? summary.selectedFiles : [];
+        const targetsRestored = Array.isArray(summary.targetsRestored) ? summary.targetsRestored : [];
+        const warningText = String(summary.warning || result.warning || '').trim();
+        const messageText = String((result && result.message) || 'Restore completed successfully.');
+        const modeLabel = mode === 'advanced' ? 'Advanced' : 'Normal';
+        const typeLabel = backupType === 'images' ? 'Images' : 'Config';
+        const sectionItems = selectedSections.length
+            ? selectedSections.map((item) => '<li class="list-group-item" style="padding:6px 10px;">' + this.escapeHtml(this.getSectionLabel(item)) + '</li>').join('')
+            : '<li class="list-group-item text-muted" style="padding:6px 10px;">None recorded</li>';
+        const folderItems = selectedImageFolders.length
+            ? selectedImageFolders.map((item) => '<li class="list-group-item" style="padding:6px 10px;">' + this.escapeHtml(String(item)) + '</li>').join('')
+            : '<li class="list-group-item text-muted" style="padding:6px 10px;">None selected</li>';
+        const restoredFileItems = targetsRestored.length
+            ? targetsRestored.map((item) => '<li class="list-group-item" style="padding:6px 10px; font-family:monospace;">' + this.escapeHtml(String(item)) + '</li>').join('')
+            : '<li class="list-group-item text-muted" style="padding:6px 10px;">No files recorded.</li>';
+        const imageFolderTargets = targetsRestored.filter((item) => /^images\/[^/]+$/.test(String(item || '')));
+        const allImageTargetsAreFolders = targetsRestored.length > 0 && imageFolderTargets.length === targetsRestored.length;
+
+        const metadataRows = [
+            ['Backup File', String(summary.file || this.pendingRestoreFile || '')],
+            ['Backup Type', typeLabel],
+            ['Restore Mode', modeLabel],
+            ['Version From', String(summary.backupVersionFrom || 'unknown')],
+            ['Version To', String(summary.restoreVersionTo || 'unknown')],
+            ['Targets Restored', String(targetsRestored.length)],
+            ['Advanced Files Selected', String(selectedFiles.length)],
+        ];
+
+        if (backupType === 'config') {
+            metadataRows.splice(5, 0,
+                ['Camera From', String(summary.cameraFrom || 'unknown')],
+                ['Camera To', String(summary.cameraTo || 'unknown')]
+            );
+        } else {
+            metadataRows.splice(5, 0, ['Folders Restored', String(selectedImageFolders.length)]);
+        }
+
+        const metadataTable = metadataRows.map((row) => (
+            '<tr>' +
+            '<th style="width:36%; color:#666; font-weight:600;">' + this.escapeHtml(row[0]) + '</th>' +
+            '<td>' + this.escapeHtml(row[1]) + '</td>' +
+            '</tr>'
+        )).join('');
+
+        const logPath = String(summary.logPath || '');
+        const logBlock = logPath !== ''
+            ? '<div class="alert alert-info" style="margin-bottom:12px;"><strong>Restore log:</strong> ' + this.escapeHtml(logPath) + '</div>'
+            : '';
+        const warningBlock = warningText !== ''
+            ? '<div class="alert alert-warning" style="margin-bottom:12px;"><strong>Warning:</strong> ' + this.escapeHtml(warningText) + '</div>'
+            : '';
+
+        let rightPanelTitle = 'Sections Restored';
+        let rightPanelBody = '<ul class="list-group" style="margin-bottom:10px;">' + sectionItems + '</ul>' +
+            '<div style="margin-bottom:6px; font-weight:600;">Files Restored <span class="badge">' + targetsRestored.length + '</span></div>' +
+            '<div style="max-height:220px; overflow:auto;"><ul class="list-group" style="margin-bottom:0;">' + restoredFileItems + '</ul></div>';
+        if (backupType === 'images') {
+            if (allImageTargetsAreFolders) {
+                rightPanelTitle = 'Image Folders Restored';
+                rightPanelBody = '<div style="max-height:320px; overflow:auto;"><ul class="list-group" style="margin-bottom:0;">' +
+                    imageFolderTargets.map((item) => '<li class="list-group-item" style="padding:6px 10px;">' + this.escapeHtml(String(item).replace(/^images\//, '')) + '</li>').join('') +
+                    '</ul></div>';
+            } else {
+                rightPanelTitle = 'Image Files Restored';
+                rightPanelBody = '<div style="max-height:340px; overflow:auto;"><ul class="list-group" style="margin-bottom:0;">' + restoredFileItems + '</ul></div>';
+            }
+        }
+
+        this.$restoreSummaryDetails.html(
+            '<div class="alert alert-success" style="margin-bottom:12px; font-size:14px;">' +
+            '<strong>Restore finished successfully.</strong> ' + this.escapeHtml(messageText) +
+            '</div>' +
+            warningBlock +
+            logBlock +
+            '<div class="row">' +
+            '<div class="col-sm-6" style="margin-bottom:12px;">' +
+            '<div class="panel panel-default" style="margin-bottom:0;">' +
+            '<div class="panel-heading" style="padding:8px 12px;"><strong>Restore Summary</strong></div>' +
+            '<div class="panel-body" style="padding:8px 12px;">' +
+            '<table class="table table-condensed" style="margin-bottom:0;">' + metadataTable + '</table>' +
+            '</div>' +
+            '</div>' +
+            '</div>' +
+            '<div class="col-sm-6">' +
+            '<div class="panel panel-default" style="margin-bottom:0;">' +
+            '<div class="panel-heading" style="padding:8px 12px;"><strong>' + this.escapeHtml(rightPanelTitle) + '</strong></div>' +
+            '<div class="panel-body" style="padding:8px 12px;">' + rightPanelBody + '</div>' +
+            '</div>' +
+            '</div>' +
+            '</div>'
+        );
+
+        this.$restoreSummaryModal.modal('show');
     }
 
     ensureBackupProgressModal() {
@@ -578,6 +722,36 @@ class ALLSKYCONFIGBACKUPS {
         return value.toFixed(1) + ' ' + units[i];
     }
 
+    getSectionLabel(sectionKey) {
+        const key = String(sectionKey || '').trim();
+        if (key === '') {
+            return '';
+        }
+        if (key === 'core') {
+            return 'Core Files';
+        }
+        if (key === 'images') {
+            return 'Images Folder';
+        }
+
+        const optionalTargets = (this.lastStatus && this.lastStatus.optionalTargets && typeof this.lastStatus.optionalTargets === 'object')
+            ? this.lastStatus.optionalTargets
+            : {};
+        const optionalMeta = optionalTargets[key];
+        if (optionalMeta && typeof optionalMeta === 'object') {
+            const shortDescription = String(optionalMeta.shortdescription || '').trim();
+            if (shortDescription !== '') {
+                return shortDescription;
+            }
+            const description = String(optionalMeta.description || '').trim();
+            if (description !== '') {
+                return description;
+            }
+        }
+
+        return key.charAt(0).toUpperCase() + key.slice(1);
+    }
+
     renderStatus(data) {
         const backups = Array.isArray(data.backups) ? data.backups : [];
 
@@ -638,6 +812,9 @@ class ALLSKYCONFIGBACKUPS {
                 pageLength: 10,
                 lengthChange: false,
                 autoWidth: false,
+                dom: "<'row'<'col-sm-12'tr>><'as-backups-table-gap'><'row'<'col-sm-5'i><'col-sm-7 text-right'p>>",
+                searching: false,
+                bFilter: false,
                 columnDefs: [
                     { width: '20%', className: 'dt-left', type: 'string', targets: 0 }, // Backup Date/Time
                     { width: '8%', targets: 1 }, // Type
@@ -1821,7 +1998,7 @@ class ALLSKYCONFIGBACKUPS {
             return;
         }
         const restoreType = String(this.pendingRestoreType || 'config').toLowerCase();
-        const showProgress = (restoreType === 'images');
+        const showProgress = true;
 
         this.$restoreConfirm.prop('disabled', true);
         if (showProgress) {
@@ -1859,10 +2036,18 @@ class ALLSKYCONFIGBACKUPS {
                 });
                 this.$restoreProgressClose.prop('disabled', false);
                 setTimeout(() => {
-                    this.$restoreProgressModal.modal('hide');
-                }, 900);
+                    if (this.$restoreProgressModal.length > 0 && this.$restoreProgressModal.hasClass('in')) {
+                        this.$restoreProgressModal.one('hidden.bs.modal', () => {
+                            this.showRestoreSummaryModal(result || {});
+                        });
+                        this.$restoreProgressModal.modal('hide');
+                    } else {
+                        this.showRestoreSummaryModal(result || {});
+                    }
+                }, 500);
             } else {
                 this.$restoreModal.modal('hide');
+                this.showRestoreSummaryModal(result || {});
             }
         }).fail((xhr) => {
             let msg = 'Restore failed.';
@@ -1981,6 +2166,7 @@ class ALLSKYCONFIGBACKUPS {
         this.ensureCreateModal();
         this.ensureBackupProgressModal();
         this.ensureRestoreProgressModal();
+        this.ensureRestoreSummaryModal();
         this.ensureInfoModal();
         this.ensureRestoreModal();
 

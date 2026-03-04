@@ -128,6 +128,12 @@ of the current release.
             - Auto refresh
             - Watchdog service control
 
+        - **Backup and Restore System
+            - Allows backups of configuration
+            - Allows backups of captured images
+            - Allows for backups to be restored
+            - Allows selective restore from backups
+
         - **Helper Tools**
             - **Check Allsky** — runs `checkAllsky.sh`
             - **Startrails** — brightness threshold tuning

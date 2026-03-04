@@ -147,6 +147,10 @@ nav:
     - Settings:
       - allsky_guide/settings/allsky.md
       - allsky_guide/settings/website.md
+    - Backup and Restore:
+      - Overview: allsky_guide/backup_restore/overview.md
+      - Backup: allsky_guide/backup_restore/backup.md
+      - Restore: allsky_guide/backup_restore/restore.md
     - Howtos:
       - Allsky layout: allsky_guide/howtos/layout.md
       - Helper Tools: 
@@ -280,4 +284,3 @@ nav:
       - Base Class: allsky_base.md
       - Allsky Server API: allsky_api.md
     - Contributing: developer_guide/contributing.md
-

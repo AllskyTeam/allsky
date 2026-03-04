@@ -33,7 +33,7 @@ There are several sections to the documentation
 
 ## Installing Allsky
 
-To install Allsky please refer the the [Installation](/allsky_guide/allsky.html) Guide.
+To install Allsky please refer the the [Installation](allsky_guide/allsky.md) Guide.
 
 ## Getting Help
 

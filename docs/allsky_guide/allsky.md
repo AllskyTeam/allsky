@@ -7,6 +7,13 @@
     If camera number 0 (the first camera) is in the list, you're good to go.
     Note that some non-Raspberry Pi brand cameras may need special software installed and/or operating system configuration changes - read the camera manual.
 
+    The above will only work if you run the command as the user you setup when burning the sd card image. If you have created another user then run the following command Before the ```rpicam-still``` command
+
+    ```usermod -aG video USERNAME```
+
+    Where USERNAME is the user you created
+
+
 
 ### Before installing
 The following needs to be done prior to installing Allsky the first time on your Pi:

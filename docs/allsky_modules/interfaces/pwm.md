@@ -81,7 +81,7 @@ Raspberry Pi 5 introduces a new I/O controller (**RP1**), so PWM is provided by 
 Edit:
 
 ```bash
-sudo nano /boot/config.txt
+sudo nano /boot/firmware/config.txt
 ```
 
 Add:

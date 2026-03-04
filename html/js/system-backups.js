@@ -18,6 +18,7 @@ class ALLSKYCONFIGBACKUPS {
         this.$backupProgressSteps = $('#as-config-backup-progress-steps');
         this.$backupProgressClose = $('#as-config-backup-progress-close');
         this.$backupProgressError = $('#as-config-backup-progress-error');
+        this.$backupProgressWarning = $('#as-config-backup-progress-warning');
         this.progressTimer = null;
         this.progressPercent = 0;
         this.$infoModal = $('#as-config-backup-info-modal');
@@ -38,6 +39,7 @@ class ALLSKYCONFIGBACKUPS {
         this.pendingRestoreType = 'config';
         this.selectedRestoreSections = [];
         this.selectedRestoreImageFolders = [];
+        this.selectedRestoreFiles = [];
         this.lastStatus = null;
 
         this.loadStatus = this.loadStatus.bind(this);
@@ -153,6 +155,12 @@ class ALLSKYCONFIGBACKUPS {
                 'body.dark #as-config-backup-create-modal #as-images-size-summary .text-muted, .dark #as-config-backup-create-modal #as-images-size-summary .text-muted {' +
                 'color:#b7c4ce;' +
                 '}' +
+                '#as-restore-advanced-files .as-restore-tree-level > li:nth-child(even) {' +
+                'background:rgba(0,0,0,0.025); border-radius:3px;' +
+                '}' +
+                'body.dark #as-restore-advanced-files .as-restore-tree-level > li:nth-child(even), .dark #as-restore-advanced-files .as-restore-tree-level > li:nth-child(even) {' +
+                'background:rgba(255,255,255,0.045);' +
+                '}' +
                 '</style>'
             );
         }
@@ -223,7 +231,8 @@ class ALLSKYCONFIGBACKUPS {
             this.$backupProgressStatus.length > 0 &&
             this.$backupProgressSteps.length > 0 &&
             this.$backupProgressClose.length > 0 &&
-            this.$backupProgressError.length > 0
+            this.$backupProgressError.length > 0 &&
+            this.$backupProgressWarning.length > 0
         ) {
             return true;
         }
@@ -238,6 +247,9 @@ class ALLSKYCONFIGBACKUPS {
                 '</div>' +
                 '<div class="modal-body">' +
                 '<div id="as-config-backup-progress-status" style="margin-bottom:8px; font-weight:600;">Preparing...</div>' +
+                '<div id="as-config-backup-progress-warning" class="alert alert-warning" style="display:none; margin-bottom:10px;">' +
+                'Image backups can be slow because large image archives take longer to create.' +
+                '</div>' +
                 '<div class="progress" style="height:22px; margin-bottom:10px;">' +
                 '<div id="as-config-backup-progress-bar" class="progress-bar progress-bar-info progress-bar-striped active" role="progressbar" style="width:0%;">0%</div>' +
                 '</div>' +
@@ -259,6 +271,7 @@ class ALLSKYCONFIGBACKUPS {
         this.$backupProgressSteps = $('#as-config-backup-progress-steps');
         this.$backupProgressClose = $('#as-config-backup-progress-close');
         this.$backupProgressError = $('#as-config-backup-progress-error');
+        this.$backupProgressWarning = $('#as-config-backup-progress-warning');
 
         if (this.$backupProgressModal.length > 0 && this.$backupProgressModal.parent().get(0) !== document.body) {
             this.$backupProgressModal.detach().appendTo(document.body);
@@ -270,7 +283,8 @@ class ALLSKYCONFIGBACKUPS {
             this.$backupProgressStatus.length > 0 &&
             this.$backupProgressSteps.length > 0 &&
             this.$backupProgressClose.length > 0 &&
-            this.$backupProgressError.length > 0
+            this.$backupProgressError.length > 0 &&
+            this.$backupProgressWarning.length > 0
         );
     }
 
@@ -496,9 +510,15 @@ class ALLSKYCONFIGBACKUPS {
         if (!this.ensureBackupProgressModal()) {
             return false;
         }
+        const type = String(backupType || 'config').toLowerCase();
         const steps = this.getBackupProgressStepLabels(willStopAllskyService);
         this.renderBackupProgressSteps(steps);
         this.$backupProgressError.hide().text('');
+        if (type === 'images') {
+            this.$backupProgressWarning.show();
+        } else {
+            this.$backupProgressWarning.hide();
+        }
         this.$backupProgressClose.prop('disabled', true);
         this.$backupProgressBar
             .removeClass('progress-bar-danger progress-bar-success')
@@ -700,6 +720,15 @@ class ALLSKYCONFIGBACKUPS {
         const optionalTargets = (status && status.optionalTargets && typeof status.optionalTargets === 'object' && Object.keys(status.optionalTargets).length > 0)
             ? status.optionalTargets
             : fallbackOptionalTargets;
+        const configSectionStats = (status && status.configSectionStats && typeof status.configSectionStats === 'object')
+            ? status.configSectionStats
+            : {};
+        const coreConfigStats = (configSectionStats && configSectionStats.core && typeof configSectionStats.core === 'object')
+            ? configSectionStats.core
+            : { sizeBytes: 0, estimatedCompressedBytes: 0 };
+        const optionalConfigStats = (configSectionStats && configSectionStats.optional && typeof configSectionStats.optional === 'object')
+            ? configSectionStats.optional
+            : {};
         const optionalKeys = Object.keys(optionalTargets);
         let imageFolders = (status && Array.isArray(status.imagesFolders)) ? status.imagesFolders : [];
         const imageFolderStats = (status && Array.isArray(status.imagesFolderStats)) ? status.imagesFolderStats : [];
@@ -749,6 +778,10 @@ class ALLSKYCONFIGBACKUPS {
             '<div class="col-xs-9">',
             '<strong>Core Files</strong>',
             '<div class="text-muted" style="margin-top:4px;">Required configuration files. This is always included.</div>',
+            '<div class="text-muted" style="margin-top:2px; font-size:12px;">' +
+            this.escapeHtml(this.formatBytes(Number(coreConfigStats.sizeBytes || 0))) +
+            ' (est. ' + this.escapeHtml(this.formatBytes(Number(coreConfigStats.estimatedCompressedBytes || 0))) + ')' +
+            '</div>',
             '</div>',
             '<div class="col-xs-3 text-right">',
             '<div class="checkbox" style="margin:0;">',
@@ -765,12 +798,19 @@ class ALLSKYCONFIGBACKUPS {
             const item = optionalTargets[key] || {};
             const description = item.description || '';
             const shortDescription = item.shortdescription || key;
+            const keyStats = (optionalConfigStats && optionalConfigStats[key] && typeof optionalConfigStats[key] === 'object')
+                ? optionalConfigStats[key]
+                : { sizeBytes: 0, estimatedCompressedBytes: 0 };
             const inputId = 'as-config-backup-option-' + key.replace(/[^a-zA-Z0-9_-]/g, '_');
             return [
                 '<div class="row" style="margin:0; padding:8px 0;">',
                 '<div class="col-xs-9">',
                 '<strong>' + this.escapeHtml(shortDescription) + '</strong>',
                 '<div class="text-muted" style="margin-top:4px;">' + this.escapeHtml(description) + '</div>',
+                '<div class="text-muted" style="margin-top:2px; font-size:12px;">' +
+                this.escapeHtml(this.formatBytes(Number(keyStats.sizeBytes || 0))) +
+                ' (est. ' + this.escapeHtml(this.formatBytes(Number(keyStats.estimatedCompressedBytes || 0))) + ')' +
+                '</div>',
                 '</div>',
                 '<div class="col-xs-3 text-right">',
                 '<div class="checkbox" style="margin:0;">',
@@ -785,7 +825,7 @@ class ALLSKYCONFIGBACKUPS {
         }).join('');
 
         this.$createModalDetails.html(
-            '<div style="max-height:420px; overflow:auto;">' +
+            '<div>' +
             typeSelector +
             '<div id="as-config-backup-options-config">' +
             coreRow +
@@ -995,6 +1035,7 @@ class ALLSKYCONFIGBACKUPS {
         this.pendingRestoreFile = selectedFile;
         this.pendingRestoreType = 'config';
         this.selectedRestoreImageFolders = [];
+        this.selectedRestoreFiles = [];
         this.$restoreModalDetails.empty();
         this.$restoreConfirm
             .removeClass('btn-success btn-danger')
@@ -1026,6 +1067,7 @@ class ALLSKYCONFIGBACKUPS {
             const missingModules = Array.isArray(result.missingModules) ? result.missingModules : [];
             const backupHasModules = !!(result && result.backupHasModules);
             const backupModules = Array.isArray(result.backupModules) ? result.backupModules : [];
+            const backupFiles = Array.isArray(result.backupFiles) ? result.backupFiles : [];
             const restoreChecks = Array.isArray(result.restoreChecks) ? result.restoreChecks : [];
             const includedSections = (result && result.sections && Array.isArray(result.sections.included))
                 ? result.sections.included
@@ -1120,6 +1162,12 @@ class ALLSKYCONFIGBACKUPS {
             ].join('');
 
             const detailsHtml = [
+                '<ul class="nav nav-tabs" style="margin-bottom:12px;">',
+                '<li class="active"><a href="#as-restore-tab-normal" data-toggle="tab">Normal</a></li>',
+                '<li><a href="#as-restore-tab-advanced" data-toggle="tab">Advanced</a></li>',
+                '</ul>',
+                '<div class="tab-content">',
+                '<div class="tab-pane fade in active" id="as-restore-tab-normal">',
                 checksHtml,
                 '<div class="row">',
                 '<div class="col-sm-6" style="margin-bottom:12px;">',
@@ -1141,9 +1189,211 @@ class ALLSKYCONFIGBACKUPS {
                 '</div>',
                 '</div>',
                 '</div>',
+                '</div>',
+                '</div>',
+                '<div class="tab-pane fade" id="as-restore-tab-advanced">',
+                '<div class="panel panel-default" style="margin-bottom:0;">',
+                '<div class="panel-heading" style="padding:8px 12px;">',
+                '<strong>Advanced File Restore</strong>',
+                '</div>',
+                '<div class="panel-body" style="padding:8px 12px;">',
+                '<div class="row" style="margin-bottom:8px;">' +
+                '<div class="col-xs-12 col-sm-7 text-muted" style="padding-top:6px;">Select individual files to restore.</div>' +
+                '<div class="col-xs-12 col-sm-5 text-right" style="margin-top:6px;">' +
+                '<button type="button" class="btn btn-default btn-sm" id="as-restore-files-all">Select all</button> ' +
+                '<button type="button" class="btn btn-default btn-sm" id="as-restore-files-none">Select none</button>' +
+                '</div>' +
+                '</div>',
+                '<div style="margin-bottom:8px;">' +
+                '<input type="text" class="form-control input-sm" id="as-restore-file-search" placeholder="Search files and folders...">' +
+                '</div>',
+                '<div id="as-restore-advanced-files"></div>',
+                '</div>',
+                '</div>',
+                '</div>',
                 '</div>'
             ].join('');
             this.$restoreModalDetails.html(detailsHtml);
+
+            const renderAdvancedFilesTree = (paths) => {
+                const safePaths = (Array.isArray(paths) ? paths : []).map((p) => String(p || '').replace(/^\/+/, '')).filter((p) => p !== '');
+                if (!safePaths.length) {
+                    return '<div class="text-muted">No file list available in backup metadata.</div>';
+                }
+
+                const root = { dirs: {}, files: [] };
+                safePaths.forEach((path) => {
+                    const parts = path.split('/').filter((p) => p !== '');
+                    if (!parts.length) return;
+                    let node = root;
+                    for (let i = 0; i < parts.length - 1; i += 1) {
+                        const d = parts[i];
+                        if (!node.dirs[d]) {
+                            node.dirs[d] = { dirs: {}, files: [] };
+                        }
+                        node = node.dirs[d];
+                    }
+                    node.files.push(parts[parts.length - 1]);
+                });
+
+                let nodeCounter = 0;
+                const renderNode = (node, prefix, level, rootLevel) => {
+                    const dirNames = Object.keys(node.dirs).sort((a, b) => a.localeCompare(b));
+                    const files = node.files.slice().sort((a, b) => a.localeCompare(b));
+                    let html = '<ul class="list-unstyled as-restore-tree-level" style="margin-bottom:0;' + (rootLevel ? '' : ' margin-left:18px;') + '">';
+
+                    dirNames.forEach((dirName) => {
+                        const nextPrefix = prefix ? (prefix + '/' + dirName) : dirName;
+                        const nodeId = 'as-restore-dir-' + (nodeCounter++);
+                        const isExpanded = (level === 0);
+                        html += '<li class="as-restore-dir-item" data-node-id="' + this.escapeHtml(nodeId) + '" data-dir-path="' + this.escapeHtml(nextPrefix) + '" style="margin:2px 0;">' +
+                            '<div class="as-restore-dir-header" style="display:flex; align-items:center; min-height:28px; justify-content:space-between; width:100%;">' +
+                            '<div style="min-width:0; padding-right:8px;">' +
+                            '<a href="#" class="as-restore-dir-toggle text-muted" data-node-id="' + this.escapeHtml(nodeId) + '" style="display:inline-block; width:14px; text-align:center; margin-right:4px;"><i class="fa ' + (isExpanded ? 'fa-caret-down' : 'fa-caret-right') + '"></i></a>' +
+                            '<i class="fa fa-folder-o text-muted" style="width:18px; text-align:center; margin-right:6px;"></i><strong>' + this.escapeHtml(dirName) + '</strong>' +
+                            '</div>' +
+                            '<div>' +
+                            '<div class="checkbox" style="margin:0;">' +
+                            '<label class="el-switch el-switch-sm el-switch-green" style="margin:0;">' +
+                            '<input type="checkbox" class="as-restore-folder" data-node-id="' + this.escapeHtml(nodeId) + '" checked>' +
+                            '<span class="el-switch-style"></span>' +
+                            '</label>' +
+                            '</div>' +
+                            '</div>' +
+                            '</div>' +
+                            '<div class="as-restore-dir-children" data-node-id="' + this.escapeHtml(nodeId) + '" style="display:' + (isExpanded ? 'block' : 'none') + ';">' +
+                            renderNode(node.dirs[dirName], nextPrefix, level + 1, false) +
+                            '</div>' +
+                            '</li>';
+                    });
+
+                    files.forEach((fileName) => {
+                        const fullPath = prefix ? (prefix + '/' + fileName) : fileName;
+                        html += '<li class="as-restore-file-item" data-file-path="' + this.escapeHtml(fullPath) + '" style="margin:2px 0;">' +
+                            '<div style="display:flex; align-items:center; min-height:28px; justify-content:space-between; width:100%;">' +
+                            '<div style="min-width:0; padding-right:8px;">' +
+                            '<i class="fa fa-file-o text-muted" style="width:18px; text-align:center; margin-right:6px;"></i>' +
+                            '<span class="as-restore-file-name" data-file-name="' + this.escapeHtml(fileName) + '">' + this.escapeHtml(fileName) + '</span>' +
+                            '</div>' +
+                            '<div>' +
+                            '<div class="checkbox" style="margin:0;">' +
+                            '<label class="el-switch el-switch-sm el-switch-green" style="margin:0;">' +
+                            '<input type="checkbox" class="as-restore-file" data-file="' + this.escapeHtml(fullPath) + '" checked>' +
+                            '<span class="el-switch-style"></span>' +
+                            '</label>' +
+                            '</div>' +
+                            '</div>' +
+                            '</div>' +
+                            '</li>';
+                    });
+
+                    html += '</ul>';
+                    return html;
+                };
+
+                return '<div style="max-height:420px; overflow:auto;">' + renderNode(root, '', 0, true) + '</div>';
+            };
+            $('#as-restore-advanced-files').html(renderAdvancedFilesTree(backupFiles));
+
+            const setDirExpanded = (nodeId, expanded) => {
+                const $toggle = this.$restoreModalDetails.find('.as-restore-dir-toggle[data-node-id="' + nodeId + '"]');
+                const $children = this.$restoreModalDetails.find('.as-restore-dir-children[data-node-id="' + nodeId + '"]');
+                if ($toggle.length === 0 || $children.length === 0) {
+                    return;
+                }
+                $children.toggle(!!expanded);
+                const $icon = $toggle.find('i.fa');
+                if (expanded) {
+                    $icon.removeClass('fa-caret-right').addClass('fa-caret-down');
+                } else {
+                    $icon.removeClass('fa-caret-down').addClass('fa-caret-right');
+                }
+            };
+
+            const updateFolderCheckedFromChildren = ($dirItem) => {
+                if ($dirItem.length === 0) {
+                    return;
+                }
+                const $childrenContainer = $dirItem.children('.as-restore-dir-children');
+                const $folderCheckbox = $dirItem.find('> .as-restore-dir-header .as-restore-folder');
+                if ($childrenContainer.length === 0 || $folderCheckbox.length === 0) {
+                    return;
+                }
+                const hasUncheckedChild = $childrenContainer.find('.as-restore-file:not(:checked), .as-restore-folder:not(:checked)').length > 0;
+                $folderCheckbox.prop('checked', !hasUncheckedChild);
+            };
+
+            const updateAncestorFolderStates = ($fromDirItem) => {
+                updateFolderCheckedFromChildren($fromDirItem);
+                let $parentDir = $fromDirItem.parents('.as-restore-dir-item').first();
+                while ($parentDir.length > 0) {
+                    updateFolderCheckedFromChildren($parentDir);
+                    $parentDir = $parentDir.parents('.as-restore-dir-item').first();
+                }
+            };
+
+            const refreshAllFolderStates = () => {
+                const $items = this.$restoreModalDetails.find('.as-restore-dir-item').get().reverse();
+                $items.forEach((el) => {
+                    updateFolderCheckedFromChildren($(el));
+                });
+            };
+
+            const applyAdvancedSearch = () => {
+                const term = String(this.$restoreModalDetails.find('#as-restore-file-search').val() || '').toLowerCase().trim();
+                const $fileItems = this.$restoreModalDetails.find('.as-restore-file-item');
+                const $dirItems = this.$restoreModalDetails.find('.as-restore-dir-item');
+                const escapeRegExp = (value) => String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const highlightName = ($item, rawName, query) => {
+                    const $name = $item.find('.as-restore-file-name');
+                    if ($name.length === 0) return;
+                    if (!query) {
+                        $name.text(rawName);
+                        return;
+                    }
+                    const re = new RegExp('(' + escapeRegExp(query) + ')', 'ig');
+                    const safeHtml = this.escapeHtml(rawName);
+                    const highlighted = safeHtml.replace(re, '<mark style="padding:0 2px; background:#f9e79f; color:#222;">$1</mark>');
+                    $name.html(highlighted);
+                };
+
+                $fileItems.show();
+                $dirItems.show();
+                $fileItems.each((_, el) => {
+                    const $file = $(el);
+                    const rawName = String($file.find('.as-restore-file-name').data('file-name') || '');
+                    highlightName($file, rawName, '');
+                });
+
+                if (term === '') {
+                    return;
+                }
+
+                $fileItems.hide();
+                $dirItems.hide();
+                this.$restoreModalDetails.find('.as-restore-dir-children').hide();
+                this.$restoreModalDetails.find('.as-restore-dir-toggle i.fa').removeClass('fa-caret-down').addClass('fa-caret-right');
+
+                $fileItems.each((_, el) => {
+                    const $file = $(el);
+                    const path = String($file.data('file-path') || '').toLowerCase();
+                    const rawName = String($file.find('.as-restore-file-name').data('file-name') || '');
+                    if (path.indexOf(term) === -1) {
+                        highlightName($file, rawName, '');
+                        return;
+                    }
+                    highlightName($file, rawName, term);
+                    $file.show();
+                    $file.parents('.as-restore-dir-item').each((__, dirEl) => {
+                        const $dir = $(dirEl);
+                        $dir.show();
+                        const nodeId = String($dir.data('node-id') || '');
+                        if (nodeId !== '') {
+                            setDirExpanded(nodeId, true);
+                        }
+                    });
+                });
+            };
 
             const findCheck = (name) => {
                 for (let i = 0; i < restoreChecks.length; i += 1) {
@@ -1207,6 +1457,31 @@ class ALLSKYCONFIGBACKUPS {
             };
 
             const updateForSelection = () => {
+                const advancedActive = this.$restoreModalDetails.find('a[href="#as-restore-tab-advanced"]').parent().hasClass('active');
+                if (advancedActive) {
+                    const selectedFiles = [];
+                    this.$restoreModalDetails.find('.as-restore-file:checked').each((_, el) => {
+                        selectedFiles.push(String($(el).data('file') || ''));
+                    });
+                    this.selectedRestoreFiles = selectedFiles;
+                    this.selectedRestoreSections = [];
+                    this.selectedRestoreImageFolders = [];
+
+                    if (selectedFiles.length > 0) {
+                        this.$restoreConfirm
+                            .removeClass('btn-warning btn-danger')
+                            .addClass('btn-success')
+                            .prop('disabled', false);
+                    } else {
+                        this.$restoreConfirm
+                            .removeClass('btn-warning btn-success')
+                            .addClass('btn-danger')
+                            .prop('disabled', true);
+                    }
+                    return;
+                }
+
+                this.selectedRestoreFiles = [];
                 const selectedKeys = (backupType === 'images')
                     ? ['images']
                     : [];
@@ -1342,6 +1617,53 @@ class ALLSKYCONFIGBACKUPS {
             this.$restoreModalDetails.off('change.restoreFolders').on('change.restoreFolders', '.as-restore-image-folder', () => {
                 updateForSelection();
             });
+            this.$restoreModalDetails.off('change.restoreFiles').on('change.restoreFiles', '.as-restore-file', (e) => {
+                const $dir = $(e.currentTarget).closest('.as-restore-dir-item');
+                if ($dir.length > 0) {
+                    updateAncestorFolderStates($dir);
+                } else {
+                    refreshAllFolderStates();
+                }
+                updateForSelection();
+            });
+            this.$restoreModalDetails.off('change.restoreFolders').on('change.restoreFolders', '.as-restore-folder', (e) => {
+                const $folder = $(e.currentTarget);
+                const checked = !!$folder.prop('checked');
+                const $dir = $folder.closest('.as-restore-dir-item');
+                if ($dir.length > 0) {
+                    const $childrenContainer = $dir.children('.as-restore-dir-children');
+                    $childrenContainer.find('.as-restore-file, .as-restore-folder').prop('checked', checked);
+                    updateAncestorFolderStates($dir);
+                } else {
+                    refreshAllFolderStates();
+                }
+                updateForSelection();
+            });
+            this.$restoreModalDetails.off('click.restoreDirToggle').on('click.restoreDirToggle', '.as-restore-dir-toggle', (e) => {
+                e.preventDefault();
+                const nodeId = String($(e.currentTarget).data('node-id') || '');
+                if (nodeId === '') return;
+                const $children = this.$restoreModalDetails.find('.as-restore-dir-children[data-node-id="' + nodeId + '"]');
+                const expand = !$children.is(':visible');
+                setDirExpanded(nodeId, expand);
+            });
+            this.$restoreModalDetails.off('input.restoreFileSearch').on('input.restoreFileSearch', '#as-restore-file-search', () => {
+                applyAdvancedSearch();
+            });
+            this.$restoreModalDetails.off('click.restoreFilesAll').on('click.restoreFilesAll', '#as-restore-files-all', () => {
+                this.$restoreModalDetails.find('.as-restore-file, .as-restore-folder').prop('checked', true);
+                refreshAllFolderStates();
+                updateForSelection();
+            });
+            this.$restoreModalDetails.off('click.restoreFilesNone').on('click.restoreFilesNone', '#as-restore-files-none', () => {
+                this.$restoreModalDetails.find('.as-restore-file, .as-restore-folder').prop('checked', false);
+                refreshAllFolderStates();
+                updateForSelection();
+            });
+            this.$restoreModalDetails.off('shown.bs.tab.restoreTabs').on('shown.bs.tab.restoreTabs', 'a[data-toggle="tab"]', () => {
+                updateForSelection();
+            });
+            refreshAllFolderStates();
             updateForSelection();
         }).fail((xhr) => {
             let msg = 'Unable to load restore details.';
@@ -1513,7 +1835,8 @@ class ALLSKYCONFIGBACKUPS {
             data: {
                 file: selectedFile,
                 selectedSections: Array.isArray(this.selectedRestoreSections) ? this.selectedRestoreSections : [],
-                selectedImageFolders: Array.isArray(this.selectedRestoreImageFolders) ? this.selectedRestoreImageFolders : []
+                selectedImageFolders: Array.isArray(this.selectedRestoreImageFolders) ? this.selectedRestoreImageFolders : [],
+                selectedFiles: Array.isArray(this.selectedRestoreFiles) ? this.selectedRestoreFiles : []
             }
         }).done((result) => {
             this.renderStatus((result && result.status) ? result.status : {});
@@ -1751,6 +2074,7 @@ class ALLSKYCONFIGBACKUPS {
                 this.pendingRestoreType = 'config';
                 this.selectedRestoreSections = [];
                 this.selectedRestoreImageFolders = [];
+                this.selectedRestoreFiles = [];
                 this.$restoreModalDetails.empty();
             });
         }

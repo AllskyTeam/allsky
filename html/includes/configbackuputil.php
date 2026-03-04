@@ -2525,7 +2525,35 @@ class CONFIGBACKUPUTIL extends UTILBASE
 
         $tarBinary = is_executable('/bin/tar') ? '/bin/tar' : 'tar';
         $useSudoTar = true;
+        $allskyStopped = false;
+        $restartWarning = '';
+        $ensureAllskyStarted = function () use (&$allskyStopped, &$steps, &$restartWarning): void {
+            if (!$allskyStopped) {
+                return;
+            }
+            $steps[] = 'Starting Allsky service';
+            $startResult = $this->controlAllskyService('start');
+            if (empty($startResult['ok'])) {
+                $restartWarning = (string)($startResult['message'] ?? 'Unable to restart allsky service after restore.');
+            }
+            $allskyStopped = false;
+        };
+        $failRestore = function (string $message) use (&$ensureAllskyStarted, &$restartWarning): array {
+            $ensureAllskyStarted();
+            if ($restartWarning !== '') {
+                $message .= ' ' . $restartWarning;
+            }
+            return ['ok' => false, 'message' => $message];
+        };
         $tarCmd = $useSudoTar ? ('sudo -n ' . $tarBinary) : $tarBinary;
+        if ($backupType === 'config') {
+            $steps[] = 'Stopping Allsky service';
+            $stopResult = $this->controlAllskyService('stop');
+            if (empty($stopResult['ok'])) {
+                return ['ok' => false, 'message' => (string)($stopResult['message'] ?? 'Unable to stop allsky service before restore.')];
+            }
+            $allskyStopped = true;
+        }
         $cmd = $tarCmd . ' -xzf ' . escapeshellarg($backupPath) .
             ' -C ' . escapeshellarg($this->allskyHome) .
             ' --no-same-owner --no-same-permissions --overwrite -m' .
@@ -2560,7 +2588,7 @@ class CONFIGBACKUPUTIL extends UTILBASE
                 if ($details !== '') {
                     $message .= ' ' . $details;
                 }
-                return ['ok' => false, 'message' => $message];
+                return $failRestore($message);
             }
         }
 
@@ -2570,17 +2598,17 @@ class CONFIGBACKUPUTIL extends UTILBASE
                 $settingsFile = $this->getSettingsFileFromArchive($backupPath);
             }
             if ($settingsFile === '') {
-                return ['ok' => false, 'message' => "Backup '$backupName' does not contain a settings file; restore is blocked."];
+                return $failRestore("Backup '$backupName' does not contain a settings file; restore is blocked.");
             }
 
             $settingsPath = $this->allskyHome . '/' . ltrim($settingsFile, '/');
             $settingsLink = $this->allskyHome . '/config/settings.json';
             if (!is_file($settingsPath)) {
-                return ['ok' => false, 'message' => "Restored settings file '$settingsFile' is missing; restore is incomplete."];
+                return $failRestore("Restored settings file '$settingsFile' is missing; restore is incomplete.");
             }
             @unlink($settingsLink);
             if (!@link($settingsPath, $settingsLink)) {
-                return ['ok' => false, 'message' => "Unable to create hard link 'config/settings.json' to '$settingsFile'."];
+                return $failRestore("Unable to create hard link 'config/settings.json' to '$settingsFile'.");
             }
 
             $ccFile = trim((string)($backupMeta['ccfile'] ?? ''));
@@ -2588,17 +2616,17 @@ class CONFIGBACKUPUTIL extends UTILBASE
                 $ccFile = $this->getCcFileFromArchive($backupPath);
             }
             if ($ccFile === '') {
-                return ['ok' => false, 'message' => "Backup '$backupName' does not contain a cc file; restore is blocked."];
+                return $failRestore("Backup '$backupName' does not contain a cc file; restore is blocked.");
             }
 
             $ccPath = $this->allskyHome . '/' . ltrim($ccFile, '/');
             $ccLink = $this->allskyHome . '/config/cc.json';
             if (!is_file($ccPath)) {
-                return ['ok' => false, 'message' => "Restored cc file '$ccFile' is missing; restore is incomplete."];
+                return $failRestore("Restored cc file '$ccFile' is missing; restore is incomplete.");
             }
             @unlink($ccLink);
             if (!@link($ccPath, $ccLink)) {
-                return ['ok' => false, 'message' => "Unable to create hard link 'config/cc.json' to '$ccFile'."];
+                return $failRestore("Unable to create hard link 'config/cc.json' to '$ccFile'.");
             }
         }
 
@@ -2616,13 +2644,21 @@ class CONFIGBACKUPUTIL extends UTILBASE
             $permissionsToApply = $this->filterPermissionsForTargets($backupMeta['permissions'], $targetsToExtract);
             $permResult = $this->applyPermissionsMetadata($permissionsToApply);
             if (empty($permResult['ok'])) {
-                return ['ok' => false, 'message' => (string)($permResult['message'] ?? 'Failed to restore file ownership/permissions.')];
+                return $failRestore((string)($permResult['message'] ?? 'Failed to restore file ownership/permissions.'));
             }
         }
+
+        $ensureAllskyStarted();
 
         $warning = '';
         if ($permissionWarnings !== '') {
             $warning = $permissionWarnings;
+        }
+        if ($restartWarning !== '') {
+            if ($warning !== '') {
+                $warning .= ' ';
+            }
+            $warning .= $restartWarning;
         }
         if (!$this->writeBackupMetadata($metadataExtra)) {
             if ($warning !== '') {

@@ -484,7 +484,7 @@ table .alert-dismissable {
 .dark input[type="text"],
 .dark input[type="number"],
 .dark select {
-	background-color: #171717;
+	background-color: #46484b;
 	color: var(--dark-text);
 	border-color: #555555;
 }

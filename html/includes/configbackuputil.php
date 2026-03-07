@@ -46,7 +46,7 @@ class CONFIGBACKUPUTIL extends UTILBASE
         return [
             '/config/settings.json',
             '/config/cc.json',
-            '/config/overlay/mytemplates/*',
+            '/config/overlay/myTemplates/*',
             '/config/overlay/images/*',
             '/config/overlay/imagethumbnails/*',
             '/config/overlay/fonts/*',

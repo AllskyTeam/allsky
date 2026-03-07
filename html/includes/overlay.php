@@ -99,6 +99,11 @@ function DisplayOverlay($image_name)
 
                         <div class="collapse navbar-collapse" id="oe-main-navbar">
                             <ul class="nav navbar-nav" id="oe-editor-toolbar">
+                                <li class="oe-toolbar-handle-wrapper">
+                                    <div class="btn btn-lg navbar-btn oe-toolbar-handle" data-toggle="tooltip" data-container="body" data-placement="top" title="Drag Toolbar">
+                                        <i class="fa-solid fa-grip-vertical"></i>
+                                    </div>
+                                </li>
                                 <li>
                                     <div class="tooltip-wrapper disabled" data-toggle="tooltip" data-container="body" data-placement="top" title="Save The Current Configuration">
                                         <div class="btn btn-lg navbar-btn oe-button disabled" id="oe-save"><i class="fa-solid fa-floppy-disk"></i></div>

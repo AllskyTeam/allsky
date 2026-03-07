@@ -39,6 +39,13 @@ class OEUIMANAGER {
     #drawRect = null
     #drawRectStartX = 0
     #drawRectStartY = 0
+    #toolbarDefaultPosition = {
+        top: 90,
+        left: 20
+    }
+    #floatingToolbarPlaceholderId = 'oe-editor-toolbar-placeholder'
+    #toolbarDockRect = null
+    #toolbarDockSnapDistance = 40
 
     constructor(imageObj) {
 
@@ -219,6 +226,8 @@ class OEUIMANAGER {
         $('#textpropgrid').off('focusin', '#pgtextlabel, #pgtextformat, #pgtextsample, #pgtextempty');
         $('#textpropgrid').off('focusout', '#pgtextlabel, #pgtextformat, #pgtextsample, #pgtextempty');
 
+        this.resetFloatingToolbar();
+
         this.#overlayLayer.destroyChildren();
         this.#transformer = new Konva.Transformer({
             resizeEnabled: false
@@ -272,6 +281,7 @@ class OEUIMANAGER {
 
         this.addFields()
 
+        this.setupFloatingToolbar()
         this.setupToolbarEvents()
         this.setupDragAndDrop()
         this.setupErrorsEvents()
@@ -291,6 +301,127 @@ class OEUIMANAGER {
 
         $('[data-toggle="tooltip"]').tooltip()
         $('.modal').on('shown.bs.modal', this.alignModal)
+    }
+
+    resetFloatingToolbar() {
+        const toolbar = $('#oe-editor-toolbar');
+        const placeholder = $('#' + this.#floatingToolbarPlaceholderId);
+
+        if (toolbar.data('ui-draggable')) {
+            toolbar.draggable('destroy');
+        }
+
+        if (placeholder.length) {
+            placeholder.replaceWith(toolbar);
+        }
+
+        toolbar.removeClass('oe-editor-toolbar-floating');
+        toolbar.css({
+            top: '',
+            left: '',
+            width: '',
+            position: ''
+        });
+    }
+
+    dockFloatingToolbar() {
+        const toolbar = $('#oe-editor-toolbar');
+        const placeholder = $('#' + this.#floatingToolbarPlaceholderId);
+
+        if (placeholder.length) {
+            placeholder.replaceWith(toolbar);
+        }
+
+        toolbar.removeClass('oe-editor-toolbar-floating');
+        toolbar.css({
+            top: '',
+            left: '',
+            width: '',
+            position: ''
+        });
+    }
+
+    setupFloatingToolbar() {
+        const toolbar = $('#oe-editor-toolbar');
+        const handle = toolbar.find('.oe-toolbar-handle');
+
+        if (!toolbar.length) {
+            return;
+        }
+
+        if (toolbar.data('ui-draggable')) {
+            toolbar.draggable('destroy');
+        }
+
+        handle.off('mousedown.oe-toolbar');
+        handle.on('mousedown.oe-toolbar', () => {
+            if (toolbar.hasClass('oe-editor-toolbar-floating')) {
+                return;
+            }
+
+            const rect = toolbar[0].getBoundingClientRect();
+            this.#toolbarDockRect = rect;
+            const placeholder = $('<div>', {
+                id: this.#floatingToolbarPlaceholderId,
+                css: {
+                    display: 'none'
+                }
+            });
+
+            toolbar.after(placeholder);
+            $('body').append(toolbar);
+
+            toolbar
+                .addClass('oe-editor-toolbar-floating')
+                .css({
+                    top: rect.top,
+                    left: rect.left,
+                    width: toolbar[0].scrollWidth,
+                    position: 'fixed'
+                });
+        });
+
+        handle.off('dblclick.oe-toolbar');
+        handle.on('dblclick.oe-toolbar', () => {
+            if (toolbar.hasClass('oe-editor-toolbar-floating')) {
+                this.dockFloatingToolbar();
+            }
+        });
+
+        toolbar
+            .draggable({
+                handle: '.oe-toolbar-handle',
+                containment: 'window',
+                scroll: false,
+                stop: () => {
+                    if (!toolbar.hasClass('oe-editor-toolbar-floating') || this.#toolbarDockRect === null) {
+                        return;
+                    }
+
+                    const rect = toolbar[0].getBoundingClientRect();
+                    const navbar = toolbar.closest('body').find('#oe-main-navbar').first();
+                    let overlapsNavbar = false;
+
+                    if (navbar.length) {
+                        const navbarRect = navbar[0].getBoundingClientRect();
+                        overlapsNavbar =
+                            rect.left < navbarRect.right &&
+                            rect.right > navbarRect.left &&
+                            rect.top < navbarRect.bottom &&
+                            rect.bottom > navbarRect.top;
+                    }
+
+                    const withinDockZone =
+                        Math.abs(rect.top - this.#toolbarDockRect.top) <= this.#toolbarDockSnapDistance &&
+                        Math.abs(rect.left - this.#toolbarDockRect.left) <= this.#toolbarDockSnapDistance;
+
+                    if (withinDockZone) {
+                        this.dockFloatingToolbar();
+                    } else if (overlapsNavbar) {
+                        this.dockFloatingToolbar();
+                    }
+                }
+            });
     }
 
     setupImageManagerEvents() {

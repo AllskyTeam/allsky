@@ -69,6 +69,53 @@
     height: auto !important;
 }
 
+#oeeditor .navbar .container-fluid {
+    position: relative;
+}
+
+#oe-editor-toolbar.oe-editor-toolbar-floating {
+    position: fixed;
+    z-index: 3000;
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 0;
+    padding: 4px 8px;
+    margin: 0;
+    white-space: nowrap;
+    background: rgba(34, 34, 34, 0.92);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 6px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    cursor: move;
+}
+
+#oe-editor-toolbar.oe-editor-toolbar-floating > li {
+    float: none;
+}
+
+#oe-editor-toolbar.oe-editor-toolbar-floating .navbar-btn {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+#oe-editor-toolbar .oe-toolbar-handle {
+    cursor: grab;
+    opacity: 0.75;
+}
+
+#oe-editor-toolbar .oe-toolbar-handle:hover,
+#oe-editor-toolbar .oe-toolbar-handle:focus {
+    opacity: 1;
+}
+
+#oe-editor-toolbar .oe-toolbar-handle:active {
+    cursor: grabbing;
+}
+
+#oe-editor-toolbar .oe-toolbar-handle-wrapper {
+    user-select: none;
+}
+
 .navbar-default .navbar-nav>.active>a, .navbar-default .navbar-nav>.active>a:focus, .navbar-default .navbar-nav>.active>a:hover {
     background: none !important;
 }

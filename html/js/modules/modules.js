@@ -1195,6 +1195,132 @@ class MODULESEDITOR {
 						}
 					}
 
+					if (fieldType == 'dht22') {
+						let retryId = false
+						let retryDelayId = false
+						let powerId = false
+						let fieldValue = '';
+
+						if (fieldData.retry !== undefined) {
+							retryId = fieldData.retry.id
+						}
+						if (fieldData.delay !== undefined) {
+							retryDelayId = fieldData.delay.id
+						}
+						if (fieldData.power !== undefined) {
+							powerId = fieldData.power.id
+						}
+
+						inputHTML = '<div class="row">'
+
+						if (retryId !== false) {
+							fieldValue = moduleData.metadata.arguments[retryId];
+							if (fieldValue === undefined) {
+								fieldValue = ''
+							}						
+							inputHTML += `	<div class="col-md-3"><input class="form-control" id="${retryId}" name="${retryId}" value="${fieldValue}" type="number" min="0" max="10" step="1"></div>`
+						}
+						if (retryDelayId !== false) {
+							fieldValue = moduleData.metadata.arguments[retryDelayId];
+							if (fieldValue === undefined) {
+								fieldValue = ''
+							}		
+							inputHTML += `	<div class="col-md-3"><input class="form-control" id="${retryDelayId}" name="${retryDelayId}" value="${fieldValue}" type="number" min="0" max="10" step="1"></div>`
+						}
+
+						fieldValue = ''
+						if (powerId !== false) {
+							fieldValue = moduleData.metadata.arguments[powerId];
+							if (fieldValue === undefined) {
+								fieldValue = ''
+							}									
+						}
+						inputHTML += '<div class="col-md-3">'
+						inputHTML += `<input id="${powerId}" name="${powerId}" class="form-control" disabled="disabled" value="${fieldValue}" ${required} ${fieldDescription}>'`;
+						inputHTML += '</div>'
+						inputHTML += `
+								<div class="col-md-3">
+									<button type="button" class="btn btn-default" id="open-gpio-${powerId}" data-source="${powerId}">...</button>
+									<button type="button" class="btn btn-default" id="reset-gpio-${powerId}" data-source="${powerId}"><i class="fa-solid fa-rotate-right"></i></button>
+								</div>
+						`;
+						inputHTML += '</div>'
+
+						inputHTML += '<div class="row help-block">'
+						inputHTML += `	<div class="col-md-3">Retry Count</div>`
+						inputHTML += `	<div class="col-md-3">Retry Delay</div>`
+						inputHTML += `	<div class="col-md-3">Power Pin</div>`
+						inputHTML += '</div>'
+
+						$(document).off('click', '#reset-gpio-' + powerId)
+						$(document).on('click', '#reset-gpio-' + powerId, (event) => {
+							let el = $(event.target).data('source');
+							$('#' + el).val('');
+						});
+
+						$(document).off('click', '#open-gpio-' + powerId)
+						$(document).on('click', '#open-gpio-' + powerId, (event) => {
+							let el = $(event.target).data('source');
+							let data = $('#' + el).val();
+
+							$.allskyGPIO({
+								id: powerId,
+								gpio: parseInt(data),
+								gpioSelected: function (gpio) {
+									$('#' + powerId).val(gpio)
+								}
+							});
+						});
+								
+					}
+
+					if (fieldType == 'offset') {
+						let tempId = false
+						let pressureId = false
+						let humidityId = false
+
+						if (fieldData.temp !== undefined) {
+							tempId = fieldData.temp.id
+						}
+						if (fieldData.pressure !== undefined) {
+							pressureId = fieldData.pressure.id
+						}
+						if (fieldData.humidity !== undefined) {
+							humidityId = fieldData.humidity.id
+						}
+
+						inputHTML = '<div class="row">'
+						if (tempId !== false) {
+							fieldValue = moduleData.metadata.arguments[tempId];
+							if (fieldValue === undefined) {
+								fieldValue = ''
+							}
+							inputHTML += `	<div class="col-md-4"><input class="form-control" id="${tempId}" name="${tempId}" value="${fieldValue}" type="number" min="-100" max="100" step="0.5"></div>`
+						}
+						if (pressureId !== false) {
+							fieldValue = moduleData.metadata.arguments[pressureId];
+							if (fieldValue === undefined) {
+								fieldValue = ''
+							}
+							inputHTML += `	<div class="col-md-4"><input class="form-control" id="${pressureId}" name="${pressureId}" value="${fieldValue}" type="number" min="-1000" max="1000" step="1"></div>`
+						}
+						if (humidityId !== false) {
+							fieldValue = moduleData.metadata.arguments[humidityId];
+							if (fieldValue === undefined) {
+								fieldValue = ''
+							}
+							inputHTML += `	<div class="col-md-4"><input class="form-control" id="${humidityId}" name="${humidityId}" value="${fieldValue}" type="number" min="-100" max="99999" step="1"></div>`
+						}
+						inputHTML += '</div>'
+						
+						inputHTML += '<div class="row help-block">'
+						inputHTML += `	<div class="col-md-4">Temp</div>`
+						inputHTML += `	<div class="col-md-4">Pressure</div>`
+						inputHTML += `	<div class="col-md-4">Humidity</div>`												
+						inputHTML += '</div>'
+
+					}
+
 					if (fieldType == 'html') {
 					}
 				}

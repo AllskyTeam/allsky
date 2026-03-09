@@ -11,6 +11,7 @@ class MODULEUTIL extends UTILBASE {
     {
         return [
             'AllskyVariables' => ['get'],
+            'AllskyKameraStatus' => ['get'],
             'CheckModuleDependencies' => ['post'],
             'GetExtraDataFile' => ['post'],
             'HassSensors' => ['post'],
@@ -21,6 +22,7 @@ class MODULEUTIL extends UTILBASE {
             'Reset' => ['get'],
             'Restore' => ['get'],
             'SerialPorts' => ['get'],
+            'SunData' => ['get'],
             'Template' => ['get'],
             'TemplateList' => ['get'],
             'TestModule' => ['post'],
@@ -239,6 +241,83 @@ class MODULEUTIL extends UTILBASE {
                 
         $formattedJSON = json_encode($result, JSON_PRETTY_PRINT);
         $this->sendResponse($formattedJSON);
+    }
+
+    public function getAllskyKameraStatus() {
+        $owner = getenv('ALLSKY_OWNER');
+        if ($owner === false || $owner === '') {
+            $owner = get_current_user();
+        }
+
+        $homeDir = '';
+        if (function_exists('posix_getpwnam')) {
+            $userInfo = @posix_getpwnam($owner);
+            if ($userInfo !== false && isset($userInfo['dir'])) {
+                $homeDir = $userInfo['dir'];
+            }
+        }
+
+        if ($homeDir === '') {
+            $homeDir = rtrim((string)getenv('HOME'), '/');
+        }
+
+        if ($homeDir === '') {
+            $homeDir = '/home/' . $owner;
+        }
+
+        $secretFile = $homeDir . '/AllSkyKamera/askutils/ASKsecret.py';
+        $installed = file_exists($secretFile);
+
+        $result = [
+            'installed' => $installed,
+            'configured' => $installed,
+            'path' => $secretFile
+        ];
+
+        $this->sendResponse(json_encode($result, JSON_PRETTY_PRINT));
+    }
+
+    public function getSunData() {
+        global $settings_array;
+
+        $angle = (string)$settings_array['angle'];
+        $lat = (string)$settings_array['latitude'];
+        $lon = (string)$settings_array['longitude'];
+        $result = [
+            'angle' => $angle,
+            'lat' => $lat,
+            'lon' => $lon,
+            'sunrise' => '',
+            'sunset' => '',
+            'tod' => ''
+        ];
+
+        $listOutput = [];
+        $pollOutput = [];
+        $retval = 0;
+        $angleArg = escapeshellarg($angle);
+        $latArg = escapeshellarg($lat);
+        $lonArg = escapeshellarg($lon);
+
+        exec("sunwait list angle $angleArg $latArg $lonArg", $listOutput);
+        if (isset($listOutput[0])) {
+            $parts = array_map('trim', explode(',', $listOutput[0], 2));
+            if (isset($parts[0])) {
+                $result['sunrise'] = $parts[0];
+            }
+            if (isset($parts[1])) {
+                $result['sunset'] = $parts[1];
+            }
+        }
+
+        exec("sunwait poll exit set angle $angleArg $latArg $lonArg", $pollOutput, $retval);
+        if ($retval == 2) {
+            $result['tod'] = 'day';
+        } else if ($retval == 3) {
+            $result['tod'] = 'night';
+        }
+
+        $this->sendResponse(json_encode($result, JSON_PRETTY_PRINT));
     }
 
     public function getModules() {

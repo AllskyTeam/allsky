@@ -326,3 +326,7 @@ body.dark .navbar-default .navbar-form {
   background: #2c2c2c;
   border-color: #444;
 }
+
+body.dark .alert a {
+  color: #66aaff !important;
+}

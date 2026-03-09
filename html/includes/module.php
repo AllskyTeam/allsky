@@ -86,6 +86,7 @@ function DisplayModule()
 
 <script src="/js/jquery-satpicker/jquery-satpicker.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
+<script src="js/jquery-allskykamera/jquery-allskykamera.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
 <div class="panel panel-allsky">
 	<div class="panel-heading"><i class="<?php echo $pageIcon ?>"></i> <?php echo $pageHeaderTitle ?></div>

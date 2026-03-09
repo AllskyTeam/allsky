@@ -648,8 +648,11 @@ class MODULESEDITOR {
 			'position': [],
 			'urlcheck': [],
 			'chart': [],
-			'satpicker': []
+			'satpicker': [],
+			'allskykamera': []
 		}
+
+		var askHack = false
 
 		target = $(target)
 		let module = target.data('module')
@@ -1030,6 +1033,50 @@ class MODULESEDITOR {
 								}
 							});
 						});
+					}
+
+					if (fieldType == 'allskykamera') {
+						let allskyKameraStatus = null;
+						$.ajax({
+							url: 'includes/moduleutil.php?request=AllskyKameraStatus',
+							type: 'GET',
+							dataType: 'json',
+							cache: false,
+							async: false,
+							success: function(result) {
+								allskyKameraStatus = result;
+							}
+						});
+
+						inputHTML = `<input type="hidden" id="${key}" name="${key}" class="form-control">`
+						if (allskyKameraStatus && allskyKameraStatus.installed && allskyKameraStatus.configured) {
+							inputHTML += `<button type="button" class="btn btn-primary" id="open-allskykamera-${key}" data-source="${key}">Edit</button>`;
+							
+							controls['allskykamera'].push({
+								'id': '#' + key,
+								'config': {
+									fieldValue: fieldValue
+								}
+							})
+
+							$(document).allskykamera({
+									variablesUrl: "includes/moduleutil.php?request=VariableList&showempty=no",
+									sunDataUrl: "includes/moduleutil.php?request=SunData",
+									onSave: (value) => {
+										$(`#${key}`).val(value)
+									},
+									configText: fieldValue,
+									frequencyMinutes: 15,
+									dailyLimit: 5000
+							});
+							
+							$(document).off('click', `#open-allskykamera-${key}`)
+							$(document).on('click', `#open-allskykamera-${key}`, (event) => {
+								$(document).allskykamera("open");
+							});
+						} else {
+							askHack = true;
+						}
 					}
 
 					if (fieldType == 'select') {
@@ -1740,6 +1787,10 @@ class MODULESEDITOR {
 			}
 		}
 
+		Object.entries(controls['allskykamera']).forEach(([key, value]) => {
+			$(value['id']).val(value['config']['fieldValue'])
+		})
+
 		Object.entries(controls['spectrum']).forEach(([key, value]) => {
 			$(value['id']).spectrum(value['config'])
 		})
@@ -1826,6 +1877,21 @@ class MODULESEDITOR {
 		});
 		$('.as-module-dependency-select').trigger('as-dependent');
 
+
+		if (askHack) {
+			$('#allsky_allskykameraGeneral').empty();
+			errorHTML += `
+				<div class="panel panel-default">
+  				<div class="panel-heading">
+    				<h3 class="panel-title">Error locating the AllskyKamera Software</h3>
+  				</div>
+  				<div class="panel-body">
+    				AllskyKamera is not installed or configured. Please refer to <a href="https://allskykamera.space" class="external" target="_blank">The AllkyKamera Network</a> for details on howto join and install the software
+  				</div>
+				</div>`;
+			
+			$('#allsky_allskykameraGeneral').append(errorHTML);
+		}
 
 		let centerModal = true
 		if ('centersettings' in moduleData.metadata) {

@@ -38,6 +38,7 @@ config/
 env.json
 variables.json
 html/allsky/configuration.json
+html/allsky/images/[0-9][0-9][0-9][0-9]/
 html/allsky/viewSettings/
 scripts/allsky-config
 scripts/functions.php

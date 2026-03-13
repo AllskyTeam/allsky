@@ -32,7 +32,22 @@ function ListImages() {
 		return;
 	}
 
-	$dir = ALLSKY_IMAGES . "/$chosen_day";
+	// Check if we should display archived images
+	$archived = getVariableOrDefault($_GET, 'archived', 0);
+	
+	if ($archived == 1) {
+		// Display from images/YYYY/YYYYMMDD/
+		$year = substr($chosen_day, 0, 4);
+		$dir = ALLSKY_IMAGES . "/images/$year/$chosen_day";
+		$web_path = "/images/images/$year/$chosen_day";
+		$title_suffix = " (Archived)";
+	} else {
+		// Display from regular day directory
+		$dir = ALLSKY_IMAGES . "/$chosen_day";
+		$web_path = "/images/$chosen_day";
+		$title_suffix = "";
+	}
+
 	$images = getValidImageNames($dir, false);	// false == get whole list
 	if (count($images) > 0) {
 		if ($imagesSortOrder === "descending") {
@@ -48,7 +63,7 @@ function ListImages() {
 	}
 
 	if (count($images) == 0) {
-		DisplayImageError("Displaying images", "There are no images for $chosen_day");		
+		DisplayImageError("Displaying images", "There are no images for $chosen_day$title_suffix");		
 	}
 
 	$width = getVariableOrDefault($settings_array, 'thumbnailsizex', 100);
@@ -57,8 +72,8 @@ function ListImages() {
 	echo '<div id="lightgallery">';
 	foreach ($images as $image) {
 
-    echo "<a href='/images/$chosen_day/$image' data-lg-size='1600-2400'>";
-    echo "    <img alt='$image' width=$width height=$height src='/images/$chosen_day/thumbnails/$image' loading='lazy' decoding='async' fetchpriority='low' />";
+    echo "<a href='$web_path/$image' data-lg-size='1600-2400'>";
+    echo "    <img alt='$image' width=$width height=$height src='$web_path/thumbnails/$image' loading='lazy' decoding='async' fetchpriority='low' />";
     echo '</a>';
 
 	}

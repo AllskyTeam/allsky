@@ -63,12 +63,21 @@ class ALLSKYSAVEINTERMMEDIATEIMAGE(ALLSKYMODULEBASE):
 			save_path = self.get_param('imagefolder', '', str)   
 			path = allsky_shared.convertPath(save_path)
 			if path is not None:
-				path = os.path.join(path, os.path.basename(allsky_shared.CURRENTIMAGEPATH))
-				if not self.__write_image(allsky_shared.image, path, quality):
-					result = f'Failed to save image {path}'
+     
+				p = pathlib.Path(path)
+
+				# If the path already contains a file extension, treat it as a filename
+				if p.suffix:
+						final_path = str(p)
+				else:
+						# Otherwise treat it as a directory
+						final_path = os.path.join(path, os.path.basename(allsky_shared.CURRENTIMAGEPATH))
+         
+				if not self.__write_image(allsky_shared.image, final_path, quality):
+					result = f'Failed to save image {final_path}'
 					self.log(0, f'ERROR: {result}')
 				else:
-					result = f'Image {path} Saved'
+					result = f'Image {final_path} Saved'
 					self.log(1, f'INFO: {result}')
 			else:
 				result = f'Invalid path {save_path}'

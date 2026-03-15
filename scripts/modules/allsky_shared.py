@@ -760,6 +760,12 @@ def getSetting(settingName):
     except Exception:
         pass
 
+    try:
+        if not result:
+            result = get_secrets(settingName)
+    except Exception:
+        pass
+            
     return result
 
 

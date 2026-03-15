@@ -237,21 +237,21 @@ function DisplayModule()
             <div class="modal-body">
                 <form id="oe-debug-dialog-form" class="form-horizontal">
                     <div class="form-group">
-                        <label for="checkbox" class="control-label col-xs-4"></label> 
+                        <label for="autoenable" class="control-label col-xs-4">Auto Enable</label> 
                         <div class="col-xs-8">
-                            <label class="checkbox-inline">
-                            <input type="checkbox" name="autoenable" id="autoenable">
-                                Auto Enable
+                            <label class="el-switch el-switch-sm el-switch-green">
+                                <input type="checkbox" id="autoenable">
+                                <span class="el-switch-style"></span>
                             </label>
                             <p class="help-block">Auto enable modules when selected</p>
                         </div>
                     </div>                                      
                     <div class="form-group">
-                        <label for="checkbox" class="control-label col-xs-4"></label> 
+                        <label for="debugmode" class="control-label col-xs-4">Debug Mode</label> 
                         <div class="col-xs-8">
-                            <label class="checkbox-inline">
-                            <input type="checkbox" name="debugmode" id="debugmode">
-                                Debug Mode
+                            <label class="el-switch el-switch-sm el-switch-green">
+                                <input type="checkbox" id="debugmode">
+                                <span class="el-switch-style"></span>
                             </label>
                             <p class="help-block">Enable debug mode. An additional icon will appear inthe toolbar showing the last results of each running module</p>
                         </div>

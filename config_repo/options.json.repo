@@ -1,21 +1,8 @@
 [
 {
-"name" : "daynighttab========================================",
-"display" : false,
-"label" : "Day/Night Settings",
-"type" : "header-tab"
-},
-{
 "name" : "daytimesettingsheader",
 "label" : "Daytime Settings",
 "type" : "header"
-},
-{
-"name" : "daynightcolumns",
-"display" : false,
-"label" : "Setting, Day Value, Description",
-"candrop" : "Description",
-"type" : "header-column"
 },
 {
 "name" : "takedaytimeimages",
@@ -36,8 +23,7 @@
 "label" : "Save",
 "label_prefix" : "Daytime",
 "type" : "boolean",
-"carryforward" : true,
-"booldependson" : "takedaytimeimages"
+"carryforward" : true
 },
 {
 "name" : "dayautoexposure",
@@ -47,64 +33,59 @@
 "label_prefix" : "Daytime",
 "type" : "boolean",
 "usage" : "capture",
-"booldependson" : "takedaytimeimages",
 "action" : "reload"
 },
 {
 "name" : "daymaxautoexposure",
-"minimum" : "_min",
-"maximum" : "_max",
-"default" : "_default",
+"minimum" : 26,
+"maximum" : 112015,
+"default" : 60000,
 "description" : "Maximum daytime <span class='WebUISetting'>Auto-Exposure</span> time in milliseconds (1000ms = 1 sec).<br>Click <a allsky='true' external='true' href='/documentation/settings/allsky.html#daymaxautoexposure'>here</a> to see how this setting impacts the time between exposures.",
 "label" : "Max Auto-Exposure",
 "label_prefix" : "Daytime",
 "type" : "float",
 "usage" : "capture",
-"booldependson" : "takedaytimeimages AND daymaxautoexposure",
 "action" : "reload"
 },
 {
 "name" : "dayexposure",
-"minimum" : "_min",
-"maximum" : "_max",
-"default" : "day_default",
+"minimum" : 0.026,
+"maximum" : 112015.553,
+"default" : 500,
 "description" : "Manual exposure time in milliseconds (1000ms = 1 sec). Can be a fraction.<br>If daytime <span class='WebUISetting'>Auto-Exposure</span> is enabled, this number is used as a starting point.<br>Click <a allsky='true' external='true' href='/documentation/settings/allsky.html#dayexposure'>here</a> to see how this setting impacts the time between exposures.",
 "label" : "Manual Exposure",
 "label_prefix" : "Daytime",
 "type" : "float",
 "usage" : "capture",
-"booldependson" : "takedaytimeimages",
 "action" : "reload"
 },
 {
 "name" : "daymean",
-"minimum" : 0.0,
-"maximum" : 1.0,
-"default" : "day_default",
+"minimum" : 0,
+"maximum" : 1,
+"default" : 0.5,
 "description" : "The target mean brightness level when <span class='WebUISetting'>Auto-Exposure</span> is on. <span class='WebUIValue'>1.0</span> is pure white.<br>Best used when <span class='WebUISetting'>Auto-Exposure</span> and <span class='WebUISetting'>Auto-Gain</span> are on.<br><span class='WebUIValue'>0</span> disables this auto-exposure mode.",
 "label" : "Mean Target",
 "label_prefix" : "Daytime",
 "type" : "float",
 "usage" : "capture",
-"booldependson" : "takedaytimeimages",
 "action" : "reload"
 },
 {
 "name" : "daymeanthreshold",
-"minimum" : "day_min",
-"maximum" : "day_max",
-"default" : "day_default",
+"minimum" : 0.01,
+"maximum" : 1,
+"default" : 0.1,
 "description" : "When using <span class='WebUISetting'>Mean Target</span> this specifies how close to the target the brightness should be.",
 "label" : "Mean Threshold",
 "label_prefix" : "Daytime",
 "type" : "float",
 "usage" : "capture",
-"booldependson" : "takedaytimeimages AND daymean",
 "action" : "reload"
 },
 {
 "name" : "daydelay",
-"minimum" : "_min",
+"minimum" : 0,
 "maximum" : "none",
 "default" : 30000,
 "description" : "Delay between daytime images in milliseconds (1000ms = 1 sec).",
@@ -113,44 +94,40 @@
 "type" : "integer",
 "usage" : "capture",
 "carryforward" : true,
-"booldependson" : "takedaytimeimages",
 "action" : "reload"
 },
 {
 "name" : "dayautogain",
-"default" : "_default",
+"default" : true,
 "description" : "Enable to use dayime auto-gain.",
 "label" : "Auto-Gain",
 "label_prefix" : "Daytime",
 "type" : "boolean",
 "usage" : "capture",
-"booldependson" : "takedaytimeimages",
 "action" : "reload"
 },
 {
 "name" : "daymaxautogain",
-"minimum" : "_min",
-"maximum" : "_max",
-"default" : "_default",
+"minimum" : 1.123,
+"maximum" : 16,
+"default" : 16,
 "description" : "Maximum gain when <span class='WebUISetting'>Auto-Gain</span> is enabled.",
 "label" : "Max Auto-Gain",
 "label_prefix" : "Daytime",
 "type" : "float",
 "usage" : "capture",
-"booldependson" : "takedaytimeimages AND dayautogain",
 "action" : "reload"
 },
 {
 "name" : "daygain",
-"minimum" : "_min",
-"maximum" : "_max",
-"default" : "day_default",
+"minimum" : 1.123,
+"maximum" : 16,
+"default" : 1.123,
 "description" : "Manually sets the light sensitivity of the camera.<br>A high number returns a brighter image but more noise. Can normally leave at the minimum value for daytime.",
 "label" : "Gain",
 "label_prefix" : "Daytime",
 "type" : "float",
 "usage" : "capture",
-"booldependson" : "takedaytimeimages",
 "action" : "reload"
 },
 {
@@ -161,8 +138,7 @@
 "description" : "Amount to stretch daytime images.  <span class='WebUIValue'>0</span> means don't stretch.",
 "label" : "Stretch Amount",
 "label_prefix" : "Daytime",
-"type" : "integer",
-"booldependson" : "takedaytimeimages"
+"type" : "integer"
 },
 {
 "name" : "imagestretchmidpointdaytime",
@@ -172,8 +148,7 @@
 "description" : "Mid point of image stretch.<br>Lower numbers brighten darker parts of image; higher numbers brighten lighter parts.<br>Only applies if <span class='WebUISetting'>Stretch Amount</span> is greater than 0.",
 "label" : "Stretch Mid Point",
 "label_prefix" : "Daytime",
-"type" : "percent",
-"booldependson" : "takedaytimeimages"
+"type" : "percent"
 },
 {
 "name" : "daybin",
@@ -184,49 +159,43 @@
 "type" : "select_integer",
 "usage" : "capture",
 "options" : [
-	"bin_values"
+	{"value" : 1, "label" : "1x1"},
+	{"value" : 2, "label" : "2x2"}
 ],
-"booldependson" : "takedaytimeimages",
 "action" : "reload"
 },
 {
 "name" : "dayawb",
-"display" : "_display",
 "default" : false,
 "description" : "Sets auto white balance so the camera adjusts the color.",
 "label" : "Auto White Balance",
 "label_prefix" : "Daytime",
 "type" : "boolean",
 "usage" : "capture",
-"booldependson" : "takedaytimeimages",
 "action" : "reload"
 },
 {
 "name" : "daywbr",
-"display" : "_display",
-"minimum" : "_min",
-"maximum" : "_max",
-"default" : "_default",
+"minimum" : 0,
+"maximum" : 32,
+"default" : 2.5,
 "description" : "Red component for the white balance.<br>When <span class='WebUISetting'>Auto White Balance</span> is enabled, this number is a starting point.",
 "label" : "Red Balance",
 "label_prefix" : "Daytime",
 "type" : "float",
 "usage" : "capture",
-"booldependson" : "takedaytimeimages AND dayawb",
 "action" : "reload"
 },
 {
 "name" : "daywbb",
-"display" : "_display",
-"minimum" : "_min",
-"maximum" : "_max",
-"default" : "_default",
+"minimum" : 0,
+"maximum" : 32,
+"default" : 2,
 "description" : "Blue component for the white balance.<br>When <span class='WebUISetting'>Auto White Balance</span> is enabled, this number is a starting point.",
 "label" : "Blue Balance",
 "label_prefix" : "Daytime",
 "type" : "float",
 "usage" : "capture",
-"booldependson" : "takedaytimeimages AND dayawb",
 "action" : "reload"
 },
 {
@@ -239,39 +208,10 @@
 "label_prefix" : "Daytime",
 "type" : "integer",
 "usage" : "capture",
-"booldependson" : "takedaytimeimages AND dayautoexposure",
-"action" : "reload"
-},
-{
-"name" : "dayenablecooler",
-"display" : "_display",
-"default" : false,
-"description" : "Enable to use cooling (on cooled cameras only).",
-"label" : "Cooling",
-"label_prefix" : "Daytime",
-"type" : "boolean",
-"usage" : "capture",
-"carryforward" : true,
-"booldependson" : "takedaytimeimages",
-"action" : "reload"
-},
-{
-"name" : "daytargettemp",
-"display" : "_display",
-"minimum" : "_min",
-"maximum" : "_max",
-"default" : "_default",
-"description" : "Sensor's target temperature <i>when cooler is enabled</i> (degrees Celsius).",
-"label" : "Target Temp.",
-"label_prefix" : "Daytime",
-"type" : "integer",
-"usage" : "capture",
-"booldependson" : "takedaytimeimages AND dayenablecooler",
 "action" : "reload"
 },
 {
 "name" : "daytuningfile",
-"display" : "_display",
 "default" : "",
 "description" : "Name of the optional day camera tuning file to use.<br>See the documentation for a <a allsky='true' external='true' href='/documentation/settings/allsky.html#daytuningfile'>description of this setting</a>.",
 "label" : "Tuning File",
@@ -280,10 +220,8 @@
 "usage" : "capture",
 "checkchanges" : true,
 "optional" : true,
-"booldependson" : "takedaytimeimages",
 "action" : "restart"
 },
-
 {
 "name" : "nighttimesettingsheader",
 "label" : "Nighttime Settings",
@@ -308,8 +246,7 @@
 "label" : "Save",
 "label_prefix" : "Nighttime",
 "type" : "boolean",
-"carryforward" : true,
-"booldependson" : "takenighttimeimages"
+"carryforward" : true
 },
 {
 "name" : "nightautoexposure",
@@ -323,22 +260,21 @@
 },
 {
 "name" : "nightmaxautoexposure",
-"minimum" : "_min",
-"maximum" : "_max",
-"default" : "_default",
+"minimum" : 26,
+"maximum" : 112015,
+"default" : 60000,
 "description" : "Maximum nighttime <span class='WebUISetting'>Auto-Exposure</span> time in milliseconds (1000ms = 1 sec).",
 "label" : "Max Auto-Exposure",
 "label_prefix" : "Nighttime",
 "type" : "float",
 "usage" : "capture",
-"booldependson" : "nightautoexposure",
 "action" : "reload"
 },
 {
 "name" : "nightexposure",
-"minimum" : "_min",
-"maximum" : "_max",
-"default" : "night_default",
+"minimum" : 0.026,
+"maximum" : 112015.553,
+"default" : 10000,
 "description" : "Manual exposure time in milliseconds (1000ms = 1 sec). Can be a fraction.<br>If nighttime <span class='WebUISetting'>Auto-Exposure</span> is enabled, this number is used as a starting point.",
 "label" : "Manual Exposure",
 "label_prefix" : "Nighttime",
@@ -348,9 +284,9 @@
 },
 {
 "name" : "nightmean",
-"minimum" : 0.0,
-"maximum" : 1.0,
-"default" : "night_default",
+"minimum" : 0,
+"maximum" : 1,
+"default" : 0.2,
 "description" : "The target mean brightness level when <span class='WebUISetting'>Auto-Exposure</span> is on. <span class='WebUIValue'>1.0</span> is pure white.<br>Best used when <span class='WebUISetting'>Auto-Exposure</span> and <span class='WebUISetting'>Auto-Gain</span> are on.<br><span class='WebUIValue'>0</span> disables this auto-exposure mode.",
 "label" : "Mean Target",
 "label_prefix" : "Nighttime",
@@ -360,20 +296,19 @@
 },
 {
 "name" : "nightmeanthreshold",
-"minimum" : "night_min",
-"maximum" : "night_max",
-"default" : "day_default",
+"minimum" : 0.01,
+"maximum" : 1,
+"default" : 0.1,
 "description" : "When using <span class='WebUISetting'>Mean Target</span> this specifies how close to the target the brightness should be.",
 "label" : "Mean Threshold",
 "label_prefix" : "Nighttime",
 "type" : "float",
 "usage" : "capture",
-"booldependson" : "nightmean",
 "action" : "reload"
 },
 {
 "name" : "nightdelay",
-"minimum" : "_min",
+"minimum" : 0,
 "maximum" : "none",
 "default" : 30000,
 "description" : "Delay between nighttime images in milliseconds (1000ms = 1 sec).",
@@ -386,7 +321,7 @@
 },
 {
 "name" : "nightautogain",
-"default" : "_default",
+"default" : true,
 "description" : "Enable to use nighttime auto-gain.",
 "label" : "Auto-Gain",
 "label_prefix" : "Nighttime",
@@ -396,22 +331,21 @@
 },
 {
 "name" : "nightmaxautogain",
-"minimum" : "_min",
-"maximum" : "_max",
-"default" : "_default",
+"minimum" : 1.123,
+"maximum" : 16,
+"default" : 16,
 "description" : "Maximum gain when <span class='WebUISetting'>Auto-Gain</span> is enabled.",
 "label" : "Max Auto-Gain",
 "label_prefix" : "Nighttime",
 "type" : "float",
 "usage" : "capture",
-"booldependson" : "nightautogain",
 "action" : "reload"
 },
 {
 "name" : "nightgain",
-"minimum" : "_min",
-"maximum" : "_max",
-"default" : "night_default",
+"minimum" : 1.123,
+"maximum" : 16,
+"default" : 8,
 "description" : "Manually sets the light sensitivity of the camera.<br>A high number returns a brighter image but more noise.",
 "label" : "Gain",
 "label_prefix" : "Nighttime",
@@ -427,8 +361,7 @@
 "description" : "Amount to stretch nighttime images.  <span class='WebUIValue'>0</span> means don't stretch.",
 "label" : "Stretch Amount",
 "label_prefix" : "Nighttime",
-"type" : "integer",
-"booldependson" : "takenighttimeimages"
+"type" : "integer"
 },
 {
 "name" : "imagestretchmidpointnighttime",
@@ -438,8 +371,7 @@
 "description" : "Mid point of image stretch.<br>Lower numbers brighten darker parts of image; higher numbers brighten lighter parts.<br>Only applies if <span class='WebUISetting'>Stretch Amount</span> is greater than 0.",
 "label" : "Stretch mid point",
 "label_prefix" : "Nighttime",
-"type" : "percent",
-"booldependson" : "takenighttimeimages"
+"type" : "percent"
 },
 {
 "name" : "nightbin",
@@ -450,13 +382,13 @@
 "type" : "select_integer",
 "usage" : "capture",
 "options" : [
-	"bin_values"
+	{"value" : 1, "label" : "1x1"},
+	{"value" : 2, "label" : "2x2"}
 ],
 "action" : "reload"
 },
 {
 "name" : "nightawb",
-"display" : "_display",
 "default" : false,
 "description" : "Enable to use auto white balance so the camera adjusts the color.<br>NOTE: enabling this can <strong>significantly</strong> increase the time needed to capture a nighttime image, so it's usually best to disable this at night.",
 "label" : "Auto White Balance",
@@ -467,30 +399,26 @@
 },
 {
 "name" : "nightwbr",
-"display" : "_display",
-"minimum" : "_min",
-"maximum" : "_max",
-"default" : "_default",
+"minimum" : 0,
+"maximum" : 32,
+"default" : 2.5,
 "description" : "Red component for the white balance.<br>When <span class='WebUISetting'>Auto White Balance</span> is enabled, this number is a starting point.",
 "label" : "Red Balance",
 "label_prefix" : "Nighttime",
 "type" : "float",
 "usage" : "capture",
-"booldependsoff" : "nightawb",
 "action" : "reload"
 },
 {
 "name" : "nightwbb",
-"display" : "_display",
-"minimum" : "_min",
-"maximum" : "_max",
-"default" : "_default",
+"minimum" : 0,
+"maximum" : 32,
+"default" : 2,
 "description" : "Blue component for the white balance.<br>When <span class='WebUISetting'>Auto White Balance</span> is enabled, this number is a starting point.",
 "label" : "Blue Balance",
 "label_prefix" : "Nighttime",
 "type" : "float",
 "usage" : "capture",
-"booldependsoff" : "nightawb",
 "action" : "reload"
 },
 {
@@ -503,38 +431,10 @@
 "label_prefix" : "Nighttime",
 "type" : "integer",
 "usage" : "capture",
-"booldependson" : "nightautoexposure",
-"action" : "reload"
-},
-{
-"name" : "nightenablecooler",
-"display" : "_display",
-"default" : false,
-"description" : "Enable to use cooling (on cooled cameras only).",
-"label" : "Cooling",
-"label_prefix" : "Nighttime",
-"type" : "boolean",
-"usage" : "capture",
-"carryforward" : true,
-"action" : "reload"
-},
-{
-"name" : "nighttargettemp",
-"display" : "_display",
-"minimum" : "_min",
-"maximum" : "_max",
-"default" : "_default",
-"description" : "Sensor's target temperature <i>when cooler is enabled</i> (degrees Celsius).",
-"label" : "Target Temp.",
-"label_prefix" : "Nighttime",
-"type" : "integer",
-"usage" : "capture",
-"booldependson" : "nightenablecooler",
 "action" : "reload"
 },
 {
 "name" : "nighttuningfile",
-"display" : "_display",
 "default" : "",
 "description" : "Name of the night camera tuning file to use.",
 "label" : "Tuning File",
@@ -544,13 +444,6 @@
 "checkchanges" : true,
 "optional" : true,
 "action" : "restart"
-},
-
-{
-"name" : "bothtab========================================",
-"display" : false,
-"label" : "24 Hours",
-"type" : "header-tab"
 },
 {
 "name" : "dayandnightheader",
@@ -566,8 +459,7 @@
 "label" : "Days To Keep",
 "type" : "integer",
 "carryforward" : true,
-"checkchanges" : true,
-"booldependson" : "savedaytimeimages OR savenighttimeimages"
+"checkchanges" : true
 },
 {
 "name" : "config",
@@ -582,7 +474,6 @@
 },
 {
 "name" : "extraargs",
-"display" : "_display",
 "default" : "",
 "description" : "Extra arguments to pass to the capture program that Allsky doesn't support.",
 "label" : "Extra Arguments",
@@ -593,10 +484,9 @@
 },
 {
 "name" : "saturation",
-"display" : "_display",
-"minimum" : "_min",
-"maximum" : "_max",
-"default" : "_default",
+"minimum" : 0,
+"maximum" : 32,
+"default" : 1,
 "description" : "Changes the saturation level of the image.<br>The lowest level produces a black and white image.",
 "label" : "Saturation",
 "type" : "float",
@@ -605,10 +495,9 @@
 },
 {
 "name" : "contrast",
-"display" : "_display",
-"minimum" : "_min",
-"maximum" : "_max",
-"default" : "_default",
+"minimum" : 0,
+"maximum" : 32,
+"default" : 1,
 "description" : "Changes the contrast of an image.",
 "label" : "Contrast",
 "type" : "float",
@@ -617,40 +506,13 @@
 },
 {
 "name" : "sharpness",
-"display" : "_display",
-"minimum" : "_min",
-"maximum" : "_max",
-"default" : "_default",
+"minimum" : 0,
+"maximum" : 32,
+"default" : 1,
 "description" : "Changes the sharpness of an image.<br>Too sharp and images look unnatural.",
 "label" : "Sharpness",
 "type" : "float",
 "usage" : "capture",
-"action" : "reload"
-},
-{
-"name" : "aggression",
-"display" : "_display",
-"minimum" : "_min",
-"maximum" : "_max",
-"default" : "_default",
-"description" : "How much of a calculated exposure change should be made during auto-exposure?<br>Lower numbers smooth out changes but take longer to react to brightness changes.",
-"label" : "Aggression",
-"type" : "percent",
-"usage" : "capture",
-"booldependson" : "dayautoexposure OR nightautoexposure",
-"action" : "reload"
-},
-{
-"name" : "gaintransitiontime",
-"display" : "_display",
-"minimum" : 0,
-"maximum" : "none",
-"default" : "_default",
-"description" : "Number of <b>minutes</b> over which to increase or decrease the gain when switching between day and night.<br>This helps smooth brightness differences. <span class='WebUIValue'>0</span> disables transitions.",
-"label" : "Gain Transition Time",
-"type" : "integer",
-"usage" : "capture",
-"booldependsoff" : "nightautogain",
 "action" : "reload"
 },
 {
@@ -661,7 +523,8 @@
 "type" : "select_integer",
 "usage" : "capture",
 "options" : [
-	"type_values"
+	{"value" : 99, "label" : "auto"},
+	{"value" : 1, "label" : "RGB24"}
 ],
 "checkchanges" : true,
 "action" : "reload"
@@ -679,29 +542,6 @@
 "action" : "reload"
 },
 {
-"name" : "autousb",
-"display" : "_display",
-"default" : true,
-"description" : "Automatically set the USB bandwidth.",
-"label" : "Auto USB Bandwidth",
-"type" : "boolean",
-"usage" : "capture",
-"action" : "reload"
-},
-{
-"name" : "usb",
-"display" : "_display",
-"minimum" : "_min",
-"maximum" : "_max",
-"default" : "_default",
-"description" : "USB bandwidth.<br>If you get ASI_ERROR_TIMEOUT errors in the log file, try changing this number up and/or down.",
-"label" : "USB Bandwidth",
-"type" : "integer",
-"usage" : "capture",
-"booldependsoff" : "autousb",
-"action" : "reload"
-},
-{
 "name" : "filename",
 "default" : "image.jpg",
 "description" : "Extensions allowed: .jpg or .png.<br><b>WARNING</b>: saving a .png file can take 10 or more seconds so be sure the time between successive images is long enough.  To measure how long it takes your Pi to save a .png file, set the <span class='WebUISetting'>Debug Level</span> to 4 and look in the log file.",
@@ -714,14 +554,14 @@
 },
 {
 "name" : "rotation",
-"display" : "_display",
 "default" : 0,
 "description" : "Set image rotation to enable proper orientation.",
 "label" : "Rotation",
 "type" : "select_integer",
 "usage" : "capture",
 "options" : [
-	"rotation_values"
+	{"value" : 0, "label" : "None"},
+	{"value" : 180, "label" : "180 degrees"}
 ],
 "action" : "reload"
 },
@@ -865,33 +705,6 @@
 "usage" : "capture",
 "carryforward" : true,
 "checkchanges" : true,
-"noreset" : true,
-"action" : "reload"
-},
-{
-"name" : "zwoexposuretype",
-"display" : "_display",
-"default" : 0,
-"description" : "Select the type of exposure to use with ZWO cameras.  Use <span class='WebUIValue'>Snapshot</span> if possible since it should fix ASI_ERROR_TIMEOUT problems.  If that doesn't work try <span class='WebUIValue'>Video Off</span>. Note that <span class='WebUISetting'>Auto White Balance</span> does not work in <span class='WebUIValue'>Snapshot</span>",
-"label" : "ZWO Exposure Type",
-"type" : "select_integer",
-"usage" : "capture",
-"options" : [
-	{"value" : 0, "label" : "Snapshot"},
-	{"value" : 1, "label" : "Video Off"},
-	{"value" : 2, "label" : "Video (original)"}
-],
-"action" : "reload"
-},
-{
-"name" : "histogrambox",
-"display" : "_display",
-"default" : "500 500 50 50",
-"description" : "Size of the histogram box (X and Y in pixels) and offset from left and top (0-100 percent). Sizes must be even numbers.",
-"label" : "Histogram Box",
-"type" : "text",
-"usage" : "capture",
-"booldependson" : "dayautoexposure OR nightautoexposure",
 "action" : "reload"
 },
 {
@@ -911,13 +724,6 @@
 ],
 "action" : "reload"
 },
-
-{
-"name" : "postcapturetab========================================",
-"display" : false,
-"label" : "Post Capture",
-"type" : "header-tab"
-},
 {
 "name" : "postcaptureheader",
 "label" : "Post Capture Settings",
@@ -931,8 +737,7 @@
 "description" : "Delete images whose mean is below this value.<br><span class='WebUIValue'>0</span> disables this check.",
 "label" : "Remove Bad Images Threshold Low",
 "type" : "float",
-"usage" : "capture",
-"booldependson" : "savedaytimeimages OR savenighttimeimages"
+"usage" : "capture"
 },
 {
 "name" : "imageremovebadhigh",
@@ -942,8 +747,7 @@
 "description" : "Delete images whose mean is above this value.<br><span class='WebUIValue'>0</span> disables this check.",
 "label" : "Remove Bad Images Threshold High",
 "type" : "float",
-"usage" : "capture",
-"booldependson" : "savedaytimeimages OR savenighttimeimages"
+"usage" : "capture"
 },
 {
 "name" : "imageremovebadcount",
@@ -953,8 +757,7 @@
 "description" : "Display a System Message when this many consecutive 'bad' images are found.",
 "label" : "Remove Bad Images Threshold Count",
 "type" : "integer",
-"usage" : "capture",
-"booldependson" : "savedaytimeimages OR savenighttimeimages"
+"usage" : "capture"
 },
 {
 "name" : "imagecreatethumbnails",
@@ -962,30 +765,27 @@
 "description" : "Enable to create thumbnails of images. If you never look at them, disable this.",
 "label" : "Create Image Thumbnails",
 "type" : "boolean",
-"carryforward" : true,
-"booldependson" : "savedaytimeimages OR savenighttimeimages"
+"carryforward" : true
 },
 {
 "name" : "thumbnailsizex",
 "minimum" : 25,
-"maximum" : "500",
+"maximum" : 500,
 "default" : 100,
 "description" : "Width of image and video thumbnails.",
 "label" : "Thumbnail Width",
 "type" : "integer",
-"carryforward" : true,
-"booldependson" : "savedaytimeimages OR savenighttimeimages"
+"carryforward" : true
 },
 {
 "name" : "thumbnailsizey",
 "minimum" : 20,
-"maximum" : "400",
+"maximum" : 400,
 "default" : 75,
 "description" : "Height of image and video thumbnails.",
 "label" : "Thumbnail Height",
 "type" : "integer",
-"carryforward" : true,
-"booldependson" : "savedaytimeimages OR savenighttimeimages"
+"carryforward" : true
 },
 {
 "name" : "imageresizewidth",
@@ -995,8 +795,7 @@
 "description" : "Width of resized image before cropping.  <span class='WebUIValue'>0</span> means don't resize.  Must be an even number.",
 "label" : "Image Resize Width",
 "type" : "integer",
-"checkchanges" : true,
-"booldependson" : "takedaytimeimages OR takenighttimeimages"
+"checkchanges" : true
 },
 {
 "name" : "imageresizeheight",
@@ -1006,54 +805,48 @@
 "description" : "Height of resized image before cropping.  <span class='WebUIValue'>0</span> means don't resize.  Must be an even number.",
 "label" : "Image Resize Height",
 "type" : "integer",
-"checkchanges" : true,
-"booldependson" : "takedaytimeimages OR takenighttimeimages"
+"checkchanges" : true
 },
 {
 "name" : "imagecroptop",
 "minimum" : 0,
-"maximum" : "_max",
+"maximum" : 2332,
 "default" : 0,
 "description" : "Number of pixels to crop off the top of image.  Must be an even number",
 "label" : "Image Crop Top",
 "type" : "integer",
-"checkchanges" : true,
-"booldependson" : "takedaytimeimages OR takenighttimeimages"
+"checkchanges" : true
 },
 {
 "name" : "imagecropright",
 "minimum" : 0,
-"maximum" : "_max",
+"maximum" : 4147,
 "default" : 0,
 "description" : "Number of pixels to crop off the right side of image.  Must be an even number",
 "label" : "Image Crop Right",
 "type" : "integer",
-"checkchanges" : true,
-"booldependson" : "takedaytimeimages OR takenighttimeimages"
+"checkchanges" : true
 },
 {
 "name" : "imagecropbottom",
 "minimum" : 0,
-"maximum" : "_max",
+"maximum" : 2332,
 "default" : 0,
 "description" : "Number of pixels to crop off the bottom of image.  Must be an even number",
 "label" : "Image Crop Bottom",
 "type" : "integer",
-"checkchanges" : true,
-"booldependson" : "takedaytimeimages OR takenighttimeimages"
+"checkchanges" : true
 },
 {
 "name" : "imagecropleft",
 "minimum" : 0,
-"maximum" : "_max",
+"maximum" : 4147,
 "default" : 0,
 "description" : "Number of pixels to crop off the left side of image.  Must be an even number",
 "label" : "Image Crop Left",
 "type" : "integer",
-"checkchanges" : true,
-"booldependson" : "takedaytimeimages OR takenighttimeimages"
+"checkchanges" : true
 },
-
 {
 "name" : "timelapsetab========================================",
 "label" : "Timelapses",
@@ -1076,32 +869,29 @@
 "label" : "Generate",
 "label_prefix" : "Daily Timelapse",
 "type" : "boolean",
-"carryforward" : true,
-"booldependson" : "savedaytimeimages OR savenighttimeimages"
+"carryforward" : true
 },
 {
 "name" : "timelapsewidth",
 "minimum" : 0,
-"maximum" : "_max",
+"maximum" : 4608,
 "default" : 0,
 "description" : "Width of resized timelapse video. <span class='WebUIValue'>0</span> disables resize.  Must be an even number.",
 "label" : "Width",
 "label_prefix" : "Daily Timelapse",
 "type" : "integer",
-"checkchanges" : true,
-"booldependson" : "timelapsegenerate"
+"checkchanges" : true
 },
 {
 "name" : "timelapseheight",
 "minimum" : 0,
-"maximum" : "_max",
+"maximum" : 2592,
 "default" : 0,
 "description" : "Height of resized timelapse video. <span class='WebUIValue'>0</span> disables resize.  Must be an even number.",
 "label" : "Height",
 "label_prefix" : "Daily Timelapse",
 "type" : "integer",
-"checkchanges" : true,
-"booldependson" : "timelapsegenerate"
+"checkchanges" : true
 },
 {
 "name" : "timelapsebitrate",
@@ -1111,8 +901,7 @@
 "description" : "Bitrate (in K) of timelapse video. Higher values produce higher quality but larger files.",
 "label" : "Bitrate",
 "label_prefix" : "Daily Timelapse",
-"type" : "integer",
-"booldependson" : "timelapsegenerate"
+"type" : "integer"
 },
 {
 "name" : "timelapsefps",
@@ -1123,17 +912,15 @@
 "label" : "FPS",
 "label_prefix" : "Daily Timelapse",
 "type" : "integer",
-"carryforward" : true,
-"booldependson" : "timelapsegenerate"
+"carryforward" : true
 },
 {
 "name" : "timelapsekeepsequence",
 "default" : false,
-"description": "Use for debugging purposes only.  Enable to keep the list of files used in creating the timelapse video.",
+"description" : "Use for debugging purposes only.  Enable to keep the list of files used in creating the timelapse video.",
 "label" : "Keep Sequence",
 "label_prefix" : "Daily Timelapse",
-"type" : "boolean",
-"booldependson" : "timelapsegenerate"
+"type" : "boolean"
 },
 {
 "name" : "timelapseextraparameters",
@@ -1143,8 +930,7 @@
 "label_prefix" : "Daily Timelapse",
 "type" : "widetext",
 "carryforward" : true,
-"optional" : true,
-"booldependson" : "timelapsegenerate"
+"optional" : true
 },
 {
 "name" : "minitimelapseheader",
@@ -1161,8 +947,7 @@
 "label_prefix" : "Mini-Timelapse",
 "type" : "integer",
 "carryforward" : true,
-"checkchanges" : true,
-"booldependson" : "savedaytimeimages OR savenighttimeimages"
+"checkchanges" : true
 },
 {
 "name" : "minitimelapseforcecreation",
@@ -1171,8 +956,7 @@
 "label" : "Force Creation",
 "label_prefix" : "Mini-Timelapse",
 "type" : "boolean",
-"carryforward" : true,
-"valuedependson" : "minitimelapsenumimages=[1-9]*"
+"carryforward" : true
 },
 {
 "name" : "minitimelapsefrequency",
@@ -1183,32 +967,29 @@
 "label" : "Frequency",
 "label_prefix" : "Mini-Timelapse",
 "type" : "integer",
-"carryforward" : true,
-"valuedependson" : "minitimelapsenumimages=[1-9]*"
+"carryforward" : true
 },
 {
 "name" : "minitimelapsewidth",
 "minimum" : 0,
-"maximum" : "_max",
+"maximum" : 4608,
 "default" : 0,
 "description" : "Width of resized mini-timelapse video. <span class='WebUIValue'>0</span> disables resize.  Must be an even number.",
 "label" : "Width",
 "label_prefix" : "Mini-Timelapse",
 "type" : "integer",
-"checkchanges" : true,
-"valuedependson" : "minitimelapsenumimages=[1-9]*"
+"checkchanges" : true
 },
 {
 "name" : "minitimelapseheight",
 "minimum" : 0,
-"maximum" : "_max",
+"maximum" : 2592,
 "default" : 0,
 "description" : "Height of resized mini-timelapse video. <span class='WebUIValue'>0</span> disables resize.  Must be an even number.",
 "label" : "Height",
 "label_prefix" : "Mini-Timelapse",
 "type" : "integer",
-"checkchanges" : true,
-"valuedependson" : "minitimelapsenumimages=[1-9]*"
+"checkchanges" : true
 },
 {
 "name" : "minitimelapsebitrate",
@@ -1219,8 +1000,7 @@
 "label" : "Bitrate",
 "label_prefix" : "Mini-Timelapse",
 "type" : "integer",
-"carryforward" : true,
-"valuedependson" : "minitimelapsenumimages=[1-9]*"
+"carryforward" : true
 },
 {
 "name" : "minitimelapsefps",
@@ -1231,8 +1011,7 @@
 "label" : "FPS",
 "label_prefix" : "Mini-Timelapse",
 "type" : "integer",
-"carryforward" : true,
-"valuedependson" : "minitimelapsenumimages=[1-9]*"
+"carryforward" : true
 },
 {
 "name" : "timelapsebothsubheader",
@@ -1247,7 +1026,6 @@
 "label_prefix" : "Timelapse",
 "type" : "text",
 "carryforward" : true,
-"booldependson" : "timelapsegenerate",
 "checkchanges" : true
 },
 {
@@ -1258,7 +1036,6 @@
 "label_prefix" : "Timelapse",
 "type" : "text",
 "carryforward" : true,
-"booldependson" : "timelapsegenerate",
 "checkchanges" : true
 },
 {
@@ -1270,15 +1047,13 @@
 "type" : "select_text",
 "carryforward" : true,
 "options" : [
-	{ "value" : "quiet",		"label" : "No output" },
-	{ "value" : "fatal",		"label" : "Fatal Errors" },
-	{ "value" : "error",		"label" : "Errors" },
-	{ "value" : "warning",	"label" : "Warnings + Errors" },
-	{ "value" : "info",		"label" : "Info + Warnings + Errors" }
-],
-"booldependson" : "timelapsegenerate"
+	{"value" : "quiet", "label" : "No output"},
+	{"value" : "fatal", "label" : "Fatal Errors"},
+	{"value" : "error", "label" : "Errors"},
+	{"value" : "warning", "label" : "Warnings + Errors"},
+	{"value" : "info", "label" : "Info + Warnings + Errors"}
+]
 },
-
 {
 "name" : "keogramstartrailstab========================================",
 "label" : "Keogram and Startrails",
@@ -1301,8 +1076,7 @@
 "label" : "Generate",
 "label_prefix" : "Keograms",
 "type" : "boolean",
-"carryforward" : true,
-"booldependson" : "savedaytimeimages OR savenighttimeimages"
+"carryforward" : true
 },
 {
 "name" : "keogramexpand",
@@ -1311,8 +1085,7 @@
 "label" : "Expand",
 "label_prefix" : "Keograms",
 "type" : "boolean",
-"carryforward" : true,
-"booldependsoff" : "keogramgenerate"
+"carryforward" : true
 },
 {
 "name" : "keogramfontname",
@@ -1321,6 +1094,7 @@
 "label" : "Font Name",
 "label_prefix" : "Keograms",
 "type" : "select_text",
+"carryforward" : true,
 "options" : [
 	{"value" : "simplex", "label" : "Simplex"},
 	{"value" : "plain", "label" : "Plain"},
@@ -1330,9 +1104,7 @@
 	{"value" : "triplex", "label" : "Triplex"},
 	{"value" : "scriptsimplex", "label" : "Script Simplex"},
 	{"value" : "scriptcomplex", "label" : "Script Complex"}
-],
-"carryforward" : true,
-"booldependson" : "keogramgenerate"
+]
 },
 {
 "name" : "keogramfontcolor",
@@ -1340,19 +1112,17 @@
 "description" : "Font color.  See <a external='true' allsky='true' href='/documentation/settings/allsky.html#keogramfontcolor'>the documentation</a> for a description of this field.",
 "label" : "Font Color",
 "label_prefix" : "Keograms",
-"type" : "color",
-"booldependson" : "keogramgenerate"
+"type" : "color"
 },
 {
 "name" : "keogramfontsize",
-"minimum" : 1.0,
-"maximum" : 10.0,
-"default" : 2.0,
+"minimum" : 1,
+"maximum" : 10,
+"default" : 2,
 "description" : "Font size.",
 "label" : "Font Size",
 "label_prefix" : "Keograms",
-"type" : "integer",
-"booldependson" : "keogramgenerate"
+"type" : "integer"
 },
 {
 "name" : "keogramlinethickness",
@@ -1362,8 +1132,7 @@
 "description" : "Font line thickness.",
 "label" : "Font Line Thickness",
 "label_prefix" : "Keograms",
-"type" : "integer",
-"booldependson" : "keogramgenerate"
+"type" : "integer"
 },
 {
 "name" : "keogramextraparameters",
@@ -1372,8 +1141,7 @@
 "label" : "Extra Parameters",
 "label_prefix" : "Keograms",
 "type" : "widetext",
-"optional" : true,
-"booldependson" : "keogramgenerate"
+"optional" : true
 },
 {
 "name" : "startrailssubheader",
@@ -1387,19 +1155,17 @@
 "label" : "Generate",
 "label_prefix" : "Startrails",
 "type" : "boolean",
-"carryforward" : true,
-"booldependson" : "savedaytimeimages OR savenighttimeimages"
+"carryforward" : true
 },
 {
 "name" : "startrailsbrightnessthreshold",
-"minimum" : 0.0,
-"maximum" : 1.0,
+"minimum" : 0,
+"maximum" : 1,
 "default" : 0.1,
 "description" : "Images with a brightness higher than this threshold will not be included in the startrails.",
 "label" : "Brightness Threshold",
 "label_prefix" : "Startrails",
-"type" : "float",
-"booldependson" : "startrailsgenerate"
+"type" : "float"
 },
 {
 "name" : "startrailsextraparameters",
@@ -1408,8 +1174,7 @@
 "label" : "Extra Parameters",
 "label_prefix" : "Startrails",
 "type" : "widetext",
-"optional" : true,
-"booldependson" : "startrailsgenerate"
+"optional" : true
 },
 {
 "name" : "websitetab========================================",
@@ -1424,24 +1189,22 @@
 {
 "name" : "imageresizeuploadswidth",
 "minimum" : 0,
-"maximum" : "_max",
+"maximum" : 4608,
 "default" : 0,
 "description" : "Resized width of uploaded images. <span class='WebUIValue'>0</span> means don't resize.  Must be an even number.",
 "label" : "Resize Uploaded Images Width",
 "type" : "integer",
-"checkchanges" : true,
-"booldependson" : "imageupload"
+"checkchanges" : true
 },
 {
 "name" : "imageresizeuploadsheight",
 "minimum" : 0,
-"maximum" : "_max",
+"maximum" : 2592,
 "default" : 0,
 "description" : "Resized height of uploaded images. <span class='WebUIValue'>0</span> means don't resize.  Must be an even number.",
 "label" : "Resize Uploaded Images Height",
 "type" : "integer",
-"checkchanges" : true,
-"booldependson" : "imageupload"
+"checkchanges" : true
 },
 {
 "name" : "imageuploadfrequency",
@@ -1451,8 +1214,7 @@
 "description" : "How often should images be uploaded to an Allsky Website and/or remote server?<br><span class='WebUIValue'>0</span> never uploads images, <span class='WebUIValue'>1</span> uploads every frame, <span class='WebUIValue'>2</span> every other frame, etc.",
 "label" : "Upload Every X Images",
 "type" : "integer",
-"carryforward" : true,
-"booldependson" : "uselocalwebsite OR useremotewebsite OR useremoteserver"
+"carryforward" : true
 },
 {
 "name" : "timelapseupload",
@@ -1461,8 +1223,7 @@
 "label" : "Upload Daily Timelapse",
 "label_prefix" : "Daily Timelapse",
 "type" : "boolean",
-"carryforward" : true,
-"booldependson" : "timelapsegenerate"
+"carryforward" : true
 },
 {
 "name" : "timelapseuploadthumbnail",
@@ -1471,8 +1232,7 @@
 "label" : "Upload Daily Timelapse Thumbnail",
 "label_prefix" : "Daily Timelapse",
 "type" : "boolean",
-"carryforward" : true,
-"booldependson" : "timelapsegenerate AND timelapseupload AND (uselocalwebsite OR useremotewebsite OR useremoteserver)"
+"carryforward" : true
 },
 {
 "name" : "keogramupload",
@@ -1481,8 +1241,7 @@
 "label" : "Upload Keogram",
 "label_prefix" : "Keograms",
 "type" : "boolean",
-"carryforward" : true,
-"booldependson" : "keogramgenerate AND (uselocalwebsite OR useremotewebsite OR useremoteserver)"
+"carryforward" : true
 },
 {
 "name" : "startrailsupload",
@@ -1491,8 +1250,7 @@
 "label" : "Upload Startrails",
 "label_prefix" : "Startrails",
 "type" : "boolean",
-"carryforward" : true,
-"booldependson" : "startrailsgenerate AND (uselocalwebsite OR useremotewebsite OR useremoteserver)"
+"carryforward" : true
 },
 {
 "name" : "minitimelapseupload",
@@ -1501,8 +1259,7 @@
 "label" : "Upload Mini-Timelapse",
 "label_prefix" : "Mini-Timelapse",
 "type" : "boolean",
-"carryforward" : true,
-"valuedependson" : "minitimelapsenumimages=[1-9]*"
+"carryforward" : true
 },
 {
 "name" : "minitimelapseuploadthumbnail",
@@ -1511,9 +1268,7 @@
 "label" : "Upload Mini-Timelapse Thumbnail",
 "label_prefix" : "Mini-Timelapse",
 "type" : "boolean",
-"carryforward" : true,
-"booldependson" : "minitimelapseupload AND (uselocalwebsite OR useremotewebsite OR useremoteserver)",
-"valuedependson" : "minitimelapsenumimages=[1-9]*"
+"carryforward" : true
 },
 {
 "name" : "displaysettings",
@@ -1522,8 +1277,7 @@
 "label" : "Display Settings",
 "type" : "boolean",
 "carryforward" : true,
-"checkchanges" : true,
-"booldependson" : "uselocalwebsite OR useremotewebsite OR useremoteserver"
+"checkchanges" : true
 },
 {
 "name" : "localwebsiteheader",
@@ -1532,14 +1286,12 @@
 },
 {
 "name" : "uselocalwebsite",
-"description" : "Enable to use the local Allsky Website.<br>You should configure it in the <span class='WebUILink'>Editor</span> page first.",
 "default" : false,
+"description" : "Enable to use the local Allsky Website.<br>You should configure it in the <span class='WebUILink'>Editor</span> page first.",
 "label" : "Use Local Website",
 "type" : "boolean",
 "carryforward" : true,
-"checkchanges" : true,
-"popup-yesno" : "Do you want to remove all saved images, keograms, startrails, and videos in the local Website?",
-"popup-yesno-value" : 0
+"checkchanges" : true
 },
 {
 "name" : "daystokeeplocalwebsite",
@@ -1550,8 +1302,7 @@
 "label" : "Days To Keep on Pi Website",
 "type" : "integer",
 "carryforward" : true,
-"checkchanges" : true,
-"booldependson" : "uselocalwebsite"
+"checkchanges" : true
 },
 {
 "name" : "remotewebsiteheader",
@@ -1568,19 +1319,6 @@
 "checkchanges" : true
 },
 {
-"name" : "daystokeepremotewebsite",
-"minimum" : 0,
-"maximum" : "none",
-"default" : 0,
-"description" : "Number of days of images and videos to keep on the remote Website. <span class='WebUIValue'>0</span> keeps all days.",
-"label" : "Days To Keep on Remote Website",
-"type" : "integer",
-"carryforward" : true,
-"checkchanges" : true,
-"booldependson" : "useremotewebsite",
-"display" : false
-},
-{
 "name" : "REMOTEWEBSITE_HOST",
 "default" : "",
 "description" : "Name of server hosting the remote Allsky Website.  NOT a URL.",
@@ -1588,9 +1326,8 @@
 "label_prefix" : "Remote Website",
 "type" : "widetext",
 "checkchanges" : true,
-"source" : "${ALLSKY_ENV}",
-"booldependson" : "useremotewebsite",
-"optional" : true
+"optional" : true,
+"source" : "${ALLSKY_ENV}"
 },
 {
 "name" : "remotewebsiteurl",
@@ -1601,7 +1338,6 @@
 "type" : "widetext",
 "carryforward" : true,
 "checkchanges" : true,
-"booldependson" : "showonmap OR useremotewebsite OR remotewebsiteimageurl",
 "optional" : true
 },
 {
@@ -1613,7 +1349,6 @@
 "type" : "widetext",
 "carryforward" : true,
 "checkchanges" : true,
-"booldependson" : "showonmap OR useremotewebsite OR remotewebsiteurl",
 "optional" : true
 },
 {
@@ -1625,8 +1360,6 @@
 "type" : "text",
 "carryforward" : true,
 "checkchanges" : true,
-"booldependson" : "useremotewebsite",
-"valuedependson" : "remotewebsiteprotocol=*ftp*",
 "optional" : true
 },
 {
@@ -1636,18 +1369,17 @@
 "label" : "Protocol",
 "label_prefix" : "Remote Website",
 "type" : "select_text",
-"options" : [
-	{"value" : "ftps",	"label" : "ftps"},
-	{"value" : "ftp",	"label" : "ftp"},
-	{"value" : "sftp",	"label" : "sftp"},
-	{"value" : "scp",	"label" : "scp"},
-	{"value" : "rsync",	"label" : "rsync"},
-	{"value" : "s3",	"label" : "S3"},
-	{"value" : "gcs",	"label" : "GCS"}
-],
 "carryforward" : true,
-"checkchanges" : true,
-"booldependson" : "useremotewebsite"
+"options" : [
+	{"value" : "ftps", "label" : "ftps"},
+	{"value" : "ftp", "label" : "ftp"},
+	{"value" : "sftp", "label" : "sftp"},
+	{"value" : "scp", "label" : "scp"},
+	{"value" : "rsync", "label" : "rsync"},
+	{"value" : "s3", "label" : "S3"},
+	{"value" : "gcs", "label" : "GCS"}
+],
+"checkchanges" : true
 },
 {
 "name" : "REMOTEWEBSITE_PORT",
@@ -1657,9 +1389,8 @@
 "label_prefix" : "Remote Website",
 "type" : "text",
 "checkchanges" : true,
-"source" : "${ALLSKY_ENV}",
-"booldependson" : "useremotewebsite",
-"optional" : true
+"optional" : true,
+"source" : "${ALLSKY_ENV}"
 },
 {
 "name" : "REMOTEWEBSITE_USER",
@@ -1669,9 +1400,8 @@
 "label_prefix" : "Remote Website",
 "type" : "text",
 "checkchanges" : true,
-"source" : "${ALLSKY_ENV}",
-"booldependson" : "useremotewebsite",
-"optional" : true
+"optional" : true,
+"source" : "${ALLSKY_ENV}"
 },
 {
 "name" : "REMOTEWEBSITE_PASSWORD",
@@ -1681,9 +1411,8 @@
 "label_prefix" : "Remote Website",
 "type" : "password",
 "checkchanges" : true,
-"source" : "${ALLSKY_ENV}",
-"booldependson" : "useremotewebsite",
-"optional" : true
+"optional" : true,
+"source" : "${ALLSKY_ENV}"
 },
 {
 "name" : "REMOTEWEBSITE_LFTP_COMMANDS",
@@ -1693,10 +1422,8 @@
 "label_prefix" : "Remote Website",
 "type" : "widetext",
 "checkchanges" : true,
-"source" : "${ALLSKY_ENV}",
-"booldependson" : "useremotewebsite",
-"valuedependson" : "remotewebsiteprotocol=*ftp*",
-"optional" : true
+"optional" : true,
+"source" : "${ALLSKY_ENV}"
 },
 {
 "name" : "REMOTEWEBSITE_SSH_KEY_FILE",
@@ -1706,10 +1433,8 @@
 "label_prefix" : "Remote Website",
 "type" : "widetext",
 "checkchanges" : true,
-"source" : "${ALLSKY_ENV}",
-"booldependson" : "useremotewebsite",
-"valuedependson" : "remotewebsiteprotocol=scp|rsync",
-"optional" : true
+"optional" : true,
+"source" : "${ALLSKY_ENV}"
 },
 {
 "name" : "REMOTEWEBSITE_AWS_CLI_DIR",
@@ -1719,10 +1444,8 @@
 "label_prefix" : "Remote Website",
 "type" : "widetext",
 "checkchanges" : true,
-"source" : "${ALLSKY_ENV}",
-"booldependson" : "useremotewebsite",
-"valuedependson" : "remotewebsiteprotocol=s3",
-"optional" : true
+"optional" : true,
+"source" : "${ALLSKY_ENV}"
 },
 {
 "name" : "REMOTEWEBSITE_S3_BUCKET",
@@ -1732,10 +1455,8 @@
 "label_prefix" : "Remote Website",
 "type" : "text",
 "checkchanges" : true,
-"source" : "${ALLSKY_ENV}",
-"booldependson" : "useremotewebsite",
-"valuedependson" : "remotewebsiteprotocol=s3",
-"optional" : true
+"optional" : true,
+"source" : "${ALLSKY_ENV}"
 },
 {
 "name" : "REMOTEWEBSITE_S3_ACL",
@@ -1745,10 +1466,8 @@
 "label_prefix" : "Remote Website",
 "type" : "text",
 "checkchanges" : true,
-"source" : "${ALLSKY_ENV}",
-"booldependson" : "useremotewebsite",
-"valuedependson" : "remotewebsiteprotocol=s3",
-"optional" : true
+"optional" : true,
+"source" : "${ALLSKY_ENV}"
 },
 {
 "name" : "REMOTEWEBSITE_GCS_BUCKET",
@@ -1758,10 +1477,8 @@
 "label_prefix" : "Remote Website",
 "type" : "text",
 "checkchanges" : true,
-"source" : "${ALLSKY_ENV}",
-"booldependson" : "useremotewebsite",
-"valuedependson" : "remotewebsiteprotocol=gcs",
-"optional" : true
+"optional" : true,
+"source" : "${ALLSKY_ENV}"
 },
 {
 "name" : "REMOTEWEBSITE_GCS_ACL",
@@ -1771,10 +1488,8 @@
 "label_prefix" : "Remote Website",
 "type" : "text",
 "checkchanges" : true,
-"source" : "${ALLSKY_ENV}",
-"booldependson" : "useremotewebsite",
-"valuedependson" : "remotewebsiteprotocol=gcs",
-"optional" : true
+"optional" : true,
+"source" : "${ALLSKY_ENV}"
 },
 {
 "name" : "remotewebsiteimageuploadoriginalname",
@@ -1783,11 +1498,8 @@
 "label" : "Upload With Original Name",
 "label_prefix" : "Remote Website",
 "type" : "boolean",
-"carryforward" : true,
-"valuedependson" : "imageuploadfrequency=[1-9]*"
+"carryforward" : true
 },
-
-
 {
 "name" : "remoteserverheader",
 "label" : "Remote Server",
@@ -1810,22 +1522,8 @@
 "label_prefix" : "Remote Server",
 "type" : "widetext",
 "checkchanges" : true,
-"source" : "${ALLSKY_ENV}",
-"booldependson" : "useremoteserver",
-"optional" : true
-},
-{
-"name" : "remoteserverurl",
-"default" : "",
-"description" : "Optional URL of remote server, for example: <span class='WebUIValue'>https://myserver.com/</span>.<br>Must begin with <span class='WebUIValue'>http</span> or <span class='WebUIValue'>https</span>.",
-"label" : "Server URL",
-"label_prefix" : "Remote Server",
-"type" : "widetext",
-"carryforward" : true,
-"checkchanges" : true,
-"booldependson" : "useremoteserver",
 "optional" : true,
-"display" : false
+"source" : "${ALLSKY_ENV}"
 },
 {
 "name" : "remoteserverimagedir",
@@ -1836,7 +1534,6 @@
 "type" : "text",
 "carryforward" : true,
 "checkchanges" : true,
-"booldependson" : "useremoteserver",
 "optional" : true
 },
 {
@@ -1846,18 +1543,17 @@
 "label" : "Protocol",
 "label_prefix" : "Remote Server",
 "type" : "select_text",
-"options" : [
-	{"value" : "ftps",	"label" : "ftps"},
-	{"value" : "ftp",	"label" : "ftp"},
-	{"value" : "sftp",	"label" : "sftp"},
-	{"value" : "scp",	"label" : "scp"},
-	{"value" : "rsync",	"label" : "rsync"},
-	{"value" : "s3",	"label" : "S3"},
-	{"value" : "gcs",	"label" : "GCS"}
-],
 "carryforward" : true,
-"checkchanges" : true,
-"booldependson" : "useremoteserver"
+"options" : [
+	{"value" : "ftps", "label" : "ftps"},
+	{"value" : "ftp", "label" : "ftp"},
+	{"value" : "sftp", "label" : "sftp"},
+	{"value" : "scp", "label" : "scp"},
+	{"value" : "rsync", "label" : "rsync"},
+	{"value" : "s3", "label" : "S3"},
+	{"value" : "gcs", "label" : "GCS"}
+],
+"checkchanges" : true
 },
 {
 "name" : "REMOTESERVER_PORT",
@@ -1867,9 +1563,8 @@
 "label_prefix" : "Remote Server",
 "type" : "text",
 "checkchanges" : true,
-"source" : "${ALLSKY_ENV}",
-"booldependson" : "useremoteserver",
-"optional" : true
+"optional" : true,
+"source" : "${ALLSKY_ENV}"
 },
 {
 "name" : "REMOTESERVER_USER",
@@ -1879,9 +1574,8 @@
 "label_prefix" : "Remote Server",
 "type" : "text",
 "checkchanges" : true,
-"source" : "${ALLSKY_ENV}",
-"booldependson" : "useremoteserver",
-"optional" : true
+"optional" : true,
+"source" : "${ALLSKY_ENV}"
 },
 {
 "name" : "REMOTESERVER_PASSWORD",
@@ -1891,9 +1585,8 @@
 "label_prefix" : "Remote Server",
 "type" : "password",
 "checkchanges" : true,
-"source" : "${ALLSKY_ENV}",
-"booldependson" : "useremoteserver",
-"optional" : true
+"optional" : true,
+"source" : "${ALLSKY_ENV}"
 },
 {
 "name" : "REMOTESERVER_LFTP_COMMANDS",
@@ -1903,10 +1596,8 @@
 "label_prefix" : "Remote Server",
 "type" : "widetext",
 "checkchanges" : true,
-"source" : "${ALLSKY_ENV}",
-"booldependson" : "useremoteserver",
-"valuedependson" : "remoteserverprotocol=*ftp*",
-"optional" : true
+"optional" : true,
+"source" : "${ALLSKY_ENV}"
 },
 {
 "name" : "REMOTESERVER_SSH_KEY_FILE",
@@ -1916,10 +1607,8 @@
 "label_prefix" : "Remote Server",
 "type" : "widetext",
 "checkchanges" : true,
-"source" : "${ALLSKY_ENV}",
-"booldependson" : "useremoteserver",
-"valuedependson" : "remoteserverprotocol=scp|rsync",
-"optional" : true
+"optional" : true,
+"source" : "${ALLSKY_ENV}"
 },
 {
 "name" : "REMOTESERVER_AWS_CLI_DIR",
@@ -1929,10 +1618,8 @@
 "label_prefix" : "Remote Server",
 "type" : "widetext",
 "checkchanges" : true,
-"source" : "${ALLSKY_ENV}",
-"booldependson" : "useremoteserver",
-"valuedependson" : "remoteserverprotocol=s3",
-"optional" : true
+"optional" : true,
+"source" : "${ALLSKY_ENV}"
 },
 {
 "name" : "REMOTESERVER_S3_BUCKET",
@@ -1942,10 +1629,8 @@
 "label_prefix" : "Remote Server",
 "type" : "text",
 "checkchanges" : true,
-"source" : "${ALLSKY_ENV}",
-"booldependson" : "useremoteserver",
-"valuedependson" : "remoteserverprotocol=s3",
-"optional" : true
+"optional" : true,
+"source" : "${ALLSKY_ENV}"
 },
 {
 "name" : "REMOTESERVER_S3_ACL",
@@ -1955,10 +1640,8 @@
 "label_prefix" : "Remote Server",
 "type" : "text",
 "checkchanges" : true,
-"source" : "${ALLSKY_ENV}",
-"booldependson" : "useremoteserver",
-"valuedependson" : "remoteserverprotocol=s3",
-"optional" : true
+"optional" : true,
+"source" : "${ALLSKY_ENV}"
 },
 {
 "name" : "REMOTESERVER_GCS_BUCKET",
@@ -1968,10 +1651,8 @@
 "label_prefix" : "Remote Server",
 "type" : "text",
 "checkchanges" : true,
-"source" : "${ALLSKY_ENV}",
-"booldependson" : "useremoteserver",
-"valuedependson" : "remoteserverprotocol=gcs",
-"optional" : true
+"optional" : true,
+"source" : "${ALLSKY_ENV}"
 },
 {
 "name" : "REMOTESERVER_GCS_ACL",
@@ -1981,10 +1662,8 @@
 "label_prefix" : "Remote Server",
 "type" : "text",
 "checkchanges" : true,
-"source" : "${ALLSKY_ENV}",
-"booldependson" : "useremoteserver",
-"valuedependson" : "remoteserverprotocol=gcs",
-"optional" : true
+"optional" : true,
+"source" : "${ALLSKY_ENV}"
 },
 {
 "name" : "remoteserverimageuploadoriginalname",
@@ -1993,8 +1672,7 @@
 "label" : "Upload With Original Name",
 "label_prefix" : "Remote Server",
 "type" : "boolean",
-"carryforward" : true,
-"valuedependson" : "imageuploadfrequency=[1-9]*"
+"carryforward" : true
 },
 {
 "name" : "remoteservervideodestinationname",
@@ -2004,7 +1682,6 @@
 "label_prefix" : "Remote Server",
 "type" : "text",
 "carryforward" : true,
-"booldependson" : "useremoteserver",
 "optional" : true
 },
 {
@@ -2015,7 +1692,6 @@
 "label_prefix" : "Remote Server",
 "type" : "text",
 "carryforward" : true,
-"booldependson" : "useremoteserver",
 "optional" : true
 },
 {
@@ -2026,10 +1702,8 @@
 "label_prefix" : "Remote Server",
 "type" : "text",
 "carryforward" : true,
-"booldependson" : "useremoteserver",
 "optional" : true
 },
-
 {
 "name" : "allskymaptab========================================",
 "label" : "Map",
@@ -2047,8 +1721,7 @@
 "label" : "Show on Map",
 "type" : "boolean",
 "carryforward" : true,
-"checkchanges" : true,
-"booldependson" : "uselocalwebsite OR useremotewebsite"
+"checkchanges" : true
 },
 {
 "name" : "location",
@@ -2058,8 +1731,7 @@
 "type" : "widetext",
 "carryforward" : true,
 "checkchanges" : true,
-"optional" : true,
-"booldependson" : "showonmap OR useremotewebsite OR useremoteserver"
+"optional" : true
 },
 {
 "name" : "owner",
@@ -2069,16 +1741,13 @@
 "type" : "text",
 "carryforward" : true,
 "checkchanges" : true,
-"optional" : true,
-"booldependson" : "showonmap OR useremotewebsite OR useremoteserver"
+"optional" : true
 },
 {
 "name" : "camera",
 "settingsonly" : true,
-"default" : "",
-"description" : "The type and model of your camera. Set automatically.",
 "label" : "NOT DISPLAYED IN WebUI",
-"noreset" : true,
+"default" : "RPi Module 3",
 "type" : "text"
 },
 {
@@ -2088,18 +1757,14 @@
 "label" : "Lens",
 "type" : "text",
 "checkchanges" : true,
-"optional" : true,
-"booldependson" : "showonmap OR useremotewebsite OR useremoteserver"
+"optional" : true
 },
 {
 "name" : "computer",
 "settingsonly" : true,
-"default" : "",
-"description" : "The computer running your allsky camera. Set automatically.",
 "label" : "NOT DISPLAYED IN WebUI",
-"type" : "text",
-"noreset" : true,
-"carryforward" : true
+"default" : "",
+"type" : "text"
 },
 {
 "name" : "equipmentinfo",
@@ -2110,7 +1775,6 @@
 "checkchanges" : true,
 "optional" : true
 },
-
 {
 "name" : "webuitab========================================",
 "label" : "WebUI",
@@ -2147,8 +1811,8 @@
 "description" : "Determines if you need to login to the WebUI or not.<br><b>If your Pi is accessible on the Internet, do NOT turn this off!!</b>.",
 "label" : "Require WebUI Login",
 "type" : "boolean",
-"checkchanges" : true,
-"carryforward" : true
+"carryforward" : true,
+"checkchanges" : true
 },
 {
 "name" : "inlinemessages",
@@ -2171,22 +1835,17 @@
 {
 "name" : "daytimeoverlay",
 "settingsonly" : true,
-"default" : "",
-"description" : "The overlay file to use during daytime",
 "label" : "NOT DISPLAYED IN WebUI",
-"noreset" : true,
+"default" : "",
 "type" : "text"
 },
 {
 "name" : "nighttimeoverlay",
 "settingsonly" : true,
-"default" : "",
-"description" : "The overlay file to use during nighttime",
 "label" : "NOT DISPLAYED IN WebUI",
-"noreset" : true,
+"default" : "",
 "type" : "text"
 },
-
 {
 "name" : "databasesettingsheader",
 "label" : "Allsky Database Settings",
@@ -2223,17 +1882,11 @@
 "label" : "Database Type",
 "type" : "select_text",
 "carryforward" : true,
-"optional" : true,
 "options" : [
-	{
-		"value" : "mysql",
-		"label" : "MySQL"
-	},
-	{
-		"value" : "sqlite",
-		"label" : "SQLite"
-	}
-]
+	{"value" : "mysql", "label" : "MySQL"},
+	{"value" : "sqlite", "label" : "SQLite"}
+],
+"optional" : true
 },
 {
 "name" : "databasehost",
@@ -2243,7 +1896,6 @@
 "type" : "text",
 "carryforward" : true,
 "optional" : true,
-"noreset" : true,
 "source" : "${ALLSKY_ENV}"
 },
 {
@@ -2254,7 +1906,6 @@
 "type" : "text",
 "carryforward" : true,
 "optional" : true,
-"noreset" : true,
 "source" : "${ALLSKY_ENV}"
 },
 {
@@ -2265,10 +1916,57 @@
 "type" : "text",
 "carryforward" : true,
 "optional" : true,
-"noreset" : true,
 "source" : "${ALLSKY_ENV}"
 },
-
+{
+"name" : "allskysensortab========================================",
+"label" : "Allsky Sensor Server",
+"type" : "header-tab"
+},
+{
+"name" : "cameraheading",
+"label" : "Allsky Sensor Server",
+"type" : "header"
+},
+{
+"name" : "enableallskysensorserver",
+"default" : false,
+"description" : "Enable to use a Allsky Sensor Server.",
+"label" : "Server Enabled",
+"type" : "boolean",
+"optional" : true,
+"carryforward" : true
+},
+{
+"name" : "allskysensorservercameraname",
+"default" : "",
+"description" : "The name this camera will appear as on the Allsky Sensor Server.",
+"label" : "Allsky Sensor Camera Name",
+"carryforward" : true,
+"type" : "text",
+"optional" : true,
+"source" : "${ALLSKY_ENV}"
+},
+{
+"name" : "allskysensorserverurl",
+"default" : "",
+"description" : "The URL of your Allsky Sensor Server. Please refer to the setup guide in the Allsky Sensor Server",
+"label" : "Allsky Sensor URL",
+"type" : "widetext",
+"carryforward" : true,
+"optional" : true,
+"source" : "${ALLSKY_ENV}"
+},
+{
+"name" : "allskysensorservertoken",
+"default" : "",
+"description" : "The Token for the Alsky Sensor Server. Please refer to the setup guide in the Allsky Sensor Server",
+"label" : "Allsky Sensor Token",
+"type" : "widetext",
+"carryforward" : true,
+"optional" : true,
+"source" : "${ALLSKY_ENV}"
+},
 {
 "name" : "cameratab========================================",
 "label" : "Camera Type",
@@ -2281,44 +1979,42 @@
 },
 {
 "name" : "cameratype",
-"default" : "",
+"default" : "RPi",
 "description" : "The type of camera you are using.<br>To change to a camera of a different type, select the new type then press the 'Save changes' button, THEN select the new <span class='WebUISetting'>Camera Model</span>.",
 "label" : "Camera Type",
 "type" : "select_text",
 "options" : [
-	"cameratype_values"
+	{"value" : "RPi", "label" : "RPi"},
+	{"value" : "ZWO", "label" : "ZWO"},
+	{"value" : "Refresh", "label" : "Refresh"}
 ],
 "checkchanges" : true,
 "action" : "restart"
 },
 {
 "name" : "cameramodel",
-"default" : "",
+"default" : "Module 3",
 "description" : "The model of camera you are using.",
 "label" : "Camera Model",
-"readonly" : true,
 "type" : "select_text",
-"options" : [
-	"cameramodel_values"
-],
 "usage" : "capture",
+"options" : [
+	{"value" : "Module 3", "label" : "Module 3 [imx708_wide]"}
+],
 "checkchanges" : true,
 "action" : "restart"
 },
 {
 "name" : "cameranumber",
 "settingsonly" : true,
-"default" : 0,
-"description" : "If multiple cameras are connected to the Pi, this is the camera number (starts at 0).",
 "label" : "Camera Number",
-"type" : "integer",
-"usage" : "capture",
-"checkchanges" : true,
-"action" : "restart"
+"default" : 0,
+"type" : "integer"
 },
-
 {
 "name" : "XX_END_XX",
-"type" : "boolean"
+"type" : "boolean",
+"display" : false
 }
 ]
+

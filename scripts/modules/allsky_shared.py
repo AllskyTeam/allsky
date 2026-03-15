@@ -5019,3 +5019,131 @@ def add_message(message: str, type: str) -> None:
 
     # Write the updated message list back to disk
     message_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+def send_camera_to_allsky_sensor_server():
+    allsky_sensor_server_enabled = get_setting("enableallskysensorserver")
+
+    if allsky_sensor_server_enabled:
+        allsky_sensor_server_url = get_setting("allskysensorserverurl")
+        allsky_sensor_server_token = get_setting("allskysensorservertoken")        
+        allsky_sensor_server_camera_name = get_setting("allskysensorservercameraname")
+
+        if allsky_sensor_server_url and allsky_sensor_server_token:
+            try:
+                import requests
+
+                iface, mac = get_active_mac()
+                payload = {
+                    "camera_id": mac,
+                    "name": allsky_sensor_server_camera_name or f"N/A",
+                    "lat": get_setting("latitude"),
+                    "lon": get_setting("longitude"),
+                    "event": "Capture",
+                    "is_night": "true" if get_environment_variable("DAY_OR_NIGHT") == "NIGHT"	else "false",
+                    "last_image_name": CURRENTIMAGEPATH
+                }
+
+                headers = {
+                    "Authorization": f"Bearer {allsky_sensor_server_token}"
+                }
+                sensor_endpoint = f"{allsky_sensor_server_url}/api/cameras"
+                response = requests.post(sensor_endpoint, json=payload, headers=headers, timeout=1)
+                if response.status_code == 200:
+                    log(4, "INFO: Sensor data successfully sent to Allsky Sensor Server.")
+                else:
+                    log(0, f'ERROR: Failed to send sensor data to Allsky Sensor Server {sensor_endpoint}. Status code: {response.status_code}')
+            except Exception as e:
+                log(0, f'ERROR: Exception while sending data to Allsky Sensor Server: {e}')
+        else:
+            log(0, 'ERROR: Allsky Sensor Server is enabled but URL or token is not set in settings.json.')    
+    
+def get_active_mac() -> tuple[str, str]:
+    """
+    Return the active network interface and its MAC address.
+
+    This function determines which network interface is used for the
+    system's default route and retrieves its MAC address directly from
+    the Linux sysfs interface.
+
+    It is designed for Linux environments (such as Raspberry Pi OS) and
+    avoids using external commands like ``ip`` or ``ifconfig`` for
+    improved performance and reliability.
+
+    Method
+    ------
+    1. The Linux routing table (``/proc/net/route``) is parsed.
+    2. The entry with destination ``00000000`` represents the default route.
+    3. The interface associated with that route is identified.
+    4. The MAC address is read from::
+
+        /sys/class/net/<interface>/address
+
+    Returns
+    -------
+    tuple[str, str]
+        A tuple containing:
+
+        - **interface** – Active network interface name (e.g. ``eth0`` or ``wlan0``)
+        - **mac_address** – MAC address of the interface
+
+    Raises
+    ------
+    RuntimeError
+        If no default route or MAC address can be determined.
+
+    Example
+    -------
+    ```python
+    iface, mac = get_active_mac()
+
+    print(iface)
+    print(mac)
+    ```
+
+    Example output::
+
+        wlan0
+        dc:a6:32:1f:8b:44
+
+    Notes
+    -----
+    - Works on Linux systems using the ``/proc`` and ``/sys`` filesystems.
+    - Suitable for embedded environments such as Raspberry Pi based devices.
+    - Avoids spawning subprocesses, making it efficient for scripts that
+        run frequently.
+
+    """
+
+    import socket
+    import fcntl
+    import struct
+
+    # ---------------------------------------------------------
+    # Determine the interface used for the default route
+    # by parsing the Linux routing table.
+    # ---------------------------------------------------------
+    with open("/proc/net/route") as route_file:
+        for line in route_file.readlines()[1:]:
+            fields = line.strip().split()
+
+            iface = fields[0]
+            destination = fields[1]
+
+            # Destination "00000000" indicates the default route
+            if destination == "00000000":
+                break
+        else:
+            raise RuntimeError("Unable to determine default network interface")
+
+    # ---------------------------------------------------------
+    # Retrieve the MAC address from the Linux sysfs interface
+    # ---------------------------------------------------------
+    mac_path = f"/sys/class/net/{iface}/address"
+
+    try:
+        with open(mac_path) as mac_file:
+            mac = mac_file.read().strip()
+    except FileNotFoundError:
+        raise RuntimeError(f"MAC address not found for interface '{iface}'")
+
+    return iface, mac

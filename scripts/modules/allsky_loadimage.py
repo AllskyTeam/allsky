@@ -146,6 +146,9 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 		}          
 	}
 
+	def update_allsky_sensor_server(self):
+		allsky_shared.send_camera_to_allsky_sensor_server()
+ 	
 	def _cleanup_module_data(arg):
 		allsky_shared.log(4,'INFO: Cleanup module data')
 		allsky_shared.cleanup_extra_data()
@@ -211,6 +214,8 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 			self.log(0,f'ERROR: {result}')  
 
 		self._dump_debug_data()
+  
+		self.update_allsky_sensor_server()
   
 		self.log(4, f'INFO: {result}')
 		return result        

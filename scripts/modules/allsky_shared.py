@@ -4031,6 +4031,85 @@ def get_flows_with_module(module_name):
 
     return found
 
+import json
+
+
+import json
+
+
+def get_module_value(json_path: str, module_name: str, key: str):
+    """
+    Retrieve a value from a specific Allsky module definition.
+
+    The JSON file contains multiple modules where the module name
+    is the top-level key. This function retrieves a value from the
+    specified module using either a dotted path or a simple argument key.
+
+    Parameters
+    ----------
+    json_path : str
+        Path to the JSON file containing module definitions.
+
+    module_name : str
+        Name of the module to retrieve data from (top-level key).
+
+    key : str
+        Key to retrieve. Supported formats:
+
+        1. **Dotted path** (e.g. ``metadata.name``)
+        2. **Simple key** (e.g. ``imagefolder``) which will be retrieved
+           from ``metadata.arguments``.
+
+    Returns
+    -------
+    Any | None
+        The value if found, otherwise ``None``.
+
+    Examples
+    --------
+    ```python
+    get_module_value("modules.json", "overlay", "metadata.name")
+
+    get_module_value("modules.json", "saveintermediateimage", "imagefolder")
+    ```
+    """
+
+    # ---------------------------------------------------------
+    # Load JSON file
+    # ---------------------------------------------------------
+    try:
+        with open(json_path, "r") as f:
+            data = json.load(f)
+    except Exception:
+        return None
+
+    # ---------------------------------------------------------
+    # Retrieve module
+    # ---------------------------------------------------------
+    module_data = data.get(module_name)
+    if module_data is None:
+        return None
+
+    # ---------------------------------------------------------
+    # Case 1: dotted path lookup
+    # ---------------------------------------------------------
+    if "." in key:
+        parts = key.split(".")
+        current = module_data
+
+        for part in parts:
+            if isinstance(current, dict) and part in current:
+                current = current[part]
+            else:
+                return None
+
+        return current
+
+    # ---------------------------------------------------------
+    # Case 2: simple key lookup in metadata.arguments
+    # ---------------------------------------------------------
+    arguments = module_data.get("metadata", {}).get("arguments", {})
+    return arguments.get(key)
 
 def to_bool(v: bool | str) -> bool:
     """
@@ -4260,6 +4339,7 @@ def get_allsky_version():
     version_file = os.environ['ALLSKY_VERSION_FILE']
     version_info = parse_version(version_file)
 
+    return version_info
 
 ### Generic Whiptail stuff ###
 def _menu_choice(ret: Union[tuple[str, int], str, None]) -> Union[str, None]:
@@ -5020,6 +5100,26 @@ def add_message(message: str, type: str) -> None:
     # Write the updated message list back to disk
     message_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
+def get_clean_image_path():
+    
+    clean_image_url = ""
+    tod = get_environment_variable("DAY_OR_NIGHT")
+    base_path = get_environment_variable("ALLSKY_MODULES")
+    client_url = get_setting("allskysensorserverclienturl")    
+    image_folder = get_environment_variable("ALLSKY_IMG_DIR")
+    
+    if client_url is not None:
+        if tod == "DAY":
+            path = f"{base_path}/postprocessing_day.json"
+        else:
+            path = f"{base_path}/postprocessing_night.json"
+            
+        clean_image_name = get_module_value(path, "savecleanimage", "imagename")
+        
+        clean_image_url = f"{client_url}/{image_folder}/{clean_image_name}"
+    
+    return clean_image_url
+    
 def send_camera_to_allsky_sensor_server():
     allsky_sensor_server_enabled = get_setting("enableallskysensorserver")
 
@@ -5032,14 +5132,18 @@ def send_camera_to_allsky_sensor_server():
             try:
                 import requests
 
+                allsky_version_info = get_allsky_version()
+                
                 iface, mac = get_active_mac()
                 payload = {
                     "camera_id": mac,
+                    "allsky_version": allsky_version_info["raw"],
                     "name": allsky_sensor_server_camera_name or f"N/A",
                     "lat": get_setting("latitude"),
                     "lon": get_setting("longitude"),
                     "event": "Capture",
                     "is_night": "true" if get_environment_variable("DAY_OR_NIGHT") == "NIGHT"	else "false",
+                    "clean_image": get_clean_image_path(),
                     "last_image_name": CURRENTIMAGEPATH
                 }
 

@@ -1968,6 +1968,16 @@
 "source" : "${ALLSKY_ENV}"
 },
 {
+"name" : "allskysensorserverurl",
+"default" : "",
+"description" : "The URL of your Allsky Sensor Server. Please refer to the setup guide in the Allsky Sensor Server",
+"label" : "Allsky Sensor URL",
+"type" : "widetext",
+"carryforward" : true,
+"optional" : true,
+"source" : "${ALLSKY_ENV}"
+},
+{
 "name" : "cameratab========================================",
 "label" : "Camera Type",
 "type" : "header-tab"

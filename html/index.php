@@ -432,11 +432,10 @@ function insertPage($p) {
 			break;
 		case "timelapse_settings":
 			include_once("helpers/$p.php");
-			// TODO: add function name						
+			timelapseSettings();				
 			break;
 		case "constellation_overlay":
 			include_once("helpers/$p.php");
-			timelapseSettings();
 			break;
 		case "bad_images_settings":
 			include_once("helpers/$p.php");

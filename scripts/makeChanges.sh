@@ -197,7 +197,7 @@ function checkTimelapse()
 	fi
 
 	# Check for only 1 value of 0.
-	if ! checkWidthHeight "${TYPE}Timelapse" "${TYPE}timelapse" \
+	if ! _checkWidthHeight "${TYPE}Timelapse" "${TYPE}timelapse" \
 			"${W}" "${H}" "${C_sensorWidth}" "${C_sensorHeight}" 2>&1 ; then
 		THIS_OK="false"
 	fi

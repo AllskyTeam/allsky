@@ -2117,7 +2117,42 @@ class ALLSKYCONFIGBACKUPS {
             this.showMessage('warning', 'Select a backup to download.');
             return;
         }
-        window.location.href = 'includes/configbackuputil.php?request=Download&file=' + encodeURIComponent(selectedFile);
+
+        this.hideMessage();
+        const iframeName = 'as-config-backup-download-frame';
+        let $iframe = $('#' + iframeName);
+        if ($iframe.length === 0) {
+            $iframe = $('<iframe>', {
+                id: iframeName,
+                name: iframeName
+            }).css('display', 'none');
+            $('body').append($iframe);
+        }
+
+        const $form = $('<form>', {
+            method: 'POST',
+            action: 'includes/configbackuputil.php?request=Download',
+            target: iframeName,
+            style: 'display:none;'
+        });
+
+        $form.append($('<input>', {
+            type: 'hidden',
+            name: 'file',
+            value: selectedFile
+        }));
+
+        $form.append($('<input>', {
+            type: 'hidden',
+            name: 'csrf_token',
+            value: window.csrfToken || ''
+        }));
+
+        $('body').append($form);
+        $form.trigger('submit');
+        window.setTimeout(() => {
+            $form.remove();
+        }, 1000);
     }
 
     uploadBackup(file) {

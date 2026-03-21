@@ -26,7 +26,7 @@ class CONFIGBACKUPUTIL extends UTILBASE
             'RestoreInfo' => ['post'],
             'Restore' => ['post'],
             'Delete' => ['post'],
-            'Download' => ['get'],
+            'Download' => ['get', 'post'],
             'Upload' => ['post'],
         ];
     }
@@ -3328,6 +3328,17 @@ class CONFIGBACKUPUTIL extends UTILBASE
     public function getDownload(): void
     {
         $selected = (string)($_GET['file'] ?? '');
+        $this->streamBackupDownload($selected);
+    }
+
+    public function postDownload(): void
+    {
+        $selected = (string)($_POST['file'] ?? '');
+        $this->streamBackupDownload($selected);
+    }
+
+    private function streamBackupDownload(string $selected): void
+    {
         $backupPath = $this->getBackupPathByName($selected);
         if ($backupPath === '') {
             $this->sendHTTPResponse('Selected backup does not exist.', 404);

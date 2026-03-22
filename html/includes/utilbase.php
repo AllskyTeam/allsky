@@ -46,6 +46,9 @@ class UTILBASE
     /** If true, only accept XMLHttpRequest (AJAX) calls */
     protected bool   $requireAjax  = true;
 
+    /** Route names that may bypass XMLHttpRequest enforcement */
+    protected array  $nonAjaxRequests = [];
+
     /**
      * Entry point called by the concrete script.
      * 1) Parse/validate method, request, and Accept header
@@ -74,6 +77,10 @@ class UTILBASE
      */
     protected function checkXHRRequest(): void
     {
+        if (in_array($this->request, $this->nonAjaxRequests, true)) {
+            return;
+        }
+
         $hdr = $_SERVER['HTTP_X_REQUESTED_WITH'] ?? '';
         if ($hdr === '' || strcasecmp($hdr, 'xmlhttprequest') !== 0) {
             $this->sendHTTPResponse('Not found', 404);
@@ -138,6 +145,7 @@ class UTILBASE
         if (in_array($this->method, ['post', 'put', 'delete', 'patch'], true)) {
             if (!function_exists('CSRFValidate') || !CSRFValidate()) {
                 // 500 rather than 401/403: treat as server misconfiguration if validator missing/failed
+                $_SESSION['flash'] = "Session Expired";
                 $this->sendHTTPResponse('Invalid or missing CSRF token.', 500);
             }
         }

@@ -8,6 +8,7 @@ include_once('utilbase.php');
 
 class CONFIGBACKUPUTIL extends UTILBASE
 {
+    protected array $nonAjaxRequests = ['Download'];
     private string $allskyHome;
     private string $allskyConfig;
     private ?string $cachedAllskyOwner = null;

@@ -2425,7 +2425,55 @@
 },
 
 {
-
+"name" : "allskysensortab========================================",
+"label" : "Allsky Sensor Server",
+"type" : "header-tab"
+},
+{
+"name" : "cameraheading",
+"label" : "Allsky Sensor Server",
+"type" : "header"
+},
+{
+"name" : "enableallskysensorserver",
+"default" : false,
+"description" : "Enable to use a Allsky Sensor Server.",
+"label" : "Server Enabled",
+"type" : "boolean",
+"optional" : true,
+"carryforward" : true
+},
+{
+"name" : "allskysensorservercameraname",
+"default" : "",
+"description" : "The name this camera will appear as on the Allsky Sensor Server.",
+"label" : "Allsky Sensor Camera Name",
+"carryforward" : true,
+"type" : "text",
+"optional" : true,
+"source" : "${ALLSKY_ENV}"
+},
+{
+"name" : "allskysensorserverurl",
+"default" : "",
+"description" : "The URL of your Allsky Sensor Server. Please refer to the setup guide in the Allsky Sensor Server",
+"label" : "Allsky Sensor URL",
+"type" : "widetext",
+"carryforward" : true,
+"optional" : true,
+"source" : "${ALLSKY_ENV}"
+},
+{
+"name" : "allskysensorservertoken",
+"default" : "",
+"description" : "The Token for the Alsky Sensor Server. Please refer to the setup guide in the Allsky Sensor Server",
+"label" : "Allsky Sensor Token",
+"type" : "widetext",
+"carryforward" : true,
+"optional" : true,
+"source" : "${ALLSKY_ENV}"
+},
+{
 "name" : "cameratab========================================",
 "label" : "Camera Type",
 "type" : "header-tab"

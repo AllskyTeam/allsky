@@ -18,7 +18,7 @@ class ALLSKYCLEARSKY(ALLSKYMODULEBASE):
 		"name": "Clear Sky Indicator",
 		"description": "Indicate if the sky is clear or cloudy based on the number of stars in an image.",
 		"module": "allsky_clearsky",
-		"version": "v1.0.2",
+		"version": "v1.0.3",
 		"extradatafilename": "allsky_clearsky.json",
 		"events": [
 			"day",
@@ -139,7 +139,16 @@ class ALLSKYCLEARSKY(ALLSKYMODULEBASE):
 						"Updates for the new module manager structure"
 					]
 				}
-			]
+			],
+			"v1.0.3" : [
+				{
+					"author": "Alex Greenland",
+					"authorurl": "https://github.com/allskyteam",
+					"changes": [
+						"Updates star detection"
+					]
+				}
+			]   
 		}
 	}
 
@@ -175,8 +184,8 @@ class ALLSKYCLEARSKY(ALLSKYMODULEBASE):
 			roi_image = gray[roi_y:roi_y + roi_h, roi_x:roi_x + roi_w]
 			image_data = roi_image.astype(float)
 
-			sources, image = allsky_shared.count_starts_in_image(image_data)
-
+			sources, _ = allsky_shared.count_starts_in_image(image_data)
+  
 			if sources is not None:
 				found_stars = len(sources)
 				self.log(4, f'INFO: Number of stars detected in ROI: {len(sources)}')

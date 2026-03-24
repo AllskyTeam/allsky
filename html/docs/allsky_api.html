@@ -5399,21 +5399,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#modules.gpio.all_gpio_status" class="md-nav__link">
+  <a href="#modules.gpio.get_gpio_count" class="md-nav__link">
     <span class="md-ellipsis">
       
-        all_gpio_status
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#modules.gpio.get_board_pin" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        get_board_pin
+        get_gpio_count
       
     </span>
   </a>
@@ -5432,10 +5421,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#modules.gpio.read_digital" class="md-nav__link">
+  <a href="#modules.gpio.get_gpiochip_handle" class="md-nav__link">
     <span class="md-ellipsis">
       
-        read_digital
+        get_gpiochip_handle
       
     </span>
   </a>
@@ -5443,32 +5432,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#modules.gpio.set_digital" class="md-nav__link">
+  <a href="#modules.gpio.normalise_pin" class="md-nav__link">
     <span class="md-ellipsis">
       
-        set_digital
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#modules.gpio.set_pwm" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        set_pwm
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#modules.gpio.status" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        status
+        normalise_pin
       
     </span>
   </a>
@@ -6093,22 +6060,59 @@ component needs to be restarted but the web interface should remain active.</p>
 <div class="doc doc-object doc-function">
 
 
-<h4 id="modules.gpio.all_gpio_status" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">all_gpio_status</span><span class="p">()</span></code>
+<h4 id="modules.gpio.get_gpio_count" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">get_gpio_count</span><span class="p">()</span></code>
 
-<a href="#modules.gpio.all_gpio_status" class="headerlink" title="Permanent link">¶</a></h4>
+<a href="#modules.gpio.get_gpio_count" class="headerlink" title="Permanent link">¶</a></h4>
 
 
     <div class="doc doc-contents ">
 
-        <p>GET /gpio/all</p>
-<p>Return the status of every board GPIO pin.</p>
+        <p>Return the number of GPIO lines exposed by the active chip.</p>
 
 
-<details class="authentication" open>
-  <summary>Authentication</summary>
-  <p>Requires @api_auth_required("gpio", "update")</p>
-</details>
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>server/modules/gpio/__init__.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tbody><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_gpio_count</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return the number of GPIO lines exposed by the active chip.</span>
+<span class="sd">    """</span>
+    <span class="n">handle</span> <span class="o">=</span> <span class="n">get_gpiochip_handle</span><span class="p">()</span>
+    <span class="k">del</span> <span class="n">handle</span>  <span class="c1"># handle is only used to ensure the chip is opened</span>
+
+    <span class="k">if</span> <span class="n">gpiochip_info</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span>
+
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">gpiochip_info</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+</code></pre></div></td></tr></tbody></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="modules.gpio.get_gpio_status" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">get_gpio_status</span><span class="p">()</span></code>
+
+<a href="#modules.gpio.get_gpio_status" class="headerlink" title="Permanent link">¶</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Inspect all available GPIO lines and return their current usage.</p>
+
 
     <p><span class="doc-section-title">Returns:</span></p>
     <table>
@@ -6120,13 +6124,12 @@ component needs to be restarted but the web interface should remain active.</p>
       </thead>
       <tbody>
           <tr class="doc-section-item">
-<td><code>JSON</code></td>            <td>
-                  <code><span title="flask.Response">Response</span></code>
+<td><code>dict</code></td>            <td>
+                  <code><span title="dict">dict</span></code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>A dictionary of all pins (D0, D1, D2...) with details on
-  whether they are unused, digital I/O, or PWM.</p>
+                <p>Status for each Dxx pin on the board.</p>
               </div>
             </td>
           </tr>
@@ -6136,65 +6139,61 @@ component needs to be restarted but the web interface should remain active.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>server/modules/gpio/__init__.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tbody><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 88</span>
-<span class="normal"> 89</span>
-<span class="normal"> 90</span>
-<span class="normal"> 91</span>
-<span class="normal"> 92</span>
-<span class="normal"> 93</span>
-<span class="normal"> 94</span>
-<span class="normal"> 95</span>
-<span class="normal"> 96</span>
-<span class="normal"> 97</span>
-<span class="normal"> 98</span>
-<span class="normal"> 99</span>
-<span class="normal">100</span>
-<span class="normal">101</span>
-<span class="normal">102</span>
-<span class="normal">103</span>
-<span class="normal">104</span>
-<span class="normal">105</span>
-<span class="normal">106</span>
-<span class="normal">107</span>
-<span class="normal">108</span>
-<span class="normal">109</span>
-<span class="normal">110</span>
-<span class="normal">111</span>
-<span class="normal">112</span>
-<span class="normal">113</span>
-<span class="normal">114</span>
-<span class="normal">115</span>
-<span class="normal">116</span>
-<span class="normal">117</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@gpio_bp</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">"/all"</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">"GET"</span><span class="p">])</span>
-<span class="nd">@api_auth_required</span><span class="p">(</span><span class="s2">"gpio"</span><span class="p">,</span> <span class="s2">"update"</span><span class="p">)</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">all_gpio_status</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Response</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tbody><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span>
+<span class="normal">150</span>
+<span class="normal">151</span>
+<span class="normal">152</span>
+<span class="normal">153</span>
+<span class="normal">154</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_gpio_status</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    GET /gpio/all</span>
-
-<span class="sd">    Return the status of every board GPIO pin.</span>
-
-<span class="sd">    Authentication:</span>
-<span class="sd">        Requires @api_auth_required("gpio", "update")</span>
+<span class="sd">    Inspect all available GPIO lines and return their current usage.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        JSON: A dictionary of all pins (D0, D1, D2...) with details on</span>
-<span class="sd">              whether they are unused, digital I/O, or PWM.</span>
+<span class="sd">        dict: Status for each Dxx pin on the board.</span>
 <span class="sd">    """</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="k">with</span> <span class="n">gpio_lock</span><span class="p">:</span>
-            <span class="n">all_status</span> <span class="o">=</span> <span class="n">get_gpio_status</span><span class="p">()</span>
+    <span class="n">all_status</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">gpio_count</span> <span class="o">=</span> <span class="n">get_gpio_count</span><span class="p">()</span>
 
-        <span class="k">return</span> <span class="n">jsonify</span><span class="p">(</span><span class="n">all_status</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">pin_num</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">gpio_count</span><span class="p">):</span>
+        <span class="n">pin</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">pin_num</span><span class="p">)</span>
+        <span class="n">status</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"mode"</span><span class="p">:</span> <span class="s2">"unused"</span><span class="p">}</span>
 
-    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-        <span class="k">return</span> <span class="p">(</span>
-            <span class="n">jsonify</span><span class="p">({</span>
-                <span class="s2">"error"</span><span class="p">:</span> <span class="s2">"Failed to retrieve all GPIO status"</span><span class="p">,</span>
-                <span class="s2">"type"</span><span class="p">:</span> <span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
-                <span class="s2">"message"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span>
-            <span class="p">}),</span>
-            <span class="mi">500</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">pin</span> <span class="ow">in</span> <span class="n">digital_pins</span><span class="p">:</span>
+            <span class="n">info</span> <span class="o">=</span> <span class="n">digital_pins</span><span class="p">[</span><span class="n">pin</span><span class="p">]</span>
+            <span class="n">direction</span> <span class="o">=</span> <span class="n">info</span><span class="p">[</span><span class="s2">"direction"</span><span class="p">]</span>
+            <span class="n">status</span><span class="p">[</span><span class="s2">"mode"</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"digital-</span><span class="si">{</span><span class="n">direction</span><span class="si">}</span><span class="s2">"</span>
+            <span class="n">status</span><span class="p">[</span><span class="s2">"value"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"on"</span> <span class="k">if</span> <span class="n">_read_pin_value</span><span class="p">(</span><span class="n">pin_num</span><span class="p">)</span> <span class="k">else</span> <span class="s2">"off"</span>
+        <span class="k">elif</span> <span class="n">pin</span> <span class="ow">in</span> <span class="n">pwm_pins</span><span class="p">:</span>
+            <span class="n">pwm</span> <span class="o">=</span> <span class="n">pwm_pins</span><span class="p">[</span><span class="n">pin</span><span class="p">]</span>
+            <span class="n">status</span><span class="p">[</span><span class="s2">"mode"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"pwm"</span>
+            <span class="n">status</span><span class="p">[</span><span class="s2">"frequency"</span><span class="p">]</span> <span class="o">=</span> <span class="n">pwm</span><span class="p">[</span><span class="s2">"frequency"</span><span class="p">]</span>
+            <span class="n">status</span><span class="p">[</span><span class="s2">"duty"</span><span class="p">]</span> <span class="o">=</span> <span class="n">pwm</span><span class="p">[</span><span class="s2">"duty"</span><span class="p">]</span>
+
+        <span class="n">all_status</span><span class="p">[</span><span class="sa">f</span><span class="s2">"D</span><span class="si">{</span><span class="n">pin_num</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span> <span class="o">=</span> <span class="n">status</span>
+
+    <span class="k">return</span> <span class="n">all_status</span>
 </code></pre></div></td></tr></tbody></table></div>
             </details>
     </div>
@@ -6204,15 +6203,106 @@ component needs to be restarted but the web interface should remain active.</p>
 <div class="doc doc-object doc-function">
 
 
-<h4 id="modules.gpio.get_board_pin" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">get_board_pin</span><span class="p">(</span><span class="n">gpio_str</span><span class="p">)</span></code>
+<h4 id="modules.gpio.get_gpiochip_handle" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">get_gpiochip_handle</span><span class="p">()</span></code>
 
-<a href="#modules.gpio.get_board_pin" class="headerlink" title="Permanent link">¶</a></h4>
+<a href="#modules.gpio.get_gpiochip_handle" class="headerlink" title="Permanent link">¶</a></h4>
 
 
     <div class="doc doc-contents ">
 
-        <p>Convert a GPIO pin number into a board-specific pin object.</p>
+        <p>Lazily open the first available gpiochip.</p>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+<th>Name</th>          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+<td><code>int</code></td>            <td>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>lgpio handle for the active gpiochip.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>server/modules/gpio/__init__.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tbody><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_gpiochip_handle</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Lazily open the first available gpiochip.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        int: lgpio handle for the active gpiochip.</span>
+<span class="sd">    """</span>
+    <span class="k">global</span> <span class="n">gpiochip_handle</span><span class="p">,</span> <span class="n">gpiochip_info</span>
+
+    <span class="k">if</span> <span class="n">gpiochip_handle</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">gpiochip_handle</span>
+
+    <span class="n">last_error</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">for</span> <span class="n">chip</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">8</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">handle</span> <span class="o">=</span> <span class="n">lgpio</span><span class="o">.</span><span class="n">gpiochip_open</span><span class="p">(</span><span class="n">chip</span><span class="p">)</span>
+            <span class="n">info</span> <span class="o">=</span> <span class="n">lgpio</span><span class="o">.</span><span class="n">gpio_get_chip_info</span><span class="p">(</span><span class="n">handle</span><span class="p">)</span>
+            <span class="n">gpiochip_handle</span> <span class="o">=</span> <span class="n">handle</span>
+            <span class="n">gpiochip_info</span> <span class="o">=</span> <span class="n">info</span>
+            <span class="k">return</span> <span class="n">gpiochip_handle</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="n">last_error</span> <span class="o">=</span> <span class="n">exc</span>
+
+    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Unable to open a gpiochip: </span><span class="si">{</span><span class="n">last_error</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</code></pre></div></td></tr></tbody></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="modules.gpio.normalise_pin" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">normalise_pin</span><span class="p">(</span><span class="n">gpio_str</span><span class="p">)</span></code>
+
+<a href="#modules.gpio.normalise_pin" class="headerlink" title="Permanent link">¶</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Validate and normalise a GPIO pin number.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -6260,7 +6350,7 @@ component needs to be restarted but the web interface should remain active.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>object | None: board.Dxx pin object, or None if invalid.</p>
+                <p>tuple[str, int]: String form and integer form of the GPIO number.</p>
               </div>
             </td>
           </tr>
@@ -6270,109 +6360,7 @@ component needs to be restarted but the web interface should remain active.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>server/modules/gpio/__init__.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tbody><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">26</span>
-<span class="normal">27</span>
-<span class="normal">28</span>
-<span class="normal">29</span>
-<span class="normal">30</span>
-<span class="normal">31</span>
-<span class="normal">32</span>
-<span class="normal">33</span>
-<span class="normal">34</span>
-<span class="normal">35</span>
-<span class="normal">36</span>
-<span class="normal">37</span>
-<span class="normal">38</span>
-<span class="normal">39</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_board_pin</span><span class="p">(</span><span class="n">gpio_str</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    Convert a GPIO pin number into a board-specific pin object.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        gpio_str (str | int): Pin number, e.g. "18".</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        object | None: board.Dxx pin object, or None if invalid.</span>
-<span class="sd">    """</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">board</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"D</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">gpio_str</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-    <span class="k">except</span> <span class="p">(</span><span class="ne">AttributeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
-        <span class="k">return</span> <span class="kc">None</span>
-</code></pre></div></td></tr></tbody></table></div>
-            </details>
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h4 id="modules.gpio.get_gpio_status" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">get_gpio_status</span><span class="p">()</span></code>
-
-<a href="#modules.gpio.get_gpio_status" class="headerlink" title="Permanent link">¶</a></h4>
-
-
-    <div class="doc doc-contents ">
-
-        <p>Inspect all available board pins and return their current usage.</p>
-
-
-<details class="this-includes" open>
-  <summary>This includes</summary>
-  <ul>
-<li>Unused pins</li>
-<li>Digital pins (input/output, on/off)</li>
-<li>PWM pins (frequency, duty cycle)</li>
-</ul>
-</details>
-
-    <p><span class="doc-section-title">Returns:</span></p>
-    <table>
-      <thead>
-        <tr>
-<th>Name</th>          <th>Type</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-<td><code>dict</code></td>            <td>
-                  <code><span title="dict">dict</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Status for each Dxx pin on the board.</p>
-              </div>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-            <details class="mkdocstrings-source">
-              <summary>Source code in <code>server/modules/gpio/__init__.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tbody><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">42</span>
-<span class="normal">43</span>
-<span class="normal">44</span>
-<span class="normal">45</span>
-<span class="normal">46</span>
-<span class="normal">47</span>
-<span class="normal">48</span>
-<span class="normal">49</span>
-<span class="normal">50</span>
-<span class="normal">51</span>
-<span class="normal">52</span>
-<span class="normal">53</span>
-<span class="normal">54</span>
-<span class="normal">55</span>
-<span class="normal">56</span>
-<span class="normal">57</span>
-<span class="normal">58</span>
-<span class="normal">59</span>
-<span class="normal">60</span>
-<span class="normal">61</span>
-<span class="normal">62</span>
-<span class="normal">63</span>
+              <div class="highlight"><table class="highlighttable"><tbody><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">63</span>
 <span class="normal">64</span>
 <span class="normal">65</span>
 <span class="normal">66</span>
@@ -6390,907 +6378,29 @@ component needs to be restarted but the web interface should remain active.</p>
 <span class="normal">78</span>
 <span class="normal">79</span>
 <span class="normal">80</span>
-<span class="normal">81</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_gpio_status</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="normal">81</span>
+<span class="normal">82</span>
+<span class="normal">83</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">normalise_pin</span><span class="p">(</span><span class="n">gpio_str</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    Inspect all available board pins and return their current usage.</span>
-
-<span class="sd">    This includes:</span>
-<span class="sd">      - Unused pins</span>
-<span class="sd">      - Digital pins (input/output, on/off)</span>
-<span class="sd">      - PWM pins (frequency, duty cycle)</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        dict: Status for each Dxx pin on the board.</span>
-<span class="sd">    """</span>
-    <span class="n">all_status</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="n">board</span><span class="p">):</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">attr</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"D"</span><span class="p">):</span>
-            <span class="k">continue</span>
-
-        <span class="n">hr_pin</span> <span class="o">=</span> <span class="n">attr</span>        <span class="c1"># e.g. "D18"</span>
-        <span class="n">pin_num</span> <span class="o">=</span> <span class="n">hr_pin</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="c1"># e.g. "18"</span>
-        <span class="n">board_pin</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">board</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span>
-
-        <span class="n">status</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"mode"</span><span class="p">:</span> <span class="s2">"unused"</span><span class="p">}</span>
-
-        <span class="k">if</span> <span class="n">pin_num</span> <span class="ow">in</span> <span class="n">digital_pins</span><span class="p">:</span>
-            <span class="n">dio</span> <span class="o">=</span> <span class="n">digital_pins</span><span class="p">[</span><span class="n">pin_num</span><span class="p">]</span>
-            <span class="n">direction</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="s2">"output"</span> <span class="k">if</span> <span class="n">dio</span><span class="o">.</span><span class="n">direction</span> <span class="o">==</span> <span class="n">digitalio</span><span class="o">.</span><span class="n">Direction</span><span class="o">.</span><span class="n">OUTPUT</span> <span class="k">else</span> <span class="s2">"input"</span>
-            <span class="p">)</span>
-            <span class="n">status</span><span class="p">[</span><span class="s2">"mode"</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"digital-</span><span class="si">{</span><span class="n">direction</span><span class="si">}</span><span class="s2">"</span>
-            <span class="n">status</span><span class="p">[</span><span class="s2">"value"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"on"</span> <span class="k">if</span> <span class="n">dio</span><span class="o">.</span><span class="n">value</span> <span class="k">else</span> <span class="s2">"off"</span>
-
-        <span class="k">elif</span> <span class="n">pin_num</span> <span class="ow">in</span> <span class="n">pwm_pins</span><span class="p">:</span>
-            <span class="n">pwm</span> <span class="o">=</span> <span class="n">pwm_pins</span><span class="p">[</span><span class="n">pin_num</span><span class="p">]</span>
-            <span class="n">status</span><span class="p">[</span><span class="s2">"mode"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"pwm"</span>
-            <span class="n">status</span><span class="p">[</span><span class="s2">"frequency"</span><span class="p">]</span> <span class="o">=</span> <span class="n">pwm</span><span class="o">.</span><span class="n">frequency</span>
-            <span class="n">status</span><span class="p">[</span><span class="s2">"duty"</span><span class="p">]</span> <span class="o">=</span> <span class="n">pwm</span><span class="o">.</span><span class="n">duty_cycle</span>
-
-        <span class="n">all_status</span><span class="p">[</span><span class="n">hr_pin</span><span class="p">]</span> <span class="o">=</span> <span class="n">status</span>
-
-    <span class="k">return</span> <span class="n">all_status</span>
-</code></pre></div></td></tr></tbody></table></div>
-            </details>
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h4 id="modules.gpio.read_digital" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">read_digital</span><span class="p">(</span><span class="n">pin</span><span class="p">)</span></code>
-
-<a href="#modules.gpio.read_digital" class="headerlink" title="Permanent link">¶</a></h4>
-
-
-    <div class="doc doc-contents ">
-
-        <p>GET /gpio/digital/<pin></pin></p>
-<p>Read a digital GPIO pin.</p>
-<p>If the pin has not previously been configured, the API automatically
-initialises it as a digital input.</p>
-
-
-<p><span class="doc-section-title">Parameters:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Description</th>
-          <th>Default</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <code>pin</code>
-            </td>
-            <td>
-                  <code><span title="str">str</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Pin number, e.g. "18".</p>
-              </div>
-            </td>
-            <td>
-                <em>required</em>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-<details class="authentication" open>
-  <summary>Authentication</summary>
-  <p>Requires @api_auth_required("gpio", "update")</p>
-</details>
-
-    <p><span class="doc-section-title">Returns:</span></p>
-    <table>
-      <thead>
-        <tr>
-<th>Name</th>          <th>Type</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-<td><code>JSON</code></td>            <td>
-                  <code><span title="flask.Response">Response</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>{ "pin": "<number>", "value": "on" | "off" }</number></p>
-              </div>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-            <details class="mkdocstrings-source">
-              <summary>Source code in <code>server/modules/gpio/__init__.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tbody><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">120</span>
-<span class="normal">121</span>
-<span class="normal">122</span>
-<span class="normal">123</span>
-<span class="normal">124</span>
-<span class="normal">125</span>
-<span class="normal">126</span>
-<span class="normal">127</span>
-<span class="normal">128</span>
-<span class="normal">129</span>
-<span class="normal">130</span>
-<span class="normal">131</span>
-<span class="normal">132</span>
-<span class="normal">133</span>
-<span class="normal">134</span>
-<span class="normal">135</span>
-<span class="normal">136</span>
-<span class="normal">137</span>
-<span class="normal">138</span>
-<span class="normal">139</span>
-<span class="normal">140</span>
-<span class="normal">141</span>
-<span class="normal">142</span>
-<span class="normal">143</span>
-<span class="normal">144</span>
-<span class="normal">145</span>
-<span class="normal">146</span>
-<span class="normal">147</span>
-<span class="normal">148</span>
-<span class="normal">149</span>
-<span class="normal">150</span>
-<span class="normal">151</span>
-<span class="normal">152</span>
-<span class="normal">153</span>
-<span class="normal">154</span>
-<span class="normal">155</span>
-<span class="normal">156</span>
-<span class="normal">157</span>
-<span class="normal">158</span>
-<span class="normal">159</span>
-<span class="normal">160</span>
-<span class="normal">161</span>
-<span class="normal">162</span>
-<span class="normal">163</span>
-<span class="normal">164</span>
-<span class="normal">165</span>
-<span class="normal">166</span>
-<span class="normal">167</span>
-<span class="normal">168</span>
-<span class="normal">169</span>
-<span class="normal">170</span>
-<span class="normal">171</span>
-<span class="normal">172</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@gpio_bp</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">"/digital/&lt;pin&gt;"</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">"GET"</span><span class="p">])</span>
-<span class="nd">@api_auth_required</span><span class="p">(</span><span class="s2">"gpio"</span><span class="p">,</span> <span class="s2">"update"</span><span class="p">)</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">read_digital</span><span class="p">(</span><span class="n">pin</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Response</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    GET /gpio/digital/&lt;pin&gt;</span>
-
-<span class="sd">    Read a digital GPIO pin.</span>
-
-<span class="sd">    If the pin has not previously been configured, the API automatically</span>
-<span class="sd">    initialises it as a digital input.</span>
+<span class="sd">    Validate and normalise a GPIO pin number.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        pin (str): Pin number, e.g. "18".</span>
-
-<span class="sd">    Authentication:</span>
-<span class="sd">        Requires @api_auth_required("gpio", "update")</span>
+<span class="sd">        gpio_str (str | int): Pin number, e.g. "18".</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        JSON: { "pin": "&lt;number&gt;", "value": "on" | "off" }</span>
+<span class="sd">        tuple[str, int]: String form and integer form of the GPIO number.</span>
 <span class="sd">    """</span>
-    <span class="n">pin</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">pin</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-    <span class="n">board_pin</span> <span class="o">=</span> <span class="n">get_board_pin</span><span class="p">(</span><span class="n">pin</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">board_pin</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">jsonify</span><span class="p">({</span><span class="s2">"error"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"Invalid GPIO pin </span><span class="si">{</span><span class="n">pin</span><span class="si">}</span><span class="s2">"</span><span class="p">}),</span> <span class="mi">400</span>
+    <span class="n">pin</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">gpio_str</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
 
     <span class="k">try</span><span class="p">:</span>
-        <span class="k">with</span> <span class="n">gpio_lock</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">pin</span> <span class="ow">in</span> <span class="n">digital_pins</span><span class="p">:</span>
-                <span class="n">digital_io</span> <span class="o">=</span> <span class="n">digital_pins</span><span class="p">[</span><span class="n">pin</span><span class="p">]</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">digital_io</span> <span class="o">=</span> <span class="n">digitalio</span><span class="o">.</span><span class="n">DigitalInOut</span><span class="p">(</span><span class="n">board_pin</span><span class="p">)</span>
-                <span class="n">digital_io</span><span class="o">.</span><span class="n">direction</span> <span class="o">=</span> <span class="n">digitalio</span><span class="o">.</span><span class="n">Direction</span><span class="o">.</span><span class="n">INPUT</span>
-                <span class="n">digital_pins</span><span class="p">[</span><span class="n">pin</span><span class="p">]</span> <span class="o">=</span> <span class="n">digital_io</span>
+        <span class="n">pin_num</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">pin</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Invalid GPIO pin </span><span class="si">{</span><span class="n">gpio_str</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
-            <span class="n">value</span> <span class="o">=</span> <span class="n">digital_io</span><span class="o">.</span><span class="n">value</span>
+    <span class="k">if</span> <span class="n">pin_num</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">pin_num</span> <span class="o">&gt;=</span> <span class="n">get_gpio_count</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Invalid GPIO pin </span><span class="si">{</span><span class="n">gpio_str</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
-            <span class="k">if</span> <span class="n">pin</span> <span class="ow">in</span> <span class="n">pin_names</span><span class="p">:</span>
-                <span class="n">pin_name</span> <span class="o">=</span> <span class="n">pin_names</span><span class="p">[</span><span class="n">pin</span><span class="p">]</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">pin_name</span> <span class="o">=</span> <span class="s2">""</span>
-
-        <span class="k">return</span> <span class="n">jsonify</span><span class="p">({</span><span class="s2">"pin"</span><span class="p">:</span> <span class="n">pin</span><span class="p">,</span> <span class="s2">"value"</span><span class="p">:</span> <span class="s2">"on"</span> <span class="k">if</span> <span class="n">value</span> <span class="k">else</span> <span class="s2">"off"</span><span class="p">,</span> <span class="s2">"name"</span><span class="p">:</span> <span class="n">pin_name</span> <span class="p">})</span>
-
-    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-        <span class="k">return</span> <span class="p">(</span>
-            <span class="n">jsonify</span><span class="p">({</span>
-                <span class="s2">"error"</span><span class="p">:</span> <span class="s2">"Failed to read digital pin"</span><span class="p">,</span>
-                <span class="s2">"type"</span><span class="p">:</span> <span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
-                <span class="s2">"message"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span>
-            <span class="p">}),</span>
-            <span class="mi">500</span><span class="p">,</span>
-        <span class="p">)</span>
-</code></pre></div></td></tr></tbody></table></div>
-            </details>
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h4 id="modules.gpio.set_digital" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">set_digital</span><span class="p">()</span></code>
-
-<a href="#modules.gpio.set_digital" class="headerlink" title="Permanent link">¶</a></h4>
-
-
-    <div class="doc doc-contents ">
-
-        <p>POST /gpio/digital</p>
-<p>Set a digital GPIO pin ON or OFF.</p>
-
-
-<details class="json-body" open>
-  <summary>JSON Body</summary>
-  <p>pin   (str/int): GPIO pin number.
-state (str):     "on" or "off". Defaults to "off".</p>
-</details>
-
-<details class="behaviour" open>
-  <summary>Behaviour</summary>
-  <p>• If the pin is currently configured for PWM, PWM is deinitialised.
-• Pin is configured as a digital output if not already.</p>
-</details>
-
-<details class="authentication" open>
-  <summary>Authentication</summary>
-  <p>Requires @api_auth_required("gpio", "update")</p>
-</details>
-
-    <p><span class="doc-section-title">Returns:</span></p>
-    <table>
-      <thead>
-        <tr>
-<th>Name</th>          <th>Type</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-<td><code>JSON</code></td>            <td>
-                  <code><span title="flask.Response">Response</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>{ "pin": <pin>, "state": "on" | "off" }</pin></p>
-              </div>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-            <details class="mkdocstrings-source">
-              <summary>Source code in <code>server/modules/gpio/__init__.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tbody><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">175</span>
-<span class="normal">176</span>
-<span class="normal">177</span>
-<span class="normal">178</span>
-<span class="normal">179</span>
-<span class="normal">180</span>
-<span class="normal">181</span>
-<span class="normal">182</span>
-<span class="normal">183</span>
-<span class="normal">184</span>
-<span class="normal">185</span>
-<span class="normal">186</span>
-<span class="normal">187</span>
-<span class="normal">188</span>
-<span class="normal">189</span>
-<span class="normal">190</span>
-<span class="normal">191</span>
-<span class="normal">192</span>
-<span class="normal">193</span>
-<span class="normal">194</span>
-<span class="normal">195</span>
-<span class="normal">196</span>
-<span class="normal">197</span>
-<span class="normal">198</span>
-<span class="normal">199</span>
-<span class="normal">200</span>
-<span class="normal">201</span>
-<span class="normal">202</span>
-<span class="normal">203</span>
-<span class="normal">204</span>
-<span class="normal">205</span>
-<span class="normal">206</span>
-<span class="normal">207</span>
-<span class="normal">208</span>
-<span class="normal">209</span>
-<span class="normal">210</span>
-<span class="normal">211</span>
-<span class="normal">212</span>
-<span class="normal">213</span>
-<span class="normal">214</span>
-<span class="normal">215</span>
-<span class="normal">216</span>
-<span class="normal">217</span>
-<span class="normal">218</span>
-<span class="normal">219</span>
-<span class="normal">220</span>
-<span class="normal">221</span>
-<span class="normal">222</span>
-<span class="normal">223</span>
-<span class="normal">224</span>
-<span class="normal">225</span>
-<span class="normal">226</span>
-<span class="normal">227</span>
-<span class="normal">228</span>
-<span class="normal">229</span>
-<span class="normal">230</span>
-<span class="normal">231</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@gpio_bp</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">"/digital"</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">"POST"</span><span class="p">])</span>
-<span class="nd">@api_auth_required</span><span class="p">(</span><span class="s2">"gpio"</span><span class="p">,</span> <span class="s2">"update"</span><span class="p">)</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">set_digital</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Response</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    POST /gpio/digital</span>
-
-<span class="sd">    Set a digital GPIO pin ON or OFF.</span>
-
-<span class="sd">    JSON Body:</span>
-<span class="sd">        pin   (str/int): GPIO pin number.</span>
-<span class="sd">        state (str):     "on" or "off". Defaults to "off".</span>
-
-<span class="sd">    Behaviour:</span>
-<span class="sd">        • If the pin is currently configured for PWM, PWM is deinitialised.</span>
-<span class="sd">        • Pin is configured as a digital output if not already.</span>
-
-<span class="sd">    Authentication:</span>
-<span class="sd">        Requires @api_auth_required("gpio", "update")</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        JSON: { "pin": &lt;pin&gt;, "state": "on" | "off" }</span>
-<span class="sd">    """</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">pin</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">json</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"pin"</span><span class="p">))</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-        <span class="n">state</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">json</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"state"</span><span class="p">,</span> <span class="s2">"off"</span><span class="p">))</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
-        <span class="n">name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">json</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">,</span> <span class="s2">""</span><span class="p">))</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Setting GPIO pin </span><span class="si">{</span><span class="n">pin</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">state</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="si">}</span><span class="s2"> with name '</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">'"</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">name</span><span class="p">:</span>
-            <span class="n">pin_names</span><span class="p">[</span><span class="n">pin</span><span class="p">]</span> <span class="o">=</span> <span class="n">name</span>
-
-        <span class="n">board_pin</span> <span class="o">=</span> <span class="n">get_board_pin</span><span class="p">(</span><span class="n">pin</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">board_pin</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">jsonify</span><span class="p">({</span><span class="s2">"error"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"Invalid GPIO pin </span><span class="si">{</span><span class="n">pin</span><span class="si">}</span><span class="s2">"</span><span class="p">}),</span> <span class="mi">400</span>
-
-        <span class="k">with</span> <span class="n">gpio_lock</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">pin</span> <span class="ow">in</span> <span class="n">pwm_pins</span><span class="p">:</span>
-                <span class="n">pwm_pins</span><span class="p">[</span><span class="n">pin</span><span class="p">]</span><span class="o">.</span><span class="n">deinit</span><span class="p">()</span>
-                <span class="k">del</span> <span class="n">pwm_pins</span><span class="p">[</span><span class="n">pin</span><span class="p">]</span>
-
-            <span class="k">if</span> <span class="n">pin</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">digital_pins</span><span class="p">:</span>
-                <span class="n">digital_io</span> <span class="o">=</span> <span class="n">digitalio</span><span class="o">.</span><span class="n">DigitalInOut</span><span class="p">(</span><span class="n">board_pin</span><span class="p">)</span>
-                <span class="n">digital_io</span><span class="o">.</span><span class="n">direction</span> <span class="o">=</span> <span class="n">digitalio</span><span class="o">.</span><span class="n">Direction</span><span class="o">.</span><span class="n">OUTPUT</span>
-                <span class="n">digital_pins</span><span class="p">[</span><span class="n">pin</span><span class="p">]</span> <span class="o">=</span> <span class="n">digital_io</span>
-
-            <span class="n">digital_pins</span><span class="p">[</span><span class="n">pin</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">state</span> <span class="o">==</span> <span class="s2">"on"</span>
-
-        <span class="k">return</span> <span class="n">jsonify</span><span class="p">({</span><span class="s2">"pin"</span><span class="p">:</span> <span class="n">pin</span><span class="p">,</span> <span class="s2">"state"</span><span class="p">:</span> <span class="s2">"on"</span> <span class="k">if</span> <span class="n">digital_pins</span><span class="p">[</span><span class="n">pin</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="k">else</span> <span class="s2">"off"</span><span class="p">})</span>
-
-    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-        <span class="k">return</span> <span class="p">(</span>
-            <span class="n">jsonify</span><span class="p">({</span>
-                <span class="s2">"error"</span><span class="p">:</span> <span class="s2">"Failed to set digital pin"</span><span class="p">,</span>
-                <span class="s2">"type"</span><span class="p">:</span> <span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
-                <span class="s2">"message"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span>
-            <span class="p">}),</span>
-            <span class="mi">500</span><span class="p">,</span>
-        <span class="p">)</span>
-</code></pre></div></td></tr></tbody></table></div>
-            </details>
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h4 id="modules.gpio.set_pwm" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">set_pwm</span><span class="p">()</span></code>
-
-<a href="#modules.gpio.set_pwm" class="headerlink" title="Permanent link">¶</a></h4>
-
-
-    <div class="doc doc-contents ">
-
-        <p>POST /gpio/pwm</p>
-<p>Configure or update PWM on a GPIO pin.</p>
-
-
-<details class="json-body" open>
-  <summary>JSON Body</summary>
-  <p>pin        (str/int): GPIO number.
-frequency  (int):     PWM frequency in Hz. Defaults to 1000.
-duty       (int):     Duty cycle 0–65535. Defaults to 0.</p>
-</details>
-
-<details class="behaviour" open>
-  <summary>Behaviour</summary>
-  <p>• If the pin was digital, digital mode is removed.
-• Creates PWMOut if necessary, otherwise updates existing PWMOut.</p>
-</details>
-
-<details class="authentication" open>
-  <summary>Authentication</summary>
-  <p>Requires @api_auth_required("gpio", "update")</p>
-</details>
-
-    <p><span class="doc-section-title">Returns:</span></p>
-    <table>
-      <thead>
-        <tr>
-<th>Name</th>          <th>Type</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-<td><code>JSON</code></td>            <td>
-                  <code><span title="flask.Response">Response</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>{
-"pin": <pin>,
-"frequency": <hz>,
-"duty": <value>,
-"duty_percent": &lt;0-100&gt;,</value></hz></pin></p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-<td></td>            <td>
-                  <code><span title="flask.Response">Response</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>}</p>
-              </div>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-            <details class="mkdocstrings-source">
-              <summary>Source code in <code>server/modules/gpio/__init__.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tbody><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">234</span>
-<span class="normal">235</span>
-<span class="normal">236</span>
-<span class="normal">237</span>
-<span class="normal">238</span>
-<span class="normal">239</span>
-<span class="normal">240</span>
-<span class="normal">241</span>
-<span class="normal">242</span>
-<span class="normal">243</span>
-<span class="normal">244</span>
-<span class="normal">245</span>
-<span class="normal">246</span>
-<span class="normal">247</span>
-<span class="normal">248</span>
-<span class="normal">249</span>
-<span class="normal">250</span>
-<span class="normal">251</span>
-<span class="normal">252</span>
-<span class="normal">253</span>
-<span class="normal">254</span>
-<span class="normal">255</span>
-<span class="normal">256</span>
-<span class="normal">257</span>
-<span class="normal">258</span>
-<span class="normal">259</span>
-<span class="normal">260</span>
-<span class="normal">261</span>
-<span class="normal">262</span>
-<span class="normal">263</span>
-<span class="normal">264</span>
-<span class="normal">265</span>
-<span class="normal">266</span>
-<span class="normal">267</span>
-<span class="normal">268</span>
-<span class="normal">269</span>
-<span class="normal">270</span>
-<span class="normal">271</span>
-<span class="normal">272</span>
-<span class="normal">273</span>
-<span class="normal">274</span>
-<span class="normal">275</span>
-<span class="normal">276</span>
-<span class="normal">277</span>
-<span class="normal">278</span>
-<span class="normal">279</span>
-<span class="normal">280</span>
-<span class="normal">281</span>
-<span class="normal">282</span>
-<span class="normal">283</span>
-<span class="normal">284</span>
-<span class="normal">285</span>
-<span class="normal">286</span>
-<span class="normal">287</span>
-<span class="normal">288</span>
-<span class="normal">289</span>
-<span class="normal">290</span>
-<span class="normal">291</span>
-<span class="normal">292</span>
-<span class="normal">293</span>
-<span class="normal">294</span>
-<span class="normal">295</span>
-<span class="normal">296</span>
-<span class="normal">297</span>
-<span class="normal">298</span>
-<span class="normal">299</span>
-<span class="normal">300</span>
-<span class="normal">301</span>
-<span class="normal">302</span>
-<span class="normal">303</span>
-<span class="normal">304</span>
-<span class="normal">305</span>
-<span class="normal">306</span>
-<span class="normal">307</span>
-<span class="normal">308</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@gpio_bp</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">"/pwm"</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">"POST"</span><span class="p">])</span>
-<span class="nd">@api_auth_required</span><span class="p">(</span><span class="s2">"gpio"</span><span class="p">,</span> <span class="s2">"update"</span><span class="p">)</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">set_pwm</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Response</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    POST /gpio/pwm</span>
-
-<span class="sd">    Configure or update PWM on a GPIO pin.</span>
-
-<span class="sd">    JSON Body:</span>
-<span class="sd">        pin        (str/int): GPIO number.</span>
-<span class="sd">        frequency  (int):     PWM frequency in Hz. Defaults to 1000.</span>
-<span class="sd">        duty       (int):     Duty cycle 0–65535. Defaults to 0.</span>
-
-<span class="sd">    Behaviour:</span>
-<span class="sd">        • If the pin was digital, digital mode is removed.</span>
-<span class="sd">        • Creates PWMOut if necessary, otherwise updates existing PWMOut.</span>
-
-<span class="sd">    Authentication:</span>
-<span class="sd">        Requires @api_auth_required("gpio", "update")</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        JSON: {</span>
-<span class="sd">            "pin": &lt;pin&gt;,</span>
-<span class="sd">            "frequency": &lt;hz&gt;,</span>
-<span class="sd">            "duty": &lt;value&gt;,</span>
-<span class="sd">            "duty_percent": &lt;0-100&gt;,</span>
-<span class="sd">        }</span>
-<span class="sd">    """</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">pin</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">json</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"pin"</span><span class="p">))</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-        <span class="n">frequency</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">json</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"frequency"</span><span class="p">,</span> <span class="mi">1000</span><span class="p">))</span>
-        <span class="n">duty</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">json</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"duty"</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
-
-        <span class="n">name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">json</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">,</span> <span class="s2">""</span><span class="p">))</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-
-        <span class="k">if</span> <span class="n">name</span><span class="p">:</span>
-            <span class="k">with</span> <span class="n">gpio_lock</span><span class="p">:</span>
-                <span class="n">pin_names</span><span class="p">[</span><span class="n">pin</span><span class="p">]</span> <span class="o">=</span> <span class="n">name</span>
-
-        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">duty</span> <span class="o">&lt;=</span> <span class="mi">65535</span><span class="p">):</span>
-            <span class="k">return</span> <span class="n">jsonify</span><span class="p">({</span><span class="s2">"error"</span><span class="p">:</span> <span class="s2">"Duty must be between 0 and 65535"</span><span class="p">}),</span> <span class="mi">400</span>
-
-        <span class="n">board_pin</span> <span class="o">=</span> <span class="n">get_board_pin</span><span class="p">(</span><span class="n">pin</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">board_pin</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">jsonify</span><span class="p">({</span><span class="s2">"error"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"Invalid GPIO pin </span><span class="si">{</span><span class="n">pin</span><span class="si">}</span><span class="s2">"</span><span class="p">}),</span> <span class="mi">400</span>
-
-        <span class="k">with</span> <span class="n">gpio_lock</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">pin</span> <span class="ow">in</span> <span class="n">digital_pins</span><span class="p">:</span>
-                <span class="n">digital_pins</span><span class="p">[</span><span class="n">pin</span><span class="p">]</span><span class="o">.</span><span class="n">deinit</span><span class="p">()</span>
-                <span class="k">del</span> <span class="n">digital_pins</span><span class="p">[</span><span class="n">pin</span><span class="p">]</span>
-
-            <span class="k">if</span> <span class="n">pin</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">pwm_pins</span><span class="p">:</span>
-                <span class="n">pwm</span> <span class="o">=</span> <span class="n">pwmio</span><span class="o">.</span><span class="n">PWMOut</span><span class="p">(</span><span class="n">board_pin</span><span class="p">,</span> <span class="n">frequency</span><span class="o">=</span><span class="n">frequency</span><span class="p">,</span> <span class="n">duty_cycle</span><span class="o">=</span><span class="n">duty</span><span class="p">)</span>
-                <span class="n">pwm_pins</span><span class="p">[</span><span class="n">pin</span><span class="p">]</span> <span class="o">=</span> <span class="n">pwm</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">pwm</span> <span class="o">=</span> <span class="n">pwm_pins</span><span class="p">[</span><span class="n">pin</span><span class="p">]</span>
-                <span class="n">pwm</span><span class="o">.</span><span class="n">frequency</span> <span class="o">=</span> <span class="n">frequency</span>
-                <span class="n">pwm</span><span class="o">.</span><span class="n">duty_cycle</span> <span class="o">=</span> <span class="n">duty</span>
-
-        <span class="k">return</span> <span class="n">jsonify</span><span class="p">({</span>
-            <span class="s2">"pin"</span><span class="p">:</span> <span class="n">pin</span><span class="p">,</span>
-            <span class="s2">"frequency"</span><span class="p">:</span> <span class="n">frequency</span><span class="p">,</span>
-            <span class="s2">"duty"</span><span class="p">:</span> <span class="n">duty</span><span class="p">,</span>
-            <span class="s2">"duty_percent"</span><span class="p">:</span> <span class="nb">round</span><span class="p">((</span><span class="n">duty</span> <span class="o">/</span> <span class="mi">65535</span><span class="p">)</span> <span class="o">*</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
-        <span class="p">})</span>
-
-    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-        <span class="k">return</span> <span class="p">(</span>
-            <span class="n">jsonify</span><span class="p">({</span>
-                <span class="s2">"error"</span><span class="p">:</span> <span class="s2">"Failed to set PWM"</span><span class="p">,</span>
-                <span class="s2">"type"</span><span class="p">:</span> <span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
-                <span class="s2">"message"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span>
-            <span class="p">}),</span>
-            <span class="mi">500</span><span class="p">,</span>
-        <span class="p">)</span>
-</code></pre></div></td></tr></tbody></table></div>
-            </details>
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h4 id="modules.gpio.status" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">status</span><span class="p">(</span><span class="nb">format</span><span class="p">)</span></code>
-
-<a href="#modules.gpio.status" class="headerlink" title="Permanent link">¶</a></h4>
-
-
-    <div class="doc doc-contents ">
-
-        <p>GET /gpio/status</p>
-<p>Return a compact summary of active digital and PWM pins.</p>
-<p>Unlike <code>/gpio/all</code>, this endpoint only reports pins currently in use.</p>
-
-
-<details class="authentication" open>
-  <summary>Authentication</summary>
-  <p>Requires @api_auth_required("gpio", "update")</p>
-</details>
-
-    <p><span class="doc-section-title">Returns:</span></p>
-    <table>
-      <thead>
-        <tr>
-<th>Name</th>          <th>Type</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-<td><code>JSON</code></td>            <td>
-                  <code><span title="flask.Response">Response</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>{
-"digital": { pin: "on" | "off" },
-"pwm": { pin: { frequency, duty } }</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-<td></td>            <td>
-                  <code><span title="flask.Response">Response</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>}</p>
-              </div>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-            <details class="mkdocstrings-source">
-              <summary>Source code in <code>server/modules/gpio/__init__.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tbody><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">311</span>
-<span class="normal">312</span>
-<span class="normal">313</span>
-<span class="normal">314</span>
-<span class="normal">315</span>
-<span class="normal">316</span>
-<span class="normal">317</span>
-<span class="normal">318</span>
-<span class="normal">319</span>
-<span class="normal">320</span>
-<span class="normal">321</span>
-<span class="normal">322</span>
-<span class="normal">323</span>
-<span class="normal">324</span>
-<span class="normal">325</span>
-<span class="normal">326</span>
-<span class="normal">327</span>
-<span class="normal">328</span>
-<span class="normal">329</span>
-<span class="normal">330</span>
-<span class="normal">331</span>
-<span class="normal">332</span>
-<span class="normal">333</span>
-<span class="normal">334</span>
-<span class="normal">335</span>
-<span class="normal">336</span>
-<span class="normal">337</span>
-<span class="normal">338</span>
-<span class="normal">339</span>
-<span class="normal">340</span>
-<span class="normal">341</span>
-<span class="normal">342</span>
-<span class="normal">343</span>
-<span class="normal">344</span>
-<span class="normal">345</span>
-<span class="normal">346</span>
-<span class="normal">347</span>
-<span class="normal">348</span>
-<span class="normal">349</span>
-<span class="normal">350</span>
-<span class="normal">351</span>
-<span class="normal">352</span>
-<span class="normal">353</span>
-<span class="normal">354</span>
-<span class="normal">355</span>
-<span class="normal">356</span>
-<span class="normal">357</span>
-<span class="normal">358</span>
-<span class="normal">359</span>
-<span class="normal">360</span>
-<span class="normal">361</span>
-<span class="normal">362</span>
-<span class="normal">363</span>
-<span class="normal">364</span>
-<span class="normal">365</span>
-<span class="normal">366</span>
-<span class="normal">367</span>
-<span class="normal">368</span>
-<span class="normal">369</span>
-<span class="normal">370</span>
-<span class="normal">371</span>
-<span class="normal">372</span>
-<span class="normal">373</span>
-<span class="normal">374</span>
-<span class="normal">375</span>
-<span class="normal">376</span>
-<span class="normal">377</span>
-<span class="normal">378</span>
-<span class="normal">379</span>
-<span class="normal">380</span>
-<span class="normal">381</span>
-<span class="normal">382</span>
-<span class="normal">383</span>
-<span class="normal">384</span>
-<span class="normal">385</span>
-<span class="normal">386</span>
-<span class="normal">387</span>
-<span class="normal">388</span>
-<span class="normal">389</span>
-<span class="normal">390</span>
-<span class="normal">391</span>
-<span class="normal">392</span>
-<span class="normal">393</span>
-<span class="normal">394</span>
-<span class="normal">395</span>
-<span class="normal">396</span>
-<span class="normal">397</span>
-<span class="normal">398</span>
-<span class="normal">399</span>
-<span class="normal">400</span>
-<span class="normal">401</span>
-<span class="normal">402</span>
-<span class="normal">403</span>
-<span class="normal">404</span>
-<span class="normal">405</span>
-<span class="normal">406</span>
-<span class="normal">407</span>
-<span class="normal">408</span>
-<span class="normal">409</span>
-<span class="normal">410</span>
-<span class="normal">411</span>
-<span class="normal">412</span>
-<span class="normal">413</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@gpio_bp</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">"/status"</span><span class="p">,</span> <span class="n">defaults</span><span class="o">=</span><span class="p">{</span><span class="s2">"format"</span><span class="p">:</span> <span class="s2">"json"</span><span class="p">},</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">"GET"</span><span class="p">])</span>
-<span class="nd">@gpio_bp</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">"/status/&lt;format&gt;"</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">"GET"</span><span class="p">])</span>
-<span class="nd">@api_auth_required</span><span class="p">(</span><span class="s2">"gpio"</span><span class="p">,</span> <span class="s2">"update"</span><span class="p">)</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">status</span><span class="p">(</span><span class="nb">format</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Response</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    GET /gpio/status</span>
-
-<span class="sd">    Return a compact summary of active digital and PWM pins.</span>
-
-<span class="sd">    Unlike `/gpio/all`, this endpoint only reports pins currently in use.</span>
-
-<span class="sd">    Authentication:</span>
-<span class="sd">        Requires @api_auth_required("gpio", "update")</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        JSON: {</span>
-<span class="sd">            "digital": { pin: "on" | "off" },</span>
-<span class="sd">            "pwm": { pin: { frequency, duty } }</span>
-<span class="sd">        }</span>
-<span class="sd">    """</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="k">with</span> <span class="n">gpio_lock</span><span class="p">:</span>
-            <span class="n">digital_status</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="n">pin</span><span class="p">:</span> <span class="s2">"on"</span> <span class="k">if</span> <span class="n">dio</span><span class="o">.</span><span class="n">value</span> <span class="k">else</span> <span class="s2">"off"</span>
-                <span class="k">for</span> <span class="n">pin</span><span class="p">,</span> <span class="n">dio</span> <span class="ow">in</span> <span class="n">digital_pins</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-            <span class="p">}</span>
-            <span class="n">pwm_status</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="n">pin</span><span class="p">:</span> <span class="p">{</span><span class="s2">"frequency"</span><span class="p">:</span> <span class="n">pwm</span><span class="o">.</span><span class="n">frequency</span><span class="p">,</span> <span class="s2">"duty"</span><span class="p">:</span> <span class="n">pwm</span><span class="o">.</span><span class="n">duty_cycle</span><span class="p">}</span>
-                <span class="k">for</span> <span class="n">pin</span><span class="p">,</span> <span class="n">pwm</span> <span class="ow">in</span> <span class="n">pwm_pins</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-            <span class="p">}</span>
-
-        <span class="k">if</span> <span class="nb">format</span> <span class="o">==</span> <span class="s2">"json"</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">jsonify</span><span class="p">({</span><span class="s2">"digital"</span><span class="p">:</span> <span class="n">digital_status</span><span class="p">,</span> <span class="s2">"pwm"</span><span class="p">:</span> <span class="n">pwm_status</span><span class="p">})</span>
-        <span class="k">else</span><span class="p">:</span>
-
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">digital_status</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">pwm_status</span><span class="p">:</span>
-                <span class="n">html</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"""</span>
-<span class="s2">                    &lt;div class="panel panel-default"&gt;</span>
-<span class="s2">                        &lt;div class="panel-body"&gt;</span>
-<span class="s2">                            &lt;div class="text-center"&gt;</span>
-<span class="s2">                                &lt;i class="fa-solid fa-ghost fa-4x"&gt;&lt;/i&gt;</span>
-<span class="s2">                                &lt;h3&gt;&lt;strong&gt;No active GPIO pins.&lt;/strong&gt;&lt;/h3&gt;</span>
-<span class="s2">                            &lt;/div&gt;</span>
-<span class="s2">                        &lt;/div&gt;</span>
-<span class="s2">                    &lt;/div&gt;                </span>
-<span class="s2">                """</span>
-                <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="n">html</span><span class="p">,</span> <span class="n">mimetype</span><span class="o">=</span><span class="s2">"text/html"</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">html</span> <span class="o">=</span> <span class="s2">"""</span>
-<span class="s2">                &lt;div class="row"&gt;</span>
-<span class="s2">                    &lt;div class="col-xs-2"&gt;&lt;strong&gt;Pin&lt;/strong&gt;&lt;/div&gt;</span>
-<span class="s2">                    &lt;div class="col-xs-2"&gt;&lt;strong&gt;Type&lt;/strong&gt;&lt;/div&gt;</span>
-<span class="s2">                    &lt;div class="col-xs-2"&gt;&lt;strong&gt;State&lt;/strong&gt;&lt;/div&gt;</span>
-<span class="s2">                    &lt;div class="col-xs-3"&gt;&lt;strong&gt;Duty Cycle&lt;/strong&gt;&lt;/div&gt;</span>
-<span class="s2">                    &lt;div class="col-xs-3"&gt;&lt;strong&gt;Frequency&lt;/strong&gt;&lt;/div&gt;   </span>
-<span class="s2">                &lt;/div&gt;</span>
-<span class="s2">                """</span>
-
-                <span class="k">for</span> <span class="n">pin</span><span class="p">,</span> <span class="n">state</span> <span class="ow">in</span> <span class="n">digital_status</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                    <span class="k">if</span> <span class="n">pin</span> <span class="ow">in</span> <span class="n">pin_names</span><span class="p">:</span>
-                        <span class="n">display_pin</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">pin</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">pin_names</span><span class="p">[</span><span class="n">pin</span><span class="p">]</span><span class="si">}</span><span class="s2">)"</span>
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="n">display_pin</span> <span class="o">=</span> <span class="n">pin</span>
-
-                    <span class="n">html</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">"""</span>
-<span class="s2">                    &lt;div class="row"&gt;</span>
-<span class="s2">                        &lt;div class="col-xs-2"&gt;D</span><span class="si">{</span><span class="n">display_pin</span><span class="si">}</span><span class="s2">&lt;/div&gt;</span>
-<span class="s2">                        &lt;div class="col-xs-2"&gt;Digital&lt;/div&gt;</span>
-<span class="s2">                        &lt;div class="col-xs-2"&gt;</span><span class="si">{</span><span class="n">state</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="si">}</span><span class="s2">&lt;/div&gt;</span>
-<span class="s2">                        &lt;div class="col-xs-3"&gt;N/A&lt;/div&gt;</span>
-<span class="s2">                        &lt;div class="col-xs-3"&gt;N/A&lt;/div&gt;   </span>
-<span class="s2">                    &lt;/div&gt;</span>
-<span class="s2">                    """</span>
-
-
-                <span class="k">for</span> <span class="n">pin</span><span class="p">,</span> <span class="n">info</span> <span class="ow">in</span> <span class="n">pwm_status</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                    <span class="k">if</span> <span class="n">pin</span> <span class="ow">in</span> <span class="n">pin_names</span><span class="p">:</span>
-                        <span class="n">display_pin</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">pin</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">pin_names</span><span class="p">[</span><span class="n">pin</span><span class="p">]</span><span class="si">}</span><span class="s2">)"</span>
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="n">display_pin</span> <span class="o">=</span> <span class="n">pin</span>
-
-                    <span class="n">duty_percent</span> <span class="o">=</span> <span class="nb">round</span><span class="p">((</span><span class="n">info</span><span class="p">[</span><span class="s2">"duty"</span><span class="p">]</span> <span class="o">/</span> <span class="mi">65535</span><span class="p">)</span> <span class="o">*</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-                    <span class="n">html</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">"""</span>
-<span class="s2">                    &lt;div class="row"&gt;</span>
-<span class="s2">                        &lt;div class="col-xs-2"&gt;D</span><span class="si">{</span><span class="n">display_pin</span><span class="si">}</span><span class="s2">&lt;/div&gt;</span>
-<span class="s2">                        &lt;div class="col-xs-2"&gt;PWM&lt;/div&gt;</span>
-<span class="s2">                        &lt;div class="col-xs-2"&gt;N/A&lt;/div&gt;</span>
-<span class="s2">                        &lt;div class="col-xs-3"&gt;</span><span class="si">{</span><span class="n">duty_percent</span><span class="si">}</span><span class="s2">%&lt;/div&gt;</span>
-<span class="s2">                        &lt;div class="col-xs-3"&gt;</span><span class="si">{</span><span class="n">info</span><span class="p">[</span><span class="s1">'frequency'</span><span class="p">]</span><span class="si">}</span><span class="s2"> Hz&lt;/div&gt;   </span>
-<span class="s2">                    &lt;/div&gt;</span>
-<span class="s2">                    """</span>
-
-                <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="n">html</span><span class="p">,</span> <span class="n">mimetype</span><span class="o">=</span><span class="s2">"text/html"</span><span class="p">)</span>
-
-    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-        <span class="k">return</span> <span class="p">(</span>
-            <span class="n">jsonify</span><span class="p">({</span>
-                <span class="s2">"error"</span><span class="p">:</span> <span class="s2">"Failed to retrieve status"</span><span class="p">,</span>
-                <span class="s2">"type"</span><span class="p">:</span> <span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
-                <span class="s2">"message"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span>
-            <span class="p">}),</span>
-            <span class="mi">500</span><span class="p">,</span>
-        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">pin</span><span class="p">,</span> <span class="n">pin_num</span>
 </code></pre></div></td></tr></tbody></table></div>
             </details>
     </div>

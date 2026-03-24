@@ -244,7 +244,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#settings" class="md-skip">
+        <a href="#how-the-module-works" class="md-skip">
           Skip to content
         </a>
       
@@ -3690,6 +3690,111 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#how-the-module-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How The Module Works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#basic-and-advanced-settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Basic And Advanced Settings
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#control-modes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Control Modes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#onoff-control-and-hysteresis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        On/Off Control And Hysteresis
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pwm-control-and-the-pwm-curve" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PWM Control And The PWM Curve
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="PWM Control And The PWM Curve">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#visual-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Visual Example
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#comparing-the-curves" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Comparing The Curves
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#timing-limits-startup-handling-and-fault-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Timing Limits, Startup Handling, And Fault Behavior
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#suggested-starting-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Suggested Starting Values
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#settings" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5597,150 +5702,311 @@
 <p class="admonition-title">Important</p>
 <p>This module requires external hardware and some basic knowledge of electronics</p>
 </div>
-<p>This module allows you to control a GPIO pin that can in turn be used to drive a dew heater. The GPIO pin cannot directly drive the heater, instead it must be used to drive a mosfet that in turn controls the heater. </p>
-<p>Whilst the electronics to do this are beyond the scope of this documentation some examples are provided as is.</p>
-<p>The Environment module is also required to provide the temperature and humidity for this module. The environment module should be placed before this module in the pipeline.</p>
-<p>There are two modes of operation for the dew heater</p>
+<p>This module controls a GPIO output that can be used to drive external heater-control hardware for a dew heater. In practical terms, it is the decision-making part of the system that works out whether your dome heater should be off, fully on, or running at a partial power level. The Raspberry Pi GPIO pin does <strong>not</strong> power the heater directly. It should instead drive a proper external switching stage, typically a MOSFET-based driver, which then switches the heater power safely.</p>
+<p>The real purpose of the module is not to make the dome hot. A dew heater only needs to keep the dome, lens window, or protective cover slightly warmer than the point at which moisture would begin to condense. In other words, the module is not trying to produce as much heat as possible. It is trying to apply the smallest useful amount of heat at the right time, and then hold that output in a stable and predictable way so condensation never gets a chance to form.</p>
+<p>In normal use the module should take its environmental values from the Environment module. That is the intended configuration. The Environment module measures temperature, humidity, and related values; the dew heater module then uses those readings to make control decisions. For that reason the Environment module should appear <strong>before</strong> the dew heater module in the relevant pipeline so the variables already exist when this module runs.</p>
+<h2 id="how-the-module-works">How The Module Works<a class="headerlink" href="#how-the-module-works" title="Permanent link">¶</a></h2>
+<p>The core idea behind the module is the difference between ambient temperature and dew point. In this documentation that difference is referred to as the <strong>dew margin</strong>:</p>
+<div class="highlight"><pre><span></span><code>dew margin = ambient temperature - dew point
+</code></pre></div>
+<p>That dew margin is the single most important concept to understand when configuring the module. A large dew margin means ambient temperature is comfortably above the dew point, so condensation is less likely. A small dew margin means ambient temperature is moving closer to the dew point, so the risk of dew is increasing. A dew margin of <code>0</code> means ambient temperature and dew point are the same. A negative dew margin means the measured temperature is already below the dew point, which is a very high-risk condition for moisture forming on the optical surface.</p>
+<p>This way of thinking is far more useful than looking at temperature by itself. A very cold night is not necessarily a problem if the dew point is also low. Equally, a fairly mild night can still be a bad dew night if the dew point is close to ambient temperature. The module therefore reacts to how close those two values are to each other, not to whether the temperature sounds high or low in isolation.</p>
+<p>Each time the module runs it goes through a sequence of decisions. It reads temperature and humidity data, derives or reads the dew point, calculates the dew margin, optionally smooths the readings, applies any configured bias, checks for timing limits or safety conditions, and then decides what output should be applied to the heater. After that it saves its state to Allsky extra data and to the dew heater history so the result can be displayed on overlays and charts.</p>
+<p>The module also exports several values that are useful when you want to see what the controller is doing. As well as the heater state itself, it publishes ambient temperature, dew point, humidity, dew margin, PWM duty cycle, and PWM percentage. This makes the module much easier to tune because you can see not only whether the heater was on, but also <em>why</em> it made that decision.</p>
+<h2 id="basic-and-advanced-settings">Basic And Advanced Settings<a class="headerlink" href="#basic-and-advanced-settings" title="Permanent link">¶</a></h2>
+<p>The module now includes a <code>Setting Level</code> selector with <code>Basic</code> and <code>Advanced</code> modes. This does not change the control logic. It only changes how much of the configuration surface is shown in the user interface.</p>
+<p><code>Basic</code> mode is intended to expose the settings that most users need for initial setup and day-to-day use: where the sensor data comes from, which GPIO pin drives the heater, which control mode is active, the main turn-on and turn-off thresholds, manual PWM if needed, the run delay, and whether the controller is disabled during the day. For many installations those are the only settings that need to be touched.</p>
+<p><code>Advanced</code> mode reveals the full set of tuning controls. That includes the PWM curve, margin bias, smoothing, minimum on and off timers, startup grace handling, sensor fault behavior, daytime PWM limiting, GPIO inversion, debug input values, and the other refinement settings that allow the controller to be matched more closely to a specific dome, heater, and climate. This split is purely there to keep normal setup readable without taking flexibility away from experienced users.</p>
+<h2 id="control-modes">Control Modes<a class="headerlink" href="#control-modes" title="Permanent link">¶</a></h2>
+<p>The module supports five control modes: <code>Automatic On/Off</code>, <code>Automatic PWM</code>, <code>Manual Off</code>, <code>Manual On</code>, and <code>Manual PWM</code>.</p>
+<p>The two automatic modes are the ones intended for routine unattended use. <code>Automatic On/Off</code> treats the heater as a simple switch. It is either on or off with no intermediate power level. <code>Automatic PWM</code> still uses the same dew-margin logic, but instead of changing only between fully off and fully on, it varies heater output according to how close conditions are to the dew point.</p>
+<p>The manual modes are explicit overrides. <code>Manual Off</code> forces the heater off regardless of the weather readings. <code>Manual On</code> forces it fully on. <code>Manual PWM</code> forces a fixed PWM output using the configured <code>Manual PWM %</code> setting. These modes are most useful while proving the hardware path, checking wiring, verifying GPIO polarity, or holding a fixed output for troubleshooting. They are not usually the right choice for long unattended operation.</p>
+<h2 id="onoff-control-and-hysteresis">On/Off Control And Hysteresis<a class="headerlink" href="#onoff-control-and-hysteresis" title="Permanent link">¶</a></h2>
+<p>In automatic modes the module uses two thresholds: <strong>Turn Heater On At</strong> and <strong>Turn Heater Off Above</strong>. They are both based on dew margin, not on temperature alone.</p>
+<p>This two-threshold arrangement is deliberate. If there were only one threshold, the heater could chatter as the dew margin moved slightly above and below that value on successive runs. With two thresholds the heater has a hysteresis band, which means it can turn on at one point and stay on until conditions become clearly safer again.</p>
+<p>For example, if you set:</p>
 <ul>
-<li>Digital - The heater is either on or off</li>
-<li>Pulse Width Modulation (PWM) - The heater voltage is 'controlled' by the mosfet between 0 and 100%. This allows for finer control of the heater</li>
+<li><code>Turn Heater On At = 3.0</code></li>
+<li><code>Turn Heater Off Above = 4.0</code></li>
 </ul>
+<p>then the behavior looks like this:</p>
+<ul>
+<li>at <code>2.8</code>, the heater turns on</li>
+<li>at <code>3.4</code>, the heater keeps its current state</li>
+<li>at <code>3.8</code>, the heater still keeps its current state</li>
+<li>at <code>4.2</code>, the heater turns off</li>
+</ul>
+<p>That gap between the two thresholds is what stops rapid switching. It is one of the most important ideas in the entire module because a poorly tuned hysteresis band is one of the easiest ways to create unstable behavior.</p>
+<h2 id="pwm-control-and-the-pwm-curve">PWM Control And The PWM Curve<a class="headerlink" href="#pwm-control-and-the-pwm-curve" title="Permanent link">¶</a></h2>
+<p><code>Automatic PWM</code> mode uses the same dew-margin idea, but instead of simply switching the heater on or off, it calculates a PWM percentage that changes with conditions. This gives the controller a way to start with a gentle amount of heat when conditions are only marginal, then progressively increase output as the dew margin shrinks.</p>
+<p>That usually works better than waiting until dew is almost forming and then applying full heat as a late reaction. A gentle, earlier response often keeps the dome stable with less overall heating, which is usually the more efficient and more controlled way to prevent condensation.</p>
+<p>PWM behavior is mainly shaped by these settings:</p>
+<ul>
+<li><code>Turn Heater On At</code></li>
+<li><code>Turn Heater Off Above</code></li>
+<li><code>Full Heat Margin</code></li>
+<li><code>Min PWM %</code></li>
+<li><code>Max PWM %</code></li>
+<li><code>PWM Curve</code></li>
+</ul>
+<p>The logic is easiest to picture if you imagine dew margin as a scale moving from dangerous conditions on the left to safer conditions on the right. If the dew margin is <strong>above</strong> <code>Turn Heater Off Above</code>, the PWM output is <code>0%</code>. If the dew margin is <strong>at or below</strong> <code>Full Heat Margin</code>, the heater uses <code>Max PWM %</code>. Between those two points, the module calculates a PWM percentage using the selected curve and then clamps it between <code>Min PWM %</code> and <code>Max PWM %</code>.</p>
+<p>This means the heater gets stronger as the dew margin gets smaller. The curve determines <em>how quickly</em> it gets stronger.</p>
+<h3 id="visual-example">Visual Example<a class="headerlink" href="#visual-example" title="Permanent link">¶</a></h3>
+<p>Assume the following settings:</p>
+<ul>
+<li><code>Turn Heater On At = 3.0</code></li>
+<li><code>Turn Heater Off Above = 4.0</code></li>
+<li><code>Full Heat Margin = 0.5</code></li>
+<li><code>Min PWM % = 20</code></li>
+<li><code>Max PWM % = 100</code></li>
+</ul>
+<p>Then the basic control picture looks like this:</p>
+<p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="/docs/assets/module_images/dew_heater_thresholds.svg" data-desc-position="bottom"><img alt="" src="/docs/assets/module_images/dew_heater_thresholds.svg" width="100%"></a></p>
+<p>At or below <code>0.5</code>, the heater is allowed to use the configured maximum PWM output. Between <code>0.5</code> and <code>4.0</code>, the module calculates a PWM percentage according to the selected curve. Above <code>4.0</code>, output falls to zero. The diagram is useful because it makes it clear that PWM control is still tied to specific thresholds. It is not vague or free-form; it is a structured response to the current dew margin.</p>
+<h3 id="comparing-the-curves">Comparing The Curves<a class="headerlink" href="#comparing-the-curves" title="Permanent link">¶</a></h3>
+<p>The three available curves are shown below:</p>
+<p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="/docs/assets/module_images/dew_heater_pwm_curves.svg" data-desc-position="bottom"><img alt="" src="/docs/assets/module_images/dew_heater_pwm_curves.svg" width="100%"></a></p>
+<p>The <code>linear</code> curve changes output evenly across the usable range. It is easy to reason about and is a good choice if you want a direct and predictable relationship between dew margin and output.</p>
+<p>The default curve is <code>quadratic</code>. This keeps more heat near the danger zone and then backs off more noticeably as the conditions become safer. In practice it often feels like a sensible middle ground because it is assertive when the dome is close to dew, without having to run at very high output all the time.</p>
+<p>The <code>aggressive</code> curve keeps PWM output higher for longer and then drops it more sharply. This can be useful when the heater needs to overcome more thermal inertia, when dew forms quickly at your location, or when experience shows that a gentler curve simply responds too slowly.</p>
+<p>The PWM curve is not the only refinement active in the module. There are several other controls that shape how PWM behaves in real conditions. <code>Sensor Smoothing</code> applies an EMA, or Exponential Moving Average, so short-lived sensor noise does not cause needless changes. <code>Minimum PWM Change %</code> can stop the controller from rewriting the output for tiny changes that do not matter in practice. <code>Max Daytime PWM %</code> allows PWM to be capped during the day if daytime operation is enabled. <code>Margin Bias</code> shifts the effective dew margin seen by the controller so the heater can be made more or less aggressive without changing the raw sensor readings.</p>
+<h2 id="timing-limits-startup-handling-and-fault-behavior">Timing Limits, Startup Handling, And Fault Behavior<a class="headerlink" href="#timing-limits-startup-handling-and-fault-behavior" title="Permanent link">¶</a></h2>
+<p>The controller includes several features designed to make it behave more like a real-world control system and less like a simple threshold switch.</p>
+<p><code>Minimum On Time</code> and <code>Minimum Off Time</code> are separate from hysteresis. Hysteresis prevents the decision point from bouncing around a single threshold. Minimum on and off timers prevent state changes from happening too quickly even when the logic would otherwise allow them. This is useful when the hardware should not be switched too frequently or when the conditions are noisy enough that even a sensible hysteresis band still results in too much activity.</p>
+<p><code>Max Heater Time</code> acts as a protection limit. If the heater remains on longer than the configured maximum continuous time, the module turns it off. This works for both simple on/off operation and PWM operation.</p>
+<p><code>Startup State</code> and <code>Startup Grace Period</code> are about behavior just after Allsky starts. <code>Startup State</code> is only relevant when there is no previous heater state available. <code>Startup Grace Period</code> preserves the current heater state for a short period in automatic modes before the module starts making new automatic decisions. This can be useful if you want the system to settle after boot before normal control resumes.</p>
+<p><code>Sensor Fault Action</code> controls what happens if the module cannot obtain a valid temperature or dew point. It can turn the heater off, keep the last state, or apply <code>Minimum Heat %</code>. The last option is especially useful when it is safer to keep some heat on rather than let the optical surface cool completely while waiting for valid readings to return.</p>
+<p><code>Forced Temperature</code> is a separate override. If ambient temperature drops to or below this value, the heater is forced on regardless of the calculated dew margin. This is useful in installations where very low temperature is known to need heater intervention even before the dew-margin logic would otherwise call for it.</p>
+<h2 id="suggested-starting-values">Suggested Starting Values<a class="headerlink" href="#suggested-starting-values" title="Permanent link">¶</a></h2>
+<p>There is no perfect universal configuration because heater size, heater placement, dome material, airflow, sensor position, and local weather all affect the result. Two systems that look similar on paper can behave differently in practice if one has more airflow, more thermal mass, or a less representative sensor location.</p>
+<p>Even so, the following settings are a sound starting point for many installations:</p>
+<ul>
+<li><code>Control Mode = Automatic PWM</code></li>
+<li><code>Turn Heater On At = 3.0 C</code></li>
+<li><code>Turn Heater Off Above = 4.0 C</code></li>
+<li><code>Full Heat Margin = 0.5 C</code></li>
+<li><code>Min PWM % = 20</code></li>
+<li><code>Max PWM % = 100</code></li>
+<li><code>PWM Curve = quadratic</code></li>
+<li><code>Delay = 30 to 60 seconds</code></li>
+<li><code>Sensor Smoothing = 0.3</code></li>
+<li><code>Minimum PWM Change % = 5</code></li>
+</ul>
+<p>If you are using Fahrenheit, use equivalent Fahrenheit values rather than copying the Celsius values literally. It is also worth treating these as starting values rather than final answers. The best tuning always comes from observing several real damp nights and then adjusting one setting at a time until the heater is stable and effective for your installation.</p>
 <h2 id="settings">Settings<a class="headerlink" href="#settings" title="Permanent link">¶</a></h2>
-<p>The following settings are available in the module</p>
+<p>The following settings are available in the module. The <code>Shown In</code> column indicates whether the setting appears in <code>Basic</code> mode, <code>Advanced</code> mode, or both. Some settings are also only shown when another setting makes them relevant, such as <code>Manual PWM %</code> only appearing in <code>Manual PWM</code> mode.</p>
 <h3 id="sensor-tab">Sensor Tab<a class="headerlink" href="#sensor-tab" title="Permanent link">¶</a></h3>
-<p>The settings on this tab control how the module gets its temeprature and humidity data</p>
+<p>These settings define where the module gets the environmental data it trusts. For most users this tab is configured once and then rarely changed.</p>
 <table>
 <thead>
 <tr>
 <th>Setting</th>
+<th>Shown In</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>Sensor Type</td>
-<td>The type of sensor to use. See notes below</td>
+<td>Basic, Advanced</td>
+<td>Selects the source of temperature and humidity data. The preferred option is <code>Allsky</code>, which reads values produced by the Environment module.</td>
 </tr>
 <tr>
 <td>Temperature Variable</td>
-<td>The variable to use for temperature. Do not change this unless you know what yo are doing</td>
+<td>Basic, Advanced</td>
+<td>The variable used for ambient temperature when <code>Sensor Type</code> is set to <code>Allsky</code>. In normal use the default Allsky temperature variable is usually correct.</td>
 </tr>
 <tr>
 <td>Humidity Variable</td>
-<td>The variable to use for humidity. Do not change this unless you know what you are doing</td>
+<td>Basic, Advanced</td>
+<td>The variable used for humidity when <code>Sensor Type</code> is set to <code>Allsky</code>. In normal use the default Allsky humidity variable is usually correct.</td>
 </tr>
 </tbody>
 </table>
 <div class="admonition warning">
 <p class="admonition-title">Sensor Type</p>
-<p>There are several options available but the preferred method is to use the 'Allsky' option. This will read the values generated by the Environment Module. The hardware sensor options provided in this setting are deprecated and will be removed in a future release.</p>
-<p>The options for sensors other than Allsky are not covered here. Please refer to the Environment module for details on howto use a hardware sensor</p>
+<p>The recommended choice is <code>Allsky</code>. This allows the dew heater module to use the values already generated by the Environment module, which is the intended long-term configuration and the simplest setup to maintain.</p>
 </div>
 <h3 id="heater-tab">Heater Tab<a class="headerlink" href="#heater-tab" title="Permanent link">¶</a></h3>
-<p>The settings on this tab determine how the heater is controlled</p>
+<p>These settings define how the heater output is driven. The basic fields are enough for most installations to get working, while the advanced fields let you tune the controller more precisely.</p>
 <table>
 <thead>
 <tr>
 <th>Setting</th>
+<th>Shown In</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>Heater Pin</td>
-<td>The GPIO pin the heater control is connected to</td>
+<td>Basic, Advanced</td>
+<td>The GPIO pin that drives the external heater-control hardware. The GPIO pin controls the switch stage, not the heater power directly.</td>
 </tr>
 <tr>
-<td>Use PWM</td>
-<td>If enabled PWM will be used to control the dew heater</td>
+<td>Setting Level</td>
+<td>Basic, Advanced</td>
+<td>Chooses whether the UI shows the simpler basic setup or the full set of advanced tuning controls. This does not change runtime behavior by itself.</td>
 </tr>
 <tr>
-<td>Min PWM Temp</td>
-<td>The minimum temperature for PWM, this equates to a 0% duty cycle</td>
+<td>Control Mode</td>
+<td>Basic, Advanced</td>
+<td>Selects <code>Automatic On/Off</code>, <code>Automatic PWM</code>, <code>Manual Off</code>, <code>Manual On</code>, or <code>Manual PWM</code>.</td>
 </tr>
 <tr>
-<td>Max PWM Temp</td>
-<td>The maximum temperature for PWM, this equates to a 100% duty cycle</td>
+<td>Manual PWM %</td>
+<td>Basic, Advanced</td>
+<td>Used only in <code>Manual PWM</code> mode. Sets the fixed PWM duty cycle percentage that should be applied.</td>
 </tr>
 <tr>
-<td>Extra Pin</td>
-<td>A second pin that is controlled in the same way as the Heater Pin</td>
+<td>Turn Heater On At</td>
+<td>Basic, Advanced</td>
+<td>The dew margin at or below which the heater may turn on in automatic modes.</td>
 </tr>
 <tr>
-<td>Use PWM</td>
-<td>Use PWM for the Extra pin, MIn and Max are the same as the main PWM controls</td>
+<td>Turn Heater Off Above</td>
+<td>Basic, Advanced</td>
+<td>The dew margin above which the heater turns off in automatic modes. This should normally be set higher than the turn-on value to provide hysteresis.</td>
+</tr>
+<tr>
+<td>Margin Bias</td>
+<td>Advanced</td>
+<td>Adjusts the effective dew margin used by the controller. Positive values make the heater respond more aggressively; negative values make it less aggressive.</td>
+</tr>
+<tr>
+<td>Full Heat Margin</td>
+<td>Advanced</td>
+<td>In <code>Automatic PWM</code>, the dew margin at or below which the heater uses the configured maximum PWM output.</td>
+</tr>
+<tr>
+<td>Min PWM %</td>
+<td>Advanced</td>
+<td>In <code>Automatic PWM</code>, the minimum PWM percentage that will be used while PWM control is active.</td>
+</tr>
+<tr>
+<td>Max PWM %</td>
+<td>Advanced</td>
+<td>In <code>Automatic PWM</code>, the maximum PWM percentage used when the controller reaches full output.</td>
+</tr>
+<tr>
+<td>Max Daytime PWM %</td>
+<td>Advanced</td>
+<td>In <code>Automatic PWM</code>, caps the PWM percentage during daytime operation if the module is allowed to run in the daytime. Set to <code>0</code> to disable the cap.</td>
+</tr>
+<tr>
+<td>Minimum PWM Change %</td>
+<td>Advanced</td>
+<td>Prevents tiny requested PWM adjustments from constantly rewriting the output. Small changes below this amount are ignored.</td>
+</tr>
+<tr>
+<td>PWM Curve</td>
+<td>Advanced</td>
+<td>Selects the PWM ramp profile in <code>Automatic PWM</code>. Available options are <code>linear</code>, <code>quadratic</code>, and <code>aggressive</code>.</td>
 </tr>
 <tr>
 <td>Startup State</td>
-<td>The intial state of the heater when starting up</td>
+<td>Advanced</td>
+<td>The initial heater state used when Allsky starts and there is no previously saved heater state. This is relevant only in the automatic modes.</td>
 </tr>
 <tr>
-<td>Invert Relay</td>
-<td>If using a relay (NOT RECOMMENDED) invert the on state</td>
-</tr>
-<tr>
-<td>Invert Extra</td>
-<td>If using a relay (NOT RECOMMENDED) invert the on state</td>
+<td>Invert GPIO</td>
+<td>Advanced</td>
+<td>Inverts the GPIO logic level. Use this if the external switching hardware expects an active-low control signal.</td>
 </tr>
 </tbody>
 </table>
 <h3 id="dew-control-tab">Dew Control Tab<a class="headerlink" href="#dew-control-tab" title="Permanent link">¶</a></h3>
-<p>The settings on this tab determine when the heater is enabled or disabled</p>
+<p>These settings define when the controller runs, what safety and fault limits it obeys, and how much it smooths or constrains the output logic. They have a major effect on real-world behavior even though some of them do not directly change the shape of the PWM curve.</p>
 <table>
 <thead>
 <tr>
 <th>Setting</th>
+<th>Shown In</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>Delay</td>
-<td>The number of seconds between reading the sensors, 0 switches this off and the sensor is read every time the module runs</td>
+<td>Basic, Advanced</td>
+<td>The number of seconds between control evaluations. A value of <code>0</code> means the module evaluates conditions every time it runs.</td>
 </tr>
 <tr>
-<td>Limit</td>
-<td>If the temperature is within this many degrees of the dew point, the heater will be enabled or disabled. This is probably the most important setting as it determines if the heater is on or off</td>
+<td>Forced Temperature</td>
+<td>Advanced</td>
+<td>Forces the heater on when ambient temperature is at or below this value. Set to <code>0</code> to disable this override.</td>
 </tr>
 <tr>
-<td>Forced</td>
-<td>Always enable the heater when the ambient termperature is below this value; 0 disables this. This is useful as a quick override if you are going to have prolonged dew</td>
+<td>Sensor Fault Action</td>
+<td>Advanced</td>
+<td>Defines what the module should do if it cannot obtain a valid temperature or dew point: turn off, keep the last state, or apply minimum heat.</td>
 </tr>
 <tr>
-<td>Max Time</td>
-<td>The maximum time in seconds for the heater to be on. 0 disables this.</td>
+<td>Minimum Heat %</td>
+<td>Advanced</td>
+<td>Used only when <code>Sensor Fault Action</code> is set to <code>Use Minimum Heat</code>. In PWM mode this is the fallback PWM percentage; in on/off mode any non-zero value means the heater is turned on.</td>
+</tr>
+<tr>
+<td>Max Heater Time</td>
+<td>Advanced</td>
+<td>The maximum number of seconds the heater may remain on continuously. Set to <code>0</code> to disable this protection.</td>
+</tr>
+<tr>
+<td>Minimum On Time</td>
+<td>Advanced</td>
+<td>The minimum number of seconds the heater should remain on before it is allowed to turn off again.</td>
+</tr>
+<tr>
+<td>Minimum Off Time</td>
+<td>Advanced</td>
+<td>The minimum number of seconds the heater should remain off before it is allowed to turn on again.</td>
+</tr>
+<tr>
+<td>Sensor Smoothing</td>
+<td>Advanced</td>
+<td>Applies EMA smoothing to temperature and dew point values so sensor noise does not cause unnecessary control changes. Lower values respond more slowly but are steadier; higher values track new readings more closely.</td>
+</tr>
+<tr>
+<td>Startup Grace Period</td>
+<td>Advanced</td>
+<td>Preserves the current heater state for a short time after startup in automatic modes before normal automatic decisions resume.</td>
 </tr>
 <tr>
 <td>Daytime Disable</td>
-<td>Disable the dew heater during the daytime</td>
+<td>Basic, Advanced</td>
+<td>Disables the module during daytime runs. Debug mode intentionally bypasses this so the module can still be tested.</td>
 </tr>
 </tbody>
 </table>
 <h3 id="debug-tab">Debug Tab<a class="headerlink" href="#debug-tab" title="Permanent link">¶</a></h3>
-<p>The settings on this tab are used to help test the module</p>
+<p>The debug tab is intended for testing and troubleshooting and is only shown in <code>Advanced</code> setting level. It allows the control logic to be exercised with known values instead of waiting for suitable real weather conditions.</p>
 <table>
 <thead>
 <tr>
 <th>Setting</th>
+<th>Shown In</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Debug Mode</td>
-<td>Enables debug mode. In this mode the sensor is NOT read the values in this tab are used</td>
+<td>Set Debug Mode</td>
+<td>Advanced</td>
+<td>Uses the values entered on the Debug tab instead of reading live sensor data.</td>
 </tr>
 <tr>
-<td>Temperature</td>
-<td>The temperature to use for testing</td>
+<td>Temperature Value</td>
+<td>Advanced</td>
+<td>The ambient temperature used when debug mode is active.</td>
 </tr>
 <tr>
-<td>Dewpoint</td>
-<td>The depoint to use for testing</td>
+<td>Dewpoint Value</td>
+<td>Advanced</td>
+<td>The dew point used when debug mode is active.</td>
 </tr>
 </tbody>
 </table>
-<p>You can use these values to force the temperature and dewpoint values used by the module. This is useful for testing that the other settings are producing the results you expect.</p>
+<p>Debug mode is especially useful when you want to prove the control logic step by step. For example, you can set a small dew margin and confirm that the heater turns on or increases PWM output. You can then set a safer margin and verify that the heater turns off or drops back. In that sense debug mode turns the module from a weather-driven black box into something you can test deliberately.</p>
 <h2 id="schematics">Schematics<a class="headerlink" href="#schematics" title="Permanent link">¶</a></h2>
 <figure>
 <p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="/docs/assets/module_images/dew_heater.png" data-desc-position="bottom"><img alt="" src="/docs/assets/module_images/dew_heater.png" width="50%"></a></p>
@@ -5749,38 +6015,80 @@
 </figcaption>
 </figure>
 <h2 id="tips">Tips<a class="headerlink" href="#tips" title="Permanent link">¶</a></h2>
-<p>Setting up the dew heater can be a little tricky so this section provides some tips on gettin git all running.</p>
-<p>Its best to start without PWM enabled just to confirm that your hardware is all working so to do this;</p>
-<ul>
-<li>Ensure that ALL PWN options are off</li>
-<li>Set the correct GPIO pin for your heater</li>
-<li>Set the limit to 5</li>
-</ul>
-<p>These setting will enable the dew heater when the temperature is within 5 degrees or less of the dew point</p>
+<p>Setting up a dew heater is usually easiest when you separate the problem into two parts: hardware first, then control logic. Many frustrating setup sessions happen because those two things get mixed together. If the heater does not behave correctly, it is much easier to troubleshoot when you already know whether the electrical path works and whether the software logic makes sense.</p>
+<p>A sensible first setup sequence is:</p>
+<ol>
+<li>Confirm that the Environment module is installed and producing believable temperature, humidity, and dew point values.</li>
+<li>Configure the correct heater GPIO pin.</li>
+<li>Leave <code>Setting Level</code> on <code>Basic</code> to avoid being distracted by tuning options that are not yet needed.</li>
+<li>Start in <code>Manual On</code> briefly to confirm that the output hardware switches correctly and the heater actually warms up.</li>
+<li>Move to <code>Automatic On/Off</code> first, because it is easier to reason about than PWM.</li>
+<li>Start with values such as <code>Turn Heater On At = 3</code> and <code>Turn Heater Off Above = 4</code>.</li>
+<li>Once simple on/off control is behaving correctly, switch to <code>Automatic PWM</code> if you want finer control.</li>
+<li>Only then move to <code>Advanced</code> and begin adjusting items such as <code>Full Heat Margin</code>, <code>PWM Curve</code>, smoothing, or timing limits.</li>
+</ol>
+<p>Starting with on/off control is usually the fastest way to prove that the GPIO path, the switching circuit, and the heater itself all work correctly before PWM tuning begins. Once that part is known to be working, PWM tuning becomes a controlled exercise in adjustment rather than a mixture of control tuning and fault finding.</p>
 <h2 id="faq">FAQ<a class="headerlink" href="#faq" title="Permanent link">¶</a></h2>
 <ul>
 <li>
 <p>My heater stays on all of the time</p>
-<ul>
-<li>Set the Allsky debug level to 4 and use the 'Test Module' button in the dew heater settings. This will display some debug messages explaining why the heater is in the state it is</li>
-<li>Check the limit value is not too large. Since the heater is enabled when the dewpoint is within this many degrees of the temeprature large values will cause the heater to stay on</li>
-<li>Check the 'Forced Temperature' value is not set. Setting this to a low value will also cause the heater to remain on</li>
-<li>Check your hardware. If you are using a relay, not recommended, then some require an inverted output. The 'Invert relay' option will enable or disable this.</li>
-</ul>
+</li>
+<li>
+<p>Increase the Allsky debug level and test the module so you can see the control messages in the log.</p>
+</li>
+<li>Check that <code>Control Mode</code> is not set to <code>Manual On</code> or <code>Manual PWM</code>.</li>
+<li>Check that <code>Forced Temperature</code> is not causing the heater to remain on.</li>
+<li>Check that <code>Turn Heater On At</code> is not set too high.</li>
+<li>If <code>Margin Bias</code> is enabled in Advanced mode, check that it is not making the controller more aggressive than intended.</li>
+<li>In PWM mode, check that <code>Full Heat Margin</code> and <code>Max PWM %</code> are sensible for your installation.</li>
+<li>
+<p>Check that the GPIO logic is correct. If your control hardware is active-low, <code>Invert GPIO</code> may need to be enabled.</p>
 </li>
 <li>
 <p>My heater never switches on</p>
-<ul>
-<li>Set the Allsky debug level to 4 and use the 'Test Module' button in the dew heater settings. This will display some debug messages explaining why the heater is in the state it is</li>
-<li>Check your hardware. If you are using a relay, not recommended, then some require an inverted output. The 'Invert relay' option will enable or disable this.</li>
-</ul>
 </li>
 <li>
-<p>My heater switches on but doesnt clear the dew</p>
-<ul>
-<li>Confirm that the heater has sufficient power</li>
-</ul>
+<p>Increase the Allsky debug level and test the module so you can see the dew margin and control decision in the log.</p>
 </li>
+<li>Check that <code>Control Mode</code> is not set to <code>Manual Off</code>.</li>
+<li>Check that the dew margin thresholds are not set too low.</li>
+<li>Check that <code>Daytime Disable</code> is not preventing operation in the current pipeline.</li>
+<li>Check whether <code>Minimum Off Time</code> or <code>Startup Grace Period</code> is intentionally holding the current state.</li>
+<li>Confirm that the heater GPIO pin is correct.</li>
+<li>
+<p>Confirm that the switching hardware is wired correctly and that the heater has a valid power source.</p>
+</li>
+<li>
+<p>My heater switches on but does not clear the dew</p>
+</li>
+<li>
+<p>Confirm that the heater itself has sufficient power for the dome or window being heated.</p>
+</li>
+<li>Confirm that the heater is mounted in an effective location.</li>
+<li>In PWM mode, consider increasing <code>Max PWM %</code>, increasing <code>Turn Heater On At</code>, or using a more aggressive PWM curve.</li>
+<li>
+<p>Confirm that the environmental sensor is mounted in a location that reflects real ambient conditions rather than a warmed or sheltered pocket of air.</p>
+</li>
+<li>
+<p>The heater switches on and off too often</p>
+</li>
+<li>
+<p>Increase the difference between <code>Turn Heater On At</code> and <code>Turn Heater Off Above</code>.</p>
+</li>
+<li>This widens the hysteresis band and prevents rapid switching.</li>
+<li>If that is still not enough, use <code>Minimum On Time</code> and <code>Minimum Off Time</code> in Advanced mode.</li>
+<li>
+<p>If the heater hardware itself cannot tolerate frequent switching well, these are some of the first settings to revisit.</p>
+</li>
+<li>
+<p>PWM output does not behave the way I expected</p>
+</li>
+<li>
+<p>Remember that PWM is based on <strong>dew margin</strong>, not just temperature.</p>
+</li>
+<li>If temperature changes but the dew point changes as well, the output may not follow temperature alone.</li>
+<li>Review the <code>Full Heat Margin</code>, <code>Min PWM %</code>, <code>Max PWM %</code>, <code>PWM Curve</code>, and <code>Margin Bias</code> settings together rather than in isolation.</li>
+<li>If in doubt, start with <code>quadratic</code>, observe the real results, and only then decide whether you need a gentler or more aggressive response.</li>
 </ul>
 <h2 id="important-notes">Important Notes<a class="headerlink" href="#important-notes" title="Permanent link">¶</a></h2>
 <h4 id="relays">Relays<a class="headerlink" href="#relays" title="Permanent link">¶</a></h4>

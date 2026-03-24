@@ -4835,6 +4835,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#grouping-fields-in-rows" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Grouping fields in rows
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -5721,7 +5732,109 @@ The section is a list of values, the table below just shows the available fields
     }            
 }
 </code></pre></div>
+<p>Filters can operate at multiple levels so in the example below, from the dew heater module. The field is only shown if the <code>settingslevel</code> is set to <code>advanced</code> and the <code>controlmode</code> is set to <code>outo_pwm</code></p>
+<div class="highlight"><pre><span></span><code>"fullheatmargin" : {
+    "required": "false",
+    "description": "Full Heat Margin",
+    "help": "At or below this ambient-minus-dew-point margin the PWM duty cycle will use the maximum PWM percentage.",
+    "tab": "Heater",
+    "type": {
+        "fieldtype": "spinner",
+        "min": -20,
+        "max": 20,
+        "step": 0.1
+    },
+    "filters": [
+        {
+            "filter": "settingslevel",
+            "filtertype": "show",
+            "values": [
+                "advanced"
+            ]
+        },
+        {
+            "filter": "controlmode",
+            "filtertype": "show",
+            "values": [
+                "auto_pwm"
+            ]
+        }
+    ]
+}
+</code></pre></div>
 <p>This is a very powerful feature and developer are encouraged to use it to keep the user interface easier for the end user.</p>
+<h3 id="grouping-fields-in-rows">Grouping fields in rows<a class="headerlink" href="#grouping-fields-in-rows" title="Permanent link">¶</a></h3>
+<p>To help keep the user interface clean its possible to put fields into columns within a row, this is controlled by the <code>layout</code> option</p>
+<p>In the example below, from the dew heater both the min and max pwm percentages are displayed in the same row.</p>
+<div class="highlight"><pre><span></span><code>"minpwmpercent" : {
+    "required": "false",
+    "description": "Min PWM %",
+    "help": "Minimum PWM duty cycle to apply when PWM control is active.",
+    "tab": "Heater",
+    "layout": {
+        "row": "heater-pwm-range",
+        "title": "PWM Range",
+        "label": "Min PWM %",
+        "width": 4
+    },
+    "type": {
+        "fieldtype": "spinner",
+        "min": 0,
+        "max": 100,
+        "step": 1
+    },
+    "filters": [
+        {
+            "filter": "settingslevel",
+            "filtertype": "show",
+            "values": [
+                "advanced"
+            ]
+        },
+        {
+            "filter": "controlmode",
+            "filtertype": "show",
+            "values": [
+                "auto_pwm"
+            ]
+        }
+    ]
+},
+"maxpwmpercent" : {
+    "required": "false",
+    "description": "Max PWM %",
+    "help": "Maximum PWM duty cycle to apply when the heater is at full output.",
+    "tab": "Heater",
+    "layout": {
+        "row": "heater-pwm-range",
+        "title": "PWM Range",
+        "label": "Max PWM %",
+        "width": 4
+    },
+    "type": {
+        "fieldtype": "spinner",
+        "min": 0,
+        "max": 100,
+        "step": 1
+    },
+    "filters": [
+        {
+            "filter": "settingslevel",
+            "filtertype": "show",
+            "values": [
+                "advanced"
+            ]
+        },
+        {
+            "filter": "controlmode",
+            "filtertype": "show",
+            "values": [
+                "auto_pwm"
+            ]
+        }
+    ]
+}
+</code></pre></div>
 <h2 id="the-businfo-section">The ‘businfo’ section<a class="headerlink" href="#the-businfo-section" title="Permanent link">¶</a></h2>
 <p>This section is optional and defines which buses on the Pi the module uses.</p>
 <div class="highlight"><pre><span></span><code>"businfo": [

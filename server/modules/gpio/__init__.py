@@ -1,9 +1,5 @@
 from flask import Blueprint, request, jsonify, Response
-from flask_jwt_extended import jwt_required
-import board
-import digitalio
-from micropython import const
-import pwmio
+import lgpio
 import threading
 from modules.auth_utils import api_auth_required
 
@@ -18,65 +14,142 @@ gpio_lock = threading.Lock()
 digital_pins = {}
 pwm_pins = {}
 pin_names = {}
+gpiochip_handle = None
+gpiochip_info = None
 
 # ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------
 
-def get_board_pin(gpio_str):
+def get_gpiochip_handle():
     """
-    Convert a GPIO pin number into a board-specific pin object.
+    Lazily open the first available gpiochip.
+
+    Returns:
+        int: lgpio handle for the active gpiochip.
+    """
+    global gpiochip_handle, gpiochip_info
+
+    if gpiochip_handle is not None:
+        return gpiochip_handle
+
+    last_error = None
+    for chip in range(8):
+        try:
+            handle = lgpio.gpiochip_open(chip)
+            info = lgpio.gpio_get_chip_info(handle)
+            gpiochip_handle = handle
+            gpiochip_info = info
+            return gpiochip_handle
+        except Exception as exc:
+            last_error = exc
+
+    raise RuntimeError(f"Unable to open a gpiochip: {last_error}")
+
+
+def get_gpio_count():
+    """
+    Return the number of GPIO lines exposed by the active chip.
+    """
+    handle = get_gpiochip_handle()
+    del handle  # handle is only used to ensure the chip is opened
+
+    if gpiochip_info is None:
+        return 0
+
+    return int(gpiochip_info[1])
+
+
+def normalise_pin(gpio_str):
+    """
+    Validate and normalise a GPIO pin number.
 
     Args:
         gpio_str (str | int): Pin number, e.g. "18".
 
     Returns:
-        object | None: board.Dxx pin object, or None if invalid.
+        tuple[str, int]: String form and integer form of the GPIO number.
     """
+    pin = str(gpio_str).strip()
+
     try:
-        return getattr(board, f"D{int(gpio_str)}")
-    except (AttributeError, ValueError):
-        return None
+        pin_num = int(pin)
+    except (TypeError, ValueError):
+        raise ValueError(f"Invalid GPIO pin {gpio_str}")
+
+    if pin_num < 0 or pin_num >= get_gpio_count():
+        raise ValueError(f"Invalid GPIO pin {gpio_str}")
+
+    return pin, pin_num
+
+
+def _release_digital_pin(pin):
+    if pin in digital_pins:
+        handle = get_gpiochip_handle()
+        lgpio.gpio_free(handle, int(pin))
+        del digital_pins[pin]
+
+
+def _release_pwm_pin(pin):
+    if pin in pwm_pins:
+        handle = get_gpiochip_handle()
+        lgpio.tx_pwm(handle, int(pin), 0, 0)
+        lgpio.gpio_free(handle, int(pin))
+        del pwm_pins[pin]
+
+
+def _claim_input(pin_num):
+    handle = get_gpiochip_handle()
+    lgpio.gpio_claim_input(handle, pin_num)
+
+
+def _claim_output(pin_num, level=0):
+    handle = get_gpiochip_handle()
+    lgpio.gpio_claim_output(handle, pin_num, level=level)
+
+
+def _read_pin_value(pin_num):
+    handle = get_gpiochip_handle()
+    return bool(lgpio.gpio_read(handle, pin_num))
+
+
+def _write_pin_value(pin_num, level):
+    handle = get_gpiochip_handle()
+    lgpio.gpio_write(handle, pin_num, 1 if level else 0)
+
+
+def _set_pwm_value(pin_num, frequency, duty):
+    handle = get_gpiochip_handle()
+    duty_percent = (float(duty) / 65535.0) * 100.0
+    lgpio.tx_pwm(handle, pin_num, int(frequency), duty_percent)
 
 
 def get_gpio_status() -> dict:
     """
-    Inspect all available board pins and return their current usage.
-
-    This includes:
-      - Unused pins
-      - Digital pins (input/output, on/off)
-      - PWM pins (frequency, duty cycle)
+    Inspect all available GPIO lines and return their current usage.
 
     Returns:
         dict: Status for each Dxx pin on the board.
     """
     all_status = {}
-    for attr in dir(board):
-        if not attr.startswith("D"):
-            continue
+    gpio_count = get_gpio_count()
 
-        hr_pin = attr        # e.g. "D18"
-        pin_num = hr_pin[1:] # e.g. "18"
-        board_pin = getattr(board, attr)
-
+    for pin_num in range(gpio_count):
+        pin = str(pin_num)
         status = {"mode": "unused"}
 
-        if pin_num in digital_pins:
-            dio = digital_pins[pin_num]
-            direction = (
-                "output" if dio.direction == digitalio.Direction.OUTPUT else "input"
-            )
+        if pin in digital_pins:
+            info = digital_pins[pin]
+            direction = info["direction"]
             status["mode"] = f"digital-{direction}"
-            status["value"] = "on" if dio.value else "off"
-
-        elif pin_num in pwm_pins:
-            pwm = pwm_pins[pin_num]
+            status["value"] = "on" if _read_pin_value(pin_num) else "off"
+        elif pin in pwm_pins:
+            pwm = pwm_pins[pin]
             status["mode"] = "pwm"
-            status["frequency"] = pwm.frequency
-            status["duty"] = pwm.duty_cycle
+            status["frequency"] = pwm["frequency"]
+            status["duty"] = pwm["duty"]
 
-        all_status[hr_pin] = status
+        all_status[f"D{pin_num}"] = status
 
     return all_status
 
@@ -88,18 +161,6 @@ def get_gpio_status() -> dict:
 @gpio_bp.route("/all", methods=["GET"])
 @api_auth_required("gpio", "update")
 def all_gpio_status() -> Response:
-    """
-    GET /gpio/all
-
-    Return the status of every board GPIO pin.
-
-    Authentication:
-        Requires @api_auth_required("gpio", "update")
-
-    Returns:
-        JSON: A dictionary of all pins (D0, D1, D2...) with details on
-              whether they are unused, digital I/O, or PWM.
-    """
     try:
         with gpio_lock:
             all_status = get_gpio_status()
@@ -120,47 +181,24 @@ def all_gpio_status() -> Response:
 @gpio_bp.route("/digital/<pin>", methods=["GET"])
 @api_auth_required("gpio", "update")
 def read_digital(pin) -> Response:
-    """
-    GET /gpio/digital/<pin>
-
-    Read a digital GPIO pin.
-
-    If the pin has not previously been configured, the API automatically
-    initialises it as a digital input.
-
-    Args:
-        pin (str): Pin number, e.g. "18".
-
-    Authentication:
-        Requires @api_auth_required("gpio", "update")
-
-    Returns:
-        JSON: { "pin": "<number>", "value": "on" | "off" }
-    """
-    pin = str(pin).strip()
-    board_pin = get_board_pin(pin)
-
-    if board_pin is None:
-        return jsonify({"error": f"Invalid GPIO pin {pin}"}), 400
-
     try:
+        pin, pin_num = normalise_pin(pin)
+
         with gpio_lock:
-            if pin in digital_pins:
-                digital_io = digital_pins[pin]
-            else:
-                digital_io = digitalio.DigitalInOut(board_pin)
-                digital_io.direction = digitalio.Direction.INPUT
-                digital_pins[pin] = digital_io
+            if pin in pwm_pins:
+                return jsonify({"error": f"GPIO pin {pin} is currently configured for PWM"}), 409
 
-            value = digital_io.value
+            if pin not in digital_pins:
+                _claim_input(pin_num)
+                digital_pins[pin] = {"direction": "input"}
 
-            if pin in pin_names:
-                pin_name = pin_names[pin]
-            else:
-                pin_name = ""
-                
-        return jsonify({"pin": pin, "value": "on" if value else "off", "name": pin_name })
+            value = _read_pin_value(pin_num)
+            pin_name = pin_names.get(pin, "")
 
+        return jsonify({"pin": pin, "value": "on" if value else "off", "name": pin_name})
+
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
     except Exception as e:
         return (
             jsonify({
@@ -175,51 +213,25 @@ def read_digital(pin) -> Response:
 @gpio_bp.route("/digital", methods=["POST"])
 @api_auth_required("gpio", "update")
 def set_digital() -> Response:
-    """
-    POST /gpio/digital
-
-    Set a digital GPIO pin ON or OFF.
-
-    JSON Body:
-        pin   (str/int): GPIO pin number.
-        state (str):     "on" or "off". Defaults to "off".
-
-    Behaviour:
-        • If the pin is currently configured for PWM, PWM is deinitialised.
-        • Pin is configured as a digital output if not already.
-
-    Authentication:
-        Requires @api_auth_required("gpio", "update")
-
-    Returns:
-        JSON: { "pin": <pin>, "state": "on" | "off" }
-    """
     try:
-        pin = str(request.json.get("pin")).strip()
-        state = str(request.json.get("state", "off")).lower()
+        pin, pin_num = normalise_pin(request.json.get("pin"))
+        state = str(request.json.get("state", "off")).lower() == "on"
         name = str(request.json.get("name", "")).strip()
-        print(f"Setting GPIO pin {pin} to {state.upper()} with name '{name}'")
+
         if name:
             pin_names[pin] = name
-                
-        board_pin = get_board_pin(pin)
-        if board_pin is None:
-            return jsonify({"error": f"Invalid GPIO pin {pin}"}), 400
 
         with gpio_lock:
-            if pin in pwm_pins:
-                pwm_pins[pin].deinit()
-                del pwm_pins[pin]
+            _release_pwm_pin(pin)
+            _release_digital_pin(pin)
+            _claim_output(pin_num, 1 if state else 0)
+            digital_pins[pin] = {"direction": "output"}
+            _write_pin_value(pin_num, state)
 
-            if pin not in digital_pins:
-                digital_io = digitalio.DigitalInOut(board_pin)
-                digital_io.direction = digitalio.Direction.OUTPUT
-                digital_pins[pin] = digital_io
+        return jsonify({"pin": pin, "state": "on" if state else "off"})
 
-            digital_pins[pin].value = state == "on"
-
-        return jsonify({"pin": pin, "state": "on" if digital_pins[pin].value else "off"})
-
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
     except Exception as e:
         return (
             jsonify({
@@ -234,61 +246,29 @@ def set_digital() -> Response:
 @gpio_bp.route("/pwm", methods=["POST"])
 @api_auth_required("gpio", "update")
 def set_pwm() -> Response:
-    """
-    POST /gpio/pwm
-
-    Configure or update PWM on a GPIO pin.
-
-    JSON Body:
-        pin        (str/int): GPIO number.
-        frequency  (int):     PWM frequency in Hz. Defaults to 1000.
-        duty       (int):     Duty cycle 0–65535. Defaults to 0.
-
-    Behaviour:
-        • If the pin was digital, digital mode is removed.
-        • Creates PWMOut if necessary, otherwise updates existing PWMOut.
-
-    Authentication:
-        Requires @api_auth_required("gpio", "update")
-
-    Returns:
-        JSON: {
-            "pin": <pin>,
-            "frequency": <hz>,
-            "duty": <value>,
-            "duty_percent": <0-100>,
-        }
-    """
     try:
-        pin = str(request.json.get("pin")).strip()
+        pin, pin_num = normalise_pin(request.json.get("pin"))
         frequency = int(request.json.get("frequency", 1000))
         duty = int(request.json.get("duty", 0))
-
         name = str(request.json.get("name", "")).strip()
-        
+
         if name:
-            with gpio_lock:
-                pin_names[pin] = name
-                
+            pin_names[pin] = name
+
+        if frequency <= 0:
+            return jsonify({"error": "Frequency must be greater than 0"}), 400
+
         if not (0 <= duty <= 65535):
             return jsonify({"error": "Duty must be between 0 and 65535"}), 400
 
-        board_pin = get_board_pin(pin)
-        if board_pin is None:
-            return jsonify({"error": f"Invalid GPIO pin {pin}"}), 400
-
         with gpio_lock:
-            if pin in digital_pins:
-                digital_pins[pin].deinit()
-                del digital_pins[pin]
+            _release_digital_pin(pin)
 
             if pin not in pwm_pins:
-                pwm = pwmio.PWMOut(board_pin, frequency=frequency, duty_cycle=duty)
-                pwm_pins[pin] = pwm
-            else:
-                pwm = pwm_pins[pin]
-                pwm.frequency = frequency
-                pwm.duty_cycle = duty
+                _claim_output(pin_num, 0)
+
+            _set_pwm_value(pin_num, frequency, duty)
+            pwm_pins[pin] = {"frequency": frequency, "duty": duty}
 
         return jsonify({
             "pin": pin,
@@ -297,6 +277,8 @@ def set_pwm() -> Response:
             "duty_percent": round((duty / 65535) * 100, 2),
         })
 
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
     except Exception as e:
         return (
             jsonify({
@@ -312,95 +294,69 @@ def set_pwm() -> Response:
 @gpio_bp.route("/status/<format>", methods=["GET"])
 @api_auth_required("gpio", "update")
 def status(format) -> Response:
-    """
-    GET /gpio/status
-
-    Return a compact summary of active digital and PWM pins.
-
-    Unlike `/gpio/all`, this endpoint only reports pins currently in use.
-
-    Authentication:
-        Requires @api_auth_required("gpio", "update")
-
-    Returns:
-        JSON: {
-            "digital": { pin: "on" | "off" },
-            "pwm": { pin: { frequency, duty } }
-        }
-    """
     try:
         with gpio_lock:
             digital_status = {
-                pin: "on" if dio.value else "off"
-                for pin, dio in digital_pins.items()
+                pin: "on" if _read_pin_value(int(pin)) else "off"
+                for pin in digital_pins
             }
             pwm_status = {
-                pin: {"frequency": pwm.frequency, "duty": pwm.duty_cycle}
-                for pin, pwm in pwm_pins.items()
+                pin: {"frequency": info["frequency"], "duty": info["duty"]}
+                for pin, info in pwm_pins.items()
             }
 
         if format == "json":
             return jsonify({"digital": digital_status, "pwm": pwm_status})
-        else:
-            
-            if not digital_status and not pwm_status:
-                html = f"""
-                    <div class="panel panel-default">
-                        <div class="panel-body">
-                            <div class="text-center">
-                                <i class="fa-solid fa-ghost fa-4x"></i>
-                                <h3><strong>No active GPIO pins.</strong></h3>
-                            </div>
+
+        if not digital_status and not pwm_status:
+            html = """
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <div class="text-center">
+                            <i class="fa-solid fa-ghost fa-4x"></i>
+                            <h3><strong>No active GPIO pins.</strong></h3>
                         </div>
-                    </div>                
-                """
-                return Response(html, mimetype="text/html")
-            else:
-                html = """
-                <div class="row">
-                    <div class="col-xs-2"><strong>Pin</strong></div>
-                    <div class="col-xs-2"><strong>Type</strong></div>
-                    <div class="col-xs-2"><strong>State</strong></div>
-                    <div class="col-xs-3"><strong>Duty Cycle</strong></div>
-                    <div class="col-xs-3"><strong>Frequency</strong></div>   
+                    </div>
                 </div>
-                """
-                
-                for pin, state in digital_status.items():
-                    if pin in pin_names:
-                        display_pin = f"{pin} ({pin_names[pin]})"
-                    else:
-                        display_pin = pin
-                                            
-                    html += f"""
-                    <div class="row">
-                        <div class="col-xs-2">D{display_pin}</div>
-                        <div class="col-xs-2">Digital</div>
-                        <div class="col-xs-2">{state.upper()}</div>
-                        <div class="col-xs-3">N/A</div>
-                        <div class="col-xs-3">N/A</div>   
-                    </div>
-                    """
+            """
+            return Response(html, mimetype="text/html")
 
-    
-                for pin, info in pwm_status.items():
-                    if pin in pin_names:
-                        display_pin = f"{pin} ({pin_names[pin]})"
-                    else:
-                        display_pin = pin
-                        
-                    duty_percent = round((info["duty"] / 65535) * 100, 2)
-                    html += f"""
-                    <div class="row">
-                        <div class="col-xs-2">D{display_pin}</div>
-                        <div class="col-xs-2">PWM</div>
-                        <div class="col-xs-2">N/A</div>
-                        <div class="col-xs-3">{duty_percent}%</div>
-                        <div class="col-xs-3">{info['frequency']} Hz</div>   
-                    </div>
-                    """
+        html = """
+        <div class="row">
+            <div class="col-xs-2"><strong>Pin</strong></div>
+            <div class="col-xs-2"><strong>Type</strong></div>
+            <div class="col-xs-2"><strong>State</strong></div>
+            <div class="col-xs-3"><strong>Duty Cycle</strong></div>
+            <div class="col-xs-3"><strong>Frequency</strong></div>
+        </div>
+        """
 
-                return Response(html, mimetype="text/html")
+        for pin, state in digital_status.items():
+            display_pin = f"{pin} ({pin_names[pin]})" if pin in pin_names else pin
+            html += f"""
+            <div class="row">
+                <div class="col-xs-2">D{display_pin}</div>
+                <div class="col-xs-2">Digital</div>
+                <div class="col-xs-2">{state.upper()}</div>
+                <div class="col-xs-3">N/A</div>
+                <div class="col-xs-3">N/A</div>
+            </div>
+            """
+
+        for pin, info in pwm_status.items():
+            display_pin = f"{pin} ({pin_names[pin]})" if pin in pin_names else pin
+            duty_percent = round((info["duty"] / 65535) * 100, 2)
+            html += f"""
+            <div class="row">
+                <div class="col-xs-2">D{display_pin}</div>
+                <div class="col-xs-2">PWM</div>
+                <div class="col-xs-2">N/A</div>
+                <div class="col-xs-3">{duty_percent}%</div>
+                <div class="col-xs-3">{info['frequency']} Hz</div>
+            </div>
+            """
+
+        return Response(html, mimetype="text/html")
 
     except Exception as e:
         return (

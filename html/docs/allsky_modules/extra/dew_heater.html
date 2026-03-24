@@ -3886,6 +3886,67 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="FAQ">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#my-heater-stays-on-all-of-the-time" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        My heater stays on all of the time
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#my-heater-never-switches-on" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        My heater never switches on
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#my-heater-switches-on-but-does-not-clear-the-dew" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        My heater switches on but does not clear the dew
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-heater-switches-on-and-off-too-often" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The heater switches on and off too often
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pwm-output-does-not-behave-the-way-i-expected" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PWM output does not behave the way I expected
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -5769,7 +5830,10 @@
 <p>The <code>linear</code> curve changes output evenly across the usable range. It is easy to reason about and is a good choice if you want a direct and predictable relationship between dew margin and output.</p>
 <p>The default curve is <code>quadratic</code>. This keeps more heat near the danger zone and then backs off more noticeably as the conditions become safer. In practice it often feels like a sensible middle ground because it is assertive when the dome is close to dew, without having to run at very high output all the time.</p>
 <p>The <code>aggressive</code> curve keeps PWM output higher for longer and then drops it more sharply. This can be useful when the heater needs to overcome more thermal inertia, when dew forms quickly at your location, or when experience shows that a gentler curve simply responds too slowly.</p>
-<p>The PWM curve is not the only refinement active in the module. There are several other controls that shape how PWM behaves in real conditions. <code>Sensor Smoothing</code> applies an EMA, or Exponential Moving Average, so short-lived sensor noise does not cause needless changes. <code>Minimum PWM Change %</code> can stop the controller from rewriting the output for tiny changes that do not matter in practice. <code>Max Daytime PWM %</code> allows PWM to be capped during the day if daytime operation is enabled. <code>Margin Bias</code> shifts the effective dew margin seen by the controller so the heater can be made more or less aggressive without changing the raw sensor readings.</p>
+<p>The PWM curve is not the only refinement active in the module. There are several other controls that shape how PWM behaves in real conditions. <code>Sensor Smoothing</code> applies an EMA, or Exponential Moving Average, so short-lived sensor noise does not cause needless changes. In plain terms, an EMA blends each new reading with the previous smoothed reading rather than trusting the latest sensor value completely on its own. That means a one-off spike or dip in temperature or dew point is softened instead of being allowed to jerk the heater output around immediately.</p>
+<p>This matters because environmental sensors rarely produce perfectly steady numbers. A small change in reported temperature or dew point can make the dew margin move around from one run to the next even when the real atmosphere has not changed very much. Without smoothing, the controller may respond to that noise as if it were a real trend. With smoothing, the module becomes less jumpy and more deliberate.</p>
+<p>The smoothing setting controls how heavily the most recent reading is weighted. Lower values produce heavier smoothing, which makes the controller steadier but slower to react. Higher values make the controller follow live readings more closely, which improves responsiveness but also allows more sensor noise through. A value around <code>0.3</code> is often a sensible starting point because it takes the edge off noisy data without making the controller feel sluggish. <code>0</code> disables smoothing completely.</p>
+<p><code>Minimum PWM Change %</code> can stop the controller from rewriting the output for tiny changes that do not matter in practice. <code>Max Daytime PWM %</code> allows PWM to be capped during the day if daytime operation is enabled. <code>Margin Bias</code> shifts the effective dew margin seen by the controller so the heater can be made more or less aggressive without changing the raw sensor readings.</p>
 <h2 id="timing-limits-startup-handling-and-fault-behavior">Timing Limits, Startup Handling, And Fault Behavior<a class="headerlink" href="#timing-limits-startup-handling-and-fault-behavior" title="Permanent link">¶</a></h2>
 <p>The controller includes several features designed to make it behave more like a real-world control system and less like a simple threshold switch.</p>
 <p><code>Minimum On Time</code> and <code>Minimum Off Time</code> are separate from hysteresis. Hysteresis prevents the decision point from bouncing around a single threshold. Minimum on and off timers prevent state changes from happening too quickly even when the logic would otherwise allow them. This is useful when the hardware should not be switched too frequently or when the conditions are noisy enough that even a sensible hysteresis band still results in too much activity.</p>
@@ -5964,7 +6028,7 @@
 <tr>
 <td>Sensor Smoothing</td>
 <td>Advanced</td>
-<td>Applies EMA smoothing to temperature and dew point values so sensor noise does not cause unnecessary control changes. Lower values respond more slowly but are steadier; higher values track new readings more closely.</td>
+<td>Applies EMA, or Exponential Moving Average, smoothing to temperature and dew point values. Instead of using only the latest reading, the module blends it with the previous smoothed value. This helps prevent noisy sensor updates from causing unnecessary heater changes. Lower values mean heavier smoothing and a steadier but slower response. Higher values mean lighter smoothing and a quicker but more reactive controller. A value of <code>0</code> disables smoothing.</td>
 </tr>
 <tr>
 <td>Startup Grace Period</td>
@@ -6029,67 +6093,26 @@
 </ol>
 <p>Starting with on/off control is usually the fastest way to prove that the GPIO path, the switching circuit, and the heater itself all work correctly before PWM tuning begins. Once that part is known to be working, PWM tuning becomes a controlled exercise in adjustment rather than a mixture of control tuning and fault finding.</p>
 <h2 id="faq">FAQ<a class="headerlink" href="#faq" title="Permanent link">¶</a></h2>
-<ul>
-<li>
-<p>My heater stays on all of the time</p>
-</li>
-<li>
-<p>Increase the Allsky debug level and test the module so you can see the control messages in the log.</p>
-</li>
-<li>Check that <code>Control Mode</code> is not set to <code>Manual On</code> or <code>Manual PWM</code>.</li>
-<li>Check that <code>Forced Temperature</code> is not causing the heater to remain on.</li>
-<li>Check that <code>Turn Heater On At</code> is not set too high.</li>
-<li>If <code>Margin Bias</code> is enabled in Advanced mode, check that it is not making the controller more aggressive than intended.</li>
-<li>In PWM mode, check that <code>Full Heat Margin</code> and <code>Max PWM %</code> are sensible for your installation.</li>
-<li>
-<p>Check that the GPIO logic is correct. If your control hardware is active-low, <code>Invert GPIO</code> may need to be enabled.</p>
-</li>
-<li>
-<p>My heater never switches on</p>
-</li>
-<li>
-<p>Increase the Allsky debug level and test the module so you can see the dew margin and control decision in the log.</p>
-</li>
-<li>Check that <code>Control Mode</code> is not set to <code>Manual Off</code>.</li>
-<li>Check that the dew margin thresholds are not set too low.</li>
-<li>Check that <code>Daytime Disable</code> is not preventing operation in the current pipeline.</li>
-<li>Check whether <code>Minimum Off Time</code> or <code>Startup Grace Period</code> is intentionally holding the current state.</li>
-<li>Confirm that the heater GPIO pin is correct.</li>
-<li>
-<p>Confirm that the switching hardware is wired correctly and that the heater has a valid power source.</p>
-</li>
-<li>
-<p>My heater switches on but does not clear the dew</p>
-</li>
-<li>
-<p>Confirm that the heater itself has sufficient power for the dome or window being heated.</p>
-</li>
-<li>Confirm that the heater is mounted in an effective location.</li>
-<li>In PWM mode, consider increasing <code>Max PWM %</code>, increasing <code>Turn Heater On At</code>, or using a more aggressive PWM curve.</li>
-<li>
-<p>Confirm that the environmental sensor is mounted in a location that reflects real ambient conditions rather than a warmed or sheltered pocket of air.</p>
-</li>
-<li>
-<p>The heater switches on and off too often</p>
-</li>
-<li>
-<p>Increase the difference between <code>Turn Heater On At</code> and <code>Turn Heater Off Above</code>.</p>
-</li>
-<li>This widens the hysteresis band and prevents rapid switching.</li>
-<li>If that is still not enough, use <code>Minimum On Time</code> and <code>Minimum Off Time</code> in Advanced mode.</li>
-<li>
-<p>If the heater hardware itself cannot tolerate frequent switching well, these are some of the first settings to revisit.</p>
-</li>
-<li>
-<p>PWM output does not behave the way I expected</p>
-</li>
-<li>
-<p>Remember that PWM is based on <strong>dew margin</strong>, not just temperature.</p>
-</li>
-<li>If temperature changes but the dew point changes as well, the output may not follow temperature alone.</li>
-<li>Review the <code>Full Heat Margin</code>, <code>Min PWM %</code>, <code>Max PWM %</code>, <code>PWM Curve</code>, and <code>Margin Bias</code> settings together rather than in isolation.</li>
-<li>If in doubt, start with <code>quadratic</code>, observe the real results, and only then decide whether you need a gentler or more aggressive response.</li>
-</ul>
+<h3 id="my-heater-stays-on-all-of-the-time">My heater stays on all of the time<a class="headerlink" href="#my-heater-stays-on-all-of-the-time" title="Permanent link">¶</a></h3>
+<p>The most common reason for this is that the module is doing exactly what it has been told to do, but one of the thresholds or overrides is more aggressive than expected. Start by checking <code>Control Mode</code>. If the module is in <code>Manual On</code> or <code>Manual PWM</code>, the heater will not respond to environmental conditions at all. After that, check <code>Forced Temperature</code>, because a low ambient temperature can hold the heater on regardless of the dew-margin logic.</p>
+<p>If you are using automatic control, the next things to review are <code>Turn Heater On At</code>, <code>Turn Heater Off Above</code>, and, if you are in Advanced mode, <code>Margin Bias</code>. A turn-on threshold that is too high, or a positive margin bias that is too strong, can make the controller think conditions are always close enough to dew to justify heat. In PWM mode, also review <code>Full Heat Margin</code>, <code>Min PWM %</code>, and <code>Max PWM %</code>, because an overly aggressive combination can make the heater look as though it is permanently active even though the controller is technically varying the output.</p>
+<p>Finally, do not overlook the electrical side. If the switching hardware is active-low and <code>Invert GPIO</code> is wrong, the physical heater can behave as though the logic is inverted. If in doubt, increase the Allsky debug level and watch the controller messages so you can compare the software decision with the actual electrical output.</p>
+<h3 id="my-heater-never-switches-on">My heater never switches on<a class="headerlink" href="#my-heater-never-switches-on" title="Permanent link">¶</a></h3>
+<p>When the heater never activates, the first question is whether the controller is actually being allowed to run. <code>Manual Off</code> will obviously prevent operation, but so will <code>Daytime Disable</code> if you are testing in a daytime pipeline. In Advanced mode, <code>Minimum Off Time</code> and <code>Startup Grace Period</code> can also delay the transition to an active heater state even when the dew margin looks close to the configured threshold.</p>
+<p>If those are not the issue, the next step is to check whether the thresholds are simply too conservative. A low <code>Turn Heater On At</code> setting means the heater waits until the dew margin is already very small before it acts. It is also worth confirming that the Environment module is producing believable values, because incorrect ambient temperature or dew point data will make the control logic look wrong when it is really the inputs that are misleading it.</p>
+<p>Once you are satisfied with the logic, move on to the hardware path. Confirm that the configured <code>Heater Pin</code> is correct, that the external switching stage is wired properly, and that the heater actually has a power source. <code>Manual On</code> is often the fastest way to separate a control problem from a wiring or power problem.</p>
+<h3 id="my-heater-switches-on-but-does-not-clear-the-dew">My heater switches on but does not clear the dew<a class="headerlink" href="#my-heater-switches-on-but-does-not-clear-the-dew" title="Permanent link">¶</a></h3>
+<p>If the heater is definitely turning on but condensation still forms, the problem is usually not the control logic alone. The heater may simply not be powerful enough for the dome or window being heated, or it may be mounted in a location that does not transfer heat effectively to the surface that needs protection. A perfectly correct controller cannot compensate for a heater that is too small or poorly placed.</p>
+<p>In PWM mode, the controller may also be too gentle for your installation. Increasing <code>Max PWM %</code>, increasing <code>Turn Heater On At</code>, or selecting a more aggressive <code>PWM Curve</code> will make the module apply more heat earlier. If you are already close to those limits, it is a sign that the hardware arrangement probably needs attention rather than more software tuning.</p>
+<p>The environmental sensor location matters as well. If the sensor is mounted in a sheltered or warmed spot, the reported dew margin may look safer than the conditions at the dome surface actually are. In that situation the controller may be making a reasonable decision based on a misleading measurement.</p>
+<h3 id="the-heater-switches-on-and-off-too-often">The heater switches on and off too often<a class="headerlink" href="#the-heater-switches-on-and-off-too-often" title="Permanent link">¶</a></h3>
+<p>Rapid switching usually means the hysteresis band is too narrow for the amount of natural variation in your measurements. The first fix is to increase the gap between <code>Turn Heater On At</code> and <code>Turn Heater Off Above</code>. That gives the module more room to hold its current state instead of reacting to every small movement around a single threshold.</p>
+<p>If widening the hysteresis band is not enough, use <code>Minimum On Time</code> and <code>Minimum Off Time</code> in Advanced mode. Those settings are especially helpful when the heater hardware itself does not tolerate frequent switching well, or when the environmental readings fluctuate enough to cause repeated transitions even though the overall conditions have not really changed very much.</p>
+<p><code>Sensor Smoothing</code> can also help here. If the switching is caused by noisy readings rather than genuine atmospheric change, a modest amount of smoothing can make the controller behave much more calmly without making it feel unresponsive.</p>
+<h3 id="pwm-output-does-not-behave-the-way-i-expected">PWM output does not behave the way I expected<a class="headerlink" href="#pwm-output-does-not-behave-the-way-i-expected" title="Permanent link">¶</a></h3>
+<p>The most important thing to remember is that PWM output is driven by <strong>dew margin</strong>, not by temperature alone. If ambient temperature changes but dew point changes with it, the PWM output may not track temperature in the simple way you expected. This is normal, because the controller is trying to judge condensation risk rather than react to temperature in isolation.</p>
+<p>If the PWM response feels wrong, review the settings as a group rather than one by one. <code>Full Heat Margin</code>, <code>Min PWM %</code>, <code>Max PWM %</code>, <code>PWM Curve</code>, and <code>Margin Bias</code> all shape the response together. Changing only one of them can produce surprising results if the others are already pushing the controller toward a gentler or more aggressive profile.</p>
+<p>When tuning from scratch, <code>quadratic</code> remains the safest default. It gives a useful increase in output near the danger zone without being as blunt as the most aggressive curve. If you are unsure why the output looks the way it does, compare the live dew margin with the threshold and curve settings before changing anything else.</p>
 <h2 id="important-notes">Important Notes<a class="headerlink" href="#important-notes" title="Permanent link">¶</a></h2>
 <h4 id="relays">Relays<a class="headerlink" href="#relays" title="Permanent link">¶</a></h4>
 <p>You will see other examples of people using relays to drive the heater but this is not recommended for the following reasons</p>

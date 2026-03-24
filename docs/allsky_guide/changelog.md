@@ -22,6 +22,9 @@ of the current release.
 
     #### Enhancements / Changes
 
+    - **Install and Update System
+        - Minor versions can now be installed with a git pull, no need to do a full upgrade :-)
+
     - **WebUI changes:**
         - Several menu items are now grouped together; putting your cursor over them or clicking on them shows a list of choices.  
           For example, the **Settings** group contains **Allsky Settings** and **Editor**.

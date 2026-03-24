@@ -1,0 +1,193 @@
+#sidebar {
+	min-width: 270px;
+	max-width: 270px;
+	background: #3445b4;
+	color: #fff;
+	-webkit-transition: all 0.3s;
+	-o-transition: all 0.3s;
+	transition: all 0.3s;
+	position: relative;
+}
+
+#sidebar .h6 {
+	color: #fff;
+}
+
+#sidebar.active {
+	margin-left: -270px;
+}
+
+#sidebar h1 {
+	margin-bottom: 20px;
+	font-weight: 700;
+	font-size: 30px;
+}
+
+#sidebar h1 .logo {
+	color: #fff;
+}
+
+#sidebar h1 .logo span {
+	font-size: 14px;
+	color: #44bef1;
+	display: block;
+}
+
+#sidebar ul.components {
+	padding: 0;
+}
+
+#sidebar ul li {
+	font-size: 16px;
+}
+
+#sidebar ul li>ul {
+	margin-left: 10px;
+}
+
+#sidebar ul li>ul li {
+	font-size: 14px;
+}
+
+#sidebar ul li a {
+	padding: 10px 0px 10px 10px;
+	display: block;
+	color: rgba(255, 255, 255, 0.8);
+}
+
+#sidebar ul li a span {
+	color: #44bef1;
+}
+
+#sidebar ul li a:hover {
+	color: #fff;
+}
+
+#sidebar ul li.active>a {
+	background: #3485B4;
+	color: #fff;
+	padding-left: 25px;
+	box-shadow: var(--bs-box-shadow) !important;
+	border-radius: 5px;
+}
+
+@media (max-width: 991.98px) {
+	#sidebar {
+		margin-left: -270px;
+	}
+
+	#sidebar.active {
+		margin-left: 0;
+	}
+}
+
+#sidebar .custom-menu {
+	display: inline-block;
+	position: absolute;
+	top: 20px;
+	right: 0;
+	margin-right: -20px;
+	-webkit-transition: 0.3s;
+	-o-transition: 0.3s;
+	transition: 0.3s;
+	z-index: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	#sidebar .custom-menu {
+		-webkit-transition: none;
+		-o-transition: none;
+		transition: none;
+	}
+}
+
+#sidebar .custom-menu .btn {
+	width: 60px;
+	height: 60px;
+	border-radius: 50%;
+	position: relative;
+}
+
+#sidebar .custom-menu .btn i {
+	margin-right: -40px;
+	font-size: 14px;
+}
+
+#sidebar .custom-menu .btn.btn-primary {
+	background: transparent;
+	border-color: transparent;
+	z-index: 10000;
+}
+
+#sidebar .custom-menu .btn.btn-primary:after {
+	z-index: -1;
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	content: '';
+	-webkit-transform: rotate(45deg);
+	-ms-transform: rotate(45deg);
+	transform: rotate(45deg);
+	background: #3445b4;
+	border-radius: 10px;
+}
+
+#sidebar .custom-menu .btn.btn-primary:hover,
+#sidebar .custom-menu .btn.btn-primary:focus {
+	background: transparent !important;
+	border-color: transparent !important;
+}
+
+@media (max-width: 991.98px) {
+	#sidebarCollapse span {
+		display: none;
+	}
+}
+
+#content {
+	width: 100%;
+	padding: 0;
+	min-height: 100vh;
+	-webkit-transition: all 0.3s;
+	-o-transition: all 0.3s;
+	transition: all 0.3s;
+}
+
+.login-card {
+	max-width: 400px;
+	margin: auto;
+	margin-top: 10vh;
+	padding: 2rem;
+	border-radius: 1rem;
+	box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+}
+
+[data-bs-theme="dark"]  aside {
+	background-color: rgb(36, 34, 34) !important;
+}
+
+/* Collapsible Card */
+.toggle-btn {
+	border: 0;
+	background: transparent;
+	line-height: 1
+}
+
+.toggle-btn .fa-chevron-down {
+	transition: transform .2s ease
+}
+
+/* when expanded, Bootstrap adds .collapsed=false => rotate icon */
+.toggle-btn:not(.collapsed) .fa-chevron-down {
+	transform: rotate(180deg)
+}
+
+/* End collapsible Card */
+
+/* Focuser */
+#asf-allsky-status {
+	padding-bottom: 0px !important;
+}
+/* End Focuser */

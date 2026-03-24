@@ -8,9 +8,10 @@ class MODULESEDITOR {
 	#eventName = null
 	#settings = null
 	#first = true
-	#dialogFilters = []
+	#dialogFilters = {}
 	#events = []
 	#errors = []
+	#dialogRowGroups = {}
 
 	constructor() {
 
@@ -637,11 +638,70 @@ class MODULESEDITOR {
 		return result
 	}
 
+	#renderTabFields(tabFields) {
+		let fieldsHTML = '';
+		let currentRowGroup = null;
+		let currentRowFields = [];
+
+		const flushRow = () => {
+			if (currentRowFields.length === 0) {
+				return;
+			}
+
+			if (currentRowFields.length === 1 || !currentRowFields[0].rowTitle) {
+				fieldsHTML += '<div class="row as-settings-row">';
+				for (const field of currentRowFields) {
+					const width = Math.min(12, Math.max(1, parseInt(field.width, 10) || 12));
+					fieldsHTML += `<div class="col-xs-12 col-md-${width}">${field.html}</div>`;
+				}
+				fieldsHTML += '</div>';
+			} else {
+				fieldsHTML += `<div class="form-group" id="${currentRowGroup}-wrapper">`;
+				fieldsHTML += `<label class="control-label col-xs-3">${currentRowFields[0].rowTitle}</label>`;
+				fieldsHTML += '<div class="col-xs-8"><div class="row as-settings-row-group" style="margin-left:0; margin-right:0;">';
+				for (const field of currentRowFields) {
+					const width = Math.min(12, Math.max(1, parseInt(field.width, 10) || 12));
+					fieldsHTML += `<div class="col-xs-12 col-md-${width}">${field.html}</div>`;
+				}
+				fieldsHTML += '</div></div><div class="col-xs-1"></div></div>';
+			}
+
+			currentRowFields = [];
+			currentRowGroup = null;
+		};
+
+		for (const field of tabFields) {
+			if (!field.rowGroup) {
+				flushRow();
+				fieldsHTML += `<div class="row as-settings-row"><div class="col-xs-12">${field.html}</div></div>`;
+				continue;
+			}
+
+			if (currentRowGroup !== null && currentRowGroup !== field.rowGroup) {
+				flushRow();
+			}
+
+			currentRowGroup = field.rowGroup;
+			currentRowFields.push(field);
+		}
+
+		flushRow();
+
+		return fieldsHTML;
+	}
+
+	#disposeFieldHelpPopovers() {
+		$('#module-settings-dialog .as-field-help-toggle').each(function() {
+			$(this).popover('hide');
+		});
+	}
+
 	#createSettingsDialog(target) {
 		var events = []
 		this.#events = []
 		let tabs = []
-		this.#dialogFilters = []
+		this.#dialogFilters = {}
+		this.#dialogRowGroups = {}
 		var controls = {
 			'spectrum': [],
 			'select2': [],
@@ -649,7 +709,8 @@ class MODULESEDITOR {
 			'urlcheck': [],
 			'chart': [],
 			'satpicker': [],
-			'allskykamera': []
+			'allskykamera': [],
+			'allskysensor': []			
 		}
 
 		var askHack = false
@@ -669,6 +730,9 @@ class MODULESEDITOR {
 			let fieldData = args[key]
 			let fieldHTML = ''
 			let fieldType = null
+			const layout = fieldData.layout || {};
+			const rowGroup = layout.row || null;
+			const groupedField = rowGroup !== null;
 			if (fieldData.type !== undefined) {
 				if (fieldData.type.fieldtype !== undefined) {
 					fieldType = fieldData.type.fieldtype
@@ -687,9 +751,11 @@ class MODULESEDITOR {
 
 				let fieldDescription = ' data-description="' + fieldData.description + '" ';
 				let helpText = '';
+				let helpToggle = '';
 				if (fieldData.help !== undefined) {
 					if (fieldData.help !== '') {
-						helpText = '<p class="help-block">' + fieldData.help + '</p>';
+						const helpContent = $('<div>').text(fieldData.help).html();
+						helpToggle = '<button type="button" class="btn btn-link btn-xs as-field-help-toggle" data-toggle="popover" data-container="body" data-trigger="focus click" data-placement="left" title="' + fieldData.description + '" data-content="' + helpContent + '" aria-label="Show help for ' + fieldData.description + '"><i class="fa-solid fa-circle-info"></i></button>';
 					}
 				}
 
@@ -1035,6 +1101,71 @@ class MODULESEDITOR {
 						});
 					}
 
+					if (fieldType == 'allskysensor') {
+
+
+
+						inputHTML = `<input type="hidden" id="${key}" name="${key}" class="form-control">`
+						inputHTML += `<button type="button" class="btn btn-primary" id="open-allskysensor-${key}" data-source="${key}">Edit</button>`;
+							
+							controls['allskysensor'].push({
+								'id': '#' + key,
+								'config': {
+									fieldValue: moduleData.metadata.extradata.values
+								}
+							})
+
+							let exampleValues = moduleData.metadata.extradata.values
+            var config = {
+                sensorsUrl: "allskysensor-proxy.php",
+                accessToken: "",
+                title: "Available Sensors",
+                openButtonText: "Open Sensor Picker",
+                values: exampleValues,
+                selectLabel: "Available Sensors",
+                placeholder: "Choose a sensor",
+                helpText: "Sensor list loaded. Pick one to inspect its details.",
+                onLoaded: function (sensors) {
+                    $("#selected-sensor-output").text(
+                        "Loaded " + sensors.length + " sensors.\n\nSelect a sensor to see its payload."
+                    );
+                },
+                onChange: function (sensor, sensors, mapping) {
+                    if (!sensor) {
+                        $("#selected-sensor-output").text("No sensor selected.");
+                        return;
+                    }
+
+                    $("#selected-sensor-output").text(JSON.stringify({
+                        sensor: sensor,
+                        mapping: mapping || {}
+                    }, null, 2));
+                },
+                onMappingChange: function (sensor, mapping) {
+                    $("#selected-sensor-output").text(JSON.stringify({
+                        sensor: sensor,
+                        mapping: mapping || {}
+                    }, null, 2));
+                },
+                onError: function (xhr) {
+                    var message = "Request failed";
+
+                    if (xhr && xhr.responseJSON && xhr.responseJSON.message) {
+                        message = xhr.responseJSON.message;
+                    }
+
+                    $("#selected-sensor-output").text("Error loading sensors: " + message);
+                }
+            };
+							
+							$(document).off('click', `#open-allskysensor-${key}`)
+							$(document).on('click', `#open-allskysensor-${key}`, (event) => {
+								$(document).allskySensor(config);
+								$(document).allskySensor("open");
+							});
+
+					}
+
 					if (fieldType == 'allskykamera') {
 						let allskyKameraStatus = null;
 						$.ajax({
@@ -1080,7 +1211,7 @@ class MODULESEDITOR {
 					}
 
 					if (fieldType == 'select') {
-						inputHTML = '<select name="' + key + '" id="' + key + '"' + required + fieldDescription + '>';
+						inputHTML = '<select name="' + key + '" id="' + key + '" class="form-control"' + required + fieldDescription + '>';
 						let values = fieldData.type.values.split(',')
 						for (let value in values) {
 							let optionValue = values[value]
@@ -1112,7 +1243,7 @@ class MODULESEDITOR {
 								dependenciesset[value].push(key)
 							})
 						}
-						inputHTML = `<select name="${key}" id="${key}" ${required} ${fieldDescription} class="as-module-dependency-select" data-action="${action}" data-value="${fieldValue}" ${dataAttributes}></select>`
+						inputHTML = `<select name="${key}" id="${key}" ${required} ${fieldDescription} class="form-control as-module-dependency-select" data-action="${action}" data-value="${fieldValue}" ${dataAttributes}></select>`
 					}
 
 					if (fieldType == 'ajaxselect') {
@@ -1128,7 +1259,7 @@ class MODULESEDITOR {
 						})
 
 						let values = result.responseJSON.results
-						inputHTML = '<select name="' + key + '" id="' + key + '"' + required + fieldDescription + '>'
+						inputHTML = '<select name="' + key + '" id="' + key + '" class="form-control"' + required + fieldDescription + '>'
 						for (const [key, value] of Object.entries(values)) {
 							let selected = ''
 							if (fieldValue == value.id) {
@@ -1419,20 +1550,36 @@ class MODULESEDITOR {
 						}
 					}
 				} else {
-					fieldHTML = '\
-						<div class="form-group" id="' + key + '-wrapper">\
-							<label for="' + key + '" class="control-label col-xs-3">' + fieldData.description + '</label>\
-							<div class="col-xs-8">\
+					if (groupedField) {
+						const fieldLabel = layout.label || fieldData.description;
+						fieldHTML = '\
+							<div class="form-group as-settings-inline-group" id="' + key + '-wrapper" style="margin-bottom:8px;">\
+								<div class="clearfix">\
+									<label for="' + key + '" class="control-label pull-left" style="margin-bottom:4px;">' + fieldLabel + '</label>\
+									<span class="pull-left" style="margin-left:6px;">' + helpToggle + '</span>\
+								</div>\
 								<div class="'+ extraClass + '">\
 									' + inputHTML + '\
 								</div>\
-								' + helpText + '\
+								' + fieldPostHTML + '\
 							</div>\
-							<div class="col-xs-1">\
-							' + fieldPostHTML + '\
+						'
+					} else {
+						const valueColumnClass = (fieldType === 'select' || fieldType === 'dependentselect' || fieldType === 'ajaxselect') ? 'col-xs-4' : 'col-xs-8';
+						fieldHTML = '\
+							<div class="form-group" id="' + key + '-wrapper">\
+								<label for="' + key + '" class="control-label col-xs-3">' + fieldData.description + ' ' + helpToggle + '</label>\
+								<div class="' + valueColumnClass + '">\
+									<div class="'+ extraClass + '">\
+										' + inputHTML + '\
+									</div>\
+								</div>\
+								<div class="col-xs-1">\
+								' + fieldPostHTML + '\
+								</div>\
 							</div>\
-						</div>\
-					'
+						'
+					}
 				}
 
 			} else {
@@ -1488,36 +1635,28 @@ class MODULESEDITOR {
 				if (tabs[tab] === undefined) {
 					tabs[tab] = [];
 				}
-				tabs[tab].push(fieldHTML);
+
+				const width = layout.width || 12;
+				const rowTitle = layout.title || null;
+				if (rowGroup !== null) {
+					if (this.#dialogRowGroups[rowGroup] === undefined) {
+						this.#dialogRowGroups[rowGroup] = [];
+					}
+					this.#dialogRowGroups[rowGroup].push(key);
+				}
+
+				tabs[tab].push({
+					html: fieldHTML,
+					rowGroup: rowGroup,
+					width: width,
+					rowTitle: rowTitle
+				});
 				fieldsHTML += fieldHTML;
 			}
 
 			if (fieldData.filters !== undefined) {
-				let filters = fieldData.filters
-				if (this.#dialogFilters[filters.filter] === undefined) {
-					this.#dialogFilters[filters.filter] = {}
-				}
-				let sourceField = moduleData.metadata.argumentdetails[filters.filter]
-				let sourceFieldType = 'text'
-				if (sourceField.type !== undefined) {
-					if (sourceField.type.fieldtype !== undefined) {
-						sourceFieldType = sourceField.type.fieldtype
-					}
-				}
-				if (sourceFieldType === 'select') {
-					for (let [filterkey, value] of Object.entries(filters.values)) {
-						if (this.#dialogFilters[filters.filter][value] === undefined) {
-							this.#dialogFilters[filters.filter][value] = {}
-						}
-						this.#dialogFilters[filters.filter][value][key] = filters.filtertype
-					}
-				}
-				if (sourceFieldType === 'checkbox') {
-					if (this.#dialogFilters[filters.filter][true] === undefined) {
-						this.#dialogFilters[filters.filter][true] = {}
-					}
-					this.#dialogFilters[filters.filter][true][key] = filters.filtertype
-				}
+				const filters = Array.isArray(fieldData.filters) ? fieldData.filters : [fieldData.filters];
+				this.#dialogFilters[key] = filters;
 			}
 		}
 		let moduleSettingsHtml = '';
@@ -1534,9 +1673,7 @@ class MODULESEDITOR {
 
 		if (numberOfTabs === 1 && moduleData.metadata.extradata === undefined) {
 			for (let tabName in tabs) {
-				for (let field in tabs[tabName]) {
-					moduleSettingsHtml += tabs[tabName][field];
-				}
+				moduleSettingsHtml += this.#renderTabFields(tabs[tabName]);
 			}
 		} else {
 			moduleSettingsHtml += '<div>';
@@ -1570,10 +1707,7 @@ class MODULESEDITOR {
 			moduleSettingsHtml += '<div class="tab-content">';
 			active = 'active';
 			for (let tabName in tabs) {
-				let fieldsHTML = '';
-				for (let field in tabs[tabName]) {
-					fieldsHTML += tabs[tabName][field];
-				}
+				let fieldsHTML = this.#renderTabFields(tabs[tabName]);
 				let tabRef = moduleData.metadata.module + tabName;
 				moduleSettingsHtml += '<div role="tabpanel" style="margin-top:10px" class="tab-pane ' + active + '" id="' + tabRef + '">' + fieldsHTML + '</div>';
 				active = '';
@@ -1959,8 +2093,30 @@ class MODULESEDITOR {
 		}
 
 		$('#module-settings-dialog').off('hidden.bs.modal')
-		$('#module-settings-dialog').on('hidden.bs.modal', function() {
-			$(this).remove();
+		$('#module-settings-dialog').on('hidden.bs.modal', () => {
+			this.#disposeFieldHelpPopovers();
+			$('#module-settings-dialog [data-toggle="popover"]').popover('dispose');
+			$('#module-settings-dialog').remove();
+		});
+		$('#module-settings-dialog').on('hide.bs.modal', () => {
+			this.#disposeFieldHelpPopovers();
+		});
+
+		$(document).off('shown.bs.tab', '#module-settings-dialog a[data-toggle="tab"]');
+		$(document).on('shown.bs.tab', '#module-settings-dialog a[data-toggle="tab"]', () => {
+			this.#disposeFieldHelpPopovers();
+		});
+
+		$(document).off('click', '.as-field-help-toggle');
+		$(document).on('click', '.as-field-help-toggle', (event) => {
+			event.stopPropagation();
+		});
+
+		$(document).off('click', '#module-settings-dialog');
+		$(document).on('click', '#module-settings-dialog', (event) => {
+			if (!$(event.target).closest('.popover, .as-field-help-toggle').length) {
+				this.#disposeFieldHelpPopovers();
+			}
 		});
 
 		$(window).off('resize')
@@ -2016,6 +2172,8 @@ class MODULESEDITOR {
 				let formValues = this.#getFormValues()
 				this.#saveFormData(this.#configData.selected, formValues, module);
 				this.#saveFormData(this.#configData.available, formValues, module);
+				this.#dirty = true;
+				this.#updateToolbar();
 
 				Object.entries(controls['spectrum']).forEach(([key, value]) => {
 					$(value['id']).spectrum('destroy')
@@ -2116,33 +2274,83 @@ class MODULESEDITOR {
 	}
 
 	#setFormState() {
-		// Hide all fields that can be hidden / shown
-		for (let [selectField, selectValues] of Object.entries(this.#dialogFilters)) {
-			for (let [selectOption, fields] of Object.entries(selectValues)) {
-				for (let [fieldToManage, filterType] of Object.entries(fields)) {
-					$('#' + fieldToManage + '-wrapper').hide()
+		const fieldVisibility = {};
+
+		for (let [fieldToManage, filters] of Object.entries(this.#dialogFilters)) {
+			const wrapper = $('#' + fieldToManage + '-wrapper');
+			if (!wrapper.length) {
+				continue;
+			}
+
+			let visible = true;
+			for (const filter of filters) {
+				const sourceElement = $('#' + filter.filter);
+				if (!sourceElement.length) {
+					visible = false;
+					break;
 				}
-			}
-		}
 
-		// Show just the fields based upon the select value
-		for (let [selectField, selectValues] of Object.entries(this.#dialogFilters)) {
-			let fieldType = $(`#${selectField}`).prop('type');
-			let selectValue = ''
-			if (fieldType === 'checkbox') {
-				selectValue = $(`#${selectField}`).prop('checked')
-			}
-			if (fieldType === 'select-one') {
-				selectValue = $(`#${selectField}`).val()
-			}
+				const fieldType = sourceElement.prop('type');
+				let matches = false;
 
-			for (let [selectOption, fields] of Object.entries(selectValues)) {
-				if ((selectValue == selectOption) || (fieldType === 'checkbox' && selectValue)) {
-					for (let [fieldToManage, filterType] of Object.entries(fields)) {
-						$('#' + fieldToManage + '-wrapper').show()
+				if (fieldType === 'checkbox') {
+					matches = sourceElement.prop('checked');
+					if (Array.isArray(filter.values) && filter.values.length > 0) {
+						const normalizedValues = filter.values.map((value) => {
+							if (typeof value === 'boolean') {
+								return value;
+							}
+							return String(value).toLowerCase();
+						});
+						const hasExplicitCheckboxState =
+							normalizedValues.includes(true) ||
+							normalizedValues.includes(false) ||
+							normalizedValues.includes('true') ||
+							normalizedValues.includes('false') ||
+							normalizedValues.includes('1') ||
+							normalizedValues.includes('0') ||
+							normalizedValues.includes('checked') ||
+							normalizedValues.includes('unchecked');
+
+						if (hasExplicitCheckboxState) {
+							matches =
+								(normalizedValues.includes(true) || normalizedValues.includes('true') || normalizedValues.includes('1') || normalizedValues.includes('checked'))
+								? sourceElement.prop('checked')
+								: !sourceElement.prop('checked');
+						}
+					}
+				} else {
+					const currentValue = sourceElement.val();
+					if (Array.isArray(filter.values)) {
+						matches = filter.values.some((value) => String(value) === String(currentValue));
+					} else {
+						matches = String(currentValue) === String(filter.values);
 					}
 				}
+
+				if (filter.filtertype === 'hide') {
+					matches = !matches;
+				}
+
+				if (!matches) {
+					visible = false;
+					break;
+				}
 			}
+
+			fieldVisibility[fieldToManage] = visible;
+			wrapper.toggle(visible);
+		}
+
+		for (let [rowGroup, fields] of Object.entries(this.#dialogRowGroups)) {
+			const rowWrapper = $('#' + rowGroup + '-wrapper');
+			if (!rowWrapper.length) {
+				continue;
+			}
+
+			const hasVisibleChildren = fields.some((fieldName) => fieldVisibility[fieldName] !== false);
+
+			rowWrapper.toggle(hasVisibleChildren);
 		}
 	}
 

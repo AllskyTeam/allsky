@@ -838,7 +838,7 @@ class MODULESEDITOR {
 								' + inputHTML + '\
 								</div>\
 								<div class="col-xs-4">\
-									<button type="button" class="btn btn-default" id="open-image-manager-' + key + '">...</button>\
+									<button type="button" class="btn btn-primary" id="open-image-manager-' + key + '">...</button>\
 								</div>\
 							</div>\
 						';
@@ -870,8 +870,8 @@ class MODULESEDITOR {
 								' + inputHTML + '\
 								</div>\
 								<div class="col-xs-5">\
-									<button type="button" class="btn btn-default" id="open-roi-' + key + '" data-source="' + key + '">...</button>\
-									<button type="button" class="btn btn-default" id="reset-roi-' + key + '" data-source="' + key + '"><i class="fa-solid fa-rotate-right"></i></button>\
+									<button type="button" class="btn btn-primary" id="open-roi-' + key + '" data-source="' + key + '">...</button>\
+									<button type="button" class="btn btn-warning" id="reset-roi-' + key + '" data-source="' + key + '"><i class="fa-solid fa-rotate-right"></i></button>\
 								</div>\
 							</div>\
 						';
@@ -986,8 +986,8 @@ class MODULESEDITOR {
 								' + inputHTML + '\
 								</div>\
 								<div class="col-xs-5">\
-									<button type="button" class="btn btn-default" id="open-gpio-' + key + '" data-source="' + key + '">...</button>\
-									<button type="button" class="btn btn-default" id="reset-gpio-' + key + '" data-source="' + key + '"><i class="fa-solid fa-rotate-right"></i></button>\
+									<button type="button" class="btn btn-primary" id="open-gpio-' + key + '" data-source="' + key + '">...</button>\
+									<button type="button" class="btn btn-warning" id="reset-gpio-' + key + '" data-source="' + key + '"><i class="fa-solid fa-rotate-right"></i></button>\
 								</div>\
 							</div>\
 						';
@@ -1026,8 +1026,8 @@ class MODULESEDITOR {
 								' + inputHTML + '\
 								</div>\
 								<div class="col-xs-3">\
-									<button type="button" class="btn btn-default" id="open-var-' + key + '" data-source="' + key + '" data-select="' + selectType + '">...</button>\
-									<button type="button" class="btn btn-default" id="reset-var-' + key + '" data-source="' + key + '"><i class="fa-solid fa-rotate-right"></i></button>\
+									<button type="button" class="btn btn-primary" id="open-var-' + key + '" data-source="' + key + '" data-select="' + selectType + '">...</button>\
+									<button type="button" class="btn btn-warning" id="reset-var-' + key + '" data-source="' + key + '"><i class="fa-solid fa-rotate-right"></i></button>\
 								</div>\
 								<div class="col-xs-4" id="' + key + '_value">\
 								</div>\
@@ -1070,8 +1070,8 @@ class MODULESEDITOR {
 								' + inputHTML + '\
 								</div>\
 								<div class="col-xs-5">\
-									<button type="button" class="btn btn-default" id="open-i2c-' + key + '" data-source="' + key + '">...</button>\
-									<button type="button" class="btn btn-default" id="reset-i2c-' + key + '" data-source="' + key + '"><i class="fa-solid fa-rotate-right"></i></button>\
+									<button type="button" class="btn btn-primary" id="open-i2c-' + key + '" data-source="' + key + '">...</button>\
+									<button type="button" class="btn btn-warning" id="reset-i2c-' + key + '" data-source="' + key + '"><i class="fa-solid fa-rotate-right"></i></button>\
 								</div>\
 							</div>\
 						';
@@ -1418,8 +1418,8 @@ class MODULESEDITOR {
 						inputHTML += '</div>'
 						inputHTML += `
 								<div class="col-md-3">
-									<button type="button" class="btn btn-default" id="open-gpio-${powerId}" data-source="${powerId}">...</button>
-									<button type="button" class="btn btn-default" id="reset-gpio-${powerId}" data-source="${powerId}"><i class="fa-solid fa-rotate-right"></i></button>
+									<button type="button" class="btn btn-primary" id="open-gpio-${powerId}" data-source="${powerId}">...</button>
+									<button type="button" class="btn btn-warning" id="reset-gpio-${powerId}" data-source="${powerId}"><i class="fa-solid fa-rotate-right"></i></button>
 								</div>
 						`;
 						inputHTML += '</div>'

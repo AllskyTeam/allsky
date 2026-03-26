@@ -47,7 +47,7 @@ done
 [[ ${OK} == "false" ]] && usage_and_exit 1
 
 if [[ "$( settings ".startrailsgenerate" )" != "true" ]]; then
-	w_ "\nWARNING: The startrails 'Generate' setting is not enabled."
+	W_ "\nWARNING: The startrails 'Generate' setting is not enabled."
 fi
 
 # Input format:

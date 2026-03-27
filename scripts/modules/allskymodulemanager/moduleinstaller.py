@@ -528,6 +528,65 @@ Would you like to review and install any available modules now?\
         w = Whiptail(title=f"Module Manager Welcome", backtitle=f"{self._main_backtitle}", height=25, width=80)
         result = w.yesno(self._welcome_message)        
         return result
+
+    def migrate_overlay_variables(self):
+        result = shared.migrate_overlay_template_variables(
+            debug=self._debug_mode,
+            logger=lambda message: self._log(True, message)
+        )
+
+        self._log(
+            False,
+            "INFO: Overlay variable migration complete. "
+            f"Scanned {result['templates_scanned']} template(s), "
+            f"updated {result['templates_updated']}, "
+            f"applied {result['replacements']} replacement(s)."
+        )
+
+        if self._debug_mode:
+            if len(result['files']) == 0:
+                self._log(True, "INFO: No overlay templates required updating")
+            else:
+                for file_info in result['files']:
+                    self._log(True, f"INFO: Updated {file_info['file']}")
+                    if len(file_info['replacements']) == 0:
+                        self._log(True, "INFO: No specific replacement details recorded")
+                    else:
+                        for replacement in file_info['replacements']:
+                            self._log(True, f"INFO: Replaced {replacement['old']} with {replacement['new']}")
+
+    def migration_report(self, module_name: str):
+        modules_folder = Path(self._allsky_path) / "config" / "myFiles" / "modules"
+        module_files = sorted(modules_folder.glob("*.py"))
+
+        if module_name.lower() == "all":
+            selected_files = module_files
+        else:
+            module_file_name = module_name if module_name.endswith(".py") else f"{module_name}.py"
+            selected_files = [modules_folder / module_file_name]
+
+        found_report = False
+
+        for module_file in selected_files:
+            if not module_file.exists():
+                self._log(False, f"ERROR: Module file not found: {module_file}")
+                continue
+
+            meta_data = shared._load_module_metadata_from_file(module_file)
+            if not meta_data:
+                self._log(False, f"ERROR: Unable to read metadata from {module_file}")
+                continue
+
+            extradata = meta_data.get("extradata", {})
+            report = shared.get_extradata_migration_report(extradata, meta_data.get("module", module_file.stem))
+            self._log(False, report)
+            found_report = True
+
+            if module_name.lower() == "all":
+                self._log(False, "")
+
+        if not found_report and module_name.lower() != "all":
+            self._log(False, f"ERROR: No migration report available for module {module_name}")
                             
     def run(self, args: argparse.Namespace) -> None:
         
@@ -607,6 +666,8 @@ if __name__ == "__main__":
     parser.add_argument("--branch", action="store_true", help="Allow the remote branch to be selected, default is 'master'")
     parser.add_argument("--setbranch", type=str, help="Specify the remote branch to use")
     parser.add_argument("--cleanupopt", action="store_true", help="Cleanup the legacy module folders")
+    parser.add_argument("--migrateoverlayvariables", action="store_true", help="Migrate overlay template variables using module migration metadata")
+    parser.add_argument("--migrationreport", nargs="?", const="all", help="Show migration report for a module, or all modules if no module is specified")
     parser.add_argument("--auto", action="store_true", help="Auto upgrade modules, will migrate if required")    
     parser.add_argument("--dryrun", action="store_true", help="For auto mode do a dry run only, no changes will be made")    
     parser.add_argument("--welcome", action="store_true", help="Show the welcome message")    
@@ -625,6 +686,14 @@ if __name__ == "__main__":
                 
     if args.cleanupopt:
         module_installer.cleanup_opt(args)
+        sys.exit(0)
+
+    if args.migrateoverlayvariables:
+        module_installer.migrate_overlay_variables()
+        sys.exit(0)
+
+    if args.migrationreport:
+        module_installer.migration_report(args.migrationreport)
         sys.exit(0)
 
     try:

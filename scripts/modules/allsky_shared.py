@@ -21,6 +21,7 @@ import os
 import traceback
 import pprint
 import shlex
+import ast
 import subprocess
 import requests
 import json
@@ -2498,6 +2499,326 @@ def format_extra_data_json(extra_data, structure, source):
                     pass
                     #log(0, f"ERROR: {key} not found in module config")
                     
+    return result
+
+def _get_extradata_indexes(structure):
+    """
+    Build the indexed suffix values used by templated extra-data keys.
+
+    This mirrors the indexing rules used by ``format_extra_data_json()``
+    so migration reports describe the same concrete keys users will see.
+    """
+    counter = 2
+    blank_first_entry = False
+
+    if 'info' in structure:
+        if 'count' in structure['info']:
+            counter = structure['info']['count']
+        if 'firstblank' in structure['info']:
+            blank_first_entry = to_bool(structure['info']['firstblank'])
+
+    indexes = []
+    for valueItr in range(1, counter):
+        index = valueItr
+        if blank_first_entry and valueItr == 1:
+            index = ''
+        else:
+            index = index - 1
+
+        indexes.append(str(index))
+
+    return indexes
+
+def _expand_extradata_migration_key(key, structure):
+    """
+    Expand a templated migration key into concrete variable names.
+    """
+    if '${COUNT}' not in key:
+        return [key]
+
+    return [key.replace('${COUNT}', index) for index in _get_extradata_indexes(structure)]
+
+def get_extradata_migration_report(structure: dict = {}, source: str = '') -> str:
+    """
+    Generate a human-readable extra-data migration report.
+
+    Modules can declare schema migrations in ``extradata['migrations']``.
+    This helper expands indexed variables such as ``${COUNT}`` and returns
+    a plain-text report suitable for logs, UI notices, or CLI output.
+    """
+    if not structure:
+        return ''
+
+    schema_version = structure.get('schema_version', 'unknown')
+    migrations = structure.get('migrations', [])
+    module_name = source if source else structure.get('module', 'Unknown module')
+
+    if len(migrations) == 0:
+        return f"{module_name} extra-data schema v{schema_version}: no declared migrations."
+
+    lines = [f"{module_name} extra-data schema v{schema_version} migration report"]
+
+    for migration in migrations:
+        from_version = migration.get('from_schema_version', 'unknown')
+        to_version = migration.get('to_schema_version', 'unknown')
+        breaking = to_bool(migration.get('breaking', False))
+        title = migration.get('title', f"Schema {from_version} -> {to_version}")
+        message = migration.get('message', '')
+        changes = migration.get('changes', {})
+
+        lines.append('')
+        lines.append(f"{title} ({from_version} -> {to_version})")
+        lines.append(f"Breaking: {'yes' if breaking else 'no'}")
+
+        if message != '':
+            lines.append(message)
+
+        renamed = changes.get('renamed', {})
+        if len(renamed) > 0:
+            lines.append('Renamed variables:')
+            for old_key, new_key in renamed.items():
+                expanded_old = _expand_extradata_migration_key(old_key, structure)
+                expanded_new = _expand_extradata_migration_key(new_key, structure)
+
+                for old_name, new_name in zip(expanded_old, expanded_new):
+                    lines.append(f"  {old_name} -> {new_name}")
+
+        added = changes.get('added', [])
+        if len(added) > 0:
+            lines.append('Added variables:')
+            for key in added:
+                for expanded_key in _expand_extradata_migration_key(key, structure):
+                    lines.append(f"  {expanded_key}")
+
+        removed = changes.get('removed', [])
+        if len(removed) > 0:
+            lines.append('Removed variables:')
+            for key in removed:
+                for expanded_key in _expand_extradata_migration_key(key, structure):
+                    lines.append(f"  {expanded_key}")
+
+    return "\n".join(lines)
+
+def _load_module_metadata_from_file(module_file: Union[str, Path]) -> dict:
+    """
+    Extract a module class ``meta_data`` dict from source without importing it.
+    """
+    module_path = Path(module_file)
+
+    try:
+        source = module_path.read_text(encoding='utf-8')
+        tree = ast.parse(source, filename=str(module_path))
+    except (OSError, SyntaxError):
+        return {}
+
+    for node in tree.body:
+        if not isinstance(node, ast.ClassDef):
+            continue
+
+        for class_node in node.body:
+            if not isinstance(class_node, ast.Assign):
+                continue
+
+            for target in class_node.targets:
+                if isinstance(target, ast.Name) and target.id == 'meta_data':
+                    try:
+                        meta_data = ast.literal_eval(class_node.value)
+                        if isinstance(meta_data, dict):
+                            return meta_data
+                    except (ValueError, TypeError):
+                        return {}
+
+    return {}
+
+def _get_extradata_migration_rules(structure: dict) -> list[dict]:
+    """
+    Convert a module's migration metadata into regex-based replacement rules.
+    """
+    rules = []
+
+    if not structure:
+        return rules
+
+    for migration in structure.get('migrations', []):
+        changes = migration.get('changes', {})
+        renamed = changes.get('renamed', {})
+
+        for old_name, new_name in renamed.items():
+            if '${COUNT}' in old_name:
+                variable_pattern = re.escape(old_name).replace(re.escape('${COUNT}'), r'(\d+)')
+                regex = re.compile(r'\$\{' + variable_pattern + r'\}')
+                rules.append({
+                    'type': 'counted',
+                    'old': old_name,
+                    'new': new_name,
+                    'regex': regex
+                })
+            else:
+                rules.append({
+                    'type': 'simple',
+                    'old': old_name,
+                    'new': new_name
+                })
+
+    return rules
+
+def _replace_overlay_field_variables(label: str, rules: list[dict]) -> tuple[str, list[dict]]:
+    """
+    Apply migration rules to a single overlay field label.
+    """
+    updated_label = label
+    replacements = []
+
+    for rule in rules:
+        if rule['type'] == 'simple':
+            old_token = '${' + rule['old'] + '}'
+            new_token = '${' + rule['new'] + '}'
+            if old_token in updated_label:
+                updated_label = updated_label.replace(old_token, new_token)
+                replacements.append({
+                    'old': rule['old'],
+                    'new': rule['new']
+                })
+        else:
+            regex = rule['regex']
+
+            def _replacement(match):
+                counter = match.group(1)
+                new_name = rule['new'].replace('${COUNT}', counter)
+                replacements.append({
+                    'old': rule['old'].replace('${COUNT}', counter),
+                    'new': new_name
+                })
+                return '${' + new_name + '}'
+
+            updated_label = regex.sub(_replacement, updated_label)
+
+    return updated_label, replacements
+
+def migrate_overlay_template_variables(overlay_folder: Union[str, Path, None] = None,
+                                       modules_folder: Union[str, Path, None] = None,
+                                       debug: bool = False,
+                                       logger=None) -> dict:
+    """
+    Migrate overlay field variables using module-declared extra-data migrations.
+
+    Overlay templates are read from ``config/overlay/myTemplates`` and module
+    metadata is read from ``config/myFiles/modules`` by default. Any variable
+    used in a field label that matches a declared migration is rewritten
+    in-place.
+    """
+    def _debug(message):
+        if debug:
+            if logger:
+                logger(message)
+            else:
+                print(message)
+
+    if overlay_folder is None:
+        overlay_base = get_environment_variable("ALLSKY_OVERLAY")
+        if overlay_base:
+            overlay_folder = Path(overlay_base) / "myTemplates"
+        else:
+            overlay_folder = Path(ALLSKYPATH) / "config" / "overlay" / "myTemplates"
+    else:
+        overlay_folder = Path(overlay_folder)
+
+    if modules_folder is None:
+        modules_folder = Path(ALLSKYPATH) / "config" / "myFiles" / "modules"
+    else:
+        modules_folder = Path(modules_folder)
+
+    result = {
+        'overlay_folder': str(overlay_folder),
+        'modules_folder': str(modules_folder),
+        'templates_scanned': 0,
+        'templates_updated': 0,
+        'replacements': 0,
+        'files': []
+    }
+
+    if not overlay_folder.exists() or not modules_folder.exists():
+        if not overlay_folder.exists():
+            _debug(f"INFO: Overlay template folder not found: {overlay_folder}")
+        if not modules_folder.exists():
+            _debug(f"INFO: Module folder not found: {modules_folder}")
+        return result
+
+    migration_rules = []
+    for module_file in sorted(modules_folder.glob('*.py')):
+        meta_data = _load_module_metadata_from_file(module_file)
+        extradata = meta_data.get('extradata', {})
+        rules = _get_extradata_migration_rules(extradata)
+        module_name = meta_data.get('module', module_file.stem)
+
+        if len(rules) > 0:
+            _debug(f"INFO: Found {len(rules)} migration rule(s) in module {module_name}")
+            migration_rules.extend(rules)
+        else:
+            _debug(f"INFO: No migration rules found in module {module_name}")
+
+    if len(migration_rules) == 0:
+        _debug("INFO: No overlay variable migration rules were found in any module")
+        return result
+
+    overlay_files = sorted(overlay_folder.glob('overlay*.json'))
+    if len(overlay_files) == 0:
+        _debug(f"INFO: No overlay template files found in {overlay_folder}")
+
+    for overlay_file in overlay_files:
+        data = load_json_file(overlay_file)
+        if not isinstance(data, dict):
+            _debug(f"INFO: Skipping invalid overlay file {overlay_file}")
+            continue
+
+        fields = data.get('fields', [])
+        if not isinstance(fields, list):
+            _debug(f"INFO: Skipping {overlay_file}; 'fields' is missing or invalid")
+            continue
+
+        result['templates_scanned'] += 1
+        file_replacements = []
+        changed = False
+        _debug(f"INFO: Scanning overlay template {overlay_file}")
+
+        for field in fields:
+            if not isinstance(field, dict):
+                continue
+
+            label = field.get('label')
+            if not isinstance(label, str) or '${' not in label:
+                continue
+
+            updated_label, replacements = _replace_overlay_field_variables(label, migration_rules)
+            if updated_label != label:
+                _debug(f"INFO: Updating field {field.get('id', 'unknown')} in {overlay_file.name}")
+                _debug(f"INFO: Old label: {label}")
+                _debug(f"INFO: New label: {updated_label}")
+                field['label'] = updated_label
+                changed = True
+                file_replacements.extend(replacements)
+            else:
+                _debug(f"INFO: No variable changes required for field {field.get('id', 'unknown')} in {overlay_file.name}")
+
+        if changed:
+            save_json_file(data, overlay_file)
+            result['templates_updated'] += 1
+            result['replacements'] += len(file_replacements)
+            _debug(f"INFO: Saved updated overlay template {overlay_file}")
+            result['files'].append({
+                'file': str(overlay_file),
+                'replacements': file_replacements
+            })
+        else:
+            _debug(f"INFO: No changes required for overlay template {overlay_file}")
+
+    _debug(
+        "INFO: Overlay migration complete. "
+        f"Scanned {result['templates_scanned']} template(s), "
+        f"updated {result['templates_updated']}, "
+        f"applied {result['replacements']} replacement(s)."
+    )
+
     return result
 
 def load_extra_data_file(file_name, type=''):

@@ -2404,8 +2404,7 @@
 "description" : "If enabled system messages are shown at the top of the page rather than via the menu.",
 "label" : "Inline System Messages",
 "type" : "boolean",
-"carryforward" : true,
-"checkchanges" : true
+"carryforward" : true
 },
 {
 "name" : "webuidatafiles",

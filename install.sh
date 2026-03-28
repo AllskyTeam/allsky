@@ -3398,6 +3398,9 @@ display_image()
 		ALLSKY_EXTENSION="jpg"
 	fi
 
+	# Just in case.
+	mkdir -p "${ALLSKY_CURRENT_DIR}"
+
 	I="${ALLSKY_CURRENT_DIR}/${ALLSKY_FILENAME}.${ALLSKY_EXTENSION}"
 	if [[ -z ${IMAGE_OR_CUSTOM} ]]; then		# No IMAGE_OR_CUSTOM means remove the image
 		display_msg --logonly info "Removing prior notification image."

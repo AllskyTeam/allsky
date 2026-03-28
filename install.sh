@@ -3634,7 +3634,8 @@ update_modules()
 				args+=("${DEBUG_ARG}")
 			fi
 
-			"${ALLSKY_MODULE_INSTALLER}" "${args[@]}"
+			# Ignore stdout since it's also written to a log file.
+			"${ALLSKY_MODULE_INSTALLER}" "${args[@]}" > /dev/null
 	else
 			display_msg --log progress "Updating modules using the ${BRANCH} branch."
 			args=(
@@ -3647,7 +3648,7 @@ update_modules()
 				args+=("${DEBUG_ARG}")
 			fi
 
-			"${ALLSKY_MODULE_INSTALLER}" "${args[@]}"
+			"${ALLSKY_MODULE_INSTALLER}" "${args[@]}" > /dev/null
 	fi
 
 	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
@@ -3665,7 +3666,7 @@ migrate_overlays()
 		args+=("${DEBUG_ARG}")
 	fi
 
-	"${ALLSKY_MODULE_INSTALLER}" "${args[@]}"
+	"${ALLSKY_MODULE_INSTALLER}" "${args[@]}" > /dev/null
 }
 
 

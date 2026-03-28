@@ -3655,6 +3655,7 @@ update_modules()
 
 migrate_overlays()
 {
+			local TMP="${ALLSKY_LOGS}/modulemigration.log"	
 			display_msg --log progress "Migrating overlays."
 			args=(
 				--migrateoverlayvariables

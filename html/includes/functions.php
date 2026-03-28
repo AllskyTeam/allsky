@@ -240,7 +240,7 @@ function initialize_variables($website_only=false) {
 	global $image_name;
 	global $showUpdatedMessage, $delay, $daydelay, $daydelay_postMsg, $nightdelay, $nightdelay_postMsg;
 	global $imagesSortOrder;
-	global $darkframe, $useLogin, $temptype, $lastChanged, $lastChangedName;
+	global $darkframe, $useLogin, $temptype, $lastChanged, $lastChangedName, $inlineMessages;
 	global $remoteWebsiteURL;
 	global $settings_array;
 	global $useLocalWebsite, $useRemoteWebsite;
@@ -271,6 +271,7 @@ function initialize_variables($website_only=false) {
 	$darkframe = toBool(getVariableOrDefault($settings_array, 'takedarkframes', "false"));
 	$imagesSortOrder = getVariableOrDefault($settings_array, 'imagessortorder', "ascending");
 	$useLogin = toBool(getVariableOrDefault($settings_array, 'uselogin', "true"));
+	$inlineMessages = toBool(getVariableOrDefault($settings_array, 'inlinemessages', "true"));
 	$temptype = getVariableOrDefault($settings_array, 'temptype', "C");
 	$lastChanged = getVariableOrDefault($settings_array, $lastChangedName, "");
 	$remoteWebsiteURL = getVariableOrDefault($settings_array, 'remotewebsiteurl', "");

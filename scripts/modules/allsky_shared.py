@@ -2821,6 +2821,343 @@ def migrate_overlay_template_variables(overlay_folder: Union[str, Path, None] = 
 
     return result
 
+def _module_name_to_flow_key(module_name: str) -> str:
+    """
+    Convert a module filename or metadata name into a flow JSON key.
+    """
+    flow_key = module_name
+
+    if flow_key.endswith('.py'):
+        flow_key = flow_key[:-3]
+
+    if flow_key.startswith('allsky_'):
+        flow_key = flow_key[len('allsky_'):]
+
+    return flow_key
+
+def _normalise_module_dependency_list(dependency_value) -> list[str]:
+    """
+    Normalize dependency metadata into a list of module filenames.
+    """
+    if dependency_value is None:
+        return []
+
+    if isinstance(dependency_value, list):
+        dependencies = dependency_value
+    elif isinstance(dependency_value, str):
+        dependencies = [item.strip() for item in dependency_value.split(',') if item.strip() != '']
+    else:
+        dependencies = [str(dependency_value).strip()]
+
+    return dependencies
+
+def check_module_dependencies(module_name: str,
+                              flows_folder: Union[str, Path, None] = None,
+                              modules_folder: Union[str, Path, None] = None,
+                              debug: bool = False,
+                              logger=None) -> dict:
+    """
+    Check whether a module's declared dependencies exist in every flow where
+    the module itself is installed.
+    """
+    def _debug(message):
+        if debug:
+            if logger:
+                logger(message)
+            else:
+                print(message)
+
+    if modules_folder is None:
+        modules_folder = Path(ALLSKYPATH) / 'config' / 'myFiles' / 'modules'
+    else:
+        modules_folder = Path(modules_folder)
+
+    if flows_folder is None:
+        flows_folder = Path(ALLSKYPATH) / 'config' / 'modules'
+    else:
+        flows_folder = Path(flows_folder)
+
+    module_file_name = module_name if module_name.endswith('.py') else f'{module_name}.py'
+    module_file = modules_folder / module_file_name
+
+    result = {
+        'module': module_name,
+        'module_file': str(module_file),
+        'module_key': '',
+        'dependencies': [],
+        'flows_scanned': 0,
+        'flows_with_module': [],
+        'missing_dependencies': [],
+        'valid': True
+    }
+
+    if not module_file.exists():
+        result['valid'] = False
+        result['error'] = f"Module file not found: {module_file}"
+        _debug(f"INFO: Module file not found: {module_file}")
+        return result
+
+    meta_data = _load_module_metadata_from_file(module_file)
+    if not meta_data:
+        result['valid'] = False
+        result['error'] = f"Unable to read metadata from {module_file}"
+        _debug(f"INFO: Unable to read metadata from {module_file}")
+        return result
+
+    dependency_value = meta_data.get('dependency', None)
+    dependencies = _normalise_module_dependency_list(dependency_value)
+    module_metadata_name = meta_data.get('module', module_file.stem)
+    module_key = _module_name_to_flow_key(module_metadata_name)
+
+    result['module'] = module_metadata_name
+    result['module_key'] = module_key
+    result['dependencies'] = dependencies
+
+    _debug(f"INFO: Checking dependencies for module {module_metadata_name}")
+    _debug(f"INFO: Module file: {module_file}")
+    _debug(f"INFO: Flow key: {module_key}")
+
+    if len(dependencies) == 0:
+        _debug(f"INFO: Module {module_metadata_name} has no declared dependencies")
+        return result
+
+    _debug(f"INFO: Declared dependencies: {', '.join(dependencies)}")
+
+    flow_files = [
+        'postprocessing_day.json',
+        'postprocessing_night.json',
+        'postprocessing_daynight.json',
+        'postprocessing_nightday.json',
+        'postprocessing_periodic.json'
+    ]
+
+    for flow_name in flow_files:
+        flow_file = flows_folder / flow_name
+        flow_data = load_json_file(flow_file)
+        result['flows_scanned'] += 1
+
+        if not isinstance(flow_data, dict):
+            _debug(f"INFO: Flow file {flow_file} is missing or invalid")
+            continue
+
+        if module_key not in flow_data:
+            _debug(f"INFO: Module {module_key} is not installed in flow {flow_name}")
+            continue
+
+        _debug(f"INFO: Module {module_key} found in flow {flow_name}")
+        result['flows_with_module'].append(flow_name)
+
+        for dependency in dependencies:
+            dependency_key = _module_name_to_flow_key(dependency)
+            if dependency_key in flow_data:
+                _debug(f"INFO: Dependency {dependency_key} found in flow {flow_name}")
+            else:
+                result['valid'] = False
+                result['missing_dependencies'].append({
+                    'flow': flow_name,
+                    'dependency': dependency,
+                    'dependency_key': dependency_key
+                })
+                _debug(f"INFO: Dependency {dependency_key} missing from flow {flow_name}")
+
+    if len(result['flows_with_module']) == 0:
+        _debug(f"INFO: Module {module_key} is not installed in any flow")
+
+    return result
+
+def scan_flow_module_dependencies(flows_folder: Union[str, Path, None] = None,
+                                  modules_folder: Union[str, Path, None] = None,
+                                  debug: bool = False,
+                                  logger=None) -> dict:
+    """
+    Scan configured flow files and verify dependencies for modules installed
+    in those flows.
+    """
+    def _debug(message):
+        if debug:
+            if logger:
+                logger(message)
+            else:
+                print(message)
+
+    if modules_folder is None:
+        modules_folder = Path(ALLSKYPATH) / 'config' / 'myFiles' / 'modules'
+    else:
+        modules_folder = Path(modules_folder)
+
+    system_modules_folder = Path(ALLSKYPATH) / 'scripts' / 'modules'
+
+    if flows_folder is None:
+        flows_folder = Path(ALLSKYPATH) / 'config' / 'modules'
+    else:
+        flows_folder = Path(flows_folder)
+
+    result = {
+        'flows_scanned': 0,
+        'modules_checked': 0,
+        'modules_with_dependencies': 0,
+        'issues': [],
+        'valid': True
+    }
+
+    module_metadata = {}
+    module_sources = [system_modules_folder, modules_folder]
+    for module_source in module_sources:
+        if not module_source.exists():
+            continue
+
+        for module_file in sorted(module_source.glob('allsky_*.py')):
+            meta_data = _load_module_metadata_from_file(module_file)
+            if not meta_data:
+                continue
+
+            module_name = meta_data.get('module', module_file.stem)
+            module_key = _module_name_to_flow_key(module_name)
+            dependencies = _normalise_module_dependency_list(meta_data.get('dependency', None))
+            module_metadata[module_key] = {
+                'module': module_name,
+                'file': str(module_file),
+                'dependencies': dependencies
+            }
+
+    def _resolve_flow_module_metadata(module_key, module_config):
+        metadata = module_metadata.get(module_key)
+        if metadata is not None:
+            return metadata
+
+        module_file_name = None
+        if isinstance(module_config, dict):
+            module_file_name = module_config.get('module')
+
+        if not isinstance(module_file_name, str) or module_file_name == '':
+            return None
+
+        for module_source in module_sources:
+            candidate = module_source / module_file_name
+            if not candidate.exists():
+                continue
+
+            meta_data = _load_module_metadata_from_file(candidate)
+            if not meta_data:
+                continue
+
+            module_name = meta_data.get('module', candidate.stem)
+            dependencies = _normalise_module_dependency_list(meta_data.get('dependency', None))
+            resolved_metadata = {
+                'module': module_name,
+                'file': str(candidate),
+                'dependencies': dependencies
+            }
+            module_metadata[module_key] = resolved_metadata
+            return resolved_metadata
+
+        return None
+
+    flow_files = [
+        'postprocessing_day.json',
+        'postprocessing_night.json',
+        'postprocessing_daynight.json',
+        'postprocessing_nightday.json',
+        'postprocessing_periodic.json'
+    ]
+
+    _debug(f"INFO: Scanning flow dependencies in {flows_folder}")
+
+    for flow_name in flow_files:
+        flow_file = flows_folder / flow_name
+        flow_data = load_json_file(flow_file)
+        result['flows_scanned'] += 1
+
+        if not isinstance(flow_data, dict):
+            _debug(f"INFO: Flow file {flow_file} is missing or invalid")
+            continue
+
+        _debug(f"INFO: Scanning flow {flow_name}")
+
+        for module_key, module_config in flow_data.items():
+            metadata = _resolve_flow_module_metadata(module_key, module_config)
+            if metadata is None:
+                _debug(f"ERROR: No metadata found for flow module {module_key}")
+                continue
+
+            result['modules_checked'] += 1
+            dependencies = metadata['dependencies']
+            if len(dependencies) == 0:
+                _debug(f"INFO: Module {module_key} in {flow_name} has no declared dependencies")
+                continue
+
+            result['modules_with_dependencies'] += 1
+            _debug(f"INFO: Module {module_key} in {flow_name} declares dependencies: {', '.join(dependencies)}")
+
+            for dependency in dependencies:
+                dependency_key = _module_name_to_flow_key(dependency)
+                if dependency_key in flow_data:
+                    _debug(f"INFO: Dependency {dependency_key} found in flow {flow_name}")
+                else:
+                    result['valid'] = False
+                    issue = {
+                        'flow': flow_name,
+                        'module': metadata['module'],
+                        'module_key': module_key,
+                        'dependency': dependency,
+                        'dependency_key': dependency_key
+                    }
+                    result['issues'].append(issue)
+                    _debug(f"ERROR: Dependency {dependency_key} missing in flow {flow_name} for module {module_key}")
+
+    return result
+
+def format_flow_dependency_issues_human(result: dict) -> str:
+    """
+    Convert flow dependency scan results into user-facing remediation text.
+    """
+    def _pipeline_display_name(flow_name: str) -> str:
+        pipeline_name = str(flow_name)
+        if pipeline_name.startswith('postprocessing_'):
+            pipeline_name = pipeline_name[len('postprocessing_'):]
+        if pipeline_name.endswith('.json'):
+            pipeline_name = pipeline_name[:-5]
+
+        pipeline_name = pipeline_name.replace('_', ' ').strip()
+        if pipeline_name == '':
+            return str(flow_name)
+
+        return pipeline_name.title()
+
+    if not result:
+        return "No dependency scan results were provided."
+
+    if result.get('valid', True):
+        return (
+            "No dependency problems were found. "
+            f"Scanned {result.get('flows_scanned', 0)} flow(s) and "
+            f"checked {result.get('modules_checked', 0)} module instance(s)."
+        )
+
+    lines = [
+        "Dependency problems were found in the configured pipelines.",
+        "To fix them, use Module Manager to add the missing module to the same pipeline as the module that requires it.",
+        ""
+    ]
+
+    for issue in result.get('issues', []):
+        pipeline_name = _pipeline_display_name(issue['flow'])
+        lines.append(
+            f"Pipeline: {pipeline_name}"
+        )
+        lines.append(
+            f"Problem: The '{issue['module_key']}' module requires the '{issue['dependency_key']}' module, but it is not installed in this pipeline."
+        )
+        lines.append(
+            f"Fix: Open the Module Manager and add the '{issue['dependency_key']}' module ({issue['dependency']}) to the {pipeline_name} pipeline so it appears alongside the '{issue['module_key']}' module."
+        )
+        lines.append(
+            f"Why: The '{issue['module_key']}' module depends on values or behavior provided by the '{issue['dependency_key']}' module."
+        )
+        lines.append("")
+
+    return "\n".join(lines).rstrip()
+
 def load_extra_data_file(file_name, type=''):
     """
     Load an extra data file from one or more ALLSKY_EXTRA directories.

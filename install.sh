@@ -3653,6 +3653,21 @@ update_modules()
 	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
 }
 
+migrate_overlays()
+{
+			display_msg --log progress "Migrating overlays."
+			args=(
+				--migrateoverlayvariables
+				--logfile "$TMP"
+			)
+
+			if [ -n "$DEBUG_ARG" ]; then
+				args+=("$DEBUG_ARG")
+			fi
+
+			"${ALLSKY_MODULE_INSTALLER}" "${args[@]}"				
+}
+
 
 clear_status()
 {
@@ -4173,6 +4188,9 @@ update_modules
 
 ##### Allow the user to install modules
 install_modules
+
+##### Perform any migrations required
+migrate_overlays
 
 ##### Setup Database (If required)
 setup_database

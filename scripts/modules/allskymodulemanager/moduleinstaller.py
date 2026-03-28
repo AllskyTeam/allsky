@@ -587,7 +587,47 @@ Would you like to review and install any available modules now?\
 
         if not found_report and module_name.lower() != "all":
             self._log(False, f"ERROR: No migration report available for module {module_name}")
-                            
+
+    def check_module_dependencies(self):
+        result = shared.scan_flow_module_dependencies(
+            debug=self._debug_mode,
+            logger=lambda message: self._log(True, message)
+        )
+
+        if result['valid']:
+            self._log(
+                False,
+                "INFO: Flow dependency check complete. "
+                f"Scanned {result['flows_scanned']} flow(s), "
+                f"checked {result['modules_checked']} module instance(s), "
+                f"found {result['modules_with_dependencies']} module instance(s) with dependencies, "
+                "no issues found."
+            )
+            return
+
+        self._log(
+            False,
+            "ERROR: Flow dependency check found issues. "
+            f"Scanned {result['flows_scanned']} flow(s), "
+            f"checked {result['modules_checked']} module instance(s), "
+            f"found {len(result['issues'])} issue(s)."
+        )
+
+        for issue in result['issues']:
+            self._log(
+                False,
+                f"ERROR: Flow {issue['flow']} module {issue['module_key']} "
+                f"({issue['module']}) is missing dependency "
+                f"{issue['dependency_key']} ({issue['dependency']})"
+            )
+
+    def check_module_dependencies_human(self):
+        result = shared.scan_flow_module_dependencies(
+            debug=self._debug_mode,
+            logger=lambda message: self._log(True, message)
+        )
+        self._log(False, shared.format_flow_dependency_issues_human(result))
+                             
     def run(self, args: argparse.Namespace) -> None:
         
         self._ensure_cloned_repo(self._module_repo, self._module_repo_path)
@@ -668,6 +708,8 @@ if __name__ == "__main__":
     parser.add_argument("--cleanupopt", action="store_true", help="Cleanup the legacy module folders")
     parser.add_argument("--migrateoverlayvariables", action="store_true", help="Migrate overlay template variables using module migration metadata")
     parser.add_argument("--migrationreport", nargs="?", const="all", help="Show migration report for a module, or all modules if no module is specified")
+    parser.add_argument("--checkdependencies", action="store_true", help="Scan the configured flows and check installed module dependencies")
+    parser.add_argument("--checkdependencieshuman", action="store_true", help="Scan the configured flows and show dependency problems with human-readable fix instructions")
     parser.add_argument("--auto", action="store_true", help="Auto upgrade modules, will migrate if required")    
     parser.add_argument("--dryrun", action="store_true", help="For auto mode do a dry run only, no changes will be made")    
     parser.add_argument("--welcome", action="store_true", help="Show the welcome message")    
@@ -694,6 +736,14 @@ if __name__ == "__main__":
 
     if args.migrationreport:
         module_installer.migration_report(args.migrationreport)
+        sys.exit(0)
+
+    if args.checkdependencies:
+        module_installer.check_module_dependencies()
+        sys.exit(0)
+
+    if args.checkdependencieshuman:
+        module_installer.check_module_dependencies_human()
         sys.exit(0)
 
     try:

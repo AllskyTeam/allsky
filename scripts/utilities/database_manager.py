@@ -1234,7 +1234,8 @@ class ALLSKYDATABASEMANAGER:
             else:
                 database_to_use = self._select_database_server()
 
-            self._log(False, f"INFO: User selected database: {database_to_use}")
+            # This message is basically a duplicate of the ones below.
+            #### self._log(False, f"INFO: User selected database: {database_to_use}")
             
             if database_to_use == "mysql" and not self._mysql_installed:
                 if self._show_mysql_warning_message():

@@ -182,7 +182,7 @@ last_installation_needed_reboot()
 	else
 		display_msg --log info "\nPlease perform the following steps:${MSG2}\n"
 	fi
-	exit_installation 0 "" "" 
+	exit_installation 0 "" ""
 }
 
 
@@ -1104,7 +1104,7 @@ set_permissions()
 			if [[ ${OWNER} != "${ALLSKY_WEBSERVER_OWNER}" ]]; then
 				display_msg --log info "Found php sessions with wrong owner - fixing them"
 				sudo chown -R "${ALLSKY_WEBSERVER_OWNER}":"${ALLSKY_WEBSERVER_OWNER}" "${SESSION_PATH}"
-				break        
+				break
 			fi
 		done
 	fi
@@ -3192,13 +3192,13 @@ install_Python()
 	#
 	#python3 -m venv "${ALLSKY_PYTHON_SERVER_VENV}" --system-site-packages
 	#if [[ ${PI_OS} == "trixie" ]]; then
-  #	run_aptGet python3-dev python3.13-dev build-essential pkg-config > "${TMP}" 2>&1	
+  #	run_aptGet python3-dev python3.13-dev build-essential pkg-config > "${TMP}" 2>&1
 	#fi
 
 	#activate_python_server_venv
 	#nstall_dependencies "${ALLSKY_REPO}/requirements-server.txt" "Python_server_dependencies"
 	#deactivate_python_server_venv
-	
+
 	local PREFIX  REQUIREMENTS_FILE  M  R  NUM_TO_INSTALL
 	local NAME  PKGs  TMP  COUNT  C  PACKAGE  STATUS_NAME  L  M  MSG
 
@@ -3209,10 +3209,10 @@ install_Python()
 
 	if [[ ${ALLSKY_PI_OS} == "trixie" ]]; then
 		display_msg --log progress "Trixie detected, installing python build packages."
-		TMP="${ALLSKY_LOGS}/trixie_build.log"		
+		TMP="${ALLSKY_LOGS}/trixie_build.log"
 		run_aptGet python3.13-dev build-essential > "${TMP}" 2>&1
 	fi
-	
+
   display_msg --logonly info "Locating Python dependency file"
 	PREFIX="${ALLSKY_REPO}/requirements"
 	REQUIREMENTS_FILE=""
@@ -3261,7 +3261,7 @@ install_Python()
 	# This should be done by adafruit-blinka.
 	# The code is in setup.py to do this but it
 	# doesn't appear to work hence we are forcing it here.
-	# gpiozero decodes the Pi revision number to calculate the Pi version so until the Pi 6 is 
+	# gpiozero decodes the Pi revision number to calculate the Pi version so until the Pi 6 is
 	# released this code will detect all future versions of the Pi 5.
 # TODO FUTURE: modify as needed once Pi 6 is out.
 
@@ -3602,11 +3602,11 @@ install_modules()
 	# NOTE: There is no way to reload the groups for the user, this is a limitation of the Linux Kernel
 	#
 
-	if [[ "$BRANCH" == "$ALLSKY_GITHUB_MAIN_BRANCH" ]]; then
+	if [[ "${BRANCH}" == "${ALLSKY_GITHUB_MAIN_BRANCH}" ]]; then
 		display_msg --log progress "Installing modules using master branch."
 		sudo su - "${ALLSKY_OWNER}" -c "${ALLSKY_MODULE_INSTALLER} --welcome ${DEBUG_ARG}"
 	else
-		display_msg --log progress "Installing modules using the ${BRANCH} branch."	
+		display_msg --log progress "Installing modules using the ${BRANCH} branch."
 		sudo su - "${ALLSKY_OWNER}" -c "${ALLSKY_MODULE_INSTALLER} --welcome --setbranch ${BRANCH} ${DEBUG_ARG}"
 	fi
 
@@ -3622,32 +3622,32 @@ install_modules()
 update_modules()
 {
 	local TMP="${ALLSKY_LOGS}/modules.log"
-	if [[ "$BRANCH" == "$ALLSKY_GITHUB_MAIN_BRANCH" ]]; then
+	if [[ "${BRANCH}" == "${ALLSKY_GITHUB_MAIN_BRANCH}" ]]; then
 			display_msg --log progress "Updating modules using master branch."
 
 			args=(
 				--auto
-				--logfile "$TMP"
+				--logfile "${TMP}"
 			)
 
-			if [ -n "$DEBUG_ARG" ]; then
-				args+=("$DEBUG_ARG")
+			if [ -n "${DEBUG_ARG}" ]; then
+				args+=("${DEBUG_ARG}")
 			fi
 
-			"${ALLSKY_MODULE_INSTALLER}" "${args[@]}"			
+			"${ALLSKY_MODULE_INSTALLER}" "${args[@]}"
 	else
 			display_msg --log progress "Updating modules using the ${BRANCH} branch."
 			args=(
 				--auto
-				--setbranch "$BRANCH"
-				--logfile "$TMP"
+				--setbranch "${BRANCH}"
+				--logfile "${TMP}"
 			)
 
-			if [ -n "$DEBUG_ARG" ]; then
-				args+=("$DEBUG_ARG")
+			if [ -n "${DEBUG_ARG}" ]; then
+				args+=("${DEBUG_ARG}")
 			fi
 
-			"${ALLSKY_MODULE_INSTALLER}" "${args[@]}"			
+			"${ALLSKY_MODULE_INSTALLER}" "${args[@]}"
 	fi
 
 	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
@@ -3655,18 +3655,17 @@ update_modules()
 
 migrate_overlays()
 {
-			local TMP="${ALLSKY_LOGS}/modulemigration.log"	
-			display_msg --log progress "Migrating overlays."
-			args=(
-				--migrateoverlayvariables
-				--logfile "$TMP"
-			)
+	display_msg --log progress "Migrating overlays."
+	args=(
+		--migrateoverlayvariables
+		--logfile "${TMP}"
+	)
 
-			if [ -n "$DEBUG_ARG" ]; then
-				args+=("$DEBUG_ARG")
-			fi
+	if [ -n "${DEBUG_ARG}" ]; then
+		args+=("${DEBUG_ARG}")
+	fi
 
-			"${ALLSKY_MODULE_INSTALLER}" "${args[@]}"				
+	"${ALLSKY_MODULE_INSTALLER}" "${args[@]}"
 }
 
 

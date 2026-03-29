@@ -1014,7 +1014,7 @@ class MODULESEDITOR {
 					}
 
 					if (fieldType == 'variable') {
-						inputHTML = '<input id="' + key + '" name="' + key + '" class="form-control" disabled="disabled" value="' + fieldValue + '"' + required + fieldDescription + '>';
+						inputHTML = '<textarea rows=10 id="' + key + '" name="' + key + '" class="form-control" disabled="disabled" value="' + fieldValue + '"' + required + fieldDescription + '>' + fieldValue + '</textarea>';
 						extraClass = 'input-group1';
 						let selectType = 'single';
 						if ('select' in fieldTypeData) {
@@ -1022,7 +1022,7 @@ class MODULESEDITOR {
 						}
 						inputHTML = '\
 							<div class="row">\
-								<div class="col-xs-4">\
+								<div class="col-xs-8">\
 								' + inputHTML + '\
 								</div>\
 								<div class="col-xs-3">\

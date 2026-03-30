@@ -1747,6 +1747,15 @@ update_allsky_common()
 install_dependencies_etc()
 {
 	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
+
+	# This needs to be done even if SKIP is true.
+	local T="${ALLSKY_SCRIPTS}/functions.php"
+	if [[ ! -f "${T}" ]]; then
+		local F="${ALLSKY_WEBUI}/includes/functions.php"
+		display_msg --logonly info "Creating link to ${F}"
+		ln -s "${F}" "${T}"		|| echo "Unable to ln -s '${F}' '${T}'" >&2
+	fi
+
 	[[ ${SKIP} == "true" ]] && return
 
 	# These commands produce a TON of output that's not needed unless there's a problem.
@@ -1757,13 +1766,6 @@ install_dependencies_etc()
 	local T="${ALLSKY_SCRIPTS}/allsky-config"
 	if [[ ! -f "${T}" ]]; then
 		local F="${ALLSKY_UTILITIES}/allsky-config.sh"
-		display_msg --logonly info "Creating link to ${F}"
-		ln -s "${F}" "${T}"		|| echo "Unable to ln -s '${F}' '${T}'" >&2
-	fi
-
-	local T="${ALLSKY_SCRIPTS}/functions.php"
-	if [[ ! -f "${T}" ]]; then
-		local F="${ALLSKY_WEBUI}/includes/functions.php"
 		display_msg --logonly info "Creating link to ${F}"
 		ln -s "${F}" "${T}"		|| echo "Unable to ln -s '${F}' '${T}'" >&2
 	fi
@@ -1872,7 +1874,9 @@ convert_settings_file()			# prior_file, new_file
 	fi
 
 	# For each field in prior file, update new file with old value.
-	# Then handle new fields and fields that changed locations or names.
+	# Then handle fields that changed locations or names.
+	# We can't add new fields here since the settings file and the options file may
+	# be for different camera types.
 
 	# Output the field name and value as text separated by a tab.
 	# Field names are already lowercase from above.

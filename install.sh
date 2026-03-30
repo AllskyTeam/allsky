@@ -3487,7 +3487,9 @@ check_restored_settings()
 {
 	local IMG  AFTER  MSG
 
-	if [[ ${ALLSKY_VERSION} == "${PRIOR_ALLSKY_VERSION}" ]]; then
+	# If not using the master branch, treat it as an upgrade since test versions
+	# often change without the version number changing.
+	if [[ ${ALLSKY_VERSION} == "${PRIOR_ALLSKY_VERSION}" && ${BRANCH} == "${ALLSKY_GITHUB_MAIN_BRANCH}" ]]; then
 		CONFIGURATION_NEEDED="false"
 		MSG="Re-installed same version; no configuration or reboot needed."
 		display_msg --logonly info "${MSG}"

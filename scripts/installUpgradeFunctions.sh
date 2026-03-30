@@ -1657,7 +1657,9 @@ function add_new_settings()
 
 	display_msg --logonly info "Checking for new settings in options file."
 
-	local TAB="$( echo -e '\t' )"
+	if [[ -z ${TAB} ]]; then
+		local TAB="$( echo -e '\t' )"
+	fi
 	local NEW="$( "${ALLSKY_SCRIPTS}/convertJSON.php" \
 		--options-only \
 		--settings-file "${SETTINGS}" \

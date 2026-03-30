@@ -24,15 +24,18 @@ if ($space === false) {
 	$ARGS = substr($ID, $space + 1);
 	$ID = substr($ID, 0, $space);
 }
-# echo "ID=[$ID], ARGS=[$ARGS]<br>";
 
 if ($use_TEXT) {
 	$eS = "";
 	$eE = "\n";
+	$wS = "";
+	$wE = "\n";
 	$sep = "\n";
 } else {
 	$eS = "<p class='errorMsgBig'>";
 	$eE = "</p>";
+	$wS = "<p style='font-size: 115%; background-color: #fcf8e3'>";
+	$wE = "</p>";
 	$sep = "<br>";
 
 ?>
@@ -76,15 +79,16 @@ switch ($ID) {
 		break;
 
 	case "AM_RM_POST":		// Remove log of post-installation actions.
-		rm_object(ALLSKY_POST_INSTALL_ACTIONS, "Deleted list of actions to perform.");
-
-		rm_msg($ID);
+		if (rm_object(ALLSKY_POST_INSTALL_ACTIONS, "Deleted list of actions to perform.")) {
+			rm_msg($ID);
+		}
 		break;
 
 	case "AM_RM_ABORTS":	// Remove the specified "have been aborted" file
 		$file = ALLSKY_ABORTS_DIR . "/$ARGS";
-		rm_object($file, "File removed.");
-		rm_msg($ID);
+		if (rm_object($file, "File removed.")) {
+			rm_msg($ID);
+		}
 		break;
 
 	case "AM_NOT_SUPPORTED":		# Not supported camera
@@ -148,7 +152,7 @@ function execute($cmd, $args="", $outputToConsole=false)
 
 	// Do NOT quote $args since there may be multiple arguments.
 	$cmd = "$cmd $args";
-	$full_cmd = escapeshellcmd("sudo --user=" . ALLSKY_OWNER . " $cmd");
+	$full_cmd = escapeshellcmd("sudo --user=" . ALLSKY_OWNER . " $cmd 2>&1");
 	$result = null;
 	exec("$full_cmd 2>&1", $result, $return_val);
 
@@ -181,7 +185,12 @@ function rm_msg($ID)
 // Remove a file or directory.
 function rm_object($item, $successMsg=null)
 {
-	global $use_TEXT, $eS, $eE;
+	global $use_TEXT, $eS, $eE, $wS, $wE;
+
+	if (! is_file($item) && ! is_dir($item)) {
+		echo "{$wS}[$item] not found so cannot remove; you can safely close this window.{$wE}";
+		return false;
+	}
 
 	$cmd = "rm";
 	$args = "-fr '$item'";		// -r in case it's a directory
@@ -207,6 +216,8 @@ function rm_object($item, $successMsg=null)
 	} else {
 		echo "<span style='font-size: 200%'>$msg</span>";
 	}
+
+	return true;
 }
 
 ?>

@@ -1268,7 +1268,7 @@ if ($debug) { echo ": &nbsp; value=$value"; }
 
 			if ($numMissingHasDefault > 0) {
 				$msg = "<strong>";
-				$msg .= "Required field" . ($numMissingHasDefault === 1 ? " is" : "s are");
+				$msg .= "Required field" . ($numMissingHasDefault === 1 ? " was" : "s were");
 				$msg .= " missing but replaced by the default:";
 				$msg .= "</strong>";
 				$msg .= "<br><strong>$missingSettingsHasDefault</strong>";

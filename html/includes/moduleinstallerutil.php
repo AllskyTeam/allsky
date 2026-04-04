@@ -301,6 +301,8 @@ class MODULEINSTALLERUTIL extends UTILBASE
 
     private function ensureRepo(string $branch, bool $reCheckout): void
     {
+        $this->assertRepoOwnership();
+
         if (is_dir($this->repoPath . '/.git') && !$reCheckout) {
             $this->runGitCommand(['reset', '--hard'], null, $this->repoPath);
             $this->runGitCommand(['clean', '-fdx'], null, $this->repoPath);
@@ -320,6 +322,39 @@ class MODULEINSTALLERUTIL extends UTILBASE
         }
 
         $this->runGitCommand(['clone', '--branch', $branch, $this->repoUrl, $this->repoPath], null, $parent);
+    }
+
+    private function assertRepoOwnership(): void
+    {
+        if (!file_exists($this->repoPath)) {
+            return;
+        }
+
+        $repoOwnerId = @fileowner($this->repoPath);
+        $currentUserId = function_exists('posix_geteuid') ? @posix_geteuid() : @getmyuid();
+
+        if ($repoOwnerId === false || $currentUserId === false || $repoOwnerId === $currentUserId) {
+            return;
+        }
+
+        $repoOwner = (string)$repoOwnerId;
+        $currentUser = (string)$currentUserId;
+
+        if (function_exists('posix_getpwuid')) {
+            $repoOwnerInfo = @posix_getpwuid($repoOwnerId);
+            $currentUserInfo = @posix_getpwuid($currentUserId);
+            if (is_array($repoOwnerInfo) && isset($repoOwnerInfo['name'])) {
+                $repoOwner = (string)$repoOwnerInfo['name'];
+            }
+            if (is_array($currentUserInfo) && isset($currentUserInfo['name'])) {
+                $currentUser = (string)$currentUserInfo['name'];
+            }
+        }
+
+        throw new RuntimeException(
+            "Temporary module repository {$this->repoPath} is owned by {$repoOwner}, " .
+            "but the WebUI is running as {$currentUser}. Please manually remove {$this->repoPath} and try again."
+        );
     }
 
     private function getPreferredBranch(): string

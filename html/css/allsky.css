@@ -246,6 +246,18 @@
     --bs3-progress-warning: #f0ad4e;
     --bs3-progress-danger: #d9534f;
 
+    /* Login */
+    --login-avatar-size: 200px;
+    --login-avatar-ring-w: 4px;
+    --login-avatar-grad-a: #e9ecef;
+    --login-avatar-grad-b: #dfe3ea;
+    --login-avatar-grad-c: #cdd3de;
+    --login-avatar-ring: #cbd3e1;
+    --login-avatar-glow-outer: rgba(255, 255, 255, .05);
+    --login-avatar-glow-inner: rgba(255, 255, 255, .08);
+    --login-canvas-bg-rgb: 0, 0, 0;
+    --login-fade-rgb: 0, 0, 0;
+
     /* Settings Page */
     --main-body-padding: 12px;
     --Layout-sidebar-width: 250px;
@@ -512,6 +524,18 @@ body.dark {
     --bs3-progress-info: #4ea3c8;
     --bs3-progress-warning: #a7742d;
     --bs3-progress-danger: #8d3431;
+
+    /* Login */
+    --login-avatar-size: 200px;
+    --login-avatar-ring-w: 4px;
+    --login-avatar-grad-a: #6d6d6d;
+    --login-avatar-grad-b: #4c4c4c;
+    --login-avatar-grad-c: #333333;
+    --login-avatar-ring: #2a2a2a;
+    --login-avatar-glow-outer: rgba(255, 255, 255, .1);
+    --login-avatar-glow-inner: rgba(200, 200, 200, .2);
+    --login-canvas-bg-rgb: 0, 0, 0;
+    --login-fade-rgb: 0, 0, 0;
 
     /* Settings Page */
     --main-body-padding: 12px;
@@ -1262,6 +1286,21 @@ pre {
 /** End Boostrap 5 emulation (Assumes $spacer as 1rem) **/
 
 /* Allsky Specific */
+
+html, body, * {
+  -webkit-user-select: none; /* Safari */
+  -moz-user-select: none;    /* Old Firefox */
+  -ms-user-select: none;     /* Old IE/Edge */
+  user-select: none;         /* Standard */
+  -webkit-touch-callout: none; /* iOS long-press menu */
+}
+
+input, textarea, select, [contenteditable="true"], .allow-select {
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+  user-select: text !important;
+}
 
 .alert-dismissable .close {
     right: 0px;

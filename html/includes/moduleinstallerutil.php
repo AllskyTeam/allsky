@@ -966,7 +966,10 @@ class MODULEINSTALLERUTIL extends UTILBASE
 
     private function runGitCommand(array $args, ?string $cwd = null, ?string $fallbackCwd = null): string
     {
-        $argv = array_merge(['/usr/bin/git'], $args);
+        $argv = array_merge(
+            ['/usr/bin/git', '-c', 'safe.directory=' . $this->repoPath],
+            $args
+        );
         $result = $this->runProcessWithOptions($argv, $cwd ?? $fallbackCwd);
         if ($result['error']) {
             throw new RuntimeException(trim($result['message']) !== '' ? trim($result['message']) : 'Git command failed.');

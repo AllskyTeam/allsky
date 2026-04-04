@@ -141,7 +141,7 @@
 						'</div>' +
 						'<div class="modal-body">' +
 							'<ul class="nav nav-tabs" data-role="dm-tabs"></ul>' +
-							'<div class="tab-content" style="padding-top:15px;" data-role="dm-panes"></div>' +
+							'<div class="tab-content" data-role="dm-panes"></div>' +
 						'</div>' +
 						'<div class="modal-footer">' +
 							'<div class="pull-left">' +
@@ -159,6 +159,55 @@
 			'</div>';
 
 		this.$modal = $(html).appendTo("body");
+	};
+
+	DeviceManager.prototype._adjustLayout = function () {
+		if (!this.$modal || !this.$modal.is(":visible")) {
+			return;
+		}
+
+		var $dialog = this.$modal.find(".modal-dialog");
+		var $content = this.$modal.find(".modal-content");
+		var $header = this.$modal.find(".modal-header");
+		var $body = this.$modal.find(".modal-body");
+		var $footer = this.$modal.find(".modal-footer");
+		var $tabs = this.$modal.find('[data-role="dm-tabs"]');
+		var $panes = this.$modal.find('[data-role="dm-panes"]');
+
+		$dialog.css({
+			"margin-top": "30px",
+			"margin-bottom": "30px"
+		});
+
+		var viewportHeight = $(window).height();
+		var dialogMargins = parseInt($dialog.css("margin-top"), 10) + parseInt($dialog.css("margin-bottom"), 10);
+		var contentHeight = Math.max(420, viewportHeight - dialogMargins);
+		var chromeHeight = $header.outerHeight(true) + $footer.outerHeight(true);
+		var bodyHeight = Math.max(260, contentHeight - chromeHeight);
+		var tabsHeight = $tabs.outerHeight(true) || 0;
+		var panesHeight = Math.max(180, bodyHeight - tabsHeight - 15);
+
+		$content.css({
+			"height": contentHeight + "px",
+			"max-height": contentHeight + "px"
+		});
+
+		$body.css({
+			"height": bodyHeight + "px",
+			"max-height": bodyHeight + "px",
+			"overflow": "hidden"
+		});
+
+		$panes.css({
+			"height": panesHeight + "px",
+			"padding-top": "15px",
+			"overflow": "hidden"
+		});
+
+		$panes.children(".tab-pane").css({
+			"height": panesHeight + "px",
+			"overflow-y": "auto"
+		});
 	};
 
 	/* ============================================================
@@ -198,7 +247,7 @@
 			);
 
 			// Add dm-tab-{key} class for easy targeting
-			var $pane = $('<div class="tab-pane dm-tab-' + key + ' ' + (active ? 'active' : '') + '" id="' + paneId + '"></div>');
+			var $pane = $('<div class="tab-pane ' + (active ? 'active' : '') + '" id="' + paneId + '"></div>');
 			$panes.append($pane);
 
 			self.tabs[key] = {
@@ -271,9 +320,11 @@
 		.done(function (html) {
 			tab.$pane.html(html);
 			tab.loaded = true;
+			self._adjustLayout();
 		})
 		.fail(function () {
 			tab.$pane.html('<div class="alert alert-danger">Failed to load. Please ensure the Allsky Server is running</div>');
+			self._adjustLayout();
 		})
 		.always(function () {
 			self.$modal.find(".modal-body").LoadingOverlay("hide");
@@ -370,6 +421,13 @@
 						self._refreshActiveTab();
 					}
 				}
+
+				self._adjustLayout();
+			});
+
+		$(window).off("resize." + this.modalId)
+			.on("resize." + this.modalId, function () {
+				self._adjustLayout();
 			});
 	};
 

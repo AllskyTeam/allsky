@@ -46,7 +46,7 @@ function DisplayLoginPage()
             <link rel="shortcut icon" href="/favicon.ico" />
             <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
             <link rel="manifest" href="/site.webmanifest" />            
-            <link href="documentation/bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+            <link href="js/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
 		    <link rel="stylesheet" href="allsky/font-awesome/css/all.min.css" type="text/css">            
             <link rel="stylesheet" href="/css/login.css">
         </head>
@@ -81,7 +81,7 @@ function DisplayLoginPage()
                     </div>
                 </div>
             </div>
-            <script src="documentation/bower_components/jquery/dist/jquery.min.js"></script>
+            <script src="js/jquery/dist/jquery.min.js"></script>
             <script src="/js/login.js"></script>
         </body>
     </html>

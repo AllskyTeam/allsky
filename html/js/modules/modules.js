@@ -12,6 +12,8 @@ class MODULESEDITOR {
 	#events = []
 	#errors = []
 	#dialogRowGroups = {}
+	#installerBranch = null
+	#installerData = null
 
 	constructor() {
 
@@ -219,6 +221,8 @@ class MODULESEDITOR {
 					group: 'list',
 					animation: 200,
 					ghostClass: 'ghost',
+					forceFallback: true,
+					fallbackOnBody: true,
 					filter: '.filtered',
 					onMove: function (evt) {
 
@@ -248,6 +252,8 @@ class MODULESEDITOR {
 					group: 'list',
 					animation: 200,
 					ghostClass: 'ghost',
+					forceFallback: true,
+					fallbackOnBody: true,
 					filter: '.filtered',
 					onMove: function (evt) {
 
@@ -500,9 +506,16 @@ class MODULESEDITOR {
 		let locked = ''
 		let enabledHTML = ''
 		let lockedHTML = ''
+		let lockedOverlayHTML = ''
 		if (data.position !== undefined) {
 			locked = 'filtered locked ' + data.position;
 			lockedHTML = '<i class="fa-solid fa-lock" title="Module cannot be moved"></i> '
+			lockedHTML = ''
+			lockedOverlayHTML = `
+				<div class="module-locked-overlay">
+					<div class="label label-default"><i class="fa-solid fa-lock"></i> Locked</div>
+				</div>
+			`
 		} else {
 			let enabled = '';
 			if (data.enabled !== undefined) {
@@ -569,6 +582,7 @@ class MODULESEDITOR {
 		let template = `
             <div id="${moduleKey}" data-id="${data.module}" class="list-group-item allskymodule ${locked}" data-search="${data.metadata.description} ${data.metadata.name}" data-group="${data.metadata.group}">
                 <div class="panel panel-default">
+                    ${lockedOverlayHTML}
                     <div class="panel-heading"><span class="warning" data-toggle="popover" data-delay=\'{"show": 1000, "hide": 200}\' data-placement="top" data-trigger="hover" data-placement="top" title="" data-content=""><i class="fa-solid fa-2x fa-triangle-exclamation"></i></span> ${lockedHTML}${data.metadata.name} ${version} ${enabledHTML}</div> 
                     <div class="panel-body">${nameData} <div class="pull-right">${settingsHtml} ${addHTML}</div></div> 
                 </div> 
@@ -2681,7 +2695,359 @@ class MODULESEDITOR {
 
 	}
 
+	#escapeHtml(value) {
+		return $('<div>').text(value ?? '').html();
+	}
+
+	#selectedInstallerBranch() {
+		return $('#module-installer-branch').val() || this.#installerBranch || '';
+	}
+
+	#moduleMatchesInstallerSearch(module, searchText) {
+		if (!searchText) {
+			return true;
+		}
+
+		const haystack = [
+			module.displayName,
+			module.module,
+			module.description,
+			module.group,
+			(module.differingFlows || []).join(' ')
+		].join(' ').toLowerCase();
+
+		return haystack.includes(searchText);
+	}
+
+	#isReleaseBranch(branch) {
+		if (!branch) {
+			return false;
+		}
+
+		return branch === 'master' || branch === 'legacy' || branch.startsWith('v');
+	}
+
+	#adjustInstallerModalHeight() {
+		const modal = $('#module-installer-dialog');
+		if (!modal.length || !modal.is(':visible')) {
+			return;
+		}
+
+		const dialog = modal.find('.modal-dialog');
+		const content = modal.find('.modal-content');
+		const header = modal.find('.modal-header');
+		const body = modal.find('.modal-body');
+		const footer = modal.find('.modal-footer');
+		const fixed = $('#module-installer-fixed');
+		const list = $('#module-installer-list');
+
+		dialog.css({
+			'margin-top': '10px',
+			'margin-bottom': '10px'
+		});
+
+		const viewportHeight = $(window).height();
+		const dialogMargins = parseInt(dialog.css('margin-top'), 10) + parseInt(dialog.css('margin-bottom'), 10);
+		const contentHeight = Math.max(420, viewportHeight - dialogMargins);
+		const chromeHeight = header.outerHeight(true) + footer.outerHeight(true);
+		const bodyHeight = Math.max(320, contentHeight - chromeHeight);
+		const fixedHeight = fixed.outerHeight(true) || 0;
+		const listHeight = Math.max(240, bodyHeight - fixedHeight);
+
+		content.css('height', `${contentHeight}px`);
+
+		body.css({
+			'height': `${bodyHeight}px`,
+			'max-height': `${bodyHeight}px`,
+			'overflow-y': 'hidden',
+			'padding-bottom': '0'
+		});
+
+		list.css({
+			'max-height': `${listHeight}px`,
+			'height': `${listHeight}px`,
+			'overflow-y': 'auto'
+		});
+	}
+
+	#renderInstallerModules(result) {
+		this.#installerData = result;
+		this.#installerBranch = result.branch;
+		$('#module-installer-repo').text(result.repo || '');
+
+		const branchSelect = $('#module-installer-branch');
+		const currentOptions = Array.from(branchSelect.find('option')).map((option) => option.value);
+		const newOptions = result.branches || [];
+		if (currentOptions.join('|') !== newOptions.join('|')) {
+			branchSelect.empty();
+			const stableGroup = $('<optgroup>', { label: 'Stable' });
+			const developmentGroup = $('<optgroup>', { label: 'Development' });
+
+			newOptions.forEach((branch) => {
+				const option = new Option(branch, branch, false, branch === result.branch);
+				if (this.#isReleaseBranch(branch)) {
+					stableGroup.append(option);
+				} else {
+					developmentGroup.append(option);
+				}
+			});
+
+			if (stableGroup.children().length > 0) {
+				branchSelect.append(stableGroup);
+			}
+			if (developmentGroup.children().length > 0) {
+				branchSelect.append(developmentGroup);
+			}
+		} else {
+			branchSelect.val(result.branch);
+		}
+
+		const groupsContainer = $('#module-installer-groups');
+		const summaryContainer = $('#module-installer-summary');
+		groupsContainer.empty();
+		summaryContainer.empty();
+
+		const searchText = ($('#module-installer-search').val() || '').trim().toLowerCase();
+		const filterMode = $('#module-installer-filter').val() || 'all';
+		const modules = (result.modules || []).filter((module) => {
+			if (filterMode === 'updateable' && !module.updateAvailable) {
+				return false;
+			}
+			if (filterMode === 'migrateable' && !module.migrationRequired) {
+				return false;
+			}
+			if (filterMode === 'not-installed') {
+				if (module.installed) {
+					return false;
+				}
+				if (module.replacedBy && String(module.replacedBy).trim() !== '') {
+					return false;
+				}
+			}
+			return this.#moduleMatchesInstallerSearch(module, searchText);
+		});
+		const installedCount = modules.filter((module) => module.installed).length;
+		const updateCount = modules.filter((module) => module.updateAvailable).length;
+		const migrationCount = modules.filter((module) => module.migrationRequired).length;
+		const deprecatedCount = modules.filter((module) => module.deprecated).length;
+
+		summaryContainer.append(`
+			<div class="row">
+				<div class="col-sm-6 col-md-2">
+					<div class="panel panel-default"><div class="panel-body text-center"><small>Total Modules</small><div><strong>${modules.length}</strong></div></div></div>
+				</div>
+				<div class="col-sm-6 col-md-2">
+					<div class="panel panel-default"><div class="panel-body text-center"><small>Installed</small><div><strong>${installedCount}</strong></div></div></div>
+				</div>
+				<div class="col-sm-6 col-md-2">
+					<div class="panel panel-default"><div class="panel-body text-center"><small>Updates</small><div><strong>${updateCount}</strong></div></div></div>
+				</div>
+				<div class="col-sm-6 col-md-2">
+					<div class="panel panel-default"><div class="panel-body text-center"><small>Migration</small><div><strong>${migrationCount}</strong></div></div></div>
+				</div>
+				<div class="col-sm-6 col-md-2">
+					<div class="panel panel-default"><div class="panel-body text-center"><small>Deprecated</small><div><strong>${deprecatedCount}</strong></div></div></div>
+				</div>
+				<div class="col-sm-6 col-md-2">
+					<div class="panel panel-default"><div class="panel-body text-center"><small>Branch</small><div><strong>${this.#escapeHtml(result.branch || '')}</strong></div></div></div>
+				</div>
+			</div>
+		`);
+
+		const groupedModules = {};
+		modules.forEach((module) => {
+			const groupName = module.group || 'Ungrouped';
+			if (groupedModules[groupName] === undefined) {
+				groupedModules[groupName] = [];
+			}
+			groupedModules[groupName].push(module);
+		});
+
+		Object.keys(groupedModules).sort((a, b) => a.localeCompare(b)).forEach((groupName) => {
+			let groupHtml = `
+				<div class="panel panel-default panel-shadow">
+					<div class="panel-heading clearfix">
+						<a data-toggle="collapse" href="#module-installer-group-${this.#escapeHtml(groupName).replace(/[^a-zA-Z0-9_-]/g, '-')}" aria-expanded="true">
+							<span>${this.#escapeHtml(groupName)}</span>
+							<span class="pull-right text-muted">${groupedModules[groupName].length} module${groupedModules[groupName].length === 1 ? '' : 's'}</span>
+						</a>
+					</div>
+					<div id="module-installer-group-${this.#escapeHtml(groupName).replace(/[^a-zA-Z0-9_-]/g, '-')}" class="panel-collapse collapse in">
+						<div class="panel-body">
+							<div class="list-group">
+			`;
+
+			groupedModules[groupName].forEach((module) => {
+			let actions = `
+				<div class="btn-group" role="group">
+					<button type="button" class="btn btn-primary module-installer-action" data-action="status" data-module="${this.#escapeHtml(module.module)}" title="Status"><i class="fa-solid fa-circle-info fa-fw"></i></button>
+				</div>
+			`;
+			if (module.installed) {
+				if (module.updateAvailable) {
+					actions += ` <div class="btn-group" role="group"><button type="button" class="btn btn-primary module-installer-action" data-action="update" data-module="${this.#escapeHtml(module.module)}" title="Update"><i class="fa-solid fa-download fa-fw"></i></button></div>`;
+				}
+				actions += ` <div class="btn-group" role="group"><button type="button" class="btn btn-warning module-installer-action" data-action="reinstall" data-module="${this.#escapeHtml(module.module)}" title="Reinstall"><i class="fa-solid fa-rotate-right fa-fw"></i></button></div>`;
+				if (module.migrationRequired) {
+					actions += ` <div class="btn-group" role="group"><button type="button" class="btn btn-info module-installer-action" data-action="migrate" data-module="${this.#escapeHtml(module.module)}" title="Migrate"><i class="fa-solid fa-right-left fa-fw"></i></button></div>`;
+				}
+				actions += ` <div class="btn-group" role="group"><button type="button" class="btn btn-danger module-installer-action" data-action="uninstall" data-module="${this.#escapeHtml(module.module)}" title="Uninstall"><i class="fa-solid fa-trash fa-fw"></i></button></div>`;
+			} else if (!module.deprecated && module.valid) {
+				actions += ` <div class="btn-group" role="group"><button type="button" class="btn btn-success module-installer-action" data-action="install" data-module="${this.#escapeHtml(module.module)}" title="Install"><i class="fa-solid fa-plus fa-fw"></i></button></div>`;
+			}
+
+			const errors = []
+				.concat(module.sourceErrors || [])
+				.concat(module.installedErrors || []);
+			const errorText = errors.length > 0
+				? this.#escapeHtml(errors.join(' | '))
+				: '';
+			const replacedBy = module.replacedBy
+				? `<div class="text-warning"><small>Replaced by ${this.#escapeHtml(module.replacedBy)}</small></div>`
+				: '';
+			const migrationBadge = (module.differingFlows || []).length > 0
+				? `<span class="badge">Migration Required</span>`
+				: '';
+			const flowsBlock = (module.differingFlows || []).length > 0
+				? `<div><strong>Flows:</strong> ${this.#escapeHtml(module.differingFlows.join(', '))}</div>`
+				: '';
+			const shortDescription = this.#escapeHtml(module.description || '');
+			let statusIcon = '<i class="fa-regular fa-circle text-muted" title="Available"></i>';
+			if (module.installed) {
+				statusIcon = '<i class="fa-solid fa-circle-check text-success" title="Installed"></i>';
+			} else if (module.deprecated) {
+				statusIcon = '<i class="fa-solid fa-triangle-exclamation text-warning" title="Deprecated"></i>';
+			}
+			const versionLine = `
+				<span class="badge">Installed: ${this.#escapeHtml(module.installedVersion || 'No')}</span>
+				<span class="badge">Available: ${this.#escapeHtml(module.sourceVersion || 'Unknown')}</span>
+			`;
+
+			groupHtml += `
+				<div class="list-group-item" data-module="${this.#escapeHtml(module.module)}">
+						<div class="row">
+							<div class="col-sm-8">
+								<div class="row">
+									<div class="col-xs-12">
+										<h4>
+											${statusIcon} ${this.#escapeHtml(module.displayName)}
+										</h4>
+									</div>
+								</div>
+								<div class="row">
+									<div class="col-xs-12">
+										<p class="text-muted">${shortDescription}</p>
+									</div>
+								</div>
+								<div class="row">
+									<div class="col-xs-12">
+										<p class="help-block"><span class="badge">${this.#escapeHtml(module.module)}</span> ${versionLine} ${migrationBadge}</p>
+									</div>
+								</div>
+								${replacedBy ? `<div class="row"><div class="col-xs-12">${replacedBy}</div></div>` : ''}
+								${errorText ? `<div class="row"><div class="col-xs-12"><div class="text-danger"><small>${errorText}</small></div></div></div>` : ''}
+								${flowsBlock ? `<div class="row"><div class="col-xs-12">${flowsBlock}</div></div>` : ''}
+							</div>
+							<div class="col-sm-4 text-right">
+								<div class="btn-toolbar pull-right" role="toolbar">
+									${actions}
+								</div>
+							</div>
+						</div>
+				</div>
+			`;
+			});
+
+			groupHtml += '</div></div></div></div>';
+			groupsContainer.append(groupHtml);
+		});
+
+		if (modules.length === 0) {
+			groupsContainer.append('<div id="module-installer-empty">No repository modules found.</div>');
+		}
+	}
+
+	#loadInstallerModules(refresh = false) {
+		const branch = this.#selectedInstallerBranch();
+		$.LoadingOverlay('show');
+
+		return $.ajax({
+			url: 'includes/moduleinstallerutil.php',
+			type: 'GET',
+			dataType: 'json',
+			cache: false,
+			data: {
+				request: 'Modules',
+				branch: branch,
+				refresh: refresh
+			},
+			context: this
+		}).done((result) => {
+			this.#renderInstallerModules(result);
+			this.#adjustInstallerModalHeight();
+		}).fail((xhr) => {
+			let message = 'Failed to load the module installer data.';
+			if (xhr.responseJSON?.message) {
+				message = xhr.responseJSON.message;
+			}
+			bootbox.alert(message);
+		}).always(() => {
+			$.LoadingOverlay('hide');
+		});
+	}
+
+	#runInstallerAction(moduleName, action) {
+		const destructive = action === 'uninstall';
+		if (destructive && !window.confirm(`Are you sure you want to ${action} ${moduleName}?`)) {
+			return;
+		}
+
+		const actionLabels = {
+			status: `Loading module information for ${moduleName}...`,
+			install: `Installing ${moduleName}. This may take a while if dependencies are needed...`,
+			update: `Updating ${moduleName}. This may take a while if dependencies are needed...`,
+			reinstall: `Reinstalling ${moduleName}. This may take a while if dependencies are needed...`,
+			migrate: `Loading migration information for ${moduleName}...`,
+			uninstall: `Uninstalling ${moduleName}...`
+		};
+
+		$.LoadingOverlay('show', {
+			text: actionLabels[action] || `Processing ${moduleName}...`
+		});
+		$.ajax({
+			url: 'includes/moduleinstallerutil.php?request=Action&_=' + new Date().getTime(),
+			type: 'POST',
+			dataType: 'json',
+			cache: false,
+			data: {
+				module: moduleName,
+				action: action,
+				branch: this.#selectedInstallerBranch()
+			},
+			context: this
+		}).done((result) => {
+			bootbox.alert({
+				title: `${action.charAt(0).toUpperCase()}${action.slice(1)} ${moduleName}`,
+				message: `<pre>${this.#escapeHtml(result.message || 'Done')}</pre>`
+			});
+			this.#loadInstallerModules(false);
+			this.#buildUI();
+		}).fail((xhr) => {
+			let message = 'The module action failed.';
+			if (xhr.responseJSON?.message) {
+				message = xhr.responseJSON.message;
+			}
+			bootbox.alert(message);
+		}).always(() => {
+			$.LoadingOverlay('hide');
+		});
+	}
+
 	run() {
+		const installerDialog = $('#module-installer-dialog');
+		if (installerDialog.length && installerDialog.parent()[0] !== document.body) {
+			installerDialog.appendTo('body');
+		}
 
 		$(document).on('click', '#module-editor-restore', (event) => {
 			if (window.confirm('Are you sure you wish to restore this Flow. The last saved configuration for this flow will be restored. This process CANNOT be undone?')) {
@@ -2747,6 +3113,44 @@ class MODULESEDITOR {
 				clearTimeout(loadingTimer);
 				$.LoadingOverlay('hide');
 			});
+		});
+
+		$(document).on('click', '#module-installer-manager', () => {
+			$('#module-installer-dialog').modal('show');
+			this.#loadInstallerModules(false);
+		});
+
+		$(document).on('shown.bs.modal', '#module-installer-dialog', () => {
+			this.#adjustInstallerModalHeight();
+		});
+
+		$(window).off('resize.moduleinstaller');
+		$(window).on('resize.moduleinstaller', () => {
+			this.#adjustInstallerModalHeight();
+		});
+
+		$(document).on('change', '#module-installer-branch', () => {
+			this.#installerBranch = $('#module-installer-branch').val();
+			this.#loadInstallerModules(false);
+		});
+
+		$(document).on('input', '#module-installer-search', () => {
+			if (this.#installerData !== null) {
+				this.#renderInstallerModules(this.#installerData);
+			}
+		});
+
+		$(document).on('change', '#module-installer-filter', () => {
+			if (this.#installerData !== null) {
+				this.#renderInstallerModules(this.#installerData);
+				this.#adjustInstallerModalHeight();
+			}
+		});
+
+		$(document).off('click', '.module-installer-action');
+		$(document).on('click', '.module-installer-action', (event) => {
+			const button = $(event.currentTarget);
+			this.#runInstallerAction(button.data('module'), button.data('action'));
 		});
 
 

@@ -35,8 +35,10 @@ class UIUTIL extends UTILBASE {
     {
         return [
             'AllskyStatus'   => ['get'],
+            'AllskyControl'  => ['post'],
             'CPULoad'        => ['get'],
             'CPUTemp'        => ['get'],
+            'DayNightStatus' => ['get'],
             'MemoryUsed'     => ['get'],
             'Multiple'       => ['post'],
             'ThrottleStatus' => ['get'],
@@ -50,6 +52,19 @@ class UIUTIL extends UTILBASE {
         $this->jsonResponse = false;
     }
 
+    /**
+     * Read a value from the global settings array prepared by initialize_variables().
+     * Optionally swap spaces with a given character for filename-ish values.
+     */
+    private function getSetting(string $name, string $swapSpaces = '')
+    {
+        /** @var array $settings_array */
+        global $settings_array;
+        $val = getVariableOrDefault($settings_array, $name, 'overlay.json');
+        if ($swapSpaces !== '') $val = str_replace(' ', $swapSpaces, (string)$val);
+        return $val;
+    }
+        
     /**
      * Build a bootstrap progress bar with safe output.
      *
@@ -92,6 +107,43 @@ class UIUTIL extends UTILBASE {
     {
         $result = output_allsky_status();
         $this->sendHTTPResponse($result);
+    }
+
+    public function postAllskyControl(): void
+    {
+        $input = file_get_contents('php://input');
+        $data = json_decode($input ?: '{}', true);
+        if (!is_array($data)) {
+            $this->send500('Invalid request payload.');
+        }
+
+        $action = strtolower(trim((string)($data['action'] ?? '')));
+        if (!in_array($action, ['start', 'stop', 'restart'], true)) {
+            $this->send400('Invalid action.');
+        }
+
+        $result = $this->runProcess(['sudo', '-n', '/bin/systemctl', $action, 'allsky']);
+        if ($result['error']) {
+            $message = trim((string)$result['message']);
+            if ($message === '') {
+                $message = 'Unable to ' . $action . ' Allsky service.';
+            }
+            $this->sendResponse([
+                'ok' => false,
+                'action' => $action,
+                'message' => $message,
+            ]);
+        }
+
+        if ($action === 'stop') {
+            update_allsky_status(ALLSKY_STATUS_NOT_RUNNING);
+        }
+
+        $this->sendResponse([
+            'ok' => true,
+            'action' => $action,
+            'message' => 'Allsky ' . $action . ' requested.',
+        ]);
     }
 
     /** CPU load as a percentage progress bar (green→yellow→red) */
@@ -175,6 +227,63 @@ class UIUTIL extends UTILBASE {
         }
 
         $this->sendHTTPResponse($uptime);
+    }
+
+    public function getDayNightStatus()
+    {
+        $status = getDayNightStatus();
+        $state = $status['state'];
+        $display = htmlspecialchars($status['display'], ENT_QUOTES);
+
+        $labelClass = 'label-default';
+        if ($state === 'day' || $state === 'night') {
+            $captureSetting = $state === 'day' ? 'takedaytimeimages' : 'takenighttimeimages';
+            $saveSetting = $state === 'day' ? 'savedaytimeimages' : 'savenighttimeimages';
+
+            $isCapturing = toBool((string)$this->getSetting($captureSetting));
+            $isSaving = toBool((string)$this->getSetting($saveSetting));
+
+            if ($isCapturing && $isSaving) {
+                $labelClass = 'label-success';
+            } else if ($isCapturing && !$isSaving) {
+                $labelClass = 'label-warning';
+            } else {
+                $labelClass = 'label-danger';
+            }
+        }
+
+        $labelText = ucfirst($state);
+        if ($state === 'unknown') {
+            $labelText = 'Unknown';
+        }
+
+        $nextStateText = htmlspecialchars(ucfirst($status['nextState'] ?? 'unknown'), ENT_QUOTES);
+        $transitionDuration = htmlspecialchars($status['transitionDuration'] ?? '--', ENT_QUOTES);
+        $nextTransitionTime = htmlspecialchars($status['nextTransitionTime'] ?? '--:--', ENT_QUOTES);
+        $dawn = htmlspecialchars($status['dawn'] ?? '--:--', ENT_QUOTES);
+        $sunrise = htmlspecialchars($status['sunrise'] ?? '--:--', ENT_QUOTES);
+        $midday = htmlspecialchars($status['midday'] ?? '--:--', ENT_QUOTES);
+        $sunset = htmlspecialchars($status['sunset'] ?? '--:--', ENT_QUOTES);
+        $dusk = htmlspecialchars($status['dusk'] ?? '--:--', ENT_QUOTES);
+
+        $html = sprintf(
+            "<div class='header-daynight-card dropdown'><div class='header-status-heading'><span class='header-status-title'>Capture Mode</span><button type='button' class='btn btn-default btn-xs header-daynight-toggle' data-toggle='dropdown' aria-expanded='false'><i class='fa-solid fa-chevron-down'></i></button></div><div class='header-status-row'><span class='header-status-row-label'>Mode:</span><span class='header-status-row-value'><span class='label %s'>%s</span></span></div><div class='header-status-row'><span class='header-status-row-label'>Transition in:</span><span class='header-status-row-value'>%s</span></div><ul class='dropdown-menu dropdown-menu-right header-daynight-menu'><li class='dropdown-header'>Transition Times</li><li><div class='header-daynight-menu-body'><div class='header-daynight-menu-row'><span>Dawn</span><strong>%s</strong></div><div class='header-daynight-menu-row'><span>Sunrise</span><strong>%s</strong></div><div class='header-daynight-menu-row'><span>Midday</span><strong>%s</strong></div><div class='header-daynight-menu-row'><span>Sunset</span><strong>%s</strong></div><div class='header-daynight-menu-row'><span>Dusk</span><strong>%s</strong></div><div class='header-daynight-menu-divider'></div><div class='header-daynight-menu-row'><span>Next Transition</span><strong>%s</strong></div></div></li></ul></div>",
+            $labelClass,
+            htmlspecialchars($labelText, ENT_QUOTES),
+            $transitionDuration,
+            $dawn,
+            $sunrise,
+            $midday,
+            $sunset,
+            $dusk,
+            $nextTransitionTime
+        );
+
+        if ($this->returnValues) {
+            return $html;
+        }
+
+        $this->sendHTTPResponse($html);
     }
 
     /**

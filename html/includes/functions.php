@@ -203,8 +203,8 @@ function update_allsky_status($newStatus) {
 	}
 }
 
-function output_allsky_status() {
-	global $allsky_status, $allsky_status_timestamp;
+function output_allsky_status($versionHtml = "") {
+	global $allsky_status, $allsky_status_timestamp, $hostname;
 
 	$retMsg = "";
 	$s = get_decoded_json_file(ALLSKY_STATUS, true, "", $retMsg);
@@ -216,23 +216,80 @@ function output_allsky_status() {
 		$allsky_status_timestamp = getVariableOrDefault($s, 'timestamp', null);
 	}
 
+	$formattedTimestamp = null;
+	if ($allsky_status_timestamp !== null) {
+		try {
+			$timezoneName = trim((string) @file_get_contents('/etc/timezone'));
+			if ($timezoneName === '') {
+				$timezoneName = date_default_timezone_get();
+			}
+			$timezone = new DateTimeZone($timezoneName);
+			$dt = DateTimeImmutable::createFromFormat(DATE_TIME_FORMAT, $allsky_status_timestamp, $timezone);
+			if ($dt !== false) {
+				$formatter = new IntlDateFormatter(
+					Locale::getDefault(),
+					IntlDateFormatter::MEDIUM,
+					IntlDateFormatter::MEDIUM,
+					$timezone
+				);
+				$formattedTimestamp = $formatter->format($dt);
+			}
+		} catch (Throwable $e) {
+			$formattedTimestamp = null;
+		}
+	}
+
 	if ($allsky_status_timestamp === null) {
 		$title = "";
-		$class = "";
+		$class = "label-default";
+		$timestampHtml = "";
 	} else if ($allsky_status == "Unknown") {
 		$allsky_status_timestamp = str_replace("<b>", "", $allsky_status_timestamp);
 		$allsky_status_timestamp = str_replace("</b>","", $allsky_status_timestamp);
 		$title = " title='$allsky_status_timestamp'";
-		$class = "alert-danger";
+		$class = "label-danger";
+		$timestampHtml = "<div class='header-status-row'><span class='header-status-row-label'>Since:</span><span class='header-status-row-value'>Unavailable</span></div>";
 	} else {
-		$title = "title='Since $allsky_status_timestamp'";
+		$displayTimestamp = $formattedTimestamp ?? $allsky_status_timestamp;
+		$title = "title='Since $displayTimestamp'";
 		if ($allsky_status == ALLSKY_STATUS_RUNNING) {
-			$class = "alert-success";
+			$class = "label-success";
 		} else {
-			$class = "alert-warning";
+			$class = "label-warning";
 		}
+		$timestampHtml = "<div class='header-status-row'><span class='header-status-row-label'>Since:</span><span class='header-status-row-value'>$displayTimestamp</span></div>";
 	}
-	return("<span class='nowrap $class' $title>Status: $allsky_status</span><br>");
+
+	if ($versionHtml === "") {
+		$versionHtml = "<div class='header-status-row'><span class='header-status-row-label'>Version:</span><span class='header-status-row-value'>" . ALLSKY_VERSION . "&nbsp; on &nbsp;<span style='font-weight: bold'>" . htmlspecialchars((string)$hostname, ENT_QUOTES) . "</span></span></div>";
+	}
+
+	$statusActions = [];
+	if ($allsky_status == ALLSKY_STATUS_RUNNING) {
+		$statusActions = ['Stop', 'Restart'];
+	} else if ($allsky_status == ALLSKY_STATUS_NOT_RUNNING) {
+		$statusActions = ['Start'];
+	} else {
+		$statusActions = ['Start', 'Restart'];
+	}
+
+	$statusActionsHtml = "";
+	foreach ($statusActions as $action) {
+		$actionEscaped = htmlspecialchars($action, ENT_QUOTES);
+		$buttonClass = "btn-default";
+		if ($action === "Start") {
+			$buttonClass = "btn-success";
+		} else if ($action === "Stop") {
+			$buttonClass = "btn-danger";
+		} else if ($action === "Restart") {
+			$buttonClass = "btn-warning";
+		}
+		$statusActionsHtml .= "<li><button type='button' class='btn $buttonClass btn-block header-status-action' data-action='" . strtolower($actionEscaped) . "'>$actionEscaped</button></li>";
+	}
+
+	$statusDropdownHtml = "<div class='dropdown header-status-dropdown'><button type='button' class='btn btn-default btn-xs header-status-toggle' aria-expanded='false'><i class='fa-solid fa-chevron-down'></i></button><ul class='dropdown-menu dropdown-menu-right header-status-menu'><li class='dropdown-header'>Manage Allsky</li>$statusActionsHtml</ul></div>";
+
+	return("<div class='header-status-card' $title><div class='header-status-heading'><span class='header-status-title'>Allsky Status</span> <span class='label $class'>$allsky_status</span>$statusDropdownHtml</div>$timestampHtml$versionHtml</div>");
 }
 
 function initialize_variables($website_only=false) {
@@ -1054,6 +1111,150 @@ function getTOD() {
 	}
 	
 	return $tod;
+}
+
+function getDayNightStatus(): array {
+	global $settings_array;
+
+	$angle = getVariableOrDefault($settings_array, 'angle', -6);
+	$lat = getVariableOrDefault($settings_array, 'latitude', "");
+	$lon = getVariableOrDefault($settings_array, 'longitude', "");
+
+	$result = [
+		'state' => 'unknown',
+		'nextState' => null,
+		'nextTransitionTime' => null,
+		'transitionDuration' => null,
+		'dawn' => null,
+		'sunrise' => null,
+		'midday' => null,
+		'sunset' => null,
+		'dusk' => null,
+		'dayStart' => null,
+		'nightStart' => null,
+		'secondsUntil' => null,
+		'display' => 'Day/Night unavailable',
+	];
+
+	if ($lat === "" || $lon === "") {
+		return $result;
+	}
+
+	exec("sunwait poll exit set angle $angle $lat $lon", $return, $retval);
+	if ($retval === 2) {
+		$result['state'] = 'day';
+		$result['nextState'] = 'night';
+		$transition = 'set';
+	} else if ($retval === 3) {
+		$result['state'] = 'night';
+		$result['nextState'] = 'day';
+		$transition = 'rise';
+	} else {
+		$result['display'] = 'Day/Night unavailable';
+		return $result;
+	}
+
+	$output = [];
+	exec("sunwait list $transition angle $angle $lat $lon", $output, $listRetval);
+	if ($listRetval !== 0 || count($output) === 0) {
+		$result['display'] = ucfirst($result['state']);
+		return $result;
+	}
+
+	$timeString = trim(implode(" ", $output));
+	if (!preg_match('/(\d{1,2}):(\d{2})/', $timeString, $matches)) {
+		$result['display'] = ucfirst($result['state']);
+		return $result;
+	}
+
+	$hours = (int)$matches[1];
+	$minutes = (int)$matches[2];
+
+	$timezoneName = trim((string) @file_get_contents('/etc/timezone'));
+	if ($timezoneName === '') {
+		$timezoneName = date_default_timezone_get();
+	}
+	try {
+		$timezone = new DateTimeZone($timezoneName);
+	} catch (Exception $e) {
+		$timezone = new DateTimeZone(date_default_timezone_get());
+	}
+
+	$now = new DateTimeImmutable('now', $timezone);
+	$transitionDate = $now->format('Y-m-d');
+	$transitionTimestamp = DateTimeImmutable::createFromFormat(
+		'Y-m-d H:i:s',
+		$transitionDate . ' ' . sprintf('%02d:%02d:30', $hours, $minutes),
+		$timezone
+	);
+	if ($transitionTimestamp === false) {
+		$result['display'] = ucfirst($result['state']);
+		return $result;
+	}
+	if ($transitionTimestamp <= $now) {
+		$transitionTimestamp = $transitionTimestamp->modify('+1 day');
+	}
+
+	$secondsUntil = max(0, $transitionTimestamp->getTimestamp() - $now->getTimestamp());
+	$result['secondsUntil'] = $secondsUntil;
+
+	$hoursUntil = intdiv($secondsUntil, 3600);
+	$minutesUntil = intdiv($secondsUntil % 3600, 60);
+	$timeUntilParts = [];
+	if ($hoursUntil > 0) {
+		$timeUntilParts[] = $hoursUntil . 'h';
+	}
+	$timeUntilParts[] = $minutesUntil . 'm';
+	$timeUntil = implode(' ', $timeUntilParts);
+	$result['transitionDuration'] = $timeUntil;
+
+	$result['nextTransitionTime'] = sprintf('%02d:%02d', $hours, $minutes);
+
+	$allTransitions = [];
+	exec("sunwait list angle $angle $lat $lon", $allTransitions, $allTransitionsRetval);
+	if ($allTransitionsRetval === 0 && count($allTransitions) > 0) {
+		$transitionText = trim(implode(" ", $allTransitions));
+		if (preg_match('/(\d{1,2}:\d{2}),\s*(\d{1,2}:\d{2})/', $transitionText, $transitionMatches)) {
+			$result['dayStart'] = $transitionMatches[1];
+			$result['nightStart'] = $transitionMatches[2];
+		}
+	}
+
+	$getSunwaitTime = function (string $twilight, string $event) use ($lat, $lon): ?string {
+		$output = [];
+		exec("sunwait list $event $twilight $lat $lon", $output, $retval);
+		if ($retval !== 0 || count($output) === 0) {
+			return null;
+		}
+
+		$timeString = trim(implode(" ", $output));
+		if (!preg_match('/(\d{1,2}:\d{2})/', $timeString, $matches)) {
+			return null;
+		}
+
+		return $matches[1];
+	};
+
+	$result['dawn'] = $getSunwaitTime('civil', 'rise');
+	$result['sunrise'] = $getSunwaitTime('daylight', 'rise');
+	$result['sunset'] = $getSunwaitTime('daylight', 'set');
+	$result['dusk'] = $getSunwaitTime('civil', 'set');
+
+	if ($result['sunrise'] !== null && $result['sunset'] !== null) {
+		[$sunriseHour, $sunriseMinute] = array_map('intval', explode(':', $result['sunrise']));
+		[$sunsetHour, $sunsetMinute] = array_map('intval', explode(':', $result['sunset']));
+		$sunriseSeconds = ($sunriseHour * 3600) + ($sunriseMinute * 60);
+		$sunsetSeconds = ($sunsetHour * 3600) + ($sunsetMinute * 60);
+		if ($sunsetSeconds < $sunriseSeconds) {
+			$sunsetSeconds += 86400;
+		}
+		$middaySeconds = (int)round(($sunriseSeconds + $sunsetSeconds) / 2) % 86400;
+		$result['midday'] = sprintf('%02d:%02d', intdiv($middaySeconds, 3600), intdiv($middaySeconds % 3600, 60));
+	}
+
+	$result['display'] = ucfirst($result['state']) . ' > ' . ucfirst($result['nextState']) . ' in ' . $timeUntil;
+
+	return $result;
 }
 
 // Get the newest Allsky version string.

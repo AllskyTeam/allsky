@@ -35,10 +35,6 @@ function DisplayOverlay($image_name)
 
     <link rel='stylesheet' href='/css/checkbox.css?c=<?php echo ALLSKY_VERSION; ?>' />
 
-    <link rel='stylesheet' href='/js/jquery-ui-1.14.1.custom/jquery-ui.min.css?c=<?php echo ALLSKY_VERSION; ?>' />
-    <script src="/js/jquery-ui-1.14.1.custom/jquery-ui.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-    <script src="/js/jquery-ui-sortable/jquery-ui-sortable.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-
     <link rel="stylesheet" href="/js/bootstrap-slider/dist/css/bootstrap-slider.css?c=<?php echo ALLSKY_VERSION; ?>">
     <script src="/js/bootstrap-slider/dist/bootstrap-slider.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
         
@@ -64,16 +60,14 @@ function DisplayOverlay($image_name)
 
     <script src="/js/konva/konva.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
-    <link href="/css/overlay.css?c=<?php echo ALLSKY_VERSION; ?>" rel="stylesheet">
+    <!-- <link href="/css/overlay.css?c=<?php echo ALLSKY_VERSION; ?>" rel="stylesheet"> -->
 
-    <link rel="stylesheet" href="/js/jquery-variable/jquery-variable.css">
     <script src="/js/jquery-variable/jquery-variable.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
     <script src="/js/jquery-datebuilder/jquery-datebuilder.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
     <link rel='stylesheet' href='/js/jquery-datebuilder/jquery-datebuilder.css?c=<?php echo ALLSKY_VERSION; ?>' />
 
-    <div id="oeeditor">
-        <div id="oe-overlay-manager"></div>     
+    <div id="oeeditor">   
         <div id="oe-viewport" class="panel panel-allsky">
             <div id="oe-overlay-not-running" class="oe-not-running big hidden">
                 <div class="center-full">
@@ -87,7 +81,7 @@ function DisplayOverlay($image_name)
 			<div class="panel-heading"><i class="<?php echo $pageIcon ?>"></i> <?php echo $pageHeaderTitle ?></div>
                 <p id="editor-messages"><?php $myStatus->showMessages(); ?></p>
                 <nav class="navbar navbar-default">
-                    <div class="container-fluid">
+                    <div class="container-fluid-de">
                         <div class="navbar-header">
                             <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#oe-main-navbar" aria-expanded="false">
                                 <span class="sr-only">Toggle navigation</span>
@@ -223,51 +217,111 @@ function DisplayOverlay($image_name)
         </div>
     </div>
 
-    <div id="textdialog" title="Text Properties">
-        <div id="textpropgrid"></div>
+    <div id="textdialog" class="oe-floating-dialog oe-property-dialog hidden" data-dialog-width="500">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-role="oe-dialog-close" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Text Properties</h4>
+            </div>
+            <div class="modal-body">
+                <div id="textpropgrid"></div>
+            </div>
+        </div>
     </div>
 
-    <div id="imagedialog" title="Image Properties">
-        <div id="imagepropgrid"></div>
+    <div id="imagedialog" class="oe-floating-dialog oe-property-dialog hidden" data-dialog-width="380">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-role="oe-dialog-close" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Image Properties</h4>
+            </div>
+            <div class="modal-body">
+                <div id="imagepropgrid"></div>
+            </div>
+        </div>
     </div>
 
-    <div id="rectdialog" title="Rect Properties">
-        <div id="rectpropgrid"></div>
+    <div id="rectdialog" class="oe-floating-dialog oe-property-dialog hidden" data-dialog-width="350">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-role="oe-dialog-close" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Rect Properties</h4>
+            </div>
+            <div class="modal-body">
+                <div id="rectpropgrid"></div>
+            </div>
+        </div>
     </div>
 
-    <div id="debugdialog" title="Debug Info">
-        <div id="debugpropgrid"></div>
+    <div id="debugdialog" class="oe-floating-dialog oe-property-dialog hidden" data-dialog-width="380">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-role="oe-dialog-close" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Debug Info</h4>
+            </div>
+            <div class="modal-body">
+                <div id="debugpropgrid"></div>
+            </div>
+        </div>
     </div>
 
-    <div class="modal" role="dialog" id="formatdialog"  title="Format Help">
-        <div id="oe-format-filters-wrapper">
-            <form class="form-horizontal">
-                <div class="form-group-temp mb-3">
-                    <label for="oe-format-filters" class="col-sm-1 control-label">Filter</label>
-                    <div class="col-sm-3">
-                        <select class="form-control" id="oe-format-filters">
-                            <option value="all">Show All</option>
-                        </select>                
+    <div id="formatdialog" class="oe-floating-dialog oe-format-dialog hidden" data-dialog-width="900">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-role="oe-dialog-close" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Format Help</h4>
+            </div>
+            <div class="modal-body">
+                <div id="oe-format-filters-wrapper">
+                    <form class="form-horizontal">
+                        <div class="form-group-temp mb-3">
+                            <label for="oe-format-filters" class="col-sm-1 control-label">Filter</label>
+                            <div class="col-sm-3">
+                                <select class="form-control" id="oe-format-filters">
+                                    <option value="all">Show All</option>
+                                </select>                
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <table id="formatlisttable" class="hidden" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>Format</th>
+                            <th>Description</th>
+                            <th>Sample</th>
+                            <th>Type</th>
+                            <th>Legacy</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <div class="pull-right">
+                    <button type="button" id="oe-format-filters-close" class="btn btn-success">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="oe-text-edit-dialog" tabindex="-1" role="dialog" aria-labelledby="oe-text-edit-dialog-title">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="oe-text-edit-dialog-title">Edit Text</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="oe-text-edit-dialog-value" class="control-label">Value</label>
+                        <textarea id="oe-text-edit-dialog-value" class="form-control" rows="6"></textarea>
                     </div>
                 </div>
-            </form>
-        </div>
-        <table id="formatlisttable" class="hidden" style="width:100%">
-            <thead>
-                <tr>
-                    <th>Format</th>
-                    <th>Description</th>
-                    <th>Sample</th>
-                    <th>Type</th>
-                    <th>Legacy</th>
-                    <th></th>
-                </tr>
-            </thead>
-        </table>
-
-        <div class="modal-footer">
-            <div class="pull-right">
-                <button type="button" id="oe-format-filters-close" class="btn btn-success">Close</button>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="oe-text-edit-dialog-apply">Apply</button>
+                </div>
             </div>
         </div>
     </div>

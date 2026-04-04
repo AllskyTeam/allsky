@@ -2738,8 +2738,14 @@ class MODULESEDITOR {
 		const header = modal.find('.modal-header');
 		const body = modal.find('.modal-body');
 		const footer = modal.find('.modal-footer');
+		const tabs = modal.find('.nav-tabs').first();
 		const fixed = $('#module-installer-fixed');
 		const list = $('#module-installer-list');
+		const tabContent = list.find('.tab-content');
+		const installerTab = $('#module-installer-tab');
+		const installerGroups = $('#module-installer-groups');
+		const suggestedTab = $('#module-suggested-tab');
+		const fixedHeight = installerTab.hasClass('active') ? (fixed.outerHeight(true) || 0) : 0;
 
 		dialog.css({
 			'margin-top': '10px',
@@ -2751,8 +2757,9 @@ class MODULESEDITOR {
 		const contentHeight = Math.max(420, viewportHeight - dialogMargins);
 		const chromeHeight = header.outerHeight(true) + footer.outerHeight(true);
 		const bodyHeight = Math.max(320, contentHeight - chromeHeight);
-		const fixedHeight = fixed.outerHeight(true) || 0;
-		const listHeight = Math.max(240, bodyHeight - fixedHeight);
+		const tabsHeight = tabs.outerHeight(true) || 0;
+		const listHeight = Math.max(240, bodyHeight - tabsHeight);
+		const installerGroupsHeight = Math.max(180, listHeight - fixedHeight);
 
 		content.css('height', `${contentHeight}px`);
 
@@ -2766,7 +2773,35 @@ class MODULESEDITOR {
 		list.css({
 			'max-height': `${listHeight}px`,
 			'height': `${listHeight}px`,
-			'overflow-y': 'auto'
+			'overflow-y': 'hidden',
+			'overflow-x': 'hidden'
+		});
+
+		tabContent.css({
+			'height': `${listHeight}px`,
+			'max-height': `${listHeight}px`,
+			'overflow-x': 'hidden'
+		});
+
+		installerTab.css({
+			'height': `${listHeight}px`,
+			'max-height': `${listHeight}px`,
+			'overflow-y': 'hidden',
+			'overflow-x': 'hidden'
+		});
+
+		installerGroups.css({
+			'height': `${installerGroupsHeight}px`,
+			'max-height': `${installerGroupsHeight}px`,
+			'overflow-y': 'auto',
+			'overflow-x': 'hidden'
+		});
+
+		suggestedTab.css({
+			'height': `${listHeight}px`,
+			'max-height': `${listHeight}px`,
+			'overflow-y': 'auto',
+			'overflow-x': 'hidden'
 		});
 	}
 
@@ -2864,15 +2899,16 @@ class MODULESEDITOR {
 		});
 
 		Object.keys(groupedModules).sort((a, b) => a.localeCompare(b)).forEach((groupName) => {
+			const groupId = `module-installer-group-${this.#escapeHtml(groupName).replace(/[^a-zA-Z0-9_-]/g, '-')}`;
 			let groupHtml = `
 				<div class="panel panel-default panel-shadow">
-					<div class="panel-heading clearfix">
-						<a data-toggle="collapse" href="#module-installer-group-${this.#escapeHtml(groupName).replace(/[^a-zA-Z0-9_-]/g, '-')}" aria-expanded="true">
-							<span>${this.#escapeHtml(groupName)}</span>
+					<div class="panel-heading">
+						<a class="module-installer-toggle collapsed" data-toggle="collapse" href="#${groupId}" aria-expanded="false" aria-controls="${groupId}">
+							<i class="fa-solid fa-chevron-right fa-fw"></i> <span>${this.#escapeHtml(groupName)}</span>
 							<span class="pull-right text-muted">${groupedModules[groupName].length} module${groupedModules[groupName].length === 1 ? '' : 's'}</span>
 						</a>
 					</div>
-					<div id="module-installer-group-${this.#escapeHtml(groupName).replace(/[^a-zA-Z0-9_-]/g, '-')}" class="panel-collapse collapse in">
+					<div id="${groupId}" class="panel-collapse collapse">
 						<div class="panel-body">
 							<div class="list-group">
 			`;
@@ -2883,6 +2919,9 @@ class MODULESEDITOR {
 					<button type="button" class="btn btn-primary module-installer-action" data-action="status" data-module="${this.#escapeHtml(module.module)}" title="Status"><i class="fa-solid fa-circle-info fa-fw"></i></button>
 				</div>
 			`;
+			if (module.helplink) {
+				actions += ` <div class="btn-group" role="group"><a class="btn btn-info" href="${this.#escapeHtml(module.helplink)}" target="_blank" rel="noopener noreferrer" title="Help"><i class="fa-solid fa-circle-question fa-fw"></i></a></div>`;
+			}
 			if (module.installed) {
 				if (module.updateAvailable) {
 					actions += ` <div class="btn-group" role="group"><button type="button" class="btn btn-primary module-installer-action" data-action="update" data-module="${this.#escapeHtml(module.module)}" title="Update"><i class="fa-solid fa-download fa-fw"></i></button></div>`;
@@ -2898,7 +2937,7 @@ class MODULESEDITOR {
 
 			const errors = []
 				.concat(module.sourceErrors || [])
-				.concat(module.installedErrors || []);
+				.concat(module.installed ? (module.installedErrors || []) : []);
 			const errorText = errors.length > 0
 				? this.#escapeHtml(errors.join(' | '))
 				: '';
@@ -2963,8 +3002,217 @@ class MODULESEDITOR {
 		});
 
 		if (modules.length === 0) {
-			groupsContainer.append('<div id="module-installer-empty">No repository modules found.</div>');
+			let emptyTitle = 'No Modules Found';
+			let emptyMessage = 'No repository modules are available for the selected branch.';
+
+			if ((result.modules || []).length > 0) {
+				emptyTitle = 'No Matching Modules';
+				emptyMessage = 'No modules match the current filter or search text. Try changing the Show option or clearing the filter.';
+			}
+
+			groupsContainer.append(`
+				<div id="module-installer-empty" class="panel panel-default">
+					<div class="panel-body">
+						<div class="alert alert-info text-center" style="margin-bottom: 0;">
+							<h4>${emptyTitle}</h4>
+							<p class="mb-0">${emptyMessage}</p>
+						</div>
+					</div>
+				</div>
+			`);
 		}
+	}
+
+	#renderSuggestedModules(suggestedData, installerData = null) {
+		const container = $('#module-suggested-groups');
+		container.empty();
+
+		const suggestionInfo = suggestedData && typeof suggestedData.info === 'string'
+			? suggestedData.info
+			: '';
+		const suggestionList = Array.isArray(suggestedData)
+			? suggestedData
+			: ((suggestedData && Array.isArray(suggestedData.suggestions)) ? suggestedData.suggestions : []);
+		const moduleIndex = {};
+		((installerData && installerData.modules) || []).forEach((module) => {
+			moduleIndex[module.module] = module;
+		});
+
+		if (suggestionInfo) {
+			container.append(`
+				<div class="panel panel-info">
+					<div class="panel-body">
+						<p class="help-block">${this.#escapeHtml(suggestionInfo)}</p>
+					</div>
+				</div>
+			`);
+		}
+
+		if (suggestionList.length === 0) {
+			container.append(`
+				<div class="panel panel-default">
+					<div class="panel-body">
+						<div class="alert alert-info text-center" style="margin-bottom: 0;">
+							<h4>No Suggestions Available</h4>
+							<p>No suggested module groups are defined.</p>
+						</div>
+					</div>
+				</div>
+			`);
+			return;
+		}
+
+		suggestionList.forEach((suggestion, index) => {
+			const title = this.#escapeHtml(suggestion.title || 'Suggested Modules');
+			const description = suggestion.description
+				? `<div class="well well-sm"><p class="text-muted" style="margin-bottom: 0;">${this.#escapeHtml(suggestion.description)}</p></div>`
+				: '';
+			const modules = Array.isArray(suggestion.modules) ? suggestion.modules : [];
+			const collapseId = `module-suggested-collapse-${index}`;
+			const installableModules = modules.filter((moduleName) => {
+				const module = moduleIndex[moduleName] || null;
+				return module && !module.installed && !module.deprecated && module.valid;
+			});
+			const installButtonDisabled = installableModules.length === 0 ? ' disabled="disabled"' : '';
+			const installButtonData = this.#escapeHtml(JSON.stringify(installableModules));
+			let panelHtml = `
+				<div class="panel panel-default panel-shadow">
+					<div class="panel-heading">
+						<div class="row">
+							<div class="col-xs-8">
+								<a class="module-suggested-toggle collapsed" role="button" data-toggle="collapse" href="#${collapseId}" aria-expanded="false" aria-controls="${collapseId}">
+									<i class="fa-solid fa-chevron-right fa-fw"></i> <strong>${title}</strong>
+								</a>
+							</div>
+							<div class="col-xs-4 text-right">
+								<button type="button" class="btn btn-success btn-sm module-suggested-install"${installButtonDisabled} data-modules='${installButtonData}'>
+									<i class="fa-solid fa-plus fa-fw"></i> Install
+								</button>
+							</div>
+						</div>
+					</div>
+					<div id="${collapseId}" class="panel-collapse collapse">
+						<div class="panel-body">
+							${description}
+							<div class="row">
+								<div class="col-xs-12">
+									<h4 class="text-muted">Required Modules</h4>
+								</div>
+							</div>
+							<div class="list-group">
+			`;
+
+			modules.forEach((moduleName) => {
+				const module = moduleIndex[moduleName] || null;
+				const safeModuleName = this.#escapeHtml(moduleName);
+				const displayName = this.#escapeHtml(module ? (module.displayName || module.module) : moduleName);
+				const statusText = module
+					? (module.installed ? 'Installed' : 'Not Installed')
+					: 'Not Available In Repository';
+				const statusClass = module
+					? (module.installed ? 'label-success' : 'label-default')
+					: 'label-warning';
+				let actions = '';
+
+				if (module && module.helplink) {
+					actions += `<div class="btn-group" role="group"><a class="btn btn-info" href="${this.#escapeHtml(module.helplink)}" target="_blank" rel="noopener noreferrer" title="Help"><i class="fa-solid fa-circle-question fa-fw"></i></a></div>`;
+				}
+				if (module && !module.installed && !module.deprecated && module.valid) {
+					actions += ` <div class="btn-group" role="group"><button type="button" class="btn btn-success module-installer-action" data-action="install" data-module="${safeModuleName}" title="Install"><i class="fa-solid fa-plus fa-fw"></i></button></div>`;
+				} else if (module && module.installed && module.updateAvailable) {
+					actions += ` <div class="btn-group" role="group"><button type="button" class="btn btn-primary module-installer-action" data-action="update" data-module="${safeModuleName}" title="Update"><i class="fa-solid fa-download fa-fw"></i></button></div>`;
+				}
+
+				panelHtml += `
+					<div class="list-group-item">
+						<div class="row">
+							<div class="col-sm-8">
+								<div><strong>${displayName}</strong></div>
+							</div>
+							<div class="col-sm-4 text-right">
+								<p class="help-block"><span class="label ${statusClass}">${statusText}</span></p>
+								${actions ? `<div class="btn-toolbar pull-right" role="toolbar">${actions}</div>` : ''}
+							</div>
+						</div>
+					</div>
+				`;
+			});
+
+			panelHtml += `
+							</div>
+						</div>
+					</div>
+				</div>
+			`;
+			container.append(panelHtml);
+		});
+	}
+
+	#runSuggestedInstall(modules) {
+		const queue = Array.isArray(modules) ? modules.slice() : [];
+		if (queue.length === 0) {
+			return;
+		}
+
+		$.LoadingOverlay('show', {
+			text: `Installing ${queue.length} suggested module${queue.length === 1 ? '' : 's'}...`
+		});
+
+		const runNext = (index) => {
+			if (index >= queue.length) {
+				$.LoadingOverlay('hide');
+				this.#loadInstallerModules(false);
+				this.#buildUI();
+				return;
+			}
+
+			$.ajax({
+				url: 'includes/moduleinstallerutil.php?request=Action&_=' + new Date().getTime(),
+				type: 'POST',
+				dataType: 'json',
+				cache: false,
+				data: {
+					module: queue[index],
+					action: 'install',
+					branch: this.#selectedInstallerBranch()
+				},
+				context: this
+			}).done(() => {
+				runNext(index + 1);
+			}).fail((xhr) => {
+				$.LoadingOverlay('hide');
+				let message = `Failed to install ${queue[index]}.`;
+				if (xhr.responseJSON?.message) {
+					message = xhr.responseJSON.message;
+				}
+				bootbox.alert(message);
+			});
+		};
+
+		runNext(0);
+	}
+
+	#loadSuggestedModules() {
+		return $.ajax({
+			url: 'config/suggested_modules.json?_=' + new Date().getTime(),
+			type: 'GET',
+			dataType: 'json',
+			cache: false,
+			context: this
+		}).done((result) => {
+			this.#renderSuggestedModules(result, this.#installerData);
+		}).fail(() => {
+			$('#module-suggested-groups').html(`
+				<div class="panel panel-default">
+					<div class="panel-body">
+						<div class="alert alert-warning text-center" style="margin-bottom: 0;">
+							<h4>Unable To Load Suggestions</h4>
+							<p>The suggested module list could not be loaded from config/suggested_modules.json.</p>
+						</div>
+					</div>
+				</div>
+			`);
+		});
 	}
 
 	#loadInstallerModules(refresh = false) {
@@ -2984,6 +3232,8 @@ class MODULESEDITOR {
 			context: this
 		}).done((result) => {
 			this.#renderInstallerModules(result);
+			this.#renderSuggestedModules([], result);
+			this.#loadSuggestedModules();
 			this.#adjustInstallerModalHeight();
 		}).fail((xhr) => {
 			let message = 'Failed to load the module installer data.';
@@ -3124,6 +3374,10 @@ class MODULESEDITOR {
 			this.#adjustInstallerModalHeight();
 		});
 
+		$(document).on('shown.bs.tab', '#module-installer-dialog a[data-toggle="tab"]', () => {
+			this.#adjustInstallerModalHeight();
+		});
+
 		$(window).off('resize.moduleinstaller');
 		$(window).on('resize.moduleinstaller', () => {
 			this.#adjustInstallerModalHeight();
@@ -3151,6 +3405,39 @@ class MODULESEDITOR {
 		$(document).on('click', '.module-installer-action', (event) => {
 			const button = $(event.currentTarget);
 			this.#runInstallerAction(button.data('module'), button.data('action'));
+		});
+
+		$(document).off('click', '.module-suggested-install');
+		$(document).on('click', '.module-suggested-install', (event) => {
+			const button = $(event.currentTarget);
+			if (button.is(':disabled')) {
+				return;
+			}
+
+			let modules = [];
+			try {
+				modules = JSON.parse(button.attr('data-modules') || '[]');
+			} catch (error) {
+				modules = [];
+			}
+
+			this.#runSuggestedInstall(modules);
+		});
+
+		$(document).off('shown.bs.collapse hidden.bs.collapse', '#module-suggested-groups .panel-collapse');
+		$(document).on('shown.bs.collapse hidden.bs.collapse', '#module-suggested-groups .panel-collapse', (event) => {
+			const collapse = $(event.currentTarget);
+			const icon = collapse.closest('.panel').find('.module-suggested-toggle .fa-solid').first();
+			icon.attr('class', collapse.hasClass('in') ? 'fa-solid fa-chevron-down fa-fw' : 'fa-solid fa-chevron-right fa-fw');
+			this.#adjustInstallerModalHeight();
+		});
+
+		$(document).off('shown.bs.collapse hidden.bs.collapse', '#module-installer-groups .panel-collapse');
+		$(document).on('shown.bs.collapse hidden.bs.collapse', '#module-installer-groups .panel-collapse', (event) => {
+			const collapse = $(event.currentTarget);
+			const icon = collapse.closest('.panel').find('.module-installer-toggle .fa-solid').first();
+			icon.attr('class', collapse.hasClass('in') ? 'fa-solid fa-chevron-down fa-fw' : 'fa-solid fa-chevron-right fa-fw');
+			this.#adjustInstallerModalHeight();
 		});
 
 

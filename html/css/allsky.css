@@ -2050,6 +2050,16 @@ body.dark .header-daynight-menu-row {
     color: var(--bs3-header-card-value);
 }
 
+body.dark .module-suggested-install[disabled],
+body.dark .module-suggested-install.disabled,
+body.dark .module-suggested-install[disabled]:hover,
+body.dark .module-suggested-install[disabled]:focus {
+    background-color: #334155;
+    border-color: #475569;
+    color: #cbd5e1;
+    opacity: 1;
+}
+
 /** End Generic Helpers **/
 
 /** Settings Page **/
@@ -3201,6 +3211,29 @@ div.dtsp-searchPane div.dtsp-topRow {
 }
 .list-group .panel {
     margin: 0px 0px !important;
+}
+
+#module-installer-list {
+  overflow: hidden;
+}
+
+#module-installer-fixed {
+  padding-top: 15px;
+}
+
+#module-suggested-groups {
+  padding-top: 15px;
+}
+
+#module-installer-groups,
+#module-suggested-tab {
+  padding-right: 8px;
+  overflow-x: hidden;
+}
+
+#module-installer-groups > .panel,
+#module-suggested-groups > .panel {
+  border: 1px solid var(--bs3-panel-default-border) !important;
 }
 
 

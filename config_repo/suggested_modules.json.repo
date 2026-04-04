@@ -1,0 +1,26 @@
+{
+  "info": "Pick a task you want Allsky to perform and install the modules needed for it. Each suggestion groups the required modules together so you can see what is already installed and what still needs to be added.If you install a suggestion, only missing modules will be installed. Modules that are already installed will be left unchanged. You will still need to configure any installed modules yourself before they can be used.",
+  "suggestions": [
+      {
+        "title": "I want to run a dew heater",
+        "description": "If you have a dew heater, you can use the dewheater module to control it based on temperature and humidity readings from the temperature module.",
+        "modules": [
+          "allsky_temp",
+          "allsky_dewheater"
+        ]
+      },
+      {
+        "title": "I want to read a local temperature sensor",
+        "modules": [
+          "allsky_temp"
+        ]    
+      },
+      {
+        "title": "I want to send data to Homeassistant",
+        "description": "The publishdata module can send data to Homeassistant using MQTT. You can send any allsky variables, such as temperature readings or dew heater status. Note you must have Homeassistant setup with MQTT enabled within it",
+        "modules": [
+          "allsky_publishdata"
+        ]    
+      }
+    ]
+}

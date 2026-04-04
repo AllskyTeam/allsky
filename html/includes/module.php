@@ -305,36 +305,47 @@ function DisplayModule()
                 <h4 class="modal-title">Module Installer</h4>
             </div>
             <div class="modal-body">
-                <div id="module-installer-fixed">
-                    <div class="row">
-                        <div class="col-sm-3">
-                            <div class="form-group">
-                                <label for="module-installer-branch">Repository Branch</label>
-                                <select class="form-control" id="module-installer-branch"></select>
-                            </div>
-                        </div>
-                    <div class="col-sm-5">
-                        <div class="form-group">
-                            <label for="module-installer-search">Filter Modules</label>
-                            <input type="text" class="form-control" id="module-installer-search" placeholder="Search by name, code, description, group">
-                        </div>
-                    </div>
-                    <div class="col-sm-4">
-                        <div class="form-group">
-                            <label for="module-installer-filter" class="control-label">Show</label>
-                            <select class="form-control" id="module-installer-filter">
-                                <option value="all">All Modules</option>
-                                <option value="updateable">Updateable Modules</option>
-                                <option value="migrateable">Migrateable Modules</option>
-                                <option value="not-installed">Not Installed</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-                    <div id="module-installer-summary"></div>
-                </div>
+                <ul class="nav nav-tabs" role="tablist">
+                    <li role="presentation" class="active"><a href="#module-installer-tab" aria-controls="module-installer-tab" role="tab" data-toggle="tab">Installer</a></li>
+                    <li role="presentation"><a href="#module-suggested-tab" aria-controls="module-suggested-tab" role="tab" data-toggle="tab">Suggested</a></li>
+                </ul>
                 <div id="module-installer-list">
-                    <div id="module-installer-groups"></div>
+                    <div class="tab-content">
+                        <div role="tabpanel" class="tab-pane active" id="module-installer-tab">
+                            <div id="module-installer-fixed">
+                                <div class="row">
+                                    <div class="col-sm-3">
+                                        <div class="form-group">
+                                            <label for="module-installer-branch">Repository Branch</label>
+                                            <select class="form-control" id="module-installer-branch"></select>
+                                        </div>
+                                    </div>
+                                <div class="col-sm-5">
+                                    <div class="form-group">
+                                        <label for="module-installer-search">Filter Modules</label>
+                                        <input type="text" class="form-control" id="module-installer-search" placeholder="Search by name, code, description, group">
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        <label for="module-installer-filter" class="control-label">Show</label>
+                                        <select class="form-control" id="module-installer-filter">
+                                            <option value="all">All Modules</option>
+                                            <option value="updateable">Updateable Modules</option>
+                                            <option value="migrateable">Migrateable Modules</option>
+                                            <option value="not-installed">Not Installed</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                                <div id="module-installer-summary"></div>
+                            </div>
+                            <div id="module-installer-groups"></div>
+                        </div>
+                        <div role="tabpanel" class="tab-pane" id="module-suggested-tab">
+                            <div id="module-suggested-groups"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">

@@ -47,83 +47,91 @@ class MODULEINSTALLERUTIL extends UTILBASE
 
     public function getModules(): void
     {
-        $requestedBranch = trim((string)($_GET['branch'] ?? ''));
-        $branch = $requestedBranch !== '' ? $requestedBranch : $this->getPreferredBranch();
-        $refresh = filter_var($_GET['refresh'] ?? false, FILTER_VALIDATE_BOOLEAN);
+        try {
+            $requestedBranch = trim((string)($_GET['branch'] ?? ''));
+            $branch = $requestedBranch !== '' ? $requestedBranch : $this->getPreferredBranch();
+            $refresh = filter_var($_GET['refresh'] ?? false, FILTER_VALIDATE_BOOLEAN);
 
-        $this->ensureRepo($branch, $refresh);
-        $branches = $this->getRemoteBranches();
-        if (!in_array($branch, $branches, true)) {
-            $preferredBranch = $this->getPreferredBranch();
-            $branch = in_array($preferredBranch, $branches, true) ? $preferredBranch : $this->defaultBranch;
+            $this->ensureRepo($branch, $refresh);
+            $branches = $this->getRemoteBranches();
+            if (!in_array($branch, $branches, true)) {
+                $preferredBranch = $this->getPreferredBranch();
+                $branch = in_array($preferredBranch, $branches, true) ? $preferredBranch : $this->defaultBranch;
+            }
+            $this->checkoutBranch($branch);
+
+            $modules = [];
+            foreach ($this->getSourceModuleDirectories() as $moduleName => $modulePath) {
+                $modules[] = $this->buildModuleRecord($moduleName, $modulePath);
+            }
+
+            usort($modules, static function (array $a, array $b): int {
+                return strcasecmp($a['displayName'], $b['displayName']);
+            });
+
+            $this->sendResponse([
+                'branch' => $branch,
+                'branches' => $branches,
+                'repo' => $this->repoUrl,
+                'modules' => $modules,
+                'currentVersion' => $this->getCurrentVersion(),
+            ]);
+        } catch (Throwable $e) {
+            $this->send500($e->getMessage());
         }
-        $this->checkoutBranch($branch);
-
-        $modules = [];
-        foreach ($this->getSourceModuleDirectories() as $moduleName => $modulePath) {
-            $modules[] = $this->buildModuleRecord($moduleName, $modulePath);
-        }
-
-        usort($modules, static function (array $a, array $b): int {
-            return strcasecmp($a['displayName'], $b['displayName']);
-        });
-
-        $this->sendResponse([
-            'branch' => $branch,
-            'branches' => $branches,
-            'repo' => $this->repoUrl,
-            'modules' => $modules,
-            'currentVersion' => $this->getCurrentVersion(),
-        ]);
     }
 
     public function postAction(): void
     {
-        $moduleName = trim((string)($_POST['module'] ?? ''));
-        $action = trim((string)($_POST['action'] ?? ''));
-        $requestedBranch = trim((string)($_POST['branch'] ?? ''));
-        $branch = $requestedBranch !== '' ? $requestedBranch : $this->defaultBranch;
+        try {
+            $moduleName = trim((string)($_POST['module'] ?? ''));
+            $action = trim((string)($_POST['action'] ?? ''));
+            $requestedBranch = trim((string)($_POST['branch'] ?? ''));
+            $branch = $requestedBranch !== '' ? $requestedBranch : $this->defaultBranch;
 
-        if (!preg_match('/^allsky_[A-Za-z0-9_]+$/', $moduleName)) {
-            $this->send400('Invalid module name.');
+            if (!preg_match('/^allsky_[A-Za-z0-9_]+$/', $moduleName)) {
+                $this->send400('Invalid module name.');
+            }
+
+            $allowedActions = ['install', 'update', 'reinstall', 'uninstall', 'migrate', 'status'];
+            if (!in_array($action, $allowedActions, true)) {
+                $this->send400('Invalid action.');
+            }
+
+            $this->ensureRepo($branch, false);
+            $this->checkoutBranch($branch);
+            $modulePath = $this->repoPath . '/' . $moduleName;
+
+            if ($action !== 'uninstall' && !is_dir($modulePath)) {
+                $this->send404('Module not found in the repository.');
+            }
+
+            $message = '';
+            switch ($action) {
+                case 'install':
+                case 'update':
+                case 'reinstall':
+                    $message = $this->installOrUpdateModule($moduleName, $modulePath, $action === 'reinstall');
+                    break;
+                case 'uninstall':
+                    $message = $this->uninstallModule($moduleName);
+                    break;
+                case 'migrate':
+                    $message = $this->migrateModule($moduleName, $modulePath);
+                    break;
+                case 'status':
+                    $message = $this->getModuleStatusText($moduleName, $modulePath);
+                    break;
+            }
+
+            $this->sendResponse([
+                'message' => $message,
+                'module' => $moduleName,
+                'action' => $action,
+            ]);
+        } catch (Throwable $e) {
+            $this->send500($e->getMessage());
         }
-
-        $allowedActions = ['install', 'update', 'reinstall', 'uninstall', 'migrate', 'status'];
-        if (!in_array($action, $allowedActions, true)) {
-            $this->send400('Invalid action.');
-        }
-
-        $this->ensureRepo($branch, false);
-        $this->checkoutBranch($branch);
-        $modulePath = $this->repoPath . '/' . $moduleName;
-
-        if ($action !== 'uninstall' && !is_dir($modulePath)) {
-            $this->send404('Module not found in the repository.');
-        }
-
-        $message = '';
-        switch ($action) {
-            case 'install':
-            case 'update':
-            case 'reinstall':
-                $message = $this->installOrUpdateModule($moduleName, $modulePath, $action === 'reinstall');
-                break;
-            case 'uninstall':
-                $message = $this->uninstallModule($moduleName);
-                break;
-            case 'migrate':
-                $message = $this->migrateModule($moduleName, $modulePath);
-                break;
-            case 'status':
-                $message = $this->getModuleStatusText($moduleName, $modulePath);
-                break;
-        }
-
-        $this->sendResponse([
-            'message' => $message,
-            'module' => $moduleName,
-            'action' => $action,
-        ]);
     }
 
     private function buildModuleRecord(string $moduleName, string $modulePath): array

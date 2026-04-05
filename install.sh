@@ -3585,8 +3585,8 @@ setup_database()
 		sudo chown "${ALLSKY_OWNER}":"${ALLSKY_WEBSERVER_OWNER}" "${ALLSKY_DATABASES}"
 		sudo chmod 664 "${ALLSKY_DATABASES}"
 
-		local TMP="${ALLSKY_LOGS}/database.log"
-		sudo "${ALLSKY_UTILITIES}/database_manager.py" --auto --logfile "${TMP}"
+		#local TMP="${ALLSKY_LOGS}/database.log"
+		#sudo "${ALLSKY_UTILITIES}/database_manager.py" --auto --logfile "${TMP}"
 	fi
 }
 

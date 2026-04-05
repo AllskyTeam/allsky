@@ -21,6 +21,13 @@ function usage_and_exit()
 	E+="Usage: ${ME} [--debug] [--optionsOnly] [--cameraTypeOnly] [--from f] [--addNewSettings]"
 	E+="\n\tkey  label  old_value  new_value  [...]"
 	wE_ "${E}"
+	echo
+	echo "Arguments:"
+	echo "  --optionsOnly       Only create the options file, not the settings file."
+	echo "  --cameraTypeOnly    Only process changes to camera type."
+	echo "  --from f            We were invoked by 'f'."
+	echo "  --addNewSettings    Add settings that are new to this Allsky release."
+	echo
 	echo "There must be a multiple of 4 key/label/old_value/new_value arguments."
 	exit "${1}"
 }

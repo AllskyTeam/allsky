@@ -2182,7 +2182,6 @@
 "description" : "The type of database.<br>MySQL has more features but uses a lot more CPU and memory.",
 "label" : "Database Type",
 "type" : "select_text",
-"default" : "sqlite",
 "carryforward" : true,
 "options" : [
 	{"value" : "mysql", "label" : "MySQL"},

@@ -3577,13 +3577,17 @@ setup_database()
 {
 	#
 	# Create the sqlite database to prevent permission errors
+	# Only create the database and ask the user what they want 
+	# to do for a new install.
 	#
-	sqlite3 "${ALLSKY_DATABASES}" ".databases"
-	sudo chown "${ALLSKY_OWNER}":"${ALLSKY_WEBSERVER_OWNER}" "${ALLSKY_DATABASES}"
-	sudo chmod 664 "${ALLSKY_DATABASES}"
+	if [ ! -f "${ALLSKY_DATABASES}" ]; then	
+		sqlite3 "${ALLSKY_DATABASES}" ".databases" > /dev/null 2>&1
+		sudo chown "${ALLSKY_OWNER}":"${ALLSKY_WEBSERVER_OWNER}" "${ALLSKY_DATABASES}"
+		sudo chmod 664 "${ALLSKY_DATABASES}"
 
-	local TMP="${ALLSKY_LOGS}/database.log"
-	sudo "${ALLSKY_UTILITIES}/database_manager.py" --auto --logfile "${TMP}"
+		local TMP="${ALLSKY_LOGS}/database.log"
+		sudo "${ALLSKY_UTILITIES}/database_manager.py" --auto --logfile "${TMP}"
+	fi
 }
 
 ####
@@ -3596,32 +3600,6 @@ update_overlays()
 		"${OVERLAY_MANAGER}" --auto --oldpath "${ALLSKY_PRIOR_DIR}" --camera "${PRIOR_CAMERA_TYPE}" > "${TMP}" 2>&1
 	else
 		"${OVERLAY_MANAGER}" --install > "${TMP}" 2>&1
-	fi
-}
-
-####
-# Allow the user to install modules.
-install_modules()
-{
-
-	#
-	# NOTE: We need to use sudo here as the ALLSKY_USER has had various groups added but they will
-	#       not be activated until the user logs out and in or reboots. The module. installer needs
-	#       these groups otherwise it cannot change the permissions of various files.
-	# NOTE: There is no way to reload the groups for the user, this is a limitation of the Linux Kernel
-	#
-
-	if [[ "${BRANCH}" == "${ALLSKY_GITHUB_MAIN_BRANCH}" ]]; then
-		display_msg --log progress "Installing modules using master branch."
-		sudo su - "${ALLSKY_OWNER}" -c "${ALLSKY_MODULE_INSTALLER} --welcome ${DEBUG_ARG}"
-	else
-		display_msg --log progress "Installing modules using the ${BRANCH} branch."
-		sudo su - "${ALLSKY_OWNER}" -c "${ALLSKY_MODULE_INSTALLER} --welcome --setbranch ${BRANCH} ${DEBUG_ARG}"
-	fi
-
-	RET=$?
-	if [[ ${RET} -eq ${EXIT_PARTIAL_OK} ]]; then
-		add_to_post_actions "To install and remove modules, execute 'allsky-config manage_modules'."
 	fi
 }
 
@@ -4195,9 +4173,6 @@ update_overlays
 
 ##### Update any installed modules
 update_modules
-
-##### Allow the user to install modules
-install_modules
 
 ##### Perform any migrations required
 migrate_overlays

@@ -1302,6 +1302,10 @@ input, textarea, select, [contenteditable="true"], .allow-select {
   user-select: text !important;
 }
 
+.panel-body .row {
+    margin: 0;
+}
+
 .alert-dismissable .close {
     right: 0px;
     opacity: .6;
@@ -1325,10 +1329,6 @@ input, textarea, select, [contenteditable="true"], .allow-select {
     color: #db8300;
     background-color: white;
     border-color: #db8300;
-}
-
-.progress-bar {
-    color: black;
 }
 
 .nowrap {

@@ -480,10 +480,10 @@ function DisplaySystem()
 						<div class="alert alert-danger" role="alert" style="margin-bottom:14px; padding:14px 16px;">
 							<div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
 								<i class="fa fa-exclamation-triangle" aria-hidden="true" style="font-size:18px;"></i>
-								<strong style="font-size:17px; line-height:1.2;">Read The Documentation Before You Continue</strong>
+								<strong style="font-size:17px; line-height:1.2;">Read The <a href="/docs/allsky_guide/backup_restore/overview.html" target="_blank">Documentation</a> Before You Continue</strong>
 							</div>
 							<div style="font-size:15px; line-height:1.45;">
-								The backup and restore system should only be used after reviewing the documentation in full.
+								The backup and restore system should only be used after reviewing the <a href="/docs/allsky_guide/backup_restore/overview.html" target="_blank">documentation</a> in full.
 								It explains what is included in each backup type, prerequisites for restore, and the correct workflow to avoid data loss.
 							</div>
 						</div>

@@ -2147,7 +2147,79 @@
 "label" : "NOT DISPLAYED IN WebUI",
 "type" : "text"
 },
-
+{
+"name" : "databasesettingsheader",
+"label" : "Allsky Database Settings",
+"type" : "header"
+},
+{
+"name" : "databasesubheader",
+"label" : "<div class='panel panel-danger' style='margin-bottom: 0'><div class='panel-heading'>*** Only change these settings if you know what you are doing. ***</div></div>",
+"type" : "header-sub"
+},
+{
+"name" : "enabledatabase",
+"default" : true,
+"description" : "Enable the Allsky database.<br>Many new features will not work if the database is disabled.",
+"label" : "Enable Database",
+"type" : "boolean",
+"carryforward" : true,
+"checkchanges" : true
+},
+{
+"name" : "databasedatabase",
+"default" : "allsky",
+"description" : "The name of the database to use.",
+"label" : "Database",
+"type" : "text",
+"carryforward" : true,
+"optional" : true,
+"source" : "${ALLSKY_ENV}"
+},
+{
+"name" : "databasetype",
+"default" : "sqlite",
+"description" : "The type of database.<br>MySQL has more features but uses a lot more CPU and memory.",
+"label" : "Database Type",
+"type" : "select_text",
+"default" : "sqlite",
+"carryforward" : true,
+"options" : [
+	{"value" : "mysql", "label" : "MySQL"},
+	{"value" : "sqlite", "label" : "SQLite"}
+],
+"optional" : true
+},
+{
+"name" : "databasehost",
+"default" : "",
+"description" : "(MySQL only) The IP address or hostname of the server running the database.<br>By default the database runs on your Pi.",
+"label" : "Database Host",
+"type" : "text",
+"carryforward" : true,
+"optional" : true,
+"source" : "${ALLSKY_ENV}"
+},
+{
+"name" : "databaseuser",
+"default" : "",
+"description" : "(MySQL only) The username used to connect to the database.",
+"label" : "Database User",
+"type" : "text",
+"carryforward" : true,
+"optional" : true,
+"source" : "${ALLSKY_ENV}"
+},
+{
+"name" : "databasepassword",
+"default" : "",
+"description" : "(MySQL only) The password used to connect to the database.",
+"label" : "User Password",
+"type" : "text",
+"carryforward" : true,
+"optional" : true,
+"source" : "${ALLSKY_ENV}"
+},
 {
 "name" : "allskysensortab========================================",
 "label" : "Allsky Sensor Server",
@@ -2164,6 +2236,7 @@
 "description" : "Enable to use a Allsky Sensor Server.",
 "label" : "Server Enabled",
 "type" : "boolean",
+"optional" : true,
 "carryforward" : true
 },
 {

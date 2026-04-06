@@ -3603,7 +3603,7 @@ body.dark .as-system-entries-browser-list .list-group-item .badge {
   margin-bottom: 1em !important;
 }
 
-.dt-column-title {
+.oe-table-header .dt-column-title {
   font-size: 1.3em !important;
 }
 

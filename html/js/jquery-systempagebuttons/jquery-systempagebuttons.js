@@ -6,6 +6,7 @@
             this.$trigger = $(element);
             this.files = [];
             this.configuredFiles = [];
+            this.configDir = "/home/pi/allsky/config";
             this.activePath = "";
             this.editIndex = -1;
             this.$modal = null;
@@ -17,11 +18,13 @@
             this.$empty = null;
             this.$message = null;
             this.$currentFile = null;
-            this.$browserPath = null;
             this.$browserList = null;
             this.$entryType = null;
             this.$errorModal = null;
             this.$resultModal = null;
+            this.$iconPickerModal = null;
+            this.fontAwesomeIcons = [];
+            this.fontAwesomeIconsLoaded = false;
             this.bindTrigger();
         }
 
@@ -108,8 +111,8 @@
             this.ensureEntryModal();
             this.ensureErrorModal();
             this.ensureResultModal();
+            this.ensureIconPickerModal();
 
-            this.$fileSelect = this.$browserModal.find("#as-system-entries-browser-configured");
             this.$newPathInput = this.$browserModal.find("#as-system-entries-new-path");
             this.$tableBody = this.$modal.find("#as-system-entries-table-body");
             this.$empty = this.$modal.find("#as-system-entries-empty");
@@ -162,6 +165,11 @@
 
             this.$entryType.on("change", () => this.updateEntryFieldVisibility());
             this.$entryModal.on("click", "#as-system-entry-save", () => this.saveEntryFromDialog());
+            this.$entryModal.on("click", "#as-system-entry-icon-picker", (event) => {
+                event.preventDefault();
+                this.openIconPicker();
+            });
+            this.$entryModal.on("input", "#as-system-entry-icon", () => this.updateIconPreview());
         }
 
         ensureBrowserModal() {
@@ -175,47 +183,48 @@
                         <div class="modal-content">
                             <div class="modal-header">
                                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                                <h4 class="modal-title" id="as-system-entries-browser-title">Open Or Create File</h4>
+                                <h4 class="modal-title" id="as-system-entries-browser-title">Open File</h4>
                             </div>
                             <div class="modal-body">
                                 <div class="panel panel-default as-system-entries-open-panel">
                                     <div class="panel-heading">Open Existing File</div>
                                     <div class="panel-body">
                                         <div class="form-group">
-                                            <label for="as-system-entries-browser-configured">Configured File</label>
-                                            <select id="as-system-entries-browser-configured" class="form-control"></select>
-                                        </div>
-                                        <div class="btn-toolbar" role="toolbar">
-                                            <div class="btn-group" role="group">
-                                                <button type="button" class="btn btn-primary" id="as-system-entries-browser-open-configured"><i class="fa fa-folder-open-o"></i> Open Selected</button>
-                                            </div>
-                                        </div>
-                                        <hr>
-                                        <div class="form-group">
-                                            <label for="as-system-entries-browser-path">Browse Directory</label>
-                                            <div class="input-group">
-                                                <input type="text" id="as-system-entries-browser-path" class="form-control" placeholder="/home/pi">
-                                                <span class="input-group-btn">
-                                                    <button type="button" class="btn btn-default" id="as-system-entries-browser-go"><i class="fa fa-folder-open"></i> Open</button>
-                                                </span>
+                                            <div class="row">
+                                                <div class="col-sm-8">
+                                                    <label>Browse Files In ~/allsky/config</label>
+                                                    <div class="help-block" id="as-system-entries-browser-root" style="margin-top: 0; margin-bottom: 0;"></div>
+                                                </div>
+                                                <div class="col-sm-4 text-right" style="padding-top: 22px;">
+                                                    <button type="button" class="btn btn-default" id="as-system-entries-browser-refresh"><i class="fa fa-refresh"></i> Refresh</button>
+                                                </div>
                                             </div>
                                         </div>
                                         <div id="as-system-entries-browser-list" class="list-group as-system-entries-browser-list"></div>
+                                        <div class="form-group" style="margin-top: 15px; margin-bottom: 0;">
+                                            <label>Selected File</label>
+                                            <div class="well well-sm" id="as-system-entries-browser-selected" style="margin-bottom: 0;">No file selected.</div>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="panel panel-default as-system-entries-new-panel">
                                     <div class="panel-heading">Create New File</div>
                                     <div class="panel-body">
                                         <div class="form-group">
-                                            <label for="as-system-entries-new-path">New File Path</label>
-                                            <input type="text" id="as-system-entries-new-path" class="form-control" placeholder="/home/pi/my_buttons.txt">
+                                            <label for="as-system-entries-new-path">Filename</label>
+                                            <div class="input-group">
+                                                <span class="input-group-addon" id="as-system-entries-new-prefix">~/allsky/config/</span>
+                                                <input type="text" id="as-system-entries-new-path" class="form-control" placeholder="my_buttons.txt">
+                                            </div>
+                                            <div class="help-block" style="margin-bottom: 0;">New additions files are always stored in <code>~/allsky/config</code>.</div>
                                         </div>
-                                        <button type="button" class="btn btn-primary" id="as-system-entries-browser-create"><i class="fa fa-file-o"></i> Use This Path</button>
                                     </div>
                                 </div>
                             </div>
                             <div class="modal-footer">
-                                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn btn-primary" id="as-system-entries-browser-open-footer" style="display:none;"><i class="fa fa-folder-open-o"></i> Open</button>
+                                <button type="button" class="btn btn-primary" id="as-system-entries-browser-create-footer" style="display:none;"><i class="fa fa-file-o"></i> Create</button>
                             </div>
                         </div>
                     </div>
@@ -224,24 +233,24 @@
 
             this.$browserModal = $(html);
             $("body").append(this.$browserModal);
-            this.$browserPath = this.$browserModal.find("#as-system-entries-browser-path");
             this.$browserList = this.$browserModal.find("#as-system-entries-browser-list");
 
-            this.$browserModal.on("click", "#as-system-entries-browser-open-configured", () => {
-                const path = $.trim(this.$browserModal.find("#as-system-entries-browser-configured").val() || "");
+            this.$browserModal.on("click", "#as-system-entries-browser-open-footer", () => {
+                const path = $.trim(this.$browserModal.attr("data-selected-file") || "");
                 if (path === "") {
-                    this.setMessage("Select a configured file to open.");
+                    this.setMessage("Select a file to open.");
                     return;
                 }
-                this.openPath(path, "Opening configured file...");
+                this.openPath(path, "Opening selected file...");
             });
-            this.$browserModal.on("click", "#as-system-entries-browser-go", () => this.browseDirectory(this.$browserPath.val() || ""));
-            this.$browserModal.on("click", "#as-system-entries-browser-create", () => {
-                const path = $.trim(this.$browserModal.find("#as-system-entries-new-path").val() || "");
-                if (path === "") {
-                    this.setMessage("Enter the absolute path for the new file you want to create.");
+            this.$browserModal.on("click", "#as-system-entries-browser-refresh", () => this.browseDirectory(this.configDir));
+            this.$browserModal.on("click", "#as-system-entries-browser-create-footer", () => {
+                const fileName = $.trim(this.$browserModal.find("#as-system-entries-new-path").val() || "");
+                if (fileName === "") {
+                    this.setMessage("Enter the filename you want to create in ~/allsky/config.");
                     return;
                 }
+                const path = this.buildConfigFilePath(fileName);
                 this.openPath(path, "Opening new file path...");
             });
             this.$browserModal.on("click", ".as-system-browser-entry", (event) => {
@@ -256,7 +265,7 @@
                 }
 
                 if (type === "file" && path !== "") {
-                    this.openPath(path, "Opening selected file...");
+                    this.setSelectedBrowserFile(path);
                 }
             });
         }
@@ -364,7 +373,13 @@
                                             <div class="col-sm-6">
                                                 <div class="form-group">
                                                     <label for="as-system-entry-icon">Font Awesome Icon</label>
-                                                    <input type="text" class="form-control" id="as-system-entry-icon" placeholder="-">
+                                                    <div class="input-group">
+                                                        <input type="text" class="form-control" id="as-system-entry-icon" placeholder="-">
+                                                        <span class="input-group-btn">
+                                                            <button type="button" class="btn btn-default" id="as-system-entry-icon-picker"><i class="fa fa-th-large"></i> Select</button>
+                                                        </span>
+                                                    </div>
+                                                    <div class="help-block" id="as-system-entry-icon-preview" style="margin-bottom: 0;"></div>
                                                 </div>
                                             </div>
                                         </div>
@@ -443,6 +458,51 @@
             $("body").append(this.$resultModal);
         }
 
+        ensureIconPickerModal() {
+            if (this.$iconPickerModal) {
+                return;
+            }
+
+            const html = `
+                <div class="modal fade" id="as-system-icon-picker-modal" tabindex="-1" role="dialog" aria-labelledby="as-system-icon-picker-title">
+                    <div class="modal-dialog modal-lg" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                <h4 class="modal-title" id="as-system-icon-picker-title">Select Font Awesome Icon</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div class="form-group">
+                                    <label for="as-system-icon-picker-search">Search Icons</label>
+                                    <input type="text" class="form-control" id="as-system-icon-picker-search" placeholder="Search by icon name">
+                                </div>
+                                <div id="as-system-icon-picker-status" class="text-muted" style="margin-bottom: 10px;"></div>
+                                <div id="as-system-icon-picker-list" class="row" style="max-height: 420px; overflow-y: auto; overflow-x: hidden;"></div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            this.$iconPickerModal = $(html);
+            $("body").append(this.$iconPickerModal);
+
+            this.$iconPickerModal.on("input", "#as-system-icon-picker-search", () => {
+                this.renderIconPickerList(this.$iconPickerModal.find("#as-system-icon-picker-search").val() || "");
+            });
+
+            this.$iconPickerModal.on("click", ".as-system-icon-choice", (event) => {
+                event.preventDefault();
+                const icon = $(event.currentTarget).attr("data-icon") || "-";
+                this.$entryModal.find("#as-system-entry-icon").val(icon);
+                this.updateIconPreview();
+                this.$iconPickerModal.modal("hide");
+            });
+        }
+
         loadConfiguredFiles() {
             this.setMessage("Loading configured files...");
             $.ajax({
@@ -453,6 +513,7 @@
             }).done((result) => {
                 this.files = Array.isArray(result.files) ? result.files : [];
                 this.configuredFiles = Array.isArray(result.configuredFiles) ? result.configuredFiles : [];
+                this.configDir = $.trim(result.configDir || this.configDir);
                 if (this.files.length > 0) {
                     this.activePath = this.files[0].path;
                 } else {
@@ -487,8 +548,7 @@
         }
 
         browseDirectory(path) {
-            const browsePath = $.trim(path || this.$browserPath.val() || "/home/pi");
-            this.$browserPath.val(browsePath);
+            const browsePath = $.trim(path || this.configDir || "/home/pi/allsky/config");
             this.$browserList.html('<div class="list-group-item text-muted">Loading...</div>');
 
             $.ajax({
@@ -502,7 +562,9 @@
             }).done((result) => {
                 const currentPath = result.path || browsePath;
                 const entries = Array.isArray(result.entries) ? result.entries : [];
-                this.$browserPath.val(currentPath);
+                this.configDir = $.trim(result.configDir || this.configDir);
+                this.$browserModal.find("#as-system-entries-browser-root").text(currentPath);
+                this.$browserModal.find("#as-system-entries-new-prefix").text(this.configDir + "/");
                 this.$browserList.empty();
 
                 if (entries.length === 0) {
@@ -528,26 +590,54 @@
         openBrowser(mode) {
             this.ensureBrowserModal();
             this.renderConfiguredFileList();
-            const currentPath = $.trim(this.activePath || "");
-            const browsePath = currentPath !== "" ? currentPath.replace(/\/[^/]*$/, "") || "/" : "/home/pi";
+            const browsePath = this.configDir;
             const $openPanel = this.$browserModal.find(".as-system-entries-open-panel");
             const $newPanel = this.$browserModal.find(".as-system-entries-new-panel");
+            const $title = this.$browserModal.find("#as-system-entries-browser-title");
+            const $createButton = this.$browserModal.find("#as-system-entries-browser-create-footer");
+            const $openButton = this.$browserModal.find("#as-system-entries-browser-open-footer");
 
             if (mode === "new") {
+                $title.text("New File");
                 $openPanel.hide();
                 $newPanel.show();
+                $createButton.show();
+                $openButton.hide();
             } else {
+                $title.text("Open File");
                 $openPanel.show();
-                $newPanel.show();
+                $newPanel.hide();
+                $createButton.hide();
+                $openButton.show();
             }
 
-            this.$browserPath.val(browsePath);
+            this.$browserModal.find("#as-system-entries-browser-root").text(browsePath);
+            this.$browserModal.find("#as-system-entries-new-prefix").text(this.configDir + "/");
+            this.setSelectedBrowserFile("");
             this.$browserList.empty();
             if (mode === "new") {
                 this.$browserModal.find("#as-system-entries-new-path").trigger("focus");
             }
             this.$browserModal.modal("show");
             this.browseDirectory(browsePath);
+        }
+
+        setSelectedBrowserFile(path) {
+            const selectedPath = $.trim(path || "");
+            const $selected = this.$browserModal.find("#as-system-entries-browser-selected");
+            this.$browserModal.attr("data-selected-file", selectedPath);
+
+            if (selectedPath === "") {
+                $selected.text("No file selected.");
+                return;
+            }
+
+            $selected.text(selectedPath);
+        }
+
+        buildConfigFilePath(fileName) {
+            const safeName = fileName.replace(/^\/+/, "");
+            return `${this.configDir}/${safeName}`;
         }
 
         openPath(path, overlayText) {
@@ -577,6 +667,100 @@
             }).always(() => {
                 $.LoadingOverlay("hide");
             });
+        }
+
+        loadFontAwesomeIcons() {
+            if (this.fontAwesomeIconsLoaded) {
+                return $.Deferred().resolve(this.fontAwesomeIcons).promise();
+            }
+
+            return $.ajax({
+                url: "/allsky/font-awesome/css/all.min.css",
+                method: "GET",
+                dataType: "text",
+                cache: true
+            }).then((cssText) => {
+                const icons = [];
+                const seen = {};
+                const iconPattern = /((?:\.fa-[a-z0-9-]+,?)+)\{--fa:/g;
+                let match = null;
+
+                while ((match = iconPattern.exec(cssText)) !== null) {
+                    const names = match[1].match(/\.fa-([a-z0-9-]+)/g) || [];
+                    names.forEach((name) => {
+                        const icon = name.replace(".fa-", "");
+                        if (icon === "" || seen[icon]) {
+                            return;
+                        }
+                        seen[icon] = true;
+                        icons.push(icon);
+                    });
+                }
+
+                this.fontAwesomeIcons = icons.sort((left, right) => left.localeCompare(right));
+                this.fontAwesomeIconsLoaded = true;
+                return this.fontAwesomeIcons;
+            });
+        }
+
+        openIconPicker() {
+            this.ensureIconPickerModal();
+            const $status = this.$iconPickerModal.find("#as-system-icon-picker-status");
+            const $search = this.$iconPickerModal.find("#as-system-icon-picker-search");
+
+            $search.val("");
+            $status.text("Loading icons...");
+            this.$iconPickerModal.modal("show");
+
+            this.loadFontAwesomeIcons().done(() => {
+                $status.text(this.fontAwesomeIcons.length + " icons available");
+                this.renderIconPickerList("");
+            }).fail(() => {
+                $status.text("Unable to load Font Awesome icons.");
+                this.$iconPickerModal.find("#as-system-icon-picker-list").html("");
+            });
+        }
+
+        renderIconPickerList(filterText) {
+            const $list = this.$iconPickerModal.find("#as-system-icon-picker-list");
+            const search = $.trim(String(filterText || "").toLowerCase());
+            const filteredIcons = this.fontAwesomeIcons.filter((icon) => search === "" || icon.indexOf(search) !== -1);
+
+            if (filteredIcons.length === 0 && search !== "") {
+                $list.html('<div class="col-sm-12"><div class="alert alert-warning" style="margin-bottom: 0;">No icons match your search.</div></div>');
+                return;
+            }
+
+            const iconsToRender = search === "" ? ["-", ...filteredIcons] : filteredIcons;
+
+            $list.html(iconsToRender.map((icon) => `
+                <div class="col-xs-6 col-sm-4 col-md-3" style="margin-bottom: 12px;">
+                    <button type="button" class="btn btn-default btn-block as-system-icon-choice" data-icon="${this.escapeHtml(icon)}" title="${icon === "-" ? "No icon" : this.escapeHtml(icon)}" style="height: 72px;">
+                        <div>${icon === "-" ? '<span class="text-muted">None</span>' : `<i class="fa fa-${this.escapeHtml(icon)} fa-2x"></i>`}</div>
+                        <div style="margin-top: 8px; font-size: 12px; white-space: normal; word-break: break-word;">${icon === "-" ? "No Icon" : this.escapeHtml(icon)}</div>
+                    </button>
+                </div>
+            `).join(""));
+        }
+
+        updateIconPreview() {
+            if (!this.$entryModal) {
+                return;
+            }
+
+            const rawIcon = $.trim(this.$entryModal.find("#as-system-entry-icon").val() || "-");
+            const icon = rawIcon === "" ? "-" : rawIcon;
+            const $preview = this.$entryModal.find("#as-system-entry-icon-preview");
+
+            if (icon === "-" || icon === "") {
+                $preview.html('<span class="text-muted">No icon selected.</span>');
+                return;
+            }
+
+            $preview.html(`
+                <span class="label label-default">Preview</span>
+                <span style="margin-left: 8px;"><i class="fa fa-${this.escapeHtml(icon)} fa-fw"></i> ${this.escapeHtml(icon)}</span>
+            `);
         }
 
         getActiveFile() {
@@ -710,6 +894,7 @@
             this.$entryModal.find("#as-system-entry-message").val("-");
             this.$entryModal.find("#as-system-entry-icon").val("-");
             this.$entryModal.find("#as-system-entry-color").val("green");
+            this.updateIconPreview();
         }
 
         populateEntryForm(entry, index) {
@@ -728,6 +913,7 @@
             this.$entryModal.find("#as-system-entry-message").val(entry.message || "-");
             this.$entryModal.find("#as-system-entry-color").val(entry.color || "green");
             this.$entryModal.find("#as-system-entry-icon").val(entry.icon || "-");
+            this.updateIconPreview();
         }
 
         updateEntryFieldVisibility() {

@@ -38,6 +38,17 @@ class SYSTEMBUTTONSUTIL extends UTILBASE
         return rtrim(ALLSKY_CONFIG, '/') . '/settings.json';
     }
 
+    private function getConfigDirectory(): string
+    {
+        return rtrim(ALLSKY_CONFIG, '/');
+    }
+
+    private function isWithinConfigDirectory(string $path): bool
+    {
+        $configDir = $this->getConfigDirectory();
+        return $path === $configDir || strpos($path, $configDir . '/') === 0;
+    }
+
     private function sanitizeField(string $value): string
     {
         $value = str_replace(["\r", "\n", "\t"], ' ', $value);
@@ -65,14 +76,19 @@ class SYSTEMBUTTONSUTIL extends UTILBASE
             $this->send400('The selected directory does not exist.');
         }
 
-        return rtrim($directory, '/') . '/' . basename($path);
+        $normalizedPath = rtrim($directory, '/') . '/' . basename($path);
+        if (!$this->isWithinConfigDirectory($normalizedPath)) {
+            $this->send400('System Page Additions files must be stored in ~/allsky/config.');
+        }
+
+        return $normalizedPath;
     }
 
     private function normalizeDirectory(string $path): string
     {
         $path = trim($path);
         if ($path === '') {
-            $path = '/home/pi';
+            $path = $this->getConfigDirectory();
         }
 
         if ($path[0] !== '/') {
@@ -86,6 +102,10 @@ class SYSTEMBUTTONSUTIL extends UTILBASE
 
         if (!is_readable($realPath)) {
             $this->send403('The selected directory is not readable.');
+        }
+
+        if (!$this->isWithinConfigDirectory($realPath)) {
+            $this->send403('You can only browse files in ~/allsky/config.');
         }
 
         return $realPath;
@@ -567,16 +587,17 @@ class SYSTEMBUTTONSUTIL extends UTILBASE
             'files' => $result,
             'configuredFiles' => $configuredFiles,
             'file' => $requestedFile,
+            'configDir' => $this->getConfigDirectory(),
         ]);
     }
 
     public function getBrowseFiles(): void
     {
-        $path = $this->normalizeDirectory((string)($_GET['path'] ?? '/home/pi'));
+        $path = $this->normalizeDirectory((string)($_GET['path'] ?? $this->getConfigDirectory()));
         $entries = [];
 
         $parent = dirname($path);
-        if ($parent !== $path) {
+        if ($parent !== $path && $this->isWithinConfigDirectory($parent)) {
             $entries[] = [
                 'name' => '..',
                 'path' => $parent,
@@ -627,6 +648,7 @@ class SYSTEMBUTTONSUTIL extends UTILBASE
         $this->sendResponse([
             'path' => $path,
             'entries' => array_merge($entries, $directories, $files),
+            'configDir' => $this->getConfigDirectory(),
         ]);
     }
 

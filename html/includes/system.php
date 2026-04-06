@@ -26,12 +26,23 @@ function formatSize($bytes)
 	return (round($bytes, 1) . " " . $types[$i]);
 }
 
-function renderSystemInfoRow($label, $value, $valueId = '')
+function renderSystemInfoRow($label, $value, $valueId = '', $rowClass = '', $labelColClass = 'col-sm-4', $valueColClass = 'col-sm-8')
 {
 	$id = $valueId !== '' ? " id='$valueId'" : '';
-	echo "<div class='row system-info-row'>";
-	echo "<div class='col-sm-3 system-info-label'><strong>$label</strong></div>";
-	echo "<div class='col-sm-9 system-info-value'$id>$value</div>";
+	$classAttr = $rowClass !== '' ? " $rowClass" : '';
+	echo "<div class='row system-info-row$classAttr'>";
+	echo "<div class='$labelColClass system-info-label'><strong>$label</strong></div>";
+	echo "<div class='$valueColClass system-info-value'$id>$value</div>";
+	echo "</div>\n";
+}
+
+function renderSystemInfoStackedRow($label, $value, $valueId = '', $rowClass = '')
+{
+	$id = $valueId !== '' ? " id='$valueId'" : '';
+	$classAttr = $rowClass !== '' ? " $rowClass" : '';
+	echo "<div class='row system-info-row$classAttr'>";
+	echo "<div class='col-sm-12 system-info-label'><strong>$label</strong></div>";
+	echo "<div class='col-sm-12 system-info-value'$id>$value</div>";
 	echo "</div>\n";
 }
 
@@ -149,7 +160,7 @@ function checkNumFields($num_required, $num_have, $type, $line_num, $line, $file
 }
 
 /* Display a "progress" bar. */
-function displayProgress($x, $label, $data, $min, $current, $max, $danger, $warning, $status_override, $elId="", $tempText="")
+function displayProgress($x, $label, $data, $min, $current, $max, $danger, $warning, $status_override, $elId="", $tempText="", $labelColClass='col-sm-3', $valueColClass='col-sm-9')
 {
 	ob_start();
 
@@ -170,8 +181,8 @@ function displayProgress($x, $label, $data, $min, $current, $max, $danger, $warn
 	}
 
 	echo "<div class='row system-progress-row'>\n";
-	echo "  <div class='col-sm-3 system-info-label'><strong>$label</strong></div>\n";
-	echo "  <div class='col-sm-9 system-progress-value'>\n";
+	echo "  <div class='$labelColClass system-info-label'><strong>$label</strong></div>\n";
+	echo "  <div class='$valueColClass system-progress-value'>\n";
 	echo "    <div class='progress'$id>";
 	if ($tempText !== "") {
 		echo "      <div class='text-center'>$tempText</div>";
@@ -197,7 +208,7 @@ function displayProgress($x, $label, $data, $min, $current, $max, $danger, $warn
 /* Display user data in "file". */
 $num_buttons = 0;
 $num_calls = 0;
-function displayUserData($file, $displayType)
+function displayUserData($file, $displayType, $labelColClass = 'col-sm-4', $valueColClass = 'col-sm-8')
 {
 	global $num_buttons;
 	global $num_calls;
@@ -258,9 +269,9 @@ function displayUserData($file, $displayType)
 			if (checkNumFields(4, $num, $type, $i, $line, $file)) {
 				list($type, $timeout_s, $label, $data) = $data;
 				if (dataExpired($file, $timeout_s))
-					renderSystemInfoRow("$label (EXPIRED)", $data);
+					renderSystemInfoRow("$label (EXPIRED)", $data, '', '', $labelColClass, $valueColClass);
 				else
-					renderSystemInfoRow($label, $data);
+					renderSystemInfoRow($label, $data, '', '', $labelColClass, $valueColClass);
 			}
 		} else if ($type === "progress" && $displayType === $type) {
 			if (checkNumFields(9, $num, $type, $i, $line, $file)) {
@@ -271,7 +282,7 @@ function displayUserData($file, $displayType)
 				} else {
 					$x = "";
 				}
-				echo displayProgress($x, $label, $data, $min, $current, $max, $danger, $warning, "");
+				echo displayProgress($x, $label, $data, $min, $current, $max, $danger, $warning, "", "", "", $labelColClass, $valueColClass);
 			}
 		} else if ($type === "button" && substr($displayType, 0, 7) === "button-") {
 			if ($num >= 6) {
@@ -454,35 +465,32 @@ function DisplaySystem()
 							<nav class="navbar navbar-default system-action-navbar">
 								<div class="container-fluid">
 									<div class="navbar-left system-action-toolbar" role="toolbar">
-										<div class="navbar-btn system-action-ribbon-group">
+										<div class="navbar-btn">
 											<div class="btn-group" role="group">
-												<button type="button" class="btn btn-success as-system-allsky-action" data-action="start">
-													<i class="fa fa-play fa-fw"></i> Start
+												<button type="button" class="btn btn-success as-system-allsky-action" data-action="start" title="Start Allsky" aria-label="Start Allsky">
+													<i class="fa fa-play fa-fw"></i>
 												</button>
-												<button type="button" class="btn btn-danger as-system-allsky-action" data-action="stop">
-													<i class="fa fa-stop fa-fw"></i> Stop
+												<button type="button" class="btn btn-danger as-system-allsky-action" data-action="stop" title="Stop Allsky" aria-label="Stop Allsky">
+													<i class="fa fa-stop fa-fw"></i>
 												</button>
 											</div>
-											<div class="system-action-group-caption">Allsky</div>
 										</div>
-										<div class="navbar-btn system-action-ribbon-group">
+										<div class="navbar-btn">
 											<div class="btn-group" role="group">
-												<button type="submit" class="btn btn-warning" name="system_reboot">
-													<i class="fa fa-power-off fa-fw"></i> Reboot
+												<button type="submit" class="btn btn-warning" name="system_reboot" title="Reboot Pi" aria-label="Reboot Pi">
+													<i class="fa fa-power-off fa-fw"></i>
 												</button>
-												<button type="submit" class="btn btn-danger" name="system_shutdown">
-													<i class="fa fa-plug fa-fw"></i> Shutdown
+												<button type="submit" class="btn btn-danger" name="system_shutdown" title="Shutdown Pi" aria-label="Shutdown Pi">
+													<i class="fa fa-plug fa-fw"></i>
 												</button>
 											</div>
-											<div class="system-action-group-caption">Pi</div>
 										</div>
-										<div class="navbar-btn system-action-ribbon-group">
+										<div class="navbar-btn">
 											<div class="btn-group" role="group">
-												<button type="button" class="btn btn-info" id="as-system-buttons-editor-open">
-													<i class="fa fa-pen-to-square fa-fw"></i> Edit
+												<button type="button" class="btn btn-info" id="as-system-buttons-editor-open" title="Edit Additions" aria-label="Edit Additions">
+													<i class="fa fa-pen-to-square fa-fw"></i>
 												</button>
 											</div>
-											<div class="system-action-group-caption">Additions</div>
 										</div>
 									</div>
 								</div>
@@ -508,50 +516,55 @@ function DisplaySystem()
 											<div class="well well-sm system-summary-card">
 											<?php
 												renderSystemInfoRow('Allsky Version', ALLSKY_VERSION);
-												renderSystemInfoRow('Local Website', "<span class=\"$localWebsiteStatusClass\">$localWebsiteStatus</span>" . ($localWebsiteVersion !== '-' ? " (" . htmlspecialchars($localWebsiteVersion) . ")" : ''));
-												renderSystemInfoRow('Remote Website', "<span class=\"$remoteWebsiteStatusClass\">$remoteWebsiteStatus</span>" . ($remoteWebsiteVersion !== '-' ? " (" . htmlspecialchars($remoteWebsiteVersion) . ")" : ''));
+												renderSystemInfoRow('Local Website', "<span class='system-info-nowrap-value'><span class=\"$localWebsiteStatusClass\">$localWebsiteStatus</span>" . ($localWebsiteVersion !== '-' ? " (" . htmlspecialchars($localWebsiteVersion) . ")" : '') . "</span>", '', 'system-info-row-nowrap');
+												renderSystemInfoRow('Remote Website', "<span class='system-info-nowrap-value'><span class=\"$remoteWebsiteStatusClass\">$remoteWebsiteStatus</span>" . ($remoteWebsiteVersion !== '-' ? " (" . htmlspecialchars($remoteWebsiteVersion) . ")" : '') . "</span>", '', 'system-info-row-nowrap');
 												renderSystemInfoRow('Allsky Uptime', $allskyUptime);
 											?>
 											</div>
 										</div>
 									</div>
-									<!-- Treat Throttle Status like a full-width progress bar -->
-									<?php echo displayProgress("", "Throttle Status", $throttle, 0, 100, 100, -1, -1, $throttle_status, "as-throttle"); ?>
-									<?php echo displayProgress("", "Memory Used", "$memused%", 0, $memused, 100, 90, 75, "", "as-memory"); ?>
-									<?php echo displayProgress("", "CPU Load", "$cpuLoad%", 0, $cpuLoad, 100, 90, 75, "", "as-cpuload", "Calculating"); ?>
-									<?php echo displayProgress("", "CPU Temperature", $display_temperature, 0, $temperature, 100, 70, 60, $temperature_status, "as-cputemp"); ?>
-									<?php 
-										$label = "Disk Usage";
-										if ($dp === -1) {
-											renderSystemInfoRow($label, $dp_msg);
-										} else {
-											echo displayProgress("", $label, $dp_msg, 0, $dp, 100, 90, 70, "");
-										}
-									?>
-									<?php 
-										$label = str_replace(ALLSKY_HOME, "~/allsky", $tmp_dir) . " Usage";
-										if ($tdp === -1) {
-											renderSystemInfoRow($label, $tdp_msg);
-										} else {
-											echo displayProgress("", $label, $tdp_msg, 0, $tdp, 100, 90, 70, "");
-										}
+									<div class="row">
+										<div class="col-md-12">
+											<div class="well well-sm system-summary-card">
+												<?php echo displayProgress("", "Throttle Status", $throttle, 0, 100, 100, -1, -1, $throttle_status, "as-throttle", "", "col-sm-2", "col-sm-10"); ?>
+												<?php echo displayProgress("", "Memory Used", "$memused%", 0, $memused, 100, 90, 75, "", "as-memory", "", "col-sm-2", "col-sm-10"); ?>
+												<?php echo displayProgress("", "CPU Load", "$cpuLoad%", 0, $cpuLoad, 100, 90, 75, "", "as-cpuload", "Calculating", "col-sm-2", "col-sm-10"); ?>
+												<?php echo displayProgress("", "CPU Temperature", $display_temperature, 0, $temperature, 100, 70, 60, $temperature_status, "as-cputemp", "", "col-sm-2", "col-sm-10"); ?>
+												<?php 
+													$label = "Disk Usage";
+													if ($dp === -1) {
+														renderSystemInfoRow($label, $dp_msg, '', '', 'col-sm-2', 'col-sm-10');
+													} else {
+														echo displayProgress("", $label, $dp_msg, 0, $dp, 100, 90, 70, "", "", "", "col-sm-2", "col-sm-10");
+													}
+												?>
+												<?php 
+													$label = str_replace(ALLSKY_HOME, "~/allsky", $tmp_dir) . " Usage";
+													if ($tdp === -1) {
+														renderSystemInfoRow($label, $tdp_msg, '', '', 'col-sm-2', 'col-sm-10');
+													} else {
+														echo displayProgress("", $label, $tdp_msg, 0, $tdp, 100, 90, 70, "", "", "", "col-sm-2", "col-sm-10");
+													}
 
-										// Optional user-specified progress bars.
-										$e = "";
-										for ($i=0; $i < $user_data_files_count; $i++) {
-											$result = displayUserData($user_data_files[$i], "progress");
-											$e .= $result['error'] . $result['html'];
-										}
-										if ($e !== "") echo "$e";
+													// Optional user-specified progress bars.
+													$e = "";
+													for ($i=0; $i < $user_data_files_count; $i++) {
+														$result = displayUserData($user_data_files[$i], "progress", "col-sm-2", "col-sm-10");
+														$e .= $result['error'] . $result['html'];
+													}
+													if ($e !== "") echo "$e";
 
-										// Optional user-specified data rows after progress bars.
-										$e = "";
-										for ($i=0; $i < $user_data_files_count; $i++) {
-											$result = displayUserData($user_data_files[$i], "data");
-											$e .= $result['error'] . $result['html'];
-										}
-										if ($e !== "") echo "$e";
-									?>
+													// Optional user-specified data rows after progress bars.
+													$e = "";
+													for ($i=0; $i < $user_data_files_count; $i++) {
+														$result = displayUserData($user_data_files[$i], "data", "col-sm-2", "col-sm-10");
+														$e .= $result['error'] . $result['html'];
+													}
+													if ($e !== "") echo "$e";
+												?>
+											</div>
+										</div>
+									</div>
 
 									<?php
 										$userButtons = "";
@@ -563,8 +576,12 @@ function DisplaySystem()
 										}
 										if ($userButtonErrors !== "") echo $userButtonErrors;
 										if ($userButtons !== "") {
-											echo "<div class='system-user-actions-body'>";
+											echo "<div class='row'>";
+											echo "<div class='col-md-12'>";
+											echo "<div class='well well-sm system-summary-card system-user-actions-body'>";
 											echo $userButtons;
+											echo "</div>";
+											echo "</div>";
 											echo "</div>";
 										}
 									?>

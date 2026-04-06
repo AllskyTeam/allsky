@@ -3333,6 +3333,22 @@ div.dtsp-searchPane div.dtsp-topRow {
     line-height: 1.4;
 }
 
+.system-info-row-nowrap .system-info-value {
+    white-space: nowrap;
+    font-size: 13px;
+}
+
+.system-info-row-nowrap .system-info-value {
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+.system-info-nowrap-value {
+    display: inline-block;
+    white-space: nowrap;
+    font-size: 13px;
+}
+
 .system-progress-value .progress {
     height: 25px;
     margin-bottom: 0;
@@ -3345,7 +3361,7 @@ div.dtsp-searchPane div.dtsp-topRow {
 
 .system-action-navbar {
     margin-bottom: 15px;
-    border-radius: 8px;
+    border-radius: 0;
     min-height: 0;
 }
 
@@ -3383,29 +3399,19 @@ div.dtsp-searchPane div.dtsp-topRow {
 }
 
 .system-action-ribbon-group {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    min-width: 0;
-    padding: 8px 10px 6px;
-    background-color: var(--bs3-surface-2);
-    border: 1px solid var(--bs3-border-soft);
-    border-radius: 6px;
-    border-right: 1px solid var(--bs3-border-soft);
+    display: block;
+    padding: 0;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
 }
 
 .system-action-ribbon-group:last-child {
-    border-right: 1px solid var(--bs3-border-soft);
+    border-right: 0;
 }
 
 .system-action-group-caption {
-    margin-top: 6px;
-    color: var(--bs3-text-muted);
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    text-align: center;
-    text-transform: uppercase;
+    display: none;
 }
 
 .system-action-navbar .btn {

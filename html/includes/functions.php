@@ -227,35 +227,18 @@ function output_allsky_status($versionHtml = "", $websiteHtml = "") {
 			$timezone = new DateTimeZone($timezoneName);
 			$dt = DateTimeImmutable::createFromFormat(DATE_TIME_FORMAT, $allsky_status_timestamp, $timezone);
 			if ($dt !== false) {
-				$dateFormatter = new IntlDateFormatter(
-					Locale::getDefault(),
-					IntlDateFormatter::MEDIUM,
-					IntlDateFormatter::NONE,
-					$timezone
-				);
-				$timeFormatter = new IntlDateFormatter(
-					Locale::getDefault(),
-					IntlDateFormatter::NONE,
-					IntlDateFormatter::NONE,
-					$timezone
-				);
-				$timeFormatter->setPattern('HH:mm');
-				$formattedDate = $dateFormatter->format($dt);
-				$formattedTime = $timeFormatter->format($dt);
-				if ($formattedDate !== false && $formattedTime !== false) {
-					$formattedTimestamp = $formattedDate . ' ' . $formattedTime;
-					$now = new DateTimeImmutable('now', $timezone);
-					if ($now >= $dt) {
-						$seconds = $now->getTimestamp() - $dt->getTimestamp();
-						$minutes = intdiv($seconds, 60);
-						$secs = $seconds % 60;
-						$parts = [];
-						if ($minutes > 0) {
-							$parts[] = sprintf('%d Mins', $minutes);
-						}
-						$parts[] = sprintf('%d Secs', $secs);
-						$uptimeText = implode(', ', $parts);
+				$formattedTimestamp = $dt->format('j M Y H:i');
+				$now = new DateTimeImmutable('now', $timezone);
+				if ($now >= $dt) {
+					$seconds = $now->getTimestamp() - $dt->getTimestamp();
+					$minutes = intdiv($seconds, 60);
+					$secs = $seconds % 60;
+					$parts = [];
+					if ($minutes > 0) {
+						$parts[] = sprintf('%d Mins', $minutes);
 					}
+					$parts[] = sprintf('%d Secs', $secs);
+					$uptimeText = implode(', ', $parts);
 				}
 			}
 		} catch (Throwable $e) {

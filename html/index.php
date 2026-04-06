@@ -325,9 +325,14 @@ function insertMenuItem($p, $day, $type="", $href_only=false) {
 	$jsHandler = getJSHandler($p);
 	$extraCSS = getextraCss($p);
 
+	$target = '';
+	if ($p == "documentation") {
+		$target = ' target="_blank" rel="noopener noreferrer"';
+	}
+
 	if ($jsHandler === null) {
 		echo "<li>";
-		echo "<a id='$p' href='$href'><i class='$icon'></i>";
+		echo "<a id='$p' href='$href' $target><i class='$icon'></i>";
 		if ($type !== "dropdown") echo "<span class='menu-text'>";
 		echo " $title";
 		if ($type !== "dropdown") echo "</span>";
@@ -483,7 +488,7 @@ function insertVersions() {
 	} else {
 		$more = "";
 	}
-	return "<div class='header-status-row'><span class='header-status-row-label'>Version:</span><span class='header-status-row-value'><span $more>" . ALLSKY_VERSION . "</span>&nbsp; on &nbsp;<span style='font-weight: bold'>$hostname</span></span></div>";
+	return "<span $more>" . ALLSKY_VERSION . "</span>";
 }
 
 function checkClearingMessages() {
@@ -644,7 +649,6 @@ $pageTitle = getPageTitle($page, $day);
 $pageHeaderTitle = getPageHeaderTitle($page, $day);
 $pageIcon = getPageIcon($page);
 $versionInfoHtml = insertVersions();
-$allskyStatus = output_allsky_status($versionInfoHtml);
 $dayNightStatus = getDayNightStatus();
 $dayNightState = $dayNightStatus['state'];
 $dayNightLabelClass = 'label-default';
@@ -679,7 +683,8 @@ $remoteWebsiteBadgeClass = $useRemoteWebsite ? "label-success" : "label-default"
 $remoteWebsiteBadgeText = $useRemoteWebsite ? "Enabled" : "Disabled";
 $localWebsiteLink = $useLocalWebsite ? "<a external='true' target='_blank' rel='noopener noreferrer' class='version-title-color' href='allsky/index.php'>View</a>" : "";
 $remoteWebsiteLink = $useRemoteWebsite ? "<a external='true' target='_blank' rel='noopener noreferrer' class='version-title-color' href='{$remoteWebsiteURL}'>View {$remoteWebsiteVersion}</a>" : "";
-$websiteLinksHtml = "<div class='header-links-card'><div class='header-status-heading'><span class='header-status-title'>Websites</span><span class='header-status-badge-spacer' aria-hidden='true'></span></div><div class='header-links-row'><span class='header-status-row-label'>Local:</span><span class='header-status-row-value'><span class='label {$localWebsiteBadgeClass}'>{$localWebsiteBadgeText}</span> {$localWebsiteLink}</span></div><div class='header-links-row'><span class='header-status-row-label'>Remote:</span><span class='header-status-row-value'><span class='label {$remoteWebsiteBadgeClass}'>{$remoteWebsiteBadgeText}</span> {$remoteWebsiteLink}</span></div></div>";
+$websiteLinksHtml = "<div class='header-status-row'><span class='header-status-row-label'>Local:</span><span class='header-status-row-value'><span class='label {$localWebsiteBadgeClass}'>{$localWebsiteBadgeText}</span> {$localWebsiteLink}</span></div><div class='header-status-row'><span class='header-status-row-label'>Remote:</span><span class='header-status-row-value'><span class='label {$remoteWebsiteBadgeClass}'>{$remoteWebsiteBadgeText}</span> {$remoteWebsiteLink}</span></div>";
+$allskyStatus = output_allsky_status($versionInfoHtml, $websiteLinksHtml);
 
 if ($page=="login") {
 		include_once("includes/login.php");
@@ -733,8 +738,7 @@ if ($page=="logout") {
 			<div class="navbar-brand valign-center">
 				<img id="toggleNav" src="documentation/img/logo-alt.png" title="Click to minimize/maximize menu bar">
 				<div class="version-title version-title-color">
-					<span id="allskyStatus"><?php echo $allskyStatus; ?></span>
-					<?php echo $websiteLinksHtml; ?>
+					<div id="allskyStatus"><?php echo $allskyStatus; ?></div>
 				</div>
 				<div class="header-daynight version-title version-title-color">
 					<div id="as-daynight-status"><?php echo $dayNightStatusHtml; ?></div>

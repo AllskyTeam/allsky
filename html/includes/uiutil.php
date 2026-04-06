@@ -64,6 +64,30 @@ class UIUTIL extends UTILBASE {
         if ($swapSpaces !== '') $val = str_replace(' ', $swapSpaces, (string)$val);
         return $val;
     }
+
+    private function getRemoteWebsiteVersionText(): string
+    {
+        $configFile = getRemoteWebsiteConfigFile();
+        if (!file_exists($configFile)) {
+            return '';
+        }
+
+        $retMsg = '';
+        $config = get_decoded_json_file($configFile, true, '', $retMsg);
+        if (!is_array($config)) {
+            return '';
+        }
+
+        $remoteWebsiteVersion = getVariableOrDefault($config, 'AllskyVersion', null);
+        if ($remoteWebsiteVersion === null) {
+            return '<span class="errorMsg">[version unknown]</span>';
+        }
+        if ($remoteWebsiteVersion == ALLSKY_VERSION) {
+            return '';
+        }
+
+        return '&nbsp; (version ' . htmlspecialchars((string)$remoteWebsiteVersion, ENT_QUOTES, 'UTF-8') . ')';
+    }
         
     /**
      * Build a bootstrap progress bar with safe output.
@@ -105,7 +129,22 @@ class UIUTIL extends UTILBASE {
     /** Overall system status string/HTML as produced by helper code */
     public function getAllskyStatus(): void
     {
-        $result = output_allsky_status();
+        global $useLocalWebsite, $useRemoteWebsite, $remoteWebsiteURL;
+
+        $localWebsiteBadgeClass = $useLocalWebsite ? 'label-success' : 'label-default';
+        $localWebsiteBadgeText = $useLocalWebsite ? 'Enabled' : 'Disabled';
+        $remoteWebsiteBadgeClass = $useRemoteWebsite ? 'label-success' : 'label-default';
+        $remoteWebsiteBadgeText = $useRemoteWebsite ? 'Enabled' : 'Disabled';
+        $remoteWebsiteVersion = $this->getRemoteWebsiteVersionText();
+        $localWebsiteLink = $useLocalWebsite
+            ? "<a external='true' target='_blank' rel='noopener noreferrer' href='allsky/index.php'>View</a>"
+            : "";
+        $remoteWebsiteLink = $useRemoteWebsite
+            ? "<a external='true' target='_blank' rel='noopener noreferrer' href='{$remoteWebsiteURL}'>View {$remoteWebsiteVersion}</a>"
+            : "";
+        $websiteHtml = "<div class='header-status-row'><span class='header-status-row-label'>Local:</span><span class='header-status-row-value'><span class='label {$localWebsiteBadgeClass}'>{$localWebsiteBadgeText}</span> {$localWebsiteLink}</span></div><div class='header-status-row'><span class='header-status-row-label'>Remote:</span><span class='header-status-row-value'><span class='label {$remoteWebsiteBadgeClass}'>{$remoteWebsiteBadgeText}</span> {$remoteWebsiteLink}</span></div>";
+
+        $result = output_allsky_status("", $websiteHtml);
         $this->sendHTTPResponse($result);
     }
 

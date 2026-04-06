@@ -203,7 +203,7 @@ function update_allsky_status($newStatus) {
 	}
 }
 
-function output_allsky_status($versionHtml = "") {
+function output_allsky_status($versionHtml = "", $websiteHtml = "") {
 	global $allsky_status, $allsky_status_timestamp, $hostname;
 
 	$retMsg = "";
@@ -217,6 +217,7 @@ function output_allsky_status($versionHtml = "") {
 	}
 
 	$formattedTimestamp = null;
+	$uptimeText = 'Unavailable';
 	if ($allsky_status_timestamp !== null) {
 		try {
 			$timezoneName = trim((string) @file_get_contents('/etc/timezone'));
@@ -226,13 +227,36 @@ function output_allsky_status($versionHtml = "") {
 			$timezone = new DateTimeZone($timezoneName);
 			$dt = DateTimeImmutable::createFromFormat(DATE_TIME_FORMAT, $allsky_status_timestamp, $timezone);
 			if ($dt !== false) {
-				$formatter = new IntlDateFormatter(
+				$dateFormatter = new IntlDateFormatter(
 					Locale::getDefault(),
 					IntlDateFormatter::MEDIUM,
-					IntlDateFormatter::MEDIUM,
+					IntlDateFormatter::NONE,
 					$timezone
 				);
-				$formattedTimestamp = $formatter->format($dt);
+				$timeFormatter = new IntlDateFormatter(
+					Locale::getDefault(),
+					IntlDateFormatter::NONE,
+					IntlDateFormatter::NONE,
+					$timezone
+				);
+				$timeFormatter->setPattern('HH:mm');
+				$formattedDate = $dateFormatter->format($dt);
+				$formattedTime = $timeFormatter->format($dt);
+				if ($formattedDate !== false && $formattedTime !== false) {
+					$formattedTimestamp = $formattedDate . ' ' . $formattedTime;
+					$now = new DateTimeImmutable('now', $timezone);
+					if ($now >= $dt) {
+						$seconds = $now->getTimestamp() - $dt->getTimestamp();
+						$minutes = intdiv($seconds, 60);
+						$secs = $seconds % 60;
+						$parts = [];
+						if ($minutes > 0) {
+							$parts[] = sprintf('%d Mins', $minutes);
+						}
+						$parts[] = sprintf('%d Secs', $secs);
+						$uptimeText = implode(', ', $parts);
+					}
+				}
 			}
 		} catch (Throwable $e) {
 			$formattedTimestamp = null;
@@ -242,13 +266,13 @@ function output_allsky_status($versionHtml = "") {
 	if ($allsky_status_timestamp === null) {
 		$title = "";
 		$class = "label-default";
-		$timestampHtml = "";
+		$timestampText = "Unavailable";
 	} else if ($allsky_status == "Unknown") {
 		$allsky_status_timestamp = str_replace("<b>", "", $allsky_status_timestamp);
 		$allsky_status_timestamp = str_replace("</b>","", $allsky_status_timestamp);
 		$title = " title='$allsky_status_timestamp'";
 		$class = "label-danger";
-		$timestampHtml = "<div class='header-status-row'><span class='header-status-row-label'>Since:</span><span class='header-status-row-value'>Unavailable</span></div>";
+		$timestampText = "Unavailable";
 	} else {
 		$displayTimestamp = $formattedTimestamp ?? $allsky_status_timestamp;
 		$title = "title='Since $displayTimestamp'";
@@ -257,11 +281,11 @@ function output_allsky_status($versionHtml = "") {
 		} else {
 			$class = "label-warning";
 		}
-		$timestampHtml = "<div class='header-status-row'><span class='header-status-row-label'>Since:</span><span class='header-status-row-value'>$displayTimestamp</span></div>";
+		$timestampText = $displayTimestamp;
 	}
 
 	if ($versionHtml === "") {
-		$versionHtml = "<div class='header-status-row'><span class='header-status-row-label'>Version:</span><span class='header-status-row-value'>" . ALLSKY_VERSION . "&nbsp; on &nbsp;<span style='font-weight: bold'>" . htmlspecialchars((string)$hostname, ENT_QUOTES) . "</span></span></div>";
+		$versionHtml = ALLSKY_VERSION;
 	}
 
 	$statusActions = [];
@@ -287,9 +311,10 @@ function output_allsky_status($versionHtml = "") {
 		$statusActionsHtml .= "<li><button type='button' class='btn $buttonClass btn-block header-status-action' data-action='" . strtolower($actionEscaped) . "'>$actionEscaped</button></li>";
 	}
 
-	$statusDropdownHtml = "<div class='dropdown header-status-dropdown'><button type='button' class='btn btn-default btn-xs header-status-toggle' aria-expanded='false'><i class='fa-solid fa-chevron-down'></i></button><ul class='dropdown-menu dropdown-menu-right header-status-menu'><li class='dropdown-header'>Manage Allsky</li>$statusActionsHtml</ul></div>";
+	$sinceHtml = "<li><div class='header-status-menu-card'><div class='header-status-menu-card-row'><span>Uptime</span><strong>$uptimeText</strong></div><div class='header-status-menu-card-row'><span>Last Restart</span><strong>$timestampText</strong></div></div></li><li role='separator' class='divider'></li>";
+	$statusDropdownHtml = "<div class='dropdown header-status-dropdown'><button type='button' class='btn btn-default btn-xs header-status-toggle' aria-expanded='false'><i class='fa-solid fa-chevron-down'></i></button><ul class='dropdown-menu dropdown-menu-right header-status-menu'>$sinceHtml<li class='dropdown-header'>Manage Allsky</li>$statusActionsHtml</ul></div>";
 
-	return("<div class='header-status-card' $title><div class='header-status-heading'><span class='header-status-title'>Allsky Status</span> <span class='label $class'>$allsky_status</span>$statusDropdownHtml</div>$timestampHtml$versionHtml</div>");
+	return("<div class='header-status-card' $title><div class='header-status-heading'><span class='header-status-title'>Status</span><span class='label $class'>$allsky_status</span><span class='header-status-inline'><span class='header-status-inline-value'>$versionHtml</span></span>$statusDropdownHtml</div>$websiteHtml</div>");
 }
 
 function initialize_variables($website_only=false) {

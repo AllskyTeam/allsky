@@ -23,6 +23,7 @@
             this.$errorModal = null;
             this.$resultModal = null;
             this.$iconPickerModal = null;
+            this.$commandBrowserModal = null;
             this.fontAwesomeIcons = [];
             this.fontAwesomeIconsLoaded = false;
             this.bindTrigger();
@@ -112,6 +113,7 @@
             this.ensureErrorModal();
             this.ensureResultModal();
             this.ensureIconPickerModal();
+            this.ensureCommandBrowserModal();
 
             this.$newPathInput = this.$browserModal.find("#as-system-entries-new-path");
             this.$tableBody = this.$modal.find("#as-system-entries-table-body");
@@ -170,6 +172,15 @@
                 this.openIconPicker();
             });
             this.$entryModal.on("input", "#as-system-entry-icon", () => this.updateIconPreview());
+            this.$entryModal.on("input", "#as-system-entry-command", () => this.updateEntryTestButtonState());
+            this.$entryModal.on("click", "#as-system-entry-command-picker", (event) => {
+                event.preventDefault();
+                this.openCommandBrowser();
+            });
+            this.$entryModal.on("click", "#as-system-entry-test-command", (event) => {
+                event.preventDefault();
+                this.testEntryCommandFromDialog();
+            });
         }
 
         ensureBrowserModal() {
@@ -286,6 +297,7 @@
                             <div class="modal-body">
                                 <form id="as-system-entry-form">
                                     <input type="hidden" id="as-system-entry-index" value="-1">
+                                    <div class="alert alert-danger" id="as-system-entry-error" style="display:none;"></div>
                                     <div class="form-group">
                                         <label for="as-system-entry-type">Type</label>
                                         <select id="as-system-entry-type" class="form-control">
@@ -349,7 +361,12 @@
                                         </div>
                                         <div class="form-group">
                                             <label for="as-system-entry-command">Command</label>
-                                            <input type="text" class="form-control" id="as-system-entry-command">
+                                            <div class="input-group">
+                                                <input type="text" class="form-control" id="as-system-entry-command">
+                                                <span class="input-group-btn">
+                                                    <button type="button" class="btn btn-default" id="as-system-entry-command-picker"><i class="fa fa-folder-open"></i> Browse</button>
+                                                </span>
+                                            </div>
                                         </div>
                                         <div class="form-group">
                                             <label for="as-system-entry-message">Success Message</label>
@@ -387,6 +404,7 @@
                                 </form>
                             </div>
                             <div class="modal-footer">
+                                <button type="button" class="btn btn-info pull-left" id="as-system-entry-test-command" disabled><i class="fa fa-play"></i> Test Script</button>
                                 <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
                                 <button type="button" class="btn btn-primary" id="as-system-entry-save"><i class="fa fa-check"></i> Save Entry</button>
                             </div>
@@ -503,6 +521,78 @@
             });
         }
 
+        ensureCommandBrowserModal() {
+            if (this.$commandBrowserModal) {
+                return;
+            }
+
+            const html = `
+                <div class="modal fade" id="as-system-command-browser-modal" tabindex="-1" role="dialog" aria-labelledby="as-system-command-browser-title">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                <h4 class="modal-title" id="as-system-command-browser-title">Select Command File</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div class="form-group">
+                                    <div class="row">
+                                        <div class="col-sm-8">
+                                            <label>Browse Filesystem</label>
+                                            <div class="help-block" id="as-system-command-browser-root" style="margin-top: 0; margin-bottom: 0;"></div>
+                                        </div>
+                                        <div class="col-sm-4 text-right" style="padding-top: 22px;">
+                                            <button type="button" class="btn btn-default" id="as-system-command-browser-refresh"><i class="fa fa-refresh"></i> Refresh</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="as-system-command-browser-list" class="list-group as-system-entries-browser-list"></div>
+                                <div class="form-group" style="margin-top: 15px; margin-bottom: 0;">
+                                    <label>Selected File</label>
+                                    <div class="well well-sm" id="as-system-command-browser-selected" style="margin-bottom: 0;">No file selected.</div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn btn-primary" id="as-system-command-browser-open-footer"><i class="fa fa-check"></i> Use File</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            this.$commandBrowserModal = $(html);
+            $("body").append(this.$commandBrowserModal);
+
+            this.$commandBrowserModal.on("click", "#as-system-command-browser-refresh", () => {
+                this.browseCommandDirectory(this.$commandBrowserModal.attr("data-current-dir") || "/home/pi");
+            });
+            this.$commandBrowserModal.on("click", ".as-system-command-browser-entry", (event) => {
+                event.preventDefault();
+                const $item = $(event.currentTarget);
+                const type = $item.attr("data-type") || "";
+                const path = $item.attr("data-path") || "";
+
+                if (type === "directory") {
+                    this.browseCommandDirectory(path);
+                    return;
+                }
+
+                if (type === "file" && path !== "") {
+                    this.setSelectedCommandFile(path);
+                }
+            });
+            this.$commandBrowserModal.on("click", "#as-system-command-browser-open-footer", () => {
+                const path = $.trim(this.$commandBrowserModal.attr("data-selected-file") || "");
+                if (path === "") {
+                    this.showError("Select a file to use as the button command.");
+                    return;
+                }
+                this.$entryModal.find("#as-system-entry-command").val(path);
+                this.$commandBrowserModal.modal("hide");
+            });
+        }
+
         loadConfiguredFiles() {
             this.setMessage("Loading configured files...");
             $.ajax({
@@ -529,6 +619,73 @@
                 this.renderTable();
                 this.showError(xhr.responseJSON?.message || "Unable to load configured files.");
             });
+        }
+
+        openCommandBrowser() {
+            this.ensureCommandBrowserModal();
+            const currentCommand = $.trim(this.$entryModal.find("#as-system-entry-command").val() || "");
+            let browsePath = "/home/pi";
+
+            if (currentCommand !== "" && currentCommand.charAt(0) === "/") {
+                browsePath = currentCommand.replace(/\/[^/]*$/, "") || "/";
+            }
+
+            this.setSelectedCommandFile(currentCommand !== "" && currentCommand.charAt(0) === "/" ? currentCommand : "");
+            this.$commandBrowserModal.modal("show");
+            this.browseCommandDirectory(browsePath);
+        }
+
+        browseCommandDirectory(path) {
+            const browsePath = $.trim(path || "/home/pi");
+            const $list = this.$commandBrowserModal.find("#as-system-command-browser-list");
+            $list.html('<div class="list-group-item text-muted">Loading...</div>');
+
+            $.ajax({
+                url: "includes/systembuttonsutil.php?request=BrowseCommandFiles",
+                method: "GET",
+                dataType: "json",
+                cache: false,
+                data: {
+                    path: browsePath
+                }
+            }).done((result) => {
+                const currentPath = result.path || browsePath;
+                const entries = Array.isArray(result.entries) ? result.entries : [];
+                this.$commandBrowserModal.attr("data-current-dir", currentPath);
+                this.$commandBrowserModal.find("#as-system-command-browser-root").text(currentPath);
+                $list.empty();
+
+                if (entries.length === 0) {
+                    $list.html('<div class="list-group-item text-muted">No files or directories found.</div>');
+                    return;
+                }
+
+                entries.forEach((entry) => {
+                    const iconClass = entry.type === "directory" ? "fa-folder-open" : "fa-file-text-o";
+                    const actionText = entry.type === "directory" ? "Open" : "Select";
+                    $list.append(`
+                        <a href="#" class="list-group-item as-system-command-browser-entry" data-type="${this.escapeHtml(entry.type || "")}" data-path="${this.escapeHtml(entry.path || "")}">
+                            <span class="badge">${actionText}</span>
+                            <i class="fa ${iconClass} fa-fw"></i> ${this.escapeHtml(entry.name || "")}
+                        </a>
+                    `);
+                });
+            }).fail((xhr) => {
+                $list.html(`<div class="list-group-item text-danger">${this.escapeHtml(xhr.responseJSON?.message || "Unable to browse the selected directory.")}</div>`);
+            });
+        }
+
+        setSelectedCommandFile(path) {
+            const selectedPath = $.trim(path || "");
+            const $selected = this.$commandBrowserModal.find("#as-system-command-browser-selected");
+            this.$commandBrowserModal.attr("data-selected-file", selectedPath);
+
+            if (selectedPath === "") {
+                $selected.text("No file selected.");
+                return;
+            }
+
+            $selected.text(selectedPath);
         }
 
         renderConfiguredFileList() {
@@ -883,6 +1040,7 @@
                 form.reset();
             }
 
+            this.hideEntryError();
             this.$entryModal.find("#as-system-entry-index").val("-1");
             this.$entryModal.find("#as-system-entry-type").val("data");
             this.$entryModal.find("#as-system-entry-timeout").val("0");
@@ -895,9 +1053,11 @@
             this.$entryModal.find("#as-system-entry-icon").val("-");
             this.$entryModal.find("#as-system-entry-color").val("green");
             this.updateIconPreview();
+            this.updateEntryTestButtonState();
         }
 
         populateEntryForm(entry, index) {
+            this.hideEntryError();
             this.$entryModal.find("#as-system-entry-index").val(String(index));
             this.$entryModal.find("#as-system-entry-type").val(entry.type || "data");
             this.$entryModal.find("#as-system-entry-timeout").val(entry.timeout || "0");
@@ -914,12 +1074,26 @@
             this.$entryModal.find("#as-system-entry-color").val(entry.color || "green");
             this.$entryModal.find("#as-system-entry-icon").val(entry.icon || "-");
             this.updateIconPreview();
+            this.updateEntryTestButtonState();
         }
 
         updateEntryFieldVisibility() {
             const type = this.$entryType.val() || "data";
             this.$entryModal.find(".as-entry-fields").hide();
             this.$entryModal.find(`.as-entry-type-${type}`).show();
+        }
+
+        showEntryError(message) {
+            this.$entryModal.find("#as-system-entry-error").text(message || "Unable to save this entry.").show();
+        }
+
+        hideEntryError() {
+            this.$entryModal.find("#as-system-entry-error").hide().text("");
+        }
+
+        updateEntryTestButtonState() {
+            const command = $.trim(this.$entryModal.find("#as-system-entry-command").val() || "");
+            this.$entryModal.find("#as-system-entry-test-command").prop("disabled", command === "");
         }
 
         buildEntryFromDialog() {
@@ -959,9 +1133,38 @@
 
         validateEntry(entry) {
             if (entry.type === "button") {
-                return entry.label !== "" && entry.command !== "";
+                if (entry.label === "" || entry.command === "") {
+                    return {
+                        ok: false,
+                        message: "Complete the required fields for this entry."
+                    };
+                }
+
+                if (/\s/.test(entry.command)) {
+                    return {
+                        ok: false,
+                        message: "Button commands must be a single command only. Examples: ls, fred.py, fred.sh, fred.php."
+                    };
+                }
+
+                if (/[;&|<>`$()]/.test(entry.command)) {
+                    return {
+                        ok: false,
+                        message: "Button commands cannot include shell operators. Enter only a single command or script name."
+                    };
+                }
+
+                return { ok: true, message: "" };
             }
-            return entry.label !== "" && entry.data !== "";
+
+            if (entry.label === "" || entry.data === "") {
+                return {
+                    ok: false,
+                    message: "Complete the required fields for this entry."
+                };
+            }
+
+            return { ok: true, message: "" };
         }
 
         saveEntryFromDialog() {
@@ -972,11 +1175,13 @@
             }
 
             const entry = this.buildEntryFromDialog();
-            if (!this.validateEntry(entry)) {
-                this.setMessage("Complete the required fields for this entry.");
+            const validation = this.validateEntry(entry);
+            if (!validation.ok) {
+                this.showEntryError(validation.message);
                 return;
             }
 
+            this.hideEntryError();
             if (!Array.isArray(file.entries)) {
                 file.entries = [];
             }
@@ -1040,6 +1245,50 @@
                 })
             }).done((result) => {
                 this.showResult(result.title || "Command Test Result", result.message || "", !!result.ok);
+            }).fail((xhr) => {
+                this.showError(xhr.responseJSON?.message || "Unable to test the selected command.");
+            }).always(() => {
+                $.LoadingOverlay("hide");
+            });
+        }
+
+        testEntryCommandFromDialog() {
+            const command = $.trim(this.$entryModal.find("#as-system-entry-command").val() || "");
+            const label = $.trim(this.$entryModal.find("#as-system-entry-button-label").val() || "Test Command");
+            const successMessage = $.trim(this.$entryModal.find("#as-system-entry-message").val() || "");
+
+            if (command === "") {
+                this.showEntryError("Enter a command before testing this button.");
+                return;
+            }
+
+            const validation = this.validateEntry({
+                type: "button",
+                label: label,
+                command: command
+            });
+            if (!validation.ok) {
+                this.showEntryError(validation.message);
+                return;
+            }
+
+            this.hideEntryError();
+            $.LoadingOverlay("show", { text: "Testing command..." });
+            $.ajax({
+                url: "includes/systembuttonsutil.php?request=RunCommand",
+                method: "POST",
+                dataType: "json",
+                contentType: "application/json",
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest",
+                    "X-CSRF-Token": $("#csrf_token").val() || ""
+                },
+                data: JSON.stringify({
+                    command: command,
+                    label: label
+                })
+            }).done((result) => {
+                this.showResult(result.title || "Command Test Result", result.message || "", !!result.ok, successMessage !== "-" ? successMessage : "");
             }).fail((xhr) => {
                 this.showError(xhr.responseJSON?.message || "Unable to test the selected command.");
             }).always(() => {
@@ -1169,13 +1418,14 @@
             return html.join("");
         }
 
-        showResult(title, message, ok) {
+        showResult(title, message, ok, successText) {
             this.ensureResultModal();
             this.$resultModal.find("#as-system-entries-result-title").text(title || "Command Test Result");
+            const statusText = ok ? ($.trim(successText || "") || "Command completed.") : "Command failed.";
             this.$resultModal.find("#as-system-entries-result-status")
                 .removeClass("alert-success alert-danger")
                 .addClass(ok ? "alert-success" : "alert-danger")
-                .text(ok ? "Command completed." : "Command failed.");
+                .text(statusText);
             this.$resultModal.find("#as-system-entries-result-message").html(this.formatResultMessage(message));
             this.$resultModal.modal("show");
         }

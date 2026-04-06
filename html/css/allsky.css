@@ -3313,6 +3313,11 @@ div.dtsp-searchPane div.dtsp-topRow {
     margin-bottom: 22px;
 }
 
+.system-progress-row {
+    display: flex;
+    align-items: center;
+}
+
 .system-info-row:last-child,
 .system-progress-row:last-child {
     margin-bottom: 0;

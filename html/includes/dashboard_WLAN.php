@@ -5,6 +5,22 @@ if (basename(__FILE__) === basename($_SERVER['SCRIPT_FILENAME'])) {
     redirect("/index.php");
 }
 
+function renderDashboardWlanInfoRow($label, $value)
+{
+    echo "<div class='row system-info-row'>";
+    echo "<div class='col-sm-4 system-info-label'><strong>$label</strong></div>";
+    echo "<div class='col-sm-8 system-info-value'>$value</div>";
+    echo "</div>\n";
+}
+
+function renderDashboardWlanProgressRow($label, $content)
+{
+    echo "<div class='row system-progress-row'>";
+    echo "<div class='col-sm-4 system-info-label'><strong>$label</strong></div>";
+    echo "<div class='col-sm-8 system-progress-value'>$content</div>";
+    echo "</div>\n";
+}
+
 function DisplayDashboard_WLAN()
 {
 	global $pageHeaderTitle, $pageIcon;
@@ -90,49 +106,59 @@ function process_WLAN_data($interface)
 				<div class="panel-body">
 					<?php if ($myStatus->isMessage()) echo "<p>" . $myStatus->showMessages() . "</p>"; ?>
 					<div class="row">
-						<div class="panel panel-default">
-							<div class="panel-body">
-								<h4><?php echo $interface ?> Interface Information</h4>
-								<div class="info-item">IP Address</div>     <?php echo $strIPAddress ?><br>
-								<div class="info-item">Subnet Mask</div>    <?php echo $strNetMask ?><br>
-								<div class="info-item">Mac Address</div>    <?php echo $strHWAddress ?><br><br>
+                        <div class="panel panel-default">
+                            <div class="panel-body">
+                                <div class="well well-sm system-summary-card">
+                                    <h4><?php echo htmlspecialchars($interface) ?> Interface Information</h4>
+                                    <?php
+                                        renderDashboardWlanInfoRow('IP Address', htmlspecialchars($strIPAddress));
+                                        renderDashboardWlanInfoRow('Subnet Mask', htmlspecialchars($strNetMask));
+                                        renderDashboardWlanInfoRow('MAC Address', htmlspecialchars($strHWAddress));
+                                    ?>
+                                </div>
+                                <div class="well well-sm system-summary-card">
+                                    <h4>Interface Statistics</h4>
+                                    <?php
+                                        renderDashboardWlanInfoRow('Received Packets', htmlspecialchars($strRxPackets));
+                                        renderDashboardWlanInfoRow('Received Bytes', htmlspecialchars($strRxBytes));
+                                        renderDashboardWlanInfoRow('Transferred Packets', htmlspecialchars($strTxPackets));
+                                        renderDashboardWlanInfoRow('Transferred Bytes', htmlspecialchars($strTxBytes));
+                                    ?>
+                                </div>
+                                <div class="well well-sm system-summary-card wireless">
+                                    <h4>Wireless Information</h4>
+                                    <?php
+                                        renderDashboardWlanInfoRow('Connected To', htmlspecialchars($strSSID));
+                                        renderDashboardWlanInfoRow('AP MAC Address', htmlspecialchars($strBSSID));
+                                        renderDashboardWlanInfoRow('Bitrate', htmlspecialchars($strBitrate));
+                                        renderDashboardWlanInfoRow('Signal Level', htmlspecialchars($strSignalLevel));
+                                        renderDashboardWlanInfoRow('Transmit Power', htmlspecialchars($strTxPower));
+                                        renderDashboardWlanInfoRow('Frequency', htmlspecialchars($strFrequency));
 
-								<h4>Interface Statistics</h4>
-								<div class="info-item">Received Packets</div>    <?php echo $strRxPackets ?><br>
-								<div class="info-item">Received Bytes</div>      <?php echo $strRxBytes ?><br><br>
-								<div class="info-item">Transferred Packets</div> <?php echo $strTxPackets ?><br>
-								<div class="info-item">Transferred Bytes</div>   <?php echo $strTxBytes ?><br>
-							</div><!-- /.panel-body -->
-						</div><!-- /.panel panel-default -->
-
-						<div class="panel panel-default">
-							<div class="panel-body wireless">
-								<h4>Wireless Information</h4>
-								<div class="info-item">Connected To</div>   <?php echo $strSSID ?><br>
-								<div class="info-item">AP Mac Address</div> <?php echo $strBSSID ?><br>
-								<div class="info-item">Bitrate</div>        <?php echo $strBitrate ?><br>
-								<div class="info-item">Signal Level</div>   <?php echo $strSignalLevel ?><br>
-								<div class="info-item">Transmit Power</div> <?php echo $strTxPower ?><br>
-								<div class="info-item">Frequency</div>      <?php echo $strFrequency ?><br>
-								<div class="info-item">Link Quality</div>
-<?php
-						if ($strLinkQualityPercent == $notSetMsg) echo "$notSetMsg <br>";
-						else {
-?>
-								<div class="progress">
-									<div class="progress-bar progress-bar-<?php echo $strLinkQuality_status ?>"
-										role="progressbar"
-										aria-valuenow="<?php echo $strLinkQualityPercent ?>"
-										aria-valuemin="0" aria-valuemax="100"
-										style="width: <?php echo $strLinkQualityPercent ?>%;">
-										<?php echo "$strLinkQualityPercent% &nbsp; &nbsp; ";
-								  			echo "($strLinkQualityAbsolute / $strLinkQualityMax)\n";
-										?>
-									</div>
-								</div>
-<?php						} ?>
-							</div><!-- /.panel-body wireless -->
-						</div><!-- /.panel panel-default -->
+                                        if ($strLinkQualityPercent == $notSetMsg) {
+                                            renderDashboardWlanInfoRow('Link Quality', htmlspecialchars($notSetMsg));
+                                        } else {
+                                            ob_start();
+                                            ?>
+                                            <div class="progress">
+                                                <div class="progress-bar progress-bar-<?php echo $strLinkQuality_status ?>"
+                                                    role="progressbar"
+                                                    aria-valuenow="<?php echo $strLinkQualityPercent ?>"
+                                                    aria-valuemin="0" aria-valuemax="100"
+                                                    style="width: <?php echo $strLinkQualityPercent ?>%;">
+                                                    <?php
+                                                        echo "$strLinkQualityPercent% &nbsp; &nbsp; ";
+                                                        echo "($strLinkQualityAbsolute / $strLinkQualityMax)\n";
+                                                    ?>
+                                                </div>
+                                            </div>
+                                            <?php
+                                            renderDashboardWlanProgressRow('Link Quality', ob_get_clean());
+                                        }
+                                    ?>
+                                </div>
+                            </div><!-- /.panel-body -->
+                        </div><!-- /.panel panel-default -->
 					</div><!-- /.row -->
 
 					<div class="col-lg-12">

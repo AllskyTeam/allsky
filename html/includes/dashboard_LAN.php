@@ -5,6 +5,14 @@ if (basename(__FILE__) === basename($_SERVER['SCRIPT_FILENAME'])) {
     redirect("/index.php");
 }
 
+function renderDashboardLanInfoRow($label, $value)
+{
+    echo "<div class='row system-info-row'>";
+    echo "<div class='col-sm-4 system-info-label'><strong>$label</strong></div>";
+    echo "<div class='col-sm-8 system-info-value'>$value</div>";
+    echo "</div>\n";
+}
+
 function DisplayDashboard_LAN()
 {
 	global $pageHeaderTitle, $pageIcon;
@@ -31,7 +39,6 @@ function DisplayDashboard_LAN()
 	}
 	if ($num_interfaces > 1) echo "<hr class='panel-primary'>";
 ?>
-		<div class="panel-footer">Information provided by ifconfig</div>
 	</div><!-- /.panel-primary -->
 <?php
 }
@@ -58,17 +65,24 @@ function process_LAN_data($interface)
 			<div class="row">
 				<div class="panel panel-success">
 					<div class="panel-body">
-						<h4>Interface Information</h4>
-						<div class="info-item">Interface Name</div> <?php echo $interface ?></br>
-						<div class="info-item">IP Address</div>     <?php echo $strIPAddress ?></br>
-						<div class="info-item">Subnet Mask</div>    <?php echo $strNetMask ?></br>
-						<div class="info-item">Mac Address</div>    <?php echo $strHWAddress ?></br></br>
-
-						<h4>Interface Statistics</h4>
-						<div class="info-item">Received Packets</div>    <?php echo $strRxPackets ?></br>
-						<div class="info-item">Received Bytes</div>      <?php echo $strRxBytes ?></br></br>
-						<div class="info-item">Transferred Packets</div> <?php echo $strTxPackets ?></br>
-						<div class="info-item">Transferred Bytes</div>   <?php echo $strTxBytes ?></br>
+                        <div class="well well-sm system-summary-card">
+                            <h4>Interface Information</h4>
+                            <?php
+                                renderDashboardLanInfoRow('Interface Name', htmlspecialchars($interface));
+                                renderDashboardLanInfoRow('IP Address', htmlspecialchars($strIPAddress));
+                                renderDashboardLanInfoRow('Subnet Mask', htmlspecialchars($strNetMask));
+                                renderDashboardLanInfoRow('MAC Address', htmlspecialchars($strHWAddress));
+                            ?>
+                        </div>
+                        <div class="well well-sm system-summary-card">
+                            <h4>Interface Statistics</h4>
+                            <?php
+                                renderDashboardLanInfoRow('Received Packets', htmlspecialchars($strRxPackets));
+                                renderDashboardLanInfoRow('Received Bytes', htmlspecialchars($strRxBytes));
+                                renderDashboardLanInfoRow('Transferred Packets', htmlspecialchars($strTxPackets));
+                                renderDashboardLanInfoRow('Transferred Bytes', htmlspecialchars($strTxBytes));
+                            ?>
+                        </div>
 					</div><!-- /.panel-body -->
 				</div><!-- /.panel-default -->
 			</div><!-- /.row -->

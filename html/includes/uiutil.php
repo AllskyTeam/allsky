@@ -80,7 +80,7 @@ class UIUTIL extends UTILBASE {
 
         $remoteWebsiteVersion = getVariableOrDefault($config, 'AllskyVersion', null);
         if ($remoteWebsiteVersion === null) {
-            return '<span class="errorMsg">[version unknown]</span>';
+            return '';
         }
         if ($remoteWebsiteVersion == ALLSKY_VERSION) {
             return '';

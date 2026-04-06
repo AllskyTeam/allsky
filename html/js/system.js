@@ -3,12 +3,16 @@
 class SYSTEM {
     #tabStorageKey = "as-system-selected-tab";
     #tabSelector = '.nav-tabs a[data-toggle="tab"][href^="#as-system-"]';
+    #pendingAction = null;
 
     init() {
         $("#as-system-buttons-editor-open").systemPageButtons();
         $("#as-system-user-button-result-modal").appendTo("body");
+        $("#as-system-confirm-modal").appendTo("body");
 
         this.#bindAllskyActions();
+        this.#bindPowerActions();
+        this.#bindConfirmModal();
         this.#bindUserButtonActions();
         this.#bindTabPersistence();
 
@@ -49,35 +53,131 @@ class SYSTEM {
                 this.#showUserButtonResult("Allsky Control", "Unknown Allsky action.", false);
                 return;
             }
-
-            const originalDisabled = $button.prop("disabled");
-            $button.prop("disabled", true);
-            $.LoadingOverlay("show", { text: (action === "start" ? "Starting" : "Stopping") + " Allsky..." });
-
-            $.ajax({
-                url: "includes/uiutil.php?request=AllskyControl",
-                method: "POST",
-                dataType: "json",
-                contentType: "application/json",
-                headers: {
-                    "X-Requested-With": "XMLHttpRequest",
-                    "X-CSRF-Token": $("#csrf_token").val() || ""
-                },
-                data: JSON.stringify({ action: action })
-            }).done((result) => {
-                const ok = !!(result && result.ok);
-                const title = "Allsky " + action.charAt(0).toUpperCase() + action.slice(1);
-                const message = (result && result.message) ? result.message : ("Allsky " + action + " request completed.");
-                this.#showUserButtonResult(title, message, ok);
-                this.refreshSystemTab();
-            }).fail((xhr) => {
-                const message = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : ("Unable to " + action + " Allsky.");
-                this.#showUserButtonResult("Allsky Control", message, false);
-            }).always(() => {
-                $button.prop("disabled", originalDisabled);
-                $.LoadingOverlay("hide");
+            this.#confirmAction({
+                type: "allsky",
+                action: action,
+                message: action === "start"
+                    ? "This will start Allsky."
+                    : "This will stop Allsky."
             });
         });
+    }
+
+    #bindPowerActions() {
+        $(document).on("click", ".as-system-power-action", (event) => {
+            event.preventDefault();
+            const action = String($(event.currentTarget).data("action") || "").toLowerCase();
+            if (!["reboot", "shutdown"].includes(action)) {
+                return;
+            }
+
+            this.#confirmAction({
+                type: "power",
+                action: action,
+                message: action === "reboot"
+                    ? "This will reboot the Raspberry Pi immediately."
+                    : "This will shut down the Raspberry Pi immediately."
+            });
+        });
+    }
+
+    #bindConfirmModal() {
+        $(document).on("click", "#as-system-confirm-accept", () => {
+            const pending = this.#pendingAction;
+            this.#pendingAction = null;
+            $("#as-system-confirm-modal").modal("hide");
+
+            if (!pending) {
+                return;
+            }
+
+            if (pending.type === "allsky") {
+                this.#runAllskyAction(pending.action);
+                return;
+            }
+
+            if (pending.type === "power") {
+                this.#submitPowerAction(pending.action);
+            }
+        });
+    }
+
+    #confirmAction(config) {
+        this.#pendingAction = config;
+        $("#as-system-confirm-title").text(this.#getConfirmTitle(config));
+        $("#as-system-confirm-message").text(config.message || "Are you sure you want to continue?");
+        $("#as-system-confirm-accept")
+            .removeClass("btn-success btn-danger btn-warning")
+            .addClass(this.#getConfirmButtonClass(config))
+            .text(this.#getConfirmButtonText(config));
+        $("#as-system-confirm-modal").modal("show");
+    }
+
+    #getConfirmTitle(config) {
+        if (config.type === "allsky") {
+            return config.action === "start" ? "Start Allsky" : "Stop Allsky";
+        }
+
+        return config.action === "reboot" ? "Reboot Pi" : "Shutdown Pi";
+    }
+
+    #getConfirmButtonText(config) {
+        if (config.type === "allsky") {
+            return config.action === "start" ? "Start Allsky" : "Stop Allsky";
+        }
+
+        return config.action === "reboot" ? "Reboot Pi" : "Shutdown Pi";
+    }
+
+    #getConfirmButtonClass(config) {
+        if (config.type === "allsky") {
+            return config.action === "start" ? "btn-success" : "btn-danger";
+        }
+
+        return config.action === "reboot" ? "btn-warning" : "btn-danger";
+    }
+
+    #runAllskyAction(action) {
+        const $button = $('.as-system-allsky-action[data-action="' + action + '"]');
+        const originalDisabled = $button.prop("disabled");
+        $button.prop("disabled", true);
+        $.LoadingOverlay("show", { text: (action === "start" ? "Starting" : "Stopping") + " Allsky..." });
+
+        $.ajax({
+            url: "includes/uiutil.php?request=AllskyControl",
+            method: "POST",
+            dataType: "json",
+            contentType: "application/json",
+            headers: {
+                "X-Requested-With": "XMLHttpRequest",
+                "X-CSRF-Token": $("#csrf_token").val() || ""
+            },
+            data: JSON.stringify({ action: action })
+        }).done((result) => {
+            const ok = !!(result && result.ok);
+            const title = "Allsky " + action.charAt(0).toUpperCase() + action.slice(1);
+            const message = (result && result.message) ? result.message : ("Allsky " + action + " request completed.");
+            this.#showUserButtonResult(title, message, ok);
+            this.refreshSystemTab();
+        }).fail((xhr) => {
+            const message = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : ("Unable to " + action + " Allsky.");
+            this.#showUserButtonResult("Allsky Control", message, false);
+        }).always(() => {
+            $button.prop("disabled", originalDisabled);
+            $.LoadingOverlay("hide");
+        });
+    }
+
+    #submitPowerAction(action) {
+        const fieldName = action === "reboot" ? "system_reboot" : "system_shutdown";
+        const $form = $('<form method="POST" action="?page=system"></form>');
+        $form.append($('<input type="hidden" name="' + fieldName + '" value="1">'));
+        const csrfToken = $("#csrf_token").val() || "";
+        if (csrfToken !== "") {
+            $form.append($('<input type="hidden" name="csrf_token" value="' + this.#escapeHtml(csrfToken) + '">'));
+        }
+        $("body").append($form);
+        $form.trigger("submit");
     }
 
     #bindUserButtonActions() {

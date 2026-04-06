@@ -477,10 +477,10 @@ function DisplaySystem()
 										</div>
 										<div class="navbar-btn">
 											<div class="btn-group" role="group">
-												<button type="submit" class="btn btn-warning" name="system_reboot" title="Reboot Pi" aria-label="Reboot Pi">
+												<button type="button" class="btn btn-warning as-system-power-action" data-action="reboot" title="Reboot Pi" aria-label="Reboot Pi">
 													<i class="fa fa-power-off fa-fw"></i>
 												</button>
-												<button type="submit" class="btn btn-danger" name="system_shutdown" title="Shutdown Pi" aria-label="Shutdown Pi">
+												<button type="button" class="btn btn-danger as-system-power-action" data-action="shutdown" title="Shutdown Pi" aria-label="Shutdown Pi">
 													<i class="fa fa-plug fa-fw"></i>
 												</button>
 											</div>
@@ -723,6 +723,27 @@ function DisplaySystem()
 									</div>
 									<div class="modal-footer">
 										<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<div class="modal fade" id="as-system-confirm-modal" tabindex="-1" role="dialog" aria-labelledby="as-system-confirm-title">
+							<div class="modal-dialog" role="document">
+								<div class="modal-content">
+									<div class="modal-header">
+										<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+										<h4 class="modal-title" id="as-system-confirm-title">Confirm Action</h4>
+									</div>
+									<div class="modal-body">
+										<div class="alert alert-warning" style="margin-bottom: 0;">
+											<div style="font-size: 16px; font-weight: 600; margin-bottom: 8px;">Are you sure?</div>
+											<div id="as-system-confirm-message"></div>
+										</div>
+									</div>
+									<div class="modal-footer">
+										<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+										<button type="button" class="btn btn-danger" id="as-system-confirm-accept">Continue</button>
 									</div>
 								</div>
 							</div>

@@ -95,8 +95,6 @@ function DisplayWPAConfig()
                         </div>
                     </nav>
 
-                    <div class="as-wifi-alerts"></div>
-
                     <div class="well well-sm system-summary-card as-wifi-summary">
                         <div class="row">
                             <div class="col-sm-4">

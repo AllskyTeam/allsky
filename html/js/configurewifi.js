@@ -306,17 +306,7 @@ class CONFIGUREWIFI {
     }
 
     #showAlert($tab, type, message) {
-        const $alerts = $tab.find(".as-wifi-alerts");
-        if (!type || !message) {
-            $alerts.empty();
-            return;
-        }
-
-        $alerts.html(
-            '<div class="alert alert-' + this.#escapeAttribute(type) + '">' +
-                this.#escapeHtml(message) +
-            "</div>"
-        );
+        return;
     }
 
     #getTab(interfaceName) {

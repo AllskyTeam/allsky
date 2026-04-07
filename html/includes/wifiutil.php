@@ -362,9 +362,17 @@ class WIFIUTIL extends UTILBASE
         $hardBlocked = false;
 
         foreach ($blocks as $block) {
-            if (!preg_match('/^\d+:\s+.+:\s+(wireless|wlan|wifi|bluetooth)$/im', $block) &&
-                !preg_match('/^\s*type:\s*wlan$/im', $block) &&
-                !preg_match('/^\s*type:\s*wireless$/im', $block)) {
+            $isWireless = false;
+
+            if (preg_match('/^\d+:\s+.+:\s+Wireless LAN$/im', $block)) {
+                $isWireless = true;
+            } elseif (preg_match('/^\s*Type:\s*wlan$/im', $block)) {
+                $isWireless = true;
+            } elseif (preg_match('/^\s*Type:\s*wireless$/im', $block)) {
+                $isWireless = true;
+            }
+
+            if (!$isWireless) {
                 continue;
             }
 

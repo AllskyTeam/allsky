@@ -3948,8 +3948,30 @@ blockquote footer {
     background-color: #000;
 }
 
-.functions-listfiletype-video-preview {
+.functions-listfiletype-video-thumb-wrap {
+    display: block;
+    position: relative;
+}
+
+.functions-listfiletype-video-thumb {
+    background-color: #000;
+}
+
+.functions-listfiletype-video-badge {
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.65);
+    border-radius: 999px;
+    color: #fff;
+    display: inline-flex;
+    font-size: 20px;
+    height: 44px;
+    justify-content: center;
+    left: 50%;
     pointer-events: none;
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 44px;
 }
 
 .images-summary-card {

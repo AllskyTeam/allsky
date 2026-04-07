@@ -39,6 +39,7 @@ class UIUTIL extends UTILBASE {
             'CPULoad'        => ['get'],
             'CPUTemp'        => ['get'],
             'DayNightStatus' => ['get'],
+            'ListFileTypeContent' => ['get'],
             'MemoryUsed'     => ['get'],
             'Multiple'       => ['post'],
             'ThrottleStatus' => ['get'],
@@ -322,6 +323,23 @@ class UIUTIL extends UTILBASE {
             return $html;
         }
 
+        $this->sendHTTPResponse($html);
+    }
+
+    public function getListFileTypeContent(): void
+    {
+        $dir = (string)($_GET['dir'] ?? '');
+        $imageFileName = (string)($_GET['imageFileName'] ?? '');
+        $formalImageTypeName = (string)($_GET['formalImageTypeName'] ?? 'Files');
+        $type = (string)($_GET['type'] ?? '');
+        $chosenDay = (string)($_GET['day'] ?? '');
+        $listNames = in_array(strtolower((string)($_GET['listNames'] ?? '0')), ['1', 'true', 'yes'], true);
+
+        if (!in_array($type, ['picture', 'video'], true)) {
+            $this->send400('Invalid file type.');
+        }
+
+        $html = renderListFileTypeContent($dir, $imageFileName, $formalImageTypeName, $type, $listNames, $chosenDay);
         $this->sendHTTPResponse($html);
     }
 

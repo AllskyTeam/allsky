@@ -666,10 +666,14 @@ function getValidImageNames($dir, $stopAfterOne=false) {
 * or only for the specified day.
 * If $dir is not null, it ends in "/".
 */
-function ListFileType($dir, $imageFileName, $formalImageTypeName, $type, $listNames=false) {
-	global $pageHeaderTitle, $pageIcon;
+function renderListFileTypeContent($dir, $imageFileName, $formalImageTypeName, $type, $listNames=false, $chosen_day=null) {
 	// "/images" is an alias in the web server for ALLSKY_IMAGES
 	$images_dir = "/images";
+	$thumbnailWarnings = [];
+	$chosen_day = $chosen_day ?? getVariableOrDefault($_REQUEST, 'day', null);
+
+	ob_start();
+
 	$renderListFileTypeError = function ($title, $message) {
 		echo "<div class='as-wifi-placeholder as-wifi-placeholder-error functions-listfiletype-error'>";
 		echo "<div class='as-wifi-placeholder-icon'><i class='fa fa-triangle-exclamation'></i></div>";
@@ -677,33 +681,22 @@ function ListFileType($dir, $imageFileName, $formalImageTypeName, $type, $listNa
 		echo "<div class='as-wifi-placeholder-text'>$message</div>";
 		echo "</div>";
 	};
-	$chosen_day = getVariableOrDefault($_REQUEST, 'day', null);
-	echo "<div class='panel panel-allsky'>";
-	echo "<div class='panel-heading'><i class='{$pageIcon}'></i> $formalImageTypeName - $chosen_day</div>";
-	echo "<div class='panel-body'>";
+
 	if ($chosen_day === null) {
 		$renderListFileTypeError('Unable to Display Files', "No <code>day</code> was specified in the URL.");
-		echo "</div></div>";
-		return;
+		return ob_get_clean();
 	}
 
 	if (! is_dir(ALLSKY_IMAGES)) {
 		$renderListFileTypeError('Unable to Display Files', "The <code>" . ALLSKY_IMAGES . "</code> directory is missing.");
-		echo "</div></div>";
-		return;
+		return ob_get_clean();
 	}
 
-	echo "<div class='functions-listfiletype-back'>";
-	echo "<a href='javascript:history.back()' class='btn btn-default'>";
-	echo "<i class='fa fa-arrow-left'></i> Back";
-	echo "</a>";
-	echo "</div>";
 	echo "<div class='well well-sm system-summary-card images-summary-card functions-listfiletype-summary'>";
 	echo "<div class='images-grid functions-listfiletype-grid'>\n";
 	if ($chosen_day === 'All'){
 		$days = getValidImageDirectories();
 		if (count($days) == 0) {
-			// This could indicate an error, or the user just installed allsky
 			$renderListFileTypeError('No Image Directories Found', 'There are no image directories available yet.');
 		} else {
 			rsort($days);
@@ -720,8 +713,13 @@ function ListFileType($dir, $imageFileName, $formalImageTypeName, $type, $listNa
 							echo "<a href='$fullFilename' class='images-grid-item functions-listfiletype-item' data-lg-size='1600-2400'>";
 							echo "<img src='$fullFilename' class='functions-listfiletype-media' />";
 							echo "<span class='images-grid-name functions-listfiletype-name'>$day</span>";
+							echo "<span class='images-grid-date functions-listfiletype-date' data-listfiletype-day='{$day}'></span>";
 							echo "</a>\n";
-						} else {	// is video
+						} else {
+							$thumbInfo = getVideoThumbnailInfo($day, $imageType, $fullFilename);
+							if (! empty($thumbInfo['warning'])) {
+								$thumbnailWarnings[$thumbInfo['warning']] = true;
+							}
 							$videoData = htmlspecialchars(json_encode([
 								'source' => [[
 									'src' => $fullFilename,
@@ -732,15 +730,16 @@ function ListFileType($dir, $imageFileName, $formalImageTypeName, $type, $listNa
 									'preload' => 'metadata',
 								],
 							], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), ENT_QUOTES);
-							echo "<a href='$fullFilename' class='images-grid-item functions-listfiletype-item' data-video='{$videoData}'>";
-							echo "<video class='functions-listfiletype-media functions-listfiletype-video-preview' muted playsinline preload='metadata'>";
-							echo "<source src='$fullFilename' type='video/mp4'>";
-							echo "Your browser does not support the video tag.";
-							echo "</video>";
+							echo "<a href='$fullFilename' class='images-grid-item functions-listfiletype-item functions-listfiletype-video-item' data-video='{$videoData}'>";
+							echo "<span class='functions-listfiletype-video-thumb-wrap'>";
+							echo "<img src='" . htmlspecialchars($thumbInfo['thumbUrl'], ENT_QUOTES) . "' class='functions-listfiletype-media functions-listfiletype-video-thumb' />";
+							echo "<span class='functions-listfiletype-video-badge'><i class='fa fa-play'></i></span>";
+							echo "</span>";
 							echo "<span class='images-grid-name functions-listfiletype-name'>$day</span>";
+							echo "<span class='images-grid-date functions-listfiletype-date' data-listfiletype-day='{$day}'></span>";
 							echo "</a>\n";
 						}
-			  		}
+					}
 				}
 			}
 			if ($num == 0) {
@@ -750,11 +749,6 @@ function ListFileType($dir, $imageFileName, $formalImageTypeName, $type, $listNa
 	} else {
 		$expr = ALLSKY_IMAGES . "/{$chosen_day}/{$dir}";
 		if (substr($imageFileName, 0, 1) == "X") {
-			// If the file name begins with a "X" the look for files whose names
-			// begin with the filename (without the "X").
-			// This allows non-standard image names.
-			// These are often "test" images that may be recreated with the same
-			// file names, so force the browser to read them.
 			$expr .= substr($imageFileName, 1) . "*";
 			$ts = "?_ts=" . time();
 		} else {
@@ -779,7 +773,11 @@ function ListFileType($dir, $imageFileName, $formalImageTypeName, $type, $listNa
 						echo "<span class='images-grid-name functions-listfiletype-name'>" . htmlspecialchars($name) . "</span>";
 					}
 					echo "</a>\n";
-				} else {	//video
+				} else {
+					$thumbInfo = getVideoThumbnailInfo($chosen_day, $imageType, $fullFilename . $ts);
+					if (! empty($thumbInfo['warning'])) {
+						$thumbnailWarnings[$thumbInfo['warning']] = true;
+					}
 					$videoData = htmlspecialchars(json_encode([
 						'source' => [[
 							'src' => $fullFilename . $ts,
@@ -790,11 +788,11 @@ function ListFileType($dir, $imageFileName, $formalImageTypeName, $type, $listNa
 							'preload' => 'metadata',
 						],
 					], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), ENT_QUOTES);
-				    echo "<a href='$fullFilename' class='images-grid-item functions-listfiletype-item' data-video='{$videoData}'>";
-					echo "<video class='functions-listfiletype-media functions-listfiletype-video-preview' muted playsinline preload='metadata'>
-						<source src='$fullFilename$ts' type='video/mp4'>
-						Your browser does not support the video tag.
-					</video>";
+					echo "<a href='$fullFilename' class='images-grid-item functions-listfiletype-item functions-listfiletype-video-item' data-video='{$videoData}'>";
+					echo "<span class='functions-listfiletype-video-thumb-wrap'>";
+					echo "<img src='" . htmlspecialchars($thumbInfo['thumbUrl'], ENT_QUOTES) . "' class='functions-listfiletype-media functions-listfiletype-video-thumb' />";
+					echo "<span class='functions-listfiletype-video-badge'><i class='fa fa-play'></i></span>";
+					echo "</span>";
 					if ($name !== '') {
 						echo "<span class='images-grid-name functions-listfiletype-name'>" . htmlspecialchars($name) . "</span>";
 					}
@@ -803,6 +801,35 @@ function ListFileType($dir, $imageFileName, $formalImageTypeName, $type, $listNa
 			}
 		}
 	}
+	echo "</div>";
+	if (count($thumbnailWarnings) > 0) {
+		echo "<div class='as-wifi-placeholder as-wifi-placeholder-error functions-listfiletype-error'>";
+		echo "<div class='as-wifi-placeholder-icon'><i class='fa fa-triangle-exclamation'></i></div>";
+		echo "<div class='as-wifi-placeholder-title'>Video thumbnails could not be created</div>";
+		echo "<div class='as-wifi-placeholder-text'>" . implode('<br>', array_keys($thumbnailWarnings)) . "</div>";
+		echo "</div>";
+	}
+	echo "</div>";
+
+	return ob_get_clean();
+}
+
+function ListFileType($dir, $imageFileName, $formalImageTypeName, $type, $listNames=false) {
+	global $pageHeaderTitle, $pageIcon;
+	$chosen_day = getVariableOrDefault($_REQUEST, 'day', null);
+	echo "<div class='panel panel-allsky'>";
+	echo "<div class='panel-heading'><i class='{$pageIcon}'></i> $formalImageTypeName - $chosen_day</div>";
+	echo "<div class='panel-body'>";
+	echo "<div class='functions-listfiletype-back'>";
+	echo "<a href='javascript:history.back()' class='btn btn-default'>";
+	echo "<i class='fa fa-arrow-left'></i> Back";
+	echo "</a>";
+	echo "</div>";
+	echo "<div id='functions-listfiletype-content'>";
+	echo "<div class='as-wifi-placeholder functions-listfiletype-loading'>";
+	echo "<div class='as-wifi-placeholder-icon'><i class='fa fa-spinner fa-spin'></i></div>";
+	echo "<div class='as-wifi-placeholder-title as-wifi-placeholder-title-lg'>Preparing previews...</div>";
+	echo "<div class='as-wifi-placeholder-text'>This page is loading in the background. If video thumbnails are missing they will be generated now.</div>";
 	echo "</div>";
 	echo "</div>";
 	echo "</div></div>";
@@ -815,36 +842,131 @@ function ListFileType($dir, $imageFileName, $formalImageTypeName, $type, $listNa
 <script src="js/lightgallery/plugins/video/lg-video.min.js"></script>
 <script>
 $(document).ready(function () {
-	const galleryElement = document.querySelector('.functions-listfiletype-grid');
-	if (!galleryElement || typeof lightGallery !== 'function') {
-		return;
+	const contentElement = document.getElementById('functions-listfiletype-content');
+	const requestUrl = 'includes/uiutil.php?request=ListFileTypeContent&day=' + encodeURIComponent(<?php echo json_encode((string)$chosen_day, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>) +
+		'&dir=' + encodeURIComponent(<?php echo json_encode((string)$dir, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>) +
+		'&imageFileName=' + encodeURIComponent(<?php echo json_encode((string)$imageFileName, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>) +
+		'&formalImageTypeName=' + encodeURIComponent(<?php echo json_encode((string)$formalImageTypeName, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>) +
+		'&type=' + encodeURIComponent(<?php echo json_encode((string)$type, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>) +
+		'&listNames=' + encodeURIComponent(<?php echo json_encode($listNames ? '1' : '0'); ?>);
+
+	function initialiseGallery() {
+		const galleryElement = document.querySelector('.functions-listfiletype-grid');
+		if (!galleryElement || typeof lightGallery !== 'function') {
+			return;
+		}
+
+		lightGallery(galleryElement, {
+			cssEasing: 'cubic-bezier(0.680, -0.550, 0.265, 1.550)',
+			selector: 'a',
+			plugins: [lgZoom, lgThumbnail, lgVideo],
+			mode: 'lg-slide-circular',
+			speed: 400,
+			download: false,
+			thumbnail: true
+		});
 	}
 
-	galleryElement.querySelectorAll('.functions-listfiletype-video-preview').forEach(function (video) {
-		video.addEventListener('loadedmetadata', function () {
-			try {
-				video.currentTime = Math.min(0.1, Math.max(video.duration || 0, 0));
-			} catch (error) {
-				// Ignore seek failures; some browsers may still render the first frame.
-			}
+	function initialiseLocaleDates() {
+		const formatter = new Intl.DateTimeFormat(undefined, {
+			dateStyle: 'medium'
 		});
-		video.addEventListener('seeked', function () {
-			video.pause();
-		});
-	});
 
-	lightGallery(galleryElement, {
-		cssEasing: 'cubic-bezier(0.680, -0.550, 0.265, 1.550)',
-		selector: 'a',
-		plugins: [lgZoom, lgThumbnail, lgVideo],
-		mode: 'lg-slide-circular',
-		speed: 400,
-		download: false,
-		thumbnail: true
+		document.querySelectorAll('.functions-listfiletype-date[data-listfiletype-day]').forEach(function (element) {
+			const rawDay = element.getAttribute('data-listfiletype-day') || '';
+			if (!/^\d{8}$/.test(rawDay)) {
+				return;
+			}
+
+			const year = parseInt(rawDay.slice(0, 4), 10);
+			const month = parseInt(rawDay.slice(4, 6), 10) - 1;
+			const day = parseInt(rawDay.slice(6, 8), 10);
+			const date = new Date(year, month, day);
+			if (Number.isNaN(date.getTime())) {
+				return;
+			}
+
+			element.textContent = formatter.format(date);
+		});
+	}
+
+	$.ajax({
+		url: requestUrl,
+		method: 'GET',
+		cache: false,
+		dataType: 'html',
+		headers: {
+			Accept: 'text/html'
+		}
+	}).done(function (html) {
+		contentElement.innerHTML = html;
+		initialiseLocaleDates();
+		initialiseGallery();
+	}).fail(function () {
+		contentElement.innerHTML =
+			"<div class='as-wifi-placeholder as-wifi-placeholder-error functions-listfiletype-error'>" +
+				"<div class='as-wifi-placeholder-icon'><i class='fa fa-triangle-exclamation'></i></div>" +
+				"<div class='as-wifi-placeholder-title'>Unable to load previews</div>" +
+				"<div class='as-wifi-placeholder-text'>The preview list could not be loaded. Try refreshing the page.</div>" +
+			"</div>";
 	});
 });
 </script>
 <?php
+}
+
+function getVideoThumbnailInfo($day, $videoPath, $videoUrl) {
+	global $settings_array;
+
+	$dayDirectory = ALLSKY_IMAGES . "/{$day}";
+	$thumbDirectory = $dayDirectory . "/videothumbs";
+	$thumbWidth = (int) getVariableOrDefault($settings_array, 'thumbnailsizex', 100);
+	$thumbHeight = (int) getVariableOrDefault($settings_array, 'thumbnailsizey', 75);
+	$videoName = pathinfo($videoPath, PATHINFO_FILENAME);
+	$thumbFile = $thumbDirectory . "/{$videoName}.jpg";
+	$thumbUrl = "/images/{$day}/videothumbs/" . rawurlencode($videoName . '.jpg');
+	$warning = null;
+
+	if (! file_exists($thumbFile)) {
+		if (! is_dir($thumbDirectory)) {
+			if (! @mkdir($thumbDirectory, 0775, true) && ! is_dir($thumbDirectory)) {
+				$warning = "The WebUI could not create <code>{$thumbDirectory}</code>. Make sure the image day folders are writable by the web server.";
+			}
+		}
+
+		if (is_dir($thumbDirectory) && is_writable($thumbDirectory)) {
+			$width = max($thumbWidth * 2, 1);
+			$height = max($thumbHeight * 2, 1);
+			$ffmpeg = '/usr/bin/ffmpeg';
+			$cmd = sprintf(
+				'%s -y -loglevel error -ss 00:00:00.2 -i %s -frames:v 1 -vf %s %s 2>&1',
+				escapeshellcmd($ffmpeg),
+				escapeshellarg($videoPath),
+				escapeshellarg("thumbnail,scale={$width}:{$height}:force_original_aspect_ratio=decrease"),
+				escapeshellarg($thumbFile)
+			);
+			@exec($cmd, $output, $returnCode);
+			if ($returnCode !== 0 && ! file_exists($thumbFile)) {
+				$warning = "The WebUI could not create a thumbnail for <code>" . htmlspecialchars(basename($videoPath)) . "</code>. Check that <code>ffmpeg</code> is installed and that the images folders are writable by the web server.";
+			}
+		} elseif ($warning === null) {
+			$warning = "The WebUI cannot write to <code>{$thumbDirectory}</code>. Make sure the image day folders are writable by the web server.";
+		}
+	}
+
+	if (file_exists($thumbFile)) {
+		return [
+			'thumbFile' => $thumbFile,
+			'thumbUrl' => $thumbUrl,
+			'warning' => null,
+		];
+	}
+
+	return [
+		'thumbFile' => null,
+		'thumbUrl' => $videoUrl,
+		'warning' => $warning,
+	];
 }
 
 // Run a command and display the appropriate status message.

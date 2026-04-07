@@ -3932,6 +3932,17 @@ blockquote footer {
     padding: 10px;
 }
 
+.functions-listfiletype-grid.functions-listfiletype-grid-single {
+    grid-template-columns: minmax(320px, 640px);
+    justify-content: center;
+}
+
+.functions-listfiletype-grid.functions-listfiletype-grid-single > .functions-listfiletype-item {
+    justify-self: center;
+    max-width: 640px;
+    width: 100%;
+}
+
 .functions-listfiletype-media {
     border-radius: 6px;
     display: block;

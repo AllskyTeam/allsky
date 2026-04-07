@@ -670,6 +670,7 @@ function renderListFileTypeContent($dir, $imageFileName, $formalImageTypeName, $
 	// "/images" is an alias in the web server for ALLSKY_IMAGES
 	$images_dir = "/images";
 	$thumbnailWarnings = [];
+	$itemCount = 0;
 	$chosen_day = $chosen_day ?? getVariableOrDefault($_REQUEST, 'day', null);
 
 	ob_start();
@@ -693,6 +694,7 @@ function renderListFileTypeContent($dir, $imageFileName, $formalImageTypeName, $
 	}
 
 	echo "<div class='well well-sm system-summary-card images-summary-card functions-listfiletype-summary'>";
+	ob_start();
 	echo "<div class='images-grid functions-listfiletype-grid'>\n";
 	if ($chosen_day === 'All'){
 		$days = getValidImageDirectories();
@@ -710,12 +712,14 @@ function renderListFileTypeContent($dir, $imageFileName, $formalImageTypeName, $
 						$imageType_name = basename($imageType);
 						$fullFilename = "$images_dir/$day/$dir$imageType_name";
 						if ($type == "picture") {
+							$itemCount += 1;
 							echo "<a href='$fullFilename' class='images-grid-item functions-listfiletype-item' data-lg-size='1600-2400'>";
 							echo "<img src='$fullFilename' class='functions-listfiletype-media' />";
 							echo "<span class='images-grid-name functions-listfiletype-name'>$day</span>";
 							echo "<span class='images-grid-date functions-listfiletype-date' data-listfiletype-day='{$day}'></span>";
 							echo "</a>\n";
 						} else {
+							$itemCount += 1;
 							$thumbInfo = getVideoThumbnailInfo($day, $imageType, $fullFilename);
 							if (! empty($thumbInfo['warning'])) {
 								$thumbnailWarnings[$thumbInfo['warning']] = true;
@@ -765,15 +769,17 @@ function renderListFileTypeContent($dir, $imageFileName, $formalImageTypeName, $
 			foreach ($imageTypes as $imageType) {
 				$imageType_name = basename($imageType);
 				$fullFilename = "$images_dir/$chosen_day/$dir$imageType_name";
-				$name = $listNames ? basename($fullFilename) : '';
+				$name = basename($fullFilename);
+				$itemDateValue = getListFileTypeDisplayDateValue($imageType_name, $chosen_day);
 				if ($type == "picture") {
+					$itemCount += 1;
 					echo "<a href='$fullFilename' class='images-grid-item functions-listfiletype-item' data-lg-size='1600-2400'>";
 					echo "<img src='$fullFilename$ts' class='functions-listfiletype-media' />";
-					if ($name !== '') {
-						echo "<span class='images-grid-name functions-listfiletype-name'>" . htmlspecialchars($name) . "</span>";
-					}
+					echo "<span class='images-grid-name functions-listfiletype-name'>" . htmlspecialchars($name) . "</span>";
+					echo "<span class='images-grid-date functions-listfiletype-date' data-listfiletype-date='" . htmlspecialchars($itemDateValue, ENT_QUOTES) . "'></span>";
 					echo "</a>\n";
 				} else {
+					$itemCount += 1;
 					$thumbInfo = getVideoThumbnailInfo($chosen_day, $imageType, $fullFilename . $ts);
 					if (! empty($thumbInfo['warning'])) {
 						$thumbnailWarnings[$thumbInfo['warning']] = true;
@@ -793,15 +799,19 @@ function renderListFileTypeContent($dir, $imageFileName, $formalImageTypeName, $
 					echo "<img src='" . htmlspecialchars($thumbInfo['thumbUrl'], ENT_QUOTES) . "' class='functions-listfiletype-media functions-listfiletype-video-thumb' />";
 					echo "<span class='functions-listfiletype-video-badge'><i class='fa fa-play'></i></span>";
 					echo "</span>";
-					if ($name !== '') {
-						echo "<span class='images-grid-name functions-listfiletype-name'>" . htmlspecialchars($name) . "</span>";
-					}
+					echo "<span class='images-grid-name functions-listfiletype-name'>" . htmlspecialchars($name) . "</span>";
+					echo "<span class='images-grid-date functions-listfiletype-date' data-listfiletype-date='" . htmlspecialchars($itemDateValue, ENT_QUOTES) . "'></span>";
 					echo "</a>\n";
 				}
 			}
 		}
 	}
 	echo "</div>";
+	$gridHtml = ob_get_clean();
+	if ($itemCount === 1) {
+		$gridHtml = str_replace("functions-listfiletype-grid'", "functions-listfiletype-grid functions-listfiletype-grid-single'", $gridHtml);
+	}
+	echo $gridHtml;
 	if (count($thumbnailWarnings) > 0) {
 		echo "<div class='as-wifi-placeholder as-wifi-placeholder-error functions-listfiletype-error'>";
 		echo "<div class='as-wifi-placeholder-icon'><i class='fa fa-triangle-exclamation'></i></div>";
@@ -868,13 +878,23 @@ $(document).ready(function () {
 	}
 
 	function initialiseLocaleDates() {
-		const formatter = new Intl.DateTimeFormat(undefined, {
+		const dateOnlyFormatter = new Intl.DateTimeFormat(undefined, {
 			dateStyle: 'medium'
 		});
 
-		document.querySelectorAll('.functions-listfiletype-date[data-listfiletype-day]').forEach(function (element) {
-			const rawDay = element.getAttribute('data-listfiletype-day') || '';
-			if (!/^\d{8}$/.test(rawDay)) {
+		document.querySelectorAll('.functions-listfiletype-date').forEach(function (element) {
+			const rawDate = element.getAttribute('data-listfiletype-date');
+			const rawDay = element.getAttribute('data-listfiletype-day');
+
+			if (rawDate) {
+				const date = new Date(rawDate);
+				if (!Number.isNaN(date.getTime())) {
+					element.textContent = dateOnlyFormatter.format(date);
+				}
+				return;
+			}
+
+			if (!rawDay || !/^\d{8}$/.test(rawDay)) {
 				return;
 			}
 
@@ -886,7 +906,7 @@ $(document).ready(function () {
 				return;
 			}
 
-			element.textContent = formatter.format(date);
+			element.textContent = dateOnlyFormatter.format(date);
 		});
 	}
 
@@ -967,6 +987,24 @@ function getVideoThumbnailInfo($day, $videoPath, $videoUrl) {
 		'thumbUrl' => $videoUrl,
 		'warning' => $warning,
 	];
+}
+
+function getListFileTypeDisplayDateValue($fileName, $fallbackDay='') {
+	if (preg_match('/(\d{14})/', $fileName, $matches)) {
+		$dateTime = DateTimeImmutable::createFromFormat('YmdHis', $matches[1], new DateTimeZone('UTC'));
+		if ($dateTime !== false) {
+			return $dateTime->format('Y-m-d\TH:i:s\Z');
+		}
+	}
+
+	if ($fallbackDay !== '' && preg_match('/^\d{8}$/', $fallbackDay)) {
+		$date = DateTimeImmutable::createFromFormat('Ymd', $fallbackDay);
+		if ($date !== false) {
+			return $date->format('Y-m-d');
+		}
+	}
+
+	return '';
 }
 
 // Run a command and display the appropriate status message.

@@ -146,6 +146,7 @@ class MODULEINSTALLERUTIL extends UTILBASE
         $displayName = (string)($sourceMeta['name'] ?? $installedMeta['name'] ?? $moduleName);
         $description = (string)($sourceMeta['description'] ?? $installedMeta['description'] ?? $moduleName);
         $group = (string)($sourceMeta['group'] ?? $installedMeta['group'] ?? 'Ungrouped');
+        $helpLink = (string)($sourceMeta['helplink'] ?? $installedMeta['helplink'] ?? '');
         $installedVersion = $installedMeta['version'] ?? null;
         $sourceVersion = $sourceMeta['version'] ?? null;
         $deprecated = $this->toBool($sourceMeta['deprecation']['deprecated'] ?? $installedMeta['deprecation']['deprecated'] ?? false);
@@ -157,6 +158,7 @@ class MODULEINSTALLERUTIL extends UTILBASE
             'displayName' => $displayName,
             'description' => $description,
             'group' => $group,
+            'helplink' => $helpLink,
             'installed' => $installed,
             'installedPath' => $installedInfo['path'] ?? '',
             'installedVersion' => $installedVersion,
@@ -302,9 +304,11 @@ class MODULEINSTALLERUTIL extends UTILBASE
         }
 
         $functionName = preg_replace('/^allsky_/', '', $moduleName);
-        $pattern = '/def\s+' . preg_quote((string)$functionName, '/') . '\s*\(\s*params\s*,\s*event\s*\)\s*:/m';
+        $returnTypePattern = '(?:\s*->\s*[^:]+)?';
+        $wrapperPattern = '/def\s+' . preg_quote((string)$functionName, '/') . '\s*\(\s*params\s*,\s*event\s*\)' . $returnTypePattern . '\s*:/m';
+        $classRunPattern = '/class\s+[A-Za-z_][A-Za-z0-9_]*\s*\(\s*ALLSKYMODULEBASE\s*\)\s*:[\s\S]*?def\s+run\s*\(\s*self\b[^)]*\)' . $returnTypePattern . '\s*:/m';
 
-        return preg_match($pattern, $contents) === 1;
+        return preg_match($wrapperPattern, $contents) === 1 || preg_match($classRunPattern, $contents) === 1;
     }
 
     private function ensureRepo(string $branch, bool $reCheckout): void
@@ -913,9 +917,13 @@ class MODULEINSTALLERUTIL extends UTILBASE
 
     private function copyFile(string $source, string $destination): void
     {
+        if (!is_file($source) || !is_readable($source)) {
+            throw new RuntimeException("Unable to read source file {$source}");
+        }
+
         $this->ensureDirectory(dirname($destination));
         if (!copy($source, $destination)) {
-            throw new RuntimeException("Unable to copy {$source}");
+            throw new RuntimeException("Unable to copy {$source} to {$destination}");
         }
     }
 
@@ -926,6 +934,9 @@ class MODULEINSTALLERUTIL extends UTILBASE
         }
         if (!is_dir($path) && !mkdir($path, 0775, true) && !is_dir($path)) {
             throw new RuntimeException("Unable to create directory {$path}");
+        }
+        if (!is_writable($path)) {
+            throw new RuntimeException("Directory {$path} is not writable by the WebUI user");
         }
     }
 

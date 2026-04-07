@@ -558,7 +558,7 @@ function parse_ifconfig($input, &$strHWAddress, &$strIPAddress, &$strNetMask, &$
 
 function handle_interface_POST_and_status($interface, $input, &$myStatus) {
 	$interface_up = false;
-	if( isset($_POST['turn_down']) ) {
+	if( isset($_POST['turn_down_' . $interface]) ) {
 		// We should only get here if the interface is up,
 		// but just in case, check if it's already down.
 		// If the interface is down it's also not running.
@@ -581,7 +581,7 @@ function handle_interface_POST_and_status($interface, $input, &$myStatus) {
 			}
 		}
 
-	} elseif( isset($_POST['turn_up']) ) {
+	} elseif( isset($_POST['turn_up_' . $interface]) ) {
 		// We should only get here if the interface is down,
 		// but just in case, check if it's already up.
 		if (is_interface_up(get_interface_status("ifconfig $interface"))) {

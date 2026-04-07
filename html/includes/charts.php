@@ -15,7 +15,7 @@ function DisplayCharts()
   <script src="/js/highcharts/code/modules/solid-gauge.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
   <script src="/js/highcharts/code/modules/no-data-to-display.js"></script>
 
-  <link rel="stylesheet" href="/css/charts.css?c=<?php echo ALLSKY_VERSION; ?>" />  
+  <link rel="stylesheet" href="/css/charts.css?c=<?php echo ALLSKY_VERSION; ?>" />
   <script src="/js/jquery-chart/jquery-chart.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
   <script src="/js/jquery-chart/jquery-chart-designer.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
   <script src="/js/jquery-chart/jquery-timerange-picker.js?c=<?php echo ALLSKY_VERSION; ?>"></script>

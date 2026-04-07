@@ -1162,15 +1162,15 @@ if ($debug) { echo ": &nbsp; value=$value"; }
 							$type == "float" || $type == "percent") {
 								$type = "text";
 						}
-						echo "\n\t\t<input class='form-control boxShadow settingInput settingInputTextNumber'" .
+						echo "\n\t\t<input class='form-control settingInput settingInputTextNumber'" .
 							" type='$type' $readonly $readonlyForm name='$name' value='$value' >";
 
 					} else if ($type == "widetext"){
-						echo "\n\t\t<input class='form-control boxShadow settingInputWidetext'" .
+						echo "\n\t\t<input class='form-control settingInputWidetext'" .
 							" type='text' $readonlyForm name='$name' value='$value'>";
 
 					} else if ($type == "select"){
-						echo "\n\t\t<select class='form-control boxShadow settingInput settingInputSelect'" .
+						echo "\n\t\t<select class='form-control settingInput settingInputSelect'" .
 							" $readonlyForm name='$name'>";
 						foreach($option['options'] as $opt){
 							$val = getVariableOrDefault($opt, 'value', "?");
@@ -1184,7 +1184,7 @@ if ($debug) { echo ": &nbsp; value=$value"; }
 						echo "</select>";
 
 					} else if ($type == "boolean"){
-						echo "\n\t\t<div class='switch-field boxShadow settingInput settingInputBoolean'>";
+						echo "\n\t\t<div class='switch-field settingInput settingInputBoolean'>";
 							echo "\n\t\t<input id='switch_no_$name' class='form-control' type='radio' ".
 								"$readonlyForm name='$name' value='false' ".
 								($value == "false" ? " checked " : "").  ">";
@@ -1268,7 +1268,7 @@ if ($debug) { echo ": &nbsp; value=$value"; }
 
 			if ($numMissingHasDefault > 0) {
 				$msg = "<strong>";
-				$msg .= "Required field" . ($numMissingHasDefault === 1 ? " was" : "s were");
+				$msg .= "Required field" . ($numMissingHasDefault === 1 ? " is" : "s are");
 				$msg .= " missing but replaced by the default:";
 				$msg .= "</strong>";
 				$msg .= "<br><strong>$missingSettingsHasDefault</strong>";

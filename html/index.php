@@ -719,8 +719,9 @@ if ($page=="logout") {
 		<link rel="stylesheet" type="text/css" href="allsky/font-awesome/css/all.min.css">
     <link rel="stylesheet" type="text/css" href="/js/datatables/datatables.min.css?c=<?php echo ALLSKY_VERSION; ?>" />
 		<link href="/css/allsky.css?c=<?php echo ALLSKY_VERSION; ?>" rel="stylesheet">
-
+	
 		<script src="/js/jquery/dist/jquery.min.js"></script>
+    <script src="/js/jquery-loading-overlay/dist/loadingoverlay.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 		<script src="/js/bootstrap/dist/js/bootstrap.min.js"></script>
     <script src="/js/datatables/datatables.js?c=<?php echo ALLSKY_VERSION; ?>"></script>		
 		<script src="/js/allsky-messages.js?c=<?php echo ALLSKY_VERSION; ?>"></script>

@@ -11,6 +11,7 @@ class WIFIUTIL extends UTILBASE
     private const NMCLI = '/usr/bin/nmcli';
     private const IW = '/usr/sbin/iw';
     private const IWGETID = '/usr/sbin/iwgetid';
+    private const RFKILL = '/usr/sbin/rfkill';
     private const SUDO = '/usr/bin/sudo';
 
     protected function getRoutes(): array
@@ -334,6 +335,86 @@ class WIFIUTIL extends UTILBASE
         return strpos($message, 'no network with ssid') !== false;
     }
 
+    private function cleanWifiErrorMessage(string $message): string
+    {
+        $message = trim($message);
+        $message = preg_replace('/^command failed:\s*/i', '', $message);
+        $message = preg_replace('/^error:\s*/i', '', $message);
+        return trim((string) $message);
+    }
+
+    private function getRfkillWifiStatus(): array
+    {
+        $result = $this->runCommand([self::RFKILL, 'list']);
+        if (!$result['ok']) {
+            return [
+                'available' => false,
+                'blocked' => false,
+                'soft' => false,
+                'hard' => false,
+                'message' => '',
+            ];
+        }
+
+        $blocks = preg_split('/\n(?=\d+:\s)/', trim($result['stdout']));
+        $hasWireless = false;
+        $softBlocked = false;
+        $hardBlocked = false;
+
+        foreach ($blocks as $block) {
+            if (!preg_match('/^\d+:\s+.+:\s+(wireless|wlan|wifi|bluetooth)$/im', $block) &&
+                !preg_match('/^\s*type:\s*wlan$/im', $block) &&
+                !preg_match('/^\s*type:\s*wireless$/im', $block)) {
+                continue;
+            }
+
+            $hasWireless = true;
+            if (preg_match('/soft blocked:\s*yes/im', $block)) {
+                $softBlocked = true;
+            }
+            if (preg_match('/hard blocked:\s*yes/im', $block)) {
+                $hardBlocked = true;
+            }
+        }
+
+        if (!$hasWireless) {
+            return [
+                'available' => true,
+                'blocked' => false,
+                'soft' => false,
+                'hard' => false,
+                'message' => '',
+            ];
+        }
+
+        $message = '';
+        if ($softBlocked || $hardBlocked) {
+            $parts = [];
+            if ($softBlocked) {
+                $parts[] = 'soft-blocked';
+            }
+            if ($hardBlocked) {
+                $parts[] = 'hard-blocked';
+            }
+
+            $message = 'The Wi-Fi adapter appears to be disabled by rfkill (' . implode(' and ', $parts) . '). ';
+            if ($softBlocked) {
+                $message .= 'Try enabling it with `sudo rfkill unblock wifi`. ';
+            }
+            if ($hardBlocked) {
+                $message .= 'Check for a hardware Wi-Fi switch, BIOS setting, or device-level radio disable. ';
+            }
+        }
+
+        return [
+            'available' => true,
+            'blocked' => ($softBlocked || $hardBlocked),
+            'soft' => $softBlocked,
+            'hard' => $hardBlocked,
+            'message' => trim($message),
+        ];
+    }
+
     private function rescanForNetwork(string $interface, string $ssid): void
     {
         $argv = [
@@ -516,12 +597,29 @@ class WIFIUTIL extends UTILBASE
             $this->send500('Wi-Fi scanning needs either passwordless sudo for the web server user or permission to read scan results from NetworkManager.');
         }
 
-        $message = trim((string) ($iwSudo['stderr'] ?: $iwSudo['stdout']));
+        $rfkillStatus = $this->getRfkillWifiStatus();
+        if ($rfkillStatus['blocked']) {
+            $message = $rfkillStatus['message'];
+            $detail = $this->cleanWifiErrorMessage((string) ($iwSudo['stderr'] ?: $iwSudo['stdout']));
+            if ($detail === '') {
+                $detail = $this->cleanWifiErrorMessage((string) ($iw['stderr'] ?: $iw['stdout']));
+            }
+            if ($detail === '') {
+                $detail = $this->cleanWifiErrorMessage((string) ($nmcli['stderr'] ?: $nmcli['stdout']));
+            }
+            if ($detail !== '') {
+                $message .= ' Scan detail: ' . $detail;
+            }
+
+            $this->send500(trim($message));
+        }
+
+        $message = $this->cleanWifiErrorMessage((string) ($iwSudo['stderr'] ?: $iwSudo['stdout']));
         if ($message === '') {
-            $message = trim((string) ($iw['stderr'] ?: $iw['stdout']));
+            $message = $this->cleanWifiErrorMessage((string) ($iw['stderr'] ?: $iw['stdout']));
         }
         if ($message === '') {
-            $message = trim((string) ($nmcli['stderr'] ?: $nmcli['stdout']));
+            $message = $this->cleanWifiErrorMessage((string) ($nmcli['stderr'] ?: $nmcli['stdout']));
         }
         if ($message === '') {
             $message = 'Unable to scan for Wi-Fi networks.';

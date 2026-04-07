@@ -194,9 +194,54 @@ function getDashboardWlanRegulatoryDomain()
     return '[not set]';
 }
 
+function getDashboardWlanRfkillStatus()
+{
+    exec('/usr/sbin/rfkill list 2>/dev/null', $output, $retval);
+    if ($retval !== 0) {
+        return [
+            'blocked' => false,
+            'soft' => false,
+            'hard' => false,
+        ];
+    }
+
+    $blocks = preg_split('/\n(?=\d+:\s)/', trim(implode("\n", $output)));
+    $softBlocked = false;
+    $hardBlocked = false;
+
+    foreach ($blocks as $block) {
+        $isWireless = false;
+        if (preg_match('/^\d+:\s+.+:\s+Wireless LAN$/im', $block)) {
+            $isWireless = true;
+        } elseif (preg_match('/^\s*Type:\s*wlan$/im', $block)) {
+            $isWireless = true;
+        } elseif (preg_match('/^\s*Type:\s*wireless$/im', $block)) {
+            $isWireless = true;
+        }
+
+        if (!$isWireless) {
+            continue;
+        }
+
+        if (preg_match('/Soft blocked:\s*yes/im', $block)) {
+            $softBlocked = true;
+        }
+        if (preg_match('/Hard blocked:\s*yes/im', $block)) {
+            $hardBlocked = true;
+        }
+    }
+
+    return [
+        'blocked' => ($softBlocked || $hardBlocked),
+        'soft' => $softBlocked,
+        'hard' => $hardBlocked,
+    ];
+}
+
 function DisplayDashboard_WLAN()
 {
 	global $pageHeaderTitle, $pageIcon;
+    $rfkillStatus = getDashboardWlanRfkillStatus();
 ?>
 	<div class="panel panel-allsky" id="as-wlan-panel">
 		<div class="panel-heading"><i class="<?php echo $pageIcon ?>"></i> <?php echo $pageHeaderTitle ?></div>
@@ -218,6 +263,28 @@ function DisplayDashboard_WLAN()
     }
 
     if (count($interfaces) === 0) {
+        return;
+    }
+
+    if ($rfkillStatus['blocked']) {
+        echo "<div class='panel-body'>\n";
+        echo "    <div class='as-wifi-placeholder as-wifi-placeholder-error' style='min-height: 0; margin-bottom: 0; border-radius: 8px;'>\n";
+        echo "        <div class='as-wifi-placeholder-icon'><i class='fa fa-triangle-exclamation'></i></div>\n";
+        echo "        <div class='as-wifi-placeholder-title'>Wi-Fi Is Blocked</div>\n";
+        echo "        <div class='as-wifi-placeholder-text'>\n";
+        if ($rfkillStatus['soft']) {
+            echo "            The wireless adapter is soft-blocked. Run <code>sudo rfkill unblock wifi</code> to re-enable it.\n";
+        }
+        if ($rfkillStatus['hard']) {
+            echo "            The wireless adapter is hard-blocked. Check for a hardware wireless switch, BIOS setting, or device-level radio disable.\n";
+        }
+        echo "        </div>\n";
+        echo "    </div>\n";
+        echo "</div>\n";
+        echo "</div>\n";
+?>
+    <script src="js/dashboard-wlan.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+<?php
         return;
     }
 

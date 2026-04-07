@@ -40,10 +40,55 @@ function getWifiConfigInterfaces()
     return $interfaces;
 }
 
+function getWifiConfigRfkillStatus()
+{
+    exec('/usr/sbin/rfkill list 2>/dev/null', $output, $retval);
+    if ($retval !== 0) {
+        return [
+            'blocked' => false,
+            'soft' => false,
+            'hard' => false,
+        ];
+    }
+
+    $blocks = preg_split('/\n(?=\d+:\s)/', trim(implode("\n", $output)));
+    $softBlocked = false;
+    $hardBlocked = false;
+
+    foreach ($blocks as $block) {
+        $isWireless = false;
+        if (preg_match('/^\d+:\s+.+:\s+Wireless LAN$/im', $block)) {
+            $isWireless = true;
+        } elseif (preg_match('/^\s*Type:\s*wlan$/im', $block)) {
+            $isWireless = true;
+        } elseif (preg_match('/^\s*Type:\s*wireless$/im', $block)) {
+            $isWireless = true;
+        }
+
+        if (!$isWireless) {
+            continue;
+        }
+
+        if (preg_match('/Soft blocked:\s*yes/im', $block)) {
+            $softBlocked = true;
+        }
+        if (preg_match('/Hard blocked:\s*yes/im', $block)) {
+            $hardBlocked = true;
+        }
+    }
+
+    return [
+        'blocked' => ($softBlocked || $hardBlocked),
+        'soft' => $softBlocked,
+        'hard' => $hardBlocked,
+    ];
+}
+
 function DisplayWPAConfig()
 {
     global $pageHeaderTitle, $pageIcon;
     $interfaces = getWifiConfigInterfaces();
+    $rfkillStatus = getWifiConfigRfkillStatus();
 ?>
     <div class="panel panel-allsky" id="as-wifi-panel">
         <div class="panel-heading">
@@ -51,7 +96,20 @@ function DisplayWPAConfig()
         </div>
         <div class="panel-body">
             <?php CSRFToken() ?>
-<?php if (count($interfaces) === 0) { ?>
+<?php if ($rfkillStatus['blocked']) { ?>
+            <div class="as-wifi-placeholder as-wifi-placeholder-error" style="min-height: 0; margin-bottom: 0; border-radius: 8px;">
+                <div class="as-wifi-placeholder-icon"><i class="fa fa-triangle-exclamation"></i></div>
+                <div class="as-wifi-placeholder-title">Wi-Fi Is Blocked</div>
+                <div class="as-wifi-placeholder-text">
+                    <?php if ($rfkillStatus['soft']) { ?>
+                        The wireless adapter is soft-blocked. Run <code>sudo rfkill unblock wifi</code> to re-enable it.
+                    <?php } ?>
+                    <?php if ($rfkillStatus['hard']) { ?>
+                        The wireless adapter is hard-blocked. Check for a hardware wireless switch, BIOS setting, or device-level radio disable.
+                    <?php } ?>
+                </div>
+            </div>
+<?php } elseif (count($interfaces) === 0) { ?>
             <div class="alert alert-warning">
                 No Wi-Fi adapters were found.
             </div>

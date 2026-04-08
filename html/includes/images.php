@@ -6,6 +6,8 @@ if (basename(__FILE__) === basename($_SERVER['SCRIPT_FILENAME'])) {
 }
 
 function DisplayImageError($title, $message) {
+  global $fa_size;
+
 	?>
 		<div class="panel panel-allsky">
 			<div class="panel-heading"><i class="fa fa-image"></i> <?php echo htmlspecialchars($title); ?></div>

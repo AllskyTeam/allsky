@@ -122,7 +122,7 @@ foreach ($days as $day) {
 
 	ob_start();
 	if ($has_images) {
-		$icon = "<i class='fa fa-image fa-fw'></i>";
+		$icon = "<i class='fa fa-image fa-fw fa-{$fa_size}'></i>";
 		echo "<a href='index.php?page=list_images&day=$day' title='Images'>$icon</a>";
 	} else {
 		echo "none";

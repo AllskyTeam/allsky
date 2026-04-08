@@ -939,18 +939,20 @@ function getVideoThumbnailInfo($day, $videoPath, $videoUrl) {
 	global $settings_array;
 
 	$dayDirectory = ALLSKY_IMAGES . "/{$day}";
-	$thumbDirectory = $dayDirectory . "/videothumbs";
+	$thumbDirectory = $dayDirectory . "/videothumbnail";
 	$thumbWidth = (int) getVariableOrDefault($settings_array, 'thumbnailsizex', 100);
 	$thumbHeight = (int) getVariableOrDefault($settings_array, 'thumbnailsizey', 75);
 	$videoName = pathinfo($videoPath, PATHINFO_FILENAME);
 	$thumbFile = $thumbDirectory . "/{$videoName}.jpg";
-	$thumbUrl = "/images/{$day}/videothumbs/" . rawurlencode($videoName . '.jpg');
+	$thumbUrl = "/images/{$day}/videothumbnail/" . rawurlencode($videoName . '.jpg');
 	$warning = null;
 
 	if (! file_exists($thumbFile)) {
 		if (! is_dir($thumbDirectory)) {
 			if (! @mkdir($thumbDirectory, 0775, true) && ! is_dir($thumbDirectory)) {
 				$warning = "The WebUI could not create <code>{$thumbDirectory}</code>. Make sure the image day folders are writable by the web server.";
+			} else {
+				setListFileTypePathOwnership($thumbDirectory, true);
 			}
 		}
 
@@ -966,6 +968,9 @@ function getVideoThumbnailInfo($day, $videoPath, $videoUrl) {
 				escapeshellarg($thumbFile)
 			);
 			@exec($cmd, $output, $returnCode);
+			if (file_exists($thumbFile)) {
+				setListFileTypePathOwnership($thumbFile, false);
+			}
 			if ($returnCode !== 0 && ! file_exists($thumbFile)) {
 				$warning = "The WebUI could not create a thumbnail for <code>" . htmlspecialchars(basename($videoPath)) . "</code>. Check that <code>ffmpeg</code> is installed and that the images folders are writable by the web server.";
 			}
@@ -987,6 +992,41 @@ function getVideoThumbnailInfo($day, $videoPath, $videoUrl) {
 		'thumbUrl' => $videoUrl,
 		'warning' => $warning,
 	];
+}
+
+function setListFileTypePathOwnership($path, $isDirectory) {
+	$owner = defined('ALLSKY_OWNER') ? (string) ALLSKY_OWNER : '';
+	$group = defined('ALLSKY_WEBSERVER_GROUP') ? (string) ALLSKY_WEBSERVER_GROUP : '';
+	$mode = $isDirectory ? 02775 : 0664;
+
+	if ($path === '' || !file_exists($path)) {
+		return;
+	}
+
+	@chmod($path, $mode);
+
+	if ($owner !== '') {
+		@chown($path, $owner);
+	}
+	if ($group !== '') {
+		@chgrp($path, $group);
+	}
+
+	if (($owner !== '' || $group !== '') && function_exists('exec')) {
+		$commands = [];
+		if ($owner !== '' && $group !== '') {
+			$commands[] = 'sudo -n chown ' . escapeshellarg($owner . ':' . $group) . ' ' . escapeshellarg($path);
+		} else if ($owner !== '') {
+			$commands[] = 'sudo -n chown ' . escapeshellarg($owner) . ' ' . escapeshellarg($path);
+		} else if ($group !== '') {
+			$commands[] = 'sudo -n chgrp ' . escapeshellarg($group) . ' ' . escapeshellarg($path);
+		}
+		$commands[] = 'sudo -n chmod ' . ($isDirectory ? '2775' : '0664') . ' ' . escapeshellarg($path);
+
+		foreach ($commands as $command) {
+			@exec($command . ' 2>/dev/null');
+		}
+	}
 }
 
 function getListFileTypeDisplayDateValue($fileName, $fallbackDay='') {

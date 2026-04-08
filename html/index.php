@@ -102,26 +102,26 @@ $pageInfo = [
 	],
 	"list_images" => [
 		"title" => "Images",
-		"icon" => "",
+		"icon" => "fa fa-image fa-" . $fa_size . " fa-fw",
 	],
 	"list_videos" => [
 		"title" => "Timelapse",
-		"icon" => "fa fa-video fa-fw",
+		"icon" => "fa fa-film fa-" . $fa_size . " fa-fw",
 		"AllTitle" => "All Timelapse (CAN BE SLOW TO LOAD)",
 	],
 	"list_keograms" => [
 		"title" => "Keogram",
-		"icon" => "fa fa-barcode fa-fw",
+		"icon" => "fa fa-barcode fa-" . $fa_size . " fa-fw",
 		"AllTitle" => "All Keograms",
 	],
 	"list_startrails" => [
 		"title" => "Startrails",
-		"icon" => "fa fa-star fa-fw",
+		"icon" => "fa-regular fa-star fa-" . $fa_size . " fa-fw",
 		"AllTitle" => "All Startrails",
 	],
 	"list_meteors" => [
 		"title" => "Meteors",
-		"icon" => "fa fa-meteor fa-fw",
+		"icon" => "fa fa-meteor fa-" . $fa_size . " fa-fw",
 		"AllTitle" => "All Meteors",
 	],
 	"configuration" => [

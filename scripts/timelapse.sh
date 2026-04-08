@@ -9,13 +9,6 @@ source "${ALLSKY_HOME}/variables.sh"		|| exit "${EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${EXIT_ERROR_STOP}"
 
-
-# TODO: Eric - whats the best way to ge these?
-export ALLSKY_OWNER=$( id --group --name )
-export ALLSKY_GROUP=${ALLSKY_OWNER}
-export ALLSKY_WEBSERVER_OWNER="www-data"
-export ALLSKY_WEBSERVER_GROUP="${ALLSKY_WEBSERVER_OWNER}"
-
 DEBUG="false"
 DO_HELP="false"
 IS_MINI="false"
@@ -369,58 +362,10 @@ if [[ ${RET} -ne -0 ]]; then
 	exit 1
 fi
 
-
-# Create a thumbnail for the video.  This is used to speed up the website.
+# Create thumbnail of timelapse
 DATE=${OUTPUT%/*}
 DATE=${DATE##*/}
-
-THUM_DIR="${ALLSKY_IMAGES}/${DATE}/videothumbnail"
-
-THUMBX=$(settings ".thumbnailsizex")
-THUMBY=$(settings ".thumbnailsizey")
-
-VIDEOTHUMBX=$((THUMBX * 2))
-VIDEOTHUMBY=$((THUMBY * 2))
-
-VIDEOFILE=${OUTPUT##*/}
-OUTPUTTHUMBNAIL="${THUM_DIR}/${VIDEOFILE%.mp4}.jpg"
-
-mkdir -p "${THUM_DIR}"
-sudo chmod 775 "${THUM_DIR}"
-sudo chown "${ALLSKY_OWNER}:${ALLSKY_WEBSERVER_GROUP}" "${THUM_DIR}" 
-
-X=$(ffmpeg -y -loglevel error -ss 00:00:00.2 -i "${OUTPUT}" \
-    -frames:v 1 \
-    -vf "thumbnail,scale=${VIDEOTHUMBX}:${VIDEOTHUMBY}:force_original_aspect_ratio=decrease" \
-    "${OUTPUTTHUMBNAIL}" 2>&1)
-RET=$?
-# The "deprecated..." message is useless and only confuses users, so hide it.
-X="$( echo "${X}" | grep -E -v "deprecated pixel format used|Processed " )"
-[[ -n ${X} ]] && echo "${X}" >> "${TMP}"		# a warning/error message
-
-if [[ ${RET} -ne -0 ]]; then
-	E_ "\n*** ${ME}: ERROR: ffmpeg failed generating timelaspse thumbnail."
-
-	# Check for common, known errors.
-	if X="$( echo "${TMP}" | grep -E -i "Killed ffmpeg|malloc of size" )" ; then
-		indent --spaces "${X}"
-		echo -e "See the 'Troubleshooting -> Timelapse' documentation page for a fix.\n"
-	elif [[ ${RET} -eq 137 ]]; then
-		# Sometimes the process is killed but we don't get a Killed message.
-		indent --spaces "Killed ffmpeg\n${X}"
-		echo -e "See the 'Troubleshooting -> Timelapse' documentation page for a fix.\n"
-	fi
-
-	indent --spaces "Output: $( < "${TMP}" )"
-	echo
-	echo "Links in '${SEQUENCE_DIR}' left for debugging."
-	echo -e "Remove them when the problem is fixed.${NC}\n"
-	rm -f "${OUTPUT}"	# don't leave around to confuse user
-	[[ -n ${ALLSKY_TIMELAPSE_PID_FILE} ]] && rm -f "${ALLSKY_TIMELAPSE_PID_FILE}"
-	exit 1
-else
-	sudo chown "${ALLSKY_OWNER}:${ALLSKY_WEBSERVER_GROUP}" "${OUTPUTTHUMBNAIL}"
-fi
+RES="$(thumbnail.sh -t timelapse -d "${DATE}" --force)"
 
 # if the user wants output, give it to them
 [[ ${FFLOG} == "info" && ${IS_MINI} == "false"  ]] && cat "${TMP}"

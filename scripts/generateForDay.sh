@@ -342,6 +342,9 @@ if [[ ${DO_KEOGRAM} == "true" ]]; then
 			echo "Keogram creation unable to read files; will not run startrails or timelapse." >&2
 		fi
 
+		# Create thumbnail of keogram
+		RES="$(thumbnail.sh -t keogram -d "${DATE}" --force)"	
+
 	else
 		if [[ ! -f ${UPLOAD_FILE} ]]; then
 			W_ "WARNING: '${UPLOAD_FILE}' not found; skipping." >&2
@@ -401,10 +404,10 @@ if [[ ${DO_STARTRAILS} == "true" ]]; then
 
 		if [[ ${RET} -eq ${EXIT_PARTIAL_OK} ]]; then
 			MSG="The startrails file was created but has no trailed stars."
-			MSG+="\nGo to the 'Helper Tools -&gt; Startrails Settings' page to determine"
+			MSG+="\nTry running 'allsky-config compare_startrails' to determine"
 			MSG+=" what 'Brightness Threshold' to use."
 			if [[ ${ON_TTY} == "true" ]]; then
-				echo -e "${MSG}" | sed 's/&gt;/>/' >&2
+				echo -e "${MSG}" >&2
 			else
 				"${ALLSKY_SCRIPTS}/addMessage.sh" --type "warning" --msg "${MSG}"
 			fi
@@ -414,6 +417,9 @@ if [[ ${DO_STARTRAILS} == "true" ]]; then
 			# timelapse will have the same problem, so don't bother running.
 			echo "Startrails creation unable to read files; will not run timelapse." >&2
 		fi
+
+		# Create thumbnail of startrail
+		RES="$(thumbnail.sh -t startrail -d "${DATE}") --force"
 
 	else
 		if [[ ! -f ${UPLOAD_FILE} ]]; then

@@ -712,9 +712,10 @@ function renderListFileTypeContent($dir, $imageFileName, $formalImageTypeName, $
 						$imageType_name = basename($imageType);
 						$fullFilename = "$images_dir/$day/$dir$imageType_name";
 						if ($type == "picture") {
+							$thumbUrl = getListFileTypePictureThumbnailUrl($day, $dir, $imageType_name, $fullFilename);
 							$itemCount += 1;
 							echo "<a href='$fullFilename' class='images-grid-item functions-listfiletype-item' data-lg-size='1600-2400'>";
-							echo "<img src='$fullFilename' class='functions-listfiletype-media' />";
+							echo "<img src='" . htmlspecialchars($thumbUrl, ENT_QUOTES) . "' class='functions-listfiletype-media' />";
 							echo "<span class='images-grid-name functions-listfiletype-name'>$day</span>";
 							echo "<span class='images-grid-date functions-listfiletype-date' data-listfiletype-day='{$day}'></span>";
 							echo "</a>\n";
@@ -772,9 +773,10 @@ function renderListFileTypeContent($dir, $imageFileName, $formalImageTypeName, $
 				$name = basename($fullFilename);
 				$itemDateValue = getListFileTypeDisplayDateValue($imageType_name, $chosen_day);
 				if ($type == "picture") {
+					$thumbUrl = getListFileTypePictureThumbnailUrl($chosen_day, $dir, $imageType_name, $fullFilename . $ts);
 					$itemCount += 1;
 					echo "<a href='$fullFilename' class='images-grid-item functions-listfiletype-item' data-lg-size='1600-2400'>";
-					echo "<img src='$fullFilename$ts' class='functions-listfiletype-media' />";
+					echo "<img src='" . htmlspecialchars($thumbUrl, ENT_QUOTES) . "' class='functions-listfiletype-media' />";
 					echo "<span class='images-grid-name functions-listfiletype-name'>" . htmlspecialchars($name) . "</span>";
 					echo "<span class='images-grid-date functions-listfiletype-date' data-listfiletype-date='" . htmlspecialchars($itemDateValue, ENT_QUOTES) . "'></span>";
 					echo "</a>\n";
@@ -1045,6 +1047,28 @@ function getListFileTypeDisplayDateValue($fileName, $fallbackDay='') {
 	}
 
 	return '';
+}
+
+function getListFileTypePictureThumbnailUrl($day, $dir, $fileName, $fallbackUrl) {
+	$dirName = trim((string)$dir, '/');
+	$thumbnailDirectory = null;
+
+	if ($dirName === 'keogram') {
+		$thumbnailDirectory = 'keogramthumbnail';
+	} else if ($dirName === 'startrails') {
+		$thumbnailDirectory = 'startrailsthumbnail';
+	}
+
+	if ($thumbnailDirectory === null || $day === '') {
+		return $fallbackUrl;
+	}
+
+	$thumbnailPath = ALLSKY_IMAGES . "/{$day}/{$thumbnailDirectory}/{$fileName}";
+	if (!file_exists($thumbnailPath)) {
+		return $fallbackUrl;
+	}
+
+	return "/images/{$day}/{$thumbnailDirectory}/" . rawurlencode($fileName);
 }
 
 // Run a command and display the appropriate status message.

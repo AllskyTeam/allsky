@@ -252,6 +252,9 @@ if __name__ == "__main__":
             if 'arguments' in shared.flow[shared.step]['metadata']:
                 arguments = shared.flow[shared.step]['metadata']['arguments']
 
+            if not isinstance(arguments, dict):
+                arguments = {}
+                
             arguments['ALLSKYTESTMODE'] = testMode                
 
             try:

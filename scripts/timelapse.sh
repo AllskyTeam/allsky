@@ -380,6 +380,8 @@ VIDEOFILE=${OUTPUT##*/}
 OUTPUTTHUMBNAIL="${THUM_DIR}/${VIDEOFILE%.mp4}.jpg"
 
 mkdir -p "${THUM_DIR}"
+sudo chmod 775 "${THUM_DIR}"
+sudo chown -r "${ALLSKY_OWNER}:${WEBSERVER_GROUP}" "${THUM_DIR}"
 
 X=$(ffmpeg -y -loglevel error -ss 00:00:00.2 -i "${OUTPUT}" \
     -frames:v 1 \
@@ -410,6 +412,8 @@ if [[ ${RET} -ne -0 ]]; then
 	rm -f "${OUTPUT}"	# don't leave around to confuse user
 	[[ -n ${ALLSKY_TIMELAPSE_PID_FILE} ]] && rm -f "${ALLSKY_TIMELAPSE_PID_FILE}"
 	exit 1
+else
+	sudo chown "${ALLSKY_OWNER}:${WEBSERVER_GROUP}" "${OUTPUTTHUMBNAIL}"
 fi
 
 # if the user wants output, give it to them

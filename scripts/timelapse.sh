@@ -10,6 +10,12 @@ source "${ALLSKY_HOME}/variables.sh"		|| exit "${EXIT_ERROR_STOP}"
 source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${EXIT_ERROR_STOP}"
 
 
+# TODO: Eric - whats the best way to ge these?
+export ALLSKY_OWNER=$( id --group --name )
+export ALLSKY_GROUP=${ALLSKY_OWNER}
+export ALLSKY_WEBSERVER_OWNER="www-data"
+export ALLSKY_WEBSERVER_GROUP="${ALLSKY_WEBSERVER_OWNER}"
+
 DEBUG="false"
 DO_HELP="false"
 IS_MINI="false"
@@ -381,7 +387,7 @@ OUTPUTTHUMBNAIL="${THUM_DIR}/${VIDEOFILE%.mp4}.jpg"
 
 mkdir -p "${THUM_DIR}"
 sudo chmod 775 "${THUM_DIR}"
-sudo chown -r "${ALLSKY_OWNER}:${WEBSERVER_GROUP}" "${THUM_DIR}"
+sudo chown -r "${ALLSKY_OWNER}:${ALLSKY_WEBSERVER_GROUP}" "${THUM_DIR}"
 
 X=$(ffmpeg -y -loglevel error -ss 00:00:00.2 -i "${OUTPUT}" \
     -frames:v 1 \
@@ -413,7 +419,7 @@ if [[ ${RET} -ne -0 ]]; then
 	[[ -n ${ALLSKY_TIMELAPSE_PID_FILE} ]] && rm -f "${ALLSKY_TIMELAPSE_PID_FILE}"
 	exit 1
 else
-	sudo chown "${ALLSKY_OWNER}:${WEBSERVER_GROUP}" "${OUTPUTTHUMBNAIL}"
+	sudo chown "${ALLSKY_OWNER}:${ALLSKY_WEBSERVER_GROUP}" "${OUTPUTTHUMBNAIL}"
 fi
 
 # if the user wants output, give it to them

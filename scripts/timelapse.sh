@@ -387,7 +387,7 @@ OUTPUTTHUMBNAIL="${THUM_DIR}/${VIDEOFILE%.mp4}.jpg"
 
 mkdir -p "${THUM_DIR}"
 sudo chmod 775 "${THUM_DIR}"
-sudo chown -r "${ALLSKY_OWNER}:${ALLSKY_WEBSERVER_GROUP}" "${THUM_DIR}"
+sudo chown "${ALLSKY_OWNER}:${ALLSKY_WEBSERVER_GROUP}" "${THUM_DIR}" 
 
 X=$(ffmpeg -y -loglevel error -ss 00:00:00.2 -i "${OUTPUT}" \
     -frames:v 1 \

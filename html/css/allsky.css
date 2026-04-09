@@ -3798,6 +3798,7 @@ blockquote footer {
 .btn-blue		{ background-color: #0080ff; border-color: #60bbff; color: white; }
 .btn-blue:hover { background-color: #0030dd; border-color: #000000; color: white; }
 .dark .btn-blue { border-color: #ffffff; }
+/** End System Page **/
 
 /** Wi-Fi Page **/
 .as-wifi-toolbar {
@@ -4239,4 +4240,230 @@ body.dark .as-wifi-table .btn-success.disabled {
 .btn-black		 { background-color: #333333; border-color: #777777; color: white; }
 .btn-black:hover { background-color: var(--dark-text); border-color: #000000; color: white; }
 .dark .btn-black { border-color: #ffffff; }
-/** End System Page **/
+
+/** Chart Page and Designer **/
+#as-charts-toolbox-wrapper {
+  position: fixed;
+  top: 110px;
+  right: 0;
+  width: 400px;
+  height: calc(100vh - 110px);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bs3-panel-bg);
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+  transition: all 0.1s cubic-bezier(0.7, 0, 0.3, 1);
+  transform: translate3d(410px, 0, 0);
+  z-index: 1001;
+}
+
+#as-charts-toolbox-wrapper .panel-body {
+        border-top: 0px !important;
+}
+
+#as-charts-toolbox-wrapper .container-fluid {
+    padding-left: 0px !important;
+    padding-right: 0px !important;
+}
+
+#as-charts-toolbox-wrapper .navbar {
+    flex: 0 0 auto;
+}
+
+#as-charts-groups {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+.as-cm-chart-entry-enabled {
+  color: rgb(7, 241, 7) !important;
+  line-height: 1.5em;
+  font-weight: 300;
+}
+
+#as-charts-toolbox-wrapper.active {
+  transform: translate3d(0px, 0, 0);
+}
+
+.as-gm-tab-tools {
+  margin-left: 10px;
+  opacity: 0;
+  visibility: hidden;
+  transition-delay: 0s;
+  transition: opacity 0.3s ease, visibility 0s linear;
+}
+
+li:hover .as-gm-tab-tools {
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 0.5s;
+}
+
+#as-gm-tablist-content .tab-pane {
+  height: 95vh;
+}
+
+.as-hc-resize {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 15px;
+  height: 15px;
+  cursor: se-resize;
+  background: linear-gradient(135deg,
+      transparent 14px,
+      rgba(0, 0, 0, .25) 14px);
+  border-top-left-radius: 4px;
+  opacity: .85;
+  z-index: 5;
+  pointer-events: auto;
+}
+
+body.dark .as-hc-resize {
+  background: linear-gradient(135deg,
+      transparent 14px,
+      rgba(255, 255, 255, .28) 14px);
+}
+
+
+/* Visual grid on the pane */
+.as-grid-bg {
+  background-image:
+    linear-gradient(to right, rgba(0, 0, 0, .06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, .06) 1px, transparent 1px);
+  background-size: 24px 24px;
+  /* match grid.size */
+}
+
+body.dark .as-grid-bg {
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, .08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, .08) 1px, transparent 1px);
+}
+
+#finalJson {
+  white-space: pre;
+  font-family: Menlo, Consolas, monospace;
+  font-size: 12px;
+}
+
+.ascd-modal .modal-dialog {
+  width: 92%;
+}
+
+.ascd-modal .ascd-preview-body {
+    height: 360px;
+    overflow: hidden;
+}
+
+.ascd-modal .ascd-drop-entry {
+    margin-bottom: 6px;
+}
+
+.ascd-modal .ascd-drop-entry:last-child {
+    margin-bottom: 0;
+}
+
+.ascd-modal .ascd-drop .ascd-badge {
+    display: inline-block;
+}
+
+.ascd-modal .ascd-type-list {
+    padding: 8px 4px;
+}
+
+.ascd-modal .ascd-type-list .fa,
+.ascd-modal .ascd-type-list .fas {
+    margin-right: 8px;
+}
+
+.ascd-modal .ascd-title-help {
+    margin-bottom: 0;
+}
+
+.ascd-modal .ascd-variables-body .list-group-item:first-child {
+    border-top-width: 0 !important;
+}
+
+.ascd-modal .ascd-variables-body .panel-heading + .panel-collapse > .list-group {
+    border-top: 0 !important;
+}
+
+.ascd-modal .modal-body {
+    max-height: 80vh;
+    overflow: hidden;
+}
+
+.ascd-modal .ascd-variables-panel {
+    display: flex;
+    flex-direction: column;
+    height: calc(80vh - 30px);
+}
+
+.ascd-modal .ascd-variables-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+.ascd-modal .ascd-variables-body .list-group-item,
+.ascd-modal .ascd-variables-body .list-group-item:hover,
+.ascd-modal .ascd-variables-body .list-group-item:focus {
+    background-color: var(--bs3-list-group-bg) !important;
+    border-color: var(--bs3-list-group-border) !important;
+    color: var(--bs3-list-group-text) !important;
+}
+
+.ascd-modal .ascd-type-list .list-group-item,
+.ascd-modal .ascd-type-list .list-group-item:hover,
+.ascd-modal .ascd-type-list .list-group-item:focus {
+    background-color: var(--bs3-list-group-bg) !important;
+    border-color: var(--bs3-list-group-border) !important;
+    color: var(--bs3-list-group-text) !important;
+}
+
+.ascd-modal .ascd-type-list .list-group-item.active,
+.ascd-modal .ascd-type-list .list-group-item.active:hover,
+.ascd-modal .ascd-type-list .list-group-item.active:focus {
+    background-color: var(--bs3-list-group-active-bg) !important;
+    border-color: var(--bs3-list-group-active-border) !important;
+    color: var(--bs3-list-group-active-text) !important;
+}
+
+.ascd-modal .ascd-variables-body .list-group-item small {
+    color: var(--bs3-list-group-text) !important;
+    opacity: 0.9;
+}
+
+/* Yes/No label */
+.yesno-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.yesno-chip {
+  font-size: 28px;
+  padding: 10px 18px;
+  border-radius: 6px;
+  font-weight: 700;
+  letter-spacing: .5px;
+}
+
+.yes-chip {
+  background: #5cb85c;
+  color: #fff;
+}
+
+.no-chip {
+  background: #d9534f;
+  color: #fff;
+}
+
+/** End Chart Page and Designer **/
+
+

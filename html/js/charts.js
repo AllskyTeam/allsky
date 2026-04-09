@@ -118,16 +118,7 @@ class ASCHARTMANAGER {
             <div class="container-fluid">
               <div class="collapse navbar-collapse">
                 <ul class="nav navbar-nav">
-                  ${this.opts.designer && this.opts.designer.enabled ? `
-                  <li>
-                  </li>` : ``}
-                </ul>
-                <ul class="nav navbar-nav navbar-right">
-                  <li>
-                    <button type="button" class="btn btn-default navbar-btn" id="as-charts-toolbox-options" title="Options">
-                      <i class="fa-solid fa-gear"></i>
-                    </button>
-                  </li>
+                  <li><h3>Available charts</h3></li>
                 </ul>
               </div>
             </div>
@@ -239,7 +230,7 @@ class ASCHARTMANAGER {
 
         </form>
       </div>
-      <div class="modal-footer" style="background:#fafafa;">
+      <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
         <button type="button" id="asChartsOptionsSave" class="btn btn-primary">Save</button>
       </div>

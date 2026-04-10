@@ -90,9 +90,13 @@ class ALLSKYDB:
 
                         # Ensure columns exist in the database, creating or modifying as needed
                         if primary_key is not None and columns is not None:
-                            added_columns = database_conn.ensure_columns(
-                                table_name, columns, primary_key=[primary_key]
-                            )
+                            try:
+                                added_columns = database_conn.ensure_columns(
+                                    table_name, columns, primary_key=[primary_key]
+                                )
+                            except:
+                                print(f"\nERROR: Unable to add columns to table '{table_name}'; skipping.\n")
+                                continue
 
                             # Debug output of added/modified columns
                             if self.debug_mode:

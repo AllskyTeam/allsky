@@ -2187,21 +2187,32 @@ def _update_database(database_conn: Any, data: dict, structure: dict, source: st
                 primary_key_type = structure.get('database', {}).get('pk_type', 'int')
                 primary_key_source = structure.get('database', {}).get('pk_source', 'now')
                 primary_key_value = get_primary_key_value(structure)
+
+                if primary_key in data:
+                    primary_key_value = data[primary_key].get("value")
                 
                 columns = {
                     primary_key: primary_key_type,
+                    "id": "INT",
                     "timestamp": "int"
                 }
 
                 row = {
-                    "id": primary_key_value,
                     "timestamp": builtins.int(time.time())
                 }
+
+                if primary_key == "id":
+                    row["id"] = primary_key_value
+                else:
+                    row[primary_key] = primary_key_value
+                    row["id"] = primary_key_value
                 
                 include_all = structure.get('database', {}).get('include_all', 'true')
                 include_all = to_bool(include_all)
                 if include_all:
                     for key, entry in data.items():
+                        if key == primary_key:
+                            continue
                         columns[key] = infer_sql_type(entry)
                         row[key] = entry.get("value")
                 else:
@@ -2209,6 +2220,8 @@ def _update_database(database_conn: Any, data: dict, structure: dict, source: st
                         include_data = entry.get('database', {}).get('include', 'false')
                         include_data = to_bool(include_data)
                         if (include_data):
+                            if key == primary_key:
+                                continue
                             columns[key] = infer_sql_type(entry)
                             row[key] = entry.get("value")
                                            
@@ -2401,30 +2414,36 @@ def save_extra_data(file_name: str = '', extra_data: dict = {}, source: str = ''
 def saveExtraData(file_name: str = '', extra_data: dict = {}, source: str = '', structure: dict = {}, custom_fields: dict = {}, event: str = 'postcapture'):
 
     #try:
-    extra_data_path = get_extra_dir(True)
-    if extra_data_path is not None:
-        checkAndCreateDirectory(extra_data_path)
-        create_file_web_server_access(extra_data_path)
+    source = source or ''
+    formatted_extra_data = extra_data
 
-        file_extension = Path(file_name).suffix
-        extra_data_filename = os.path.join(extra_data_path, file_name)
-        allsky_tmp = get_environment_variable("ALLSKY_TMP")
-        with tempfile.NamedTemporaryFile(mode="w", dir=allsky_tmp, delete=False) as temp_file:
-            if file_extension == '.json':
-                extra_data = format_extra_data_json(extra_data, structure, source)
-            if len(custom_fields) > 0:
-                for key, value in custom_fields.items():
-                    extra_data[key] = value
-            extra_data = json.dumps(extra_data, indent=4)
-            temp_file.write(extra_data)
-            temp_file_name = temp_file.name
+    if structure:
+        formatted_extra_data = format_extra_data_json(extra_data, structure, source)
 
-        shutil.move(temp_file_name, extra_data_filename)
-        os.chmod(extra_data_filename, 0o770)
-        set_permissions(extra_data_filename)
+    if len(custom_fields) > 0:
+        for key, value in custom_fields.items():
+            formatted_extra_data[key] = value
 
-        if 'database' in structure:
-            update_database(structure, extra_data, event, source)
+    extra_data_json = json.dumps(formatted_extra_data, indent=4)
+
+    if file_name:
+        extra_data_path = get_extra_dir(True)
+        if extra_data_path is not None:
+            checkAndCreateDirectory(extra_data_path)
+            create_file_web_server_access(extra_data_path)
+
+            extra_data_filename = os.path.join(extra_data_path, file_name)
+            allsky_tmp = get_environment_variable("ALLSKY_TMP")
+            with tempfile.NamedTemporaryFile(mode="w", dir=allsky_tmp, delete=False) as temp_file:
+                temp_file.write(extra_data_json)
+                temp_file_name = temp_file.name
+
+            shutil.move(temp_file_name, extra_data_filename)
+            os.chmod(extra_data_filename, 0o770)
+            set_permissions(extra_data_filename)
+
+    if 'database' in structure:
+        update_database(structure, extra_data_json, event, source)
     #except Exception as e:
     #    me = os.path.basename(__file__)
     #    eType, eObject, eTraceback = sys.exc_info()

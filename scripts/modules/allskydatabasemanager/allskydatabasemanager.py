@@ -167,7 +167,6 @@ class ALLSKYDATABASEMANAGER:
     def _run_with_retry(self, cur, fn: str, sql: str, params: tuple[Any, ...]):
         delay = self.retry_backoff
         last_exception = None
-
         for attempt in range(self.retry_attempts):
             try:
                 t0 = time.perf_counter()

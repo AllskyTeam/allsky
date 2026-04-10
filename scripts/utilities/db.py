@@ -24,7 +24,7 @@ try:
     # Get the path to the Allsky Python virtual environment
     venv_dir = os.environ['ALLSKY_PYTHON_VENV']
 except KeyError:
-    # Environment not initialized — exit with an error
+    # Environment not initialized - exit with an error
     print("ERROR: This program needs to be run in an Allsky environment with variables.sh or variables.json sourced in.")
     sys.exit(1)
 

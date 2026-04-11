@@ -3577,13 +3577,14 @@ setup_database()
 {
 	#
 	# Create the sqlite database to prevent permission errors
+	# Only create the database and ask the user what they want 
+	# to do for a new install.
 	#
-	sqlite3 "${ALLSKY_DATABASE}" ".databases"
-	sudo chown "${ALLSKY_OWNER}":"${ALLSKY_WEBSERVER_OWNER}" "${ALLSKY_DATABASE}"
-	sudo chmod 664 "${ALLSKY_DATABASE}"
-
-	local TMP="${ALLSKY_LOGS}/database.log"
-	sudo "${ALLSKY_UTILITIES}/database_manager.py" --auto --logfile "${TMP}"
+	if [ ! -f "${ALLSKY_DATABASE}" ]; then	
+		sqlite3 "${ALLSKY_DATABASE}" ".databases" > /dev/null 2>&1
+		sudo chown "${ALLSKY_OWNER}":"${ALLSKY_WEBSERVER_OWNER}" "${ALLSKY_DATABASE}"
+		sudo chmod 664 "${ALLSKY_DATABASE}"
+	fi
 }
 
 ####

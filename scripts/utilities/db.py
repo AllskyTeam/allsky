@@ -121,13 +121,14 @@ class ALLSKYDB:
     # ---------------------------------------------------------------------
     # Run arbitrary SQL queries against the database
     # ---------------------------------------------------------------------
-    def run(self, query, return_format, include_columns=False):
+    def run(self, query, return_format, include_columns=False, format_explicitly_set=False):
         """
         Execute an SQL query and print results in the desired format.
 
         :param query: SQL query string to execute
         :param return_format: Output format ('tab' or 'json')
         :param include_columns: Include column names in the output
+        :param format_explicitly_set: True when --format was supplied on the CLI
         """
         result = ''
         database_conn = shared.get_database_connection(silent=not self.debug_mode)
@@ -151,27 +152,31 @@ class ALLSKYDB:
                         else:
                             result = query_result['rows']
                     elif return_format == 'tab':
-                        # Format as aligned plain text
+                        # Format as aligned plain text unless tab output was explicitly requested
                         rows = query_result.get("rows", [])
                         keys = list(rows[0].keys()) if rows else []
-                        widths = {}
-                        for key in keys:
-                            widths[key] = len(str(key))
-
-                        for row in rows:
-                            for key in keys:
-                                widths[key] = max(widths[key], len(str(row.get(key, ""))))
-
                         lines = []
-                        if include_columns and keys:
-                            header = "  ".join(str(key).ljust(widths[key]) for key in keys)
-                            separator = "  ".join("-" * widths[key] for key in keys)
-                            lines.append(header)
-                            lines.append(separator)
+                        if format_explicitly_set:
+                            for row in rows:
+                                lines.append("\t".join(str(row.get(key, "")) for key in keys))
+                        else:
+                            widths = {}
+                            for key in keys:
+                                widths[key] = len(str(key))
 
-                        for row in rows:
-                            line = "  ".join(str(row.get(key, "")).ljust(widths[key]) for key in keys)
-                            lines.append(line.rstrip())
+                            for row in rows:
+                                for key in keys:
+                                    widths[key] = max(widths[key], len(str(row.get(key, ""))))
+
+                            if include_columns and keys:
+                                header = "  ".join(str(key).ljust(widths[key]) for key in keys)
+                                separator = "  ".join("-" * widths[key] for key in keys)
+                                lines.append(header)
+                                lines.append(separator)
+
+                            for row in rows:
+                                line = "  ".join(str(row.get(key, "")).ljust(widths[key]) for key in keys)
+                                lines.append(line.rstrip())
                         result = "\n".join(lines)
                 else:
                     # Non-select queries (INSERT/UPDATE/DELETE)
@@ -184,7 +189,8 @@ class ALLSKYDB:
             result = 'Connection failed'
 
         # Output result and exit with appropriate code
-        if query_result['type'] == 'select' or not query_result['ok']:
+        query_type = query_result.get('type')
+        if query_type == 'select' or not query_result['ok']:
             print(result)
         else:
             self._print_status(result)
@@ -403,11 +409,15 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     
+    format_explicitly_set = args.format is not None
+
     # --format and --columns only allowed with --run
     if args.format and not args.run:
         parser.error("--format can only be used together with --run")
     if args.columns and not args.run:
         parser.error("--columns can only be used together with --run")
+    if args.columns and args.format == "tab":
+        parser.error("--columns cannot be used together with --format tab")
 
     # Default format when --run is used but no --format given
     if args.run and not args.format:
@@ -442,7 +452,7 @@ if __name__ == "__main__":
             sys.exit(0)
             
         if args.run:
-            allsky_db.run(args.run, args.format, args.columns)
+            allsky_db.run(args.run, args.format, args.columns, format_explicitly_set)
             sys.exit(0)
             
         if args.purge:

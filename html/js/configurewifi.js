@@ -100,6 +100,7 @@ class CONFIGUREWIFI {
             return;
         }
 
+        this.#showAlert($tab, "", "");
         this.#setLoadingState($tab, true, "Scanning for available Wi-Fi networks...");
 
         $.ajax({
@@ -245,6 +246,7 @@ class CONFIGUREWIFI {
         const $tab = this.#getTab(interfaceName);
 
         this.$connectModal.modal("hide");
+        this.#showAlert($tab, "", "");
         this.#setLoadingState($tab, true, "Connecting to Wi-Fi network...");
         this.$connectButton.prop("disabled", true);
 
@@ -306,7 +308,30 @@ class CONFIGUREWIFI {
     }
 
     #showAlert($tab, type, message) {
-        return;
+        let $alert = $tab.children(".as-wifi-alert").first();
+        if ($alert.length === 0) {
+            $alert = $('<div class="as-wifi-alert alert hidden" role="alert"></div>');
+            const $toolbar = $tab.children(".as-wifi-toolbar").first();
+            if ($toolbar.length > 0) {
+                $alert.insertAfter($toolbar);
+            } else {
+                $tab.prepend($alert);
+            }
+        }
+
+        const text = String(message || "").trim();
+        if (text === "" || String(type || "").trim() === "") {
+            $alert
+                .addClass("hidden")
+                .removeClass("alert-success alert-danger alert-warning alert-info")
+                .empty();
+            return;
+        }
+
+        $alert
+            .removeClass("hidden alert-success alert-danger alert-warning alert-info")
+            .addClass("alert-" + type)
+            .text(text);
     }
 
     #getTab(interfaceName) {

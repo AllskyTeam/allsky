@@ -335,6 +335,15 @@ class WIFIUTIL extends UTILBASE
         return strpos($message, 'no network with ssid') !== false;
     }
 
+    private function isNetworkNotFound(array $result): bool
+    {
+        $message = strtolower(trim((string) ($result['stderr'] ?: $result['stdout'])));
+        return
+            strpos($message, 'no network with ssid') !== false ||
+            strpos($message, 'could not find access point') !== false ||
+            strpos($message, 'the wifi network could not be found') !== false;
+    }
+
     private function cleanWifiErrorMessage(string $message): string
     {
         $message = trim($message);
@@ -423,6 +432,36 @@ class WIFIUTIL extends UTILBASE
         ];
     }
 
+    private function ensureWifiRadioEnabled(): array
+    {
+        $status = $this->runNmcliWithSudo([self::NMCLI, 'radio', 'wifi']);
+        $current = strtolower(trim((string) $status['stdout']));
+        if ($status['ok'] && ($current === 'enabled' || $current === '')) {
+            return ['ok' => true, 'message' => ''];
+        }
+
+        $enable = $this->runNmcliWithSudo([self::NMCLI, 'radio', 'wifi', 'on']);
+        if (!$enable['ok']) {
+            $message = $this->cleanWifiErrorMessage((string) ($enable['stderr'] ?: $enable['stdout']));
+            if ($message === '') {
+                $message = 'Unable to enable Wi-Fi in NetworkManager.';
+            }
+
+            return ['ok' => false, 'message' => $message];
+        }
+
+        $verify = $this->runNmcliWithSudo([self::NMCLI, 'radio', 'wifi']);
+        $current = strtolower(trim((string) $verify['stdout']));
+        if ($verify['ok'] && ($current === 'enabled' || $current === '')) {
+            return ['ok' => true, 'message' => ''];
+        }
+
+        return [
+            'ok' => false,
+            'message' => 'Wi-Fi is disabled in NetworkManager and could not be enabled.',
+        ];
+    }
+
     private function rescanForNetwork(string $interface, string $ssid): void
     {
         $argv = [
@@ -496,6 +535,7 @@ class WIFIUTIL extends UTILBASE
             'connection', 'modify',
             $connectionName,
             'connection.autoconnect', 'yes',
+            'connection.interface-name', $interface,
             '802-11-wireless.hidden', 'yes',
         ];
 
@@ -516,44 +556,25 @@ class WIFIUTIL extends UTILBASE
             '--wait', '20',
             'connection', 'up',
             'id', $connectionName,
+            'ifname', $interface,
         ]);
     }
 
     private function isNetworkVisible(string $interface, string $ssid, string $bssid): bool
     {
-        $result = $this->runCommand([
-            self::SUDO, '-n',
-            self::NMCLI,
-            '--colors', 'no',
-            '--mode', 'multiline',
-            '--fields', 'SSID,BSSID',
-            'device', 'wifi', 'list',
-            'ifname', $interface,
-            '--rescan', 'no',
-        ]);
-
-        if (!$result['ok']) {
+        $networks = $this->scanNetworks($interface);
+        if (count($networks) === 0) {
             return true;
         }
 
-        $currentSsid = '';
-        $currentBssid = '';
-        foreach (preg_split('/\r?\n/', $result['stdout']) as $line) {
-            if (preg_match('/^SSID:\s*(.*)$/', $line, $matches)) {
-                $currentSsid = trim($matches[1]);
-                continue;
-            }
-
-            if (preg_match('/^BSSID:\s*(.*)$/', $line, $matches)) {
-                $currentBssid = strtolower(trim($matches[1]));
-                $ssidMatches = ($ssid !== '' && $currentSsid === $ssid);
-                $bssidMatches = ($bssid !== '' && $currentBssid === strtolower($bssid));
-                if ($ssidMatches || $bssidMatches) {
-                    return true;
-                }
-
-                $currentSsid = '';
-                $currentBssid = '';
+        $targetBssid = strtolower($bssid);
+        foreach ($networks as $network) {
+            $currentSsid = trim((string) ($network['ssid'] ?? ''));
+            $currentBssid = strtolower(trim((string) ($network['bssid'] ?? '')));
+            $ssidMatches = ($ssid !== '' && $currentSsid === $ssid);
+            $bssidMatches = ($targetBssid !== '' && $currentBssid === $targetBssid);
+            if ($ssidMatches || $bssidMatches) {
+                return true;
             }
         }
 
@@ -647,6 +668,10 @@ class WIFIUTIL extends UTILBASE
     public function getScan(): void
     {
         $interface = $this->getRequestedInterface($_GET['interface'] ?? null);
+        $radio = $this->ensureWifiRadioEnabled();
+        if (!$radio['ok']) {
+            $this->send500($radio['message']);
+        }
         $currentLink = $this->getCurrentLink($interface);
         $networks = $this->deduplicateNetworks($this->scanNetworks($interface), $currentLink);
 
@@ -701,13 +726,15 @@ class WIFIUTIL extends UTILBASE
             $this->send400('A password is required for this Wi-Fi network.');
         }
 
-        $this->rescanForNetwork($interface, $ssid);
-        if (!$this->isNetworkVisible($interface, $ssid, $bssid)) {
+        $radio = $this->ensureWifiRadioEnabled();
+        if (!$radio['ok']) {
             $this->sendResponse([
                 'ok' => false,
-                'message' => 'The selected Wi-Fi network is no longer visible on this adapter. Refresh the list and try again.',
+                'message' => $radio['message'],
             ]);
         }
+
+        $this->rescanForNetwork($interface, $ssid);
 
         $target = $ssid !== '' ? $ssid : $bssid;
         $argv = [
@@ -717,18 +744,13 @@ class WIFIUTIL extends UTILBASE
             'ifname', $interface,
         ];
 
-        if ($ssid !== '' && $bssid !== '') {
-            $argv[] = 'bssid';
-            $argv[] = $bssid;
-        }
-
         if (!$isOpen) {
             $argv[] = 'password';
             $argv[] = $password;
         }
 
         $result = $this->runNmcliWithSudo($argv);
-        if (!$result['ok'] && $this->isNoSsidFound($result)) {
+        if (!$result['ok'] && $this->isNetworkNotFound($result)) {
             $retryArgv = [
                 self::NMCLI,
                 '--wait', '20',
@@ -746,6 +768,8 @@ class WIFIUTIL extends UTILBASE
             if (!$result['ok'] && $ssid !== '') {
                 $result = $this->connectUsingProfile($interface, $ssid, $password, $isOpen);
             }
+        } elseif (!$result['ok'] && $ssid !== '') {
+            $result = $this->connectUsingProfile($interface, $ssid, $password, $isOpen);
         }
 
         if (!$result['ok']) {
@@ -756,11 +780,13 @@ class WIFIUTIL extends UTILBASE
                 ]);
             }
 
-            $plainResult = $this->runCommand($argv);
-            if ($plainResult['ok']) {
-                $result = $plainResult;
-            } elseif (trim((string) ($plainResult['stderr'] ?: $plainResult['stdout'])) !== '') {
-                $result = $plainResult;
+            if ($result['stderr'] === '' && $result['stdout'] === '') {
+                $plainResult = $this->runCommand($argv);
+                if ($plainResult['ok']) {
+                    $result = $plainResult;
+                } elseif (trim((string) ($plainResult['stderr'] ?: $plainResult['stdout'])) !== '') {
+                    $result = $plainResult;
+                }
             }
         }
 
@@ -776,10 +802,8 @@ class WIFIUTIL extends UTILBASE
             ]);
         }
 
-        $message = trim((string) $result['stdout']);
-        if ($message === '') {
-            $message = 'Connected to ' . ($ssid !== '' ? $ssid : $target) . ' using ' . $interface . '.';
-        }
+        $connectedName = $ssid !== '' ? $ssid : $target;
+        $message = 'Connected to ' . $connectedName . ' using ' . $interface . '.';
 
         $this->sendResponse([
             'ok' => true,

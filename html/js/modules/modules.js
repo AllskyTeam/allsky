@@ -2750,6 +2750,7 @@ class MODULESEDITOR {
 		const tabContent = list.find('.tab-content');
 		const installerTab = $('#module-installer-tab');
 		const installerGroups = $('#module-installer-groups');
+		const coreTab = $('#module-core-tab');
 		const suggestedTab = $('#module-suggested-tab');
 		const fixedHeight = installerTab.hasClass('active') ? (fixed.outerHeight(true) || 0) : 0;
 
@@ -2799,6 +2800,13 @@ class MODULESEDITOR {
 		installerGroups.css({
 			'height': `${installerGroupsHeight}px`,
 			'max-height': `${installerGroupsHeight}px`,
+			'overflow-y': 'auto',
+			'overflow-x': 'hidden'
+		});
+
+		coreTab.css({
+			'height': `${listHeight}px`,
+			'max-height': `${listHeight}px`,
 			'overflow-y': 'auto',
 			'overflow-x': 'hidden'
 		});
@@ -3122,6 +3130,7 @@ class MODULESEDITOR {
 		this.#installerData = result;
 		this.#installerBranch = result.branch;
 		$('#module-installer-repo').text(result.repo || '');
+		this.#renderCoreModules(result.coreModules || []);
 
 		const branchSelect = $('#module-installer-branch');
 		const currentOptions = Array.from(branchSelect.find('option')).map((option) => option.value);
@@ -3240,8 +3249,8 @@ class MODULESEDITOR {
 					<button type="button" class="btn btn-primary module-installer-action" data-action="status" data-module="${this.#escapeHtml(module.module)}" title="Status"><i class="fa-solid fa-circle-info fa-fw"></i></button>
 				</div>
 			`;
-			if (module.helplink) {
-				actions += ` <div class="btn-group" role="group"><a class="btn btn-info" href="${this.#escapeHtml(module.helplink)}" target="_blank" rel="noopener noreferrer" title="Help"><i class="fa-solid fa-circle-question fa-fw"></i></a></div>`;
+			if (module.docs) {
+				actions += ` <div class="btn-group" role="group"><a class="btn btn-info" href="${this.#escapeHtml(module.docs)}" target="_blank" rel="noopener noreferrer" title="Docs"><i class="fa-solid fa-circle-question fa-fw"></i></a></div>`;
 			}
 			if (module.installed) {
 				if (module.updateAvailable) {
@@ -3344,6 +3353,119 @@ class MODULESEDITOR {
 		}
 	}
 
+	#renderCoreModules(coreModules) {
+		const container = $('#module-core-groups');
+		container.empty();
+
+		const modules = Array.isArray(coreModules) ? coreModules : [];
+		if (modules.length === 0) {
+			container.append(`
+				<div class="panel panel-default">
+					<div class="panel-body">
+						<div class="alert alert-info text-center" style="margin-bottom: 0;">
+							<h4>No Core Modules Found</h4>
+							<p>No built-in Allsky core modules were detected in scripts/modules.</p>
+						</div>
+					</div>
+				</div>
+			`);
+			return;
+		}
+
+		container.append(`
+			<div class="panel panel-info">
+				<div class="panel-body">
+					<p class="help-block" style="margin-bottom: 0;">Core modules are built into Allsky. They are shown here for reference and documentation only, and cannot be installed, updated, or removed from the package manager.</p>
+				</div>
+			</div>
+		`);
+
+		const groupedModules = {};
+		modules.forEach((module) => {
+			const groupName = module.group || 'Allsky Core';
+			if (groupedModules[groupName] === undefined) {
+				groupedModules[groupName] = [];
+			}
+			groupedModules[groupName].push(module);
+		});
+
+		Object.keys(groupedModules).sort((a, b) => a.localeCompare(b)).forEach((groupName) => {
+			const groupId = `module-core-group-${this.#escapeHtml(groupName).replace(/[^a-zA-Z0-9_-]/g, '-')}`;
+			let groupHtml = `
+				<div class="panel panel-default panel-shadow">
+					<div class="panel-heading">
+						<a class="module-core-toggle collapsed" data-toggle="collapse" href="#${groupId}" aria-expanded="false" aria-controls="${groupId}">
+							<i class="fa-solid fa-chevron-right fa-fw"></i> <span>${this.#escapeHtml(groupName)}</span>
+							<span class="pull-right text-muted">${groupedModules[groupName].length} module${groupedModules[groupName].length === 1 ? '' : 's'}</span>
+						</a>
+					</div>
+					<div id="${groupId}" class="panel-collapse collapse">
+						<div class="panel-body">
+							<div class="list-group">
+			`;
+
+			groupedModules[groupName].forEach((module) => {
+				let actions = '';
+				if (module.docs) {
+					actions += `<div class="btn-group" role="group"><a class="btn btn-info" href="${this.#escapeHtml(module.docs)}" target="_blank" rel="noopener noreferrer" title="Docs"><i class="fa-solid fa-circle-question fa-fw"></i></a></div>`;
+				}
+
+				const errors = [].concat(module.sourceErrors || []);
+				const errorText = errors.length > 0
+					? this.#escapeHtml(errors.join(' | '))
+					: '';
+				const replacedBy = module.replacedBy
+					? `<div class="text-warning"><small>Replaced by ${this.#escapeHtml(module.replacedBy)}</small></div>`
+					: '';
+				const shortDescription = this.#escapeHtml(module.description || '');
+				let statusIcon = '<i class="fa-solid fa-circle-check text-success" title="Core Module"></i>';
+				if (module.deprecated) {
+					statusIcon = '<i class="fa-solid fa-triangle-exclamation text-warning" title="Deprecated"></i>';
+				} else if (!module.valid) {
+					statusIcon = '<i class="fa-solid fa-circle-xmark text-danger" title="Invalid"></i>';
+				}
+				const versionLine = `
+					<span class="badge">Installed: ${this.#escapeHtml(module.installedVersion || 'Built-in')}</span>
+					<span class="badge">Available: ${this.#escapeHtml(module.sourceVersion || 'Built-in')}</span>
+				`;
+
+				groupHtml += `
+					<div class="list-group-item" data-module="${this.#escapeHtml(module.module)}">
+						<div class="row">
+							<div class="col-sm-8">
+								<div class="row">
+									<div class="col-xs-12">
+										<h4>
+											${statusIcon} ${this.#escapeHtml(module.displayName)}
+										</h4>
+									</div>
+								</div>
+								<div class="row">
+									<div class="col-xs-12">
+										<p class="text-muted">${shortDescription}</p>
+									</div>
+								</div>
+								<div class="row">
+									<div class="col-xs-12">
+										<p class="help-block"><span class="badge">${this.#escapeHtml(module.module)}</span> ${versionLine}</p>
+									</div>
+								</div>
+								${replacedBy ? `<div class="row"><div class="col-xs-12">${replacedBy}</div></div>` : ''}
+								${errorText ? `<div class="row"><div class="col-xs-12"><div class="text-danger"><small>${errorText}</small></div></div></div>` : ''}
+							</div>
+							<div class="col-sm-4 text-right">
+								${actions ? `<div class="btn-toolbar pull-right" role="toolbar">${actions}</div>` : ''}
+							</div>
+						</div>
+					</div>
+				`;
+			});
+
+			groupHtml += '</div></div></div></div>';
+			container.append(groupHtml);
+		});
+	}
+
 	#renderSuggestedModules(suggestedData, installerData = null) {
 		const container = $('#module-suggested-groups');
 		container.empty();
@@ -3435,8 +3557,8 @@ class MODULESEDITOR {
 					: 'label-warning';
 				let actions = '';
 
-				if (module && module.helplink) {
-					actions += `<div class="btn-group" role="group"><a class="btn btn-info" href="${this.#escapeHtml(module.helplink)}" target="_blank" rel="noopener noreferrer" title="Help"><i class="fa-solid fa-circle-question fa-fw"></i></a></div>`;
+				if (module && module.docs) {
+					actions += `<div class="btn-group" role="group"><a class="btn btn-info" href="${this.#escapeHtml(module.docs)}" target="_blank" rel="noopener noreferrer" title="Docs"><i class="fa-solid fa-circle-question fa-fw"></i></a></div>`;
 				}
 				if (module && !module.installed && !module.deprecated && module.valid) {
 					actions += ` <div class="btn-group" role="group"><button type="button" class="btn btn-success module-installer-action" data-action="install" data-module="${safeModuleName}" title="Install"><i class="fa-solid fa-plus fa-fw"></i></button></div>`;
@@ -3788,6 +3910,14 @@ class MODULESEDITOR {
 		$(document).on('shown.bs.collapse hidden.bs.collapse', '#module-installer-groups .panel-collapse', (event) => {
 			const collapse = $(event.currentTarget);
 			const icon = collapse.closest('.panel').find('.module-installer-toggle .fa-solid').first();
+			icon.attr('class', collapse.hasClass('in') ? 'fa-solid fa-chevron-down fa-fw' : 'fa-solid fa-chevron-right fa-fw');
+			this.#adjustInstallerModalHeight();
+		});
+
+		$(document).off('shown.bs.collapse hidden.bs.collapse', '#module-core-groups .panel-collapse');
+		$(document).on('shown.bs.collapse hidden.bs.collapse', '#module-core-groups .panel-collapse', (event) => {
+			const collapse = $(event.currentTarget);
+			const icon = collapse.closest('.panel').find('.module-core-toggle .fa-solid').first();
 			icon.attr('class', collapse.hasClass('in') ? 'fa-solid fa-chevron-down fa-fw' : 'fa-solid fa-chevron-right fa-fw');
 			this.#adjustInstallerModalHeight();
 		});

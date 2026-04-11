@@ -134,7 +134,7 @@ function DisplayModule()
                     </ul>
                     <ul class="nav navbar-nav navbar-right">
                         <li>
-                            <div class="btn btn-lg navbar-btn" id="module-installer-manager" data-toggle="tooltip" data-container="body" data-placement="top" title="Module Installer"><i class="fa-solid fa-box-open"></i></div>
+                            <div class="btn btn-lg navbar-btn" id="module-installer-manager" data-toggle="tooltip" data-container="body" data-placement="top" title="Module package Manager"><i class="fa-solid fa-box-open"></i></div>
                         </li>
                         <li>
                             <div class="btn btn-lg navbar-btn" id="device-manager" data-toggle="tooltip" data-container="body" data-placement="top" title="Device Manager"><i class="fa-solid fa-wrench"></i></div>
@@ -302,7 +302,7 @@ function DisplayModule()
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title">Module Installer</h4>
+                <h4 class="modal-title">Module package Manager</h4>
             </div>
             <div class="modal-body">
                 <nav class="navbar navbar-default" style="margin-bottom: 15px;">
@@ -322,6 +322,7 @@ function DisplayModule()
                 </nav>
                 <ul class="nav nav-tabs" role="tablist">
                     <li role="presentation" class="active"><a href="#module-installer-tab" aria-controls="module-installer-tab" role="tab" data-toggle="tab">Installer</a></li>
+                    <li role="presentation"><a href="#module-core-tab" aria-controls="module-core-tab" role="tab" data-toggle="tab">Core Modules</a></li>
                     <li role="presentation"><a href="#module-suggested-tab" aria-controls="module-suggested-tab" role="tab" data-toggle="tab">Suggested</a></li>
                 </ul>
                 <div id="module-installer-list">
@@ -356,6 +357,9 @@ function DisplayModule()
                                 <div id="module-installer-summary"></div>
                             </div>
                             <div id="module-installer-groups"></div>
+                        </div>
+                        <div role="tabpanel" class="tab-pane" id="module-core-tab">
+                            <div id="module-core-groups"></div>
                         </div>
                         <div role="tabpanel" class="tab-pane" id="module-suggested-tab">
                             <div id="module-suggested-groups"></div>

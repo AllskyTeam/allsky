@@ -65,8 +65,15 @@ class MODULEINSTALLERUTIL extends UTILBASE
             foreach ($this->getSourceModuleDirectories() as $moduleName => $modulePath) {
                 $modules[] = $this->buildModuleRecord($moduleName, $modulePath);
             }
+            $coreModules = [];
+            foreach ($this->getCoreModuleFiles() as $moduleName => $moduleFile) {
+                $coreModules[] = $this->buildCoreModuleRecord($moduleName, $moduleFile);
+            }
 
             usort($modules, static function (array $a, array $b): int {
+                return strcasecmp($a['displayName'], $b['displayName']);
+            });
+            usort($coreModules, static function (array $a, array $b): int {
                 return strcasecmp($a['displayName'], $b['displayName']);
             });
 
@@ -75,6 +82,7 @@ class MODULEINSTALLERUTIL extends UTILBASE
                 'branches' => $branches,
                 'repo' => $this->repoUrl,
                 'modules' => $modules,
+                'coreModules' => $coreModules,
                 'currentVersion' => $this->getCurrentVersion(),
             ]);
         } catch (Throwable $e) {
@@ -167,7 +175,7 @@ class MODULEINSTALLERUTIL extends UTILBASE
         $displayName = (string)($sourceMeta['name'] ?? $installedMeta['name'] ?? $moduleName);
         $description = (string)($sourceMeta['description'] ?? $installedMeta['description'] ?? $moduleName);
         $group = (string)($sourceMeta['group'] ?? $installedMeta['group'] ?? 'Ungrouped');
-        $helpLink = (string)($sourceMeta['helplink'] ?? $installedMeta['helplink'] ?? '');
+        $docsLink = (string)($sourceMeta['docs'] ?? $installedMeta['docs'] ?? $sourceMeta['helplink'] ?? $installedMeta['helplink'] ?? '');
         $installedVersion = $installedMeta['version'] ?? null;
         $sourceVersion = $sourceMeta['version'] ?? null;
         $deprecated = $this->toBool($sourceMeta['deprecation']['deprecated'] ?? $installedMeta['deprecation']['deprecated'] ?? false);
@@ -179,7 +187,7 @@ class MODULEINSTALLERUTIL extends UTILBASE
             'displayName' => $displayName,
             'description' => $description,
             'group' => $group,
-            'helplink' => $helpLink,
+            'docs' => $docsLink,
             'installed' => $installed,
             'installedPath' => $installedInfo['path'] ?? '',
             'installedVersion' => $installedVersion,
@@ -217,6 +225,62 @@ class MODULEINSTALLERUTIL extends UTILBASE
 
         ksort($modules, SORT_NATURAL | SORT_FLAG_CASE);
         return $modules;
+    }
+
+    private function getCoreModuleFiles(): array
+    {
+        $modules = [];
+        $corePath = ALLSKY_SCRIPTS . '/modules';
+        if (!is_dir($corePath)) {
+            return $modules;
+        }
+
+        foreach (scandir($corePath) ?: [] as $entry) {
+            if ($entry === '.' || $entry === '..' || $entry === 'allsky_shared.py' || $entry === 'allsky_base.py') {
+                continue;
+            }
+            if (!str_starts_with($entry, 'allsky_') || !str_ends_with($entry, '.py')) {
+                continue;
+            }
+
+            $moduleName = substr($entry, 0, -3);
+            $path = $corePath . '/' . $entry;
+            if (is_file($path)) {
+                $modules[$moduleName] = $path;
+            }
+        }
+
+        ksort($modules, SORT_NATURAL | SORT_FLAG_CASE);
+        return $modules;
+    }
+
+    private function buildCoreModuleRecord(string $moduleName, string $moduleFile): array
+    {
+        $moduleInfo = $this->readModuleInfo($moduleName, $moduleFile, dirname($moduleFile), 'core');
+        $meta = $moduleInfo['meta_data'] ?? [];
+        $docsLink = (string)($meta['docs'] ?? $meta['helplink'] ?? '');
+        $version = $meta['version'] ?? null;
+
+        return [
+            'module' => $moduleName,
+            'displayName' => (string)($meta['name'] ?? $moduleName),
+            'description' => (string)($meta['description'] ?? $moduleName),
+            'group' => (string)($meta['group'] ?? 'Allsky Core'),
+            'docs' => $docsLink,
+            'installed' => true,
+            'installedPath' => dirname($moduleFile),
+            'installedVersion' => $version,
+            'sourceVersion' => $version,
+            'updateAvailable' => false,
+            'deprecated' => $this->toBool($meta['deprecation']['deprecated'] ?? false),
+            'replacedBy' => (string)($meta['deprecation']['replacedby'] ?? ''),
+            'migrationRequired' => false,
+            'differingFlows' => [],
+            'valid' => $moduleInfo['valid'] ?? false,
+            'sourceErrors' => $moduleInfo['errors'] ?? [],
+            'installedErrors' => [],
+            'core' => true,
+        ];
     }
 
     private function findInstalledModule(string $moduleName): ?array

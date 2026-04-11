@@ -182,6 +182,7 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" || ${1} == "--force" ]]; then
 
 	# Database-related variables.
 	ALLSKY_DATABASE="${ALLSKY_MYFILES_DIR}/allsky.db"
+	ALLSKY_DATABASE_COMMAND="${ALLSKY_UTILITIES}/db.py}"
 	ALLSKY_DATABASES="${ALLSKY_DATABASE}"	# TODO: remove old name
 	ALLSKY_IMAGES_TABLE="allsky_image"
 	ALLSKY_STARTRAILS_TABLE="allsky_startrails"

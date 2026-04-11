@@ -24,7 +24,7 @@ try:
     # Get the path to the Allsky Python virtual environment
     venv_dir = os.environ['ALLSKY_PYTHON_VENV']
 except KeyError:
-    # Environment not initialized — exit with an error
+    # Environment not initialized - exit with an error
     print("ERROR: This program needs to be run in an Allsky environment with variables.sh or variables.json sourced in.")
     sys.exit(1)
 
@@ -57,6 +57,10 @@ class ALLSKYDB:
         :param debug: Enables verbose debug output if True
         """
         self.debug_mode = debug
+
+    def _print_status(self, message):
+        if self.debug_mode:
+            print(message)
 
     # ---------------------------------------------------------------------
     # Install or verify database schema based on db_data.json definitions
@@ -111,7 +115,7 @@ class ALLSKYDB:
             exit_code = 1
 
         # Print result and exit with appropriate code
-        print(result)
+        self._print_status(result)
         sys.exit(exit_code)
 
     # ---------------------------------------------------------------------
@@ -180,7 +184,10 @@ class ALLSKYDB:
             result = 'Connection failed'
 
         # Output result and exit with appropriate code
-        print(result)
+        if query_result['type'] == 'select' or not query_result['ok']:
+            print(result)
+        else:
+            self._print_status(result)
         sys.exit(0 if query_result['ok'] else 1)
 
     def save_from_definition(self, table_name, values, event='postcapture'):
@@ -201,7 +208,7 @@ class ALLSKYDB:
         extra_data = self._build_extra_data(values, structure, db_column_types)
         shared.save_extra_data(None, extra_data, None, structure, event=event)
 
-        print("OK")
+        self._print_status("OK")
         sys.exit(0)
 
     def _build_meta_data(self, table_name, table_definition):

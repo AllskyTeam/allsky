@@ -185,9 +185,10 @@ def getEnvironmentVariable(name, fatal=False, debug=False, try_allsky_debug_file
             DBDEBUGDATA = {}
             #log(4, f"ERROR: Resetting corrupted Allsky database '{db_file}'")
 
-        if name in DBDEBUGDATA['os']:
-            result = DBDEBUGDATA['os'][name]
-
+        os_data = DBDEBUGDATA.get('os', {})
+        if name in os_data:
+            result = os_data[name]
+    
     return result
 
 

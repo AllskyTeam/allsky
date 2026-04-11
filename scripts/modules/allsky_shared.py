@@ -2029,10 +2029,10 @@ def get_database_connection(silent=True):
 
         if secret_data['databasetype'] == 'sqlite':
             try:
-                db_path = os.environ['ALLSKY_DATABASES']
+                db_path = os.environ['ALLSKY_DATABASE']
             except KeyError:
                 setupForCommandLine()
-                db_path = os.environ['ALLSKY_DATABASES']                
+                db_path = os.environ['ALLSKY_DATABASE']                
             database_conn = ALLSKYDATABASEMANAGER("sqlite", db_path=db_path, silent=silent)
 
         if database_conn and not database_conn.check_connection():

@@ -21,7 +21,7 @@ Environment variables:
 - ALLSKY_MYFILES_DIR
 - ALLSKY_MODULE_LOCATION
 - ALLSKY_SCRIPTS
-- ALLSKY_DATABASES (path to SQLite DB)
+- ALLSKY_DATABASE (path to SQLite DB)
 - ALLSKY_SETTINGS_FILE (JSON)
 - ALLSKY_ENV (JSON holding env-style configuration for Allsky)
 
@@ -738,7 +738,7 @@ class ALLSKYDATABASEMANAGER:
             return update_command
                 
         result = None
-        db_path = os.environ['ALLSKY_DATABASES']
+        db_path = os.environ['ALLSKY_DATABASE']
         with sqlite3.connect(db_path, timeout=10) as conn:
             cursor = conn.cursor()
             cursor.execute(command)
@@ -1056,7 +1056,7 @@ class ALLSKYDATABASEMANAGER:
                   
             if self._database_config["databasetype"] == "sqlite":
                 try:
-                    db_path = os.environ['ALLSKY_DATABASES']
+                    db_path = os.environ['ALLSKY_DATABASE']
                     shared.remove_path(db_path)
                 except KeyError:
                     pass

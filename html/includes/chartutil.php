@@ -85,8 +85,8 @@ class CHARTUTIL extends UTILBASE
         // --- SQLite connection ---
         if ($secretData['databasetype'] === 'sqlite') {
             // Ensure the SQLite database file exists before attempting connection
-            if (file_exists(ALLSKY_DATABASES)) {
-                $dsn = 'sqlite:' . ALLSKY_DATABASES;
+            if (file_exists(ALLSKY_DATABASE)) {
+                $dsn = 'sqlite:' . ALLSKY_DATABASE;
 
                 // Create and configure a new PDO instance for SQLite
                 $pdo = new PDO($dsn, null, null, [

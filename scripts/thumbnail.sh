@@ -8,22 +8,18 @@ ME="$( basename "${BASH_ARGV0}" )"
 source "${ALLSKY_HOME}/variables.sh" || exit "${EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/functions.sh" || exit "${EXIT_ERROR_STOP}"
+#shellcheck source-path=scripts
+source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh" || exit "${EXIT_ERROR_STOP}"
 
-usage() {
-	echo "Usage: ${ME} -t <startrail|keogram|timelapse|all> -d <YYYYMMDD|all> [--force]"
+function usage() {
+	echo "Usage: ${ME} -t <startrail|keogram|timelapse|all> -d <YYYYMMDD|all|test*> [--force]"
 	exit 1
 }
 
-error_exit() {
+function error_exit() {
 	echo "${ME}: ERROR: $1" >&2
 	exit 1
 }
-
-# TODO: Eric - Whats the best way to handle these I wasnt sure if just including upgrade functions was a good idea
-export ALLSKY_OWNER="$( id --group --name )"
-export ALLSKY_GROUP="${ALLSKY_OWNER}"
-export ALLSKY_WEBSERVER_OWNER="www-data"
-export ALLSKY_WEBSERVER_GROUP="${ALLSKY_WEBSERVER_OWNER}"
 
 TYPE=""
 DATE=""
@@ -61,8 +57,8 @@ esac
 
 if [[ "${DATE}" != "all" ]]; then
 	case "${DATE}" in
-		[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]) ;;
-		*) error_exit "Date must be in format YYYYMMDD or all" ;;
+		[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9] | test*) ;;
+		*) error_exit "Date must be in format YYYYMMDD or 'all' or start with 'test'." ;;
 	esac
 fi
 
@@ -72,10 +68,9 @@ THUMBY="$(settings ".thumbnailsizey")" || error_exit "Failed to get thumbnailsiz
 THUMBX=$((THUMBX * 2))
 THUMBY=$((THUMBY * 2))
 
-ALLSKY_IMAGES="${ALLSKY_HOME}/images"
 MISSING_IMAGE="${ALLSKY_HOME}/html/images/missing-image.png"
 
-process_thumbnail() {
+function process_thumbnail() {
 	local TYPE="$1"
 	local DATE="$2"
 	local SOURCE=""
@@ -153,7 +148,7 @@ process_thumbnail() {
 	return 0
 }
 
-process_date() {
+function process_date() {
 	local CUR_DATE="$1"
 
 	if [[ "${TYPE}" == "all" ]]; then

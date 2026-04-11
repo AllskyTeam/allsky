@@ -404,10 +404,10 @@ if [[ ${DO_STARTRAILS} == "true" ]]; then
 
 		if [[ ${RET} -eq ${EXIT_PARTIAL_OK} ]]; then
 			MSG="The startrails file was created but has no trailed stars."
-			MSG+="\nTry running 'allsky-config compare_startrails' to determine"
+			MSG+="\nGo to the 'Helper Tools -&gt; Startrails Settings' page to determine"
 			MSG+=" what 'Brightness Threshold' to use."
 			if [[ ${ON_TTY} == "true" ]]; then
-				echo -e "${MSG}" >&2
+				echo -e "${MSG}" | sed 's/&gt;/>/' >&2
 			else
 				"${ALLSKY_SCRIPTS}/addMessage.sh" --type "warning" --msg "${MSG}"
 			fi

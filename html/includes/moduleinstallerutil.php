@@ -25,6 +25,7 @@ class MODULEINSTALLERUTIL extends UTILBASE
     {
         return [
             'Modules' => ['get'],
+            'VerifyInstalled' => ['get'],
             'Action' => ['post'],
         ];
     }
@@ -81,6 +82,23 @@ class MODULEINSTALLERUTIL extends UTILBASE
         }
     }
 
+    public function getVerifyInstalled(): void
+    {
+        try {
+            $requestedBranch = trim((string)($_GET['branch'] ?? ''));
+            $branch = $requestedBranch !== '' ? $requestedBranch : $this->getPreferredBranch();
+
+            $this->ensureRepo($branch, false);
+            $this->checkoutBranch($branch);
+
+            $this->sendResponse([
+                'message' => $this->verifyInstalledModulesReport(),
+            ]);
+        } catch (Throwable $e) {
+            $this->send500($e->getMessage());
+        }
+    }
+
     public function postAction(): void
     {
         try {
@@ -93,7 +111,7 @@ class MODULEINSTALLERUTIL extends UTILBASE
                 $this->send400('Invalid module name.');
             }
 
-            $allowedActions = ['install', 'update', 'reinstall', 'uninstall', 'migrate', 'status'];
+            $allowedActions = ['install', 'update', 'reinstall', 'uninstall', 'migrate', 'status', 'verify'];
             if (!in_array($action, $allowedActions, true)) {
                 $this->send400('Invalid action.');
             }
@@ -121,6 +139,9 @@ class MODULEINSTALLERUTIL extends UTILBASE
                     break;
                 case 'status':
                     $message = $this->getModuleStatusText($moduleName, $modulePath);
+                    break;
+                case 'verify':
+                    $message = $this->verifyInstalledModuleText($moduleName);
                     break;
             }
 
@@ -452,33 +473,42 @@ class MODULEINSTALLERUTIL extends UTILBASE
 
         $paths = $this->buildModulePaths($moduleName, $modulePath);
         $log = [];
+        $rollback = $this->createInstallRollbackSnapshot($moduleName, $paths, $installedInfo);
 
-        $this->ensureDirectory($paths['module']);
-        $this->copyFile($modulePath . '/' . $moduleName . '.py', $paths['module'] . '/' . $moduleName . '.py');
-        $log[] = "Copied module code to {$paths['module']}";
+        try {
+            $this->ensureDirectory($paths['module']);
+            $this->copyFile($modulePath . '/' . $moduleName . '.py', $paths['module'] . '/' . $moduleName . '.py');
+            $log[] = "Copied module code to {$paths['module']}";
 
-        $this->copyDirectoryIfExists($modulePath . '/blocks', $paths['blocks'], $log, 'blocks');
-        $this->copyDirectoryIfExists($modulePath . '/charts', $paths['charts'], $log, 'charts');
-        $this->copyDirectoryIfExists($modulePath . '/' . $moduleName, $paths['data'], $log, 'data');
-        $this->copyInfoFiles($modulePath, $paths['info'], $log);
-        $installerData = $this->writeInstallerInfo($modulePath, $paths['installer']);
-        $log[] = 'Installer metadata updated';
+            $this->copyDirectoryIfExists($modulePath . '/blocks', $paths['blocks'], $log, 'blocks');
+            $this->copyDirectoryIfExists($modulePath . '/charts', $paths['charts'], $log, 'charts');
+            $this->copyDirectoryIfExists($modulePath . '/' . $moduleName, $paths['data'], $log, 'data');
+            $this->copyInfoFiles($modulePath, $paths['info'], $log);
+            $installerData = $this->writeInstallerInfo($modulePath, $paths['installer']);
+            $log[] = 'Installer metadata updated';
 
-        $this->installDatabaseConfig($sourceMeta, $modulePath, $log);
-        $this->installPackagesFile($modulePath . '/packages.txt', $paths['logfiles'] . '/dependencies.log', $log);
-        $this->installRequirementsFile($modulePath . '/requirements.txt', $paths['logfiles'] . '/dependencies.log', $log);
-        $this->runPostInstall($installerData, $modulePath, $paths['data'], $log);
-        $this->cleanupLegacyModule($moduleName, $installedInfo, $paths['module'], $log);
+            $this->installDatabaseConfig($sourceMeta, $modulePath, $log);
+            $this->installPackagesFile($modulePath . '/packages.txt', $paths['logfiles'] . '/dependencies.log', $log);
+            $this->installRequirementsFile($modulePath . '/requirements.txt', $paths['logfiles'] . '/dependencies.log', $log);
+            $this->runPostInstall($installerData, $modulePath, $paths['data'], $log);
+            $this->cleanupLegacyModule($moduleName, $installedInfo, $paths['module'], $log);
 
-        $migrationLog = $this->migrateModule($moduleName, $modulePath, false);
-        if ($migrationLog !== '') {
-            $log[] = trim($migrationLog);
+            $migrationLog = $this->migrateModule($moduleName, $modulePath, false);
+            if ($migrationLog !== '') {
+                $log[] = trim($migrationLog);
+            }
+
+            $this->applyOwnership($this->myModulesDir);
+            $this->applyOwnership($this->moduleDataDir);
+
+            $this->cleanupInstallRollbackSnapshot($rollback);
+            return implode("\n", $log);
+        } catch (Throwable $e) {
+            $this->rollbackFailedInstall($moduleName, $paths, $rollback);
+            throw new RuntimeException(
+                $e->getMessage() . "\nInstaller rollback completed; the module was not left partially installed."
+            );
         }
-
-        $this->applyOwnership($this->myModulesDir);
-        $this->applyOwnership($this->moduleDataDir);
-
-        return implode("\n", $log);
     }
 
     private function uninstallModule(string $moduleName): string
@@ -614,6 +644,176 @@ class MODULEINSTALLERUTIL extends UTILBASE
         return implode("\n", $lines);
     }
 
+    private function verifyInstalledModulesReport(): string
+    {
+        $installedModules = $this->getInstalledModuleNames();
+        if ($installedModules === []) {
+            return 'No installed modules were found.';
+        }
+
+        $lines = [];
+        $overallOk = true;
+
+        foreach ($installedModules as $moduleName) {
+            $moduleReport = $this->verifyInstalledModuleText($moduleName);
+            $lines[] = $moduleReport;
+            $overallOk = $overallOk && !str_contains($moduleReport, 'Result: FAILED');
+        }
+
+        array_unshift($lines, 'Installed module verification: ' . ($overallOk ? 'OK' : 'FAILED'));
+        return implode("\n\n", $lines);
+    }
+
+    private function getInstalledModuleNames(): array
+    {
+        $modules = [];
+        $paths = [$this->myModulesDir, $this->userModulesDir];
+
+        foreach ($paths as $path) {
+            if (!is_dir($path)) {
+                continue;
+            }
+
+            foreach (glob($path . '/allsky_*.py') ?: [] as $file) {
+                $modules[] = basename($file, '.py');
+            }
+        }
+
+        $modules = array_values(array_unique($modules));
+        sort($modules, SORT_NATURAL | SORT_FLAG_CASE);
+        return $modules;
+    }
+
+    private function verifyInstalledModuleText(string $moduleName): string
+    {
+        $installedInfo = $this->findInstalledModule($moduleName);
+        if ($installedInfo === null) {
+            return "Module: {$moduleName}\nResult: FAILED\nERROR: Module is not installed.";
+        }
+
+        $sourcePath = $this->repoPath . '/' . $moduleName;
+        $paths = $this->buildModulePaths($moduleName, $sourcePath);
+        $installerData = $this->readInstalledInstallerInfo($paths['installer'], $sourcePath);
+        $moduleLines = [];
+        $moduleOk = true;
+
+        $moduleLines[] = "Module: {$moduleName}";
+        $moduleLines[] = 'Installed path: ' . (string)($installedInfo['path'] ?? '');
+        $moduleLines[] = 'Code valid: ' . (($installedInfo['valid'] ?? false) ? 'yes' : 'no');
+        if (!($installedInfo['valid'] ?? false)) {
+            $moduleOk = false;
+            foreach (($installedInfo['errors'] ?? []) as $error) {
+                $moduleLines[] = 'ERROR: ' . $error;
+            }
+        }
+
+        foreach ($this->verifyAptDependencies($installerData['packages'] ?? []) as $line) {
+            if (str_starts_with($line, 'MISSING:')) {
+                $moduleOk = false;
+            }
+            $moduleLines[] = $line;
+        }
+
+        foreach ($this->verifyPythonDependencies($installerData['requirements'] ?? []) as $line) {
+            if (str_starts_with($line, 'MISSING:')) {
+                $moduleOk = false;
+            }
+            $moduleLines[] = $line;
+        }
+
+        $moduleLines[] = 'Result: ' . ($moduleOk ? 'OK' : 'FAILED');
+        return implode("\n", $moduleLines);
+    }
+
+    private function readInstalledInstallerInfo(string $installedInstallerDir, string $sourcePath): array
+    {
+        $installerFile = $installedInstallerDir . '/installer.json';
+        if (is_file($installerFile)) {
+            $decoded = json_decode((string)file_get_contents($installerFile), true);
+            if (is_array($decoded)) {
+                return $decoded;
+            }
+        }
+
+        return [
+            'requirements' => $this->readDependencyLines($sourcePath . '/requirements.txt'),
+            'packages' => $this->readDependencyLines($sourcePath . '/packages.txt'),
+        ];
+    }
+
+    private function verifyAptDependencies(array $packages): array
+    {
+        $lines = [];
+        foreach ($packages as $packageSpec) {
+            $packageName = $this->normaliseAptPackageName((string)$packageSpec);
+            if ($packageName === '') {
+                continue;
+            }
+
+            $result = $this->runProcessWithOptions(['/usr/bin/dpkg-query', '-W', '-f=${Status}', $packageName]);
+            if (!$result['error'] && str_contains($result['message'], 'install ok installed')) {
+                $lines[] = "APT: {$packageName} OK";
+            } else {
+                $lines[] = "MISSING: APT package {$packageName}";
+            }
+        }
+
+        if ($lines === []) {
+            $lines[] = 'APT: no declared dependencies';
+        }
+
+        return $lines;
+    }
+
+    private function verifyPythonDependencies(array $packages): array
+    {
+        $lines = [];
+        foreach ($packages as $packageSpec) {
+            $packageName = $this->normalisePythonPackageName((string)$packageSpec);
+            if ($packageName === '') {
+                continue;
+            }
+
+            $result = $this->runProcessWithOptions([$this->venvPython, '-m', 'pip', 'show', $packageName], $this->allskyHome);
+            if (!$result['error']) {
+                $lines[] = "PIP: {$packageName} OK";
+            } else {
+                $lines[] = "MISSING: Python package {$packageName}";
+            }
+        }
+
+        if ($lines === []) {
+            $lines[] = 'PIP: no declared dependencies';
+        }
+
+        return $lines;
+    }
+
+    private function normaliseAptPackageName(string $packageSpec): string
+    {
+        $package = trim($packageSpec);
+        if ($package === '') {
+            return '';
+        }
+
+        $package = preg_split('/\s+/', $package)[0] ?? $package;
+        $package = explode('=', $package, 2)[0];
+        return trim($package);
+    }
+
+    private function normalisePythonPackageName(string $packageSpec): string
+    {
+        $package = trim($packageSpec);
+        if ($package === '') {
+            return '';
+        }
+
+        $package = preg_split('/\s*;\s*/', $package, 2)[0] ?? $package;
+        $package = preg_split('/\s*(===|==|~=|!=|<=|>=|<|>)\s*/', $package, 2)[0] ?? $package;
+        $package = preg_split('/\s*\[/', $package, 2)[0] ?? $package;
+        return trim($package);
+    }
+
     private function buildModulePaths(string $moduleName, string $modulePath): array
     {
         return [
@@ -680,6 +880,147 @@ class MODULEINSTALLERUTIL extends UTILBASE
         return $installerData;
     }
 
+    private function createInstallRollbackSnapshot(string $moduleName, array $paths, ?array $installedInfo): array
+    {
+        $snapshotRoot = rtrim(sys_get_temp_dir(), '/') . '/allsky-module-rollback-' . $moduleName . '-' . uniqid('', true);
+        if (!mkdir($snapshotRoot, 0700, true) && !is_dir($snapshotRoot)) {
+            throw new RuntimeException('Unable to create installer rollback snapshot.');
+        }
+
+        $snapshot = [
+            'root' => $snapshotRoot,
+            'had_existing_install' => $installedInfo !== null && rtrim((string)($installedInfo['path'] ?? ''), '/') === rtrim($paths['module'], '/'),
+            'db_config_file' => $this->myFilesDir . '/db_data.json',
+            'db_config_contents' => null,
+        ];
+
+        $dbConfigFile = $snapshot['db_config_file'];
+        if (is_file($dbConfigFile)) {
+            $contents = file_get_contents($dbConfigFile);
+            $snapshot['db_config_contents'] = $contents === false ? null : $contents;
+        }
+
+        if (!$snapshot['had_existing_install']) {
+            return $snapshot;
+        }
+
+        $this->snapshotPath($paths['module'] . '/' . $moduleName . '.py', $snapshotRoot . '/module.py');
+        $this->snapshotPath($paths['blocks'], $snapshotRoot . '/blocks');
+        $this->snapshotPath($paths['data'], $snapshotRoot . '/data');
+        $this->snapshotPath($paths['info'], $snapshotRoot . '/info');
+        $this->snapshotPath($paths['charts'], $snapshotRoot . '/charts');
+        $this->snapshotPath($paths['installer'], $snapshotRoot . '/installer');
+        $this->snapshotPath($paths['logfiles'], $snapshotRoot . '/logfiles');
+
+        return $snapshot;
+    }
+
+    private function rollbackFailedInstall(string $moduleName, array $paths, array $snapshot): void
+    {
+        $this->removePath($paths['module'] . '/' . $moduleName . '.py');
+        $this->removePath($paths['blocks']);
+        $this->removePath($paths['data']);
+        $this->removePath($paths['info']);
+        $this->removePath($paths['charts']);
+        $this->removePath($paths['installer']);
+        $this->removePath($paths['logfiles']);
+
+        if (!empty($snapshot['had_existing_install'])) {
+            $this->restoreSnapshotPath($snapshot['root'] . '/module.py', $paths['module'] . '/' . $moduleName . '.py');
+            $this->restoreSnapshotPath($snapshot['root'] . '/blocks', $paths['blocks']);
+            $this->restoreSnapshotPath($snapshot['root'] . '/data', $paths['data']);
+            $this->restoreSnapshotPath($snapshot['root'] . '/info', $paths['info']);
+            $this->restoreSnapshotPath($snapshot['root'] . '/charts', $paths['charts']);
+            $this->restoreSnapshotPath($snapshot['root'] . '/installer', $paths['installer']);
+            $this->restoreSnapshotPath($snapshot['root'] . '/logfiles', $paths['logfiles']);
+        }
+
+        $dbConfigFile = (string)($snapshot['db_config_file'] ?? '');
+        if ($dbConfigFile !== '') {
+            if (array_key_exists('db_config_contents', $snapshot) && $snapshot['db_config_contents'] !== null) {
+                $this->restoreFileContents($dbConfigFile, (string)$snapshot['db_config_contents']);
+            } else {
+                $this->removePath($dbConfigFile);
+            }
+        }
+
+        $this->applyOwnership($this->myModulesDir);
+        $this->applyOwnership($this->moduleDataDir);
+        $this->applyOwnership($this->myFilesDir);
+        $this->cleanupInstallRollbackSnapshot($snapshot);
+    }
+
+    private function cleanupInstallRollbackSnapshot(array $snapshot): void
+    {
+        $root = (string)($snapshot['root'] ?? '');
+        if ($root !== '') {
+            $this->removePath($root);
+        }
+    }
+
+    private function snapshotPath(string $source, string $destination): void
+    {
+        if (is_file($source)) {
+            $parent = dirname($destination);
+            if (!is_dir($parent) && !mkdir($parent, 0700, true) && !is_dir($parent)) {
+                throw new RuntimeException("Unable to create snapshot directory {$parent}");
+            }
+            if (!copy($source, $destination)) {
+                throw new RuntimeException("Unable to snapshot {$source}");
+            }
+            return;
+        }
+
+        if (is_dir($source)) {
+            $this->copyDirectory($source, $destination);
+        }
+    }
+
+    private function restoreSnapshotPath(string $source, string $destination): void
+    {
+        if (is_file($source)) {
+            $this->copyFile($source, $destination);
+            return;
+        }
+
+        if (is_dir($source)) {
+            $this->copyDirectory($source, $destination);
+        }
+    }
+
+    private function restoreFileContents(string $filePath, string $contents): void
+    {
+        $this->ensureDirectory(dirname($filePath));
+
+        if (@file_put_contents($filePath, $contents) !== false) {
+            return;
+        }
+
+        $tempFile = tempnam(sys_get_temp_dir(), 'allsky-restore-');
+        if ($tempFile === false) {
+            throw new RuntimeException("Unable to restore {$filePath}");
+        }
+
+        try {
+            if (file_put_contents($tempFile, $contents) === false) {
+                throw new RuntimeException("Unable to restore {$filePath}");
+            }
+
+            $result = $this->runProcessWithOptions(['/usr/bin/sudo', 'cp', $tempFile, $filePath]);
+            if ($result['error']) {
+                throw new RuntimeException(
+                    "Unable to restore {$filePath}" .
+                    (trim($result['message']) !== '' ? ': ' . trim($result['message']) : '')
+                );
+            }
+
+            $this->runProcessWithOptions(['/usr/bin/sudo', 'chown', $this->owner . ':' . $this->webGroup, $filePath]);
+            $this->runProcessWithOptions(['/usr/bin/sudo', 'chmod', '0664', $filePath]);
+        } finally {
+            @unlink($tempFile);
+        }
+    }
+
     private function installDatabaseConfig(array $sourceMeta, string $modulePath, array &$log): void
     {
         $dbConfigPath = $modulePath . '/db/db_data.json';
@@ -737,10 +1078,14 @@ class MODULEINSTALLERUTIL extends UTILBASE
             return;
         }
 
+        $this->ensurePythonEnvironmentWritable();
         $this->ensureDirectory(dirname($logFile));
         foreach ($packages as $package) {
             file_put_contents($logFile, "\n--- Installing {$package} ---\n", FILE_APPEND);
-            $result = $this->runProcessWithOptions([$this->venvPython, '-m', 'pip', 'install', $package], $this->allskyHome);
+            $result = $this->runProcessWithOptions(
+                [$this->venvPython, '-m', 'pip', 'install', '--no-cache-dir', $package],
+                $this->allskyHome
+            );
             file_put_contents($logFile, $result['message'] . "\n", FILE_APPEND);
             if ($result['error']) {
                 throw new RuntimeException("Failed to install Python dependency {$package}: " . trim($result['message']));
@@ -748,6 +1093,18 @@ class MODULEINSTALLERUTIL extends UTILBASE
         }
 
         $log[] = 'Installed Python dependencies';
+    }
+
+    private function ensurePythonEnvironmentWritable(): void
+    {
+        foreach ([$this->allskyHome . '/venv', dirname($this->venvPython)] as $path) {
+            if (!file_exists($path)) {
+                continue;
+            }
+
+            $this->runProcessWithOptions(['/usr/bin/sudo', '/bin/chown', '-R', $this->owner . ':' . $this->webGroup, $path]);
+            $this->runProcessWithOptions(['/usr/bin/sudo', '/bin/chmod', '-R', 'g+w', $path]);
+        }
     }
 
     private function runPostInstall(array $installerData, string $modulePath, string $installDataDir, array &$log): void
@@ -907,10 +1264,7 @@ class MODULEINSTALLERUTIL extends UTILBASE
                     throw new RuntimeException("Unable to create directory {$target}");
                 }
             } else {
-                $this->ensureDirectory(dirname($target));
-                if (!copy($item->getPathname(), $target)) {
-                    throw new RuntimeException("Unable to copy {$target}");
-                }
+                $this->copyFile($item->getPathname(), $target);
             }
         }
     }
@@ -922,9 +1276,23 @@ class MODULEINSTALLERUTIL extends UTILBASE
         }
 
         $this->ensureDirectory(dirname($destination));
-        if (!copy($source, $destination)) {
+        $this->writeFileFromSource($source, $destination);
+    }
+
+    private function writeFileFromSource(string $source, string $destination): void
+    {
+        if (@copy($source, $destination)) {
+            @chmod($destination, 0664);
+            return;
+        }
+
+        $result = $this->runProcessWithOptions(['/usr/bin/sudo', 'cp', $source, $destination]);
+        if ($result['error']) {
             throw new RuntimeException("Unable to copy {$source} to {$destination}");
         }
+
+        $this->runProcessWithOptions(['/usr/bin/sudo', 'chown', $this->owner . ':' . $this->webGroup, $destination]);
+        $this->runProcessWithOptions(['/usr/bin/sudo', 'chmod', '0664', $destination]);
     }
 
     private function ensureDirectory(string $path): void
@@ -932,11 +1300,37 @@ class MODULEINSTALLERUTIL extends UTILBASE
         if ($path === '') {
             return;
         }
-        if (!is_dir($path) && !mkdir($path, 0775, true) && !is_dir($path)) {
-            throw new RuntimeException("Unable to create directory {$path}");
+
+        if (!is_dir($path)) {
+            if (!@mkdir($path, 0775, true) && !is_dir($path)) {
+                $result = $this->runProcessWithOptions(['/usr/bin/sudo', 'mkdir', '-p', '-m', '0775', $path]);
+                if ($result['error'] && !is_dir($path)) {
+                    throw new RuntimeException(
+                        "Unable to create directory {$path}" .
+                        (trim($result['message']) !== '' ? ': ' . trim($result['message']) : '')
+                    );
+                }
+            }
         }
+
+        if (!is_writable($path)) {
+            $this->repairDirectoryPermissions($path);
+        }
+
         if (!is_writable($path)) {
             throw new RuntimeException("Directory {$path} is not writable by the WebUI user");
+        }
+    }
+
+    private function repairDirectoryPermissions(string $path): void
+    {
+        $commands = [
+            ['/usr/bin/sudo', 'chown', $this->owner . ':' . $this->webGroup, $path],
+            ['/usr/bin/sudo', 'chmod', '0775', $path],
+        ];
+
+        foreach ($commands as $command) {
+            $this->runProcessWithOptions($command);
         }
     }
 
@@ -991,8 +1385,35 @@ class MODULEINSTALLERUTIL extends UTILBASE
             throw new RuntimeException("Unable to encode JSON for {$filePath}");
         }
         $json .= "\n";
-        if (file_put_contents($filePath, $json) === false) {
+
+        $this->ensureDirectory(dirname($filePath));
+
+        if (@file_put_contents($filePath, $json) !== false) {
+            return;
+        }
+
+        $tempFile = tempnam(sys_get_temp_dir(), 'allsky-json-');
+        if ($tempFile === false) {
             throw new RuntimeException("Unable to write {$filePath}");
+        }
+
+        try {
+            if (file_put_contents($tempFile, $json) === false) {
+                throw new RuntimeException("Unable to write temporary file for {$filePath}");
+            }
+
+            $result = $this->runProcessWithOptions(['/usr/bin/sudo', 'cp', $tempFile, $filePath]);
+            if ($result['error']) {
+                throw new RuntimeException(
+                    "Unable to write {$filePath}" .
+                    (trim($result['message']) !== '' ? ': ' . trim($result['message']) : '')
+                );
+            }
+
+            $this->runProcessWithOptions(['/usr/bin/sudo', 'chown', $this->owner . ':' . $this->webGroup, $filePath]);
+            $this->runProcessWithOptions(['/usr/bin/sudo', 'chmod', '0664', $filePath]);
+        } finally {
+            @unlink($tempFile);
         }
     }
 

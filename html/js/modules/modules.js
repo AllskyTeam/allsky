@@ -14,13 +14,19 @@ class MODULESEDITOR {
 	#dialogRowGroups = {}
 	#installerBranch = null
 	#installerData = null
+	#installerQueueRunning = false
+	#installerReturnToDialog = false
+	#installerCancelRequested = false
+	#installerCurrentRequest = null
+	#installerPendingRefreshText = null
+	#installerPendingEditorRefreshText = null
 
 	constructor() {
 
 	}
 
-	#buildUI() {
-		$.LoadingOverlay('show');
+	#buildUI(overlayText = null) {
+		$.LoadingOverlay('show', overlayText ? { text: overlayText } : {});
 
 		$('[data-toggle="tooltip"]').tooltip();
 
@@ -2805,6 +2811,313 @@ class MODULESEDITOR {
 		});
 	}
 
+	#installerQueueModules() {
+		if (this.#installerData === null) {
+			return [];
+		}
+
+		const searchText = ($('#module-installer-search').val() || '').trim().toLowerCase();
+		const filterMode = $('#module-installer-filter').val() || 'all';
+		return (this.#installerData.modules || []).filter((module) => {
+			if (filterMode === 'updateable' && !module.updateAvailable) {
+				return false;
+			}
+			if (filterMode === 'migrateable' && !module.migrationRequired) {
+				return false;
+			}
+			if (filterMode === 'not-installed') {
+				if (module.installed) {
+					return false;
+				}
+				if (module.replacedBy && String(module.replacedBy).trim() !== '') {
+					return false;
+				}
+			}
+			if (!this.#moduleMatchesInstallerSearch(module, searchText)) {
+				return false;
+			}
+
+			return !module.installed && !module.deprecated && module.valid;
+		}).map((module) => module.module);
+	}
+
+	#updateableModulesVisible() {
+		if (this.#installerData === null) {
+			return [];
+		}
+
+		const searchText = ($('#module-installer-search').val() || '').trim().toLowerCase();
+		const filterMode = $('#module-installer-filter').val() || 'all';
+		return (this.#installerData.modules || []).filter((module) => {
+			if (filterMode === 'migrateable' && !module.migrationRequired) {
+				return false;
+			}
+			if (filterMode === 'not-installed' && !module.installed) {
+				return false;
+			}
+			if (!this.#moduleMatchesInstallerSearch(module, searchText)) {
+				return false;
+			}
+
+			return module.installed && module.updateAvailable;
+		}).map((module) => module.module);
+	}
+
+	#installedModulesForVerification() {
+		if (this.#installerData === null) {
+			return [];
+		}
+
+		return (this.#installerData.modules || [])
+			.filter((module) => module.installed)
+			.map((module) => module.module);
+	}
+
+	#resetInstallerProgress() {
+		$('#module-installer-progress-status').text('');
+		$('#module-installer-progress-log').text('');
+		$('#module-installer-progress-cancel').prop('disabled', false).show();
+		$('#module-installer-progress-close').prop('disabled', true);
+		this.#installerPendingRefreshText = null;
+		this.#installerPendingEditorRefreshText = null;
+	}
+
+	#appendInstallerProgress(message) {
+		const log = $('#module-installer-progress-log');
+		const current = log.text();
+		log.text(current ? `${current}\n${message}` : message);
+		log.scrollTop(log[0].scrollHeight);
+	}
+
+	#setInstallerProgressStatus(message) {
+		$('#module-installer-progress-status').text(message);
+	}
+
+	#setInstallerQueueState(running) {
+		this.#installerQueueRunning = running;
+		$('#module-installer-install-all').prop('disabled', running);
+		$('#module-installer-update-all').prop('disabled', running);
+		$('#module-installer-verify-all').prop('disabled', running);
+		$('.module-installer-action').prop('disabled', running);
+		$('.module-suggested-install').prop('disabled', running);
+		if (!running) {
+			this.#installerCurrentRequest = null;
+		}
+	}
+
+	#showInstallerProgressModal(title, status, body, returnToDialog = true) {
+		const installerDialog = $('#module-installer-dialog');
+		const progressModal = $('#module-installer-progress-modal');
+		if (progressModal.length && progressModal.parent()[0] !== document.body) {
+			progressModal.appendTo('body');
+		}
+
+		this.#installerReturnToDialog = returnToDialog && installerDialog.is(':visible');
+		if (this.#installerReturnToDialog) {
+			installerDialog.modal('hide');
+		}
+
+		progressModal.find('.modal-title').text(title);
+		$('#module-installer-progress-status').text(status);
+		$('#module-installer-progress-log').text(body || '');
+		$('#module-installer-progress-cancel').hide();
+		$('#module-installer-progress-close').prop('disabled', false);
+		progressModal.modal({
+			backdrop: 'static',
+			keyboard: true,
+			show: true
+		});
+	}
+
+	#runInstallerQueue(modules, action, title) {
+		const queue = Array.isArray(modules) ? modules.slice() : [];
+		if (queue.length === 0 || this.#installerQueueRunning) {
+			return;
+		}
+
+		const installerDialog = $('#module-installer-dialog');
+		const progressModal = $('#module-installer-progress-modal');
+		if (progressModal.length && progressModal.parent()[0] !== document.body) {
+			progressModal.appendTo('body');
+		}
+		this.#installerReturnToDialog = installerDialog.is(':visible');
+		if (this.#installerReturnToDialog) {
+			installerDialog.modal('hide');
+		}
+
+		this.#installerCancelRequested = false;
+		this.#installerCurrentRequest = null;
+		$('#module-installer-progress-log').text('');
+		progressModal.modal({
+			backdrop: 'static',
+			keyboard: false,
+			show: true
+		});
+		progressModal.find('.modal-title').text('Installer Progress');
+		this.#setInstallerQueueState(true);
+		$('#module-installer-progress-cancel').prop('disabled', false).show();
+		$('#module-installer-progress-close').prop('disabled', true);
+		this.#setInstallerProgressStatus(`${title}: 0 of ${queue.length} complete`);
+		this.#appendInstallerProgress(`Starting ${title.toLowerCase()} for ${queue.length} module${queue.length === 1 ? '' : 's'}.`);
+
+		const runNext = (index) => {
+			if (this.#installerCancelRequested) {
+				this.#setInstallerProgressStatus(`${title}: cancelled`);
+				this.#appendInstallerProgress('Installation cancelled by user.');
+				this.#setInstallerQueueState(false);
+				$('#module-installer-progress-cancel').hide();
+				$('#module-installer-progress-close').prop('disabled', false);
+				this.#installerPendingRefreshText = 'Refreshing installer after cancellation...';
+				this.#installerPendingEditorRefreshText = 'Refreshing module editor...';
+				return;
+			}
+
+			if (index >= queue.length) {
+				this.#setInstallerProgressStatus(`${title}: complete`);
+				this.#appendInstallerProgress('All queued modules processed.');
+				this.#setInstallerQueueState(false);
+				$('#module-installer-progress-cancel').hide();
+				$('#module-installer-progress-close').prop('disabled', false);
+				this.#installerPendingRefreshText = 'Refreshing installer after installation...';
+				this.#installerPendingEditorRefreshText = 'Refreshing module editor...';
+				return;
+			}
+
+			const moduleName = queue[index];
+			this.#setInstallerProgressStatus(`${title}: ${index + 1} of ${queue.length} - ${moduleName}`);
+			this.#appendInstallerProgress(`[${index + 1}/${queue.length}] ${action} ${moduleName}...`);
+
+			this.#installerCurrentRequest = $.ajax({
+				url: 'includes/moduleinstallerutil.php?request=Action&_=' + new Date().getTime(),
+				type: 'POST',
+				dataType: 'json',
+				cache: false,
+				data: {
+					module: moduleName,
+					action: action,
+					branch: this.#selectedInstallerBranch()
+				},
+				context: this
+			}).done((result) => {
+				this.#appendInstallerProgress(`OK: ${moduleName}`);
+				if (result.message) {
+					this.#appendInstallerProgress(result.message);
+				}
+				this.#installerCurrentRequest = null;
+				runNext(index + 1);
+			}).fail((xhr) => {
+				this.#installerCurrentRequest = null;
+				if (this.#installerCancelRequested || xhr.statusText === 'abort') {
+					runNext(index + 1);
+					return;
+				}
+
+				let message = `Failed to ${action} ${moduleName}.`;
+				if (xhr.responseJSON?.message) {
+					message = xhr.responseJSON.message;
+				}
+				this.#appendInstallerProgress(`FAILED: ${moduleName}`);
+				this.#appendInstallerProgress(message);
+				this.#setInstallerProgressStatus(`${title}: failed on ${moduleName}`);
+				this.#setInstallerQueueState(false);
+				$('#module-installer-progress-cancel').hide();
+				$('#module-installer-progress-close').prop('disabled', false);
+				bootbox.alert(message);
+			});
+		};
+
+		runNext(0);
+	}
+
+	#runVerificationQueue(modules) {
+		const queue = Array.isArray(modules) ? modules.slice() : [];
+		if (queue.length === 0 || this.#installerQueueRunning) {
+			return;
+		}
+
+		const installerDialog = $('#module-installer-dialog');
+		const progressModal = $('#module-installer-progress-modal');
+		if (progressModal.length && progressModal.parent()[0] !== document.body) {
+			progressModal.appendTo('body');
+		}
+		this.#installerReturnToDialog = installerDialog.is(':visible');
+		if (this.#installerReturnToDialog) {
+			installerDialog.modal('hide');
+		}
+
+		this.#installerCancelRequested = false;
+		this.#installerCurrentRequest = null;
+		progressModal.find('.modal-title').text('Module Verification');
+		$('#module-installer-progress-log').text('');
+		progressModal.modal({
+			backdrop: 'static',
+			keyboard: false,
+			show: true
+		});
+		this.#setInstallerQueueState(true);
+		$('#module-installer-progress-cancel').prop('disabled', false).show();
+		$('#module-installer-progress-close').prop('disabled', true);
+		this.#setInstallerProgressStatus(`Verifying installed modules: 0 of ${queue.length} complete`);
+		this.#appendInstallerProgress(`Starting verification for ${queue.length} module${queue.length === 1 ? '' : 's'}.`);
+
+		const runNext = (index) => {
+			if (this.#installerCancelRequested) {
+				this.#setInstallerProgressStatus('Verification cancelled');
+				this.#appendInstallerProgress('Verification cancelled by user.');
+				this.#setInstallerQueueState(false);
+				$('#module-installer-progress-cancel').hide();
+				$('#module-installer-progress-close').prop('disabled', false);
+				this.#installerPendingRefreshText = 'Refreshing installer after verification cancellation...';
+				return;
+			}
+
+			if (index >= queue.length) {
+				this.#setInstallerProgressStatus('Verification complete');
+				this.#appendInstallerProgress('All installed modules verified.');
+				this.#setInstallerQueueState(false);
+				$('#module-installer-progress-cancel').hide();
+				$('#module-installer-progress-close').prop('disabled', false);
+				this.#installerPendingRefreshText = 'Refreshing installer after verification...';
+				return;
+			}
+
+			const moduleName = queue[index];
+			this.#setInstallerProgressStatus(`Verifying installed modules: ${index + 1} of ${queue.length} - ${moduleName}`);
+			this.#appendInstallerProgress(`[${index + 1}/${queue.length}] verify ${moduleName}...`);
+
+			this.#installerCurrentRequest = $.ajax({
+				url: 'includes/moduleinstallerutil.php?request=Action&_=' + new Date().getTime(),
+				type: 'POST',
+				dataType: 'json',
+				cache: false,
+				data: {
+					module: moduleName,
+					action: 'verify',
+					branch: this.#selectedInstallerBranch()
+				},
+				context: this
+			}).done((result) => {
+				this.#installerCurrentRequest = null;
+				this.#appendInstallerProgress(result.message || `Module: ${moduleName}\nResult: OK`);
+				this.#appendInstallerProgress('');
+				runNext(index + 1);
+			}).fail((xhr) => {
+				this.#installerCurrentRequest = null;
+				if (this.#installerCancelRequested || xhr.statusText === 'abort') {
+					runNext(index + 1);
+					return;
+				}
+
+				const message = xhr.responseJSON?.message || `Failed to verify ${moduleName}.`;
+				this.#appendInstallerProgress(`Module: ${moduleName}\nResult: FAILED\nERROR: ${message}`);
+				this.#appendInstallerProgress('');
+				runNext(index + 1);
+			});
+		};
+
+		runNext(0);
+	}
+
 	#renderInstallerModules(result) {
 		this.#installerData = result;
 		this.#installerBranch = result.branch;
@@ -2861,6 +3174,14 @@ class MODULESEDITOR {
 			}
 			return this.#moduleMatchesInstallerSearch(module, searchText);
 		});
+		const installableCount = modules.filter((module) => !module.installed && !module.deprecated && module.valid).length;
+		const updateableCount = modules.filter((module) => module.installed && module.updateAvailable).length;
+		$('#module-installer-install-all')
+			.prop('disabled', installableCount === 0 || this.#installerQueueRunning)
+			.html(`<i class="fa-solid fa-layer-group fa-fw"></i>`);
+		$('#module-installer-update-all')
+			.prop('disabled', updateableCount === 0 || this.#installerQueueRunning)
+			.html(`<i class="fa-solid fa-download fa-fw"></i>`);
 		const installedCount = modules.filter((module) => module.installed).length;
 		const updateCount = modules.filter((module) => module.updateAvailable).length;
 		const migrationCount = modules.filter((module) => module.migrationRequired).length;
@@ -3149,47 +3470,7 @@ class MODULESEDITOR {
 	}
 
 	#runSuggestedInstall(modules) {
-		const queue = Array.isArray(modules) ? modules.slice() : [];
-		if (queue.length === 0) {
-			return;
-		}
-
-		$.LoadingOverlay('show', {
-			text: `Installing ${queue.length} suggested module${queue.length === 1 ? '' : 's'}...`
-		});
-
-		const runNext = (index) => {
-			if (index >= queue.length) {
-				$.LoadingOverlay('hide');
-				this.#loadInstallerModules(false);
-				this.#buildUI();
-				return;
-			}
-
-			$.ajax({
-				url: 'includes/moduleinstallerutil.php?request=Action&_=' + new Date().getTime(),
-				type: 'POST',
-				dataType: 'json',
-				cache: false,
-				data: {
-					module: queue[index],
-					action: 'install',
-					branch: this.#selectedInstallerBranch()
-				},
-				context: this
-			}).done(() => {
-				runNext(index + 1);
-			}).fail((xhr) => {
-				$.LoadingOverlay('hide');
-				let message = `Failed to install ${queue[index]}.`;
-				if (xhr.responseJSON?.message) {
-					message = xhr.responseJSON.message;
-				}
-				bootbox.alert(message);
-			});
-		};
-
-		runNext(0);
+		this.#runInstallerQueue(modules, 'install', 'Suggested Install');
 	}
 
 	#loadSuggestedModules() {
@@ -3215,9 +3496,9 @@ class MODULESEDITOR {
 		});
 	}
 
-	#loadInstallerModules(refresh = false) {
+	#loadInstallerModules(refresh = false, overlayText = null) {
 		const branch = this.#selectedInstallerBranch();
-		$.LoadingOverlay('show');
+		$.LoadingOverlay('show', overlayText ? { text: overlayText } : {});
 
 		return $.ajax({
 			url: 'includes/moduleinstallerutil.php',
@@ -3247,6 +3528,15 @@ class MODULESEDITOR {
 	}
 
 	#runInstallerAction(moduleName, action) {
+		if (this.#installerQueueRunning) {
+			return;
+		}
+
+		if (action === 'install') {
+			this.#runInstallerQueue([moduleName], 'install', `Install ${moduleName}`);
+			return;
+		}
+
 		const destructive = action === 'uninstall';
 		if (destructive && !window.confirm(`Are you sure you want to ${action} ${moduleName}?`)) {
 			return;
@@ -3297,6 +3587,10 @@ class MODULESEDITOR {
 		const installerDialog = $('#module-installer-dialog');
 		if (installerDialog.length && installerDialog.parent()[0] !== document.body) {
 			installerDialog.appendTo('body');
+		}
+		const installerProgressDialog = $('#module-installer-progress-modal');
+		if (installerProgressDialog.length && installerProgressDialog.parent()[0] !== document.body) {
+			installerProgressDialog.appendTo('body');
 		}
 
 		$(document).on('click', '#module-editor-restore', (event) => {
@@ -3367,11 +3661,46 @@ class MODULESEDITOR {
 
 		$(document).on('click', '#module-installer-manager', () => {
 			$('#module-installer-dialog').modal('show');
+			this.#resetInstallerProgress();
 			this.#loadInstallerModules(false);
 		});
 
 		$(document).on('shown.bs.modal', '#module-installer-dialog', () => {
 			this.#adjustInstallerModalHeight();
+		});
+
+		$(document).off('hidden.bs.modal', '#module-installer-progress-modal');
+		$(document).on('hidden.bs.modal', '#module-installer-progress-modal', () => {
+			const refreshText = this.#installerPendingRefreshText;
+			const editorRefreshText = this.#installerPendingEditorRefreshText;
+			this.#installerPendingRefreshText = null;
+			this.#installerPendingEditorRefreshText = null;
+
+			if (refreshText !== null) {
+				this.#loadInstallerModules(false, refreshText);
+			}
+			if (editorRefreshText !== null) {
+				this.#buildUI(editorRefreshText);
+			}
+
+			if (this.#installerReturnToDialog) {
+				this.#installerReturnToDialog = false;
+				$('#module-installer-dialog').modal('show');
+			}
+		});
+
+		$(document).off('click', '#module-installer-progress-cancel');
+		$(document).on('click', '#module-installer-progress-cancel', () => {
+			if (!this.#installerQueueRunning) {
+				return;
+			}
+			this.#installerCancelRequested = true;
+			$('#module-installer-progress-cancel').prop('disabled', true);
+			this.#setInstallerProgressStatus('Cancelling after current step...');
+			this.#appendInstallerProgress('Cancel requested.');
+			if (this.#installerCurrentRequest !== null) {
+				this.#installerCurrentRequest.abort();
+			}
 		});
 
 		$(document).on('shown.bs.tab', '#module-installer-dialog a[data-toggle="tab"]', () => {
@@ -3405,6 +3734,29 @@ class MODULESEDITOR {
 		$(document).on('click', '.module-installer-action', (event) => {
 			const button = $(event.currentTarget);
 			this.#runInstallerAction(button.data('module'), button.data('action'));
+		});
+
+		$(document).off('click', '#module-installer-install-all');
+		$(document).on('click', '#module-installer-install-all', () => {
+			const modules = this.#installerQueueModules();
+			if (modules.length === 0) {
+				return;
+			}
+			this.#runInstallerQueue(modules, 'install', 'Bulk Install');
+		});
+
+		$(document).off('click', '#module-installer-update-all');
+		$(document).on('click', '#module-installer-update-all', () => {
+			const modules = this.#updateableModulesVisible();
+			if (modules.length === 0) {
+				return;
+			}
+			this.#runInstallerQueue(modules, 'update', 'Bulk Update');
+		});
+
+		$(document).off('click', '#module-installer-verify-all');
+		$(document).on('click', '#module-installer-verify-all', () => {
+			this.#runVerificationQueue(this.#installedModulesForVerification());
 		});
 
 		$(document).off('click', '.module-suggested-install');

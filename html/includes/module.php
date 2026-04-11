@@ -305,6 +305,21 @@ function DisplayModule()
                 <h4 class="modal-title">Module Installer</h4>
             </div>
             <div class="modal-body">
+                <nav class="navbar navbar-default" style="margin-bottom: 15px;">
+                    <div class="container-fluid">
+                        <div class="nav navbar-nav" style="margin-left: 0;">
+                            <button type="button" class="btn btn-primary navbar-btn" id="module-installer-verify-all" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Verify Installed Modules">
+                                <i class="fa-solid fa-shield-check fa-fw"></i>
+                            </button>
+                            <button type="button" class="btn btn-info navbar-btn" id="module-installer-update-all" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Update All Installed Modules">
+                                <i class="fa-solid fa-download fa-fw"></i>
+                            </button>
+                            <button type="button" class="btn btn-success navbar-btn" id="module-installer-install-all" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Install All Modules">
+                                <i class="fa-solid fa-layer-group fa-fw"></i>
+                            </button>
+                        </div>
+                    </div>
+                </nav>
                 <ul class="nav nav-tabs" role="tablist">
                     <li role="presentation" class="active"><a href="#module-installer-tab" aria-controls="module-installer-tab" role="tab" data-toggle="tab">Installer</a></li>
                     <li role="presentation"><a href="#module-suggested-tab" aria-controls="module-suggested-tab" role="tab" data-toggle="tab">Suggested</a></li>
@@ -316,7 +331,7 @@ function DisplayModule()
                                 <div class="row">
                                     <div class="col-sm-3">
                                         <div class="form-group">
-                                            <label for="module-installer-branch">Repository Branch</label>
+                                            <label for="module-installer-branch">Version</label>
                                             <select class="form-control" id="module-installer-branch"></select>
                                         </div>
                                     </div>
@@ -351,6 +366,24 @@ function DisplayModule()
             <div class="modal-footer">
                 <span class="pull-left text-muted" id="module-installer-repo"></span>
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" role="dialog" id="module-installer-progress-modal">
+    <div class="modal-dialog modal-md" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Installer Progress</h4>
+            </div>
+            <div class="modal-body">
+                <div id="module-installer-progress-status" class="help-block" style="margin-top: 0;"></div>
+                <pre id="module-installer-progress-log" style="height: 320px; overflow-y: auto; margin-bottom: 0;"></pre>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-warning" id="module-installer-progress-cancel">Cancel</button>
+                <button type="button" class="btn btn-default" id="module-installer-progress-close" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>

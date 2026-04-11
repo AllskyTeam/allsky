@@ -1,6 +1,7 @@
 site_name: Allsky Documentation
 site_url: "https://docs.allsky.local"
-site_dir: "html/docs"
+docs_dir: "source"
+site_dir: "../html/docs"
 
 repo_url: https://github.com/AllskyTeam/allsky
 repo_name: Allsky
@@ -94,8 +95,8 @@ plugins:
       handlers:
         python:
           paths:
-            - .
-            - server
+            - ..
+            - ../server
           options:
             docstring_style: google
             show_source: true

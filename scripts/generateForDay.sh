@@ -229,6 +229,7 @@ if [[ ${GOT} -eq 0 ]]; then
 fi
 
 if [[ ${TYPE} == "GENERATE" ]]; then
+	GENERATE_OUTPUT=""		# global
 	generate()
 	{
 		GENERATING_WHAT="${1}"
@@ -240,7 +241,7 @@ if [[ ${TYPE} == "GENERATE" ]]; then
 
 		[[ -n ${DEBUG_ARG} ]] && echo "${ME}: Executing: ${CMD}"
 		# shellcheck disable=SC2086
-		eval ${CMD}
+		GENERATE_OUTPUT="$( eval ${CMD} 2>&1 )"
 		local RET=$?
 		if [[ ${RET} -ne 0 && ${RET} -ne ${EXIT_PARTIAL_OK}  ]]; then
 			E_ "${ME}: Command Failed: ${CMD}" >&2
@@ -343,7 +344,7 @@ if [[ ${DO_KEOGRAM} == "true" ]]; then
 		fi
 
 		# Create thumbnail of keogram
-		RES="$(thumbnail.sh -t keogram -d "${DATE}" --force)"	
+		RES="$( thumbnail.sh -t keogram -d "${DATE}" --force )"
 
 	else
 		if [[ ! -f ${UPLOAD_FILE} ]]; then
@@ -402,6 +403,30 @@ if [[ ${DO_STARTRAILS} == "true" ]]; then
 		generate "Startrails, threshold=${BRIGHTNESS_THRESHOLD}" "startrails" "${CMD}"
 		RET=$?
 
+		# ${GENERATE_OUTPUT} contains the output of the startrails command.
+		# startrails: Minimum: .05 maximum: 0.584629 mean: 0.494671 median: 0.526751 \
+		#	numImagesUsed: 0 numImagesNotUsed: 47 threshold: 0.1
+		V="$( echo ${GENERATE_OUTPUT} | gawk -v Q="'" '{
+			if ($1 == "startrails:") {
+				printf(" %sminimum,%f%s", Q, $3, Q);
+				printf(" %smaximum,%f%s", Q, $5, Q);
+				printf(" %smean,%f%s", Q, $7, Q);
+				printf(" %smedian,%f%s", Q, $9, Q);
+				printf(" %snumImagesUsed,%d%s", Q, $11, Q);
+				printf(" %snumImagesNotUsed,%d%s", Q, $13, Q);
+				printf(" %sthreshold,%f%s", Q, $15, Q);
+			}
+			}'
+		)"
+		if [[ -n ${V} ]]; then
+			VALUES="'directory,${DATE}' ${V}"
+
+			# Insert the stats into the DB.
+			# shellcheck disable=SC2086
+			eval "${ALLSKY_DATABASE_COMMAND}" --table "${ALLSKY_STARTRAILS_TABLE}" \
+				--values ${VALUES}
+		fi
+
 		if [[ ${RET} -eq ${EXIT_PARTIAL_OK} ]]; then
 			MSG="The startrails file was created but has no trailed stars."
 			MSG+="\nGo to the 'Helper Tools -&gt; Startrails Settings' page to determine"
@@ -419,7 +444,7 @@ if [[ ${DO_STARTRAILS} == "true" ]]; then
 		fi
 
 		# Create thumbnail of startrail
-		RES="$(thumbnail.sh -t startrail -d "${DATE}") --force"
+		RES="$( thumbnail.sh -t startrail -d "${DATE}" --force )"
 
 	else
 		if [[ ! -f ${UPLOAD_FILE} ]]; then

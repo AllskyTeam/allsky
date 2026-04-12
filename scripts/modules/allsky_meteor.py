@@ -19,6 +19,8 @@ class ALLSKYMETEOR(ALLSKYMODULEBASE):
 			"night"
 		],
 		"module": "allsky_meteor",
+		"version": "v1.0.0",  
+    "docs": "docs/allsky_modules/core/meteor_count.html",
 		"centersettings": "false",
 		"extradatafilename": "allsky_meteor.json",
 		"group": "Image Analysis",
@@ -141,7 +143,16 @@ class ALLSKYMETEOR(ALLSKYMODULEBASE):
 					"fieldtype": "graph"
 				}
 			}
-		}
+		},
+		"changelog": {
+			"v1.0.0" : [
+				{
+					"author": "Alex Greenland",
+					"authorurl": "https://github.com/allskyteam",
+					"changes": "Initial Release"
+				}
+			]   
+		}   
 	}
 
 	def run(self):

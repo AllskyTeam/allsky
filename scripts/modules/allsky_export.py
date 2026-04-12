@@ -18,6 +18,8 @@ class ALLSKYEXPORT(ALLSKYMODULEBASE):
 	meta_data = {
 		"name": "Export Allsky Data",
 		"description": "Export data created by Allsky to a file for use by other programs.",
+		"version": "v1.0.0",  
+  	"docs": "docs/allsky_modules/core/export.html",    
 		"module": "allsky_export",
 		"testable": "true",
 		"centersettings": "false",
@@ -41,7 +43,16 @@ class ALLSKYEXPORT(ALLSKYMODULEBASE):
 				"description": "Extra data to export",
 				"help": "Comma-separated list of additional variables to export."
 			}        
-		}          
+		},
+		"changelog": {
+			"v1.0.0" : [
+				{
+					"author": "Alex Greenland",
+					"authorurl": "https://github.com/allskyteam",
+					"changes": "Initial Release"
+				}
+			]   
+		}           
 	}
 
 	def run(self):

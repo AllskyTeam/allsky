@@ -18,6 +18,8 @@ class ALLSKYEXPOSURERECT(ALLSKYMODULEBASE):
         "name": "Display the ZWO Histogram Box",
         "description": "Overlay the ZWO 'Histogram Box' on images.",
         "full_description": "Overlay the ZWO 'Histogram Box' on images.  The size and location of the box is set by the <span class='WebUISetting'>Histogram Box</span> setting.",
+		"version": "v1.0.0",  
+  	    "docs": "docs/allsky_modules/core/exposure_rect.html", 
         "module": "allsky_exposurerect",
         "group": "Image Adjustments",
         "events": [
@@ -25,7 +27,16 @@ class ALLSKYEXPOSURERECT(ALLSKYMODULEBASE):
             "night"
         ],
         "arguments":{
-        }   
+        },
+		"changelog": {
+			"v1.0.0" : [
+				{
+					"author": "Alex Greenland",
+					"authorurl": "https://github.com/allskyteam",
+					"changes": "Initial Release"
+				}
+			]   
+		}        
     }    
 
     def _draw_exposure_rect(self, width_px=500, height_px=500, x_pct=50, y_pct=50):

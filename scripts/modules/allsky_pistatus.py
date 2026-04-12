@@ -19,6 +19,7 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 	meta_data = {
 		"name": "Read Pi Status Data",
 		"description": "Read Pi status data so it can be added to overlays.",
+    "docs": "docs/allsky_modules/core/pi_status.html",  
 		"module": "allsky_pistatus",    
 		"version": "v1.0.0",
 		"events": [

@@ -18,12 +18,23 @@ class ALLSKYSAVEIMAGE(ALLSKYMODULEBASE):
 		"name": "Save an image",
 		"description": "Save the modified image.",
 		"module": "allsky_saveimage",
+		"version": "v1.0.0",
+  	"docs": "docs/allsky_modules/core/save_image.html",    
 		"ignorewatchdog": "True",
 		"group": "Allsky Core",       
 		"events": [
 			"day",
 			"night"
-		] 
+		],
+		"changelog": {
+			"v1.0.0" : [
+				{
+					"author": "Alex Greenland",
+					"authorurl": "https://github.com/allskyteam",
+					"changes": "Initial Release"
+				}
+			]   
+		}  
 	}
     
 	def _write_image(self, image, path, quality):

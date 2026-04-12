@@ -1744,6 +1744,16 @@ update_allsky_common()
 }
 
 ####
+# Copy repo files while updating them.
+update_repo_files()
+{
+	sed \
+		-e "s;XX_ALLSKY_STARTRAILS_TABLE;${ALLSKY_STARTRAILS_TABLE};" \
+		"${ALLSKY_REPO}/db_data.json.repo" \
+	> "${ALLSKY_CONFIG}/db_data.json"
+}
+
+####
 install_dependencies_etc()
 {
 	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
@@ -1776,6 +1786,7 @@ install_dependencies_etc()
 		exit_with_image 1 "${STATUS_ERROR}" "dependency installation failed"
 
 	update_allsky_common
+	update_repo_files
 
 	# "make -C src deps" may need to install some packages, so needs "sudo".
 	display_msg --log progress "Creating Allsky commands."

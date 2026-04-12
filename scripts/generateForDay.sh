@@ -406,6 +406,7 @@ if [[ ${DO_STARTRAILS} == "true" ]]; then
 		# ${GENERATE_OUTPUT} contains the output of the startrails command.
 		# startrails: Minimum: .05 maximum: 0.584629 mean: 0.494671 median: 0.526751 \
 		#	numImagesUsed: 0 numImagesNotUsed: 47 threshold: 0.1
+		# shellcheck disable=SC2086
 		V="$( echo ${GENERATE_OUTPUT} | gawk -v Q="'" '{
 			if ($1 == "startrails:") {
 				printf(" %sminimum,%f%s", Q, $3, Q);

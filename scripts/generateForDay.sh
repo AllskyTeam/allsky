@@ -291,6 +291,7 @@ else
 fi
 
 EXIT_CODE=0
+NUM_SUCCESS=0
 
 if [[ ${DO_KEOGRAM} == "true" || ${DO_STARTRAILS} == "true" ]]; then
 	# Nasty JQ trick to compose a widthxheight string if both width and height
@@ -334,6 +335,8 @@ if [[ ${DO_KEOGRAM} == "true" ]]; then
 		CMD+=" -e ${ALLSKY_EXTENSION} -o '${UPLOAD_FILE}' ${MORE} ${KEOGRAM_EXTRA_PARAMETERS}"
 		[[ -n ${KEOGRAM_PARAMS} ]] && CMD+=" ${KEOGRAM_PARAMS}"
 		generate "Keogram" "keogram" "${CMD}"
+		RET=$?
+		[[ ${RET} -eq 0 ]] && ((NUM_SUCCESS++))
 
 		if [[ $? -gt 90 && (${DO_STARTRAILS} == "true" || ${DO_TIMELAPSE} == "true") ]]; then
 			DO_STARTRAILS="false"
@@ -402,6 +405,7 @@ if [[ ${DO_STARTRAILS} == "true" ]]; then
 		[[ -n ${STARTRAILS_PARAMS} ]] && CMD+=" ${STARTRAILS_PARAMS}"
 		generate "Startrails, threshold=${BRIGHTNESS_THRESHOLD}" "startrails" "${CMD}"
 		RET=$?
+		[[ ${RET} -eq 0 ]] && ((NUM_SUCCESS++))
 
 		# ${GENERATE_OUTPUT} contains the output of the startrails command.
 		# startrails: Minimum: .05 maximum: 0.584629 mean: 0.494671 median: 0.526751 \
@@ -519,6 +523,7 @@ if [[ ${DO_TIMELAPSE} == "true" ]]; then
 			[[ -n ${TIMELAPSE_PARAMS} ]] && CMD+=" ${TIMELAPSE_PARAMS}"
 			generate "Timelapse" "" "${CMD}"	# it creates the necessary directory
 			RET=$?
+			[[ ${RET} -eq 0 ]] && ((NUM_SUCCESS++))
 		fi
 		if [[ ${RET} -eq 0 && ${TIMELAPSE_UPLOAD_THUMBNAIL} == "true" && -s ${UPLOAD_FILE} ]]; then
 			# Want the thumbnail to be near the start of the video, but not the first frame
@@ -598,8 +603,8 @@ if [[ ${DO_TIMELAPSE} == "true" ]]; then
 	fi
 fi
 
-
-if [[ ${TYPE} == "GENERATE" && ${SILENT} == "false" && ${EXIT_CODE} -eq 0 ]]; then
+# Only display this message if at least one "generate" succeeded.
+if [[ ${TYPE} == "GENERATE" && ${SILENT} == "false" && ${NUM_SUCCESS} -gt 0 ]]; then
 	ARGS="${THUMBNAIL_ONLY_ARG}"
 	[[ ${DO_KEOGRAM} == "true" ]] && ARGS="${ARGS} --keogram"
 	[[ ${DO_STARTRAILS} == "true" ]] && ARGS="${ARGS} --startrails"

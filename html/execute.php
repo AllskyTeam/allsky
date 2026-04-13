@@ -49,9 +49,7 @@ if ($use_TEXT) {
 	<meta http-equiv="Pragma" content="no-cache" />
 	<meta http-equiv="Expires" content="0" />
 
-	<link href="documentation/css/custom.css" rel="stylesheet">
-	<link href="documentation/css/light.css" rel="stylesheet">
-	<link href="documentation/css/documentation.css" rel="stylesheet">
+	<link href="css/allsky.css" rel="stylesheet">
 	<link rel="shortcut icon" type="image/png" href="documentation/img/allsky-favicon.png">
 	<title>Execute <?php echo "$ID"; ?></title>
 </head>

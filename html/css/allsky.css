@@ -4487,11 +4487,7 @@ body.dark .as-grid-bg {
 /** Variable Manager **/
 .as-variable-list .dtrg-group td{
 	padding: 5px;
-	background: #e0e0e0
-}
-
-.dark .as-variable-list .dtrg-group td{
-	background: #222
+	background: var(--bs3-modal-header-bg);
 }
 
 .dark .as-variable-has-value {

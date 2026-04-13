@@ -253,7 +253,7 @@ handle_prior_installation()
 ####
 do_initial_heading()
 {
-	[[ ${SKIP} == "true" ]] && return
+	[[ ${SKIP} == "true" || ${SKIP2} == "true" ]] && return
 
 	if [[ ${UPDATE} == "true" ]]; then
 		display_header "Updating Allsky"
@@ -317,7 +317,7 @@ usage_and_exit()
 	else
 		C="${RED}"
 	fi
-	USAGE="Usage: ${ME} [--help] [--debug [...]] [--fix |--update | --restore | --function function]"
+	USAGE="Usage: ${ME} [--help] [--debug [...]] [--fix |--update | --restore | --function function] [--skip | --skip2]"
 	echo -e "\n${C}${USAGE}${NC}"
 	echo
 	echo "Arguments:"
@@ -327,6 +327,8 @@ usage_and_exit()
 	echo "   --update     Should only be used when instructed to by the Allsky Website."
 	echo "   --restore    Restores ${ALLSKY_PRIOR_DIR} to ${ALLSKY_HOME}."
 	echo "   --function   Executes the specified function and quits."
+	echo "   --skip       Skip some steps to speed up installation.  Use when installing after a 'git clone'."
+	echo "   --skip2      Skip more steps.  Use when installing over existing Allsky."
 	echo
 
 	exit_installation "${RET}"
@@ -769,7 +771,7 @@ recreate_options_file()
 do_sudoers()
 {
 	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
-	[[ ${SKIP} == "true" ]] && return
+	[[ ${SKIP} == "true" || ${SKIP2} == "true" ]] && return
 
 	display_msg --logonly info "Creating/updating sudoers file."
 	sed \
@@ -928,7 +930,7 @@ get_checksums()
 install_webserver_et_al()
 {
 	declare -n v="${FUNCNAME[0]}"
-	[[ ${SKIP} == "true" ]] && return
+	[[ ${SKIP} == "true" || ${SKIP2} == "true" ]] && return
 
 	sudo systemctl stop lighttpd 2>/dev/null
 
@@ -1758,20 +1760,15 @@ install_dependencies_etc()
 {
 	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
 
-	# This needs to be done even if SKIP is true.
+	display_msg --log progress "Installing dependencies."
+
+	# These need to be done even if SKIP is true.
 	local T="${ALLSKY_SCRIPTS}/functions.php"
 	if [[ ! -f "${T}" ]]; then
 		local F="${ALLSKY_WEBUI}/includes/functions.php"
 		display_msg --logonly info "Creating link to ${F}"
 		ln -s "${F}" "${T}"		|| echo "Unable to ln -s '${F}' '${T}'" >&2
 	fi
-
-	[[ ${SKIP} == "true" ]] && return
-
-	# These commands produce a TON of output that's not needed unless there's a problem.
-	# They also take a little while, so hide the output and let the user know.
-
-	display_msg --log progress "Installing dependencies."
 
 	local T="${ALLSKY_SCRIPTS}/allsky-config"
 	if [[ ! -f "${T}" ]]; then
@@ -1780,10 +1777,17 @@ install_dependencies_etc()
 		ln -s "${F}" "${T}"		|| echo "Unable to ln -s '${F}' '${T}'" >&2
 	fi
 
-	TMP="${ALLSKY_LOGS}/allsky_dependencies.log"
-	run_aptGet ffmpeg lftp imagemagick sqlite3 bc > "${TMP}" 2>&1
-	check_success $? "Allsky dependency installation failed" "${TMP}" "${DEBUG}" ||
-		exit_with_image 1 "${STATUS_ERROR}" "dependency installation failed"
+	[[ ${SKIP2} == "true" ]] && return
+
+	# These commands produce a TON of output that's not needed unless there's a problem.
+	# They also take a little while, so hide the output and let the user know.
+
+	if [[ ${SKIP} != "true" ]]; then
+		TMP="${ALLSKY_LOGS}/allsky_dependencies.log"
+		run_aptGet ffmpeg lftp imagemagick sqlite3 bc > "${TMP}" 2>&1
+		check_success $? "Allsky dependency installation failed" "${TMP}" "${DEBUG}" ||
+			exit_with_image 1 "${STATUS_ERROR}" "dependency installation failed"
+	fi
 
 	update_allsky_common
 	update_repo_files
@@ -3128,7 +3132,7 @@ install_PHP_modules()
 		display_msg --logonly info "PHP modules already installed"
 		return
 	fi
-	[[ ${SKIP} == "true" ]] && return
+	[[ ${SKIP} == "true" || ${SKIP2} == "true" ]] && return
 
 	display_msg --log progress "Installing PHP modules and dependencies."
 	TMP="${ALLSKY_LOGS}/PHP_modules.log"
@@ -3198,21 +3202,29 @@ install_Python()
 		display_msg --logonly info "Python and related packages already installed"
 		return
 	fi
-	[[ ${SKIP} == "true" ]] && return
+
+# XXX TODO: FIX
+## This produces errors and doesn't create allsky/venv - not sure why.
+##	if [[ ${SKIP} == "true" ]]; then
+##		python3 -m venv "${ALLSKY_PYTHON_VENV}" --system-site-packages
+##		activate_python_venv
+##		return
+##	fi
+##	[[ ${SKIP2} == "true" ]] && return
 
 
-	#
+# XXX TODO: either fix, or remove these lines.
 	# Install the server venv. NOTE this needs older versions of some packages like numpy so cannot use
-	# the main allsky venv
+	# the main allsky venv.
 	#
-	#python3 -m venv "${ALLSKY_PYTHON_SERVER_VENV}" --system-site-packages
-	#if [[ ${PI_OS} == "trixie" ]]; then
-  #	run_aptGet python3-dev python3.13-dev build-essential pkg-config > "${TMP}" 2>&1
-	#fi
+	# python3 -m venv "${ALLSKY_PYTHON_SERVER_VENV}" --system-site-packages
+	# if [[ ${PI_OS} == "trixie" ]]; then
+	#	run_aptGet python3-dev python3.13-dev build-essential pkg-config > "${TMP}" 2>&1
+	# fi
 
-	#activate_python_server_venv
-	#nstall_dependencies "${ALLSKY_REPO}/requirements-server.txt" "Python_server_dependencies"
-	#deactivate_python_server_venv
+	#  activate_python_server_venv
+	#  install_dependencies "${ALLSKY_REPO}/requirements-server.txt" "Python_server_dependencies"
+	#  deactivate_python_server_venv
 
 	local PREFIX  REQUIREMENTS_FILE  M  R  NUM_TO_INSTALL
 	local NAME  PKGs  TMP  COUNT  C  PACKAGE  STATUS_NAME  L  M  MSG
@@ -3222,13 +3234,13 @@ install_Python()
 	M=" for ${ALLSKY_PI_OS^}"
 	R="-${ALLSKY_PI_OS}"
 
-	if [[ ${ALLSKY_PI_OS} == "trixie" ]]; then
+	if [[ ${ALLSKY_PI_OS} == "trixie" && ${SKIP2} != "true" ]]; then
 		display_msg --log progress "Trixie detected, installing python build packages."
 		TMP="${ALLSKY_LOGS}/trixie_build.log"
 		run_aptGet python3.13-dev build-essential > "${TMP}" 2>&1
 	fi
 
-  display_msg --logonly info "Locating Python dependency file"
+	display_msg --logonly info "Locating Python dependency file"
 	PREFIX="${ALLSKY_REPO}/requirements"
 	REQUIREMENTS_FILE=""
 	for file in "${PREFIX}${R}-${LONG_BITS}.txt" \
@@ -3250,13 +3262,15 @@ install_Python()
 
 	NUM_TO_INSTALL=$( wc -l < "${REQUIREMENTS_FILE}" )
 
-	PKGs="python3-full libgfortran5 libopenblas0-pthread"
-	display_msg --logonly progress "Installing ${PKGs}."
-	TMP="${ALLSKY_LOGS}/python3-full.log"
-	# shellcheck disable=SC2086
-	run_aptGet ${PKGs} > "${TMP}" 2>&1
-	check_success $? "${PKGs} install failed" "${TMP}" "${DEBUG}" ||
-		exit_with_image 1 "${STATUS_ERROR}" "${PKGs} install failed."
+	if [[ ${SKIP} != "true" && ${SKIP2} != "true" ]]; then
+		PKGs="python3-full libgfortran5 libopenblas0-pthread"
+		display_msg --logonly progress "Installing ${PKGs}."
+		TMP="${ALLSKY_LOGS}/python3-full.log"
+		# shellcheck disable=SC2086
+		run_aptGet ${PKGs} > "${TMP}" 2>&1
+		check_success $? "${PKGs} install failed" "${TMP}" "${DEBUG}" ||
+			exit_with_image 1 "${STATUS_ERROR}" "${PKGs} install failed."
+	fi
 
 	python3 -m venv "${ALLSKY_PYTHON_VENV}" --system-site-packages
 	activate_python_venv
@@ -3266,7 +3280,8 @@ install_Python()
 	# If the requirements file is the same as the in the prior Allsky version,
 	# don't re-install these packages.
 	local PRIOR_REQ="${REQUIREMENTS_FILE/${ALLSKY_HOME}/${ALLSKY_PRIOR_DIR}}"
-	if [[ ${WILL_USE_PRIOR} == "true" && ${SKIP} == "true" && -f ${PRIOR_REQ} ]] && cmp --silent "${REQUIREMENTS_FILE}" "${PRIOR_REQ}" ; then
+	if [[ ${WILL_USE_PRIOR} == "true" && (${SKIP} == "true" || ${SKIP2} == "true") && -f ${PRIOR_REQ} ]] && \
+		cmp --silent "${REQUIREMENTS_FILE}" "${PRIOR_REQ}" ; then
 		display_msg --log progress "Skipping installation of ${NAME} - already installed."
 	else
 		install_dependencies "${REQUIREMENTS_FILE}" "${NAME}"
@@ -3564,7 +3579,7 @@ check_restored_settings()
 # Do every time as a reminder.
 remind_old_version()
 {
-	[[ ${SKIP} == "true" ]] && return
+	[[ ${SKIP} == "true" || ${SKIP2} == "true" ]] && return
 
 	if [[ ${USE_PRIOR_ALLSKY} == "true" ]]; then
 		MSG="When you are sure everything is working with the new Allsky release,"
@@ -3615,7 +3630,6 @@ update_overlays()
 # Allow the user to install modules.
 install_modules()
 {
-
 	#
 	# NOTE: We need to use sudo here as the ALLSKY_USER has had various groups added but they will
 	#       not be activated until the user logs out and in or reboots. The module. installer needs
@@ -3623,11 +3637,10 @@ install_modules()
 	# NOTE: There is no way to reload the groups for the user, this is a limitation of the Linux Kernel
 	#
 
+	display_msg --log progress "Installing modules using the ${BRANCH} branch."
 	if [[ "${BRANCH}" == "${ALLSKY_GITHUB_MAIN_BRANCH}" ]]; then
-		display_msg --log progress "Installing modules using master branch."
 		sudo su - "${ALLSKY_OWNER}" -c "${ALLSKY_MODULE_INSTALLER} --welcome ${DEBUG_ARG}"
 	else
-		display_msg --log progress "Installing modules using the ${BRANCH} branch."
 		sudo su - "${ALLSKY_OWNER}" -c "${ALLSKY_MODULE_INSTALLER} --welcome --setbranch ${BRANCH} ${DEBUG_ARG}"
 	fi
 
@@ -3804,7 +3817,7 @@ set_now()
 install_installer_dependencies()
 {
 	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
-	[[ ${SKIP} == "true" ]] && return
+	[[ ${SKIP} == "true" || ${SKIP2} == "true" ]] && return
 
 	# Needed to put notification images there.
 	[[ ! -d ${ALLSKY_CURRENT_DIR} ]] && mkdir -p "${ALLSKY_CURRENT_DIR}"
@@ -3966,6 +3979,7 @@ WT_WIDTH="$( calc_wt_size )"
 ##### Check arguments
 OK="true"
 SKIP="false"			# mostly for testing same install multiple times
+SKIP2="false"			# Only use if Allsky is already installed.
 DEBUG=0
 DEBUG_ARG=""
 LOG_TYPE="--logonly"	# by default we only log some messages but don't display
@@ -3996,6 +4010,9 @@ while [ $# -gt 0 ]; do
 			;;
 		--skip)
 			SKIP="true"
+			;;
+		--skip2)
+			SKIP2="true"
 			;;
 		--function)
 			FUNCTION="${2}"

@@ -50,15 +50,31 @@ if [[ "$( settings ".startrailsgenerate" )" != "true" ]]; then
 	W_ "\nWARNING: The startrails 'Generate' setting is not enabled."
 fi
 
-# Input format:
-# 2025-01-17T06:20:45.240112-06:00 \
-#	Minimum: 0.0840083   maximum: 0.145526   mean: 0.103463   median: 0.104839 numImageUsed: 21 numImagesNotUsed: 18  threshold: 0.1
-#	$2       $3          $4       $5         $6    $7         $8      $9       $10          $11 $12              $13  $14        $15
+STATS="$( "${ALLSKY_DATABASE_COMMAND}" --format tab --run \
+	"SELECT timestamp, minimum, maximum, mean, median, numImagesUsed, numImagesNotUsed, threshold from ${ALLSKY_STARTRAILS_TABLE} order by timestamp" | gawk '{
+			# Convert time since epoch to date/time.
+			"date +%Y-%m-%dT%H:%M:%S --date=@" $1 | getline timestamp
+			print(timestamp, "Minimum", $2, "maximum", $3, "mean", $4, "median", $5, "numImagesUseed", $6, "numImagesNotUsed", $7, "threshold", $8);
+		}'
+)"
+RET=$?
 
-LOGS="$( ls -tr "${ALLSKY_LOG}"* )"
-#shellcheck disable=SC2086
-grep --no-filename "startrails: Minimum" ${LOGS} 2> /dev/null |
-	sed "s/$(uname -n).*startrails: //" |
+(
+	if [[ ${RET} -eq 0 && -n ${STATS} ]]; then
+		# 2025-01-17T06:20:45 \
+		#	Minimum: 0.0840083   maximum: 0.145526   mean: 0.103463   median: 0.104839 numImagesUsed: 21 numImagesNotUsed: 18  threshold: 0.1
+		#	$2       $3          $4       $5         $6    $7         $8      $9       $10          $11 $12              $13  $14        $15
+		echo "${STATS}"
+	else
+		# Input format:
+		# 2025-01-17T06:20:45.240112-06:00 \
+		#	Minimum: 0.0840083   maximum: 0.145526   mean: 0.103463   median: 0.104839 numImagesUsed: 21 numImagesNotUsed: 18  threshold: 0.1
+		#	$2       $3          $4       $5         $6    $7         $8      $9       $10          $11 $12              $13  $14        $15
+		LOGS="$( ls -tr "${ALLSKY_LOG}"* )"
+		#shellcheck disable=SC2086
+		grep --no-filename "startrails: Minimum" ${LOGS} 2> /dev/null
+	fi | sed "s/$(uname -n).*startrails: //"
+) |
 	nawk 'BEGIN {
 			print;
 			t_min=0; t_max=0; t_mean=0; t_median=0; t_num=0; t_used=0; t_notUsed=0;

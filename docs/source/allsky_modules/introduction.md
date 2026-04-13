@@ -87,18 +87,19 @@ Pipelines are managed by adding and removing modules via the Module Manager.
 The Module Manager
 ///
 
-| Number { .w-5p }| Function { .w-25p } | Description |
+| # { .w-5p }| Function { .w-25p } | Description |
 |--------|----------|-------------|
 | 1 | Save The Current Pipeline | USe this button to save the pipeline after you have made any changes to modules or module configuration. |
 | 2 | Select Pipeline| Selects the pipeline to manage |
 | 3 | Periodic Flow | Shortcut to display the periodic flow. |
 | 4 | Module Filter | Filters modules in the available lkist by module type |
-| 5 | Search | Allows searching in the available and selected module lists.
+| 5 | Package manager | Manage modules, install, remove |
 | 6 | Device Manager | Displays the 'Device Manager'.|
 | 7 | Settings | Displays the module manager settings |
 | 8 | Debug | Displays debug information for the last pipeline run |
-| 9 | Available Modules | Lists the modules available to be added to the pipeline |
-| 10 | Selected Modules | Lists the modules selected for the  pipeline |
+| 9 | Search | Allows searching in the available and selected module lists.
+| 10 | Available Modules | Lists the modules available to be added to the pipeline |
+| 11 | Selected Modules | Lists the modules selected for the  pipeline |
 
 ### Enabling a module
 To enable a module drag it from the Available Modules column to the Selected Modules column and select the "Enabled" checkbox. The module will become active after the flow has been saved. You can set modules to be automatically enabled when dragging them to the Selected Modules column in the Module Editor Module Options.
@@ -168,7 +169,17 @@ The Test button
 
 clicking the test button will run the module with the current settings you have configured and display a results dialog with two tabs
 
-| ![](/assets/module_images/module_test_result.png) | ![](/assets/module_images/module_test_result_data.png) |
-|-------------------------------------------------------|-------------------------------------------------|
-| Teh test results | The Extra Data the test generated |
+
+![](/assets/module_images/module_test_result.png)
+
+/// caption
+The Test results
+///
+
+![](/assets/module_images/module_test_result_data.png)
+
+/// caption
+The Extra Data the test generated
+///
+
 

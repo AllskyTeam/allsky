@@ -15,8 +15,7 @@ include_once('../includes/functions.php');
 	<meta name="description" content="WebUI 'helper' page to display images or videos">
 	<title>Display Images/Videos</title>
 
-	<link href="../documentation/css/custom.css" rel="stylesheet">
-	<link href="../documentation/css/documentation.css" rel="stylesheet">
+	<link href="../css/allsky.css" rel="stylesheet">
 	<link rel="shortcut icon" type="image/ico" href="../favicon.ico">
 </head>
 <body>

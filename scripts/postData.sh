@@ -211,7 +211,7 @@ if [[ -n ${WEBS} ]]; then
 		for file in \
 			"${ALLSKY_OPTIONS_FILE}" \
 			"${ALLSKY_WEBUI}/includes/allskySettings.php" \
-			"${ALLSKY_DOCUMENTATION}/css/custom.css" 
+			"${ALLSKY_WEBUI}/css/allsky.css" 
 		do
 			upload_file "${WEBS}" "${file}" "${ALLSKY_WEBSITE_VIEWSETTINGS_DIRECTORY_NAME}"
 		done

@@ -346,8 +346,10 @@ if [[ ${DO_KEOGRAM} == "true" ]]; then
 			echo "Keogram creation unable to read files; will not run startrails or timelapse." >&2
 		fi
 
-		# Create thumbnail of keogram
-		RES="$( thumbnail.sh -t keogram -d "${DATE}" --force )"
+		if [[ ${RET} -eq 0 ]]; then
+			# Create thumbnail of keogram
+			RES="$( "${ALLSKY_UTILITIES}/thumbnail.sh" -t keogram -d "${DATE}" --force )"
+		fi
 
 	else
 		if [[ ! -f ${UPLOAD_FILE} ]]; then
@@ -405,7 +407,7 @@ if [[ ${DO_STARTRAILS} == "true" ]]; then
 		[[ -n ${STARTRAILS_PARAMS} ]] && CMD+=" ${STARTRAILS_PARAMS}"
 		generate "Startrails, threshold=${BRIGHTNESS_THRESHOLD}" "startrails" "${CMD}"
 		RET=$?
-		[[ ${RET} -eq 0 ]] && ((NUM_SUCCESS++))
+		[[ ${RET} -eq 0 || ${RET} -eq ${EXIT_PARTIAL_OK} ]] && ((NUM_SUCCESS++))
 
 		# ${GENERATE_OUTPUT} contains the output of the startrails command.
 		# startrails: Minimum: .05 maximum: 0.584629 mean: 0.494671 median: 0.526751 \
@@ -448,8 +450,10 @@ if [[ ${DO_STARTRAILS} == "true" ]]; then
 			echo "Startrails creation unable to read files; will not run timelapse." >&2
 		fi
 
-		# Create thumbnail of startrail
-		RES="$( thumbnail.sh -t startrail -d "${DATE}" --force )"
+		if [[ ${RET} -eq 0 || ${RET} -eq ${EXIT_PARTIAL_OK} ]]; then
+			# Create thumbnail of startrail
+			RES="$( "${ALLSKY_UTILITIES}/thumbnail.sh" -t startrails -d "${DATE}" --force )"
+		fi
 
 	else
 		if [[ ! -f ${UPLOAD_FILE} ]]; then

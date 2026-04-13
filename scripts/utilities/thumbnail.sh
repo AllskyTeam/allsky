@@ -12,7 +12,7 @@ source "${ALLSKY_SCRIPTS}/functions.sh" || exit "${EXIT_ERROR_STOP}"
 source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh" || exit "${EXIT_ERROR_STOP}"
 
 function usage() {
-	echo "Usage: ${ME} -t <startrail|keogram|timelapse|all> -d <YYYYMMDD|all|test*> [--force]"
+	echo "Usage: ${ME} -t <startrails|keogram|timelapse|all> -d <YYYYMMDD|all|test*> [--force]"
 	exit 1
 }
 
@@ -51,8 +51,8 @@ done
 [[ -z "${TYPE}" || -z "${DATE}" ]] && usage
 
 case "${TYPE}" in
-	keogram|startrail|timelapse|all) ;;
-	*) error_exit "Type must be startrail, keogram, timelapse, or all" ;;
+	keogram|startrails|timelapse|all) ;;
+	*) error_exit "Type must be startrails, keogram, timelapse, or all" ;;
 esac
 
 if [[ "${DATE}" != "all" ]]; then
@@ -83,7 +83,7 @@ function process_thumbnail() {
 			SOURCE="${ALLSKY_IMAGES}/${DATE}/keogram/keogram-${DATE}.jpg"
 			DEST="${ALLSKY_IMAGES}/${DATE}/keogramthumbnail/keogram-${DATE}.jpg"
 			;;
-		startrail)
+		startrails)
 			SOURCE="${ALLSKY_IMAGES}/${DATE}/startrails/startrails-${DATE}.jpg"
 			DEST="${ALLSKY_IMAGES}/${DATE}/startrailsthumbnail/startrails-${DATE}.jpg"
 			;;
@@ -114,7 +114,7 @@ function process_thumbnail() {
 
 	if [[ -f "${SOURCE}" ]]; then
 		case "${TYPE}" in
-			keogram|startrail)
+			keogram|startrails)
 				convert "${SOURCE}" \
 					-thumbnail "${THUMBX}x${THUMBY}" \
 					"${DEST}"
@@ -153,7 +153,7 @@ function process_date() {
 
 	if [[ "${TYPE}" == "all" ]]; then
 		process_thumbnail "keogram" "${CUR_DATE}"
-		process_thumbnail "startrail" "${CUR_DATE}"
+		process_thumbnail "startrails" "${CUR_DATE}"
 		process_thumbnail "timelapse" "${CUR_DATE}"
 	else
 		process_thumbnail "${TYPE}" "${CUR_DATE}"

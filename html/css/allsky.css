@@ -2132,6 +2132,16 @@ body.dark .module-suggested-install[disabled]:focus {
     opacity: 1;
 }
 
+body.dark #module-installer-progress-close[disabled],
+body.dark #module-installer-progress-close.disabled,
+body.dark #module-installer-progress-close[disabled]:hover,
+body.dark #module-installer-progress-close[disabled]:focus {
+    background-color: var(--bs3-btn-default-bg);
+    border-color: var(--bs3-btn-default-border);
+    color: var(--bs3-btn-default-text);
+    opacity: 1;
+}
+
 /** End Generic Helpers **/
 
 /** Settings Page **/
@@ -3199,7 +3209,10 @@ div.dtsp-searchPane div.dtsp-topRow {
 
 .allskymodule.locked .panel {
   position: relative;
-  overflow: hidden;
+}
+
+.allskymodule.locked .panel-body {
+  position: relative;
 }
 
 .module-locked-overlay {
@@ -3209,6 +3222,7 @@ div.dtsp-searchPane div.dtsp-topRow {
   bottom: 0;
   left: 0;
   z-index: 5;
+  pointer-events: none;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3220,6 +3234,10 @@ div.dtsp-searchPane div.dtsp-topRow {
 }
 
 .module-locked-overlay .label {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, -50%);
   font-size: 1em;
   padding: 10px;
 }
@@ -4466,4 +4484,49 @@ body.dark .as-grid-bg {
 
 /** End Chart Page and Designer **/
 
+/** Variable Manager **/
+.as-variable-list .dtrg-group td{
+	padding: 5px;
+	background: #e0e0e0
+}
 
+.dark .as-variable-list .dtrg-group td{
+	background: #222
+}
+
+.dark .as-variable-has-value {
+	color: green;
+}
+
+.as-variables .toolbar {
+	padding: 5px 0px 5px 0px;
+	background: #e0e0e0;
+}
+
+.dark .as-variables .toolbar {
+	background: #222;
+}
+
+.as-variable-list td {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+div.dt-container div.dt-scroll-body {
+	border-bottom: none !important;
+}
+
+table.dataTable .selected {
+	background-color: rgb(0, 136, 204);
+	color: white !important;
+}
+
+table.dataTable .selected .as-variable-has-value {
+	color: white !important;
+}
+
+.dt-scroll-body {
+	overflow-x: hidden !important;
+}
+/** End Variable Manager **/

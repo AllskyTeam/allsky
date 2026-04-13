@@ -242,5 +242,4 @@ if (! is_dir(ALLSKY_SUPPORT_DIR)) {
 <script src="/js/bootbox/bootbox.all.js?c=<?php echo $V; ?>"></script>
 <script src="/js/bootbox/bootbox.locales.min.js?c=<?php echo $V; ?>"></script>
 
-<link rel="stylesheet" type="text/css" href="documentation/css/light.css?c=<?php echo $V; ?>" />
-<link rel="stylesheet" type="text/css" href="documentation/css/documentation.css?c=<?php echo $V; ?>" />
+<link rel="stylesheet" type="text/css" href="css/allsky.css?c=<?php echo $V; ?>" />

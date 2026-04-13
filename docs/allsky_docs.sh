@@ -88,7 +88,7 @@ run_dev() {
     ensure_mkdocs
 
     echo "==> Starting MkDocs dev server on 0.0.0.0:8000"
-    mkdocs serve -f "$MKDOCS_CONFIG" --dev-addr=0.0.0.0:8000
+    mkdocs serve -f "$MKDOCS_CONFIG" --dev-addr=0.0.0.0:8000 --livereload
 }
 
 command="${1:-}"

@@ -148,15 +148,34 @@ nav:
     - Settings:
       - allsky_guide/settings/allsky.md
       - allsky_guide/settings/website.md
+    - Using Allsky:
+      - Access Control: allsky_guide/using/access_control.md
+      - WebUI: allsky_guide/using/webui.md
+      - Live View: allsky_guide/using/live_view.md
+      - Images: allsky_guide/using/images.md
+      - Overlays: allsky_guide/overlays/overview.md
+      - Modules: allsky_modules/introduction.md
+      - Charts: allsky_guide/using/charts.md
+      - Networking: allsky_guide/using/networking.md
+      - System:
+        - Status: allsky_guide/using/system/status.md
+        - Watchdog: allsky_guide/using/system/watchdog.md
+        - Logs: allsky_guide/using/system/logs.md
+        - Backups: allsky_guide/backup_restore/overview.md
+      - Support: allsky_guide/using/support.md
+      - Helper Tools:
+        - Startrails: allsky_guide/howtos/helper_tools/startrails.md
+        - Image Stretch: allsky_guide/howtos/helper_tools/image_stretch.md
+        - Timelapse: allsky_guide/howtos/helper_tools/timelapse.md
     - Backup and Restore:
       - Overview: allsky_guide/backup_restore/overview.md
       - Backup: allsky_guide/backup_restore/backup.md
-      - Restore: allsky_guide/backup_restore/restore.md
+      - Restore: allsky_guide/backup_restore/restore.md        
     - Howtos:
       - Allsky layout: allsky_guide/howtos/layout.md
       - Helper Tools: 
         - Startrails: allsky_guide/howtos/helper_tools/startrails.md
-        - Image Stretch:  allsky_guide/howtos/helper_tools/image_stretch.md
+        - Image Stretch: allsky_guide/howtos/helper_tools/image_stretch.md
         - Timelapse: allsky_guide/howtos/helper_tools/timelapse.md
       - Constellation Overlay: allsky_guide/howtos/constellation_overlay.md
       - Dark Frames: allsky_guide/howtos/dark_frames.md
@@ -216,6 +235,7 @@ nav:
       - I2C: allsky_modules/interfaces/i2c.md
       - One Wire: allsky_modules/interfaces/onewire.md      
       - PWM: allsky_modules/interfaces/pwm.md
+    - Managing Modules: allsky_modules/manager.md      
     - Core Modules: 
       - Modules:
         - Load Image: allsky_modules/core/load_image.md

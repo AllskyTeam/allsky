@@ -198,10 +198,17 @@ function getDashboardLanPacketStats($interface)
 
 function DisplayDashboard_LAN()
 {
-	global $pageHeaderTitle, $pageIcon;
+	global $pageHeaderTitle, $pageIcon, $pageHelp;
 ?>
 	<div class="panel panel-allsky" id="as-lan-panel">
-		<div class="panel-heading"><i class="<?php echo $pageIcon ?>"></i> <?php echo $pageHeaderTitle ?></div>
+		<div class="panel-heading clearfix">
+            <span><i class="<?php echo $pageIcon ?>"></i> <?php echo $pageHeaderTitle ?></span>
+<?php if (!empty($pageHelp)) { ?>
+            <a class="pull-right" href="<?php echo $pageHelp; ?>" target="_blank" rel="noopener noreferrer" data-toggle="tooltip" data-container="body" data-placement="left" title="Help">
+                <i class="fa-solid fa-circle-question"></i> Help
+            </a>
+<?php } ?>
+        </div>
 <?php
 	$interfaces = array();
 

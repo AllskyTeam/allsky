@@ -169,7 +169,7 @@ function DisplayAllskyConfig() {
 	global $endSetting;
 	global $saveChangesLabel;
 	global $forceRestart;
-	global $pageHeaderTitle, $pageIcon;
+	global $pageHeaderTitle, $pageIcon, $pageHelp;
 
 	$cameraTypeName = "cameratype";			// json setting name
 	$cameraModelName = "cameramodel";		// json setting name
@@ -763,7 +763,12 @@ if ($debug) {
 	} else {
 		$x = "<i class='$pageIcon'></i> ";
 	}
-	echo "<div class='panel-heading'>$x $pageHeaderTitle for &nbsp;<b>$cameraType $cameraModel</b></div>";
+	$helpHtml = "";
+	if (!empty($pageHelp)) {
+		$helpUrl = htmlspecialchars($pageHelp, ENT_QUOTES);
+		$helpHtml = "<a class='pull-right' href='{$helpUrl}' target='_blank' rel='noopener noreferrer' data-toggle='tooltip' data-container='body' data-placement='left' title='Help'><i class='fa-solid fa-circle-question'></i> Help</a>";
+	}
+	echo "<div class='panel-heading clearfix'><span>$x $pageHeaderTitle for &nbsp;<b>$cameraType $cameraModel</b></span>{$helpHtml}</div>";
 	echo "<div class='panel-body' style='padding: 5px;'>";
 	if ($formReadonly != "readonly") {
 		echo "<div id='messages'>";

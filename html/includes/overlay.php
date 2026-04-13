@@ -7,7 +7,7 @@ if (basename(__FILE__) === basename($_SERVER['SCRIPT_FILENAME'])) {
 function DisplayOverlay($image_name)
 {
 	global $settings_array;
-	global $pageHeaderTitle, $pageIcon;
+	global $pageHeaderTitle, $pageIcon, $pageHelp;
 
 	$myStatus = new StatusMessages();
 ?>
@@ -78,7 +78,14 @@ function DisplayOverlay($image_name)
                     </div>
                 </div>
             </div> 
-			<div class="panel-heading"><i class="<?php echo $pageIcon ?>"></i> <?php echo $pageHeaderTitle ?></div>
+			<div class="panel-heading clearfix">
+                <span><i class="<?php echo $pageIcon ?>"></i> <?php echo $pageHeaderTitle ?></span>
+<?php if (!empty($pageHelp)) { ?>
+                <a class="pull-right" href="<?php echo $pageHelp; ?>" target="_blank" rel="noopener noreferrer" data-toggle="tooltip" data-container="body" data-placement="left" title="Help">
+                    <i class="fa-solid fa-circle-question"></i> Help
+                </a>
+<?php } ?>
+            </div>
                 <p id="editor-messages"><?php $myStatus->showMessages(); ?></p>
                 <nav class="navbar navbar-default">
                     <div class="container-fluid-de">
@@ -193,10 +200,6 @@ function DisplayOverlay($image_name)
                                 </li>
                                 <li>
                                     <div class="btn btn-lg navbar-btn oe-button" id="oe-options" data-toggle="tooltip" data-container="body" data-placement="top" title="Layout and App Options"><i class="fa-solid fa-gear"></i>
-                                    </div>
-                                </li>
-                                <li>
-                                    <div class="btn btn-lg navbar-btn oe-button" id="oe-help" data-toggle="tooltip" data-container="body" data-placement="top" title="Help"><i class="fa-solid fa-question"></i>
                                     </div>
                                 </li>
                             </ul>

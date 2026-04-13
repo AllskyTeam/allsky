@@ -325,7 +325,7 @@ function displayUserData($file, $displayType, $labelColClass = 'col-sm-4', $valu
 function DisplaySystem()
 {
 	global $temptype, $page, $settings_array, $status, $hostname, $useLocalWebsite, $useRemoteWebsite;
-	global $pageHeaderTitle, $pageIcon;
+	global $pageHeaderTitle, $pageIcon, $pageHelp;
 
 	$uptime = getUptime();
 	$allskyUptime = getAllskyUptimeText();
@@ -413,7 +413,14 @@ function DisplaySystem()
 	}
 	?>
 		<div class="panel panel-allsky">
-			<div class="panel-heading"><i class="<?php echo $pageIcon ?>"></i> <?php echo $pageHeaderTitle ?></div>
+			<div class="panel-heading clearfix">
+                <span><i class="<?php echo $pageIcon ?>"></i> <?php echo $pageHeaderTitle ?></span>
+<?php if (!empty($pageHelp)) { ?>
+                <a class="pull-right" href="<?php echo $pageHelp; ?>" target="_blank" rel="noopener noreferrer" data-toggle="tooltip" data-container="body" data-placement="left" title="Help">
+                    <i class="fa-solid fa-circle-question"></i> Help
+                </a>
+<?php } ?>
+            </div>
 			<div class="panel-body">
 
 				<?php

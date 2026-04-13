@@ -1,156 +1,170 @@
 # Backup and Restore Overview
 
-The **Backup and Restore** page exists for one simple reason: sooner or later, every system needs recovery.
+The **Backup and Restore** area exists for a simple reason: at some point, almost every Allsky installation needs a safe way to recover.
 
-That might be because:
+That might be because you are:
 
-- you are about to make major changes and want a clean rollback point,
-- you are moving Allsky to a new SD card or a new Raspberry Pi,
-- a setting change has caused unexpected behaviour,
-- module or overlay files have been edited and you want a safe fallback,
-- or you just want regular operational hygiene.
+- about to make major changes and want a rollback point,
+- moving Allsky to a new SD card or a different Raspberry Pi,
+- undoing a settings change that caused unexpected behaviour,
+- restoring module or overlay files after editing,
+- or just doing routine maintenance properly.
 
-In short, this page gives you a controlled way to protect and recover your Allsky environment without manual file wrangling.
+Instead of manually copying files around and hoping nothing important gets missed, this part of the WebUI gives you a controlled way to protect and recover your Allsky environment.
 
-!!! danger "Please read this guide before using backup/restore"
+!!! danger "Read this section before using backup or restore"
     Backup and restore operations can overwrite live files.
     If used incorrectly, they can replace working settings with older data.
-    Read this section and the backup/restore guides in full before using the tools in production.
+    Read this overview and the detailed backup and restore guides before using these tools on a live system.
 
-## Where this is in the WebUI
+## Where to find it
 
 Open:
 
-1. **System** page
-2. **Backups** tab
+1. **System**
+2. **Backups**
 
 ![Backups tab location](/assets/guide_images/backup-overview-tab-location.png)
 /// caption
 Screenshot: The System page with the **Backups** tab selected.
 ///
 
-## What the page does
+## What you can do from this page
 
-From this tab, you can:
+The **Backups** tab is your working area for everything related to archived recovery data.
+
+From here, you can:
 
 - create new backups,
 - upload existing backup archives,
-- inspect backup contents,
-- download backup archives,
-- restore backups,
-- and delete old backups.
+- inspect what a backup contains,
+- download backups to another device,
+- restore a backup,
+- and delete backups you no longer need.
 
-The table is grouped by backup type and gives you a quick operational view of what you have available.
+In other words, this page is both your backup creation screen and your recovery inventory.
 
 ## Backup types
 
-There are two backup types and they solve different problems.
+There are two backup types. They solve different problems, so choosing the right one matters.
 
-### 1. Config backups
+### Config backups
 
-A config backup is for restoring how your Allsky system is configured.
+A **Config backup** is used when you want to preserve how Allsky is configured.
 
-It includes core configuration areas and can optionally include extra sections such as user modules and database-related files.
+This type of backup includes the core configuration areas that control how your system behaves, and it can also include optional sections such as user modules and database-related content.
 
-Use this when you need to preserve:
+Use a config backup when you want to preserve things like:
 
 - system behaviour,
 - module settings,
 - overlay data,
 - camera-related configuration,
-- and environment/config files.
+- and environment or config files used by Allsky.
 
-### 2. Images backups
+### Images backups
 
-An images backup is for restoring captured image data.
+An **Images backup** is used when you want to preserve captured image data.
 
-It can include all image folders or selected date folders.
+This can include every image folder or only selected date folders, depending on what you need.
 
-Use this when you need to preserve:
+Use an images backup when you want to preserve:
 
 - historical captures,
-- selected observation dates,
-- or specific image sets before cleanup/maintenance.
+- specific observation dates,
+- or selected image sets before cleanup, migration, or storage changes.
+
+!!! tip "Quick rule of thumb"
+    If you want to preserve **how Allsky is set up**, create a **Config backup**.
+    If you want to preserve **what Allsky captured**, create an **Images backup**.
 
 ## Understanding the backups table
 
-The table is your operational inventory.
+The table on this page is your backup inventory. It shows what is available to restore, download, or inspect.
 
-Common columns:
+Common columns are:
 
-- **Backup Date/Time**: when the archive was created.
-- **Type**: Config or Images.
-- **Version**: Allsky version from when backup was created.
-- **Camera Type / Camera Model**: relevant for config restores and compatibility checks.
-- **Size**: archive size on disk.
-- **Actions**: info/download/restore/delete.
+| Column | What it means |
+|--------|----------------|
+| **Backup Date/Time** | When the archive was created. |
+| **Type** | Whether the archive is **Config** or **Images**. |
+| **Version** | The Allsky version the backup came from. |
+| **Camera Type / Camera Model** | Useful for config restore compatibility checks. |
+| **Size** | The archive size on disk. |
+| **Actions** | Controls for info, download, restore, and delete. |
 
 !!! note
-    Image backups show camera fields as **N/A**, because they are image archives rather than camera configuration archives.
+    Image backups show the camera fields as **N/A** because they are image archives, not camera configuration archives.
 
 ![Backups table](/assets/guide_images/backup-overview-layout.png)
 /// caption
 Screenshot: Backups table grouped by backup type with action icons.
 ///
 
-## Row actions: what each one is for
+## What the row actions do
 
-Each backup row has icon actions:
+Each backup row includes several action icons. These are meant to help you inspect first and restore second.
 
-- **Info**: opens a detailed summary of what is inside that backup.
-- **Download**: exports the archive from backup storage.
-- **Restore**: opens restore checks and restore options.
-- **Delete**: permanently removes that backup archive from storage.
+| Action | Use it for |
+|--------|-------------|
+| **Info** | Open a detailed summary of what is inside the backup. |
+| **Download** | Save the archive outside the device. |
+| **Restore** | Open restore checks and restore options. |
+| **Delete** | Permanently remove the backup archive from local storage. |
 
-Use **Info** first when in doubt. It is the fastest way to confirm whether a backup has what you need before you restore it.
+If you are unsure whether a backup contains what you need, start with **Info**. It is the fastest way to confirm the contents before you begin a restore.
 
-## How metadata is used
+## How backup metadata is stored
 
-To keep the UI responsive, backup metadata is stored in two places:
+To keep the WebUI responsive, backup metadata is stored in two places:
 
-- inside the backup archive (`metadata.json`), and
-- in a sidecar metadata file (`<backup_name>.json`).
+- inside the archive as `metadata.json`,
+- and in a sidecar metadata file named `<backup_name>.json`.
 
-The sidecar is used first for speed. If it is missing, metadata is read from the archive and then cached for future access.
+The sidecar file is used first because it is much faster to read. If it is missing, Allsky reads the metadata from inside the archive and then caches it for later use.
 
-That design keeps large-backup browsing practical, especially for images backups.
+This design is especially useful for larger backups, where repeatedly opening the archive would be slower.
 
-## Safety model during restore
+## How restore safety works
 
-Restore is intentionally not a blind one-click process.
+Restore is intentionally not a blind one-click action.
 
-Before restore, the system performs checks and displays what will happen.
-
-Depending on backup type and selection mode, checks can include:
+Before anything is written back to the system, Allsky performs checks and shows you what will happen. Depending on the backup type and the restore mode you choose, those checks can include:
 
 - camera compatibility validation,
 - required module validation,
-- selected section/folder/file validation,
-- and permission/ownership reapplication logic.
+- selected section, folder, or file validation,
+- and permission or ownership reapplication logic.
 
-You then confirm restore explicitly.
+You must then explicitly confirm the restore.
 
-## What happens after restore
+## What happens after a restore
 
-After a restore:
+Once a restore starts, Allsky gives you feedback at each stage so you can see what is happening.
 
-- a progress modal shows stage updates,
-- a completion modal summarises exactly what was restored,
-- and a restore log is written into `config/logs`.
+After the restore:
 
-This gives you both immediate confirmation and an audit trail.
+- a progress modal shows stage-by-stage updates,
+- a completion modal summarizes exactly what was restored,
+- and a restore log is written to `config/logs`.
 
-## Suggested workflow for reliability
+That gives you both immediate confirmation and a written record for troubleshooting later.
 
-If you are using Allsky in regular operation, this pattern works well:
+## A practical workflow that works well
 
-1. Create a config backup before significant changes.
-2. Create periodic image backups for important nights/dates.
+If you use Allsky regularly, this is a sensible pattern:
+
+1. Create a config backup before making significant changes.
+2. Create image backups for important nights or before cleanup.
 3. Keep more than one restore point.
-4. Download critical backups off-device.
-5. Use info + restore checks before every restore.
+4. Download critical backups off the device.
+5. Use **Info** and review the restore checks before every restore.
 
-## What to read next
+!!! info "Why this matters"
+    A backup only helps if it contains the right data and is still available when you need it.
+    Keeping more than one backup, and keeping important ones off-device, gives you much better recovery options.
+
+## Read next
 
 - [Creating Backups](backup.md)
 - [Restoring Backups](restore.md)

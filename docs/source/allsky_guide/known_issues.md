@@ -12,11 +12,7 @@ This page lists known issues and limitations with the current Allsky release. Wo
 
 ## Overlays
 
-- **Known Issue**: Fonts sometimes change to Glyphicons This just a display problem in the Text Editor; the actual font used is whatever you initially specified.
-
-    **Workaround**: None
-
-    **Future Plans**: Will fix in next major release.
+- None
 
 ## Modules
 
@@ -24,7 +20,7 @@ This page lists known issues and limitations with the current Allsky release. Wo
 
     **Workaround**: None
 
-    **Future Plans**: Will change in next release.
+    **Future Plans**: Will change in a future release.
 
 - **Known Issue**: The Overlay Module may be disabled the first time it runs. This is due to the module having to download the JPL ephemeris data which can take some time on a slow Internet connection.
     **Workaround**: Re-enable it in the Module Manager.

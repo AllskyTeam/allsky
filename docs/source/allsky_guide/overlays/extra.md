@@ -1,5 +1,5 @@
 # Extra Data
-This section explains how you can wite data that is available for use in the overlay from yoru own scripts outside of Allsky.
+This section explains how you can wite data that is available for use in the overlay from your own scripts outside of Allsky.
 
 !!! warning  ""
 

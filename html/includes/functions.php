@@ -1340,7 +1340,7 @@ function haveSQLite() {
     $result = true;
 
 	try {
-    	$db = new SQLite3(ALLSKY_DATABASES);
+    	$db = new SQLite3(ALLSKY_DATABASE);
 	} catch (Exception $e) {
 		$db = false;
 	}

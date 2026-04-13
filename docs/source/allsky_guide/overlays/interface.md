@@ -19,29 +19,31 @@ The Overlay Editor web page consists of two key areas:
 The Overlay Editor toolbar
 ///
 
-| Number { .w-5p }| Function { .w-25p } | Description |
+|  # { .w-5p }| Function { .w-25p } | Description |
 |--------|----------|-------------|
-| 1 | Save The Current Configuration | This is enabled and turns green when any changes have been made that require saving. The word "Modified" is also appended to the tab label, i.e., "Overlay Editor - Modified". |
-| 2 | Add New Text Field | Click to add a new field with text and/or variables to the overlay, including adding a variable |
-| 3 | Add New Image Field | Click to add an existing image to the overlay. The image must have previously been uploaded using the Image Manager. |
-| 4 | Delete selcted field | Click to delete the selected field. The "del" or "delete" keys on the keyboard can also be used. The icon is only enable turns green when a field is selected. |
-| 5 | Variable manager |  Click to add a pre-defined field from the Variable Manager. See the [Variable Manager](#variable-manager) section for more details.
-| 6 | Preview| Click to preview each of the fields. This is useful to see what actual data will look like on the overlay so you can better align fields.|
-| 7 | Group Fields | Groups the selected fields |
-| 8 | Un Group Fields | Ungroups the selected group |
-| 9 | Left Align | Lest aligns the selected fields |
-|10 | Equal Vertical Space | Equally distributes the selected fields between the first and last selected fields |
-|11 | Equal Horizontal Space | Equally distributes the selected fields between the first and last selected fields |
-|12 | Zoom In | Zooms into the overlay |
-|13 | Zoom Out | Zooms out of the overlay |
-|14 | Full Size | Views the overlay at full resolution |
-|15 | Fit | Fits the overlay into the screen |
-|16 | Overlay Manager | Displays the [Overlay Manager](#overlay-manager) |
-|17 | Overlay Errors | Only displayed if any fields are detected that are off the screen. Selecting this icon will display the [Overlay Errors](#overlay-errors) dialog allowing the off-screen fields to be deleted or fixed. Fixing the field will move it into the visible portion of the overlay editor allowing you to move it to the exact position required. |
-|18 | Font Manageer | Displays the [Font Manager](#font-manager) |
-|19 | Image Manager | Displays the [Image Manager](#image-manager) |
-|20 | Settings | Displays the [Overlay Settings](#overlay-settings) |
-|21 | Help | Displays the overlay manager help |
+| 1 | Grab Handle | Grab handle to move the toolbar from the menu dock. Dropping the toolbar back near the dock will re dock it |
+| 2 | Save The Current Configuration | This is enabled and turns green when any changes have been made that require saving. The word "Modified" is also appended to the tab label, i.e., "Overlay Editor - Modified". |
+| 3 | Add New Text Field | Click to add a new field with text and/or variables to the overlay, including adding a variable |
+| 4 | Add New Image Field | Click to add an existing image to the overlay. The image must have previously been uploaded using the Image Manager. |
+| 5 | Delete selected field | Click to delete the selected field. The "del" or "delete" keys on the keyboard can also be used. The icon is only enable turns green when a field is selected. |
+| 6 | Variable manager |  Click to add a pre-defined field from the Variable Manager. See the [Variable Manager](#variable-manager) section for more details.
+| 7 | Preview| Click to preview each of the fields. This is useful to see what actual data will look like on the overlay so you can better align fields.|
+| 8 | Split Field | Splits a field. If a field contains a label and varibale this will create two fields, one with the label and one with the variable |
+| 9 | Grid Align | Align fields to grid. This will re align all fields to the grid, note you may have to rejustify fields after doing this |
+| 10 | Group Fields | Groups the selected fields |
+| 11 | Un Group Fields | Ungroups the selected group |
+| 12 | Left Align | Lest aligns the selected fields |
+| 13 | Equal Vertical Space | Equally distributes the selected fields between the first and last selected fields |
+| 14 | Equal Horizontal Space | Equally distributes the selected fields between the first and last selected fields |
+| 15 | Zoom In | Zooms into the overlay |
+| 16 | Zoom Out | Zooms out of the overlay |
+| 17 | Full Size | Views the overlay at full resolution |
+| 18 | Fit | Fits the overlay into the screen |
+| 19 | Overlay Manager | Displays the [Overlay Manager](#overlay-manager) |
+| 20 | Overlay Errors | Only displayed if any fields are detected that are off the screen. Selecting this icon will display the [Overlay Errors](#overlay-errors) dialog allowing the off-screen fields to be deleted or fixed. Fixing the field will move it into the visible portion of the overlay editor allowing you to move it to the exact position required. |
+| 21 | Font Manageer | Displays the [Font Manager](#font-manager) |
+| 22 | Image Manager | Displays the [Image Manager](#image-manager) |
+| 23 | Settings | Displays the [Overlay Settings](#overlay-settings) |
 
 ### Keyboard/Mouse 
 There are various keyboard and mouse shortcuts used by the overlay manager
@@ -210,6 +212,10 @@ The Font Manager Dialog
     - It is not possible to delete a System Font and they will not have a delete icon as shown for the first several fonts above.
     - If a font is in use when deleted then any fields using the font will revert to the default font as specified in the overlay settings.
 
+!!! warning "IMPORTANT"
+
+    - By default the maximum file that can be uploaded is 2M. If your fonts are larger you must change this setting. To change the setting edit, as root, ``/etc/php/8.2/cli/php.ini``` . Find the line ```upload_max_filesize = 2M``` and change it to ```upload_max_filesize = 20M``` . The find the line ```post_max_size = 8M``` and change it to ```post_max_size = 20M```
+
 #### Font Preview
 The Font Preview dialog allows you to preview any installed font, including system fonts.
 
@@ -303,8 +309,7 @@ The Overlay Settings
 6. The default font color for new text fields.
 7. The default rotation for new text fields.
 8. The default colour used for the font stroke.
-9. The default expiration time in seconds for "extra" data files that do not specify an expiry time. This applies to all variables in .txt files and entries in .json files that don't have an "expires" attribute.
-10. The default text used when a field has expired.
+9. The default text used when a field has expired.
 
 
 ![Overlay Settings editor](/assets/overlay_images/overlay-settings-editor.png)

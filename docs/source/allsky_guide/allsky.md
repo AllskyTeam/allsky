@@ -1,63 +1,112 @@
-!!! danger  "Before you install"
-    Your camera must be connected to the Pi prior to installation.
-    If you have an RPi camera, run the following to make sure the camera can be seen by Allsky:
+!!! danger "Before you install"
 
-    ```rpicam-still --list-cameras```
+    Your camera must be connected to the Raspberry Pi before you install Allsky.
 
-    If camera number 0 (the first camera) is in the list, you're good to go.
-    Note that some non-Raspberry Pi brand cameras may need special software installed and/or operating system configuration changes - read the camera manual.
+    If you are using a Raspberry Pi camera, check that the operating system can see it:
 
-    The above will only work if you run the command as the user you setup when burning the sd card image. If you have created another user then run the following command Before the ```rpicam-still``` command
+    ```bash
+    rpicam-still --list-cameras
+    ```
 
-    ```usermod -aG video USERNAME```
+    If camera `0` appears in the list, the camera is visible and Allsky should be able to use it.
 
-    Where USERNAME is the user you created
+    Some non-Raspberry Pi cameras need extra software, drivers, firmware, or operating system changes before they can be used. If that applies to your camera, follow the camera vendor's instructions first.
 
+    The `rpicam-still` command must be run as the user you configured when you created the SD card image. If you created a different user later, add that user to the `video` group first:
 
+    ```bash
+    sudo usermod -aG video USERNAME
+    ```
 
-### Before installing
-The following needs to be done prior to installing Allsky the first time on your Pi:
+    Replace `USERNAME` with the account you actually use on the Pi.
 
-- If this is a new Pi, you'll need to install the Raspberry Pi Operating System (OS)   on it. We recommend installing the Desktop version of Pi OS.
-- Make sure your Pi has a working [Internet connection](https://www.raspberrypi.com/documentation/computers/configuration.html)  . Use a wired LAN connection if possible - it's faster and more reliable than a Wi-Fi connection. If you use Power over Ethernet (PoE)   you can run a single ethernet cable to your Pi.
-- Ensure git is installed:  
-  ```sudo apt-get install git```
+# Installing Allsky
 
-### If Allsky is installed
-If Allsky already exists on your Pi, stop it:
+Installing Allsky is usually straightforward, but it goes much more smoothly if a few basic things are already in place. This page walks through the normal installation process, covers what to do if an older copy of Allsky is already present, and explains the main prompts you are likely to see during installation.
 
+For most users, the overall process is simple: prepare the Pi, make sure the camera and network are working, download the Allsky source, run the installer, then complete the first-time setup in the WebUI. None of those steps is especially difficult on its own, but it is worth doing them in order so that you are not trying to diagnose several unrelated problems at once.
+
+### Before Installing
+
+Before you install Allsky for the first time, make sure the Pi itself is in a sensible starting state.
+
+The Raspberry Pi should already be running Raspberry Pi OS. In most cases, the Desktop version is recommended because it tends to make general setup and troubleshooting easier, especially while you are still getting the system working. Headless setups are absolutely possible, but if this is your first installation the Desktop version usually gives you a smoother starting point.
+
+The Pi should also have a working Internet connection. A wired network connection is preferable if you can use one, because it is generally faster and more reliable than Wi-Fi during installation. This matters more than it may first appear. The installer may need to fetch packages, update components, and compile software, and that is all easier when the connection is stable. If you are using Power over Ethernet, that can make deployment especially neat because you only need one cable to the Pi.
+
+You also need `git` installed:
+
+```bash
+sudo apt-get install git
 ```
+
+!!! tip "A reliable installation starts with a reliable Pi"
+
+    If the camera is not detected, the network is unstable, or the Pi itself is only partly configured, it is better to fix that first and install Allsky afterwards. Allsky depends on those pieces working properly, so installing on top of a half-configured system tends to create confusing failures later.
+
+### If Allsky Is Already Installed
+
+If Allsky is already on the Pi, stop it first:
+
+```bash
 sudo systemctl stop allsky
 cd
 ```
 
-then perform one of these steps:
+After that, decide what you want to do with the existing installation. There are three common choices, and they each mean something slightly different.
 
-- To upgrade the old version and keep its settings:  
-  ```mv  allsky  allsky-OLD```  
-  During installation you will be asked if you want to use the settings from allsky-OLD.  
-  **Nothing is lost with this option.**
+=== "Keep old settings"
 
+    If you want to upgrade and preserve the old installation so its settings can be reused, rename the directory:
 
-- To archive the old version but not use it:  
-  ```mv  allsky  allsky-SAVED```  
-  **Nothing is lost** with this option but after installation you'll need to re-enter all your settings and the new version won't have any of your prior images, timelapses, etc. At some point you'll want to delete the allsky-SAVED directory to free up its disk space.
+    ```bash
+    mv allsky allsky-OLD
+    ```
 
-- To delete the old version - only select this option if you're sure you don't want any saved images, darks, and configuration settings:  
-  ```rm  -fr  allsky```  
-  ***Everything is lost*** with this option so after installation you'll need to re-enter all your settings.
+    During installation, you will be asked whether you want to use the settings from `allsky-OLD`.
 
-### Installing Allsky
-Get the Allsky software and put it in ==~/allsky==. Except for some system files, all Allsky-related files reside in this directory.
+    This is the safest upgrade path for most users. Nothing is deleted, and you still have the earlier installation available if you need to refer back to it.
 
-```
+=== "Archive old version"
+
+    If you want to keep the old installation as a reference but do **not** want its settings reused automatically, rename it differently:
+
+    ```bash
+    mv allsky allsky-SAVED
+    ```
+
+    This keeps everything, but the new installation will behave like a fresh setup. You will need to configure it again, and the new installation will not automatically use your earlier images, timelapses, darks, or settings. At some point you will probably want to remove `allsky-SAVED` to reclaim disk space.
+
+=== "Delete old version"
+
+    If you are completely sure you do not want the old installation, you can remove it:
+
+    ```bash
+    rm -fr allsky
+    ```
+
+    This is destructive. Images, darks, configuration files, and other saved data in that directory are lost. Only choose this option if you are certain that you do not need anything from the previous installation.
+
+!!! warning "Be deliberate here"
+
+    If you are unsure which option to choose, renaming the old directory is almost always better than deleting it. Disk space is usually easier to recover later than lost configuration or lost data.
+
+### Downloading Allsky
+
+Allsky is installed into `~/allsky`. With the exception of some system-level files created during setup, that directory becomes the main home for the installation.
+
+Clone the repository like this:
+
+```bash
 cd
-git clone  --depth=1  --recursive  https://github.com/AllskyTeam/allsky.git
+git clone --depth=1 --recursive https://github.com/AllskyTeam/allsky.git
 ```
 
-This may take a minute and should produce output similar to what's below. The new ==allsky== directory is approximately 150 MB after download.
+This can take a little while depending on the Pi model, storage speed, and network speed. When it finishes, the new `allsky` directory will normally be around 150 MB.
 
-```
+You should see output broadly similar to this:
+
+```text
 Cloning into 'allsky'...
 remote: Enumerating objects: 891, done.
 ...  more commands here
@@ -70,77 +119,139 @@ remote: Enumerating objects: 119, done.
 Submodule path 'src/sunwait-src': checked out '151d8340a748a4dac7752ebcd38983b2887f5f0c'
 ```
 
-Now install Allsky:
+### Running The Installer
 
-``
-cd allsky
+Once the source has been downloaded, start the installer:
+
+```bash
+cd ~/allsky
 ./install.sh
-``
-
-The installation may prompt for several items (accepting the defaults is recommended). Upgrades produce fewer prompts.
-
-- If the **host name** has never been changed you are asked to enter a new name - the default is ```allsky```. If you have more than one Pi on the same network they must all have unique names. For example, if you have a test Pi you may want to call it allsky-test.
-- The **Locale** to use. This determines what the decimal separator is in log output (period or comma). Note that the default locale is ```en_GB.UTF-8``` where the Pi is developed.
-- Adding **swap** space if needed. This effectively increases the amount of memory your Pi has. Insufficient swap space is one of the leading causes of timelapse video creations problems.
-- Putting the ==~/allsky/tmp== directory in memory instead of on the disk. This directory holds temporary Allsky files and is where most Allsky files are initially written to. Putting the directory in memory **significantly** reduces the number of writes to the SD card, which increases its life.
-- New installations will prompt for the **Latitude** and **Longitude** to use. In most cases values based on your network's location will be displayed as defaults.
-- If a **reboot** is needed you are asked if the Pi should be rebooted when installation completes. If you answer "no", note that Allsky will not start until the Pi is rebooted.
-The installation will notify you of any actions you need to take when the installation completes. If there are any such actions, the WebUI will display a message reminding you of those actions. Clear the message(s) when done performing the actions.
-
-!!! info  "Instalation time"
-    The installation may take up to an hour, depending on how many package you already have installed and the speed of your Pi. Subsequent installations of Allsky will be significantly faster.
-
-### Post installation
-After installation, reboot if told to, then perform any actions the identified during installation. Allsky will not begin until you do the following:
-
-- Bring up the WebUI by entering ```http://allsky.local``` or ```http://allsky.localhost``` in a web browser. The default username is admin and the default password is secret.
-
-!!! danger  "Remote Access"
-    If your Pi is accessible via the Internet, change the username and password via the Change Password link on the WebUI.
-
-- Go to the ```Allsky Settings``` page.
-- If there's a message saying you need to configure Allsky or review the settings, do that now.
-- Click on the blue button. It may look like [Save Changes](#){ .md-button .md-button--small }, or [Configuration Done; Start Allsky](#){ .md-button .md-button--small }, or something similar. Allsky will start.
-
-### Starting and stopping Allsky
-Allsky starts automatically when the Raspberry Pi boots up. To enable or disable this behavior, run:
-
-```
-sudo systemctl enable allsky     # starts Allsky when the Pi boots up
 ```
 
-\#   OR
+The installer may ask a number of questions. In most cases, accepting the defaults is the best choice unless you already know that your setup needs something different. If you are upgrading from an earlier Allsky installation, you will usually see fewer prompts because some information is already known.
 
-```
-sudo systemctl disable allsky    # does NOT automatically start Allsky
-```
+/// details | Common installation prompts
 
-When you want to manually start, stop, or restart Allsky, or obtain status, use one of these commands:
+#### Host name
 
-```
+If the Raspberry Pi still has its default host name, you may be asked to choose a new one. The default suggestion is usually `allsky`. If you have more than one Pi on the same network, they must all have unique names. A test machine might be named `allsky-test`, for example.
+
+#### Locale
+
+You may be asked which locale to use. This affects details such as the decimal separator in log output. The development environment uses `en_GB.UTF-8` by default.
+
+#### Swap space
+
+The installer may offer to add swap space. This effectively gives the system more working memory, and that can be important on smaller Pis. Insufficient swap space is one of the more common causes of timelapse creation problems.
+
+#### Temporary directory in memory
+
+You may be asked whether `~/allsky/tmp` should be placed in memory rather than on the SD card. This directory is used heavily for temporary files, and keeping it in memory can significantly reduce SD card writes. That generally improves card longevity.
+
+#### Latitude and longitude
+
+On a new installation, the installer will ask for the location. In many cases it can suggest defaults based on the network environment. These values matter because Allsky uses them for sunrise, sunset, and other time-dependent behaviour.
+
+#### Reboot
+
+If installation changes require a reboot, the installer will ask whether the Pi should be rebooted when it finishes. If you choose not to reboot at that point, remember that Allsky will not start properly until the reboot has happened.
+
+///
+
+If the installer tells you that there are post-installation actions to complete, do those before expecting the system to run normally. The WebUI will also remind you about required follow-up actions if any remain outstanding.
+
+!!! info "Installation time"
+
+    The first installation can take a surprisingly long time, especially on older Pis or systems that need many packages installed. An hour is not impossible. Later installs and upgrades are usually much faster.
+
+### After Installation
+
+Once installation finishes, reboot the Pi if you were told to do so. After that, open the WebUI and complete the initial configuration.
+
+Use one of the following in a web browser:
+
+- `http://allsky.local`
+- `http://allsky.localhost`
+
+The default login is:
+
+- Username: `admin`
+- Password: `secret`
+
+!!! danger "Remote access"
+
+    If your Pi can be reached from the Internet, change the WebUI username and password immediately using the **Change Password** link. The defaults are only suitable for first-time local setup.
+
+From there, go to **Allsky Settings**. If the WebUI shows a message saying Allsky still needs to be configured or reviewed, do that before trying to start it. When you are ready, click the blue action button. Depending on the state of the installation, it may say something like [Save Changes](#){ .md-button .md-button--small } or [Configuration Done; Start Allsky](#){ .md-button .md-button--small }.
+
+That step is important. Installation alone does not always mean the system is ready to begin capturing immediately. The WebUI is where you confirm the configuration and allow Allsky to start with a valid setup.
+
+### Starting And Stopping Allsky
+
+Allsky is configured to start automatically when the Raspberry Pi boots. If you want to control that behaviour manually, use `systemctl`.
+
+=== "Enable auto-start"
+
+    ```bash
+    sudo systemctl enable allsky
+    ```
+
+    This makes Allsky start automatically whenever the Pi boots.
+
+=== "Disable auto-start"
+
+    ```bash
+    sudo systemctl disable allsky
+    ```
+
+    This prevents Allsky from starting automatically on boot.
+
+When you want to control the service manually, these are the commands you will use most often:
+
+```bash
 sudo systemctl start allsky
 sudo systemctl stop allsky
-sudo systemctl restart allsky    # a restart is the same as a stop then start
+sudo systemctl restart allsky
 sudo systemctl status allsky
 ```
 
-!!! info  "TIP"
-    Add lines like the following to ~/.bashrc to save typing:  
-    ``` alias start='sudo systemctl start allsky'```  
-    You then only need to type start to start Allsky. Do this for the other commands as well.
+`restart` is effectively the same as doing a stop followed by a start.
 
-### Troubleshooting
+!!! tip "Save yourself some typing"
 
-Starting Allsky from the terminal is a great way to track down issues as it provides debug information to the terminal window. To start Allsky manually, run:
+    If you do this often, add shell aliases to `~/.bashrc`, for example:
 
-```
+    ```bash
+    alias start='sudo systemctl start allsky'
+    alias stop='sudo systemctl stop allsky'
+    alias restart='sudo systemctl restart allsky'
+    alias status='sudo systemctl status allsky'
+    ```
+
+    Then open a new terminal session, or reload the shell, and you can use the shorter commands directly.
+
+### Troubleshooting From The Terminal
+
+If Allsky is not behaving as expected, running it directly from a terminal is often one of the quickest ways to see what is wrong. Starting it manually gives you debug output in the terminal window, which is much easier to work with than guessing from symptoms alone.
+
+To do that, first stop the service version and then start Allsky manually:
+
+```bash
 sudo systemctl stop allsky
 cd ~/allsky
 ./allsky.sh
 ```
 
-If you are using a desktop environment (Pixel, Mate, LXDE, etc.) or using remote desktop or VNC, you can add the --preview argument to show the images the program is currently saving in a separate window:
+This is often the best first step when something appears broken but the WebUI does not make the cause obvious. Errors and warnings that would otherwise be hidden inside logs become visible immediately in the terminal.
 
-```
+If you are running a desktop environment such as Pixel, Mate, or LXDE, or if you are connected through remote desktop or VNC, you can add the `--preview` option:
+
+```bash
 ./allsky.sh --preview
 ```
+
+That opens a preview window showing the images currently being saved. It can be very useful while you are testing camera operation, exposure behaviour, or general image flow.
+
+!!! note
+
+    Manual terminal startup is mainly a troubleshooting technique. For normal use, Allsky is intended to run as a service under `systemctl`.

@@ -86,13 +86,18 @@ function getWifiConfigRfkillStatus()
 
 function DisplayWPAConfig()
 {
-    global $pageHeaderTitle, $pageIcon;
+    global $pageHeaderTitle, $pageIcon, $pageHelp;
     $interfaces = getWifiConfigInterfaces();
     $rfkillStatus = getWifiConfigRfkillStatus();
 ?>
     <div class="panel panel-allsky" id="as-wifi-panel">
-        <div class="panel-heading">
-            <i class="<?php echo $pageIcon ?>"></i> <?php echo $pageHeaderTitle ?>
+        <div class="panel-heading clearfix">
+            <span><i class="<?php echo $pageIcon ?>"></i> <?php echo $pageHeaderTitle ?></span>
+<?php if (!empty($pageHelp)) { ?>
+            <a class="pull-right" href="<?php echo $pageHelp; ?>" target="_blank" rel="noopener noreferrer" data-toggle="tooltip" data-container="body" data-placement="left" title="Help">
+                <i class="fa-solid fa-circle-question"></i> Help
+            </a>
+<?php } ?>
         </div>
         <div class="panel-body">
             <?php CSRFToken() ?>

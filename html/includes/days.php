@@ -13,7 +13,7 @@ function ListDays()
 	$useThumbnailsIfExist = false;
 
 	global $page;
-	global $pageHeaderTitle, $pageIcon;
+	global $pageHeaderTitle, $pageIcon, $pageHelp;
 	global $fa_size, $fa_size_px;
 
 	if (! is_dir(ALLSKY_IMAGES)) {
@@ -46,7 +46,14 @@ function ListDays()
 <div class="row">
 	<div class="col-lg-12">
 	<div class="panel panel-allsky">
-	<div class="panel-heading"><i class="<?php echo $pageIcon ?>"></i> <?php echo $pageHeaderTitle ?></div>
+	<div class="panel-heading clearfix">
+        <span><i class="<?php echo $pageIcon ?>"></i> <?php echo $pageHeaderTitle ?></span>
+<?php if (!empty($pageHelp)) { ?>
+        <a class="pull-right" href="<?php echo $pageHelp; ?>" target="_blank" rel="noopener noreferrer" data-toggle="tooltip" data-container="body" data-placement="left" title="Help">
+            <i class="fa-solid fa-circle-question"></i> Help
+        </a>
+<?php } ?>
+    </div>
 	<div class="panel-body">
 	<div class="row">
 		<div class="col-md-12">

@@ -29,6 +29,8 @@ of the current release.
         - Several menu items are now grouped together; putting your cursor over them or clicking on them shows a list of choices.  
           For example, the **Settings** group contains **Allsky Settings** and **Editor**.
 
+        - New header. Shows more information abotu what state Allsky is in
+
         - **Improved Login System**
             - The old login system has been removed and a new version implemented
             - Existing login details are not affected
@@ -48,7 +50,14 @@ of the current release.
             - Directories in the `images` directory starting with `test` are now displayed
             - Image, timelapse, keogram, and startrail icons are now aligned with the Delete button
 
+        - ** Improved light and Dark Mode **
+            - The light and dark modes have been overhauled 
+
         - You can now view the mini-timelapse (if it exists) from the top of the **Live View** page
+
+        - Image pages
+            - Improved layout
+            - Improved performance
 
         - **Overlay Editor**
             - Enhanced Variable Manager for easier variable handling
@@ -62,12 +71,14 @@ of the current release.
             - Rectangles can now be drawn with configurable border and background colours
             - Solar calculations moved to the new **Solar System** module
             - Font Manager now auto-detects fonts in use
+            - The toolbar can now be dragged around the screen, this is useful if you are adding fields and have to scroll the page
             - **Mask Editor**
                 - Create and edit masks directly in the WebUI
                 - Accessible from the Image Manager
                 - Masks can be reused by other modules (e.g. star count, meteor detection)
 
         - **Module Manager**
+            - New Package manager used to manage modules, no more commnd line needed
             - UI now dynamically adapts to selected devices
             - Search and filter modules by type
             - New configuration field types:
@@ -84,9 +95,10 @@ of the current release.
                 - **Graph**
             - Refactored module system for easier development
             - New module installer (no git clone required)
-            - Modules are automatically upgraded
             - New **Device Manager** for connected hardware
             - Modules moved into the main Allsky directory tree
+              - Modules are no longer stored in /opt/allsky/modules. They will be migrated upon installation of this version
+            - Module options layout improvements
             - **New / Updated Modules**
                 - ADSB
                 - AI (deprecated)
@@ -110,7 +122,7 @@ of the current release.
                 - Reusable blocks and charts
                 - Overlay and chart helper functions
                 - Expanded metadata support:
-                    - Conditional fields
+                    - Conditional fields, support multiple conditions
                     - Advanced DB control
                     - Overlay data exposure
                     - Install/uninstall hooks
@@ -128,6 +140,7 @@ of the current release.
                 - Yes/No
 
         - **System page**
+            - Editor for system page additions
             - Auto refresh
             - Watchdog service control
 

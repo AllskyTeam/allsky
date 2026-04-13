@@ -545,6 +545,10 @@ class MODULESEDITOR {
 			hidden = 'hidden';
 		}
 
+		let docsHTML = '';
+		if (data.metadata.docs !== undefined && data.metadata.docs !== '') {
+			docsHTML = '<a type="button" class="btn btn-xs btn-link pull-right" target="_blank" rel="noopener noreferrer" href="' + data.metadata.docs + '" title="Help"><i class="fa-solid fa-question-circle"></i> Help</a>';
+		}
 
 		let deprecated = this.#getNested(data.metadata, 'deprecation.deprecated', 'false')
 
@@ -588,9 +592,8 @@ class MODULESEDITOR {
 		let template = `
             <div id="${moduleKey}" data-id="${data.module}" class="list-group-item allskymodule ${locked}" data-search="${data.metadata.description} ${data.metadata.name}" data-group="${data.metadata.group}">
                 <div class="panel panel-default">
-                    ${lockedOverlayHTML}
-                    <div class="panel-heading"><span class="warning" data-toggle="popover" data-delay=\'{"show": 1000, "hide": 200}\' data-placement="top" data-trigger="hover" data-placement="top" title="" data-content=""><i class="fa-solid fa-2x fa-triangle-exclamation"></i></span> ${lockedHTML}${data.metadata.name} ${version} ${enabledHTML}</div> 
-                    <div class="panel-body">${nameData} <div class="pull-right">${settingsHtml} ${addHTML}</div></div> 
+                    <div class="panel-heading"><span class="warning" data-toggle="popover" data-delay=\'{"show": 1000, "hide": 200}\' data-placement="top" data-trigger="hover" data-placement="top" title="" data-content=""><i class="fa-solid fa-2x fa-triangle-exclamation"></i></span> ${lockedHTML}${data.metadata.name} ${version} ${docsHTML} ${enabledHTML}</div> 
+                    <div class="panel-body">${lockedOverlayHTML}${nameData} <div class="pull-right">${settingsHtml} ${addHTML}</div></div> 
                 </div> 
             </div>`;
 
@@ -1897,9 +1900,9 @@ class MODULESEDITOR {
 			}
 		}
 
-		let helpLink = '';
-		if (moduleData.metadata.help !== undefined) {
-			helpLink = `<a type="button" class="btn btn-danger mr-4" target="_blank" href="${moduleData.metadata.help}"><i class="fa-solid fa-question"></i></a>`;
+		let docsLink = '';
+		if (moduleData.metadata.docs !== undefined) {
+			docsLink = `<a type="button" class="btn btn-danger mr-4" target="_blank" href="${moduleData.metadata.docs}"><i class="fa-solid fa-question"></i></a>`;
 		}
 
 		let dialogTemplate = `
@@ -1919,7 +1922,7 @@ class MODULESEDITOR {
                         <div class="modal-footer">
                             ${testButton}
 														<div class="pull-right">
-															${helpLink}
+															${docsLink}
 															<button type="button" class="btn btn-danger" data-dismiss="modal">Cancel</button>
 															<button type="button" class="btn btn-primary" id="module-settings-dialog-save">Save</button>
 														</div>
@@ -2705,6 +2708,106 @@ class MODULESEDITOR {
 		return $('<div>').text(value ?? '').html();
 	}
 
+	#moduleHasChangelog(module) {
+		if (!module || module.changelog === null || module.changelog === undefined) {
+			return false;
+		}
+
+		return Object.keys(module.changelog).length > 0;
+	}
+
+	#renderModuleChangelogHtml(changelog) {
+		if (changelog === null || changelog === undefined || Object.keys(changelog).length === 0) {
+			return '<div class="alert alert-info" style="margin-bottom: 0;">No changelog is available for this module.</div>';
+		}
+
+		const wrapperId = 'module-installer-changelog-' + Date.now() + '-' + Math.floor(Math.random() * 100000);
+		let state = ' in';
+		let idCounter = 0;
+		let html = '\
+			<div class="clearfix" style="margin-bottom: 10px;">\
+				<button type="button" class="btn btn-default btn-sm pull-right module-installer-changelog-toggle-all" data-target="#' + wrapperId + '" data-expanded="false">Show All Changes</button>\
+			</div>\
+			<div class="panel-group" id="' + wrapperId + '" role="tablist">';
+
+		Object.entries(changelog).reverse().forEach(([version, versionChangeData]) => {
+			let changeHTML = '';
+			Object.entries(versionChangeData || {}).forEach(([, changeList]) => {
+				let firstChange = '';
+				let subsequentChangesHTML = '';
+
+				if (typeof changeList.changes === 'string') {
+					firstChange = '&bull; ' + this.#escapeHtml(changeList.changes);
+				} else {
+					const changeArray = Object.values(changeList.changes || {});
+					firstChange = '&bull; ' + this.#escapeHtml(changeArray[0] || '');
+					for (let i = 1; i < changeArray.length; i++) {
+						subsequentChangesHTML += '\
+							<div class="row">\
+								<div class="col-md-6 col-md-offset-4">&bull; ' + this.#escapeHtml(changeArray[i]) + '</div>\
+							</div>';
+					}
+				}
+
+				let author = 'Unknown Author';
+				if (changeList.author !== undefined) {
+					author = this.#escapeHtml(changeList.author);
+				}
+
+				if (changeList.authorurl !== undefined) {
+					author = '<a href="' + this.#escapeHtml(changeList.authorurl) + '" target="_blank" rel="noopener noreferrer">' + author + '</a>';
+				}
+
+				changeHTML += '\
+					<div class="row">\
+						<div class="col-md-4">' + author + '</div>\
+						<div class="col-md-6">' + firstChange + '</div>\
+					</div>\
+					' + subsequentChangesHTML;
+			});
+
+			const id = 'module-installer-changelog-' + idCounter++;
+			html += '\
+				<div class="panel panel-default">\
+					<div class="panel-heading" role="tab">\
+						<h4 class="panel-title">\
+							<a role="button" data-toggle="collapse" href="#' + id + '" aria-expanded="' + (state !== '' ? 'true' : 'false') + '">Version - ' + this.#escapeHtml(version) + '</a>\
+						</h4>\
+					</div>\
+					<div id="' + id + '" class="panel-collapse collapse' + state + '" role="tabpanel">\
+						<div class="panel-body">\
+							' + changeHTML + '\
+						</div>\
+					</div>\
+				</div>';
+			state = '';
+		});
+
+		html += '</div>';
+		return html;
+	}
+
+	#showModuleChangelog(moduleName) {
+		const allModules = []
+			.concat((this.#installerData && this.#installerData.modules) || [])
+			.concat((this.#installerData && this.#installerData.coreModules) || []);
+		const module = allModules.find((item) => item.module === moduleName) || null;
+		const title = module ? this.#escapeHtml(module.displayName || module.module) : this.#escapeHtml(moduleName);
+		const html = this.#renderModuleChangelogHtml(module ? module.changelog : null);
+
+		bootbox.dialog({
+			title: '<h4>Change Log: ' + title + '</h4>',
+			message: '<div style="max-height: 60vh; overflow-y: auto;">' + html + '</div>',
+			size: 'large',
+			buttons: {
+				main: {
+					label: 'Close',
+					className: 'btn-primary'
+				}
+			}
+		});
+	}
+
 	#selectedInstallerBranch() {
 		return $('#module-installer-branch').val() || this.#installerBranch || '';
 	}
@@ -3165,6 +3268,7 @@ class MODULESEDITOR {
 		summaryContainer.empty();
 
 		const searchText = ($('#module-installer-search').val() || '').trim().toLowerCase();
+		const autoExpandGroups = searchText !== '';
 		const filterMode = $('#module-installer-filter').val() || 'all';
 		const modules = (result.modules || []).filter((module) => {
 			if (filterMode === 'updateable' && !module.updateAvailable) {
@@ -3230,15 +3334,19 @@ class MODULESEDITOR {
 
 		Object.keys(groupedModules).sort((a, b) => a.localeCompare(b)).forEach((groupName) => {
 			const groupId = `module-installer-group-${this.#escapeHtml(groupName).replace(/[^a-zA-Z0-9_-]/g, '-')}`;
+			const expandedClass = autoExpandGroups ? 'in' : '';
+			const toggleClass = autoExpandGroups ? 'module-installer-toggle' : 'module-installer-toggle collapsed';
+			const expandedState = autoExpandGroups ? 'true' : 'false';
+			const iconClass = autoExpandGroups ? 'fa-solid fa-chevron-down fa-fw' : 'fa-solid fa-chevron-right fa-fw';
 			let groupHtml = `
 				<div class="panel panel-default panel-shadow">
 					<div class="panel-heading">
-						<a class="module-installer-toggle collapsed" data-toggle="collapse" href="#${groupId}" aria-expanded="false" aria-controls="${groupId}">
-							<i class="fa-solid fa-chevron-right fa-fw"></i> <span>${this.#escapeHtml(groupName)}</span>
+						<a class="${toggleClass}" data-toggle="collapse" href="#${groupId}" aria-expanded="${expandedState}" aria-controls="${groupId}">
+							<i class="${iconClass}"></i> <span>${this.#escapeHtml(groupName)}</span>
 							<span class="pull-right text-muted">${groupedModules[groupName].length} module${groupedModules[groupName].length === 1 ? '' : 's'}</span>
 						</a>
 					</div>
-					<div id="${groupId}" class="panel-collapse collapse">
+					<div id="${groupId}" class="panel-collapse collapse ${expandedClass}">
 						<div class="panel-body">
 							<div class="list-group">
 			`;
@@ -3249,6 +3357,11 @@ class MODULESEDITOR {
 					<button type="button" class="btn btn-primary module-installer-action" data-action="status" data-module="${this.#escapeHtml(module.module)}" title="Status"><i class="fa-solid fa-circle-info fa-fw"></i></button>
 				</div>
 			`;
+			if (this.#moduleHasChangelog(module)) {
+				actions += ` <div class="btn-group" role="group"><button type="button" class="btn btn-default module-installer-changelog" data-module="${this.#escapeHtml(module.module)}" title="Change Log"><i class="fa-solid fa-clock-rotate-left fa-fw"></i></button></div>`;
+			} else {
+				actions += ` <div class="btn-group" role="group"><button type="button" class="btn btn-default" title="No changelog available" disabled="disabled"><i class="fa-solid fa-clock-rotate-left fa-fw"></i></button></div>`;
+			}
 			if (module.docs) {
 				actions += ` <div class="btn-group" role="group"><a class="btn btn-info" href="${this.#escapeHtml(module.docs)}" target="_blank" rel="noopener noreferrer" title="Docs"><i class="fa-solid fa-circle-question fa-fw"></i></a></div>`;
 			}
@@ -3406,8 +3519,13 @@ class MODULESEDITOR {
 
 			groupedModules[groupName].forEach((module) => {
 				let actions = '';
+				if (this.#moduleHasChangelog(module)) {
+					actions += `<div class="btn-group" role="group"><button type="button" class="btn btn-default module-installer-changelog" data-module="${this.#escapeHtml(module.module)}" title="Change Log"><i class="fa-solid fa-clock-rotate-left fa-fw"></i></button></div>`;
+				} else {
+					actions += `<div class="btn-group" role="group"><button type="button" class="btn btn-default" title="No changelog available" disabled="disabled"><i class="fa-solid fa-clock-rotate-left fa-fw"></i></button></div>`;
+				}
 				if (module.docs) {
-					actions += `<div class="btn-group" role="group"><a class="btn btn-info" href="${this.#escapeHtml(module.docs)}" target="_blank" rel="noopener noreferrer" title="Docs"><i class="fa-solid fa-circle-question fa-fw"></i></a></div>`;
+					actions += ` <div class="btn-group" role="group"><a class="btn btn-info" href="${this.#escapeHtml(module.docs)}" target="_blank" rel="noopener noreferrer" title="Docs"><i class="fa-solid fa-circle-question fa-fw"></i></a></div>`;
 				}
 
 				const errors = [].concat(module.sourceErrors || []);
@@ -3557,8 +3675,15 @@ class MODULESEDITOR {
 					: 'label-warning';
 				let actions = '';
 
+				if (module) {
+					if (this.#moduleHasChangelog(module)) {
+						actions += `<div class="btn-group" role="group"><button type="button" class="btn btn-default module-installer-changelog" data-module="${safeModuleName}" title="Change Log"><i class="fa-solid fa-clock-rotate-left fa-fw"></i></button></div>`;
+					} else {
+						actions += `<div class="btn-group" role="group"><button type="button" class="btn btn-default" title="No changelog available" disabled="disabled"><i class="fa-solid fa-clock-rotate-left fa-fw"></i></button></div>`;
+					}
+				}
 				if (module && module.docs) {
-					actions += `<div class="btn-group" role="group"><a class="btn btn-info" href="${this.#escapeHtml(module.docs)}" target="_blank" rel="noopener noreferrer" title="Docs"><i class="fa-solid fa-circle-question fa-fw"></i></a></div>`;
+					actions += ` <div class="btn-group" role="group"><a class="btn btn-info" href="${this.#escapeHtml(module.docs)}" target="_blank" rel="noopener noreferrer" title="Docs"><i class="fa-solid fa-circle-question fa-fw"></i></a></div>`;
 				}
 				if (module && !module.installed && !module.deprecated && module.valid) {
 					actions += ` <div class="btn-group" role="group"><button type="button" class="btn btn-success module-installer-action" data-action="install" data-module="${safeModuleName}" title="Install"><i class="fa-solid fa-plus fa-fw"></i></button></div>`;
@@ -3856,6 +3981,34 @@ class MODULESEDITOR {
 		$(document).on('click', '.module-installer-action', (event) => {
 			const button = $(event.currentTarget);
 			this.#runInstallerAction(button.data('module'), button.data('action'));
+		});
+
+		$(document).off('click', '.module-installer-changelog');
+		$(document).on('click', '.module-installer-changelog', (event) => {
+			const button = $(event.currentTarget);
+			this.#showModuleChangelog(button.data('module'));
+		});
+
+		$(document).off('click', '.module-installer-changelog-toggle-all');
+		$(document).on('click', '.module-installer-changelog-toggle-all', (event) => {
+			const button = $(event.currentTarget);
+			const target = $(button.attr('data-target'));
+			if (!target.length) {
+				return;
+			}
+
+			const expanded = button.attr('data-expanded') === 'true';
+			const sections = target.find('.panel-collapse');
+			if (expanded) {
+				sections.collapse('hide');
+				sections.first().collapse('show');
+				button.attr('data-expanded', 'false');
+				button.text('Show All Changes');
+			} else {
+				sections.collapse('show');
+				button.attr('data-expanded', 'true');
+				button.text('Collapse Changes');
+			}
 		});
 
 		$(document).off('click', '#module-installer-install-all');

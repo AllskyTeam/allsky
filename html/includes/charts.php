@@ -6,7 +6,7 @@ if (basename(__FILE__) === basename($_SERVER['SCRIPT_FILENAME'])) {
 }
 function DisplayCharts()
 {
-  global $pageHeaderTitle, $pageIcon;
+  global $pageHeaderTitle, $pageIcon, $pageHelp;
 ?>
   <script src="/js/highcharts/code/highcharts.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
   <script src="/js/highcharts/code/highcharts-more.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
@@ -27,6 +27,11 @@ function DisplayCharts()
       </div>
 
       <div class="pull-right">
+<?php if (!empty($pageHelp)) { ?>
+        <a href="<?php echo $pageHelp; ?>" target="_blank" rel="noopener noreferrer" class="btn btn-default btn-xs mr-2" title="Help">
+          <i class="fa-solid fa-circle-question"></i> Help
+        </a>
+<?php } ?>
         <button type="button" id="as-tr-btn" class="btn btn-primary btn-xs mr-2" title="Time range">
           <i class="fa-regular fa-clock"></i>
         </button>

@@ -7,7 +7,7 @@ if (basename(__FILE__) === basename($_SERVER['SCRIPT_FILENAME'])) {
 
 function DisplayModule()
 {
-	global $pageHeaderTitle, $pageIcon;
+	global $pageHeaderTitle, $pageIcon, $pageHelp;
 ?>
 
 <script src="/documentation/js/all.min.js?c=<?php echo ALLSKY_VERSION; ?>" type="application/javascript"></script>
@@ -88,7 +88,14 @@ function DisplayModule()
 <script src="js/jquery-allskysensor/jquery-allskysensor.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
 <div class="panel panel-allsky">
-	<div class="panel-heading"><i class="<?php echo $pageIcon ?>"></i> <?php echo $pageHeaderTitle ?></div>
+	<div class="panel-heading clearfix">
+        <span><i class="<?php echo $pageIcon ?>"></i> <?php echo $pageHeaderTitle ?></span>
+<?php if (!empty($pageHelp)) { ?>
+        <a class="pull-right" href="<?php echo $pageHelp; ?>" target="_blank" rel="noopener noreferrer" data-toggle="tooltip" data-container="body" data-placement="left" title="Help">
+            <i class="fa-solid fa-circle-question"></i> Help
+        </a>
+<?php } ?>
+    </div>
     <div class="panel-body">
         <nav class="navbar navbar-default">
             <div class="container-fluid-na">

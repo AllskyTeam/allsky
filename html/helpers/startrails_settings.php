@@ -100,7 +100,7 @@ function add_args() {
 						Number of images to include in each startrail
 					</label>
 					<div class="col-xs-8">
-						<div class="input-group col-xs-2">
+						<div class="input-group col-xs-3">
 							<input type="number" class="form-control"
 								id="num_images" name="num_images"
 								min="1" step="1"

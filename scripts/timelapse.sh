@@ -365,7 +365,7 @@ fi
 # Create thumbnail of timelapse
 DATE=${OUTPUT%/*}
 DATE=${DATE##*/}
-RES="$(thumbnail.sh -t timelapse -d "${DATE}" --force)"
+RES="$( "${ALLSKY_UTILITIES}/thumbnail.sh" -t timelapse -d "${DATE}" --force )"
 
 # if the user wants output, give it to them
 [[ ${FFLOG} == "info" && ${IS_MINI} == "false"  ]] && cat "${TMP}"

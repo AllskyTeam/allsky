@@ -244,7 +244,7 @@ if [[ ${TYPE} == "GENERATE" ]]; then
 		GENERATE_OUTPUT="$( eval ${CMD} 2>&1 )"
 		local RET=$?
 		if [[ ${RET} -ne 0 && ${RET} -ne ${EXIT_PARTIAL_OK}  ]]; then
-			E_ "${ME}: Command Failed: ${CMD}" >&2
+			E_ "${ME}: Command Failed: ${GENERATE_OUTPUT}" >&2
 		elif [[ ${SILENT} == "false" ]]; then
 			echo -e "\tDone"
 		fi

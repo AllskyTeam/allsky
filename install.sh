@@ -3136,7 +3136,7 @@ install_PHP_modules()
 
 	display_msg --log progress "Installing PHP modules and dependencies."
 	TMP="${ALLSKY_LOGS}/PHP_modules.log"
-	run_aptGet php-zip php-sqlite3 python3-pip libatlas-base-dev > "${TMP}" 2>&1
+	run_aptGet php-zip php-sqlite3 libatlas-base-dev > "${TMP}" 2>&1
 	check_success $? "PHP module installation failed" "${TMP}" "${DEBUG}" ||
 		exit_with_image 1 "${STATUS_ERROR}" "PHP module install failed."
 
@@ -3154,10 +3154,20 @@ install_dependencies()
 	display_msg --log progress "Installing ${NAME}:"
 	COUNT=0
 	rm -f "${STATUS_FILE_TEMP}"
+	local CAN_SKIP="CAN_SKIP "
+	local LEN="${#CAN_SKIP}"
 	while read -r package
 	do
+		SKIPPING="false"
 		((COUNT++))
-		echo "${package}" > /tmp/package
+
+		if [[ ${package:0:${LEN}} == "${CAN_SKIP}" ]]; then
+			PACKAGE="${package/${CAN_SKIP}/}"
+			[[ ${SKIP} == "true" || ${SKIP2} == "true" ]] && SKIPPING="true"
+		else
+			PACKAGE="${package}"
+		fi
+
 		# Make the numbers line up.
 		if [[ ${COUNT} -lt 10 ]]; then
 			C=" ${COUNT}"
@@ -3165,17 +3175,23 @@ install_dependencies()
 			C="${COUNT}"
 		fi
 
-		PACKAGE="   === Package # ${C} of ${NUM_TO_INSTALL}: [${package}]"
+		PACKAGE_STRING="   === Package # ${C} of ${NUM_TO_INSTALL}: [${PACKAGE}]"
+		if [[ ${SKIPPING} == "true" ]]; then
+			display_msg --log progress "${PACKAGE_STRING} (skipping)"
+			continue
+		fi
+
+		echo "${PACKAGE}" > /tmp/package
 		STATUS_NAME="${NAME}_${COUNT}"
 		# Need indirection since the ${STATUS_NAME} is the variable name and we want its value.
 		if [[ ${!STATUS_NAME} == "true" ]]; then
-			display_msg --log progress "${PACKAGE} - already installed."
+			display_msg --log progress "${PACKAGE_STRING} - already installed."
 			continue
 		fi
-		display_msg --log progress "${PACKAGE}"
+		display_msg --log progress "${PACKAGE_STRING}"
 
 		L="${TMP}.${COUNT}.log"
-		M="${NAME} [${package}] failed"
+		M="${NAME} [${PACKAGE}] failed"
 		pip3 install --upgrade --no-warn-script-location -r /tmp/package > "${L}" 2>&1
 		# These files are too big to display so pass in "0" instead of ${DEBUG}.
 		if ! check_success $? "${M}" "${L}" 0 ; then
@@ -3243,7 +3259,8 @@ install_Python()
 	display_msg --logonly info "Locating Python dependency file"
 	PREFIX="${ALLSKY_REPO}/requirements"
 	REQUIREMENTS_FILE=""
-	for file in "${PREFIX}${R}-${LONG_BITS}.txt" \
+	for file in \
+		"${PREFIX}${R}-${LONG_BITS}.txt" \
 		"${PREFIX}${R}.txt" \
 		"${PREFIX}-${LONG_BITS}.txt" \
 		"${PREFIX}.txt"
@@ -3263,7 +3280,7 @@ install_Python()
 	NUM_TO_INSTALL=$( wc -l < "${REQUIREMENTS_FILE}" )
 
 	if [[ ${SKIP} != "true" && ${SKIP2} != "true" ]]; then
-		PKGs="python3-full libgfortran5 libopenblas0-pthread"
+		PKGs="python3-pip python3-full libgfortran5 libopenblas0-pthread"
 		display_msg --logonly progress "Installing ${PKGs}."
 		TMP="${ALLSKY_LOGS}/python3-full.log"
 		# shellcheck disable=SC2086

@@ -7,7 +7,7 @@ CAN_SKIP astral
 CAN_SKIP pytz
 CAN_SKIP scipy
 CAN_SKIP paho-mqtt
-CAN_SKIP astropy
+astropy
 CAN_SKIP suncalc
 Adafruit-Blinka
 CAN_SKIP vcgencmd

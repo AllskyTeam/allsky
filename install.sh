@@ -3220,29 +3220,6 @@ install_Python()
 		return
 	fi
 
-# XXX TODO: FIX
-## This produces errors and doesn't create allsky/venv - not sure why.
-##	if [[ ${SKIP} == "true" ]]; then
-##		python3 -m venv "${ALLSKY_PYTHON_VENV}" --system-site-packages
-##		activate_python_venv
-##		return
-##	fi
-##	[[ ${SKIP2} == "true" ]] && return
-
-
-# XXX TODO: either fix, or remove these lines.
-	# Install the server venv. NOTE this needs older versions of some packages like numpy so cannot use
-	# the main allsky venv.
-	#
-	# python3 -m venv "${ALLSKY_PYTHON_SERVER_VENV}" --system-site-packages
-	# if [[ ${PI_OS} == "trixie" ]]; then
-	#	run_aptGet python3-dev python3.13-dev build-essential pkg-config > "${TMP}" 2>&1
-	# fi
-
-	#  activate_python_server_venv
-	#  install_dependencies "${ALLSKY_REPO}/requirements-server.txt" "Python_server_dependencies"
-	#  deactivate_python_server_venv
-
 	local PREFIX  REQUIREMENTS_FILE  M  R  NUM_TO_INSTALL
 	local NAME  PKGs  TMP  COUNT  C  PACKAGE  STATUS_NAME  L  M  MSG
 
@@ -3290,49 +3267,56 @@ install_Python()
 			exit_with_image 1 "${STATUS_ERROR}" "${PKGs} install failed."
 	fi
 
-	python3 -m venv "${ALLSKY_PYTHON_VENV}" --system-site-packages
-	activate_python_venv
-
-	NAME="Python_dependencies"
-
-	# If the requirements file is the same as the in the prior Allsky version,
-	# don't re-install these packages.
-	local PRIOR_REQ="${REQUIREMENTS_FILE/${ALLSKY_HOME}/${ALLSKY_PRIOR_DIR}}"
-	if [[ ${WILL_USE_PRIOR} == "true" && (${SKIP} == "true" || ${SKIP2} == "true") && -f ${PRIOR_REQ} ]] && \
-		cmp --silent "${REQUIREMENTS_FILE}" "${PRIOR_REQ}" ; then
-		display_msg --log progress "Skipping installation of ${NAME} - already installed."
+	OLD_VENV="${ALLSKY_PRIOR_DIR}/venv"
+	if [[ ${USE_PRIOR_ALLSKY} == "true" && -d ${OLD_VENV} && (${SKIP} == "true" || ${SKIP2} == "true" ) ]]; then
+		display_msg --log progress "Copying ${OLD_VENV} to ${ALLSKY_HOME}."
+		cp -r -a "${OLD_VENV}" "${ALLSKY_HOME}"
+		activate_python_venv
 	else
-		install_dependencies "${REQUIREMENTS_FILE}" "${NAME}"
-	fi
+		python3 -m venv "${ALLSKY_PYTHON_VENV}" --system-site-packages
+		activate_python_venv
 
-	# On Pi 5 models we need to replace rpi.gpi with lgpio.
-	# This should be done by adafruit-blinka.
-	# The code is in setup.py to do this but it
-	# doesn't appear to work hence we are forcing it here.
-	# gpiozero decodes the Pi revision number to calculate the Pi version so until the Pi 6 is
-	# released this code will detect all future versions of the Pi 5.
+		NAME="Python_dependencies"
+
+		# If the requirements file is the same as the in the prior Allsky version,
+		# don't re-install these packages.
+		local PRIOR_REQ="${REQUIREMENTS_FILE/${ALLSKY_HOME}/${ALLSKY_PRIOR_DIR}}"
+		if [[ ${WILL_USE_PRIOR} == "true" && (${SKIP} == "true" || ${SKIP2} == "true") && -f ${PRIOR_REQ} ]] && \
+			cmp --silent "${REQUIREMENTS_FILE}" "${PRIOR_REQ}" ; then
+			display_msg --log progress "Skipping installation of ${NAME} - already installed."
+		else
+			install_dependencies "${REQUIREMENTS_FILE}" "${NAME}"
+		fi
+
+		# On Pi 5 models we need to replace rpi.gpi with lgpio.
+		# This should be done by adafruit-blinka.
+		# The code is in setup.py to do this but it
+		# doesn't appear to work hence we are forcing it here.
+		# gpiozero decodes the Pi revision number to calculate the Pi version so until the Pi 6 is
+		# released this code will detect all future versions of the Pi 5.
 # TODO FUTURE: modify as needed once Pi 6 is out.
 
-	local CMD="from gpiozero import Device"
-	CMD+="\nDevice.ensure_pin_factory()"
-	CMD+="\nprint(Device.pin_factory.board_info.model)"
-	# Hide error since it only applies to Pi 5.
-	local pimodel="$( echo -e "${CMD}" | python3 2>/dev/null )"
-	echo "${pimodel}" > "${ALLSKY_PI_VERSION_FILE}"
+		local CMD="from gpiozero import Device"
+		CMD+="\nDevice.ensure_pin_factory()"
+		CMD+="\nprint(Device.pin_factory.board_info.model)"
+		# Hide error since it only applies to Pi 5.
+		local pimodel="$( echo -e "${CMD}" | python3 2>/dev/null )"
+		echo "${pimodel}" > "${ALLSKY_PI_VERSION_FILE}"
 
-	# If we are on the pi 5 then uninstall rpi.gpio,
-	# using the virtual environment which will always exist on the pi 5.
-	# lgpio is installed globally so will be used after rpi.gpio is removed.
-	# Adafruits blinka reinstalls rpi.gpio so we need to ensure its removed.
-	if [[ -n ${pimodel} ]]; then
-		PI_MODEL="0"					# global
-	else
-		PI_MODEL="${pimodel:0:1}"
-	fi
-	if [[ ${PI_MODEL} == "5" ]]; then
-		display_msg --logonly info "Updating GPIO to lgpio"
-		activate_python_venv
-		pip3 uninstall -y rpi.gpio > /dev/null 2>&1
+		# If we are on the pi 5 then uninstall rpi.gpio,
+		# using the virtual environment which will always exist on the pi 5.
+		# lgpio is installed globally so will be used after rpi.gpio is removed.
+		# Adafruits blinka reinstalls rpi.gpio so we need to ensure its removed.
+		if [[ -n ${pimodel} ]]; then
+			PI_MODEL="0"					# global
+		else
+			PI_MODEL="${pimodel:0:1}"
+		fi
+		if [[ ${PI_MODEL} == "5" ]]; then
+			display_msg --logonly info "Updating GPIO to lgpio"
+			activate_python_venv
+			pip3 uninstall -y rpi.gpio > /dev/null 2>&1
+		fi
 	fi
 
 	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
@@ -3641,30 +3625,6 @@ update_overlays()
 		"${OVERLAY_MANAGER}" --auto --oldpath "${ALLSKY_PRIOR_DIR}" --camera "${PRIOR_CAMERA_TYPE}" > "${TMP}" 2>&1
 	else
 		"${OVERLAY_MANAGER}" --install > "${TMP}" 2>&1
-	fi
-}
-
-####
-# Allow the user to install modules.
-install_modules()
-{
-	#
-	# NOTE: We need to use sudo here as the ALLSKY_USER has had various groups added but they will
-	#       not be activated until the user logs out and in or reboots. The module. installer needs
-	#       these groups otherwise it cannot change the permissions of various files.
-	# NOTE: There is no way to reload the groups for the user, this is a limitation of the Linux Kernel
-	#
-
-	display_msg --log progress "Installing modules using the ${BRANCH} branch."
-	if [[ "${BRANCH}" == "${ALLSKY_GITHUB_MAIN_BRANCH}" ]]; then
-		sudo su - "${ALLSKY_OWNER}" -c "${ALLSKY_MODULE_INSTALLER} --welcome ${DEBUG_ARG}"
-	else
-		sudo su - "${ALLSKY_OWNER}" -c "${ALLSKY_MODULE_INSTALLER} --welcome --setbranch ${BRANCH} ${DEBUG_ARG}"
-	fi
-
-	RET=$?
-	if [[ ${RET} -eq ${EXIT_PARTIAL_OK} ]]; then
-		add_to_post_actions "To install and remove modules, execute 'allsky-config manage_modules'."
 	fi
 }
 
@@ -4230,9 +4190,6 @@ update_overlays
 
 ##### Update any installed modules
 update_modules
-
-##### Allow the user to install modules
-install_modules
 
 ##### Perform any migrations required
 migrate_overlays

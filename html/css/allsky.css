@@ -1355,7 +1355,8 @@ input, textarea, select, [contenteditable="true"], .allow-select, .allow-select 
     top: 0;
     left: 0;
     right: 0;
-    height: 100px;
+    height: 78px;
+    alex-height: 100px;
     padding: 5px 12px;
     z-index: 400;
     border-bottom: 1px solid var(--bs3-navbar-border);
@@ -1471,7 +1472,8 @@ div.dt-container div.dt-scroll-body {
 /** Sidebar **/
 .sidebar {
     position: fixed;
-    top: 90px;
+    top: 68px;
+    alex-top: 90px;
     left: 0;
     bottom: 0;
     width: 220px;
@@ -1579,7 +1581,8 @@ div.dt-container div.dt-scroll-body {
 /* Content scrolls independently */
 .content {
     position: fixed;
-    top: 100px;
+    top: 75px;
+    alex-top: 100px;
     right: 0;
     bottom: 0;
     left: 220px;
@@ -1763,10 +1766,10 @@ div.dt-container div.dt-scroll-body {
 }
 
 .navbar-brand img {
-    height: 90px;
+    height: 70px;
     display: inline-block;
     margin-right: 0px;
-    margin-left: 20px;
+    alex-margin-left: 20px;
     margin-top: -4px;
 }
 
@@ -1792,7 +1795,8 @@ div.dt-container div.dt-scroll-body {
     }
 
     .header .navbar-brand > .version-title:not(.header-daynight) {
-        margin-left: 75px;
+        margin-left: 20px;
+        alex-margin-left: 75px;
     }
 }
 
@@ -1803,12 +1807,12 @@ div.dt-container div.dt-scroll-body {
 .header-status-card {
     display: inline-block;
     margin-top: -3px;
-    padding: 4px 14px;
+    alex-padding: 4px 14px;
     text-align: left;
     vertical-align: top;
     font-size: 11px;
-    background-color: var(--bs3-panel-bg);
-    border: 1px solid var(--bs3-border);
+    alex-background-color: var(--bs3-panel-bg);
+    alex-border: 1px solid var(--bs3-border);
     border-radius: 8px;
     box-shadow: 0 1px 2px rgba(0, 0, 0, .08);
 }
@@ -1817,7 +1821,8 @@ div.dt-container div.dt-scroll-body {
     display: grid;
     grid-template-columns: 84px minmax(0, 1fr);
     align-items: center;
-    min-height: 24px;
+    min-height: 20px;
+    alex-min-height: 24px;
     column-gap: 0;
 }
 
@@ -1862,13 +1867,15 @@ div.dt-container div.dt-scroll-body {
     align-items: center;
     gap: 6px;
     margin-bottom: 4px;
-    min-height: 24px;
+    min-height: 20px;
+    alex-min-height: 24px;
 }
 
 .header-status-title {
     display: inline-flex;
     align-items: center;
-    min-height: 24px;
+    min-height: 20px;
+    alex-min-height: 24px;
     line-height: 1;
     font-size: 11px;
     font-weight: 600;
@@ -1881,7 +1888,8 @@ div.dt-container div.dt-scroll-body {
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    min-height: 24px;
+    min-height: 20px;
+    alex-min-height: 24px;
 }
 
 .header-status-inline-label {
@@ -2056,12 +2064,12 @@ div.dt-container div.dt-scroll-body {
 .header-daynight-card {
     display: inline-block;
     margin-top: -3px;
-    padding: 4px 14px;
+    alex-padding: 4px 14px;
     text-align: left;
     vertical-align: top;
     font-size: 11px;
-    background-color: var(--bs3-panel-bg);
-    border: 1px solid var(--bs3-border);
+    alex-background-color: var(--bs3-panel-bg);
+    alex-border: 1px solid var(--bs3-border);
     border-radius: 8px;
     box-shadow: 0 1px 2px rgba(0, 0, 0, .08);
 }

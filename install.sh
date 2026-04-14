@@ -3155,7 +3155,7 @@ install_dependencies()
 	display_msg --log progress "Installing ${NAME}:"
 	COUNT=0
 	rm -f "${STATUS_FILE_TEMP}"
-	local CAN_SKIP="CAN_SKIP "
+	local CAN_SKIP="CAN_SKIP "		# CAN_SKIP isn't used, but leave the code in case
 	local LEN="${#CAN_SKIP}"
 	while read -r package
 	do

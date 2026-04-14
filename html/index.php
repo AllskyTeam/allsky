@@ -47,7 +47,7 @@ function getRemoteWebsiteVersion() {
 	// Get the version of the remote Allsky Website, if it exists.
 	$remoteWebsiteVersion = "";
 	if ($useRemoteWebsite) {
-		$f = getRemoteWebsiteConfigFile(); 
+		$f = getRemoteWebsiteConfigFile();
 		$errorMsg = "WARNING: ";
 		$retMsg = "";
 		$a_array = get_decoded_json_file($f, true, $errorMsg, $retMsg);
@@ -87,11 +87,11 @@ $pageInfo = [
 		"jshandler" => "ALLSKYSHOWMESSAGES",
 		"extraiconcss" => "text-danger",
 		"extratextcss" => "text-danger"
-	],	
+	],
 	"login" => [
 		"title" => "Login",
 		"icon" => "fa fa-right-to-bracketfa-fw"
-	],	
+	],
 	"live_view" => [
 		"title" => "Live View",
 		"icon" => "fa fa-eye fa-fw",
@@ -352,7 +352,7 @@ function insertMenuItem($p, $day, $type="", $href_only=false) {
 function insertPage($p) {
 	global $image_name, $delay, $daydelay, $daydelay_postMsg, $nightdelay, $nightdelay_postMsg, $darkframe;
 
-	switch ($p) {		
+	switch ($p) {
 		case "list_days":
 			include_once("includes/days.php");
 			ListDays();
@@ -437,16 +437,16 @@ function insertPage($p) {
 			break;
 		case "timelapse_settings":
 			include_once("helpers/$p.php");
-			timelapseSettings();				
+			timelapseSettings();
 			break;
 		case "constellation_overlay":
 			include_once("helpers/$p.php");
 			break;
 		case "bad_images_settings":
 			include_once("helpers/$p.php");
-			// TODO: add function name 
+			// TODO: add function name
 			break;
-			
+
 		case "live_view":
 		default:
 			include_once('includes/liveview.php');
@@ -614,7 +614,7 @@ function displayStatusMessages($p) {
 			echo "</div>";
 		echo "</div>"; echo "</div>";// /.system-message and /.row
 
-		echo '</div></div>'; // panel 
+		echo '</div></div>'; // panel
 	}
 }
 
@@ -701,7 +701,7 @@ if ($page=="logout") {
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-		<title><?php echo "$pageTitle - WebUI"; ?></title>	
+		<title><?php echo "$pageTitle - WebUI"; ?></title>
 		<meta charset="utf-8">
 		<meta http-equiv="X-UA-Compatible" content="IE=edge">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
@@ -717,20 +717,20 @@ if ($page=="logout") {
 
 		<link href="/js/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
 		<link rel="stylesheet" type="text/css" href="allsky/font-awesome/css/all.min.css">
-    <link rel="stylesheet" type="text/css" href="/js/datatables/datatables.min.css?c=<?php echo ALLSKY_VERSION; ?>" />
+    	<link rel="stylesheet" type="text/css" href="/js/datatables/datatables.min.css?c=<?php echo ALLSKY_VERSION; ?>" />
 		<link href="/css/allsky.css?c=<?php echo ALLSKY_VERSION; ?>" rel="stylesheet">
-	
+
 		<script src="/js/jquery/dist/jquery.min.js"></script>
-    <script src="/js/jquery-loading-overlay/dist/loadingoverlay.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+    	<script src="/js/jquery-loading-overlay/dist/loadingoverlay.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 		<script src="/js/bootstrap/dist/js/bootstrap.min.js"></script>
-    <script src="/js/datatables/datatables.js?c=<?php echo ALLSKY_VERSION; ?>"></script>		
+    	<script src="/js/datatables/datatables.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 		<script src="/js/allsky-messages.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 		<script src="/js/allsky.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
 		<!-- Code Mirror editor -->
 		<?php insertEditorCode($page); ?>
 
-		<script> var allskyPage='<?php echo $page ?>';  </script>		
+		<script> var allskyPage='<?php echo $page ?>';  </script>
 	</head>
 	<body>
 
@@ -809,7 +809,7 @@ if (DHCP_ENABLED) {
 						// insertMenuItem('constellation_overlay', "", "dropdown");
 ?>
 					</ul>
-				</li>	
+				</li>
 <?php
 				insertMenuItem('documentation', "");
 ?>
@@ -817,7 +817,7 @@ if (DHCP_ENABLED) {
 					<span id="as-switch-theme">
 						<i class="fa fa-moon fa-fw"></i>
 						<span class="menu-text"> Light/Dark mode</span>
-					</span>	
+					</span>
 				</li>
 <?php
 	if ($useLogin) {
@@ -846,7 +846,7 @@ if (DHCP_ENABLED) {
 				insertPage($page);
 			?>
 		</div>
-		<div id="oe-overlay-manager"></div>  
+		<div id="oe-overlay-manager"></div>
 
 	</body>
 </html>

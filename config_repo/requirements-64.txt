@@ -1,25 +1,25 @@
-CAN_SKIP numpy
+numpy
 opencv-python
-CAN_SKIP Pillow
-CAN_SKIP pyephem
-CAN_SKIP skyfield
-CAN_SKIP astral
-CAN_SKIP pytz
-CAN_SKIP scipy
-CAN_SKIP paho-mqtt
+Pillow
+pyephem
+skyfield
+astral
+pytz
+scipy
+paho-mqtt
 astropy
-CAN_SKIP suncalc
+suncalc
 Adafruit-Blinka
-CAN_SKIP vcgencmd
-CAN_SKIP certifi
-CAN_SKIP requests
+vcgencmd
+certifi
+requests
 mysql-connector-python
-CAN_SKIP photutils
-CAN_SKIP psutil
+photutils
+psutil
 gitpython
 whiptail-dialogs
-CAN_SKIP flask
-CAN_SKIP flask-login
-CAN_SKIP gunicorn
-CAN_SKIP flask-jwt-extended
-CAN_SKIP bcrypt
+flask
+flask-login
+gunicorn
+flask-jwt-extended
+bcrypt

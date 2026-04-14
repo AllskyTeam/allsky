@@ -3619,6 +3619,84 @@ body.dark .as-system-entries-browser-list .list-group-item .badge {
     font-weight: 700;
 }
 
+@media (max-width: 767px) {
+    .days-grid-header {
+        display: none;
+    }
+
+    .days-grid-row {
+        align-items: center;
+        display: flex;
+        flex-wrap: nowrap;
+        margin-left: 0;
+        margin-right: 0;
+        padding: 12px;
+    }
+
+    .days-grid-actions {
+        align-items: center;
+        display: flex;
+        flex-wrap: nowrap;
+        margin-left: 0;
+        margin-right: 0;
+        margin-top: 10px;
+        width: 100%;
+    }
+
+    .days-day-col {
+        flex: 0 0 84px;
+        max-width: 84px;
+        min-width: 84px;
+        padding-left: 0;
+        padding-right: 8px;
+    }
+
+    .days-actions-col {
+        flex: 0 1 calc(100% - 84px);
+        max-width: none;
+        min-width: 0;
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    .days-grid-actions > [class*='col-'] {
+        float: none;
+        min-width: 0;
+        padding-left: 0;
+        padding-right: 0;
+        text-align: center !important;
+        width: auto;
+    }
+
+    .days-action-col {
+        flex: 0 0 25%;
+        max-width: 25%;
+        width: 25%;
+    }
+
+    .days-grid-actions .days-grid-value {
+        font-size: 11px;
+        line-height: 1.2;
+        white-space: nowrap;
+    }
+
+    .days-grid-actions .btn {
+        padding-left: 4px;
+        padding-right: 4px;
+    }
+
+    .days-grid-actions a,
+    .days-grid-actions .fa {
+        display: inline-block;
+        white-space: nowrap;
+    }
+
+    .days-table-day {
+        font-size: 12px;
+        white-space: nowrap;
+    }
+}
+
 #module-installer-groups > .panel,
 #module-suggested-groups > .panel {
   border: 1px solid var(--bs3-panel-default-border) !important;

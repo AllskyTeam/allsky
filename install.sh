@@ -1751,7 +1751,7 @@ update_allsky_common()
 update_repo_files()
 {
 	sed \
-		-e "s;XX_ALLSKY_STARTRAILS_TABLE;${ALLSKY_STARTRAILS_TABLE};" \
+		-e "s;XX_ALLSKY_STARTRAILS_TABLE_XX;${ALLSKY_STARTRAILS_TABLE};" \
 		"${ALLSKY_REPO}/db_data.json.repo" \
 	> "${ALLSKY_CONFIG}/db_data.json"
 }

@@ -327,8 +327,9 @@ usage_and_exit()
 	echo "   --update     Should only be used when instructed to by the Allsky Website."
 	echo "   --restore    Restores ${ALLSKY_PRIOR_DIR} to ${ALLSKY_HOME}."
 	echo "   --function   Executes the specified function and quits."
-	echo "   --skip       Skip some steps to speed up installation.  Use when installing after a 'git clone'."
-	echo "   --skip2      Skip more steps.  Use when installing over existing Allsky."
+	echo "   --skip       Skip some steps to speed up installation."
+	echo "                Use when installing after a 'git clone'."
+	echo "   --skip2      Skip more steps.  Use when Allsky is installed."
 	echo
 
 	exit_installation "${RET}"

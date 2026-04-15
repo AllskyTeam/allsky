@@ -365,7 +365,10 @@ fi
 # Create thumbnail of timelapse
 DATE=${OUTPUT%/*}
 DATE=${DATE##*/}
-RES="$( "${ALLSKY_UTILITIES}/thumbnail.sh" -t timelapse -d "${DATE}" --force )"
+# Mini timelapses are not saved in ${ALLSKY_IMAGES}, so don't create a thumbnail for them.
+if [[ ${DATE} != "$( basename "${ALLSKY_CURRENT_DIR}" )" ]]; then
+	RES="$( "${ALLSKY_UTILITIES}/thumbnail.sh" -t timelapse -d "${DATE}" --force )"
+fi
 
 # if the user wants output, give it to them
 [[ ${FFLOG} == "info" && ${IS_MINI} == "false"  ]] && cat "${TMP}"

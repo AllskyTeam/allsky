@@ -90,8 +90,8 @@ fi
 
 # Get all settings we're going to use.  Their bash names are prefixed by "S_".
 #shellcheck disable=SC2119
-getAllSettings --var "imageremovebadlow imageremovebadhigh imageremovebadhighdarkframe \
-	takedarkframes imageremovebadcount " || exit 1
+getAllSettings --var "imageremovebadlow imageremovebadhigh imageremovebadcount \
+	imageremovebadhighdarkframe takedarkframes " || exit 1
 
 #shellcheck disable=SC2154
 HIGH="${S_imageremovebadhigh}"

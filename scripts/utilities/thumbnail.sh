@@ -55,12 +55,10 @@ case "${TYPE}" in
 	*) error_exit "Type must be startrails, keogram, timelapse, or all" ;;
 esac
 
-if [[ "${DATE}" != "all" ]]; then
-	case "${DATE}" in
-		[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9] | test*) ;;
-		*) error_exit "Date must be in format YYYYMMDD or 'all' or start with 'test'." ;;
-	esac
-fi
+case "${DATE}" in
+	[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9] | test* | all) ;;
+	*) error_exit "Date must be in format YYYYMMDD, or 'all', or start with 'test'; it is '${DATE}." ;;
+esac
 
 THUMBX="$(settings ".thumbnailsizex")" || error_exit "Failed to get thumbnailsizex"
 THUMBY="$(settings ".thumbnailsizey")" || error_exit "Failed to get thumbnailsizey"

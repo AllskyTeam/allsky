@@ -57,7 +57,7 @@ esac
 
 case "${DATE}" in
 	[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9] | test* | all) ;;
-	*) error_exit "Date must be in format YYYYMMDD, or 'all', or start with 'test'; it is '${DATE}." ;;
+	*) error_exit "Date must be in format YYYYMMDD, or 'all', or start with 'test'; it is '${DATE}'." ;;
 esac
 
 THUMBX="$(settings ".thumbnailsizex")" || error_exit "Failed to get thumbnailsizex"

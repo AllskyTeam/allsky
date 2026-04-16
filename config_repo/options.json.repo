@@ -2255,6 +2255,7 @@
 "description" : "Enable to use a Allsky Sensor Server.",
 "label" : "Server Enabled",
 "type" : "boolean",
+"optional" : true,
 "carryforward" : true
 },
 {

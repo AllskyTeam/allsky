@@ -151,13 +151,15 @@ function add_args() {
 					</div>
 				</div>
 
-
 				<input type="submit" class="btn btn-primary" name="startrails"
 					value="Create Startrails" />
 			</form>
+			<br><p>
+				Click <a href="execute.php?ID=AM_ALLSKY_CONFIG get_startrails_info --html">
+					here</a> to see prior startrails information.
+			</p>
 		</div>
 	</div>
-
 
 <?php 
 }

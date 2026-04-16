@@ -231,13 +231,16 @@ if [[ ${NIGHT_ONLY} == "true" ]]; then
 	## echo -e "SQL=\n${SQL}, records=$( wc -l "${IMAGES}" )"
 	if [[ ${RET} -ne 0 ]]; then
 		wE_ "ERROR: Unable to get list of ${NIGHT} images from database: $( cat "${IMAGES}" )"
-		exit ${ALLSKY_EXIT_ERROR_STOP}
+		exit "${ALLSKY_EXIT_ERROR_STOP}"
 	fi
 	if [[ -z ${LIST} ]]; then
 		wW_ "NOTICE: No ${NIGHT}images found in database; using ALL images instead.\n"
 	else
 		# Need full pathnames.
-		echo "${LIST}" | sed "s;^;${IN_DIRECTORY}/;" > "${IMAGES}"
+		# shellcheck disable=SC2001	# Old, inefficient way:
+		## echo "${LIST}" | sed "s;^;${IN_DIRECTORY}/;" > "${IMAGES}"
+
+		echo "${LIST/#/${IN_DIRECTORY}/}" > "${IMAGES}"
 	fi
 fi
 if [[ ${NUM_IMAGES} -eq 0 ]]; then

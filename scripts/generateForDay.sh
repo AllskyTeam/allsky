@@ -181,7 +181,7 @@ getAllSettings --var "uselocalwebsite \
 	useremoteserver remoteserverimagedir \
 	remoteserverkeogramdestinationname remoteserverstartrailsdestinationname remoteservervideodestinationname \
 	keogramextraparameters keogramexpand keogramfontname keogramfontcolor keogramfontsize keogramlinethickness \
-	startrailsbrightnessthreshold startrailsextraparameters \
+	startrailsbrightnessthreshold startrailsextraparameters startrailsnightonly \
 	timelapseuploadthumbnail" || exit 1
 
 if [[ -n ${IMAGES_FILE} ]]; then
@@ -426,7 +426,10 @@ if [[ ${DO_STARTRAILS} == "true" ]]; then
 			}'
 		)"
 		if [[ -n ${V} ]]; then
-			VALUES="'directory,${DATE}' ${V}"
+			# The directory is usually YYYYMMDD but can be "test*".
+			D="${DATE}"
+			! is_number "${D}" && D="$( date '+%Y%m%d' )"
+			VALUES="'date,${D}' 'directory,${DATE}' ${V}"
 
 			# Insert the stats into the DB.
 			# shellcheck disable=SC2086

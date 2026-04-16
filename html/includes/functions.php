@@ -827,10 +827,17 @@ function renderListFileTypeContent($dir, $imageFileName, $formalImageTypeName, $
 }
 
 function ListFileType($dir, $imageFileName, $formalImageTypeName, $type, $listNames=false) {
-	global $pageHeaderTitle, $pageIcon;
+	global $pageHeaderTitle, $pageIcon, $pageHelp;
 	$chosen_day = getVariableOrDefault($_REQUEST, 'day', null);
 	echo "<div class='panel panel-allsky'>";
-	echo "<div class='panel-heading'><i class='{$pageIcon}'></i> $formalImageTypeName - $chosen_day</div>";
+	echo "<div class='panel-heading clearfix'>";
+	echo "<span><i class='{$pageIcon}'></i> $formalImageTypeName - $chosen_day</span>";
+	if (!empty($pageHelp)) {
+		echo "<a class='pull-right' href='{$pageHelp}' target='_blank' rel='noopener noreferrer' data-toggle='tooltip' data-container='body' data-placement='left' title='Help'>";
+		echo "<i class='fa-solid fa-circle-question'></i> Help";
+		echo "</a>";
+	}
+	echo "</div>";
 	echo "<div class='panel-body'>";
 	echo "<div class='functions-listfiletype-back'>";
 	echo "<a href='javascript:history.back()' class='btn btn-default'>";

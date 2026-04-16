@@ -6,7 +6,7 @@ if (basename(__FILE__) === basename($_SERVER['SCRIPT_FILENAME'])) {
 }
 
 global $useLogin;
-global $pageHeaderTitle, $pageIcon;
+global $pageHeaderTitle, $pageIcon, $pageHelp;
 
 $privateVars   = get_decoded_json_file(ALLSKY_ENV, true, "");
 $adminUser     = (string)$privateVars["WEBUI_USERNAME"];
@@ -21,7 +21,14 @@ $adminUser     = (string)$privateVars["WEBUI_USERNAME"];
 <div class="container">
 	<div class="col-md-6 col-md-offset-2 panel-style">
 		<div class="panel panel-allsky">
-			<div class="panel-heading"><i class="<?php echo $pageIcon ?>"></i> <?php echo $pageHeaderTitle ?></div>
+			<div class="panel-heading clearfix">
+				<span><i class="<?php echo $pageIcon ?>"></i> <?php echo $pageHeaderTitle ?></span>
+<?php if (!empty($pageHelp)) { ?>
+				<a class="pull-right" href="<?php echo $pageHelp; ?>" target="_blank" rel="noopener noreferrer" data-toggle="tooltip" data-container="body" data-placement="left" title="Help">
+					<i class="fa-solid fa-circle-question"></i> Help
+				</a>
+<?php } ?>
+			</div>
 			<div class="panel-body">
 				<div class="row">
 					<div class="col-md-12">

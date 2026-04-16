@@ -28,7 +28,7 @@ function DisplayImageError($title, $message) {
 }
 
 function ListImages() {
-	global $imagesSortOrder, $settings_array, $pageHeaderTitle, $pageIcon;
+	global $imagesSortOrder, $settings_array, $pageHeaderTitle, $pageIcon, $pageHelp;
 
 
 	$chosen_day = getVariableOrDefault($_GET, 'day', null);
@@ -67,7 +67,14 @@ function ListImages() {
 	$imageItems = [];
 
 	echo "<div class='panel panel-allsky'>";
-	echo "<div class='panel-heading'><i class='{$pageIcon}'></i> Images for {$chosen_day} - {$displayDate}</div>";
+	echo "<div class='panel-heading clearfix'>";
+	echo "  <span><i class='{$pageIcon}'></i> Images for {$chosen_day} - {$displayDate}</span>";
+	if (!empty($pageHelp)) {
+		echo "  <a class='pull-right' href='{$pageHelp}' target='_blank' rel='noopener noreferrer' data-toggle='tooltip' data-container='body' data-placement='left' title='Help'>";
+		echo "      <i class='fa-solid fa-circle-question'></i> Help";
+		echo "  </a>";
+	}
+	echo "</div>";
 	echo "<div class='panel-body'>";
 	echo "  <div class='functions-listfiletype-back'>";
 	echo "      <a href='javascript:history.back()' class='btn btn-default'>";

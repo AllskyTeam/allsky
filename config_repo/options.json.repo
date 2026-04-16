@@ -1417,6 +1417,16 @@
 "booldependson" : "savedaytimeimages OR savenighttimeimages"
 },
 {
+"name" : "startrailsnightonly",
+"default" : false,
+"description" : "Only include nighttime images in startrails?",
+"label" : "Night images only",
+"label_prefix" : "Startrails",
+"type" : "boolean",
+"carryforward" : true,
+"booldependson" : "startrailsgenerate"
+},
+{
 "name" : "startrailsbrightnessthreshold",
 "minimum" : 0.0,
 "maximum" : 1.0,

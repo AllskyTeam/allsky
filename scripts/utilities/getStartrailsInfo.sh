@@ -4,9 +4,9 @@
 ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck source-path=.
-source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 usage_and_exit()
 {
@@ -15,7 +15,8 @@ usage_and_exit()
 	echo
 	local USAGE="Usage: ${ME} [--help]"
 	if [[ ${RET} -ne 0 ]]; then
-		E_ "${USAGE}"
+		wE_ "${USAGE}"
+		[[ ${HTML} == "true" ]] && RET="${ALLSKY_EXIT_ERROR_STOP}"
 	else
 		echo -e "${USAGE}"
 	fi
@@ -30,14 +31,18 @@ usage_and_exit()
 
 OK="true"
 DO_HELP="false"
+HTML="false"
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
 	case "${ARG,,}" in
 		--help)
 			DO_HELP="true"
 			;;
+		--html)
+			HTML="true"
+			;;
 		-*)
-			E_ "Unknown argument '${ARG}'." >&2
+			wE_ "Unknown argument '${ARG}'." >&2
 			OK="false"
 			;;
 	esac
@@ -47,7 +52,7 @@ done
 [[ ${OK} == "false" ]] && usage_and_exit 1
 
 if [[ "$( settings ".startrailsgenerate" )" != "true" ]]; then
-	W_ "\nWARNING: The startrails 'Generate' setting is not enabled."
+	wW_ "\nWARNING: The startrails 'Generate' setting is not enabled."
 fi
 
 DB_DATA="$( "${ALLSKY_DATABASE_COMMAND}" --format tab --run \
@@ -55,7 +60,7 @@ DB_DATA="$( "${ALLSKY_DATABASE_COMMAND}" --format tab --run \
 )"
 RET=$?
 if [[ ${RET} -ne 0 ]]; then
-	echo "${ME}: Unable to get startrails data from database: ${DB_DATA}"
+	wW_ "\nWARNING: Unable to get startrails data from database: ${DB_DATA} $RET"
 fi
 
 (
@@ -154,7 +159,8 @@ fi
 		}'
 RET=$?
 if [[ ${RET} -ne 0 ]]; then
-	echo -n "No information found.  "
+	echo "No information found.  Try again after some startrails have been created."
+	echo
 	STATUS="$( get_allsky_status )"
 	if [[ -z ${STATUS} ]]; then
 		echo "Is Allsky running?"
@@ -162,6 +168,7 @@ if [[ ${RET} -ne 0 ]]; then
 		TIMESTAMP="$( get_allsky_status_timestamp )"
 		echo "Allsky is ${STATUS} as of ${TIMESTAMP:-unknown time}."
 	fi
+	RET="${ALLSKY_EXIT_PARTIAL_OK}"		# The command itself didn't fail
 fi
 echo
 exit "${RET}"

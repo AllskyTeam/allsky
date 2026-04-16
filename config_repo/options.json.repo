@@ -907,7 +907,8 @@
 "description" : "Delete images whose mean is below this value.<br><span class='WebUIValue'>0</span> disables this check.",
 "label" : "Remove Bad Images Threshold Low",
 "type" : "float",
-"booldependson" : "savedaytimeimages OR savenighttimeimages"
+"booldependson" : "savedaytimeimages OR savenighttimeimages",
+"action" : "restart"
 },
 {
 "name" : "imageremovebadhigh",
@@ -917,7 +918,16 @@
 "description" : "Delete images whose mean is above this value.<br><span class='WebUIValue'>0</span> disables this check.",
 "label" : "Remove Bad Images Threshold High",
 "type" : "float",
-"booldependson" : "savedaytimeimages OR savenighttimeimages"
+"booldependson" : "savedaytimeimages OR savenighttimeimages",
+"action" : "restart"
+},
+{
+"name" : "imageremovebadcount",
+"settingsonly" : true,
+"default" : 5,
+"description" : "After this many 'bad' images display a message.",
+"label" : "NOT DISPLAYED IN WebUI",
+"type" : "integer"
 },
 {
 "name" : "imagecreatethumbnails",

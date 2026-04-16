@@ -95,29 +95,35 @@ $pageInfo = [
 	"live_view" => [
 		"title" => "Live View",
 		"icon" => "fa fa-eye fa-fw",
+		"help" => "docs/allsky_guide/using/live_view.html"
 	],
 	"list_days" => [
 		"title" => "Images",
 		"icon" => "fa fa-image fa-fw",
+		"help" => "docs/allsky_guide/using/images.html"
 	],
 	"list_images" => [
 		"title" => "Images",
 		"icon" => "fa fa-image fa-" . $fa_size . " fa-fw",
+		"help" => "docs/allsky_guide/using/images.html"		
 	],
 	"list_videos" => [
 		"title" => "Timelapse",
 		"icon" => "fa fa-film fa-" . $fa_size . " fa-fw",
 		"AllTitle" => "All Timelapse (CAN BE SLOW TO LOAD)",
+		"help" => "docs/allsky_guide/using/images.html"		
 	],
 	"list_keograms" => [
 		"title" => "Keogram",
 		"icon" => "fa fa-barcode fa-" . $fa_size . " fa-fw",
 		"AllTitle" => "All Keograms",
+		"help" => "docs/allsky_guide/using/images.html"		
 	],
 	"list_startrails" => [
 		"title" => "Startrails",
 		"icon" => "fa-regular fa-star fa-" . $fa_size . " fa-fw",
 		"AllTitle" => "All Startrails",
+		"help" => "docs/allsky_guide/using/images.html"		
 	],
 	"list_meteors" => [
 		"title" => "Meteors",
@@ -127,34 +133,42 @@ $pageInfo = [
 	"configuration" => [
 		"title" => "Allsky Settings",
 		"icon" => "fa fa-camera fa-fw",
+		"help" => "docs/allsky_guide/settings/allsky.html"			
 	],
 	"editor" => [
 		"title" => "Editor",
 		"icon" => "fa fa-code fa-fw",
+		"help" => "docs/allsky_guide/settings/website.html"
 	],
 	"overlay" => [
 		"title" => "Overlay Editor",
 		"icon" => "fa fa-edit fa-fw",
+		"help" => "docs/allsky_guide/overlays/overview.html"
 	],
 	"module" => [
 		"title" => "Module Manager",
 		"icon" => "fa fa-bars fa-fw",
+		"help" => "docs/allsky_modules/introduction.html"
 	],
 	"charts" => [
 		"title" => "Chart Manager",
 		"icon" => "fa-solid fa-chart-line",
+		"help" => "docs/allsky_guide/using/charts.html"
 	],
 	"LAN_info" => [
 		"title" => "<b>LAN</b> Dashboard",
 		"icon" => "fa fa-network-wired fa-fw",
+		"help" => "docs/allsky_guide/using/networking.html"
 	],
 	"WLAN_info" => [
 		"title" => "<b>WLAN</b> Dashboard",
 		"icon" => "fa fa-tachometer-alt fa-fw",
-	],
+		"help" => "docs/allsky_guide/using/networking.html"
+		],
 	"wifi" => [
 		"title" => "Configure Wi-Fi",
 		"icon" => "fa fa-wifi fa-fw",
+		"help" => "docs/allsky_guide/using/networking.html"
 	],
 	"dhcp_conf" => [
 		"title" => "Configure DHCP",
@@ -163,15 +177,18 @@ $pageInfo = [
 	"system" => [
 		"title" => "System",
 		"icon" => "fa fa-cube fa-fw",
+		"help" => "docs/allsky_guide/using/system/status.html"
 	],
 	"auth_conf" => [
 		"title" => "Change Password",
 		"icon" => "fa fa-lock fa-fw",
 		"headerTitle" => "Update WebUI User / Password",
+		"help" => "docs/allsky_guide/using/access_control.html"
 	],
 	"support" => [
 		"title" => "Getting Support",
 		"icon" => "fa fa-question fa-fw",
+		"help" => "docs/allsky_guide/using/support.html"
 	],
 	"check_allsky" => [
 		"title" => "Check Allsky",
@@ -248,6 +265,12 @@ function getPageIcon($p) {
 
 	return $pageInfo[$p]['icon'] ?? "";
 }
+function getPageHelp($p) {
+	global $pageInfo;
+
+	return $pageInfo[$p]['help'] ?? "";
+}
+
 function getJSHandler($p) {
 	global $pageInfo;
 
@@ -350,7 +373,9 @@ function insertMenuItem($p, $day, $type="", $href_only=false) {
 }
 
 function insertPage($p) {
-	global $image_name, $delay, $daydelay, $daydelay_postMsg, $nightdelay, $nightdelay_postMsg, $darkframe;
+	global $image_name, $pageHelp, $delay, $daydelay, $daydelay_postMsg, $nightdelay, $nightdelay_postMsg, $darkframe;
+
+	$pageHelp = getPageHelp($p);
 
 	switch ($p) {
 		case "list_days":

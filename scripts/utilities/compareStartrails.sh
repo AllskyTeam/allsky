@@ -214,12 +214,40 @@ sudo chown "${ALLSKY_OWNER}:${WEBSERVER_GROUP}" "${OUT_DIRECTORY}"
 
 # Create the list of images.
 
-### TODO: replace with DB query.  Add intelligence to list, e.g., night only, ...
-
 IMAGES="${OUT_DIRECTORY}/images.txt"
-find "${IN_DIRECTORY}" -type f -name "*.${ALLSKY_EXTENSION}" 2>/dev/null | head -"${COUNT}" > "${IMAGES}"
+
+### TODO: replace with DB query.  Add intelligence to list, e.g., night only, ...
+NIGHT_ONLY="$( settings ".startrailsnightonly" )"
+[[ -z ${NIGHT_ONLY} ]] && NIGHT_ONLY="false"
+
+NUM_IMAGES=0
+if [[ ${NIGHT_ONLY} == "true" ]]; then
+	NIGHT="nighttime "
+	SQL="SELECT AS_CAMERAIMAGE FROM ${ALLSKY_IMAGES_TABLE} WHERE \
+		AS_DATE_NAME = '$( basename "${IN_DIRECTORY}" )' AND AS_DAY_OR_NIGHT = 'NIGHT' \
+		ORDER BY AS_CAMERAIMAGE LIMIT ${COUNT}"
+	LIST="$( "${ALLSKY_DATABASE_COMMAND}" --run "${SQL}" 2>&1 )"
+	RET=$?
+	## echo -e "SQL=\n${SQL}, records=$( wc -l "${IMAGES}" )"
+	if [[ ${RET} -ne 0 ]]; then
+		wE_ "ERROR: Unable to get list of ${NIGHT} images from database: $( cat "${IMAGES}" )"
+		exit ${ALLSKY_EXIT_ERROR_STOP}
+	fi
+	if [[ -z ${LIST} ]]; then
+		wW_ "NOTICE: No ${NIGHT}images found in database; using ALL images instead.\n"
+	else
+		# Need full pathnames.
+		echo "${LIST}" | sed "s;^;${IN_DIRECTORY}/;" > "${IMAGES}"
+	fi
+fi
+if [[ ${NUM_IMAGES} -eq 0 ]]; then
+	NIGHT=""
+	find "${IN_DIRECTORY}" -type f -name "*.${ALLSKY_EXTENSION}" 2>/dev/null |
+		head -"${COUNT}" > "${IMAGES}"
+fi
+
 if [[ ! -s ${IMAGES} ]]; then
-	echo -e "${ME}: WARNING: no images found in '${IN_DIRECTORY}' with extension '.${ALLSKY_EXTENSION}'." >&2
+	wW_ "WARNING: No ${NIGHT}images found in '${IN_DIRECTORY}' with extension '.${ALLSKY_EXTENSION}'." >&2
 	exit 0
 fi
 
@@ -276,7 +304,7 @@ do
 	else
 		echo -e "ERROR: Unable to make startrails.  Quitting." >&2
 		remove_colors "${MSG}" >&2
-		exit 3
+		exit "${ALLSKY_EXIT_ERROR_STOP}"
 	fi
 done
 

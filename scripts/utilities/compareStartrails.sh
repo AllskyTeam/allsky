@@ -4,11 +4,11 @@
 ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck source-path=.
-source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 usage_and_exit()
 {
@@ -55,7 +55,7 @@ THRESHOLDS=""
 THRESHOLD="$( settings ".startrailsbrightnessthreshold" )"
 d_THRESHOLDS="${THRESHOLD}"
 i=1
-while [[ ${i} -le 7 ]];
+while [[ ${i} -le 7 ]];		# 7 seems like a good number of thresholds
 do
 	THRESHOLD="$( gawk -v T="${THRESHOLD}" 'BEGIN { printf("%0.2f", T + 0.03); }' )"
 	d_THRESHOLDS+=" ${THRESHOLD}"
@@ -101,11 +101,11 @@ while [[ $# -gt 0 ]]; do
 	shift
 done
 [[ ${DO_HELP} == "true" ]] && usage_and_exit 0
-[[ ${OK} == "false" ]] && usage_and_exit 1
+[[ ${OK} == "false" ]] && usage_and_exit "${ALLSKY_EXIT_ERROR_STOP}"
 if [[ ${HTML} == "true" &&
 		( -z ${IN_DIRECTORY} || -z ${COUNT} || -z ${THRESHOLDS} ) ]]; then
 	echo "<p style='color: red'>All settings must be specified on the command line.</p>" >&2
-	usage_and_exit 2
+	usage_and_exit "${ALLSKY_EXIT_ERROR_STOP}"
 fi
 
 # Prompt for missing data.
@@ -135,6 +135,11 @@ if [[ -z ${IN_DIRECTORY} ]]; then
 		fi
 		echo "Enter directory name: "
 	done
+else
+	if [[ ! -d ${IN_DIRECTORY} ]]; then
+		echo -e "Directory '${IN_DIRECTORY}' does not exist." >&2
+		exit 1
+	fi
 fi
 if [[ -z ${COUNT} ]]; then
 	while true
@@ -214,8 +219,8 @@ sudo chown "${ALLSKY_OWNER}:${WEBSERVER_GROUP}" "${OUT_DIRECTORY}"
 IMAGES="${OUT_DIRECTORY}/images.txt"
 find "${IN_DIRECTORY}" -type f -name "*.${ALLSKY_EXTENSION}" 2>/dev/null | head -"${COUNT}" > "${IMAGES}"
 if [[ ! -s ${IMAGES} ]]; then
-	echo -e "${ME}: ERROR: no images found in '${IN_DIRECTORY}' with extension '.${ALLSKY_EXTENSION}'." >&2
-	exit 1
+	echo -e "${ME}: WARNING: no images found in '${IN_DIRECTORY}' with extension '.${ALLSKY_EXTENSION}'." >&2
+	exit 0
 fi
 
 # Check for input errors
@@ -249,7 +254,7 @@ do
 		--output "${OUTPUT}" \
 		--brightness "${THRESHOLD}" 2>&1 )"
 	RET=$?
-	if [[ ${RET} -eq 0 || ${RET} -eq ${EXIT_PARTIAL_OK} ]]; then
+	if [[ ${RET} -eq 0 || ${RET} -eq ${ALLSKY_EXIT_PARTIAL_OK} ]]; then
 		(( NUM_CREATED++ ))
 		echo "Created '${OUTPUT}' with Brightness Threshold of ${THRESHOLD}."
 		if [[ ${VERBOSE} == "true" ]]; then

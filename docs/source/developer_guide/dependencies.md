@@ -1,4 +1,4 @@
-## The installer.json file
+## The installer.json file { data-toc-label="The installer.json file" }
 
 This file allows you to configure dependencies and post installation scripts for the module.
 
@@ -24,7 +24,7 @@ There are three sections available in this file
 
 These are covered in more detail in the following sections
 
-### Python Dependencies
+### Python Dependencies { data-toc-label="Python Dependencies" }
 
 If your module requires Python dependencies then first check if the dependencies are already available.
 
@@ -44,7 +44,7 @@ Any installed dependencies will be added to the main Allsky virtual python envir
     Some modules use a requirements.txt file – This is the legacy method for installing dependencies and must not be used.
 
 
-### APT Packages
+### APT Packages { data-toc-label="APT Packages" }
 
 If your module requires addition apt packages to be installed then create or amend the installer.json file to add the packages
 
@@ -55,7 +55,7 @@ The module installer will install these packages using apt so you can use the ap
     Some modules use a packages.txt file – This is the legacy method for installing dependencies and must not be used.
 
 
-### Additional Data
+### Additional Data { data-toc-label="Additional Data" }
 
 If your module requires additional data then create a folder inside the module folder with the same name as the module. Inside this folder place any data you require.
 
@@ -63,16 +63,16 @@ The module installer will then copy this code into the main Allsky folder. You w
 
 The allsky_adsb module is a good example to look at for this type of functionality.
 
-### Install scripts
+### Install scripts { data-toc-label="Install scripts" }
 
 If you need to run any post installation code, so setup data for example then place details of the script to call int eh post-install section of the installer.json file.
 
 In the example above the script has been placed in the allsky_adsb/tools folder. This will be copied to the main Allsky folder during installation. The installer file references {install_data_dir} which the installer will replace with the real folder.
 
-### Charts
+### Charts { data-toc-label="Charts" }
 
 See the charts section for more details
 
-### Blocks
+### Blocks { data-toc-label="Blocks" }
 
 See the blocks section for more details

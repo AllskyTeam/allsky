@@ -6,7 +6,7 @@ tags:
   - Pipeline Periodic  
 ---
 
-## Description
+## Description { data-toc-label="Description" }
 This module reads data from the Pi's hardware. Teh following is read
 
 - CPU Temperature
@@ -16,14 +16,14 @@ This module reads data from the Pi's hardware. Teh following is read
 - Memory Info. Size, usage, free
 - Uptime
 
-## Settings
+## Settings { data-toc-label="Settings" }
 The following settings are available in the module
 
 | Setting | Description |
 |--------|-------------|
 | Read Every | The number of seconds between reading the data |
 
-## Available Variables
+## Available Variables { data-toc-label="Available Variables" }
 
 | Variable | Description |
 |--------|-------------|
@@ -44,7 +44,7 @@ The following settings are available in the module
 | AS_MEMORYFREEPERCENTAGE | Percentage of memory free |
 | AS_UPTIME | the uptim eof th pi |
 
-### Throttled Status
+### Throttled Status { data-toc-label="Throttled Status" }
 
 When a Raspberry Pi detects unsafe operating conditions, it protects itself by reducing performance. This is known as throttling and can involve:
 
@@ -70,7 +70,7 @@ The following throttle conditions can occur
 | Soft temperature limit occurred since boot | The Pi reached high temperatures at least once |
 
 
-## Available in
+## Available in { data-toc-label="Available in" }
 
 === "Pipelines available In"
     

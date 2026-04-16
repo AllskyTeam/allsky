@@ -6,12 +6,12 @@ tags:
 ---
 
 
-## Description
+## Description { data-toc-label="Description" }
 
 This allows Allsky data to be exported to a json file.
 
 
-## Settings
+## Settings { data-toc-label="Settings" }
 The following settings are available in the module
 
 | Setting | Description |
@@ -19,7 +19,7 @@ The following settings are available in the module
 | File Location | The file to create the data in |
 | Extra Data To Export | Comma separated list of Allksy variables to export |
 
-## Available in
+## Available in { data-toc-label="Available in" }
 
 === "Pipelines available In"
     

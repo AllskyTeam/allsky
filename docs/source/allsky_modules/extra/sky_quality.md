@@ -23,9 +23,9 @@ Where
 **gain** - The gain used for the captured image
 
 
-## Settings
+## Settings { data-toc-label="Settings" }
 
-### Main Settings
+### Main Settings { data-toc-label="Main Settings" }
 
 | Setting | Description |
 |--------|-------------|
@@ -34,20 +34,20 @@ Where
 | Fallback | If no ROI specified then use this percentage around the image center |
 | Adjustment | Python forumula to apply when calculating the sky quality |
 
-### Debug Settings
+### Debug Settings { data-toc-label="Debug Settings" }
 
 | Setting | Description |
 |--------|-------------|
 | Enable | When on debug mod is enabled and the Debug Image is used rather than the captured image |
 | Debug Image | The image to use to test the module |
 
-## Available Variables
+## Available Variables { data-toc-label="Available Variables" }
 
 | Variable | Description |
 |--------|-------------|
 | AS_SQM | The estimated sky quality |
 
-## Available in
+## Available in { data-toc-label="Available in" }
 
 === "Pipelines available In"
     

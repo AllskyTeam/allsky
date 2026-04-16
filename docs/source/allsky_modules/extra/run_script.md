@@ -10,7 +10,7 @@ This module allows you to run a script. This can be useful if you want to perfor
 
 Be careful when running a script in the day or night time pipelines as the time your script takes to run will affect the time duration between captured images. Ideally only use this module in the periodic pipeline
 
-## Settings
+## Settings { data-toc-label="Settings" }
 
 | Setting | Description |
 |--------|-------------|
@@ -21,7 +21,7 @@ Be careful when running a script in the day or night time pipelines as the time 
 
     Only enable the 'Use Shell' option if you full undserstand th eimplications of running a script in a shell. 99% of scripts will NOT require this.
 
-## Available in
+## Available in { data-toc-label="Available in" }
 
 === "Pipelines available In"
     

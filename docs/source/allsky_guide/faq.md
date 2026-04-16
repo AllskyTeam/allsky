@@ -1,6 +1,6 @@
 # FAQ
 
-## Startup and Capture
+## Startup and Capture { data-toc-label="Startup and Capture" }
 
 ??? question "Stuck `Allsky software is starting up`"
     Most likely, Allsky is dropping all images because they are overly dark or overly bright due to inappropriate settings.
@@ -86,24 +86,24 @@
 
     When in doubt, check the exact setting labels in the WebUI and confirm whether they apply to daytime, nighttime, or both.
 
-## Storage
+## Storage { data-toc-label="Storage" }
 
 ??? question "My SD card is getting full. How do I move images somewhere else, like to a bigger SSD?"
     If you would like to store more images or other files than will fit on your SD card, you can:
 
-    ### Buy a bigger SD card
+    **Buy a bigger SD card**
 
     This is fairly easy to do and is relatively inexpensive. The disadvantage is that you would still be using an SD card, which is not as fast or reliable as other media.
 
     If you go with this option, follow the steps on the **Imaging a storage device** page.
 
-    ### Replace the SD card with a bigger, more reliable drive like an SSD
+    **Replace the SD card with a bigger, more reliable drive like an SSD**
 
     This option is similar to buying a bigger SD card, but you will be using faster, more reliable media, potentially with much more disk space. On the other hand, an SSD may not fit in your allsky camera enclosure.
 
     If you go with this option, follow the same instructions as above.
 
-    ### Add a second disk, such as a USB thumb drive or SSD
+    **Add a second disk, such as a USB thumb drive or SSD**
 
     This option is probably the easiest one to implement. You will not need to reinstall Linux or any programs.
 
@@ -232,12 +232,12 @@
 
     If you are collecting information for support, use the **Getting Support** page or the support script so you gather the right logs and context together instead of copying fragments manually.
 
-## Camera
+## Camera { data-toc-label="Camera" }
 
 ??? question "How do I focus my allsky camera?"
     Almost all allsky lenses can focus, either manually, meaning you focus them, or automatically via a motor on the lens.
 
-    ### Manual-focus cameras
+    **Manual-focus cameras**
 
     Manual-focus lenses have a ring that you turn to change the focus. If your lens does **not** have a focus ring or some other focusing mechanism, it is called a **fixed focus** lens and you can skip this FAQ item.
 
@@ -259,7 +259,7 @@
 
     In the WebUI, disable **Focus Mode**{ .web-ui-setting }.
 
-    ### Auto-focus cameras
+    **Auto-focus cameras**
 
     If you have a camera with an auto-focus lens like the RPi Module 3, see the camera documentation for a description of focus-related settings. You will use the `--lens-position` setting to determine where the best focus is.
 
@@ -305,7 +305,7 @@
 
     Timelapse creation in particular can be demanding, especially on smaller Pis or with high-resolution sensors. If the system seems overloaded during that kind of work, review the timelapse troubleshooting guidance and consider reducing output size or adding swap where appropriate.
 
-## Website
+## Website { data-toc-label="Website" }
 
 ??? question "How do I change the icons on the Allsky Website?"
     The icons on the left side of an Allsky Website page, and what happens when you click one, are controlled by the `leftSidebar` setting. The icon itself is specified via the `icon` sub-setting.

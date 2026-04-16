@@ -10,7 +10,7 @@ It covers:
 - what the progress and completion screens mean,
 - and what to verify afterwards.
 
-## Start a restore
+## Start a restore { data-toc-label="Start a restore" }
 
 1. Go to **System > Backups**.
 2. Find the backup you want in the table.
@@ -23,7 +23,7 @@ Screenshot: Restore icon in a backup row.
 
 The restore dialog opens and begins loading the backup metadata and running the initial checks.
 
-## What the restore dialog shows
+## What the restore dialog shows { data-toc-label="What restore dialog" }
 
 The restore dialog is laid out to answer four questions:
 
@@ -46,7 +46,7 @@ Screenshot: Restore dialog with checks, metadata, and mode tabs.
 
 ---
 
-## Understanding the pre-restore checks
+## Understanding the pre-restore checks { data-toc-label="Understanding the" }
 
 The checks are there to stop bad restores before they happen.
 
@@ -68,7 +68,7 @@ Each check shows:
 
 That is intentional. The goal is to prevent partial or invalid restores, not just warn about them afterwards.
 
-## Normal mode and Advanced mode
+## Normal mode and Advanced mode { data-toc-label="Normal mode Advanced" }
 
 Allsky offers two restore modes because not every recovery task is the same.
 
@@ -107,7 +107,7 @@ Screenshot: Advanced mode file tree with search and hierarchical selection.
 
 ---
 
-## Config restore behaviour
+## Config restore behaviour { data-toc-label="Config restore behaviour" }
 
 Config restores are handled carefully because they can replace active files that Allsky is currently using.
 
@@ -121,7 +121,7 @@ For config restores, Allsky performs a controlled sequence:
 
 This is deliberate. It helps keep the restored configuration consistent instead of mixing live state with partially replaced files.
 
-### Camera compatibility rule
+### Camera compatibility rule { data-toc-label="Camera compatibility" }
 
 Config restores are camera-safe.
 
@@ -129,7 +129,7 @@ If the camera type or camera model stored in the backup does not match the curre
 
 That prevents a configuration intended for one camera from being applied to a different one.
 
-### Module availability rule
+### Module availability rule { data-toc-label="Module availability rule" }
 
 Module validation depends on what you chose to restore:
 
@@ -138,7 +138,7 @@ Module validation depends on what you chose to restore:
 
 This helps avoid ending up with a restored configuration that points to modules the current system does not have.
 
-## Images restore behaviour
+## Images restore behaviour { data-toc-label="Images restore behaviour" }
 
 Images restores are more flexible because you may want either a broad recovery or a very specific one.
 
@@ -151,13 +151,13 @@ Where metadata is available, ownership and permission information is reapplied a
 
 That helps keep restored content consistent with the rest of the image storage layout.
 
-## Confirming the restore
+## Confirming the restore { data-toc-label="Confirming the restore" }
 
 When the checks pass and your selection is valid, click **Confirm Restore**.
 
 At that point, the restore begins and a progress modal opens.
 
-## Restore progress modal
+## Restore progress modal { data-toc-label="Restore progress modal" }
 
 The progress modal gives you stage-by-stage feedback while the restore runs.
 
@@ -179,7 +179,7 @@ Screenshot: Restore progress modal while restore is running.
 
 ---
 
-## Restore completion modal
+## Restore completion modal { data-toc-label="Restore completion modal" }
 
 When the restore finishes successfully, Allsky displays a completion summary so you can see exactly what happened.
 
@@ -203,7 +203,7 @@ For image restores:
 Screenshot: Restore complete summary modal.
 ///
 
-## Restore logs and traceability
+## Restore logs and traceability { data-toc-label="Restore logs" }
 
 Every restore writes a log file to `config/logs` using a name like:
 
@@ -221,7 +221,7 @@ The log gives you a permanent record of:
     If you are diagnosing issues after a rollback or after a targeted file restore, keep the restore log.
     It provides a reliable record of exactly what changed.
 
-## What to check after a restore
+## What to check after a restore { data-toc-label="What check after restore" }
 
 After restoring, verify that the system is behaving the way you expected.
 
@@ -235,7 +235,7 @@ Use this checklist:
 
 If you used **Advanced mode** to restore only a small part of the system, test that exact component rather than assuming everything is fine.
 
-## Recommended restore strategy
+## Recommended restore strategy { data-toc-label="Recommended restore" }
 
 - Use **Normal mode** for most restores.
 - Use **Advanced mode** only when you need a targeted recovery.

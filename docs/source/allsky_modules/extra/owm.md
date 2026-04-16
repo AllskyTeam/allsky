@@ -19,7 +19,7 @@ This module obtains weather data from the Open Weather Map service
 
     The free API limits you to 1000 requests per day. Please ensure you set the 'Read Every' setting to the correct value so as not to exceed this limit
 
-## Settings
+## Settings { data-toc-label="Settings" }
 
 | Setting | Description |
 |--------|-------------|
@@ -28,7 +28,7 @@ This module obtains weather data from the Open Weather Map service
 | Units | The units to obtain data in |
 | Expiry Time | How long to keep data for before its removed |
 
-## Available Variables
+## Available Variables { data-toc-label="Available Variables" }
 
 | Variable | Description |
 |--------|-------------|
@@ -52,7 +52,7 @@ This module obtains weather data from the Open Weather Map service
 | AS_OWSUNRISE | Sunrise time |
 | AS_OWSUNSET | Sunset time |
 
-## Available in
+## Available in { data-toc-label="Available in" }
 
 === "Pipelines available In"
     

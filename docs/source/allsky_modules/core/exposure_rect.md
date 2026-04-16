@@ -5,7 +5,7 @@ tags:
   - Pipeline Day  
 ---
 
-## Description
+## Description { data-toc-label="Description" }
 
 This module draws the exposure rectangle definied in the main settings on the image
 
@@ -14,7 +14,7 @@ This module draws the exposure rectangle definied in the main settings on the im
     This only works with ZWO Cameras
 
 
-## Settings
+## Settings { data-toc-label="Settings" }
 None
 
 ![](/assets/module_images/exposure_rect.png) 
@@ -24,7 +24,7 @@ Example ZWO Exposure Rectangle
 ///
 
 
-## Available in
+## Available in { data-toc-label="Available in" }
 
 === "Pipelines available In"
     

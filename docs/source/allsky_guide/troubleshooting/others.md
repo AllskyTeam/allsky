@@ -1,6 +1,6 @@
 This pages lists how to troubleshoot other problems that don't deserve their own page.
 
-## USB reset messages in system logs
+## USB reset messages in system logs { data-toc-label="USB reset messages" }
 
 You can ignore entries similar to the following in the system logs:
 

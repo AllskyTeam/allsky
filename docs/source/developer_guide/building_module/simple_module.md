@@ -16,7 +16,7 @@ We will be using the following json file so create a file somewhere on the pi an
 }
 ```
 
-### Basic Framework
+### Basic Framework { data-toc-label="Basic Framework" }
 First we need the very basic framework for a module
 
 ```python
@@ -84,7 +84,7 @@ def example_cleanup():
 
 This will allow the module to be displayed in the module manager for the relevant pipelines but it wont actually do anything just yet.
 
-### Add Arguments
+### Add Arguments { data-toc-label="Add Arguments" }
 Next we need to add some fields that specify where the file is that contains the json data. This is accomplished by adding values to the ```arguments``` and ```argumentsdetails``` sections of the ```meta_data```
 
 Change the ```arguments``` and ```argumentdetails``` section of the ```meta_data``` variable to the following
@@ -104,7 +104,7 @@ Change the ```arguments``` and ```argumentdetails``` section of the ```meta_data
 
 This adds a field called ```Filename``` to the module options
 
-### Use the arguments
+### Use the arguments { data-toc-label="Use the arguments" }
 Next we need to make use of the arguments to read the json file.
 
 Change the ```run``` module method to the following
@@ -132,7 +132,7 @@ A couple of important points here
   - The ```load_json_file``` helper function from the ```allsky_shared``` module is used to read the json file. This makes reading json files a lot easier. Refer to the [Shared Module](../../allsky_shared.md){ target="_blank" rel="noopener" .external } documentation for details of this method.
   - Note how the result variable is set in any error condition to ensure we have more than an empty string returned.
 
-### Create The Allsky Variable
+### Create The Allsky Variable { data-toc-label="Create Allsky Variable" }
 Next we need to use the data from the json file to create the allsky variable, which will be available in the overlay manager
 
 Change the ```run``` module method to the following
@@ -165,7 +165,7 @@ Change the ```run``` module method to the following
 
 This creates the extra_data dict and then calls the ```allsky_shared.save_extra_data``` method to actually save the data. This will create a file in ```~/allsky/tmp/extra``` called ```allsky_example.json``` containing the variable and value, this can then be used in the overlay editor
 
-### Define the Allsky Variable
+### Define the Allsky Variable { data-toc-label="Define Allsky Variable" }
 
 In the example above Allsky knows nothing about what the variable you have created is, this will cause limitations in the overlay editor.
 
@@ -234,7 +234,7 @@ In the definition we added we are telling Allsky that
 - the variable is number, formatted to 0 decimal places with a percent sign added
 - The variable will be displayed in a group called 'User' in the Variable Manager
 
-### Adding more variables
+### Adding more variables { data-toc-label="Adding more variables" }
 
 Our json file contains a second value so lets add that as well by adding the new variable to the ```meta_data``` and setting it in the ```run``` method
 

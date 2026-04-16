@@ -1,6 +1,6 @@
 This page describes how to request that Allsky support a camera.
 
-## ZWO Cameras
+## ZWO Cameras { data-toc-label="ZWO Cameras" }
 
 Open a new [Discussions](https://github.com/AllskyTeam/allsky-modules/discussions){ target="_blank" rel="noopener" .external } in GitHub using the New feature requests category. Let us know what model of ZWO camera it is, and if you know it, when the camera came out.
 
@@ -20,7 +20,7 @@ sudo systemctl start allsky
 
 Allsky should now recognize your camera.
 
-## RPi Cameras
+## RPi Cameras { data-toc-label="RPi Cameras" }
 
 - Step 1: Check if the camera is good for allsky
   

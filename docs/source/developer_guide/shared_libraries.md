@@ -1,4 +1,4 @@
-### The Allsky Base Module
+### The Allsky Base Module { data-toc-label="The Allsky Base Module" }
 Every module class must extend this base class. The base class does the following
 In the constructor;
 
@@ -8,7 +8,7 @@ In the constructor;
 
 It also provides the following functions that the module class should use;
 
-#### get_parm
+#### get_parm { data-toc-label="get_parm" }
 This function is used to get a parameter from the module settings. Whilst this can be accessed in the params variable this is not encouraged. The function  accepts the following parameters
 
 |Parameter	|Description|
@@ -18,7 +18,7 @@ This function is used to get a parameter from the module settings. Whilst this c
 |target_type	|The Python type of the variable to return|
 |Use_default_if_blank	|If the target_type is a string (str) and the found value for the param is an empty tring then use the default value if this parameter is True|
 
-#### log
+#### log { data-toc-label="log" }
 This function logs data to either the console or Allsky debug logs. The function  accepts the following parameters
 
 |Parameter	|Description|
@@ -33,7 +33,7 @@ This function logs data to either the console or Allsky debug logs. The function
 
     For more details on these functions see the SDK Reference
 
-### The Allsky Shared Module
+### The Allsky Shared Module { data-toc-label="The Allsky Shared Module" }
 The shared module provides a huge library of functions that can assist module developers.
 
 !!! info  "Detailed SDK"

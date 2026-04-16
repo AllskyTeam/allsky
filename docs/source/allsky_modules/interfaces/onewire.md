@@ -7,13 +7,13 @@ Typical devices include:
 - iButton devices  
 - EEPROM identification chips  
 
-## Enabling 1-Wire on Raspberry Pi
+## Enabling 1-Wire on Raspberry Pi { data-toc-label="Enabling 1-Wire" }
 
 - `raspi-config` → Interface Options → One Wire 
 
 Raspberry Pi provides built-in support for 1-Wire using a kernel driver.
 
-### Enable via `/boot/config.txt`
+### Enable via `/boot/config.txt` { data-toc-label="Enable via" }
 
 Edit the configuration file:
 
@@ -42,7 +42,7 @@ Reboot the Pi:
 sudo reboot
 ```
 
-## How 1-Wire Works
+## How 1-Wire Works { data-toc-label="How 1-Wire Works" }
 
 The bus uses:
 - **DQ (Data line)** – carries both data and timing signals  
@@ -51,7 +51,7 @@ The bus uses:
 
 All devices share the same data line and are identified by a **unique 64-bit ID**, allowing many devices to exist on the same bus.
 
-## Power Modes
+## Power Modes { data-toc-label="Power Modes" }
 
 1-Wire devices can operate in two ways:
 
@@ -63,7 +63,7 @@ All devices share the same data line and are identified by a **unique 64-bit ID*
 > For reliability, **normal powered mode is recommended** instead of parasitic power.
 
 
-## Verifying 1-Wire is Working
+## Verifying 1-Wire is Working { data-toc-label="Verifying 1-Wire Working" }
 
 After reboot, check that the driver is loaded:
 
@@ -81,7 +81,7 @@ w1_bus_master1
 Each `28-xxxxxxxxxxxx` folder represents a detected 1-Wire device.
 
 
-## Reading a DS18B20 Temperature Sensor
+## Reading a DS18B20 Temperature Sensor { data-toc-label="Reading DS18B20" }
 
 You can read the temperature directly from the system:
 

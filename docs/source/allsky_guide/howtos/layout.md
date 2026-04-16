@@ -1,6 +1,12 @@
-When you install Allsky it put its files and directories in the allsky directory of the login you installed it with, typically pi. That directory is usually referred to as ~/allsky.
+When you install Allsky, it creates its files and directories under the home directory of the user you installed it as, which is often `pi`. In most examples throughout the documentation this appears as `~/allsky`.
 
-Ever wonder what all the files and directories are in the ~/allsky directory? Read on.
+You do not need to understand every file in that tree to use Allsky successfully, but it is useful to know the broad layout. It helps when you are following troubleshooting steps, making backups, browsing saved images, or simply trying to understand what Allsky has stored on the Pi.
+
+This page is a practical guide to the main files and directories you are likely to come across.
+
+## Typical layout { data-toc-label="Typical Layout" }
+
+A typical Allsky installation looks roughly like this:
 
 ```text
 allsky
@@ -26,123 +32,182 @@ allsky
     ├── lftp_cmds
     ├── logs
     └── __pycache__
-
 ```
 
+Your installation may not match this exactly. Some directories only appear when a feature is enabled or has been used, and others may vary slightly between versions. The point of the tree above is to show the general structure, not to define an exact list that every system must have.
 
-**assets**
+## Directories you will most likely use { data-toc-label="Main Directories" }
 
-Contains files used by the developers in creating Allsky as well as images used by the README.md file. You can ignore this directory.
+The most important directories for normal users are `config`, `html`, `images`, `darks`, and `tmp`. If you understand those, you already understand most of what matters in everyday use.
 
+### `config` { data-toc-label="config" }
 
-**bin**
+This directory contains Allsky's configuration files.
 
-This holds all the binary files (files created by compiling source code), for example capture_RPi and capture_ZWO are the programs that read your settings and take pictures, storing them in the tmp directory, described below.
+Some of the most important items here are:
 
-**config**
-Contains all the configuration files. Some of the files in this directory include:
+- `settings.json`, which holds most of the settings you change on the **Allsky Settings** page in the WebUI.
+- The `modules` directory, which contains configuration for the **Module Manager**.
+- The `overlay` directory, which contains configuration for the **Overlay Editor**.
+- `cc.json` and `options.json`, which are created based on your camera and control which settings appear in the WebUI, along with their valid ranges and defaults.
 
-  - settings.json is updated via the Allsky Settings page in the WebUI and contains most of the settings used by Allsky. This file is linked to a file that contains your camera type and camera model in the file name.
+If you change camera type or model through the WebUI, some of these files are regenerated automatically.
 
-  - The modules and overlay directories contain the configuration files for the Module Manager and Overlay Editor, respectively.
+If you use a remote Allsky Website, you may also see `remote_configuration.json` here. That file is uploaded to the remote server when you update it through the WebUI's **Editor** page.
 
-  - cc.json (camera capabilities) and options.json are created as part of the installation based on what capabilities your camera has, and determine what settings you see in the WebUI as well as their minimum, maximum, and default values. If you change cameras via the WebUI, these files are re-created.
+For most users, the important point is simple: this is where Allsky's main configuration lives. If you are backing up the system, moving to a new SD card, or troubleshooting settings, this directory matters a great deal.
 
-  - If you have a remote Allsky Website a remote_configuration.json file will exist that's uploaded to the remote server whenever you change it via the WebUI's Editor page.
+### `html` { data-toc-label="html" }
 
-**config_repo**
+This directory contains the WebUI and the files for the local Allsky Website.
 
-This holds "templates" of the configuration files. Copies of most of these files are updated and stored in the config directory during installation.
+It also includes the documentation that can be viewed through the WebUI. If you are told to look for WebUI files, PHP pages, or local website configuration, this is the area you will usually end up in.
 
+The WebUI itself does not have one single user-editable configuration file in the same way that `settings.json` controls Allsky. However, the local website does have configuration files that can be changed through the WebUI editor.
 
-**darks**
+### `images` { data-toc-label="images" }
 
-This holds optional dark frames which are used to decrease noise in pictures.
+This is where Allsky stores captured output.
 
+That includes:
 
-**html**
+- saved images
+- timelapse videos
+- keograms
+- startrails
+- thumbnails related to those outputs
 
-All the WebUI and local Allsky Website files are here. The WebUI itself doesn't have a configuration file, but a local Allsky Website has configuration.json which is updated via the WebUI's Editor page.
+Allsky stores these by date, with each day's output in a directory named `YYYYMMDD`, for example `20240710`.
 
-The Allsky Documentation is also in this directory.
+If you are looking for a specific image, checking disk usage, copying output off the Pi, or removing old captures manually, this is the directory you will work with.
 
+### `darks` { data-toc-label="darks" }
 
-**images**
+This directory stores optional dark frames. Dark frames are used to reduce visible sensor noise in images. If you are not using dark frames, this directory may be empty or unimportant to you. If you are using them, this is where they are kept.
 
-This holds all the daily images, keograms, startrails, and timelapse videos for as long as you have specified in the Days To Keep setting in the WebUI. Each day's files are stored in a subdirectory called YYYYMMDD, for example, 20240710.
+### `tmp` { data-toc-label="tmp" }
 
-**tmp**
+This directory holds temporary files used while Allsky is running.
 
-Hold temporary files, including most log files, used by Allsky while it's running. The contents of this directory are usually cleaned out after a reboot.
+It often contains:
 
-**venv**
+- log files
+- temporary working files
+- intermediate output used during processing
+- other short-lived files created by scripts and helper tools
 
-You can ignore this directory. It holds Python configuration data used by Allsky.
+The contents of `tmp` are not usually meant to be permanent, and much of this area is often cleared after a reboot. When you are debugging a problem, however, this directory becomes much more important because many logs and temporary traces appear here.
 
+## Other directories you may notice { data-toc-label="Other Directories" }
 
-**allsky.sh**
+The rest of the installation tree is still useful to understand, even if you rarely touch it directly.
 
-This is the program that's executed when you start Allsky. It calls the appropriate program to take pictures.
+### `assets` { data-toc-label="assets" }
 
-**env.json**
+This mainly contains files used in building or presenting Allsky, including assets used in documentation and development. Most users can ignore it.
 
-This file contains private settings used to upload files such as user names and passwords. These settings are in a separate file so you can safely upload the settings.json file to GitHub without exposing sensitive information.
+### `bin` { data-toc-label="bin" }
 
-The data in this file is updated via the WebUI.
+This contains compiled binary programs used by Allsky.
 
+For example, this is where the camera capture programs such as `capture_RPi` and `capture_ZWO` live after they have been built. These are not usually files you run directly in normal day-to-day use, but they are central to how Allsky actually captures images.
 
-**install.sh**
+### `config_repo` { data-toc-label="config_repo" }
 
-The installation / upgrade script for Allsky.
+This holds template versions of configuration files. During installation, and sometimes during upgrades, Allsky uses these templates to create or refresh files in the `config` directory.
 
-**LICENSE**
+Most users should treat this as an internal support directory rather than a place to make routine edits.
 
-Holds the Allsky license. If you plan to copy Allsky in part or in whole you should be aware of the license.
+### `notification_images` { data-toc-label="notification_images" }
 
+This contains the images Allsky can display for status or notification purposes, such as startup or placeholder images.
 
-**Makefile**
+Depending on your image format, you may see both `.jpg` and `.png` files here.
 
-This is used during installation to create directories and binary files and perform other tasks. You can ignore this file.
-notification_images
+### `resized` { data-toc-label="resized" }
 
-Holds all the images such as "Allsky software is starting up". There are both .jpg and .png files, depending on whether your image is called image.jpg or image.png.
+This directory is used for resized images created as part of Allsky processing or website-related workflows. Not every user will need to interact with it directly, but it is normal for it to exist.
 
+### `scripts` { data-toc-label="scripts" }
 
-**README.md**
+This contains the shell scripts and helper programs Allsky uses while it is running.
 
-A file containing information about Allsky. You'll normally view the Allsky Documentation via the WebUI's Documentation link instead of this file.
-remoteWebsiteInstall.sh
+Some of these scripts are also useful for advanced troubleshooting. For example, certain upload or generation scripts can be run manually when you are debugging a specific part of the system. For normal users, though, this is mostly part of Allsky's internal machinery.
 
-The program used to prepare an optional remote Allsky Website. This should only be run after viewing the Allsky Website Installation page for instructions on installing a remote Allsky Website.
+### `src` { data-toc-label="src" }
 
+This contains the source code for compiled parts of Allsky, including capture programs and utilities such as the keogram and startrails generators.
 
-**scripts**
+Most users will never need to change anything here, but if you ever compile Allsky from source or follow advanced developer-oriented instructions, this is where that work happens.
 
-Holds all the scripts (i.e., programs) used by Allsky while it's running. Several scripts can be manually executed for debugging purposes, per the documentation. For example running testUpload.sh manually can help debug upload problems.
+### `venv` { data-toc-label="venv" }
 
+This directory contains Python virtual environment data used by Allsky. In normal use, you can ignore it.
 
-**src**
-Holds the source code for the capture, keogram, startrails, and sunwait programs.
+## Important files in the top level { data-toc-label="Top-Level Files" }
 
+Alongside the directories, there are several top-level files worth knowing about.
 
-**upgrade.sh**
+### `allsky.sh` { data-toc-label="allsky.sh" }
 
-Do not use - it's incomplete and for developer testing only.
+This is the main script used when Allsky starts. It launches the appropriate capture program and coordinates the normal runtime flow.
 
-When finished, this script will perform all steps needed to upgrade the existing Allsky to the newest version.
+### `env.json` { data-toc-label="env.json" }
 
+This file stores private or sensitive values such as usernames, passwords, and similar credentials used by uploads or integrations.
 
-**uninstall.sh**
+It is kept separate from `settings.json` so that the main settings file can be shared more safely without exposing secrets. If you ever send configuration files to someone for help, this is one of the files you should treat with care.
 
-A VERY BASIC uninstallation script that hasn't been tested much.
+The values in `env.json` are normally managed through the WebUI rather than edited by hand.
 
+### `install.sh` { data-toc-label="install.sh" }
 
-**variables.sh**
+This is the installation and upgrade script for Allsky.
 
-Defines a lot of variables used by other programs. These variables define where various files and directories are. Super advanced users who want to put items in different locations can create a config/uservariables.sh file to define their own locations.
+### `LICENSE` { data-toc-label="LICENSE" }
 
-Note that although this has a .sh extension which indicates it's a shell script, it's colored in black which means it is NOT executable. This script is only included in other scripts, never executed on its own.
+This contains the Allsky software license.
 
-**version**
+### `Makefile` { data-toc-label="Makefile" }
 
-A file that holds the version of Allsky you're running.
+This is used during build and installation steps to create binaries, prepare directories, and perform other setup tasks. Most users do not need to interact with it directly.
+
+### `README.md` { data-toc-label="README.md" }
+
+This is the repository readme file. Most users will read the documentation through the WebUI or the documentation site instead, but this file still provides useful overview information.
+
+### `remoteWebsiteInstall.sh` { data-toc-label="remoteWebsiteInstall" }
+
+This script is used to prepare a remote Allsky Website. It should only be used when you are following the remote website installation instructions.
+
+### `upgrade.sh` { data-toc-label="upgrade.sh" }
+
+Do not use this unless documentation specifically tells you to. It is incomplete and intended for developer testing rather than normal upgrades.
+
+### `uninstall.sh` { data-toc-label="uninstall.sh" }
+
+This is a very basic uninstall script. It exists, but it should not be thought of as a polished full removal tool.
+
+### `variables.sh` { data-toc-label="variables.sh" }
+
+This file defines many of the variables used by Allsky scripts, including the locations of files and directories.
+
+Advanced users who want to override locations can create `config/uservariables.sh`. For most users, though, `variables.sh` is reference material rather than something to edit.
+
+One useful detail is that although it ends in `.sh`, it is not meant to be executed directly. It is sourced by other scripts.
+
+### `version` { data-toc-label="version" }
+
+This file contains the Allsky version currently installed.
+
+## A practical way to think about the layout { data-toc-label="Practical View" }
+
+If you want a simple mental model, think of the installation like this:
+
+- `config` is where Allsky remembers what to do.
+- `images` is where Allsky stores what it produced.
+- `tmp` is where Allsky keeps short-lived working files and logs.
+- `html` is where the WebUI and local website live.
+- `scripts`, `bin`, and `src` are mostly the software itself.
+
+That is enough to get you through most backup, troubleshooting, and file-management tasks without needing to memorise the entire tree.

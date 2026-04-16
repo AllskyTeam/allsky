@@ -14,9 +14,9 @@ This module allows you to read latitude, longitude and time from a GPS attached 
 
     Time synchronisation
 
-## Settings
+## Settings { data-toc-label="Settings" }
 
-### Settings Tab
+### Settings Tab { data-toc-label="Settings Tab" }
 
 | Setting | Description |
 |--------|-------------|
@@ -27,7 +27,7 @@ This module allows you to read latitude, longitude and time from a GPS attached 
 | Extra Data Filename | The name of the file to create the GPS data in for the Overlay Manager. Normally you will not need to change this |
 | Discrepancy Warning | if the "Lat/Lon Warning" is enabled and a discrepancy is found this text will be set in the variable for the Overlay Manager |
 
-### Obfuscation Tab
+### Obfuscation Tab { data-toc-label="Obfuscation Tab" }
 | Setting | Description |
 |--------|-------------|
 | Obfuscate Position | If enabled the values below will be used to modify the GPS position. This is designed to allow you to display the GPS position on an overlay without giving away your exact position |
@@ -35,12 +35,12 @@ This module allows you to read latitude, longitude and time from a GPS attached 
 | Longitude Metres | The number of metres to offset the longitude by. Can be a positive or negative number |
 
 
-## Setting Location
+## Setting Location { data-toc-label="Setting Location" }
 The module has the ability to set your lat and lon in the main Allsky settings from the GPS data. 
 
 If you are concerned about your exact location being set then the module contains settings allowing these values to be randomly adjusted to help obfuscate your exact location
 
-## Setting the time
+## Setting the time { data-toc-label="Setting the time" }
 
   Even if you set the time sync options in the GPS module the time will only be synchronised if the Pi is NOT having its time updated from the Internet. To test if the time is currently being synchronised from the Internet enter the following command:
 

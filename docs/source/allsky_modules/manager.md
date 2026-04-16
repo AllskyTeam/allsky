@@ -24,7 +24,7 @@ That distinction is easy to miss when you first start using modules, but it is t
 The main Module Manager. The package manager installs modules; this screen is where you add them to a pipeline and configure how they run.
 ///
 
-## What The Package Manager Is For
+## What The Package Manager Is For { data-toc-label="What Package Manager" }
 
 Core modules that ship with Allsky are already present and do not normally need to be installed with the package manager. The package manager is mainly for optional and user modules that add extra features such as hardware support, additional data sources, image processing, or export functions.
 
@@ -34,7 +34,7 @@ This is why the package manager is the supported way to add modules. It understa
 
 The package manager also knows how to tell whether a module is already installed, whether a newer version is available, and whether a module has been deprecated. In normal use, deprecated modules are hidden from the install list so that new systems are not built around older modules that are being phased out.
 
-## At A Glance
+## At A Glance { data-toc-label="At A Glance" }
 
 <div class="grid cards" markdown>
 
@@ -64,7 +64,7 @@ The package manager also knows how to tell whether a module is already installed
 
 </div>
 
-## Before You Start
+## Before You Start { data-toc-label="Before You Start" }
 
 Before opening the package manager, it is worth stopping for a moment and deciding what you want the module to do. Some modules generate values that can be shown in overlays. Others talk to hardware connected to the Pi. Others work directly on the image itself. If you know what role the module is meant to play, it becomes much easier to choose the right pipeline afterwards.
 
@@ -75,19 +75,19 @@ If a module depends on hardware, make sure the hardware is actually connected an
 !!! tip "Before you click install"
     Read the module description carefully, think about which pipeline it belongs in, and check whether it needs hardware, network access, API credentials, or other preparation.
 
-## Opening The Package Manager
+## Opening The Package Manager { data-toc-label="Opening Package Manager" }
 
 The package manager is presented as a simple installer-style interface. Its job is deliberately narrow: it helps you review the modules that are available, install new ones, update existing ones, and remove modules you no longer want.
 
 The first screen is usually a short welcome message explaining what modules are and asking whether you want to continue. After that, the main menu gives you the actions that are relevant to your system. On a system with no optional modules installed, the menu may be very short. Once you have modules installed, you will normally see options to install and uninstall modules. In debug mode there may also be advanced maintenance options such as switching the repository branch.
 
-??? note "Suggested screenshot"
-    Add a screenshot of the package manager welcome screen here.
+![Images folder selection](/assets/module_images/package-manager.png)
 
-??? note "Suggested screenshot"
-    Add a screenshot of the package manager main menu here.
+/// caption
+The Allsky Modules Package Manager.
+///
 
-## The Normal Workflow
+## The Normal Workflow { data-toc-label="The Normal Workflow" }
 
 The easiest way to think about the package manager is as the first half of the process. The second half happens in the Module Manager.
 
@@ -104,7 +104,7 @@ The easiest way to think about the package manager is as the first half of the p
     A successful installation only tells you that the module is present on disk and ready to use.
     A successful pipeline setup is what makes the module actually do something.
 
-## Installing, Updating, And Removing Modules
+## Installing, Updating, And Removing Modules { data-toc-label="Installing, Updating," }
 
 === "Installing"
 
@@ -138,7 +138,7 @@ The easiest way to think about the package manager is as the first half of the p
 After installing or updating a module, open its settings and confirm that everything still looks correct.
 ///
 
-## After Installation: Put The Module To Work
+## After Installation: Put The Module To Work { data-toc-label="After Installation: Put" }
 
 The most common misunderstanding is expecting the package manager to do everything automatically. It does not. Its responsibility ends once the module is installed on disk and ready for use. To make the module actually run, you need to move over to the Module Manager and place it into the right pipeline.
 
@@ -149,7 +149,7 @@ The order of modules in a pipeline is just as important as the installation itse
 !!! warning "Pipeline order matters"
     If a module generates data for another module, install order is irrelevant but run order is critical. A correctly installed module can still appear broken if it sits in the wrong place in the flow.
 
-## What To Check In Module Settings
+## What To Check In Module Settings { data-toc-label="What Check Module" }
 
 Once a module has been installed and added to a flow, its settings dialog becomes the main place to confirm that it is behaving as expected. The exact options depend on the module, but a few tabs appear often enough that they are worth understanding.
 
@@ -193,7 +193,7 @@ Once a module has been installed and added to a flow, its settings dialog become
     If a module is deprecated, this tab explains the situation and may point you to a replacement.
     ///
 
-## Testing A Module After Installation
+## Testing A Module After Installation { data-toc-label="Testing Module After" }
 
 Some modules provide a test button. This is one of the quickest ways to confirm that the module is correctly installed and that its current settings make sense. Running a test does not replace adding the module to the correct pipeline, but it does let you check the module logic immediately instead of waiting for the next normal capture cycle.
 
@@ -209,7 +209,7 @@ Use the test button when it is available to confirm that a newly installed modul
 |---|---|
 | The result tab shows whether the module ran successfully. | Some modules also show the extra data they generated during the test run. |
 
-## Good Practice
+## Good Practice { data-toc-label="Good Practice" }
 
 A careful workflow will save you trouble. Install one module at a time, configure it properly, and verify that it works before adding more. If you install several modules at once and then something goes wrong, it becomes much harder to tell which change caused the problem.
 
@@ -220,7 +220,7 @@ Finally, do not ignore warnings about deprecated or experimental modules. Deprec
 !!! tip "Recommended habit"
     Install one module, place it in the flow, save the flow, test it, and only then move on to the next module.
 
-## FAQ
+## FAQ { data-toc-label="FAQ" }
 
 ??? question "I installed a module, but nothing happened"
     This usually means the module was installed correctly but has not yet been added to a pipeline. Open the Module Manager, choose the correct flow, drag the module into the selected list, configure it, enable it, and save the pipeline. If the module produces overlay data, also make sure those variables have been added to your overlay.

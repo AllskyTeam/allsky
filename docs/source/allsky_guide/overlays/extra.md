@@ -13,7 +13,7 @@ The "extra" file can be either a simple ==.txt== file or preferably a ==.json== 
 
 When adding dates to any extra data files please ensure that the date is formatted in the same format as the Time Format setting in WebUI
 
-### Text Files
+### Text Files { data-toc-label="Text Files" }
 
 Text files must end with a .txt extension. The format is a simple **name=value** pair structure, with anything after the = being the value, as shown below:
 
@@ -25,7 +25,7 @@ Text files must end with a .txt extension. The format is a simple **name=value**
 
 The data in these files could become old if the application creating them fails or is not running. To have Allsky detect this you tell it to ignore "extra" files when they are over a certain age. For .txt files there is a single value which is specified in the Overlay Editor settings dialog box. See the next section for how to specify the expiration time for .json files.
 
-### JSON Files
+### JSON Files { data-toc-label="JSON Files" }
 
 .json files are more complex in their structure but provide a lot more flexibility to add your own variables and even control the attributes of a field.
 

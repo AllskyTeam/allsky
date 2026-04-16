@@ -11,10 +11,10 @@ This module allows you to control fans based upon either the internal CPU temper
 
 This can be useful for controlling a cpu cooler or venting air from the Allsky enclosure.
 
-## Settings
+## Settings { data-toc-label="Settings" }
 The following settings are available in the module
 
-### Fans 1 and 2 tabs
+### Fans 1 and 2 tabs { data-toc-label="Fans 1 and 2 tabs" }
 
 | Setting | Description |
 |--------|-------------|
@@ -28,7 +28,7 @@ The following settings are available in the module
 | PWM Min | Only available when 'Use PWM' selected. Sets the min temp for pwm i.e. duty cycle is 0% |
 | PWM Max | Only available when 'Use PWM' selected. Sets the max temp for pwm i.e. duty cycle is 100% |
 
-### Data Control Tab
+### Data Control Tab { data-toc-label="Data Control Tab" }
 
 !!! warning  "Deprecation Warning"
  
@@ -39,7 +39,7 @@ The following settings are available in the module
 | Custom Expiry | Enable cutom expiry |
 | Data Age | How long the data is valid for |
 
-## Schematics
+## Schematics { data-toc-label="Schematics" }
 
 !!! warning  "5v Fans and Relays"
  
@@ -52,7 +52,7 @@ The following settings are available in the module
 Example Mosfet driven 12 Fan
 ///
 
-## Available in
+## Available in { data-toc-label="Available in" }
 
 === "Pipelines available In"
     

@@ -17,7 +17,7 @@ Instead of manually copying files around and hoping nothing important gets misse
     If used incorrectly, they can replace working settings with older data.
     Read this overview and the detailed backup and restore guides before using these tools on a live system.
 
-## Where to find it
+## Where to find it { data-toc-label="Where to find it" }
 
 Open:
 
@@ -29,7 +29,7 @@ Open:
 Screenshot: The System page with the **Backups** tab selected.
 ///
 
-## What you can do from this page
+## What you can do from this page { data-toc-label="What page" }
 
 The **Backups** tab is your working area for everything related to archived recovery data.
 
@@ -44,11 +44,11 @@ From here, you can:
 
 In other words, this page is both your backup creation screen and your recovery inventory.
 
-## Backup types
+## Backup types { data-toc-label="Backup types" }
 
 There are two backup types. They solve different problems, so choosing the right one matters.
 
-### Config backups
+### Config backups { data-toc-label="Config backups" }
 
 A **Config backup** is used when you want to preserve how Allsky is configured.
 
@@ -62,7 +62,7 @@ Use a config backup when you want to preserve things like:
 - camera-related configuration,
 - and environment or config files used by Allsky.
 
-### Images backups
+### Images backups { data-toc-label="Images backups" }
 
 An **Images backup** is used when you want to preserve captured image data.
 
@@ -78,7 +78,7 @@ Use an images backup when you want to preserve:
     If you want to preserve **how Allsky is set up**, create a **Config backup**.
     If you want to preserve **what Allsky captured**, create an **Images backup**.
 
-## Understanding the backups table
+## Understanding the backups table { data-toc-label="Understanding backups" }
 
 The table on this page is your backup inventory. It shows what is available to restore, download, or inspect.
 
@@ -101,7 +101,7 @@ Common columns are:
 Screenshot: Backups table grouped by backup type with action icons.
 ///
 
-## What the row actions do
+## What the row actions do { data-toc-label="What the row actions do" }
 
 Each backup row includes several action icons. These are meant to help you inspect first and restore second.
 
@@ -114,7 +114,7 @@ Each backup row includes several action icons. These are meant to help you inspe
 
 If you are unsure whether a backup contains what you need, start with **Info**. It is the fastest way to confirm the contents before you begin a restore.
 
-## How backup metadata is stored
+## How backup metadata is stored { data-toc-label="How backup metadata" }
 
 To keep the WebUI responsive, backup metadata is stored in two places:
 
@@ -125,7 +125,7 @@ The sidecar file is used first because it is much faster to read. If it is missi
 
 This design is especially useful for larger backups, where repeatedly opening the archive would be slower.
 
-## How restore safety works
+## How restore safety works { data-toc-label="How restore safety works" }
 
 Restore is intentionally not a blind one-click action.
 
@@ -138,7 +138,7 @@ Before anything is written back to the system, Allsky performs checks and shows 
 
 You must then explicitly confirm the restore.
 
-## What happens after a restore
+## What happens after a restore { data-toc-label="What happens after" }
 
 Once a restore starts, Allsky gives you feedback at each stage so you can see what is happening.
 
@@ -150,7 +150,7 @@ After the restore:
 
 That gives you both immediate confirmation and a written record for troubleshooting later.
 
-## A practical workflow that works well
+## A practical workflow that works well { data-toc-label="A practical workflow" }
 
 If you use Allsky regularly, this is a sensible pattern:
 
@@ -164,7 +164,7 @@ If you use Allsky regularly, this is a sensible pattern:
     A backup only helps if it contains the right data and is still available when you need it.
     Keeping more than one backup, and keeping important ones off-device, gives you much better recovery options.
 
-## Read next
+## Read next { data-toc-label="Read next" }
 
 - [Creating Backups](backup.md)
 - [Restoring Backups](restore.md)

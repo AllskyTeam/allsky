@@ -27,10 +27,10 @@ This module allows you to send data to [Discord](https://discord.com){ target="_
 Example images posted to a Discord server
 ///
 
-## Settings
+## Settings { data-toc-label="Settings" }
 The following settings are available in the module
 
-### Daytime Tab
+### Daytime Tab { data-toc-label="Daytime Tab" }
 
 | Setting | Description |
 |--------|-------------|
@@ -40,7 +40,7 @@ The following settings are available in the module
 | Bottom Size | The size of the bottom border in pixels |
 | Webhook URL | The webhook for daytime images, see notes below on Webhooks |
 
-### Daytime Tab
+### Daytime Tab { data-toc-label="Daytime Tab" }
 
 | Setting | Description |
 |--------|-------------|
@@ -50,7 +50,7 @@ The following settings are available in the module
 | Bottom Size | The size of the bottom border in pixels |
 | Webhook URL | The webhook for daytime images, see notes below on Webhooks |
 
-### Startrails Tab
+### Startrails Tab { data-toc-label="Startrails Tab" }
 
 !!! info  "Use correct Pipeline"
 
@@ -61,7 +61,7 @@ The following settings are available in the module
 | Post Statrails| When enabled startrail images will be posted |
 | Webhook URL | The webhook for startrails images, see notes below on Webhooks |
 
-### Keograms Tab
+### Keograms Tab { data-toc-label="Keograms Tab" }
 
 !!! info  "Use correct Pipeline"
 
@@ -72,7 +72,7 @@ The following settings are available in the module
 | Post Keograms | When enabled Keograms images will be posted |
 | Webhook URL | The webhook for keogram images, see notes below on Webhooks |
 
-### Timelapse Tab
+### Timelapse Tab { data-toc-label="Timelapse Tab" }
 
 !!! info  "Use correct Pipeline"
 
@@ -83,7 +83,7 @@ The following settings are available in the module
 | Post Timelaps | When enabled Timelapse videos will be posted |
 | Webhook URL | The webhook for timelapse videos, see notes below on Webhooks |
 
-## Webhooks
+## Webhooks { data-toc-label="Webhooks" }
 
 This moduel requires that you create webhooks in the Discord server. Detailed instructions can be found in the [Discord Support](https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks){ target="_blank" rel="noopener" }  pages
 
@@ -95,7 +95,7 @@ The Discord Server settings for creating webhooks
 ///
 
 
-## Available in
+## Available in { data-toc-label="Available in" }
 
 === "Pipelines available In"
     

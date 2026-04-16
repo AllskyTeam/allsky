@@ -1,6 +1,6 @@
 # Module Structure
 
-## Anatomy of a module
+## Anatomy of a module { data-toc-label="Anatomy of a module" }
 
 Modules can be implemented in a number of ways but only the preferred method is documented here.
 A module is essentially a Python script consisting of two methods
@@ -44,12 +44,12 @@ def tutorial_cleanup():
  
 Breaking this down we have
 
-### Two imports that
+### Two imports that { data-toc-label="Two imports that" }
 
 -	Import the allsky_shared module, this is a library of functions that a module can use.
 -	Import of the base module. The is a base class providing helper functions for a module
 
-### A class definition (ALLSKYTUTORIAL)
+### A class definition (ALLSKYTUTORIAL) { data-toc-label="A class definition" }
 
 that extends the base module (ALLSKYBASE) we imported. Note that the class can be called anything but as a convention its ALLSKY plus the module name all in upper case
 
@@ -57,7 +57,7 @@ A meta_data variable. This is described later and contains all of the definition
 
 A run function, this is the convention we use to run a module. This function must return the result of the module as a string, this is displayed in the module debug dialog.
 
-### The module entry point (tutorial)
+### The module entry point (tutorial) { data-toc-label="The module entry point" }
 
 Every module requires this function. This is the function called by core Allsky to start the module.
 
@@ -71,7 +71,7 @@ In this function we would create a new instance of the module class passing the 
 
 Your class does not need a constructor, that’s handled by the base class. If for some reason you do need a constructor then you must ensure that base class constructor is also called
 
-### The module cleanup entry point (tutorial_cleanup)
+### The module cleanup entry point (tutorial_cleanup) { data-toc-label="The module cleanup entry" }
 
 This function is called by core Allsky when a module is remove from a pipeline. This is to allow the module to cleanup any data required. A core function is provided that you can call that will handle all of the cleanup.
 

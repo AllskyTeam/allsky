@@ -140,7 +140,6 @@ markdown_extensions:
 nav:
   - Home: index.md
   - Allsky Guide:
-    - Glossary: allsky_guide/glossary.md
     - Installation: 
       - allsky_guide/allsky.md
       - allsky_guide/website.md
@@ -192,7 +191,7 @@ nav:
       - Cleanup A Website: allsky_guide/howtos/cleanup_website.md
       - The Allsky map: allsky_guide/howtos/allsky_map.md
     - Troubleshootings:
-      - Reporting Problems: allsky_guide/troubleshooting/reporting.md
+      - Reporting Problems: allsky_guide/using/support.md
       - Tools: allsky_guide/troubleshooting/tools.md
       - Uploads (ftp, scp etc) :  allsky_guide/troubleshooting/uploads.md
       - Startrails: allsky_guide/troubleshooting/startrails.md
@@ -218,6 +217,7 @@ nav:
       - Allskykamera: allsky_guide/things/allskykamera.md
     - 3d Printables: allsky_guide/3d.md   
     - Alternatives: allsky_guide/alternatives.md
+    - Glossary: allsky_guide/glossary.md    
     - Tags: tags.md    
   - Overlays:
     - Overview: allsky_guide/overlays/overview.md

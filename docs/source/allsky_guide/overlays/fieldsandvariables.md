@@ -11,7 +11,7 @@ There are two types of fields:
 - **Text** fields contain text and/or variables, for example, Exposure: ${sEXPOSURE}, which adds the word Exposure: followed by the image's exposure time to the overlay.
 - **Image** fields contain pictures, graphics, or any image you want and are often used are logos, weather graphs, and compasses.
 
-### Variable Names
+### Variable Names { data-toc-label="Variable Names" }
 
 - Must begin with a letter a - z or A - Z.  
 - The remaining characters may contain any number of letters, number 0 - 9, or the underscore character _.  
@@ -27,7 +27,7 @@ There are two types of fields:
     If a variable is displayed as ?? it usually means the variable's formatting is incorrect, for example, you tried to display a number as a date. Make sure the formatting is valid for the type of variable - click on the [?] icon to see valid formats for each type of variable.
     Incorrectly formatted variables will have a line in ```/var/log/allsky.log``` like: ERROR: Cannot use format '%a' on Number variables like ${GAIN}.
 
-### Example text fields
+### Example text fields { data-toc-label="Example text fields" }
 
 |Field { .w-20p } | Example Output { .w-20p } | Description |
 |-----------|----------------|-------------|
@@ -42,7 +42,7 @@ Variables come from a variety of sources:
 **Modules** - Any module can create variables.  
 **Extra Data** - Typically created by an application external to Allsky.  
 
-### Allsky Variables
+### Allsky Variables { data-toc-label="Allsky Variables" }
 
 The table below shows the most commonly used Allsky variables; a complete list can be found in the Variable Manager.
 
@@ -60,7 +60,7 @@ The table below shows the most commonly used Allsky variables; a complete list c
 |${TEMPERATURE_C} and ${TEMPERATURE_F}	|36	|The temperature of the camera sensor, if available. This does NOT include the C or F for Centigrade or Fahrenheit so you'll need to add them yourself, e.g., Sensor Temp: ${TEMPERATURE_C} C.|
 |${MEAN}	|0.108564	|The mean brightness value for the image, from 0.0 (pure black) to 1.0 (pure white).|
 
-### Module Variables
+### Module Variables { data-toc-label="Module Variables" }
 Any module can create variables for use in the Overlay Module. For this reason it's important that the Overlay Module runs as late as possible within the module flow. As an example, the Star Count Module creates a variable called ${STARCOUNT} and passes it to the next module.
 
 Please refer to the documentation on each module for the variables they make available.

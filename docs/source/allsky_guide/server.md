@@ -4,11 +4,11 @@ This page describes how to prepare a remote server to accept uploads of the curr
     This page is for setting up a remote server, which typically does not run an Allsky Website. If you want to set up a remote Website, click [here](website.md).
 
 
-#### Why use a remote server?
+#### Why use a remote server? { data-toc-label="Why use a remote server?" }
 
 Since this server does NOT run the Allsky Website software you may wonder why have a remote server. Let's say you have a web page for an observatory that has a description of your equipment as well as some astrophotographs you've taken. If you also want to include the current allsky image as well as last night's timelapse, you'd simply set up your observatory web server to accept pictures from Allsky, then update Allsky to upload the pictures.
 
-#### Preparing the remote server
+#### Preparing the remote server { data-toc-label="Preparing remote server" }
 
 The exact commands you use will depend on your server and/or hosting solution, but at a high level the steps are:
 

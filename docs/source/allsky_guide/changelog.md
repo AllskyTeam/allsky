@@ -5,7 +5,7 @@ of the current release.
 
 ---
 
-## v2025.xx.xx
+## v2025.xx.xx { data-toc-label="v2025.xx.xx" }
 
 ???+ "v2025.xx.xx"
 
@@ -195,7 +195,7 @@ of the current release.
 
     ---
 
-## v2024.12.06
+## v2024.12.06 { data-toc-label="v2024.12.06" }
 
 ??? "v2024.12.06"
 
@@ -585,7 +585,7 @@ of the current release.
     ---
 
 
-## v2023.05.01
+## v2023.05.01 { data-toc-label="v2023.05.01" }
 
 ??? "v2023.05.01"
 
@@ -757,7 +757,7 @@ of the current release.
     ---
 
 
-## v2022.03.01
+## v2022.03.01 { data-toc-label="v2022.03.01" }
 
 ??? "v2022.03.01"
 
@@ -811,7 +811,7 @@ of the current release.
           particularly on Bullseye where many settings changed.
 
 
-### 0.8 Base Release
+### 0.8 Base Release { data-toc-label="0.8 Base Release" }
 
 ??? "0.8 Base Release"
 
@@ -832,7 +832,7 @@ of the current release.
 
 ---
 
-## 0.7
+## 0.7 { data-toc-label="0.7" }
 
 ??? "0.7"
 
@@ -846,7 +846,7 @@ of the current release.
 
 ---
 
-## 0.6
+## 0.6 { data-toc-label="0.6" }
 
 ??? "0.6"
 
@@ -863,7 +863,7 @@ of the current release.
 
 ---
 
-## 0.5
+## 0.5 { data-toc-label="0.5" }
 
 ??? "0.5"
 
@@ -872,7 +872,7 @@ of the current release.
 
 ---
 
-## 0.4
+## 0.4 { data-toc-label="0.4" }
 
 ??? "0.4"
 
@@ -880,7 +880,7 @@ of the current release.
 
 ---
 
-## 0.3
+## 0.3 { data-toc-label="0.3" }
 
 ??? "0.3"
 
@@ -888,7 +888,7 @@ of the current release.
 
 ---
 
-## 0.2
+## 0.2 { data-toc-label="0.2" }
 
 ??? "0.2"
 
@@ -896,7 +896,7 @@ of the current release.
 
 ---
 
-## 0.1
+## 0.1 { data-toc-label="0.1" }
 
 ??? "0.1"
 

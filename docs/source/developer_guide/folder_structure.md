@@ -2,7 +2,7 @@
 
 There are two relevant folder structures, that used when developing a module and that used after a module has been installed.
 
-## Repository Structure
+## Repository Structure { data-toc-label="Repository Structure" }
 When developing a new module the following folder structure is required, this is taken from the Allsky ADSB module as an example
 
 
@@ -32,7 +32,7 @@ allsky_adsb                             Top level folder, the module name
 └── README.md                         Readme file for people browsing the repo
 ```
 
-## Installed structure
+## Installed structure { data-toc-label="Installed structure" }
 Once a module has been installed by the moduel installer the files are copied into the main Allsky folder. The base folder for extra modules is
 
 ```

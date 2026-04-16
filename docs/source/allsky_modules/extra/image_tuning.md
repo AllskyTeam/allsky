@@ -21,7 +21,7 @@ The module applies enhancements in this specific order for optimal results:
   - Contrast - Enhance separation
   - Sharpening - Final detail enhancement
 
-## Settings
+## Settings { data-toc-label="Settings" }
 The following settings are available in the module
 
   - **Saturation (level)**
@@ -78,7 +78,7 @@ The following settings are available in the module
     - Effect: Maintains overall image brightness when contrast is increased/decreased
     - Use Case: Enable when you want to adjust contrast without making the image too bright or dark
 
-## Tips
+## Tips { data-toc-label="Tips" }
 
 Tips and Best Practices when using the module
 
@@ -90,7 +90,7 @@ Tips and Best Practices when using the module
   - Test Different Times - Settings that work at night may not work during the day
 
 
-## Available in
+## Available in { data-toc-label="Available in" }
 
 === "Pipelines available In"
     

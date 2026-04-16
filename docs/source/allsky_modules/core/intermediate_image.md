@@ -5,7 +5,7 @@ tags:
   - Pipeline Night 
 ---
 
-## Description
+## Description { data-toc-label="Description" }
 
 This module allows you to save a copy of the image to a specific location
 
@@ -16,14 +16,14 @@ This module allows you to save a copy of the image to a specific location
 
 The position of this module in the pipeline will determined whats saved. So for example if its the very first module then the image will be as captured, if you place it after the mask module it will contain the masked image. This can be useful for saving images before the overlay has been appended to them.
 
-## Settings
+## Settings { data-toc-label="Settings" }
 The following settings are available in the module
 
 | Setting | Description |
 |--------|-------------|
 | Image Folder | The location to save the images, see notes below on using variables in the path |
 
-### Using Allsky variables
+### Using Allsky variables { data-toc-label="Using Allsky variables" }
 
 You can use any Allsky variables when constructing the path, for example
 
@@ -33,7 +33,7 @@ ${ALLSKY_IMAGES}/${DATE}-clean
 
 This will save the images in a folder within the main images directory ```${ALLSKY_IMAGES}``` by date ```${DATE}``` with ```-clean``` appended
 
-## Available in
+## Available in { data-toc-label="Available in" }
 
 === "Pipelines available In"
     

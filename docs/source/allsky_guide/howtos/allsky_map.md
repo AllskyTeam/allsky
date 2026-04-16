@@ -7,7 +7,7 @@ The [Allsky Map](https://www.thomasjacquin.com/allsky-map/){ target="_blank" rel
 The Allsky Map
 ///
 
-## Adding your camera
+## Adding your camera { data-toc-label="Adding your camera" }
 To add your camera to the map, enable the Show On Map setting in the Allsky Map Settings section of the WebUI. If your camera is already on the map you can remove it by turning the setting off. You can also update your information by changing any of the map-related settings.
 
 Once you've enabled Show On Map, your map information will be automatically sent to the map server whenever you change it, as well as every other day so it can distinguish current data from old, expired data.

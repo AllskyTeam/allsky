@@ -10,7 +10,7 @@ Blocks are accessed from the variable managier when editing an overlay
 The blocks tab in the variable manager
 ///
 
-## Blocks structure
+## Blocks structure { data-toc-label="Blocks structure" }
 
 Blocks are json files that define one or more blocks that are made available in the variable manager. The following example is taken from the allsk_solarsystem module and defines two blocks related ot the sun
 
@@ -173,5 +173,5 @@ The block defining the Sun position and timings
 
 The block defining the top 5 ADSB aircraft, note the differeing columns per row
 
-## Distributing
+## Distributing { data-toc-label="Distributing" }
 To include blocks with your module simply create the config and add them to the blocks folder withing the module repository. The installer will then copy the charts to the correct location within Allsky.

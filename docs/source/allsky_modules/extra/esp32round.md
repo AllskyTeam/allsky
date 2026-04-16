@@ -10,7 +10,7 @@ This module resizes and image for display on round screens, specifically the [Wa
 
 Thanks to [Kumar Challa](https://github.com/chvvkumar/ESP32-P4-Allsky-Display){ target="_blank" rel="noopener" } for all of the hard work on the ESP32 software to drive the screen
 
-## Settings
+## Settings { data-toc-label="Settings" }
 The following settings are available in the module
 
 | Setting | Description |
@@ -19,7 +19,7 @@ The following settings are available in the module
 | Size | The size the cropped image will be resized to |
 
 
-## Available in
+## Available in { data-toc-label="Available in" }
 
 === "Pipelines available In"
     

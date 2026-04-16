@@ -19,7 +19,7 @@ Allsky supports two types of timelapse:
 
 Settings for both types of timelapses are in the Timelapse Settings section of the WebUI's Allsky Settings page. Each type of timelapse has its own sub-section in the WebUI, and there is a sub-section that applies to both timelapse types.
 
-## Daily Timelapse
+## Daily Timelapse { data-toc-label="Daily Timelapse" }
 
 The "Daily" timelapse is the one that's created once a day, at the end of nighttime. It includes all the images saved in the last 24 hours.
 
@@ -38,7 +38,7 @@ If you have a remote Website you'll most likely need to enable the Upload Thumbn
 
 If your camera has a lot of pixels you may need to resize the timelapse in order to decrease the processing power needed to create it and to reduce the file size. If so, update the Width and Height settings. Cutting each size in half is a good starting point.
 
-## Mini Timelapse
+## Mini Timelapse { data-toc-label="Mini Timelapse" }
 
 A mini timelapse contains a limited number of images and is constantly recreated throughout the day. For example, you can have a mini timelapse that shows the last 50 of images, and is recreated every 5 images. Note that every new mini timelapse replaces the prior one, so there is ever only one mini timelapse.
 
@@ -54,7 +54,7 @@ If Number Of Images is greater than 0, a new mini timelapse will be created afte
 
 Mini timelapses are not designed to be created manually because some configuration files need to be updated after creation.
 
-## Change the timelapse length
+## Change the timelapse length { data-toc-label="Change timelapse length" }
 
 Two things determine how long a timelapse video is:
 
@@ -65,7 +65,7 @@ Two things determine how long a timelapse video is:
 These are described in more details below.
 
 
-### Number of frames
+### Number of frames { data-toc-label="Number of frames" }
 Everything else being equal, the more frames in a video, the longer it plays. Doubling the number of frames will double the video's length.
 
 To increase a video's length, do options A and/or B below.
@@ -121,7 +121,7 @@ To decrease a video's length, do the opposite of the options below.
 
   - Taking shorter exposures only helps at night - typical daytime exposures are less than a second.
 
-### Frames Per Second (FPS)
+### Frames Per Second (FPS) { data-toc-label="Frames Per Second (FPS)" }
 
 A video with 2000 frames displayed at the default FPS of 25 will run for 80 seconds (2000 / 25). The same video displayed at 10 FPS will run for 200 seconds, or 3 minutes, 20 seconds.
 
@@ -156,6 +156,6 @@ you think is best.
 rm -fr test
 ```
 
-## Troubleshooting
+## Troubleshooting { data-toc-label="Troubleshooting" }
 
 See the [Troubleshooting -> Timelapse](/allsky_guide/troubleshooting/timelapse.html) for troubleshooting information.

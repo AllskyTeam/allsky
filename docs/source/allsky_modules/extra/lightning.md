@@ -20,16 +20,16 @@ The AS3935 is a dedicated lightning detection integrated circuit designed to ide
 
     The sensor used in this module will only estimate values. It must NEVER be used for any form of personal protection from storms
 
-## Settings
+## Settings { data-toc-label="Settings" }
 
-### Basic
+### Basic { data-toc-label="Basic" }
 
 | Setting | Description |
 |--------|-------------|
 | I²C Address | The I²C address of the as3935, leave blank for the default |
 | Input Pin | The pin the as3935 irq pin is connected to, this is set high when lightning is detected
 
-### Advanced
+### Advanced { data-toc-label="Advanced" }
 
 | Setting | Description |
 |--------|-------------|
@@ -40,7 +40,7 @@ The AS3935 is a dedicated lightning detection integrated circuit designed to ide
 | Strike Threshold | The number of strikes detected before an event is triggered |
 | Expire Strikes | If a strike is detected then after this number of seconds of no strikes the strikes overlay variable and strike counter will be reset. Default is 600 seconds (10 minutes) |
 
-## Available Variables
+## Available Variables { data-toc-label="Available Variables" }
 
 | Variable | Description |
 |--------|-------------|
@@ -49,7 +49,7 @@ The AS3935 is a dedicated lightning detection integrated circuit designed to ide
 | AS_LIGHTNING_DIST | Distance of last strike, this is an estimate |
 | AS_LIGHTNING_ENERGY | Energy of the last strike |
 
-## Schematics
+## Schematics { data-toc-label="Schematics" }
 
 ![](/assets/module_images/as3935.png){ width="100%" }
 
@@ -58,7 +58,7 @@ The AS3935 is a dedicated lightning detection integrated circuit designed to ide
 Example using the as3935
 ///
 
-## Available in
+## Available in { data-toc-label="Available in" }
 
 === "Pipelines available In"
     

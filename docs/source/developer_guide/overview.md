@@ -1,5 +1,5 @@
 # Overview
-## What Are Modules
+## What Are Modules { data-toc-label="What Are Modules" }
 
 Modules are Python components that extend the functionality of Allsky. They typically fall into one of several categories:
 
@@ -7,7 +7,7 @@ Modules are Python components that extend the functionality of Allsky. They typi
   - **Hardware-control modules** — These interact with external devices. A common example is the Dew Heater module, which reads sensor data and automatically adjusts the dew heater.
   - **Image-processing modules** — These operate on the captured images. Some modify the image itself (such as the Mask module), while others analyse the image to generate additional overlay data, such as the Star Count module.
 
-## Available Pipelines (flows)
+## Available Pipelines (flows) { data-toc-label="Available Pipelines" }
 There are 5 pipelines available in Allsky.
 
 | Pipeline | Description |

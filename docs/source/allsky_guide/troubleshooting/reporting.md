@@ -7,9 +7,9 @@ Misconfigured settings and other user errors are not problems since the Allsky S
 
 A bug is something that isn't working correctly and you are pretty sure it's caused by the Allsky Software.
 
-## Reporting Problems
+## Reporting Problems { data-toc-label="Reporting Problems" }
 
-### The Automated Method
+### The Automated Method { data-toc-label="The Automated Method" }
 
 !!! info  "Info"
 
@@ -17,7 +17,7 @@ A bug is something that isn't working correctly and you are pretty sure it's cau
 
 Follow the instructions on the WebUI's [Getting Support](/?page=support){ target="_blank" rel="noopener" }  page.
 
-### The Manual Method
+### The Manual Method { data-toc-label="The Manual Method" }
 
 !!! danger  "Warning"
 
@@ -58,7 +58,7 @@ Either way:
 
     GitHub only accepts certain file types. See [this URL](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/attaching-files){ target="_blank" rel="noopener" } for a list of supported types. If your file has an unsupported extension, append a .txt to its name, e.g., settings.json.txt.
 
-## Reporting Other Things
+## Reporting Other Things { data-toc-label="Reporting Other Things" }
 
 If you have a new item and it's:
 

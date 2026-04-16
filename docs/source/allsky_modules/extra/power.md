@@ -11,10 +11,10 @@ This module is used to measure voltage and current. It supports the ina219 (Sing
 
 This can typically be used to monitor the voltage and current being applied to a dew heater, its a pretty reliable way to know if its actually working !
 
-## Settings
+## Settings { data-toc-label="Settings" }
 The following settings are available in the module
 
-### ina219 settings
+### ina219 settings { data-toc-label="ina219 settings" }
 When selecting the ina219 as the Sensor type the following settings are available
 
 | Setting | Description |
@@ -29,7 +29,7 @@ When selecting the ina219 as the Sensor type the following settings are availabl
 
     Refer to your board for the I²C address
 
-### ina3221 settings
+### ina3221 settings { data-toc-label="ina3221 settings" }
 When selecting the ina3221 as the Sensor type the following settings are available
 
 | Setting | Description |
@@ -50,9 +50,9 @@ When selecting the ina3221 as the Sensor type the following settings are availab
     Refer to your board for the I²C address
 
 
-## Available Variables
+## Available Variables { data-toc-label="Available Variables" }
 
-### INA219
+### INA219 { data-toc-label="INA219" }
 
 The ina219 produces the following variables for use in overlays
 
@@ -64,7 +64,7 @@ The ina219 produces the following variables for use in overlays
 | AS_POWER_SHUNT_VOLTAGE1 | Channel 1 Shunt Voltage |
 | AS_POWER_POWER1 | Cannel 1 Power (w) |
 
-### INA3221
+### INA3221 { data-toc-label="INA3221" }
 
 The ina3221 produces the following variables for use in overlays
 
@@ -86,7 +86,7 @@ The ina3221 produces the following variables for use in overlays
 | AS_POWER_SHUNT_VOLTAGE3 | Channel 3 Shunt Voltage |
 | AS_POWER_POWER3 | Cannel 3 Power (w) |
 
-## Schematics
+## Schematics { data-toc-label="Schematics" }
 
 The most common use for these sensors it to monitor the dew heater to ensure its on, its not easy when using PWM (Or a relay !) to really know the heater is on
 
@@ -97,7 +97,7 @@ The most common use for these sensors it to monitor the dew heater to ensure its
 Example using an ina219 to measure dew heater voltage and current
 ///
 
-## Available in
+## Available in { data-toc-label="Available in" }
 
 === "Pipelines available In"
     

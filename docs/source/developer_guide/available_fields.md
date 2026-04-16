@@ -1,6 +1,6 @@
 # Available fields
 
-## Text field
+## Text field { data-toc-label="Text field" }
 
 This is the default field type and requires no extra values. This will display a text box allowing the user to enter detail
 
@@ -13,7 +13,7 @@ This is the default field type and requires no extra values. This will display a
 }
 ```
 
-## Select field
+## Select field { data-toc-label="Select field" }
 This displays a drop down list allowing the user to select a value. The only additional value required is the ‘values’ option which is a comma separated list of the values to display in the dropdown
 
 ```
@@ -29,7 +29,7 @@ This displays a drop down list allowing the user to select a value. The only add
 }
 ```
 
-## Ajax select field
+## Ajax select field { data-toc-label="Ajax select field" }
 This field type is main intended for use by the core Allsky development team. It displays a dopdown list of values obtained from an ajax request.
 
 ```
@@ -46,7 +46,7 @@ This field type is main intended for use by the core Allsky development team. It
 }
 ```
 
-## Checkbox field
+## Checkbox field { data-toc-label="Checkbox field" }
 This displays a ‘switch’ that can be used to turn a value on or off. This will be presented in the params data as a boolean
 
 ```
@@ -61,7 +61,7 @@ This displays a ‘switch’ that can be used to turn a value on or off. This wi
 }
 ```
 
-## Number field
+## Number field { data-toc-label="Number field" }
 This uses the HTML5 spinner control to allow a number to be entered. You can set the min, max and step values
 
 ```
@@ -80,7 +80,7 @@ This uses the HTML5 spinner control to allow a number to be entered. You can set
 
 ```
 
-## I²C Field
+## I²C Field { data-toc-label="I²C Field" }
 This displays a dialog allowing the user to select an I²C address. The dialog will display all detected devices on bus zero. A library, courtesy of Adafruit, is also available.
 
 ```
@@ -103,7 +103,7 @@ The I²C device selection dialog
 
 When Allsky is first installed the I²C database has to be built. The ‘Update Database’ button in the dialog will rebuild the database.
 
-## GPIO Field
+## GPIO Field { data-toc-label="GPIO Field" }
 This field will allow the user to select a gpio pin using a graphical interface. The user simple needs to click on the pin they require.
 
 ```
@@ -124,7 +124,7 @@ This field will allow the user to select a gpio pin using a graphical interface.
 The GPIO pin selection dialog
 ///
 
-## Image Field
+## Image Field { data-toc-label="Image Field" }
 This allows the user to select or upload an image. Typically this would be used where a module requires a mask. This will allow the user to select the mask from the image library
 
 ```
@@ -146,7 +146,7 @@ The image selection dialog
 ///
 
 
-## Region of Interest (ROI) Field
+## Region of Interest (ROI) Field { data-toc-label="Region Interest (ROI)" }
 This allows the user to select a region Of Interest (ROI) in the image. This will then be available to the module. Typically, this would be used for things like sky brightness detection where you only want to run the calculation on a portion of the image
 
 ```
@@ -167,7 +167,7 @@ This allows the user to select a region Of Interest (ROI) in the image. This wil
 The RIO selection dialog
 ///
 
-## Variable Field
+## Variable Field { data-toc-label="Variable Field" }
 If you need the user to select another variable from within Allsky then this field type will display the variable manager allowing a variable to be selected.
 The ‘selectmode’ option has to options ‘single’ or ‘multi’. This controls if the user can select a single variable or multiple. Multiple variables will be presented as a comma separated list.
 
@@ -190,7 +190,7 @@ The ‘selectmode’ option has to options ‘single’ or ‘multi’. This con
 The Variable selection dialog
 ///
 
-## Position Field
+## Position Field { data-toc-label="Position Field" }
 This field allows the user to select a position from a map. There are three additional parameters required for this field, all refer to the name of the value in the arguments section
 
 **lat** – The name of the argument to store the latitude in  
@@ -229,7 +229,7 @@ The Position fields on a module dialog
 The map location selection dialog
 ///
 
-## URL Field
+## URL Field { data-toc-label="URL Field" }
 This field allows a url to be entered and validate using a button. The validation will check to ensure the url can be connected to.
 
 ```
@@ -250,7 +250,7 @@ This field allows a url to be entered and validate using a button. The validatio
 The URL entry fields
 ///
 
-## Host field
+## Host field { data-toc-label="Host field" }
 This field allows a host and port number to ben entered. There are two additional parameters required for this field, all refer to the name of the value in the arguments section
 
 **url** – The url or ip address of the host  
@@ -280,7 +280,7 @@ The Host entry fields
 ///
 
 
-## Graph field
+## Graph field { data-toc-label="Graph field" }
 This is a special field type that rather than display a field adds a new tab to the modules settings to display the history for this module.
 
 For this field to work there are a few criteria that have to be met
@@ -304,7 +304,7 @@ For this field to work there are a few criteria that have to be met
 The Module Graph
 ///
 
-## Notice field
+## Notice field { data-toc-label="Notice field" }
 This field is used to display text on the modules dialog settings. The ‘alert’ settings utilise bootstraps alerts.
 
 ```
@@ -329,7 +329,7 @@ This field is used to display text on the modules dialog settings. The ‘alert�
 The Notice field
 ///
 
-## HTML Field
+## HTML Field { data-toc-label="HTML Field" }
 This field is used to display HTML in a modules dialog. There are a few additional settings available.
 
 **Source** – Either local, where the html is read from the ‘html’ value or ‘file’ where the html is read from a file on the server using the ‘file’ value to define the source

@@ -45,7 +45,7 @@ The Overlay Editor toolbar
 | 22 | Image Manager | Displays the [Image Manager](#image-manager) |
 | 23 | Settings | Displays the [Overlay Settings](#overlay-settings) |
 
-### Keyboard/Mouse 
+### Keyboard/Mouse { data-toc-label="Keyboard/Mouse" }
 There are various keyboard and mouse shortcuts used by the overlay manager
 
 - The Del or Delete key will delete a field if one is selected  
@@ -55,7 +55,7 @@ There are various keyboard and mouse shortcuts used by the overlay manager
 - Clicking the mouse and dragging around fields will select all of the fields
 - Holding the alt key and dragging will draw a rectange
 
-### Variable Manager
+### Variable Manager { data-toc-label="Variable Manager" }
 The variable manager allows you to select variables and add them to overlays as a field. I also allows block of fields to be added
 
 ![Variable Manager](/assets/overlay_images/variable-manager.png)
@@ -81,7 +81,7 @@ This dialog allows blocks to be added to the overlay, blocks are a collection of
 1. Select he font details for the block. **NOTE** This must be selected BEFORE adding the block
 2. Click the add button to add the block
 
-### Overlay Manager
+### Overlay Manager { data-toc-label="Overlay Manager" }
 The Overlay Manager is used to create and enable overlays for day and nighttime capture.
 
 ![Overlay manager](/assets/overlay_images/overlay-manager-full.png)
@@ -98,7 +98,7 @@ The Overlay Manager comes pre installed with several overlays for common cameras
 
 During an upgrade from a previous version of Allsky the Module Manager will attempt to convert any of your customised overlays into the module manager format.
 
-#### Main Tab
+#### Main Tab { data-toc-label="Main Tab" }
 
 ![Overlay manager main](/assets/overlay_images/overlay-manager.png)
 
@@ -121,7 +121,7 @@ During an upgrade from a previous version of Allsky the Module Manager will atte
 
      When making any changes in the overlay meta data section you must use the main save button on the Overlay Editor toolbar, this will be highlighted in green if there are any changes to save
 
-#### Options Tab
+#### Options Tab { data-toc-label="Options Tab" }
 
 ![Overlay manager config](/assets/overlay_images/overlay-manager-config.png)
 
@@ -131,13 +131,13 @@ During an upgrade from a previous version of Allsky the Module Manager will atte
 2. Selects the overlay to use when capturing nightime images
 
 
-#### Selecting Overlays
+#### Selecting Overlays { data-toc-label="Selecting Overlays" }
 
 To select the overlays to use for day or night open the Overlay Manager and switch to the Options Tab. Here you can select the appropriate overlay to use.
 
 Overlays can be limited to daytime, nighttime capture or both. Only the available overlays for day / nighttime capture will be displayed in the drop downs
 
-#### Create New Overlay
+#### Create New Overlay { data-toc-label="Create New Overlay" }
 
 To create a new overlay click the + icon (4). A new dialog will be displayed allowing you to create the new overlay.
 
@@ -176,7 +176,7 @@ Add new overlay advanced tab
 
 Once you have completed the required fields in the dialog select the 'Ok' button and the new overlay will be displayed allowing you to edit it.
 
-#### Delete Overlay
+#### Delete Overlay { data-toc-label="Delete Overlay" }
 
 To delete an overlay select the required overlay and click the delete buttton.
 
@@ -186,9 +186,9 @@ To delete an overlay select the required overlay and click the delete buttton.
 
 
 
-### Overlay Errors
+### Overlay Errors { data-toc-label="Overlay Errors" }
 
-### Font Manager
+### Font Manager { data-toc-label="Font Manager" }
 The Font Manager allows you to manage fonts used in overlays. It supports all mainstream browser fonts and allows you to upload any TrueType font for use in text fields. You only need to use the Font Manager if you intend to use any non built in fonts.
 
 !!! info  ""
@@ -216,7 +216,7 @@ The Font Manager Dialog
 
     - By default the maximum file that can be uploaded is 2M. If your fonts are larger you must change this setting. To change the setting edit, as root, ``/etc/php/8.2/cli/php.ini``` . Find the line ```upload_max_filesize = 2M``` and change it to ```upload_max_filesize = 20M``` . The find the line ```post_max_size = 8M``` and change it to ```post_max_size = 20M```
 
-#### Font Preview
+#### Font Preview { data-toc-label="Font Preview" }
 The Font Preview dialog allows you to preview any installed font, including system fonts.
 
 ![Font Preview](/assets/overlay_images/font-manager-preview.png)
@@ -230,7 +230,7 @@ The Font Manager Preview Dialog
 3. Enter some text to preview
 4. The previewd text
 
-### Image Manager
+### Image Manager { data-toc-label="Image Manager" }
 The Image Manager allows you to upload images for use on overlays and create masks for certain functions such as star and meteor detection. Allsky comes with several basic images.
 
 ![Image manager](/assets/overlay_images/image-manager.png)
@@ -246,7 +246,7 @@ The Image Manager Dialog
 5. Starts the Mask Editor
 
 
-### The Mask Editor
+### The Mask Editor { data-toc-label="The Mask Editor" }
 Some modules with Allsky benefit from having a mask applied to them prior to running the module. The Starcount module us a good example of this. To prevent false positives a mask is applied that removes the areas of the image you are not interested in counting stars in.
 
 Masks can also be used to mask out areas outside of the image circle thay mak have light leaks. This give syou a nice dark area to place th eoverlays on.
@@ -288,7 +288,7 @@ Once you are happy with the mask click the 'Save' button and you will be prompte
 
     When creating a mask turn off all modules that may add to the image, overlays etc to ensure you have a clean image to create the mask with
 
-### Overlay Settings
+### Overlay Settings { data-toc-label="Overlay Settings" }
 The overlay Editor has three tabs for settings
 
 - **Overlay Settings** Settings that affect new fields added to an Overlay

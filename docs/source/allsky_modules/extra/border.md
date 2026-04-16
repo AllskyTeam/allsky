@@ -8,7 +8,7 @@ tags:
 
 This module allows you to draw a border around the captured image, this can be useful for creating a blank area to draw overlay data on. The borders are drawn on the top, left, bottom and right had side of the image. Each border can be a different size
 
-## Settings
+## Settings { data-toc-label="Settings" }
 The following settings are available in the module
 
 | Setting | Description |
@@ -20,7 +20,7 @@ The following settings are available in the module
 | Border Colour | The colour of the border |
 
 
-## Available in
+## Available in { data-toc-label="Available in" }
 
 === "Pipelines available In"
     

@@ -13,7 +13,7 @@ This module produces a Lux level and estimation of Bortle value from various lig
 - TSL2591
 - LTR390
 
-## Lux
+## Lux { data-toc-label="Lux" }
 Lux (lx) is the standard unit used to measure illuminance, which means how much light actually falls on a surface.
 
 It describes how bright something appears, not how much light a source emits.
@@ -29,7 +29,7 @@ It describes how bright something appears, not how much light a source emits.
 | Overcast daylight        | ~1,000                   | Bright but no direct sun                       |
 | Direct sunlight          | 100,000+                 | Can reach 120,000–130,000 lx at noon           |
 
-## Bortle Scale
+## Bortle Scale { data-toc-label="Bortle Scale" }
 The Bortle Scale is a 9-level classification system used to describe night-sky brightness and how much light pollution affects your ability to see stars, the Milky Way, and deep-sky objects.
 
 It was created by John E. Bortle in 2001 and is widely used by astronomers to compare observing sites.
@@ -46,7 +46,7 @@ It was created by John E. Bortle in 2001 and is widely used by astronomers to co
 | 8            | City                         | Not visible                               | 4.1–4.5               | Very few stars visible                              |
 | 9            | Inner city                   | Not visible                               | <4.0                  | Only brightest stars/planets visible                |
 
-### Calculating Bortle
+### Calculating Bortle { data-toc-label="Calculating Bortle" }
 Converting Lux to the Bortle scale is not possible. The Bortle scale describes sky quality as seen by a human observer, while lux measures illuminance on a surface.
 They are related to sky brightness, but they measure completely different things.
 
@@ -64,17 +64,9 @@ The values the module calculates are estimates based upon the table below
 | 8            | City                           | 0.1500 – 0.3000                  | Very few stars visible                            |
 | 9            | Inner city                     | 0.3000 – 1.0000+                 | Bright orange/grey sky; deep-sky impossible       |
 
-## Settings
+## Settings { data-toc-label="Settings" }
 
-### TSL2561
-
-| Setting | Description |
-|--------|-------------|
-| I²C Address | The I²C address of the sensor, leave blank for the default |
-| Gain | The gain to use |
-| Integration Time | The time taken to take a reading |
-
-### TSL2591
+### TSL2561 { data-toc-label="TSL2561" }
 
 | Setting | Description |
 |--------|-------------|
@@ -82,7 +74,15 @@ The values the module calculates are estimates based upon the table below
 | Gain | The gain to use |
 | Integration Time | The time taken to take a reading |
 
-### LTR390
+### TSL2591 { data-toc-label="TSL2591" }
+
+| Setting | Description |
+|--------|-------------|
+| I²C Address | The I²C address of the sensor, leave blank for the default |
+| Gain | The gain to use |
+| Integration Time | The time taken to take a reading |
+
+### LTR390 { data-toc-label="LTR390" }
 
 | Setting | Description |
 |--------|-------------|
@@ -92,7 +92,7 @@ The values the module calculates are estimates based upon the table below
 | Gain | The gain to use |
 | Delay | Delay between measurements, only really useful for power saving |
 
-## Available Variables
+## Available Variables { data-toc-label="Available Variables" }
 The module generates the following variables
 
 | Variable | Description |
@@ -100,7 +100,7 @@ The module generates the following variables
 | AS_LUX | The measure Lux level |
 | AS_BORTLE | The estimated Bortle value |
 
-## Schematics
+## Schematics { data-toc-label="Schematics" }
 
 ![](/assets/module_images/light.png){ width="100%" }
 
@@ -109,7 +109,7 @@ The module generates the following variables
 Example using the tsl2561 and tsl2591
 ///
 
-## Protecting The Sensors
+## Protecting The Sensors { data-toc-label="Protecting The Sensors" }
 
 These sensors are delicate and cannot be exposed to the elements, however they do need clear access to the sky to be able to measure the light levels. You will require some way to protect the sensor
 
@@ -123,7 +123,7 @@ These sensors are delicate and cannot be exposed to the elements, however they d
 | **Silicone sealant (over sensor)** | 🚫 No | Poor                               | Waterproof                                        | Strong spectral distortion; fogging; uneven layer | Do not apply directly over sensor                 |
 | **3D-printed plastics (PLA/PETG)** | 🚫 No | Poor                               | Easy to fabricate                                 | Not optically clear; scatter light; UV issues     | Not suitable as a light-transmitting cover        |
 
-## Available in
+## Available in { data-toc-label="Available in" }
 
 === "Pipelines available In"
     

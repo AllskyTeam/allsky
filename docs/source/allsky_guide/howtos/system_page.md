@@ -13,7 +13,7 @@ The image below shows the types of items that can be added:
 Example System Page With Added Buttons
 ///
 
-## Details
+## Details { data-toc-label="Details" }
 
 The information to display on the System page is described in one or more "data files" which are listed in the System Page Additions setting. This section describes the format of those data files.
 

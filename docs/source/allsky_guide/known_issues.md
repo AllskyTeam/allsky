@@ -1,6 +1,6 @@
 This page lists known issues and limitations with the current Allsky release. Workarounds and plans to address the items, if known, are also given.
 
-## Image Capture
+## Image Capture { data-toc-label="Image Capture" }
 
 - **Limitation** (ZWO only): When using the default ZWO Exposure Method of Snapshot, Auto Gain and Auto White Balance do not work.
     
@@ -10,11 +10,11 @@ This page lists known issues and limitations with the current Allsky release. Wo
     
     **Future Plans**: None.
 
-## Overlays
+## Overlays { data-toc-label="Overlays" }
 
 - None
 
-## Modules
+## Modules { data-toc-label="Modules" }
 
 - **Limitation**: Modules can only run once per flow, e.g., once per image, once per day/night transition, etc.
 
@@ -33,7 +33,7 @@ This page lists known issues and limitations with the current Allsky release. Wo
 
     **Future Plans**: Will fix in the next release.
 
-## Other
+## Other { data-toc-label="Other" }
 
 - **Limitation**: If you have three or more cameras connected to a single Pi (very rare except while testing) including at least one RPi and one ZWO, if you switch from the current camera type to the other type which has at least two cameras, which of those cameras is used is undefined.
 For example, assume you have one ZWO camera and two RPi cameras and the ZWO camera is the current one and you switch to the RPi Camera Type in the WebUI. Which RPi camera becomes current is undefined, and you'll likely see several errors about missing or empty fields.

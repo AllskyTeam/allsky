@@ -5,7 +5,7 @@ tags:
   - Pipeline Day  
 ---
 
-## Description
+## Description { data-toc-label="Description" }
 
 This module is responsible for saving the last captured image for the daytime and nighttime pipelines once all other modules have run.
 
@@ -14,7 +14,7 @@ This module is responsible for saving the last captured image for the daytime an
     This module is automatically added to the daytime and nighttime flows and cannot be removed of moved.
 
 
-## Available in
+## Available in { data-toc-label="Available in" }
 
 === "Pipelines available In"
     

@@ -6,7 +6,7 @@ Before you configure a remote Website you must first install it - see the [Allsk
 
 Steps to configure an Allsky Website are below.
 
-## Configure Website Settings
+## Configure Website Settings { data-toc-label="Configure Website" }
 
 - In the WebUI, click on the Editor link.
 - In the drop-down at the bottom of the page, select one of the following, depending on which Website you want to configure:
@@ -23,7 +23,7 @@ Example Remote Configuration Settings
 ///
 
 
-## Using The Editor
+## Using The Editor { data-toc-label="Using The Editor" }
 
 ??? info "Using the Editor"
 
@@ -125,7 +125,7 @@ Example Remote Configuration Settings
     
     Be sure all setting names are unique.
 
-## Enable The Website
+## Enable The Website { data-toc-label="Enable The Website" }
 
 1. On the WebUI's Allsky Settings page display the Website and Remote Server Settings section.
 2. Enable the Website in either the Local Website Settings or Remote Website Settings subsection, depending on which Website you are configuring.
@@ -133,7 +133,7 @@ Example Remote Configuration Settings
 
 The subsections below describe the settings in the json files, their default values, and a description.
 
-## Config Settings
+## Config Settings { data-toc-label="Config Settings" }
 
 !!! info  "Legend"
 
@@ -200,7 +200,7 @@ The subsections below describe the settings in the json files, their default val
 | `id` |  | **Do not change.** |
 | `AllskyVersion` |  | **Do not change.** |
 
-## Homepage Settings
+## Homepage Settings { data-toc-label="Homepage Settings" }
 
 | Setting { .w-20p } | Default Value { .w-20p } | Description |
 |--------|--------------|-------------|

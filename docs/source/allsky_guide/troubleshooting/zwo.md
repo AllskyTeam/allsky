@@ -1,4 +1,4 @@
-## ZWO camera not found
+## ZWO camera not found { data-toc-label="ZWO camera not found" }
 If you have a new ZWO camera model that Allsky doesn't support you'll get an appropriate message in the WebUI when you start Allsky. The message will also tell you how to request support.
 
 If your camera is supported, check:
@@ -8,7 +8,7 @@ If your camera is supported, check:
   - Is the camera plugged in to a USB hub? Make sure the hub is plugged into the Pi. Try plugging the hub into a different port on the Pi. Temporarily bypass the hub.
   - If you have access to another Pi, or a PC, plug the camera into it to see if it works.
 
-## ASI_ERROR_TIMEOUT
+## ASI_ERROR_TIMEOUT { data-toc-label="ASIERRORTIMEOUT" }
 
 !!! warning  "Info"
 
@@ -31,7 +31,7 @@ If you are seeing lots of errors (an occasional one can be ignored) try the foll
 - If you have a Windows PC, plug the camera into it and use the ZWO software that came with the camera to see if it also has problems. If it does, it's likely a hardware issue.
 - The above changes work for almost everyone. If they don't work for you, follow the instructions on the Reporting Problems   page to report the problem.
 
-### Advanced steps
+### Advanced steps { data-toc-label="Advanced steps" }
 
 The steps listed below haven't been fully tested and we suggest entering a new [Discussions](https://github.com/AllskyTeam/allsky-modules/discussions){ target="_blank" rel="noopener" }    item before trying them.
 
@@ -46,7 +46,7 @@ Prior to this change the contents of /sys/kernel/debug/swiotlb/io_tlb_used was h
 
 Enable ```DebugPrint``` in ~/.ZWO/ASIconfig.xml by changing the 00 to 01, then restart Allsky. A LOT of lines will be added to /var/log/allsky.log, so be sure to set it back to 00 when done testing. The extra log entries may offer some insight into causes of the exposure failures.
 
-## ASI120 etc
+## ASI120 etc { data-toc-label="ASI120 etc" }
 
 !!! danger  "Warning"
 
@@ -54,7 +54,7 @@ Enable ```DebugPrint``` in ~/.ZWO/ASIconfig.xml by changing the 00 to 01, then r
   
 Owners of USB2.0 cameras such as the ASI120 may need to do a firmware upgrade  .
 
-## T7 Cameras
+## T7 Cameras { data-toc-label="T7 Cameras" }
 The T7 / T7C cameras from Datyson and other sellers are an OEM version of the ZWO ASI120 and isn't officially supported in Allsky because it does not work out of the box. If you do decide to try this camera, you do so at your own risk.
 
 We do not know if the camera has a fail-safe boot loader that will prevent the camera from being bricked if a firmware update fails. ZWO states that updating the firmware may result in reduced camera performance. As with all firmware updates, this may damage your camera. Once again, use this camera at your own risk.

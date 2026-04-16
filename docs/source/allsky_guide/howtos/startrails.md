@@ -26,7 +26,7 @@ Startrail images provide both scientific and aesthetic value, turning many hours
 Example Startrails Image
 ///
 
-## Creating a Startrail
+## Creating a Startrail { data-toc-label="Creating a Startrail" }
 
 To have a startrails image automatically created at the end of each night, enable the Generate  setting in the Startrails sub-section of the WebUI.
 

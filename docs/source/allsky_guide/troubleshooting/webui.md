@@ -1,4 +1,4 @@
-## Username and password issues
+## Username and password issues { data-toc-label="Username password issues" }
 
 If you previously changed the username or password they are stored in encrypted format in a file. Deleting the file will restore the default values:
 

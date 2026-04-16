@@ -296,7 +296,7 @@ This modfifies the ```meta_data``` to
 The resulting database table when only saving one value
 ///
 
-### Database Rules
+### Database Rules { data-toc-label="Database Rules" }
 
   - Only store numeric values, text values are of little use at present
   - Be mindful of data volumes, don't store huge amounts of data

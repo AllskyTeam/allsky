@@ -1,4 +1,4 @@
-## Choosing A lens
+## Choosing A lens { data-toc-label="Choosing A lens" }
 
 Lenses have a few attributes you'll want to be aware of, and together with the camera sensor determine what kind of image you'll see.
 
@@ -10,7 +10,7 @@ The aperture of a lens determines how much light it passes through. Lower number
 
 Lenses are round so produce round images. The size of the image it produces on the sensor, measured by its diameter in mm, is called its image circle.
 
-## Image Circles
+## Image Circles { data-toc-label="Image Circles" }
 
 Most allsky cameras have rectangular sensors that are wider than they are tall. The images below show a sensor (black with dark gray border) and image circles produced by various fictional lenses (white with stars and a yellow borders).
 
@@ -36,7 +36,7 @@ Depending on the physical size of the sensor and the size of the image circle, y
 
     ![](/assets/hardware_images/Case2b.png){ width="100%" }
 
-## Determining Image Type
+## Determining Image Type { data-toc-label="Determining Image Type" }
 
 To determine which of the examples above you'll get you need to know the physical size of the camera's sensor and the size of the lens' image circle.
 
@@ -178,7 +178,7 @@ The lens' image circle (6.4 mm) is larger than the height of the sensor (5.0 mm)
 
 In the examples above, if you used a camera with a much larger sensor you would see the full cicular image even with the 2.5 mm lens. On the other hand, if you used a much smaller sensor, like the ASI224, you would see a slightly cut-off circle with the 1.5 mm lens and would see a rectangular image with no black using the 2.5 mm lens.
 
-## Image Offset
+## Image Offset { data-toc-label="Image Offset" }
 
 It's not uncommon for the sky image to be off center relative to the sensor, as seen below. The small yellow circle is the center of the sky image and the small dark square is the center of the sensor.
 

@@ -16,16 +16,16 @@ This module allows data from Allsky to be published to a variety of destinations
   - **[InfluxDB](https://www.influxdata.com){ target="_blank" rel="noopener" .external  }** - is a high-performance, open-source time series database designed specifically for storing and querying timestamped data such as metrics, events, and IoT sensor readings. It organizes data into measurements, tags, fields, and timestamps, enabling efficient indexing and fast retrieval even at very high ingest rates. InfluxDB supports powerful time-based queries, downsampling, and data retention policies that automatically manage storage over time. With its SQL-like query language (InfluxQL) or the more advanced Flux language, it provides flexible analytics capabilities. Optimized for real-time monitoring, observability, and IoT workloads, InfluxDB delivers a scalable and performant foundation for applications that must handle large volumes of chronological data.
 
 
-## Settings
+## Settings { data-toc-label="Settings" }
 
 
-### General Settings
+### General Settings { data-toc-label="General Settings" }
 
 | Setting | Description |
 |--------|-------------|
 | Extra Data | The Allsky variables to export |
 
-### Redis
+### Redis { data-toc-label="Redis" }
 
 | Setting | Description |
 |--------|-------------|
@@ -38,7 +38,7 @@ This module allows data from Allsky to be published to a variety of destinations
 | Password | The password for the Redis server if one is required |
 
 
-### InfluxDB
+### InfluxDB { data-toc-label="InfluxDB" }
 
 | Setting | Description |
 |--------|-------------|
@@ -52,7 +52,7 @@ This module allows data from Allsky to be published to a variety of destinations
 
     InfluxDB only accepts numerical values so please ensure the Data Types contains only numerical data types. If in doubt don't change it
 
-### MQTT
+### MQTT { data-toc-label="MQTT" }
 
 | Setting | Description |
 |--------|-------------|
@@ -65,7 +65,7 @@ This module allows data from Allsky to be published to a variety of destinations
 | Password | The password to use for the above username |
 | QoS | The Quality of Service to use, see below for details |
 
-#### Quality of Service (QoS)
+#### Quality of Service (QoS) { data-toc-label="Quality of Service (QoS)" }
 MQTT uses a QoS system for publishing data, the table below summarises these
 
 | QoS | Delivery Guarantee | Duplicate Messages? | Speed / Overhead |
@@ -108,13 +108,13 @@ The message arrives once and only once.
 Use when:
 Billing systems, transactions, state changes where duplicates cannot be tolerated.
 
-### POST (REST)
+### POST (REST) { data-toc-label="POST (REST)" }
 | Setting | Description |
 |--------|-------------|
 | Publish to endpoint | Enable to publish data to the enspoint |
 | Endpoint | The endpoint to publish data to |
 
-## Available in
+## Available in { data-toc-label="Available in" }
 
 === "Pipelines available In"
     

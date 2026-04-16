@@ -26,7 +26,7 @@ Installing Allsky is usually straightforward, but it goes much more smoothly if 
 
 For most users, the overall process is simple: prepare the Pi, make sure the camera and network are working, download the Allsky source, run the installer, then complete the first-time setup in the WebUI. None of those steps is especially difficult on its own, but it is worth doing them in order so that you are not trying to diagnose several unrelated problems at once.
 
-### Before Installing
+### Before Installing { data-toc-label="Before Installing" }
 
 Before you install Allsky for the first time, make sure the Pi itself is in a sensible starting state.
 
@@ -44,7 +44,7 @@ sudo apt-get install git
 
     If the camera is not detected, the network is unstable, or the Pi itself is only partly configured, it is better to fix that first and install Allsky afterwards. Allsky depends on those pieces working properly, so installing on top of a half-configured system tends to create confusing failures later.
 
-### If Allsky Is Already Installed
+### If Allsky Is Already Installed { data-toc-label="If Allsky Already" }
 
 If Allsky is already on the Pi, stop it first:
 
@@ -91,7 +91,7 @@ After that, decide what you want to do with the existing installation. There are
 
     If you are unsure which option to choose, renaming the old directory is almost always better than deleting it. Disk space is usually easier to recover later than lost configuration or lost data.
 
-### Downloading Allsky
+### Downloading Allsky { data-toc-label="Downloading Allsky" }
 
 Allsky is installed into `~/allsky`. With the exception of some system-level files created during setup, that directory becomes the main home for the installation.
 
@@ -119,7 +119,7 @@ remote: Enumerating objects: 119, done.
 Submodule path 'src/sunwait-src': checked out '151d8340a748a4dac7752ebcd38983b2887f5f0c'
 ```
 
-### Running The Installer
+### Running The Installer { data-toc-label="Running The Installer" }
 
 Once the source has been downloaded, start the installer:
 
@@ -132,27 +132,27 @@ The installer may ask a number of questions. In most cases, accepting the defaul
 
 /// details | Common installation prompts
 
-#### Host name
+#### Host name { data-toc-label="Host name" }
 
 If the Raspberry Pi still has its default host name, you may be asked to choose a new one. The default suggestion is usually `allsky`. If you have more than one Pi on the same network, they must all have unique names. A test machine might be named `allsky-test`, for example.
 
-#### Locale
+#### Locale { data-toc-label="Locale" }
 
 You may be asked which locale to use. This affects details such as the decimal separator in log output. The development environment uses `en_GB.UTF-8` by default.
 
-#### Swap space
+#### Swap space { data-toc-label="Swap space" }
 
 The installer may offer to add swap space. This effectively gives the system more working memory, and that can be important on smaller Pis. Insufficient swap space is one of the more common causes of timelapse creation problems.
 
-#### Temporary directory in memory
+#### Temporary directory in memory { data-toc-label="Temporary directory" }
 
 You may be asked whether `~/allsky/tmp` should be placed in memory rather than on the SD card. This directory is used heavily for temporary files, and keeping it in memory can significantly reduce SD card writes. That generally improves card longevity.
 
-#### Latitude and longitude
+#### Latitude and longitude { data-toc-label="Latitude and longitude" }
 
 On a new installation, the installer will ask for the location. In many cases it can suggest defaults based on the network environment. These values matter because Allsky uses them for sunrise, sunset, and other time-dependent behaviour.
 
-#### Reboot
+#### Reboot { data-toc-label="Reboot" }
 
 If installation changes require a reboot, the installer will ask whether the Pi should be rebooted when it finishes. If you choose not to reboot at that point, remember that Allsky will not start properly until the reboot has happened.
 
@@ -164,7 +164,7 @@ If the installer tells you that there are post-installation actions to complete,
 
     The first installation can take a surprisingly long time, especially on older Pis or systems that need many packages installed. An hour is not impossible. Later installs and upgrades are usually much faster.
 
-### After Installation
+### After Installation { data-toc-label="After Installation" }
 
 Once installation finishes, reboot the Pi if you were told to do so. After that, open the WebUI and complete the initial configuration.
 
@@ -186,7 +186,7 @@ From there, go to **Allsky Settings**. If the WebUI shows a message saying Allsk
 
 That step is important. Installation alone does not always mean the system is ready to begin capturing immediately. The WebUI is where you confirm the configuration and allow Allsky to start with a valid setup.
 
-### Starting And Stopping Allsky
+### Starting And Stopping Allsky { data-toc-label="Starting Stopping Allsky" }
 
 Allsky is configured to start automatically when the Raspberry Pi boots. If you want to control that behaviour manually, use `systemctl`.
 
@@ -230,7 +230,7 @@ sudo systemctl status allsky
 
     Then open a new terminal session, or reload the shell, and you can use the shorter commands directly.
 
-### Troubleshooting From The Terminal
+### Troubleshooting From The Terminal { data-toc-label="Troubleshooting Terminal" }
 
 If Allsky is not behaving as expected, running it directly from a terminal is often one of the quickest ways to see what is wrong. Starting it manually gives you debug output in the terminal window, which is much easier to work with than guessing from symptoms alone.
 

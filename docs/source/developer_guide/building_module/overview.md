@@ -8,7 +8,7 @@ The following points should be considered when developing modules
 - Modules must return a result, a text string indicating the outcome of the module. This is used in the module debug popup in the module manager
 - All of the example modules here can be found in the allsky modules repository
 
-### Tips when writing modules
+### Tips when writing modules { data-toc-label="Tips writing modules" }
 
 - Ensure you limit the modules to the correct pipelines. Some modules make sense to run in the capture pipelines, dya and night and some don't
 - Ensure you keen the version numbers and changelog updated when releasing new versions, this helps the module installer identify new versions

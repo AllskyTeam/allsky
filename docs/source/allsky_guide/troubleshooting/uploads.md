@@ -1,6 +1,6 @@
 Uploading a file means copying it to a different computer. Allsky supports several ways to upload files including ```ftp```, ```scp```, and others.
 
-### Testing an upload
+### Testing an upload { data-toc-label="Testing an upload" }
 
 After you've configured settings such as Server Name and Protocol for a remote Website or remote server, run one of the commands below, depending on whether you are testing uploads to a remote Allsky Website or a remote server:
 
@@ -14,7 +14,7 @@ This attempts to upload a file to the server, and if it fails, it often tells yo
 
 If that doesn't help, look at the sections below for additional information.
 
-### Incorrect WebUI connection settings
+### Incorrect WebUI connection settings { data-toc-label="Incorrect WebUI" }
 
 A common mistake is having incorrect values for the Server Name and associated URL settings in the WebUI.
 
@@ -26,13 +26,13 @@ A common mistake is having incorrect values for the Server Name and associated U
 
 See Mapping server locations to URLs   for tips on what values to use for these settings, especially if you get messages like "Not found" or "404".
 
-### Incorrect WebUI settings
+### Incorrect WebUI settings { data-toc-label="Incorrect WebUI settings" }
 
 The Server Name, User Name, and other connection settings in the WebUI for the remote Website or remote server must be correct. If YOU can't log in to the server, Allsky won't be able to either.
 
 The directory structure for a remote Website must match the Allsky standard; changing locations and/or names of files and directories will cause uploads to fail. For a remote server you can use use any directory structure you want; Allsky only writes to the Image Directory location.
 
-### Certificate-related errors
+### Certificate-related errors { data-toc-label="Certificate-related" }
 
 There are three main certificate-related error messages you'll see.
 
@@ -60,6 +60,6 @@ There are three main certificate-related error messages you'll see.
 
 If your Pi's IP address changed, or the IP address remained but the machine using the addressed changed, you probably need to remove the previous key from your ~/.ssh/known_hosts file. If the file has only one entry, simply remove it. If the file has multiple entries, make a backup of the file, then delete one entry at a time until you find the "bad" one.
 
-### Missing directories on the remote Website or server
+### Missing directories on the remote Website or server { data-toc-label="Missing directories" }
 
 Review the [Allsky Website installation instructions](../website.md) or the [Remote server installation instructions](../server.md)  to determine how to create the necessary directories.

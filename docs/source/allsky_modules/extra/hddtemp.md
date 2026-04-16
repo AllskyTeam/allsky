@@ -27,10 +27,10 @@ Whilst SMART prvides a lot of data this module is intended to only provide the t
 
 The module will attempt to read the temperature from all connected drives
 
-## Settings
+## Settings { data-toc-label="Settings" }
 The following settings are available in the module
 
-### Fans 1 and 2 tabs
+### Fans 1 and 2 tabs { data-toc-label="Fans 1 and 2 tabs" }
 
 | Setting | Description |
 |--------|-------------|
@@ -39,11 +39,11 @@ The following settings are available in the module
 | Ok Colour | If 'Use Colour' ie enabled this colour will be used when the temperatur is ok |
 | Bad Colour | If 'Use Colour' ie enabled this colour will be used when the temperatur is not ok |
 
-## Charts
+## Charts { data-toc-label="Charts" }
 
 A variety of charts are available, see the chart manager for details
 
-## Available in
+## Available in { data-toc-label="Available in" }
 
 === "Pipelines available In"
     

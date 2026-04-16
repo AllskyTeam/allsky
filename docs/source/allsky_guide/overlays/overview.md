@@ -1,6 +1,6 @@
 An overlay is information that is added, i.e., overlayed, on top of each captured Allsky image. This often includes the time the image was taken, the sensor temperature, and the exposure length, but can include any other text or images you want.
 
-## TL;DR
+## TL;DR { data-toc-label="TL;DR" }
 
 <div class="grid cards" markdown>
 
@@ -16,7 +16,7 @@ An overlay is information that is added, i.e., overlayed, on top of each capture
 
 </div>
 
-## Features
+## Features { data-toc-label="Features" }
 Almost any information can be added to a captured Allsky image. Some of the key features of Allsky's overlays include:
 
 - **Overlay Editor** - this is the web page for creating and managing overlays and supports:  

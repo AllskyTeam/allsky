@@ -8,7 +8,7 @@ Some notes on the data
 
 -	All Boolean values must be quoted i.e. “true” NOT True
 
-## The ‘header’ section
+## The ‘header’ section { data-toc-label="The ‘header’ section" }
 
 This section contains basic information about the module and how it should be displayed in the installer and module manager.
 
@@ -31,11 +31,11 @@ This section contains basic information about the module and how it should be di
 |replacedby	|(Optional) The name of the module replacing the deprecated functionality|
 |deprecated	|“true” to deprecate a module, if “false” then the optional values above can be used|
 
-## The ‘Extra Data’ section
+## The ‘Extra Data’ section { data-toc-label="The ‘Extra Data’ section" }
 
 This section defines what data the module will generate for use in the overlays. It also controls what data can be written to the database for use by the charting system.
 
-### The ‘databases’ section
+### The ‘databases’ section { data-toc-label="The ‘databases’ section" }
 
 |Name	|Description|
 |-----|-----------|
@@ -47,7 +47,7 @@ This section defines what data the module will generate for use in the overlays.
 |Include_all	|(Optional) If enable then this field IS required and determines if all extra data values are written to the database. If “false” then you can specify which data is written against the extra data fields definitions|
 |time_of_day_save	|(Optional) Determines how  data is saved for each pipeline.  |
 
-### The ‘values’ section
+### The ‘values’ section { data-toc-label="The ‘values’ section" }
 
 This section defines all of the extra data that the module will generate for use in overlays. The information defined here is used throughout core Allsky to format and present the data.
 The section is a list of values, the table below just shows the available fields for a single value
@@ -65,14 +65,14 @@ The section is a list of values, the table below just shows the available fields
 |**database** || 
 |include	|If the database is enabled but include_all is ‘false’ then setting this to ‘true’ will write this value to the database|
 
-## The ‘arguments’ section
+## The ‘arguments’ section { data-toc-label="The ‘arguments’ section" }
 
 This is a list of all of the arguments the module requires along with their default values. This list MUST match the ‘argumentdetails’ section. If an entry exists in the ‘argumentdetails’ section but not here then It will not be available to the module.
 
 This is the ‘params’ variable passed into the module function when the module is run.
 
 
-## The ‘argumentdetails’ section
+## The ‘argumentdetails’ section { data-toc-label="The ‘argumentdetails’" }
 
 This section defines all of the fields that are displayed in the module manager for a module.
 
@@ -82,7 +82,7 @@ Each field has a type, this defines how  the field appears. The fields are docum
 
 The Boiler plate module implements each of the field types so can be used to see how they work.
 
-#### Common field attributes
+#### Common field attributes { data-toc-label="Common field attributes" }
 The following keys are available on all fields
 
 |Key	|Description|
@@ -93,7 +93,7 @@ The following keys are available on all fields
 |tab	|The tab the field is displayed on|
 |secret	|This indicates that the value in this field will contain sensitive information. Any details entered into a ‘secret’ field are stored in a separate file away from the pipeline json files. If the field is a text type field then the value will not be visible in the module manager. A button is displayed allowing the field value to be displayed or hidden|
 
-#### Filtering
+#### Filtering { data-toc-label="Filtering" }
 Filtering allows fields to be displayed or hidden based upon the value of another field. A good example of this is when selecting a sensor in the Environment module. Each sensor has different settings so rather than display all of them, which would make the modules dialog large and confusing only those relevant to the sensor are displayed.
 
 To utilise this feature add the ‘filters’ section to a field. The filters section contains the following values
@@ -130,7 +130,7 @@ So in the example below the ‘input’ field will be shown if the ‘type’ fi
 This is a very powerful feature and developer are encouraged to use it to keep the user interface easier for the end user.
 
 
-## The ‘businfo’ section
+## The ‘businfo’ section { data-toc-label="The ‘businfo’ section" }
 This section is optional and defines which buses on the Pi the module uses.
 
 ```
@@ -151,7 +151,7 @@ In this example the module uses the I²C bus
 In this example the module uses both the I²C bus and the onewire bus
 
 
-## The ‘changelog’ section
+## The ‘changelog’ section { data-toc-label="The ‘changelog’ section" }
 This section contains the changelog for the module. The latest version is at the end of the changelog.
 In this example there are several different types of entries in the changelog
 

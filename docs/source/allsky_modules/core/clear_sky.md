@@ -4,13 +4,13 @@ tags:
   - Pipeline Night 
 ---
 
-## Description
+## Description { data-toc-label="Description" }
 
 This module attempts to determine if the sky is clear. It does this by counting the number of stars in a specific region of the image. If the count is above a threshold then the sky is considered clear.
 
 Several other modules, star count and meteor count, can use the results of this module. If the sky is not considered clear then these modules will not attempt to run as there would be no point.
 
-## Settings
+## Settings { data-toc-label="Settings" }
 The following settings are available in the module
 
 | Setting | Description |
@@ -19,7 +19,7 @@ The following settings are available in the module
 | Fallback % | If no region of interets is specified then an are around the center of the image will be used. This determines what percentage of the image, from the center, is used |
 | Clear Sky | If the number of stars is above this then the sky is conidered clear |
 
-### The Debug Options
+### The Debug Options { data-toc-label="The Debug Options" }
 The debug options allow you to fine tune the settings and annotate the main image so see what the algorithms are detecting.
 
 | Setting | Description |
@@ -32,7 +32,7 @@ The debug options allow you to fine tune the settings and annotate the main imag
     When using debug images set the 'Debug Image Name' to a file inside the Allsky web root. This will allow you to browse to the image
 
 
-## Available in
+## Available in { data-toc-label="Available in" }
 
 === "Pipelines available In"
     

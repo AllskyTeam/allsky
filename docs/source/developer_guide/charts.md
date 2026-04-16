@@ -20,9 +20,9 @@ There are several charts types available
 
 There other charts types supported all of which are standard Highcharts so please refer to the [Highcharts](https://www.highcharts.com){target="_blank"} documentation for details
 
-## Chart Types
+## Chart Types { data-toc-label="Chart Types" }
 
-### Line Charts
+### Line Charts { data-toc-label="Line Charts" }
 
 <div class="grid cards" markdown>
 
@@ -38,7 +38,7 @@ Multi axis line chart
 </div>
 
 
-#### Single axis
+#### Single axis { data-toc-label="Single axis" }
 The following defines a line chart showing the total number of aircraft seen by the adsb module.
 
 | field | Description |
@@ -82,7 +82,7 @@ The following defines a line chart showing the total number of aircraft seen by 
 }
 ```
 
-#### Multiple axis
+#### Multiple axis { data-toc-label="Multiple axis" }
 It is possible to create a chart with multiple Y axis.
 
 When using multiple axis there are a few things to bear in mind. The **opposite** setting in the yAxis forces the axis to the other axis. The **yAxis** value in the series defines which axis the data will appear against
@@ -123,10 +123,10 @@ When using multiple axis there are a few things to bear in mind. The **opposite*
 }
 ```
 
-### Spline Charts
+### Spline Charts { data-toc-label="Spline Charts" }
 The configuration for a spline chart is identical to a line chart except the **type** is set to spline.
 
-### Gauges
+### Gauges { data-toc-label="Gauges" }
 
 ![Gauge](/assets/developer_images/gauge.png) 
 /// caption 
@@ -226,7 +226,7 @@ The full extent of customisation is beyon the scope o this document. Please refe
     ]
 }
 ```
-### Yes/No Charts
+### Yes/No Charts { data-toc-label="Yes/No Charts" }
 These simply display text based upon a thruthy value.
 
 ![Yesno Gauge](/assets/developer_images/yesno.png) 
@@ -262,5 +262,5 @@ The important values here are the **truetext**, **falsetext** and the associated
 }
 ```
 
-## Distributing
+## Distributing { data-toc-label="Distributing" }
 To include charts with your module simply create the config and add them to the charts folder withing the module repository. The installer will then copy the charts to the correct location within Allsky.

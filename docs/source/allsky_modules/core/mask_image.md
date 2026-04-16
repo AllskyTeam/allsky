@@ -5,7 +5,7 @@ tags:
   - Pipeline Day  
 ---
 
-## Description
+## Description { data-toc-label="Description" }
 
 This module applied a mask to an image. This is mainly uised to ensure the areas outside of the image circle are black, serving two purposes
 
@@ -14,7 +14,7 @@ This module applied a mask to an image. This is mainly uised to ensure the areas
 
 For details on howto create masks please refer to the [Creating Masks](../../allsky_guide/overlays/interface.md#the-mask-editor) documentation
 
-## Settings
+## Settings { data-toc-label="Settings" }
 The following settings are available in the module
 
 | Setting | Description |
@@ -32,7 +32,7 @@ Example masking an image
 
 In the above example the image on the left has no mask applied resulting in the areas outside of th eimage circle looking messy. The right hand image has a mask applied giving a much cleaner image
 
-## Available in
+## Available in { data-toc-label="Available in" }
 
 === "Pipelines available In"
     

@@ -1,6 +1,6 @@
 The WebUI Helper Tools do what the name suggests - they "help" you do something, often helping determine what settings to use.
 
-## Startrails
+## Startrails { data-toc-label="Startrails" }
 
 The Startrails helper tool aids you in determining what Brightness Threshold setting to use.
 

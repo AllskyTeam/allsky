@@ -1,8 +1,8 @@
-### Overview
+### Overview { data-toc-label="Overview" }
 
 The networking area of the WebUI brings together three closely related pages: **Configure WiFi**, **LAN Dashboard**, and **WLAN Dashboard**. Taken together, these pages answer two different kinds of question. The first is, “How do I get this Pi connected to the network I want to use?” The second is, “Now that it is connected, what is the current state of that connection?” The Wi-Fi configuration page is mostly about making or changing a connection, while the LAN and WLAN dashboard pages are more about inspecting the interfaces you already have.
 
-### Configure WiFi
+### Configure WiFi { data-toc-label="Configure WiFi" }
 
 For most people, the page they will interact with most directly is **Configure WiFi**. This page is designed to make wireless setup less awkward than editing network files by hand, especially on headless or appliance-style Allsky systems where the camera may be installed in a location that is inconvenient to work on physically. Instead of manually scanning, remembering the exact SSID, and writing credentials somewhere else, the page shows the wireless adapters it can find, scans for nearby networks, displays what each adapter can currently see, and lets you start a connection directly from the WebUI.
 
@@ -42,7 +42,7 @@ Another helpful behaviour is that **Configure WiFi** will tell you if it cannot 
 
 In day-to-day use, the Wi-Fi page is best thought of as an operational tool rather than a long-term monitor. You visit it when you need to connect, reconnect, check what networks are visible, or confirm that the adapter is seeing what it should. Once the interface is connected and you want more detailed information, the **WLAN Dashboard** becomes the more useful page.
 
-### WLAN Dashboard
+### WLAN Dashboard { data-toc-label="WLAN Dashboard" }
 
 The **WLAN Dashboard** is about the current state of wireless networking rather than choosing a network. Like the configuration page, it is organised per wireless interface, but what it shows is much broader. It reports items such as SSID, BSSID, bitrate, transmit power, signal level, link quality, frequency, derived band and channel information, IPv4 and IPv6 addressing, gateway, DNS servers, MTU, and regulatory domain. It is the page you use when wireless is technically connected but not behaving well, or when you simply want to understand exactly what the radio is doing.
 
@@ -54,7 +54,7 @@ Placeholder: WLAN dashboard
 
 That distinction between **Configure WiFi** and **WLAN Dashboard** is important. The Wi-Fi configuration page is user-facing and task-oriented: find a network, connect to it, and refresh the scan when needed. The WLAN dashboard is diagnostic and descriptive: it tells you what the wireless interface is currently associated with and how healthy that connection appears to be. If your signal is poor, if you are on an unexpected band, if your bitrate is lower than expected, or if you want to verify gateway and DNS information, the dashboard is usually the better place to look.
 
-### LAN Dashboard
+### LAN Dashboard { data-toc-label="LAN Dashboard" }
 
 The **LAN Dashboard** performs the same general role for wired networking. It is organised per Ethernet interface and focuses on link state, speed, duplex, auto-negotiation, IPv4 and IPv6 addressing, packet counts, byte counts, packet errors, packet drops, gateway, DNS, and MTU. If the Pi is connected by cable, this is the page that tells you whether the interface is merely present or actually negotiated and carrying traffic.
 
@@ -66,7 +66,7 @@ Placeholder: LAN dashboard
 
 The wired dashboard is especially helpful when a cable appears to be connected but networking still does not behave correctly. Link state will tell you whether the Ethernet connection is actually up. Speed and duplex reveal whether the negotiated link is what you expected. Packet errors and drops can suggest cabling or switch issues. Gateway and DNS values tell you whether the broader network configuration makes sense once the link itself is working.
 
-### How The Pages Fit Together
+### How The Pages Fit Together { data-toc-label="How Pages Fit Together" }
 
 Between them, the LAN and WLAN dashboard pages give you a detailed view of your current interfaces, while **Configure WiFi** gives you a practical way to choose and connect to wireless networks. That is why it makes sense to see them as one documentation topic even though they are three separate pages. In real use, they support each other. You might use **Configure WiFi** to join a new network, then open the **WLAN Dashboard** to confirm that the adapter connected on the expected band with a sensible signal level, and then use the **LAN Dashboard** to verify that a backup wired connection is also available or to compare the two interfaces.
 

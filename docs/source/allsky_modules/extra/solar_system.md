@@ -17,22 +17,22 @@ Data used in this modules calculations is obtained from a variety of sources
 - [**Celestrak** ](https://celestrak.org){ target="_blank" rel="noopener" } Provides the data for calculating:
     - Earth satellite positions
 
-## Settings
+## Settings { data-toc-label="Settings" }
 
-### Moon
+### Moon { data-toc-label="Moon" }
 
 | Setting | Description |
 |--------|-------------|
 | Enable | Enable this to calculate ephemeris for the Moon |
 | Min Elevation | Above this elevation the Moon will be considered visible |
 
-### Sun
+### Sun { data-toc-label="Sun" }
 
 | Setting | Description |
 |--------|-------------|
 | Enable | Enable this to calculate ephemeris for the Sun |
 
-### Planets
+### Planets { data-toc-label="Planets" }
 
 | Setting | Description |
 |--------|-------------|
@@ -46,7 +46,7 @@ Data used in this modules calculations is obtained from a variety of sources
 | Enable Pluto | Enable this to calculate ephemeris for Pluto |
 | Min Elevation | Above this elevation the planet will be considered visible |
 
-### ISS
+### ISS { data-toc-label="ISS" }
 | Setting | Description |
 |--------|-------------|
 | Enable ISS | Select this to calculate ISS data |
@@ -60,7 +60,7 @@ Data used in this modules calculations is obtained from a variety of sources
 
 Calculating passes for ISS can be fairly slow so be careful with the number of days ahead you look. A sensible value is 5 to 15 days. Also note that the TLE data will become less accurate the further out you look.
 
-### Satellites
+### Satellites { data-toc-label="Satellites" }
 | Setting | Description |
 |--------|-------------|
 | NORAD Id's | List of Norad Id's for satellites, see below for more details |
@@ -82,13 +82,13 @@ Calculating large numbers of satellites can be slow so be careful
 
     Data is only retreived from Celestrak every two days to prevent being blocked by the site
 
-## Available Variables
+## Available Variables { data-toc-label="Available Variables" }
 
 !!! info  "Localisation"
 
     All values are relative to the location and timezone defined in the main Allsky settings
 
-### The Moons Variables
+### The Moons Variables { data-toc-label="The Moons Variables" }
 
 | Variable | Sample | Description |
 |--------|-----| -------------|
@@ -97,7 +97,7 @@ Calculating large numbers of satellites can be slow so be careful
 | AS_MOON_ILLUMINATION | 11.5 | The Moons illumination percentage |
 | AS_MOON_SYMBOL | W | The Moon symbol for use with the moon font on overlays |
 
-### The Suns Variables
+### The Suns Variables { data-toc-label="The Suns Variables" }
 
 | Variable | Sample | Description |
 |--------|-----| -------------|
@@ -109,7 +109,7 @@ Calculating large numbers of satellites can be slow so be careful
 | AS_SUN_AZIMUTH | 307 | The Sun's Azimuth |
 | AS_SUN_ELEVATION | -40 | The Sun's Elevation |
 
-### The Planets Variables
+### The Planets Variables { data-toc-label="The Planets Variables" }
 
 In the examples below replace Mercury with the relevant planet name
 
@@ -131,7 +131,7 @@ In the examples below replace Mercury with the relevant planet name
 | AS_Mercury_DISTANCE_MILES_FORMATTED | 121,556,526 | The planets distance from Earth in miles formatted |
 | AS_Mercury_VISIBLE | No | Is the planet visible |
 
-### The Satellites Variables
+### The Satellites Variables { data-toc-label="The Satellites Variables" }
 
 In the examples below replace 66645 with the Norad Id.
 
@@ -163,16 +163,16 @@ If ISS passes are enabled then the following variables are generated
 
 If you add a table of pass information, or use one of the provided blocks, then you can place the AS_25544_VISIBLE_PASSES on top of the table. If there are no passes this will be displayed, useful for indicating that there are no passes
 
-## Blocks
+## Blocks { data-toc-label="Blocks" }
 
 Several blocks are provide to make adding data to the overlays easier. These can be access from the variable manager in the overlay editor
 
-## Charts
+## Charts { data-toc-label="Charts" }
 
 Several charts are available that display Moon related information. These can be found in the Chart Manager
 
 
-## Available in
+## Available in { data-toc-label="Available in" }
 
 === "Pipelines available In"
     

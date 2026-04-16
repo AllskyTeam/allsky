@@ -5,12 +5,12 @@ tags:
   - Pipeline Day  
 ---
 
-## Description
+## Description { data-toc-label="Description" }
 
 This module draws a histogram on the image
 
 
-## Settings
+## Settings { data-toc-label="Settings" }
 
 | Setting | Description |
 |--------|-------------|
@@ -27,7 +27,7 @@ Example Histogram
 ///
 
 
-## Available in
+## Available in { data-toc-label="Available in" }
 
 === "Pipelines available In"
     

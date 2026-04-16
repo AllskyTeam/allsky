@@ -13,7 +13,7 @@ This module allows you to display information on Aircraft in your vicinity on ov
   - Installing an ADS-B reception station at home
   - Using an online API
 
-## ADS-B Overview
+## ADS-B Overview { data-toc-label="ADS-B Overview" }
 ADS-B is a modern surveillance technology used in aviation to determine and share the position of aircraft in real time. The system is called automatic because it transmits information continuously without pilot input, dependent because it relies on the aircraft’s onboard navigation system, and broadcast because the data is openly transmitted as a one-way signal that anyone with the right equipment can receive. At the heart of ADS-B is the aircraft’s ability to calculate its own position. Using GNSS satellite navigation—such as GPS, Galileo, or GLONASS—the aircraft’s avionics system determines its latitude, longitude, altitude, heading, ground speed, and vertical rate. This information is updated multiple times per second and is considered far more accurate than traditional radar measurements.
 
 Once the aircraft has determined its position, it broadcasts this information over one of two frequencies. The most common is 1090 MHz, known as 1090ES (Extended Squitter), which is used globally and required for high-altitude and international operations. In the United States, a secondary system called 978 MHz UAT is available for general aviation flying below 18,000 feet. These ADS-B broadcasts are not encrypted or directional—they are simply radio messages radiating outward from the aircraft. Any receiver within line-of-sight can detect them, which includes other aircraft, ground stations, satellites, and even hobbyists at home.
@@ -34,7 +34,7 @@ In summary, ADS-B is a highly accurate, globally scalable surveillance system wh
 ADS-B Overview
 ///
 
-## Local Installation
+## Local Installation { data-toc-label="Local Installation" }
 
 !!! warning  "Hardware"
 
@@ -59,7 +59,7 @@ Details on how-to set this up are beyond the scope of this document but there ar
 
     If you are running a local ADS-B installation then most online services will provide you with some benefits if you contribute data. Contributing is easy and documented on the relevants services websites. We encourage people to contribute data if possible, it should be noted that you can contribute to multiple services at the same time.
 
-### Local Settings
+### Local Settings { data-toc-label="Local Settings" }
 To use a local installation select 'Local' from the data source dropdown
 
 | Setting | Description |
@@ -70,10 +70,10 @@ To obtain this address find the ip address of your ads-b installation and use it
 
 http://&lt;ADSB INSTALLATION IP&gt;:8080/data/aircraft.json
 
-## Online API's
+## Online API's { data-toc-label="Online API's" }
 The module supports three online API's for accessing ADS-B data
 
-### OpenSky
+### OpenSky { data-toc-label="OpenSky" }
 The OpenSky Network is a non-profit association based in Switzerland. It aims at improving the security, reliability and efficiency of the air space usage by providing open access of real-world air traffic control data to the public. The OpenSky Network consists of a multitude of sensors connected to the Internet by volunteers, industrial supporters, and academic/governmental organizations. All collected raw data is archived in a large historical database. The database is primarily used by researchers from different areas to analyze and improve air traffic control technologies and processes.
 
 Before using OpenSky you will need either a paid subscription or to be contributing data, see the [Open Sky](https://opensky-network.org){ target="_blank" rel="noopener" } Website for details.
@@ -111,7 +111,7 @@ Most unpaid accounts will start with 4000 credits
 | over 400 or all (>2000x2000km) | 4 |
 
 
-### AirplanesLive
+### AirplanesLive { data-toc-label="AirplanesLive" }
 Airplanes.Live is a website dedicated to aviation enthusiasts. It leverages enthusiast receivers to capture ADS-B (Automatic Dependent Surveillance-Broadcast) and MLAT (Multilateration) data, providing real-time information about aircraft in your area. Your unfiltered data allows enthusiasts, researchers, and journalists access to an incredible amount of data related to flight monitoring. Airplanes.Live displays all ADS-B and all Mode S equipped, calculated by MLAT, aircraft on a full featured tracking map with history and replay functions.
 
 **Settings**
@@ -122,7 +122,7 @@ There are no specific settings for the Airplanes live API
 
 The Airplanes.live REST API is rate limited to 1 request per second.
 
-### adsb.fi
+### adsb.fi { data-toc-label="adsb.fi" }
 adsb.fi is a community-driven flight tracker, with over 4500 feeders around the world. We provide open and unfiltered access to worldwide air traffic data.
 
 **Settings**
@@ -133,7 +133,7 @@ There are no specific settings for the adsb.fi API
 
 adsb.fi uses rate limiting to protect against abuse and misuse, and to help ensure everyone has fair access to the API. The public endpoints are rate limited to 1 request per second, and the feeder endpoint to 1 request every 30 seconds.
 
-## Settings
+## Settings { data-toc-label="Settings" }
 
 Aside from the data source the following settings are available on the settings tab
 
@@ -145,13 +145,13 @@ Aside from the data source the following settings are available on the settings 
 | Altitude | The altitude of your station in metres |
 | Read Every | Only access the API's every this number of seconds, this helps to reduce hitting rate limits on API's |
 
-### Aircraft Type Data Source
+### Aircraft Type Data Source { data-toc-label="Aircraft Type Data" }
 ADS-B does not provide an aircraft type in its data but it does provide a unique hex code for the aircraft. Contributors on the internet have built an database that maps these hex code to aicraft types. The module provides two different ways to get more detailed information about an aircraft
 
   - Local. This uses a local database but be aware that this may not be uptodate and will contain incorrect data. Its fine for most purposes
   - hexdb. This is an online service that contains much more uptodate information
 
-### Flight Routes
+### Flight Routes { data-toc-label="Flight Routes" }
 Flight routes are obtained from an online service. This service imposes rate limits which unless you live in a very busy area you are unlikely to hit
 
 The Rate limits are calculated over a rolling 60 second time period.
@@ -161,7 +161,7 @@ The Rate limits are calculated over a rolling 60 second time period.
 | 512 + | 60 |
 | 1024 + | 300 |
 
-## Overlay Data
+## Overlay Data { data-toc-label="Overlay Data" }
 
 For each aircraft the following data is available for use in overlays, (X) in the table below relates to the aircraft number. The aircraft are sorted with the first being the closest to your location
 
@@ -189,15 +189,15 @@ For each aircraft the following data is available for use in overlays, (X) in th
 Example ADS-B data on an overlay
 ///
 
-## Blocks
+## Blocks { data-toc-label="Blocks" }
 
 Several blocks are provide to make adding data to the overlays easier. These can be access from the variable manager in the overlay editor
 
-## Charts
+## Charts { data-toc-label="Charts" }
 
 A chart and gauge showing the number of aircraft received are available. These can be found in the Chart Manager
 
-## Available in
+## Available in { data-toc-label="Available in" }
 
 === "Pipelines available In"
     

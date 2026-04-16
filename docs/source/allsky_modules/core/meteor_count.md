@@ -4,7 +4,7 @@ tags:
   - Pipeline Night 
 ---
 
-## Description
+## Description { data-toc-label="Description" }
 
 This module counts meteors in an image. It utilises a couple of algorithms to acheive this.
 
@@ -23,7 +23,7 @@ This module counts meteors in an image. It utilises a couple of algorithms to ac
  
     When creating a mask ensure that it removes ALL areas of the image that could trigger false positives. Ideally the masked area should be smaller then the image circle, probably quite a bit smaller to prevent false positives around the horizon.
 
-## Settings
+## Settings { data-toc-label="Settings" }
 The following settings are available in the module
 
 | Setting | Description |
@@ -32,7 +32,7 @@ The following settings are available in the module
 | Mask Path | The mask to apply to the image |
 | Min Length | The minimum length of a streak|
 
-### The Debug Options
+### The Debug Options { data-toc-label="The Debug Options" }
 The debug options allow you to fine tune the settings and annotate the main image so see what the algorithms are detecting.
 
 | Setting | Description |
@@ -44,7 +44,7 @@ The debug options allow you to fine tune the settings and annotate the main imag
  
     When using debug images set the 'Debug Image Name' to a file inside the Allsky web root. This will allow you to browse to the image
 
-## Available in
+## Available in { data-toc-label="Available in" }
 
 === "Pipelines available In"
     

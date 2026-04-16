@@ -16,10 +16,10 @@ The module can read upto 4 sensors
   - **Core** - This is used to provide data to overlays and other Allsky modules
   - **Sensor 1 - 3** - These can be used for any purpose, for example you may have a temperature sensor insode the dome and one external. These sensors can alos be used to drive a GPIO pin
    
-## Settings
+## Settings { data-toc-label="Settings" }
 The following settings are available in the module
 
-## Home Tab
+## Home Tab { data-toc-label="Home Tab" }
 The settings on this tab control how the module gets its temeprature and humidity data
 
 | Setting | Description |
@@ -27,12 +27,12 @@ The settings on this tab control how the module gets its temeprature and humidit
 | Delay | The number of seconds between reading the sensors, 0 switches this off and the sensor is read every time the module runs |
 | Units | The unit of measure used |
 
-## Core Tab
+## Core Tab { data-toc-label="Core Tab" }
 This sensor is used for providing environment data to other Allsky modules, it can also be used on overlays
 
 See the [Sensor Fields](#sensor-fields) Section for details of each sensor that can be used
 
-## Sensor Fields
+## Sensor Fields { data-toc-label="Sensor Fields" }
 
 
     
@@ -363,7 +363,7 @@ See the [Sensor Fields](#sensor-fields) Section for details of each sensor that 
         ![](/assets/module_images/ds18b20.png){ width="50%" }
 </div>
 
-## Sensor 1 to 3
+## Sensor 1 to 3 { data-toc-label="Sensor 1 to 3" }
 These tabs allow you to define upto three additional sensors that can be used to
 
     - Display information on the overlay
@@ -384,7 +384,7 @@ The sensors available are defined in the [Sensor Fields](#sensor-fields) section
 
 
 
-## Available in
+## Available in { data-toc-label="Available in" }
 
 === "Pipelines available In"
     

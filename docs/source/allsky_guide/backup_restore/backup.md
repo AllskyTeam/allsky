@@ -11,7 +11,7 @@ It explains:
 
 If this is your first time using the feature, read **Choosing the right backup type** and **Before you click Create Backup** before doing anything else.
 
-## Open the backup dialog
+## Open the backup dialog { data-toc-label="Open the backup dialog" }
 
 1. Go to **System > Backups**.
 2. Click **Create Backup**.
@@ -23,7 +23,7 @@ Screenshot: Create Backup button in the panel header.
 
 The create dialog opens with the backup type selector and the options relevant to the type you choose.
 
-## Choosing the right backup type
+## Choosing the right backup type { data-toc-label="Choosing right backup" }
 
 The most important decision is not the button click. It is choosing the backup type that matches your recovery goal.
 
@@ -65,7 +65,7 @@ Screenshot: Backup type selector in the create dialog.
 
 ---
 
-## Config backup in detail
+## Config backup in detail { data-toc-label="Config backup in detail" }
 
 Config backups are built in two parts:
 
@@ -74,7 +74,7 @@ Config backups are built in two parts:
 
 This makes it possible to always capture the essential configuration while still letting you include heavier or more situational data when needed.
 
-### Core Files
+### Core Files { data-toc-label="Core Files" }
 
 Core files are always included and cannot be disabled.
 
@@ -87,7 +87,7 @@ These are the files Allsky needs in order to restore the main configuration stat
 
 If your main goal is "I want to be able to get my setup back," the core files are the foundation of that recovery.
 
-### Optional Sections
+### Optional Sections { data-toc-label="Optional Sections" }
 
 Optional sections let you include additional data when a basic configuration snapshot is not enough.
 
@@ -111,7 +111,7 @@ Screenshot: Optional section switches with size/estimate details.
     If you are preparing for a full migration or a serious recovery scenario, include the optional sections you may need.
     If you only want a fast rollback point before changing settings, a smaller config-only backup is often enough.
 
-### Service pause behaviour for database consistency
+### Service pause behaviour for database consistency { data-toc-label="Service pause behaviour" }
 
 If you include database-related data, Allsky may stop the `allsky` service while the archive is being created.
 
@@ -124,7 +124,7 @@ This behaviour is normal, and it exists to prevent inconsistent database backups
 
 ---
 
-## Images backup in detail
+## Images backup in detail { data-toc-label="Images backup in detail" }
 
 Images backups are focused on captured data rather than configuration.
 
@@ -135,7 +135,7 @@ You can create them in two ways:
 
 The folder list is built from the image date folders available on your system.
 
-### Size and estimate summary
+### Size and estimate summary { data-toc-label="Size estimate summary" }
 
 Images backups can become large quickly, so the dialog shows estimates to help you make sensible choices before starting.
 
@@ -150,7 +150,7 @@ You may see:
 Screenshot: Images folder selection with per-folder size details.
 ///
 
-### How folder selection behaves
+### How folder selection behaves { data-toc-label="How folder selection" }
 
 The selector is designed to make your intent clearer and reduce mistakes:
 
@@ -160,7 +160,7 @@ The selector is designed to make your intent clearer and reduce mistakes:
 
 This matters because image backups can take time and can use significant storage space. It is worth confirming that the selected dates match what you actually want to keep.
 
-## Before you click Create Backup
+## Before you click Create Backup { data-toc-label="Before click Create" }
 
 Run through this checklist:
 
@@ -174,7 +174,7 @@ Run through this checklist:
     A config backup does not protect your image history, and an images backup does not protect your system configuration.
     If you need both, create both.
 
-## What happens during backup creation
+## What happens during backup creation { data-toc-label="What happens during" }
 
 When you click **Create Backup**, the create dialog closes and a progress modal appears.
 
@@ -194,7 +194,7 @@ Screenshot: Backup progress modal with stage list and progress bar.
     Large image backups can take a while.
     The actual runtime depends on the amount of data, storage speed, and the system load while compression is running.
 
-## After the backup finishes
+## After the backup finishes { data-toc-label="After backup finishes" }
 
 When the backup completes successfully:
 
@@ -206,7 +206,7 @@ A good next step is to click **Info** on the new backup and confirm that it cont
 
 That quick check is worth doing immediately, while the backup is still fresh in your mind.
 
-## Uploading an existing backup archive
+## Uploading an existing backup archive { data-toc-label="Uploading existing" }
 
 If you already have a backup file from somewhere else:
 
@@ -216,7 +216,7 @@ If you already have a backup file from somewhere else:
 
 The system checks the archive structure and its metadata before accepting it into backup storage.
 
-## Operational best practices
+## Operational best practices { data-toc-label="Operational best" }
 
 !!! tip "Recommended baseline"
     1. Keep at least one recent config backup and one older known-good config backup.
@@ -224,7 +224,7 @@ The system checks the archive structure and its metadata before accepting it int
     3. Download critical backups off the device.
     4. Create backups before maintenance, upgrades, or experiments.
 
-## Common mistakes to avoid
+## Common mistakes to avoid { data-toc-label="Common mistakes to avoid" }
 
 - Creating only image backups and assuming configuration can be recovered later.
 - Forgetting optional sections before a migration or rebuild.

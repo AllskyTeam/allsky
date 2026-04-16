@@ -4,7 +4,7 @@
 
 It is commonly used for devices such as temperature sensors, light sensors, RTC clocks, ADCs, DACs, OLED displays, and GPIO expanders.
 
-## I²C on Raspberry Pi
+## I²C on Raspberry Pi { data-toc-label="I²C on Raspberry Pi" }
 
 Raspberry Pi exposes I²C on the following pins:
 
@@ -13,7 +13,7 @@ Raspberry Pi exposes I²C on the following pins:
 | GPIO2 | Pin 3 | SDA |
 | GPIO3 | Pin 5 | SCL |
 
-### Enabling I²C on the Pi
+### Enabling I²C on the Pi { data-toc-label="Enabling I²C on the Pi" }
 
 Before using any I²C devices you must enable the I²C interface as it is not enabled by default.
 
@@ -33,14 +33,14 @@ The bus will then appear as:
 
 If I²C is not enabled most modules will warn you.
 
-## The I²C Library
+## The I²C Library { data-toc-label="The I²C Library" }
 
 Allsky uses a library of I²C  devices that is provided by Adafruit on their [Github repository](https://github.com/adafruit/I²C_Addresses){ target="_blank" rel="noopener" .external }
 
 When first selecting an I²C device use the button on the dialog to build the database.
 
 
-## How I²C Works
+## How I²C Works { data-toc-label="How I²C Works" }
 
 I²C uses two shared lines:
 
@@ -53,7 +53,7 @@ Both lines are **open-drain**, meaning devices can only pull the line low. **Pul
 
 Devices connect in **parallel** on the same two wires.
 
-## Master and Slave Devices
+## Master and Slave Devices { data-toc-label="Master and Slave Devices" }
 
 - The **master** (e.g. Raspberry Pi) controls communication and provides the clock.  
 - **Slave devices** (e.g. sensors) each have a unique **I²C address**.
@@ -63,7 +63,7 @@ Example devices on a bus:
 - SHT40 sensor → slave at address `0x44`  
 - TSL2591 sensor → slave at address `0x29`
 
-## I²C Addresses
+## I²C Addresses { data-toc-label="I²C Addresses" }
 
 - Most devices use **7-bit addresses**, written as hexadecimal (e.g. `0x44`)  
 - Some devices allow **address selection** using jumpers or pins  
@@ -82,7 +82,7 @@ sudo apt update
 sudo apt install I²C-tools
 ```
 
-## Typical Speed Modes
+## Typical Speed Modes { data-toc-label="Typical Speed Modes" }
 
 | Mode | Speed |
 |------|--------|

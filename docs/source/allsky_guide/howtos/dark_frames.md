@@ -25,7 +25,7 @@ Noise increases with temperature and exposure length. You won't notice noise in 
 
 Many people find noise distracting, and a good way to decrease it is to subtract it from a captured image. A picture that contains your desired object, e.g., night sky, and noise is called a light frame. A picture with just the noise (like the picture above) is called a dark frame because it's mostly dark. Subtracting a dark frame from a light frame leaves just your desired object.
 
-## When to take dark frames
+## When to take dark frames { data-toc-label="When to take dark frames" }
 
 You can take dark frames anytime - the software will use your night settings when taking dark frames, even if you take them during the day. The most important thing is to cover your lens fully so no light gets in. This isn't always easy and is why many people take dark frames at night. A good time to take them is on cloudy nights so you aren't "wasting" any time.
 
@@ -37,11 +37,11 @@ You'll probably want to take dark frames before you install your allsky camera, 
 
 Some people put their camera in the freezer before taking darks, then take darks until the camera is fully warmed. If that's not possible, take darks a few times a year when the temperature changes. The goal is to have a range of temperatures, but it's not critical to have EVERY possible temperature. A 2 or 3 degree spread is usually fine, e.g., 21, 24, 27 degrees C.
 
-## How to take and use darks?
+## How to take and use darks? { data-toc-label="How take use darks?" }
 
 Execute these steps to take and then use dark frames.
 
-### Capture dark frames
+### Capture dark frames { data-toc-label="Capture dark frames" }
 
 - In the WebUI's Allsky Settings page, set Take Dark Frames to Yes.
 
@@ -61,7 +61,7 @@ Execute these steps to take and then use dark frames.
 
 - Restart Allsky: ```sudo systemctl start allsky```.
 
-### Subtract dark frames
+### Subtract dark frames { data-toc-label="Subtract dark frames" }
 
 - On the WebUI's Allsky Settings page set Use Dark Frames to Yes.
 
@@ -69,7 +69,7 @@ Execute these steps to take and then use dark frames.
 
 You will get an error message in the WebUI if there aren't any dark frames.
 
-## How does Allsky handle darks?
+## How does Allsky handle darks? { data-toc-label="How Allsky handle darks?" }
 When you are taking dark frames, the software will turn off auto-exposure, auto-gain, and any overlay settings (e.g., time) and use your nighttime settings for Max Auto-Exposure, Gain, and Binning.
 
 !!! info  "Info"

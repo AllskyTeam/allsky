@@ -21,7 +21,7 @@ The PMS7003 is functionally very similar to the PMS5003, offering laser-based de
 
 The PMSA003 is a compact, low-profile particulate matter sensor designed for space-constrained applications. It uses the same laser scattering measurement principle as other Plantower sensors but is optimised for reduced size and power consumption. The PMSA003 reports PM1.0, PM2.5, and PM10 mass concentrations and is typically used in consumer devices, portable monitors, and embedded systems where enclosure depth is limited. Despite its smaller form factor, it maintains good measurement consistency for general air quality monitoring, though it may be slightly more sensitive to airflow and placement compared to larger models like the PMS5003 or PMS7003.
 
-## Settings
+## Settings { data-toc-label="Settings" }
 
 | Setting | Description |
 |--------|-------------|
@@ -31,7 +31,7 @@ The PMSA003 is a compact, low-profile particulate matter sensor designed for spa
 
     If no serial ports are displayed in the drop down then the sensor has not been detected. Please check the sensors connections
 
-## Available Variables
+## Available Variables { data-toc-label="Available Variables" }
 
 | Variable | Description |
 |--------|-------------|
@@ -50,7 +50,7 @@ The PMSA003 is a compact, low-profile particulate matter sensor designed for spa
 | AS_AQI | Air quality |
 | AS_AQI_TEXT | Human readable air quality |
 
-## Air quality
+## Air quality { data-toc-label="Air quality" }
 
 To determine the air quality first the maximum of AS_PM2_5 and AS_PM10 is taken, then the following table is used
 
@@ -63,7 +63,7 @@ To determine the air quality first the maximum of AS_PM2_5 and AS_PM10 is taken,
 | 200 - 299 | Very Unhealthy |
 | 300+ | Hazardous |
 
-## Available in
+## Available in { data-toc-label="Available in" }
 
 === "Pipelines available In"
     

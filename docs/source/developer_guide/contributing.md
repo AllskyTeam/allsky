@@ -18,7 +18,7 @@ If your change modifies the main application, installer, WebUI, documentation, o
 
 If your change adds or modifies an extra module, it almost certainly belongs in `allsky-modules`.
 
-### Choosing The Correct Repository
+### Choosing The Correct Repository { data-toc-label="Choosing Correct" }
 
 Before you write code, decide where the contribution should land. This matters because a change that is correct in one repository may be awkward, out of scope, or unmergeable in the other.
 
@@ -42,7 +42,7 @@ Before you write code, decide where the contribution should land. This matters b
 
     If a change requires modifications in both repositories, treat them as two separate contributions and prepare two pull requests. That keeps review cleaner and avoids coupling unrelated histories together.
 
-### Recommended Workflow
+### Recommended Workflow { data-toc-label="Recommended Workflow" }
 
 The recommended workflow is the standard fork-and-branch model used on GitHub. In practice, this means:
 
@@ -56,7 +56,7 @@ The recommended workflow is the standard fork-and-branch model used on GitHub. I
 
 This workflow keeps your `main` branch clean, makes it easy to sync with the upstream project, and helps reviewers understand exactly what your branch is trying to do.
 
-### Fork And Clone
+### Fork And Clone { data-toc-label="Fork And Clone" }
 
 Start by forking the relevant repository on GitHub. Once that is done, clone your fork locally.
 
@@ -92,7 +92,7 @@ Then add the upstream remote:
 
 The `origin` remote should point to your fork. The `upstream` remote should point to the AllskyTeam repository.
 
-### Keep `main` Clean
+### Keep `main` Clean { data-toc-label="Keep main Clean" }
 
 Your local `main` branch should be treated as a clean tracking branch, not as a development branch. That is one of the simplest habits that prevents unnecessary Git pain later.
 
@@ -111,7 +111,7 @@ If you prefer rebasing over merging for your personal workflow, that is fine, bu
 
     A branch should represent one focused change set. If you fix three unrelated issues in one branch because they happen to touch similar files, review becomes harder, testing becomes less clear, and the chance of the whole branch being delayed goes up.
 
-### Create A Branch
+### Create A Branch { data-toc-label="Create A Branch" }
 
 Create a dedicated branch for the work you are about to do. Branch names do not need to be elaborate, but they should tell reviewers what the branch is for.
 
@@ -126,7 +126,7 @@ git checkout -b module/add-weather-underground
 
 Short-lived, focused branches are strongly preferred over long-running personal integration branches.
 
-### Do The Work
+### Do The Work { data-toc-label="Do The Work" }
 
 Once the branch exists, make your changes. Keep the scope tight. A good contribution branch usually has one clear purpose:
 
@@ -140,7 +140,7 @@ If you realise halfway through that you are solving a second problem, it is ofte
 
 For larger changes, it is good practice to make several small commits rather than one huge undifferentiated commit. That said, the commit history should still be coherent. Reviewers should be able to see the logic of the change rather than a stream of random checkpoint commits.
 
-### Code And Documentation Expectations
+### Code And Documentation Expectations { data-toc-label="Code Documentation" }
 
 Allsky spans shell, Python, PHP, JavaScript, HTML, CSS, and documentation. The exact standards differ by area, but some general expectations apply everywhere.
 
@@ -180,7 +180,7 @@ Allsky spans shell, Python, PHP, JavaScript, HTML, CSS, and documentation. The e
 
 ///
 
-### Test Before You Push
+### Test Before You Push { data-toc-label="Test Before You Push" }
 
 You do not need a perfect enterprise test matrix for every contribution, but you do need to verify your work sensibly. The right checks depend on the type of change.
 
@@ -209,7 +209,7 @@ If you could not test something important, say so explicitly in the pull request
 
     “It should work” is not testing. Even for documentation-only changes, it is worth checking that formatting, links, and code fences render correctly.
 
-### Commit Your Changes
+### Commit Your Changes { data-toc-label="Commit Your Changes" }
 
 Commit messages should be clear and purposeful. Reviewers should be able to understand what happened from the log without opening every diff immediately.
 
@@ -232,7 +232,7 @@ git add <files>
 git commit -m "docs: rewrite developer contributing guide"
 ```
 
-### Push Your Branch
+### Push Your Branch { data-toc-label="Push Your Branch" }
 
 Push the branch to your fork:
 
@@ -242,7 +242,7 @@ git push -u origin docs/contributing-guide
 
 The `-u` flag sets the upstream tracking branch so later pushes can usually be done with a plain `git push`.
 
-### Open A Pull Request
+### Open A Pull Request { data-toc-label="Open A Pull Request" }
 
 Open a pull request from your forked branch to the appropriate upstream repository.
 
@@ -267,7 +267,7 @@ For UI changes, include screenshots. For behavioural changes, include enough exp
 
 ///
 
-### Keep Your Branch Up To Date
+### Keep Your Branch Up To Date { data-toc-label="Keep Branch Date" }
 
 If `main` moves on while your pull request is open, update your branch from upstream rather than letting it drift too far behind.
 
@@ -285,7 +285,7 @@ Then push the updated branch again.
 
 If you are comfortable with rebasing and prefer a cleaner history on your own fork, you can rebase instead, but do so carefully once a pull request is already under review. Reviewers generally care more about a stable, understandable branch than about a perfectly minimal commit graph.
 
-### Contributing To `allsky-modules`
+### Contributing To `allsky-modules` { data-toc-label="Contributing To" }
 
 The modules repository deserves a few additional points because modules are often contributed independently of core work.
 
@@ -304,7 +304,7 @@ Do not rely on undocumented assumptions. If the module expects hardware, a servi
 
     Extra modules often outlive the original contributor’s immediate interest. A module that is easy to understand, clearly documented, and explicit about its dependencies is much easier for the project to keep healthy over time.
 
-### Contributing To `allsky`
+### Contributing To `allsky` { data-toc-label="Contributing To allsky" }
 
 Core contributions deserve extra caution because changes here can affect installation, upgrades, runtime behaviour, and the user interface for a wide range of systems.
 
@@ -317,17 +317,17 @@ If you are changing core behaviour:
 
 Even small changes in the core project can have wider effects than they first appear. This does not mean core changes should be avoided. It means they should be made carefully and with the broader system in mind.
 
-### Documentation-Only Contributions
+### Documentation-Only Contributions { data-toc-label="Documentation-Only" }
 
 Documentation contributions are valuable and welcome. They do not need to be bundled with code changes to be worthwhile. If you find something unclear, outdated, misleading, incomplete, or awkwardly explained, it is entirely reasonable to submit a docs-only pull request.
 
 In fact, focused documentation pull requests are often easier to review and merge than mixed code-and-doc changes where the documentation gets buried inside a larger feature branch.
 
-### Security Issues
+### Security Issues { data-toc-label="Security Issues" }
 
 Do not open a public issue or public pull request for an undisclosed security vulnerability. Report security-sensitive problems privately to the project maintainers using the project’s preferred security reporting route.
 
-### Final Advice
+### Final Advice { data-toc-label="Final Advice" }
 
 The easiest contributions to review and merge are usually the ones with the clearest boundaries. Pick the right repository, start from an up-to-date `main`, create a focused branch, test what you changed, and explain your work clearly in the pull request.
 

@@ -28,7 +28,7 @@ AS_VAR2
 
 var3 will be ignored as its an object which cannot be imported
 
-### Settings 
+### Settings { data-toc-label="Settings" }
 
 | Setting | Description |
 |--------|-------------|
@@ -37,7 +37,7 @@ var3 will be ignored as its an object which cannot be imported
 | Prefix | The prefix to add to variables when imported so for example var1 becomes AS_{PREFIX}VAR1 |
 | Filename | The name of the xtra data file to update |
 
-## Available in
+## Available in { data-toc-label="Available in" }
 
 === "Pipelines available In"
     

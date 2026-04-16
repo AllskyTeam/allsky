@@ -18,7 +18,7 @@ Some modules are designed to operate with external hardware, typically connected
 
 Don't be discouraged by the above warnings - the module system is very flexible and allows you to customise Allsky without having to change any Allsky code.
 
-## What Are Modules
+## What Are Modules { data-toc-label="What Are Modules" }
 
 Modules are Python components that extend the functionality of Allsky. They typically fall into one of several categories:
 
@@ -26,7 +26,7 @@ Modules are Python components that extend the functionality of Allsky. They typi
   - **Hardware-control modules** — These interact with external devices. A common example is the Dew Heater module, which reads sensor data and automatically adjusts the dew heater.
   - **Image-processing modules** — These operate on the captured images. Some modify the image itself (such as the Mask module), while others analyse the image to generate additional overlay data, such as the Star Count module.
 
-## Available Pipelines (flows)
+## Available Pipelines (flows) { data-toc-label="Available Pipelines" }
 There are 5 pipelines available in Allsky.
 
 | Pipeline | Description |
@@ -74,7 +74,7 @@ flowchart TB
     R --> A
 ```
 
-## The Module Manager
+## The Module Manager { data-toc-label="The Module Manager" }
 Pipelines are managed by adding and removing modules via the Module Manager.
 
 !!! info  "Default Pipline"
@@ -101,28 +101,28 @@ The Module Manager
 | 10 | Available Modules | Lists the modules available to be added to the pipeline |
 | 11 | Selected Modules | Lists the modules selected for the  pipeline |
 
-### Enabling a module
+### Enabling a module { data-toc-label="Enabling a module" }
 To enable a module drag it from the Available Modules column to the Selected Modules column and select the "Enabled" checkbox. The module will become active after the flow has been saved. You can set modules to be automatically enabled when dragging them to the Selected Modules column in the Module Editor Module Options.
 
 Most modules require some configuration after they have been moved to the Selected Modules column. Clicking the settings button will display any configuration options for the module.
 
-### Disabling a Module
+### Disabling a Module { data-toc-label="Disabling a Module" }
 There are two ways to disable a module:
 
   - Drag the module to the Available Modules column - this will disable the module and lose any settings for it.
   - Uncheck the "Enabled" checkbox - this will disable the module but retain any settings. This is the preferred method if you just wish to temporarily disable a module.
 
-### Execution order
+### Execution order { data-toc-label="Execution order" }
 The modules are run in the order they appear in the Selected Modules column. To change the order simply drag the modules up or down the list. Modules highlighted in red can not be moved.
 
 !!! info  "Module Order"
 
     The order modules run is important. For example dont put the overlay module before a module that generates data for it. If you do this the overlay will display the data from the previous run of the pipeline
 
-## Module Settings
+## Module Settings { data-toc-label="Module Settings" }
 Each module provides a dialog where its settings can be managed. These settings are divided into tabs. Each module will have different tabs but there are a few that are consistent across all modules
 
-### The History Tab
+### The History Tab { data-toc-label="The History Tab" }
 If the module produces any graphs then the main graph will be displayed in the history tab
 
 ![](/assets/module_images/module_history.png) 
@@ -131,7 +131,7 @@ If the module produces any graphs then the main graph will be displayed in the h
 The History tab
 ///
 
-### The Variables Tab
+### The Variables Tab { data-toc-label="The Variables Tab" }
 This tab shows what variables the module will generate, these can then be used in the VAriable manager to add fields to the overlays. This is really only for information purposes.
 
 ![](/assets/module_images/module_variables.png) 
@@ -140,7 +140,7 @@ This tab shows what variables the module will generate, these can then be used i
 The Variables tab
 ///
 
-### The Changelog Tab
+### The Changelog Tab { data-toc-label="The Changelog Tab" }
 This tab shows a history of the changes that have been mad to the module
 
 ![](/assets/module_images/module_changelog.png) 
@@ -149,7 +149,7 @@ This tab shows a history of the changes that have been mad to the module
 The Change Log tab
 ///
 
-### The 'Important' tab
+### The 'Important' tab { data-toc-label="The 'Important' tab" }
 If this module or any portions of it are deprecated then this tab will display information about those deprecations
 
 ![](/assets/module_images/module_dep.png) 
@@ -158,7 +158,7 @@ If this module or any portions of it are deprecated then this tab will display i
 The Deprecation tab
 ///
 
-## Testing Modules
+## Testing Modules { data-toc-label="Testing Modules" }
 Some modules provide the ability to test the module rather than waiting for it to run and reviewing the Allsky logs. 
 
 ![](/assets/module_images/module_test.png) 

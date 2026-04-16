@@ -25,7 +25,7 @@ Because a keogram condenses thousands of images into one continuous timeline, it
 Example Keogram
 ///
 
-## Creating a keogram
+## Creating a keogram { data-toc-label="Creating a keogram" }
 
 You specify whether or not you want a keogram automatically created via the Generate   setting in the Keograms sub-section of the WebUI. When enabled, a keogram will be created at the end of night and will contain information for the prior 24 hours.
 

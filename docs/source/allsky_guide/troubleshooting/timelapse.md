@@ -1,6 +1,6 @@
 Timelapse video creation can fail or result in poor quality videos for a number of reasons. The steps below, which apply to both the daily- and mini-timelapse, will almost always fix it.
 
-## Timelapse video is not created
+## Timelapse video is not created { data-toc-label="Timelapse video created" }
 
 
 First make sure the timelapse is enabled. In the Timelapse Settings section of the WebUI's Allsky Settings page, check that Generate setting for a Daily Timlapse is enabled; for a mini-timelapse, make sure Number of Images is not 0.
@@ -32,7 +32,7 @@ If the number in the "VIRT" (virtual memory) column of ```htop``` hits a maximum
     - Set the VCODEC setting to ```libx265``` and set timelapse Extra Parameters to ```-x265-params crf=30```. This video codec takes a long time to create a video (over 3 hours on a PI 4b with 1500 RPi HQ images versus about 15 minutes with ```libx264```). Lower crf numbers (a measure of file compression) mean larger, higher-quality videos. Note that small changes to the number can result in huge difference in file size, for example, going from ```crf=30``` to ```crf=25``` can increase the video size by over five times.
 
 
-## Poor Quality Timelapse
+## Poor Quality Timelapse { data-toc-label="Poor Quality Timelapse" }
 
 If your timelapse videos have poor quality, typically more noticable in fast-moving areas like clouds, and/or the videos are "blocky", as seen in the image blow, try the steps below.
 
@@ -61,7 +61,7 @@ There are two ways to reduce the resolution.
   - Increase the Bitrate. This setting determines how much data is included in the video, and hence, how much data is left out. The more data that's left out, the smaller the file is.  
     The default is around 5000 kilobits/second (5 Mb/second) and is typically sufficient. Increasing the value too high, e.g., 25000 (25 Mb/second) could cause problems viewing the video - not all  network connections and devices can support that speed and you may get pauses.
 
-## Missing Images In Timelapse
+## Missing Images In Timelapse { data-toc-label="Missing Images Timelapse" }
 
 The number of images (also called "frames") in a timelapse video is the number of seconds long it is (including fractions of a second) times the Frames Per Second (FPS) you set. Execute the following to determine how many frames are in a video file as well as the length in seconds. Ignore the fps number, and replace YOUR_FILE with the name of your video:
 

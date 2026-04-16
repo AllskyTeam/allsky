@@ -10,11 +10,11 @@ tags:
 
 This module detects rain using a digital sensor.
 
-## Rain Sensors
+## Rain Sensors { data-toc-label="Rain Sensors" }
 
 There are a few types of rain sensor available.
 
-### The 'Cheap' ones
+### The 'Cheap' ones { data-toc-label="The 'Cheap' ones" }
 ![](/assets/module_images/rain-bad.jpg)
 
 Resistive rain sensor plates
@@ -47,7 +47,7 @@ Low-cost rain sensor plates are not designed for long-term outdoor exposure. Con
 
     These sensors will corrode very quickly, in my usage they last arounbd 12 months before the sensor is so corroded it can no longer read moisture
 
-### Slightly better ones
+### Slightly better ones { data-toc-label="Slightly better ones" }
 
 ![](/assets/module_images/rain-good.jpg)
 
@@ -78,14 +78,14 @@ Limitations remain
 Even with a heater, the M152 remains a resistive wetness sensor, not a true rain gauge. It still detects surface conductivity and cannot distinguish between rain intensity, duration, or volume. Heavy condensation combined with contamination can still trigger the sensor, and long-term exposure will gradually alter its response due to electrode degradation.
 
 
-## Settings 
+## Settings { data-toc-label="Settings" }
 
 | Setting | Description |
 |--------|-------------|
 | Input Pin	| The gpio pin the detector is connected to| 
 | Invert | Normally the cheap sensors are high when it's not raining and low when it is. This setting reverse that | 
 
-## Available Variables
+## Available Variables { data-toc-label="Available Variables" }
 
 | Variable | Description |
 |--------|-------------|
@@ -93,11 +93,11 @@ Even with a heater, the M152 remains a resistive wetness sensor, not a true rain
 | AS_ALLSKYRAINFLAG	| Either True if it's raining, or False if it's not |
 | AS_ALLSKYRAINFLAGINT | Either 1 if it's raining, or 0 if it's not |
 
-## Allsky Usage
+## Allsky Usage { data-toc-label="Allsky Usage" }
 
 Allsky can use the results of this sensor in other modules, for example in the star and meteor count modules if its raining there is little point checking for stars or meteors
 
-## Schematics
+## Schematics { data-toc-label="Schematics" }
 
 ![](/assets/module_images/rain.png){ width="100%" }
 
@@ -106,7 +106,7 @@ Allsky can use the results of this sensor in other modules, for example in the s
 Example using the cheaper rain sensors
 ///
 
-## Available in
+## Available in { data-toc-label="Available in" }
 
 === "Pipelines available In"
     

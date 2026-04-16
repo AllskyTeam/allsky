@@ -24,7 +24,7 @@ To make the overlay icon appear:
 
 For more information on this, and other Website settings, visit the [Allsky Website Settings](/allsky_guide/settings/website.html) page.
 
-## Adjusting image size
+## Adjusting image size { data-toc-label="Adjusting image size" }
 
 The default maximum size of the image that's displayed on the Website is 960 pixels wide by 720 pixels high. If your monitor is very small or can support a larger resolution, you may wish to change the default size by doing the following:
 
@@ -35,7 +35,7 @@ The default maximum size of the image that's displayed on the Website is 960 pix
 - If you resized the image via the WebUI the final images size should be the same or greater than the size of the imageHeight value.
 
 
-## Aligning the overlay
+## Aligning the overlay { data-toc-label="Aligning the overlay" }
 !!! info  "Info"
 
     Getting the overlay placed over the sky image correctly is a trial-and-error effort that takes time.
@@ -72,7 +72,7 @@ In the steps below you'll be editing the configuration.json file using the WebUI
 
 - Rotate the overlay to match the stars. Increasing the az setting rotates the overlay clockwise.
 
-## Tips
+## Tips { data-toc-label="Tips" }
 
 The following items can be done while aligning the overlay, and undone when finished.
 

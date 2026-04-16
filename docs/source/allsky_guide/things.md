@@ -1,5 +1,5 @@
 
-## [ESP32-P4 AllSky Display](https://github.com/chvvkumar/ESP32-P4-Allsky-Display){ target="_blank" rel="noopener" .external }
+## [ESP32-P4 AllSky Display](https://github.com/chvvkumar/ESP32-P4-Allsky-Display) { target="_blank" rel="noopener" .external data-toc-label="ESP32-P4 AllSky Display" }
 
 Transform your ESP32-P4 display into an all-sky camera viewer with multi-image cycling, hardware acceleration, and seamless Home Assistant integration.
 

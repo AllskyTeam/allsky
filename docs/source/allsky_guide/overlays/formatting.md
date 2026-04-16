@@ -18,7 +18,7 @@ In this example we have double clicked the 'AS-SUN_DAWN' field and then clicked 
 
 Simply select the format you required and save the overlay.
 
-### Common Formats
+### Common Formats { data-toc-label="Common Formats" }
 
 !!! warning  ""
 
@@ -26,7 +26,7 @@ Simply select the format you required and save the overlay.
 
 **Please Note** The lists below are not exhaustive and may change from release to release. Please refer to the Formatting Dialog for available options
 
-#### Date Formats
+#### Date Formats { data-toc-label="Date Formats" }
 This allows dates to be formatted in a number of ways. A custom date formatter is provided allowing you to format a date in any way you like
 
 | Format | Description | Example |
@@ -40,7 +40,7 @@ This allows dates to be formatted in a number of ways. A custom date formatter i
 |%m-%d-%y %H:%m	|Short date and time (US format)	|12-25-23 23:10	|
 |Custom date	|Custom date format	|N/A	|
 
-#### Number Formats
+#### Number Formats { data-toc-label="Number Formats" }
 This allows numbers ot be formatted, setting decimal places etc
 
 | Format | Description | Example |
@@ -53,7 +53,7 @@ This allows numbers ot be formatted, setting decimal places etc
 The Number Format Dialog
 ///
 
-#### Boolean Formats
+#### Boolean Formats { data-toc-label="Boolean Formats" }
 This allows boolean values to be displayed in a more Human Readable format
 
 | Format | Description | Example |
@@ -63,14 +63,14 @@ This allows boolean values to be displayed in a more Human Readable format
 |truefalse	|Output 'True' if input is 1, of 'False'	|True, False	|
 |num	|Output '1' if input is 1, or '0'	|1, 0|
 
-#### Elevation Formats
+#### Elevation Formats { data-toc-label="Elevation Formats" }
 This allows an elevation value to be displayed in a Human Readable format
 
 | Format | Description | Example |
 |--------|-------------|---------|
 |Custom elevation	|	Elevation with decimal places and degree symbol	|52.12 ° |
 
-#### Azimuth Formats
+#### Azimuth Formats { data-toc-label="Azimuth Formats" }
 This allows an azimuth value to be displayed in a Human Readable format
 
 | Format | Description | Example |
@@ -78,7 +78,7 @@ This allows an azimuth value to be displayed in a Human Readable format
 |Custom azimuth	|Azimuth with decimal places and degree symbol	|52.12	|
 |dms	|Display azimuth with Degrees, Minutes, and Seconds	|123|
 
-#### Filesize Formats
+#### Filesize Formats { data-toc-label="Filesize Formats" }
 This allows an filesize value to be displayed in a Human Readable format
 
 | Format | Description | Example |
@@ -86,7 +86,7 @@ This allows an filesize value to be displayed in a Human Readable format
 |Auto filesize	|The most appropriate unit will be displayed (GB, etc.)	|12 GB	|
 |Custom filesize	|Filesize with decimal places and units (GB, MB, etc.)	|12 TB|
 
-#### Filesize Formats
+#### Filesize Formats { data-toc-label="Filesize Formats" }
 This allows an filesize value to be displayed in a Human Readable format, converting between units if required
 
 | Format | Description | Example |
@@ -94,7 +94,7 @@ This allows an filesize value to be displayed in a Human Readable format, conver
 |Default temperature	|Use default temperature attributes - see Sample -->	|23.5° C	|
 |Custom temperature	|Customize variable attributes	|23,54° C|
 
-#### GPIO Formats
+#### GPIO Formats { data-toc-label="GPIO Formats" }
 This allows the state of a GPIO pin to be displayed in a more Human Readable format
 
 | Format | Description | Example |
@@ -104,7 +104,7 @@ This allows the state of a GPIO pin to be displayed in a more Human Readable for
 |truefalse	|Show as True or False	|False	|
 |num	|Show as 1 or 0	|0|
 
-#### String Formats
+#### String Formats { data-toc-label="String Formats" }
 This allows strings to be formatted in a a variety of ways
 
 | Format | Description | Example |
@@ -117,7 +117,7 @@ This allows strings to be formatted in a a variety of ways
 |sentence	|Capitalize the string, removing leading and trailing spaces	|Hello, World!|
 
 
-#### Altitude Formats
+#### Altitude Formats { data-toc-label="Altitude Formats" }
 This converts an altitude to a Flight level
 
 | Format | Description | Example |
@@ -125,7 +125,7 @@ This converts an altitude to a Flight level
 | flightlevel|Convert altitude in metres to flight level| FL020|
 
 
-#### Distance Formats
+#### Distance Formats { data-toc-label="Distance Formats" }
 Converts distance between Units
 
 | Format | Description |

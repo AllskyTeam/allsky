@@ -10,7 +10,7 @@ tags:
 This module allows a GPIO pin to be toggled during the transition from day to night and night to day. This can be used to signal other hadrware that the transition has happened, for example an automated cover that protects the camera during daylight hours in very hot environments
 
 
-## Settings
+## Settings { data-toc-label="Settings" }
 The following settings are available in the module
 
 | Setting | Description |
@@ -23,7 +23,7 @@ As an example to control a device connected to GPIO pin 18 that goes high at nig
   - In the Day To Night pipeline add the module, set the GPIO pin to 18 and check the state
   - In the Night To Day pipline add the module, set the GPIO pin to 18 and un check the state
 
-## Available in
+## Available in { data-toc-label="Available in" }
 
 === "Pipelines available In"
     

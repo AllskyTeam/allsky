@@ -14,7 +14,7 @@ In practice, this means the page is well suited to questions that are difficult 
 
     The page is designed to be arranged around the questions you care about. One user might build a layout for system health and housekeeping. Another might focus on camera behaviour or module-provided metrics. A third might create several custom charts just to compare related signals over the same period. The page supports all of those approaches because it is intended to be worked with, not just glanced at.
 
-### What The Page Is For
+### What The Page Is For { data-toc-label="What The Page Is For" }
 
 The main function of the Charts page is to let you compare time-based data in a way that would be awkward everywhere else in the WebUI. Logs are excellent when you need exact events or exact error messages, but they are not ideal when you want to understand trends. The System page is excellent for broad health information, but it is intentionally summarised and immediate. Charts sits between those two worlds. It gives you enough history to reason about change over time, but does so in a visual form that is fast to read and easy to compare.
 
@@ -22,7 +22,7 @@ This becomes especially valuable when you are trying to answer questions such as
 
 The page is also useful because it does not force you into a single fixed dashboard. Instead, it lets you choose which charts belong together. You can build one tab that acts as a high-level overview, another that focuses on a narrower technical area, and another that exists only for experimentation. That flexibility is an important part of the page’s function. It is not trying to dictate one “correct” set of graphs for every user. It is giving you a place to build the views that are actually useful for your own installation.
 
-### Understanding The Header Controls
+### Understanding The Header Controls { data-toc-label="Understanding Header" }
 
 The header controls in the top-right corner are small, but each one changes the way you work with the page.
 
@@ -52,7 +52,7 @@ The header controls in the top-right corner are small, but each one changes the 
 Placeholder: Available charts side panel
 ///
 
-### Adding A Chart To The Workspace
+### Adding A Chart To The Workspace { data-toc-label="Adding Chart Workspace" }
 
 The normal way to add a chart is simple, but it helps to understand the flow clearly. First, open the chart menu so the available chart categories are visible. Then choose the tab you want to work in. Finally, drag the chart entry from the side panel into the active tab area. Once dropped, the chart is created inside that tab and becomes part of its saved layout.
 
@@ -68,7 +68,7 @@ Once a chart has been added, it can be moved and resized. That matters because s
 
     A very common pattern is to set the time range first, then add two or three related charts to a tab, then resize them so they can be compared at a glance. After that, you may create another tab for a different topic. Over time, the page becomes less like a blank canvas and more like a set of reusable dashboards tailored to your own system.
 
-### Working With Tabs
+### Working With Tabs { data-toc-label="Working With Tabs" }
 
 Tabs exist so that the page can hold several different chart layouts without forcing them all into one crowded view. The default page begins with a Home tab, but you can create more, switch between them, rename them, and close them when they are no longer needed. This is useful because a single chart layout is rarely enough once you begin using the page seriously.
 
@@ -76,7 +76,7 @@ One tab might hold broad system-level charts that you want to glance at regularl
 
 The page also remembers these layouts. That persistence is important. It means the time spent arranging the page is not wasted. Once you have built a tab structure that suits your installation, you can keep using it as your normal working environment rather than having to reconstruct it every time you visit.
 
-### Time Range And Comparison
+### Time Range And Comparison { data-toc-label="Time Range Comparison" }
 
 The global time range is one of the features that gives the page most of its analytical value. Because the same range is pushed to the charts in the workspace, you can compare signals over the same period without constantly adjusting each graph by hand. That makes the page much better at showing relationships between variables.
 
@@ -92,13 +92,13 @@ Quick ranges are useful when you want to move quickly between common windows suc
 
     When you change the global time range, the charts reload against that new period. If the workspace contains several charts, that may take a moment because the page is asking each one to refresh its data. That behaviour is expected and is part of keeping the workspace consistent.
 
-### Auto-Refresh And Live Monitoring
+### Auto-Refresh And Live Monitoring { data-toc-label="Auto-Refresh Live" }
 
 Although charts are often used for historical analysis, they can also act as a live monitoring surface. Each chart can refresh automatically, which allows the graph to keep moving forward as new data arrives. This means the page can sit somewhere between a static report and a live dashboard. If you want to monitor behaviour while also keeping recent history visible, this feature is often exactly what makes the page useful.
 
 The default auto-refresh rate for newly created charts is controlled from the options dialog, but individual charts can keep their own refresh settings. That is a practical design choice. Not every graph benefits from updating at the same rate. Some charts are better treated as stable references, while others are more useful when they update frequently.
 
-### The Options Dialog In Detail
+### The Options Dialog In Detail { data-toc-label="The Options Dialog" }
 
 The options dialog affects the behaviour of the chart manager rather than the data itself. That distinction is important because these settings are about how the workspace feels and behaves while you arrange charts.
 
@@ -128,7 +128,7 @@ This is the refresh interval that newly added charts start with. It does not rew
 
 These controls are easy to overlook, but they can make a noticeable difference to how usable the page feels. If the workspace seems messy or difficult to manage, the options dialog is often the right place to improve the experience.
 
-### Custom Charts In More Detail
+### Custom Charts In More Detail { data-toc-label="Custom Charts More" }
 
 Custom charts are where the page becomes more than a viewer for predefined graphs. The custom chart editor allows you to define a chart of your own and save it back into the chart library. Once saved, it behaves like any other available chart entry and can be dragged into tabs whenever you want to use it.
 
@@ -154,13 +154,13 @@ The most important thing when creating a custom chart is to know what question t
 
 Because custom charts become part of the available chart list, they can gradually turn the Charts page into a much more personal tool. Over time, many users will end up with a small set of custom charts that reflect the parts of their own installation they care about most. That is one of the reasons this page can become so valuable. It adapts to the system instead of forcing the system into one fixed dashboard model.
 
-### Built-In And Custom Charts Together
+### Built-In And Custom Charts Together { data-toc-label="Built-In Custom Charts" }
 
 One of the strengths of the page is that built-in and custom charts are not separated into different worlds. Once a custom chart has been saved, it joins the same chart library and the same drag-and-drop workflow as everything else. That makes the page feel coherent. You do not need one mental model for stock charts and another for your own charts. The difference is only in where the chart definition came from.
 
 This also means you can mix them freely inside one tab. A built-in chart can provide context, while a custom chart focuses on the specific relationship you care about. That combination is often much more useful than relying only on one type or the other.
 
-### Making The Most Of The Page
+### Making The Most Of The Page { data-toc-label="Making Most Page" }
 
 The Charts page is most useful when you approach it with intent. If you open it only to scatter charts around, it can quickly become noisy. If you open it with a question in mind, it becomes much more powerful. Decide what you want to compare, pick the time range that matters, add only the charts that support that question, and then arrange them so the comparison is easy to read.
 

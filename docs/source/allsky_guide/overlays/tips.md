@@ -1,4 +1,4 @@
-### Best Practice
+### Best Practice { data-toc-label="Best Practice" }
 
 **Create separate overlys for day and night**
 

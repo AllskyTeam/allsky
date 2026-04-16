@@ -3,10 +3,10 @@ This page describes how to install a new Allsky Website or upgrade an existing W
 An Allsky Website running on your Pi is called a **local Website** because it is local to your Pi.  
 An Allsky Website running on anywhere else is called a **remote Website**.
 
-### Local Website
+### Local Website { data-toc-label="Local Website" }
 The code for a local Website is already on your Pi so getting it to work is easy:
 
-#### New Allsky installations or upgrades with no prior local Website
+#### New Allsky installations or upgrades with no prior local Website { data-toc-label="New Allsky installations" }
 The new local Website needs to be **enabled** and **configured** before it can be used. If you go to the Website prior to that you'll get an error message telling you what to do.
 
 - **Enable** the Website by going to the ```Allsky Settings``` page in the WebUI and enabling the Use ^^Local Website^^ setting in the **Websites and Remote Server Settings** section. This will create a default configuration file you'll use in the next step.
@@ -14,7 +14,7 @@ The new local Website needs to be **enabled** and **configured** before it can b
 
 See the [Website Settings](settings/website.md)  page for a description of the settings.
 
-#### Allsky Upgrades with an existing local Website
+#### Allsky Upgrades with an existing local Website { data-toc-label="Allsky Upgrades existing" }
 The Allsky upgrade will use your prior local Website configuration and automatically enable the new Website. Any existing images and videos from the prior Website will be moved to to the new Website. You are done unless the prior Website was version **v2022.03.01+** or earlier, in which case you need to:
 
 - Manually copy your prior settings from ==/var/www/html/allsky/config.js== to ==configuration.json== by going to the ```Editor``` page in the WebUI and selecting ```configuration.json (local Allsky Website)```. Note that there are more settings in the new configuration file, but it should be straightforward to map settings from the old file to the new file.

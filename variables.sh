@@ -180,8 +180,11 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" || ${1} == "--force" ]]; then
 	# URL for the Allsky API.
 	ALLSKY_API_URL="http://localhost:8090"
 
-	# Path to the Allsky database.
-	ALLSKY_DATABASES="${ALLSKY_MYFILES_DIR}/allsky.db"
+	# Database-related variables.
+	ALLSKY_DATABASE="${ALLSKY_MYFILES_DIR}/allsky.db"
+	ALLSKY_DATABASE_COMMAND="${ALLSKY_UTILITIES}/db.py"
+	ALLSKY_IMAGES_TABLE="allsky_image"
+	ALLSKY_STARTRAILS_TABLE="allsky_startrails"
 
 	# Directories and files for the flow timer function
 	ALLSKY_FLOWTIMINGS="${ALLSKY_TMP}/flowtimings"

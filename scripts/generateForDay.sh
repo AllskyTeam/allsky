@@ -229,6 +229,7 @@ if [[ ${GOT} -eq 0 ]]; then
 fi
 
 if [[ ${TYPE} == "GENERATE" ]]; then
+	GENERATE_OUTPUT=""		# global
 	generate()
 	{
 		GENERATING_WHAT="${1}"
@@ -240,10 +241,10 @@ if [[ ${TYPE} == "GENERATE" ]]; then
 
 		[[ -n ${DEBUG_ARG} ]] && echo "${ME}: Executing: ${CMD}"
 		# shellcheck disable=SC2086
-		eval ${CMD}
+		GENERATE_OUTPUT="$( eval ${CMD} 2>&1 )"
 		local RET=$?
 		if [[ ${RET} -ne 0 && ${RET} -ne ${EXIT_PARTIAL_OK}  ]]; then
-			E_ "${ME}: Command Failed: ${CMD}" >&2
+			E_ "${ME}: Command Failed: ${GENERATE_OUTPUT}" >&2
 		elif [[ ${SILENT} == "false" ]]; then
 			echo -e "\tDone"
 		fi
@@ -290,6 +291,7 @@ else
 fi
 
 EXIT_CODE=0
+NUM_SUCCESS=0
 
 if [[ ${DO_KEOGRAM} == "true" || ${DO_STARTRAILS} == "true" ]]; then
 	# Nasty JQ trick to compose a widthxheight string if both width and height
@@ -333,6 +335,8 @@ if [[ ${DO_KEOGRAM} == "true" ]]; then
 		CMD+=" -e ${ALLSKY_EXTENSION} -o '${UPLOAD_FILE}' ${MORE} ${KEOGRAM_EXTRA_PARAMETERS}"
 		[[ -n ${KEOGRAM_PARAMS} ]] && CMD+=" ${KEOGRAM_PARAMS}"
 		generate "Keogram" "keogram" "${CMD}"
+		RET=$?
+		[[ ${RET} -eq 0 ]] && ((NUM_SUCCESS++))
 
 		if [[ $? -gt 90 && (${DO_STARTRAILS} == "true" || ${DO_TIMELAPSE} == "true") ]]; then
 			DO_STARTRAILS="false"
@@ -340,6 +344,11 @@ if [[ ${DO_KEOGRAM} == "true" ]]; then
 			# -gt 90 means either no files or unable to read initial file, and
 			# keograms and timelapse will have the same problem, so don't bother running.
 			echo "Keogram creation unable to read files; will not run startrails or timelapse." >&2
+		fi
+
+		if [[ ${RET} -eq 0 ]]; then
+			# Create thumbnail of keogram
+			RES="$( "${ALLSKY_UTILITIES}/thumbnail.sh" -t keogram -d "${DATE}" --force )"
 		fi
 
 	else
@@ -398,6 +407,32 @@ if [[ ${DO_STARTRAILS} == "true" ]]; then
 		[[ -n ${STARTRAILS_PARAMS} ]] && CMD+=" ${STARTRAILS_PARAMS}"
 		generate "Startrails, threshold=${BRIGHTNESS_THRESHOLD}" "startrails" "${CMD}"
 		RET=$?
+		[[ ${RET} -eq 0 || ${RET} -eq ${EXIT_PARTIAL_OK} ]] && ((NUM_SUCCESS++))
+
+		# ${GENERATE_OUTPUT} contains the output of the startrails command.
+		# startrails: Minimum: .05 maximum: 0.584629 mean: 0.494671 median: 0.526751 \
+		#	numImagesUsed: 0 numImagesNotUsed: 47 threshold: 0.1
+		# shellcheck disable=SC2086
+		V="$( echo ${GENERATE_OUTPUT} | gawk -v Q="'" '{
+			if ($1 == "startrails:") {
+				printf(" %sminimum,%f%s", Q, $3, Q);
+				printf(" %smaximum,%f%s", Q, $5, Q);
+				printf(" %smean,%f%s", Q, $7, Q);
+				printf(" %smedian,%f%s", Q, $9, Q);
+				printf(" %snumImagesUsed,%d%s", Q, $11, Q);
+				printf(" %snumImagesNotUsed,%d%s", Q, $13, Q);
+				printf(" %sthreshold,%f%s", Q, $15, Q);
+			}
+			}'
+		)"
+		if [[ -n ${V} ]]; then
+			VALUES="'directory,${DATE}' ${V}"
+
+			# Insert the stats into the DB.
+			# shellcheck disable=SC2086
+			eval "${ALLSKY_DATABASE_COMMAND}" --table "${ALLSKY_STARTRAILS_TABLE}" \
+				--values ${VALUES}
+		fi
 
 		if [[ ${RET} -eq ${EXIT_PARTIAL_OK} ]]; then
 			MSG="The startrails file was created but has no trailed stars."
@@ -413,6 +448,11 @@ if [[ ${DO_STARTRAILS} == "true" ]]; then
 			# -gt 90 means either no files or unable to read initial file, and
 			# timelapse will have the same problem, so don't bother running.
 			echo "Startrails creation unable to read files; will not run timelapse." >&2
+		fi
+
+		if [[ ${RET} -eq 0 || ${RET} -eq ${EXIT_PARTIAL_OK} ]]; then
+			# Create thumbnail of startrail
+			RES="$( "${ALLSKY_UTILITIES}/thumbnail.sh" -t startrails -d "${DATE}" --force )"
 		fi
 
 	else
@@ -487,6 +527,7 @@ if [[ ${DO_TIMELAPSE} == "true" ]]; then
 			[[ -n ${TIMELAPSE_PARAMS} ]] && CMD+=" ${TIMELAPSE_PARAMS}"
 			generate "Timelapse" "" "${CMD}"	# it creates the necessary directory
 			RET=$?
+			[[ ${RET} -eq 0 ]] && ((NUM_SUCCESS++))
 		fi
 		if [[ ${RET} -eq 0 && ${TIMELAPSE_UPLOAD_THUMBNAIL} == "true" && -s ${UPLOAD_FILE} ]]; then
 			# Want the thumbnail to be near the start of the video, but not the first frame
@@ -566,8 +607,8 @@ if [[ ${DO_TIMELAPSE} == "true" ]]; then
 	fi
 fi
 
-
-if [[ ${TYPE} == "GENERATE" && ${SILENT} == "false" && ${EXIT_CODE} -eq 0 ]]; then
+# Only display this message if at least one "generate" succeeded.
+if [[ ${TYPE} == "GENERATE" && ${SILENT} == "false" && ${NUM_SUCCESS} -gt 0 ]]; then
 	ARGS="${THUMBNAIL_ONLY_ARG}"
 	[[ ${DO_KEOGRAM} == "true" ]] && ARGS="${ARGS} --keogram"
 	[[ ${DO_STARTRAILS} == "true" ]] && ARGS="${ARGS} --startrails"

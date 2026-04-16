@@ -3,9 +3,9 @@
 ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck source-path=.
-source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 SETTING_NAME="Remove Bad Images Threshold"
 
@@ -18,7 +18,8 @@ usage_and_exit()
 	[[ -n ${MSG} ]] && USAGE+="${MSG}\n"
 	USAGE+="Usage: ${ME} [--help] [--show_bad_images]"
 	if [[ ${RET} -ne 0 ]]; then
-		E_ "${USAGE}"
+		wE_ "${USAGE}"
+		[[ ${HTML} == "true" ]] && RET="${ALLSKY_EXIT_ERROR_STOP}"
 	else
 		echo -e "${USAGE}"
 	fi
@@ -74,8 +75,8 @@ grep "Bad Image at [0-9]* has MEAN of" "${ALLSKY_LOG}" "${ALLSKY_LOG}.1" 2>/dev/
 	sed -e 's/.* Bad Image at //' -e 's/ has MEAN of//' -e 's/ and is//' > "${BAD_IMAGES_LIST}"
 if [[ ! -s ${BAD_IMAGES_LIST} ]]; then
 	rm -f "${BAD_IMAGES_LIST}"
-	W_ "\nCongratulations - no bad file information found in the Allsky log.\n" >&2
-	exit 1
+	wW_ "\nCongratulations - no bad file information found in the Allsky log.\n" >&2
+	exit 0
 fi
 
 #	20250209104345 0.167969 below low threshold of 0.5
@@ -198,3 +199,4 @@ fi
 if [[ ${HTML} == "false" ]]; then
 	echo		# adds space at bottom to make it easier to read on a terminal
 fi
+exit 0

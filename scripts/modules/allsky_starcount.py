@@ -28,6 +28,7 @@ class ALLSKYSTARCOUNT(ALLSKYMODULEBASE):
 		],
 		"module": "allsky_starcount",
 		"version": "v1.0.2",
+  	"docs": "docs/allsky_guide/overlays/star_count.html",
 		"testable": "false",
 		"testableresult": "images",
 		"centersettings": "false",

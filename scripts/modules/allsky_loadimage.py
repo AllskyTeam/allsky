@@ -19,9 +19,11 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 	meta_data = {
 		"name": "Load the Current Image",
 		"description": "Load the last captured image.",
+		"version": "v1.0.0",  
 		"module": "allsky_loadimage",
 		"ignorewatchdog": "True",
 		"extradatafilename": "allsky_camera.json",
+  	"docs": "docs/allsky_modules/core/load_image.html",
 		"group": "Allsky Core",
 		"events": [
 			"day",
@@ -143,7 +145,16 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 					"type": "number"
 				}  
 			}                         
-		}          
+		},
+		"changelog": {
+			"v1.0.0" : [
+				{
+					"author": "Alex Greenland",
+					"authorurl": "https://github.com/allskyteam",
+					"changes": "Initial Release"
+				}
+			]   
+		}         
 	}
 
 	def update_allsky_sensor_server(self):

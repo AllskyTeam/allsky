@@ -109,7 +109,14 @@
 		});
 
 		// Now we have all the html we need, just assemble it
-		var innerHTML = '<table class="pgTable">';
+		var innerHTML = '<div class="form-group"><table class="pgTable">';
+
+		innerHTML += `
+		    <colgroup>
+        <col>
+        <col>
+    </colgroup>`;
+
 		for (var group in groupsHeaderRowHTML) {
 			// Add the group row
 			innerHTML += groupsHeaderRowHTML[group];
@@ -124,7 +131,7 @@
 		}
 
 		// Close the table and apply it to the div
-		innerHTML += '</table>';
+		innerHTML += '</table></div>';
 		this.html(innerHTML);
 
 		// Call the post init functions
@@ -289,19 +296,37 @@
 			}
 
 			// If number and a jqueryUI spinner is loaded use it
-		} else if (typeof $.fn.spinner === 'function' && (type === 'number' || (type === '' && typeof value === 'number'))) {
-			valueHTML = '<input type="text" id="' + elemId + '" value="' + value + '" style="width:50px" />';
-			if (postCreateInitFuncs) {
-				postCreateInitFuncs.push(initSpinner(elemId, meta.options, name, changedCallback, el));
-			}
+		} else if (type === 'number' || (type === '' && typeof value === 'number')) {
+			if (typeof $.fn.spinner === 'function') {
+				valueHTML = '<input type="number" id="' + elemId + '" value="' + value + '" style="width:50px" />';
+				if (postCreateInitFuncs) {
+					postCreateInitFuncs.push(initSpinner(elemId, meta.options, name, changedCallback, el));
+				}
 
-			if (getValueFuncs) {
-				getValueFuncs[name] = function () { return $('#' + elemId).spinner('value'); };
-			}
-			if (setValueFuncs) {
-				setValueFuncs[name] = function (value) { $('#' + elemId).spinner('value', value); };
-			}
+				if (getValueFuncs) {
+					getValueFuncs[name] = function () { return $('#' + elemId).spinner('value'); };
+				}
+				if (setValueFuncs) {
+					setValueFuncs[name] = function (value) { $('#' + elemId).spinner('value', value); };
+				}
+			} else {
+				// If we don't have the spinner plugin just create a number input
+				valueHTML = '<input type="number" id="' + elemId + '" value="' + value + '" class="form-control" style="width:150px" />';
+				if (getValueFuncs) {
+					getValueFuncs[name] = function () { return parseFloat($('#' + elemId).val()); };
+				}
+				if (setValueFuncs) {
+					setValueFuncs[name] = function (value) { $('#' + elemId).val(value); };
+				}
 
+				if (changedCallback) {
+					$(el).on('input', '#' + elemId, function changed(e) {
+						changedCallback(this, name, parseFloat($('#' + elemId).val()));
+						e.preventDefault();
+						e.stopPropagation();
+					});
+				}
+			}
 			// If color and we have the spectrum color picker use it
 		} else if (type === 'color' && typeof $.fn.spectrum === 'function') {
 			valueHTML = '<input type="text" id="' + elemId + '" />';
@@ -332,7 +357,7 @@
 
 			// Default is textbox
 		} else {
-			valueHTML = '<input type="text" id="' + elemId + '" value="' + value + '" autocomplete="off"</input>' + postHTML;
+			valueHTML = '<input type="text" class="form-control" style="display: inline;" id="' + elemId + '" value="' + value + '" autocomplete="off"</input>' + postHTML;
 			if (getValueFuncs) {
 				getValueFuncs[name] = function () { return $('#' + elemId).val(); };
 			}
@@ -366,9 +391,9 @@
 		}
 
 		if (meta.colspan2) {
-			return '<tr class="pgRow"><td colspan="2" class="pgCell">' + valueHTML + '</td></tr>';
+			return '<tr class="pgRow"><td colspan="2" class="pgCell"><label for="' + elemId + '">' + valueHTML + '</label></td></tr>';
 		} else {
-			return '<tr class="pgRow"><td class="pgCell">' + displayName + '</td><td class="pgCell">' + valueHTML + '</td></tr>';
+			return '<tr class="pgRow"><td class="pgCell"><label for="' + elemId + '">' + displayName + '</label></td><td class="pgCell">' + valueHTML + '</td></tr>';
 		}
 	}
 
@@ -386,7 +411,7 @@
 
 		var html = '<select';
 		if (id) {
-			html += ' id="' + id + '"';
+			html += ' id="' + id + '" class="form-control"';
 		}
 
 		html += '>';

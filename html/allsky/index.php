@@ -131,7 +131,7 @@
 			}
 			if ($leftSidebarStyle !== null)
 				echo "		#leftSidebar { $leftSidebarStyle }";
-			if ($personalLink_style !== "")		// adds to what's in custom.css
+			if ($personalLink_style !== "")		// adds to what's in allsky.css
 				echo "		.personalLink { $personalLink_style }";
 		?>
 	</style>

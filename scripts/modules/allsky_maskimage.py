@@ -15,6 +15,7 @@ class ALLSKYMASKIMAGE(ALLSKYMODULEBASE):
 		"name": "Apply a Mask to an Image",
 		"description": "Apply a mask to an image, often used to ensure a black background for overlay text.",
 		"version": "v1.0.2",
+  	"docs": "docs/allsky_modules/core/mask_image.html",     
 		"centersettings": "false",
 		"testable": "false",
 		"group": "Image Adjustments",

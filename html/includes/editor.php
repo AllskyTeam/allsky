@@ -9,7 +9,7 @@ function DisplayEditor()
 {
 	global $useLocalWebsite, $useRemoteWebsite;
 	global $hasLocalWebsite, $hasRemoteWebsite;
-	global $pageHeaderTitle, $pageIcon;
+	global $pageHeaderTitle, $pageIcon, $pageHelp;
 
 	$myStatus = new StatusMessages();
 	$mode = JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_NUMERIC_CHECK|JSON_PRESERVE_ZERO_FRACTION;
@@ -408,7 +408,14 @@ function DisplayEditor()
 	<div class="row">
 		<div class="col-lg-12">
 			<div class="panel panel-allsky">
-				<div class="panel-heading"><i class="<?php echo $pageIcon ?>"></i> <?php echo $pageHeaderTitle ?></div>
+				<div class="panel-heading clearfix">
+                    <span><i class="<?php echo $pageIcon ?>"></i> <?php echo $pageHeaderTitle ?></span>
+<?php if (!empty($pageHelp)) { ?>
+                    <a class="pull-right" href="<?php echo $pageHelp; ?>" target="_blank" rel="noopener noreferrer" data-toggle="tooltip" data-container="body" data-placement="left" title="Help">
+                        <i class="fa-solid fa-circle-question"></i> Help
+                    </a>
+<?php } ?>
+                </div>
 				<div class="panel-body">
 					<p id="editor-messages"><?php $myStatus->showMessages(); ?></p>
 					<p id="need-to-update"></p> <p id="file-corruption"></p>

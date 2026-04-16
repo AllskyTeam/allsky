@@ -7,7 +7,7 @@ if (basename(__FILE__) === basename($_SERVER['SCRIPT_FILENAME'])) {
 
 function DisplayModule()
 {
-	global $pageHeaderTitle, $pageIcon;
+	global $pageHeaderTitle, $pageIcon, $pageHelp;
 ?>
 
 <script src="/documentation/js/all.min.js?c=<?php echo ALLSKY_VERSION; ?>" type="application/javascript"></script>
@@ -15,7 +15,7 @@ function DisplayModule()
 <script src="/js/sortable/sortable.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 <script src="/js/sortable/jquery-sortable.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
-<link rel='stylesheet' href='/css/modules.css?c=<?php echo ALLSKY_VERSION; ?>' />
+<!-- <link rel='stylesheet' href='/css/modules.css?c=<?php echo ALLSKY_VERSION; ?>' /> -->
 <script src="/js/modules/modules.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
 <script src="/js/jquery-loading-overlay/dist/loadingoverlay.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
@@ -45,7 +45,6 @@ function DisplayModule()
 <link rel="stylesheet" href="/js/jquery-i2c/jquery-i2c.css?c=<?php echo ALLSKY_VERSION; ?>">
 <script src="/js/jquery-i2c/jquery-i2c.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
-<link rel="stylesheet" href="/js/jquery-variable/jquery-variable.css">
 <script src="/js/jquery-variable/jquery-variable.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
 <link rel="stylesheet" type="text/css" href="/js/datatables/datatables.min.css?c=<?php echo ALLSKY_VERSION; ?>" />
@@ -71,7 +70,6 @@ function DisplayModule()
 <link rel='stylesheet' href='/css/checkbox.css?c=<?php echo ALLSKY_VERSION; ?>' />
 
 <script src="/js/jquery-devicemanager/jquery-devicemanager.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-<link rel="stylesheet" href="/js/jquery-devicemanager/jquery-devicemanager.css?c=<?php echo ALLSKY_VERSION; ?>">
 
 <script src="/js/highcharts/code/highcharts.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 <script src="/js/highcharts/code/highcharts-more.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
@@ -87,12 +85,20 @@ function DisplayModule()
 <script src="/js/jquery-satpicker/jquery-satpicker.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
 <script src="js/jquery-allskykamera/jquery-allskykamera.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+<script src="js/jquery-allskysensor/jquery-allskysensor.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
 <div class="panel panel-allsky">
-	<div class="panel-heading"><i class="<?php echo $pageIcon ?>"></i> <?php echo $pageHeaderTitle ?></div>
+	<div class="panel-heading clearfix">
+        <span><i class="<?php echo $pageIcon ?>"></i> <?php echo $pageHeaderTitle ?></span>
+<?php if (!empty($pageHelp)) { ?>
+        <a class="pull-right" href="<?php echo $pageHelp; ?>" target="_blank" rel="noopener noreferrer" data-toggle="tooltip" data-container="body" data-placement="left" title="Help">
+            <i class="fa-solid fa-circle-question"></i> Help
+        </a>
+<?php } ?>
+    </div>
     <div class="panel-body">
         <nav class="navbar navbar-default">
-            <div class="container-fluid">
+            <div class="container-fluid-na">
                 <div class="navbar-header">
                     <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#oe-module-editor-navbar">
                         <span class="sr-only">Toggle navigation</span>
@@ -135,6 +141,9 @@ function DisplayModule()
                     </ul>
                     <ul class="nav navbar-nav navbar-right">
                         <li>
+                            <div class="btn btn-lg navbar-btn" id="module-installer-manager" data-toggle="tooltip" data-container="body" data-placement="top" title="Module package Manager"><i class="fa-solid fa-box-open"></i></div>
+                        </li>
+                        <li>
                             <div class="btn btn-lg navbar-btn" id="device-manager" data-toggle="tooltip" data-container="body" data-placement="top" title="Device Manager"><i class="fa-solid fa-wrench"></i></div>
                         </li>
                         <li>
@@ -142,12 +151,6 @@ function DisplayModule()
                         </li>
                         <li id="oe-toolbar-debug" class="hidden">
                             <div id="module-toobar-debug-button" class="btn btn-lg navbar-btn" data-toggle="tooltip" data-container="body" data-placement="top" title="Debug Info"><i class="fa-solid fa-bug"></i></div>
-                        </li>                                
-                        <li>
-                            <div class="btn btn-lg navbar-btn" id="module-editor-reset" data-toggle="tooltip" data-placement="top" data-container="body" title="Reset Config to default"><i class="fa-solid fa-rotate-right"></i></div>
-                        </li>
-                        <li>
-                            <div class="btn btn-lg navbar-btn" id="module-editor-restore" data-toggle="tooltip" data-placement="top" data-container="body" title="Restore last good config"><i class="fa-solid fa-upload"></i></div>
                         </li>
                     </ul>                            
                 </div>
@@ -296,6 +299,102 @@ function DisplayModule()
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" role="dialog" id="module-installer-dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Module package Manager</h4>
+            </div>
+            <div class="modal-body">
+                <nav class="navbar navbar-default" style="margin-bottom: 15px;">
+                    <div class="container-fluid">
+                        <div class="nav navbar-nav" style="margin-left: 0;">
+                            <button type="button" class="btn btn-primary navbar-btn" id="module-installer-verify-all" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Verify Installed Modules">
+                                <i class="fa-solid fa-shield-check fa-fw"></i>
+                            </button>
+                            <button type="button" class="btn btn-info navbar-btn" id="module-installer-update-all" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Update All Installed Modules">
+                                <i class="fa-solid fa-download fa-fw"></i>
+                            </button>
+                            <button type="button" class="btn btn-success navbar-btn" id="module-installer-install-all" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Install All Modules">
+                                <i class="fa-solid fa-layer-group fa-fw"></i>
+                            </button>
+                        </div>
+                    </div>
+                </nav>
+                <ul class="nav nav-tabs" role="tablist">
+                    <li role="presentation" class="active"><a href="#module-installer-tab" aria-controls="module-installer-tab" role="tab" data-toggle="tab">Installer</a></li>
+                    <li role="presentation"><a href="#module-core-tab" aria-controls="module-core-tab" role="tab" data-toggle="tab">Core Modules</a></li>
+                    <li role="presentation"><a href="#module-suggested-tab" aria-controls="module-suggested-tab" role="tab" data-toggle="tab">Suggested</a></li>
+                </ul>
+                <div id="module-installer-list">
+                    <div class="tab-content">
+                        <div role="tabpanel" class="tab-pane active" id="module-installer-tab">
+                            <div id="module-installer-fixed">
+                                <div class="row">
+                                    <div class="col-sm-3">
+                                        <div class="form-group">
+                                            <label for="module-installer-branch">Version</label>
+                                            <select class="form-control" id="module-installer-branch"></select>
+                                        </div>
+                                    </div>
+                                <div class="col-sm-5">
+                                    <div class="form-group">
+                                        <label for="module-installer-search">Filter Modules</label>
+                                        <input type="text" class="form-control" id="module-installer-search" placeholder="Search by name, code, description, group">
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        <label for="module-installer-filter" class="control-label">Show</label>
+                                        <select class="form-control" id="module-installer-filter">
+                                            <option value="all">All Modules</option>
+                                            <option value="updateable">Updateable Modules</option>
+                                            <option value="migrateable">Migrateable Modules</option>
+                                            <option value="not-installed">Not Installed</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                                <div id="module-installer-summary"></div>
+                            </div>
+                            <div id="module-installer-groups"></div>
+                        </div>
+                        <div role="tabpanel" class="tab-pane" id="module-core-tab">
+                            <div id="module-core-groups"></div>
+                        </div>
+                        <div role="tabpanel" class="tab-pane" id="module-suggested-tab">
+                            <div id="module-suggested-groups"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <span class="pull-left text-muted" id="module-installer-repo"></span>
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" role="dialog" id="module-installer-progress-modal">
+    <div class="modal-dialog modal-md" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Installer Progress</h4>
+            </div>
+            <div class="modal-body">
+                <div id="module-installer-progress-status" class="help-block" style="margin-top: 0;"></div>
+                <pre id="module-installer-progress-log" style="height: 320px; overflow-y: auto; margin-bottom: 0;"></pre>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-warning" id="module-installer-progress-cancel">Cancel</button>
+                <button type="button" class="btn btn-default" id="module-installer-progress-close" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>

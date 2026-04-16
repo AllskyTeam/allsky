@@ -1,0 +1,23 @@
+{
+    "XX_ALLSKY_STARTRAILS_TABLE_XX": {
+        "definition":{
+            "primary_key": "id",
+            "columns": {
+				"id" : "int",
+				"date" : "int",
+				"directory" : "varchar",
+				"minimum" : "float",
+				"maximum" : "float",
+				"mean" : "float",
+				"median" : "float",
+				"numImagesUsed" : "int",
+				"numImagesNotUsed" : "int",
+				"threshold" : "float"
+            },
+            "indexes": {
+
+            }
+        },
+        "purge_days": 365
+    }
+}

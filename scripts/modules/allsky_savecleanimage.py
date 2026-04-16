@@ -22,6 +22,7 @@ class ALLSKYSAVECLEANIMAGE(ALLSKYMODULEBASE):
 		"name": "Save a Clean Image",
 		"description": "Save the current image for use with allsky-sensors",
 		"module": "allsky_savecleanimage",
+		"version": "v1.0.0",  
 		"group": "Allsky Core",      
 		"events": [
 			"day",
@@ -36,7 +37,16 @@ class ALLSKYSAVECLEANIMAGE(ALLSKYMODULEBASE):
 				"description": "Image Path",
 				"help": "The name of the image, the will be saved in the current images folder."
 			}
-		}      
+		},
+		"changelog": {
+			"v1.0.0" : [
+				{
+					"author": "Alex Greenland",
+					"authorurl": "https://github.com/allskyteam",
+					"changes": "Initial Release"
+				}
+			]   
+		}        
 	}
 
  

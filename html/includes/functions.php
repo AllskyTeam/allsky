@@ -203,8 +203,8 @@ function update_allsky_status($newStatus) {
 	}
 }
 
-function output_allsky_status() {
-	global $allsky_status, $allsky_status_timestamp;
+function output_allsky_status($versionHtml = "", $websiteHtml = "") {
+	global $allsky_status, $allsky_status_timestamp, $hostname;
 
 	$retMsg = "";
 	$s = get_decoded_json_file(ALLSKY_STATUS, true, "", $retMsg);
@@ -216,23 +216,88 @@ function output_allsky_status() {
 		$allsky_status_timestamp = getVariableOrDefault($s, 'timestamp', null);
 	}
 
+	$formattedTimestamp = null;
+	$uptimeText = 'Unavailable';
+	if ($allsky_status_timestamp !== null) {
+		try {
+			$timezoneName = trim((string) @file_get_contents('/etc/timezone'));
+			if ($timezoneName === '') {
+				$timezoneName = date_default_timezone_get();
+			}
+			$timezone = new DateTimeZone($timezoneName);
+			$dt = DateTimeImmutable::createFromFormat(DATE_TIME_FORMAT, $allsky_status_timestamp, $timezone);
+			if ($dt !== false) {
+				$formattedTimestamp = $dt->format('j M Y H:i');
+				$now = new DateTimeImmutable('now', $timezone);
+				if ($now >= $dt) {
+					$seconds = $now->getTimestamp() - $dt->getTimestamp();
+					$minutes = intdiv($seconds, 60);
+					$secs = $seconds % 60;
+					$parts = [];
+					if ($minutes > 0) {
+						$parts[] = sprintf('%d Mins', $minutes);
+					}
+					$parts[] = sprintf('%d Secs', $secs);
+					$uptimeText = implode(', ', $parts);
+				}
+			}
+		} catch (Throwable $e) {
+			$formattedTimestamp = null;
+		}
+	}
+
 	if ($allsky_status_timestamp === null) {
 		$title = "";
-		$class = "";
+		$class = "label-default";
+		$timestampText = "Unavailable";
 	} else if ($allsky_status == "Unknown") {
 		$allsky_status_timestamp = str_replace("<b>", "", $allsky_status_timestamp);
 		$allsky_status_timestamp = str_replace("</b>","", $allsky_status_timestamp);
 		$title = " title='$allsky_status_timestamp'";
-		$class = "alert-danger";
+		$class = "label-danger";
+		$timestampText = "Unavailable";
 	} else {
-		$title = "title='Since $allsky_status_timestamp'";
+		$displayTimestamp = $formattedTimestamp ?? $allsky_status_timestamp;
+		$title = "title='Since $displayTimestamp'";
 		if ($allsky_status == ALLSKY_STATUS_RUNNING) {
-			$class = "alert-success";
+			$class = "label-success";
 		} else {
-			$class = "alert-warning";
+			$class = "label-warning";
 		}
+		$timestampText = $displayTimestamp;
 	}
-	return("<span class='nowrap $class' $title>Status: $allsky_status</span><br>");
+
+	if ($versionHtml === "") {
+		$versionHtml = ALLSKY_VERSION;
+	}
+
+	$statusActions = [];
+	if ($allsky_status == ALLSKY_STATUS_RUNNING) {
+		$statusActions = ['Stop', 'Restart'];
+	} else if ($allsky_status == ALLSKY_STATUS_NOT_RUNNING) {
+		$statusActions = ['Start'];
+	} else {
+		$statusActions = ['Start', 'Restart'];
+	}
+
+	$statusActionsHtml = "";
+	foreach ($statusActions as $action) {
+		$actionEscaped = htmlspecialchars($action, ENT_QUOTES);
+		$buttonClass = "btn-default";
+		if ($action === "Start") {
+			$buttonClass = "btn-success";
+		} else if ($action === "Stop") {
+			$buttonClass = "btn-danger";
+		} else if ($action === "Restart") {
+			$buttonClass = "btn-warning";
+		}
+		$statusActionsHtml .= "<li><button type='button' class='btn $buttonClass btn-block header-status-action' data-action='" . strtolower($actionEscaped) . "'>$actionEscaped</button></li>";
+	}
+
+	$sinceHtml = "<li><div class='header-status-menu-card'><div class='header-status-menu-card-row'><span>Uptime</span><strong>$uptimeText</strong></div><div class='header-status-menu-card-row'><span>Last Restart</span><strong>$timestampText</strong></div></div></li><li role='separator' class='divider'></li>";
+	$statusDropdownHtml = "<div class='dropdown header-status-dropdown'><button type='button' class='btn btn-default btn-xs header-status-toggle' aria-expanded='false'><i class='fa-solid fa-chevron-down'></i></button><ul class='dropdown-menu dropdown-menu-right header-status-menu'>$sinceHtml<li class='dropdown-header'>Manage Allsky</li>$statusActionsHtml</ul></div>";
+
+	return("<div class='header-status-card' $title><div class='header-status-heading'><span class='header-status-title'>Status</span><span class='label $class'>$allsky_status</span><span class='header-status-inline'><span class='header-status-inline-value'>$versionHtml</span></span>$statusDropdownHtml</div>$websiteHtml</div>");
 }
 
 function initialize_variables($website_only=false) {
@@ -493,7 +558,7 @@ function parse_ifconfig($input, &$strHWAddress, &$strIPAddress, &$strNetMask, &$
 
 function handle_interface_POST_and_status($interface, $input, &$myStatus) {
 	$interface_up = false;
-	if( isset($_POST['turn_down']) ) {
+	if( isset($_POST['turn_down_' . $interface]) ) {
 		// We should only get here if the interface is up,
 		// but just in case, check if it's already down.
 		// If the interface is down it's also not running.
@@ -516,7 +581,7 @@ function handle_interface_POST_and_status($interface, $input, &$myStatus) {
 			}
 		}
 
-	} elseif( isset($_POST['turn_up']) ) {
+	} elseif( isset($_POST['turn_up_' . $interface]) ) {
 		// We should only get here if the interface is down,
 		// but just in case, check if it's already up.
 		if (is_interface_up(get_interface_status("ifconfig $interface"))) {
@@ -601,30 +666,40 @@ function getValidImageNames($dir, $stopAfterOne=false) {
 * or only for the specified day.
 * If $dir is not null, it ends in "/".
 */
-function ListFileType($dir, $imageFileName, $formalImageTypeName, $type, $listNames=false) {
+function renderListFileTypeContent($dir, $imageFileName, $formalImageTypeName, $type, $listNames=false, $chosen_day=null) {
 	// "/images" is an alias in the web server for ALLSKY_IMAGES
 	$images_dir = "/images";
-	$chosen_day = getVariableOrDefault($_REQUEST, 'day', null);
+	$thumbnailWarnings = [];
+	$itemCount = 0;
+	$chosen_day = $chosen_day ?? getVariableOrDefault($_REQUEST, 'day', null);
+
+	ob_start();
+
+	$renderListFileTypeError = function ($title, $message) {
+		echo "<div class='as-wifi-placeholder as-wifi-placeholder-error functions-listfiletype-error'>";
+		echo "<div class='as-wifi-placeholder-icon'><i class='fa fa-triangle-exclamation'></i></div>";
+		echo "<div class='as-wifi-placeholder-title'>" . htmlspecialchars($title) . "</div>";
+		echo "<div class='as-wifi-placeholder-text'>$message</div>";
+		echo "</div>";
+	};
+
 	if ($chosen_day === null) {
-		echo "<br><br><br>";
-		echo "<h2 class='alert-danger'>ERROR: No 'day' specified in URL.</h2>";
-		return;
+		$renderListFileTypeError('Unable to Display Files', "No <code>day</code> was specified in the URL.");
+		return ob_get_clean();
 	}
 
 	if (! is_dir(ALLSKY_IMAGES)) {
-		echo "<br><div class='errorMsgBig'>";
-		echo "ERROR: '" . ALLSKY_IMAGES . "' directory is missing!";
-		echo "</div>";
-		return;
+		$renderListFileTypeError('Unable to Display Files', "The <code>" . ALLSKY_IMAGES . "</code> directory is missing.");
+		return ob_get_clean();
 	}
 
-	echo "<h2>$formalImageTypeName - $chosen_day</h2>\n";
-	echo "<div class='row'>\n";
+	echo "<div class='well well-sm system-summary-card images-summary-card functions-listfiletype-summary'>";
+	ob_start();
+	echo "<div class='images-grid functions-listfiletype-grid'>\n";
 	if ($chosen_day === 'All'){
 		$days = getValidImageDirectories();
 		if (count($days) == 0) {
-			// This could indicate an error, or the user just installed allsky
-			echo "<span class='alert-warning'>There are no image directories.</span>";
+			$renderListFileTypeError('No Image Directories Found', 'There are no image directories available yet.');
 		} else {
 			rsort($days);
 			$num = 0;
@@ -633,42 +708,52 @@ function ListFileType($dir, $imageFileName, $formalImageTypeName, $type, $listNa
 				foreach (glob(ALLSKY_IMAGES . "/$day/$dir$imageFileName-$day.*") as $imageType) {
 					$imageTypes[] = $imageType;
 					$num += 1;
-					echo "<br>&nbsp;"; // to separate images
 					foreach ($imageTypes as $imageType) {
 						$imageType_name = basename($imageType);
 						$fullFilename = "$images_dir/$day/$dir$imageType_name";
 						if ($type == "picture") {
-							echo "<a href='$fullFilename'>";
-							echo "<div class='functionsListFileType'>";
-							echo "<label>$day</label>";
-							echo "<img src='$fullFilename' class='functionsListTypeImg' />";
-							echo "</div></a>\n";
-						} else {	// is video
-							// TODO: Show a thumbnail since loading videos is bandwidth intensive?
-							echo "<a href='$fullFilename'>";
-							echo "<div class='functionsListFileType'>";
-							echo "<label class='middleVerticalAlign'>$day &nbsp; &nbsp;</label>";
-							echo "<video width='85%' height='85%' controls class='middleVerticalAlign'>";
-							echo "<source src='$fullFilename' type='video/mp4'>";
-							echo "Your browser does not support the video tag.";
-							echo "</video>";
-							echo "</div></a>\n";
+							$thumbUrl = getListFileTypePictureThumbnailUrl($day, $dir, $imageType_name, $fullFilename);
+							$itemCount += 1;
+							echo "<a href='$fullFilename' class='images-grid-item functions-listfiletype-item' data-lg-size='1600-2400'>";
+							echo "<img src='" . htmlspecialchars($thumbUrl, ENT_QUOTES) . "' class='functions-listfiletype-media' />";
+							echo "<span class='images-grid-name functions-listfiletype-name'>$day</span>";
+							echo "<span class='images-grid-date functions-listfiletype-date' data-listfiletype-day='{$day}'></span>";
+							echo "</a>\n";
+						} else {
+							$itemCount += 1;
+							$thumbInfo = getVideoThumbnailInfo($day, $imageType, $fullFilename);
+							if (! empty($thumbInfo['warning'])) {
+								$thumbnailWarnings[$thumbInfo['warning']] = true;
+							}
+							$videoData = htmlspecialchars(json_encode([
+								'source' => [[
+									'src' => $fullFilename,
+									'type' => 'video/mp4',
+								]],
+								'attributes' => [
+									'controls' => true,
+									'preload' => 'metadata',
+								],
+							], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), ENT_QUOTES);
+							echo "<a href='$fullFilename' class='images-grid-item functions-listfiletype-item functions-listfiletype-video-item' data-video='{$videoData}'>";
+							echo "<span class='functions-listfiletype-video-thumb-wrap'>";
+							echo "<img src='" . htmlspecialchars($thumbInfo['thumbUrl'], ENT_QUOTES) . "' class='functions-listfiletype-media functions-listfiletype-video-thumb' />";
+							echo "<span class='functions-listfiletype-video-badge'><i class='fa fa-play'></i></span>";
+							echo "</span>";
+							echo "<span class='images-grid-name functions-listfiletype-name'>$day</span>";
+							echo "<span class='images-grid-date functions-listfiletype-date' data-listfiletype-day='{$day}'></span>";
+							echo "</a>\n";
 						}
-			  		}
+					}
 				}
 			}
 			if ($num == 0) {
-				echo "<span class='alert-warning'>There are no $formalImageTypeName.</span>";
+				$renderListFileTypeError("No {$formalImageTypeName} Found", "There are no {$formalImageTypeName} available.");
 			}
 		}
 	} else {
 		$expr = ALLSKY_IMAGES . "/{$chosen_day}/{$dir}";
 		if (substr($imageFileName, 0, 1) == "X") {
-			// If the file name begins with a "X" the look for files whose names
-			// begin with the filename (without the "X").
-			// This allows non-standard image names.
-			// These are often "test" images that may be recreated with the same
-			// file names, so force the browser to read them.
 			$expr .= substr($imageFileName, 1) . "*";
 			$ts = "?_ts=" . time();
 		} else {
@@ -680,53 +765,310 @@ function ListFileType($dir, $imageFileName, $formalImageTypeName, $type, $listNa
 			$imageTypes[] = $imageType;
 		}
 		if (count($imageTypes) == 0) {
-			echo "<span class='alert-warning'>There are no $formalImageTypeName for this day.</span>";
+			$renderListFileTypeError("No {$formalImageTypeName} Found", "There are no {$formalImageTypeName} for this day.");
 		} else {
 			foreach ($imageTypes as $imageType) {
 				$imageType_name = basename($imageType);
 				$fullFilename = "$images_dir/$chosen_day/$dir$imageType_name";
-				if ($listNames) {
-					$class = "left center-text";
-					$name = "<br><span style='font-size: 125%;'>";
-					$name .= basename($fullFilename);
-					$name .= "</span>";
-				} else {
-					$class = "left";
-					$name = "";
-				}
+				$name = basename($fullFilename);
+				$itemDateValue = getListFileTypeDisplayDateValue($imageType_name, $chosen_day);
 				if ($type == "picture") {
-					$style = "max-width: 100%; max-height: 400px;";
-					if ($listNames) {
-						echo "<div class='$class' style='padding: 10px 10px 20px 10px;'>";
-						echo "<a href='$fullFilename'>
-						<img src='$fullFilename$ts' style='$style'/>
-						</a>";
-						echo $name;
-						echo "</div>";
-					} else {
-						echo "<a href='$fullFilename'>";
-						echo "<div class='$class'>";
-						echo "<img src='$fullFilename$ts' style='$style'/>";
-						echo "</div></a>";
+					$thumbUrl = getListFileTypePictureThumbnailUrl($chosen_day, $dir, $imageType_name, $fullFilename . $ts);
+					$itemCount += 1;
+					echo "<a href='$fullFilename' class='images-grid-item functions-listfiletype-item' data-lg-size='1600-2400'>";
+					echo "<img src='" . htmlspecialchars($thumbUrl, ENT_QUOTES) . "' class='functions-listfiletype-media' />";
+					echo "<span class='images-grid-name functions-listfiletype-name'>" . htmlspecialchars($name) . "</span>";
+					echo "<span class='images-grid-date functions-listfiletype-date' data-listfiletype-date='" . htmlspecialchars($itemDateValue, ENT_QUOTES) . "'></span>";
+					echo "</a>\n";
+				} else {
+					$itemCount += 1;
+					$thumbInfo = getVideoThumbnailInfo($chosen_day, $imageType, $fullFilename . $ts);
+					if (! empty($thumbInfo['warning'])) {
+						$thumbnailWarnings[$thumbInfo['warning']] = true;
 					}
-					echo "\n";
-				} else {	//video
-				    echo "<a href='$fullFilename'>";
-				    echo "<div class='$class' style='width: 100%'>";
-					echo "<video width='85%' height='85%' controls>
-						<source src='$fullFilename$ts' type='video/mp4'>
-						Your browser does not support the video tag.
-					</video>
-					</div></a>";
-					if ($listNames) {
-						echo $name;
-					}
-					echo "\n";
+					$videoData = htmlspecialchars(json_encode([
+						'source' => [[
+							'src' => $fullFilename . $ts,
+							'type' => 'video/mp4',
+						]],
+						'attributes' => [
+							'controls' => true,
+							'preload' => 'metadata',
+						],
+					], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), ENT_QUOTES);
+					echo "<a href='$fullFilename' class='images-grid-item functions-listfiletype-item functions-listfiletype-video-item' data-video='{$videoData}'>";
+					echo "<span class='functions-listfiletype-video-thumb-wrap'>";
+					echo "<img src='" . htmlspecialchars($thumbInfo['thumbUrl'], ENT_QUOTES) . "' class='functions-listfiletype-media functions-listfiletype-video-thumb' />";
+					echo "<span class='functions-listfiletype-video-badge'><i class='fa fa-play'></i></span>";
+					echo "</span>";
+					echo "<span class='images-grid-name functions-listfiletype-name'>" . htmlspecialchars($name) . "</span>";
+					echo "<span class='images-grid-date functions-listfiletype-date' data-listfiletype-date='" . htmlspecialchars($itemDateValue, ENT_QUOTES) . "'></span>";
+					echo "</a>\n";
 				}
 			}
 		}
 	}
 	echo "</div>";
+	$gridHtml = ob_get_clean();
+	if ($itemCount === 1) {
+		$gridHtml = str_replace("functions-listfiletype-grid'", "functions-listfiletype-grid functions-listfiletype-grid-single'", $gridHtml);
+	}
+	echo $gridHtml;
+	if (count($thumbnailWarnings) > 0) {
+		echo "<div class='as-wifi-placeholder as-wifi-placeholder-error functions-listfiletype-error'>";
+		echo "<div class='as-wifi-placeholder-icon'><i class='fa fa-triangle-exclamation'></i></div>";
+		echo "<div class='as-wifi-placeholder-title'>Video thumbnails could not be created</div>";
+		echo "<div class='as-wifi-placeholder-text'>" . implode('<br>', array_keys($thumbnailWarnings)) . "</div>";
+		echo "</div>";
+	}
+	echo "</div>";
+
+	return ob_get_clean();
+}
+
+function ListFileType($dir, $imageFileName, $formalImageTypeName, $type, $listNames=false) {
+	global $pageHeaderTitle, $pageIcon;
+	$chosen_day = getVariableOrDefault($_REQUEST, 'day', null);
+	echo "<div class='panel panel-allsky'>";
+	echo "<div class='panel-heading'><i class='{$pageIcon}'></i> $formalImageTypeName - $chosen_day</div>";
+	echo "<div class='panel-body'>";
+	echo "<div class='functions-listfiletype-back'>";
+	echo "<a href='javascript:history.back()' class='btn btn-default'>";
+	echo "<i class='fa fa-arrow-left'></i> Back";
+	echo "</a>";
+	echo "</div>";
+	echo "<div id='functions-listfiletype-content'>";
+	echo "<div class='as-wifi-placeholder functions-listfiletype-loading'>";
+	echo "<div class='as-wifi-placeholder-icon'><i class='fa fa-spinner fa-spin'></i></div>";
+	echo "<div class='as-wifi-placeholder-title as-wifi-placeholder-title-lg'>Preparing previews...</div>";
+	echo "<div class='as-wifi-placeholder-text'>This page is loading in the background. If video thumbnails are missing they will be generated now.</div>";
+	echo "</div>";
+	echo "</div>";
+	echo "</div></div>";
+?>
+<link type="text/css" rel="stylesheet" href="js/lightgallery/css/lightgallery-bundle.min.css" />
+<link type="text/css" rel="stylesheet" href="js/lightgallery/css/lg-transitions.css" />
+<script src="js/lightgallery/lightgallery.min.js"></script>
+<script src="js/lightgallery/plugins/zoom/lg-zoom.min.js"></script>
+<script src="js/lightgallery/plugins/thumbnail/lg-thumbnail.min.js"></script>
+<script src="js/lightgallery/plugins/video/lg-video.min.js"></script>
+<script>
+$(document).ready(function () {
+	const contentElement = document.getElementById('functions-listfiletype-content');
+	const requestUrl = 'includes/uiutil.php?request=ListFileTypeContent&day=' + encodeURIComponent(<?php echo json_encode((string)$chosen_day, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>) +
+		'&dir=' + encodeURIComponent(<?php echo json_encode((string)$dir, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>) +
+		'&imageFileName=' + encodeURIComponent(<?php echo json_encode((string)$imageFileName, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>) +
+		'&formalImageTypeName=' + encodeURIComponent(<?php echo json_encode((string)$formalImageTypeName, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>) +
+		'&type=' + encodeURIComponent(<?php echo json_encode((string)$type, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>) +
+		'&listNames=' + encodeURIComponent(<?php echo json_encode($listNames ? '1' : '0'); ?>);
+
+	function initialiseGallery() {
+		const galleryElement = document.querySelector('.functions-listfiletype-grid');
+		if (!galleryElement || typeof lightGallery !== 'function') {
+			return;
+		}
+
+		lightGallery(galleryElement, {
+			cssEasing: 'cubic-bezier(0.680, -0.550, 0.265, 1.550)',
+			selector: 'a',
+			plugins: [lgZoom, lgThumbnail, lgVideo],
+			mode: 'lg-slide-circular',
+			speed: 400,
+			download: false,
+			thumbnail: true
+		});
+	}
+
+	function initialiseLocaleDates() {
+		const dateOnlyFormatter = new Intl.DateTimeFormat(undefined, {
+			dateStyle: 'medium'
+		});
+
+		document.querySelectorAll('.functions-listfiletype-date').forEach(function (element) {
+			const rawDate = element.getAttribute('data-listfiletype-date');
+			const rawDay = element.getAttribute('data-listfiletype-day');
+
+			if (rawDate) {
+				const date = new Date(rawDate);
+				if (!Number.isNaN(date.getTime())) {
+					element.textContent = dateOnlyFormatter.format(date);
+				}
+				return;
+			}
+
+			if (!rawDay || !/^\d{8}$/.test(rawDay)) {
+				return;
+			}
+
+			const year = parseInt(rawDay.slice(0, 4), 10);
+			const month = parseInt(rawDay.slice(4, 6), 10) - 1;
+			const day = parseInt(rawDay.slice(6, 8), 10);
+			const date = new Date(year, month, day);
+			if (Number.isNaN(date.getTime())) {
+				return;
+			}
+
+			element.textContent = dateOnlyFormatter.format(date);
+		});
+	}
+
+	$.ajax({
+		url: requestUrl,
+		method: 'GET',
+		cache: false,
+		dataType: 'html',
+		headers: {
+			Accept: 'text/html'
+		}
+	}).done(function (html) {
+		contentElement.innerHTML = html;
+		initialiseLocaleDates();
+		initialiseGallery();
+	}).fail(function () {
+		contentElement.innerHTML =
+			"<div class='as-wifi-placeholder as-wifi-placeholder-error functions-listfiletype-error'>" +
+				"<div class='as-wifi-placeholder-icon'><i class='fa fa-triangle-exclamation'></i></div>" +
+				"<div class='as-wifi-placeholder-title'>Unable to load previews</div>" +
+				"<div class='as-wifi-placeholder-text'>The preview list could not be loaded. Try refreshing the page.</div>" +
+			"</div>";
+	});
+});
+</script>
+<?php
+}
+
+function getVideoThumbnailInfo($day, $videoPath, $videoUrl) {
+	global $settings_array;
+
+	$dayDirectory = ALLSKY_IMAGES . "/{$day}";
+	$thumbDirectory = $dayDirectory . "/videothumbnail";
+	$thumbWidth = (int) getVariableOrDefault($settings_array, 'thumbnailsizex', 100);
+	$thumbHeight = (int) getVariableOrDefault($settings_array, 'thumbnailsizey', 75);
+	$videoName = pathinfo($videoPath, PATHINFO_FILENAME);
+	$thumbFile = $thumbDirectory . "/{$videoName}.jpg";
+	$thumbUrl = "/images/{$day}/videothumbnail/" . rawurlencode($videoName . '.jpg');
+	$warning = null;
+
+	if (! file_exists($thumbFile)) {
+		if (! is_dir($thumbDirectory)) {
+			if (! @mkdir($thumbDirectory, 0775, true) && ! is_dir($thumbDirectory)) {
+				$warning = "The WebUI could not create <code>{$thumbDirectory}</code>. Make sure the image day folders are writable by the web server.";
+			} else {
+				setListFileTypePathOwnership($thumbDirectory, true);
+			}
+		}
+
+		if (is_dir($thumbDirectory) && is_writable($thumbDirectory)) {
+			$width = max($thumbWidth * 2, 1);
+			$height = max($thumbHeight * 2, 1);
+			$ffmpeg = '/usr/bin/ffmpeg';
+			$cmd = sprintf(
+				'%s -y -loglevel error -ss 00:00:00.2 -i %s -frames:v 1 -vf %s %s 2>&1',
+				escapeshellcmd($ffmpeg),
+				escapeshellarg($videoPath),
+				escapeshellarg("thumbnail,scale={$width}:{$height}:force_original_aspect_ratio=decrease"),
+				escapeshellarg($thumbFile)
+			);
+			@exec($cmd, $output, $returnCode);
+			if (file_exists($thumbFile)) {
+				setListFileTypePathOwnership($thumbFile, false);
+			}
+			if ($returnCode !== 0 && ! file_exists($thumbFile)) {
+				$warning = "The WebUI could not create a thumbnail for <code>" . htmlspecialchars(basename($videoPath)) . "</code>. Check that <code>ffmpeg</code> is installed and that the images folders are writable by the web server.";
+			}
+		} elseif ($warning === null) {
+			$warning = "The WebUI cannot write to <code>{$thumbDirectory}</code>. Make sure the image day folders are writable by the web server.";
+		}
+	}
+
+	if (file_exists($thumbFile)) {
+		return [
+			'thumbFile' => $thumbFile,
+			'thumbUrl' => $thumbUrl,
+			'warning' => null,
+		];
+	}
+
+	return [
+		'thumbFile' => null,
+		'thumbUrl' => $videoUrl,
+		'warning' => $warning,
+	];
+}
+
+function setListFileTypePathOwnership($path, $isDirectory) {
+	$owner = defined('ALLSKY_OWNER') ? (string) ALLSKY_OWNER : '';
+	$group = defined('ALLSKY_WEBSERVER_GROUP') ? (string) ALLSKY_WEBSERVER_GROUP : '';
+	$mode = $isDirectory ? 02775 : 0664;
+
+	if ($path === '' || !file_exists($path)) {
+		return;
+	}
+
+	@chmod($path, $mode);
+
+	if ($owner !== '') {
+		@chown($path, $owner);
+	}
+	if ($group !== '') {
+		@chgrp($path, $group);
+	}
+
+	if (($owner !== '' || $group !== '') && function_exists('exec')) {
+		$commands = [];
+		if ($owner !== '' && $group !== '') {
+			$commands[] = 'sudo -n chown ' . escapeshellarg($owner . ':' . $group) . ' ' . escapeshellarg($path);
+		} else if ($owner !== '') {
+			$commands[] = 'sudo -n chown ' . escapeshellarg($owner) . ' ' . escapeshellarg($path);
+		} else if ($group !== '') {
+			$commands[] = 'sudo -n chgrp ' . escapeshellarg($group) . ' ' . escapeshellarg($path);
+		}
+		$commands[] = 'sudo -n chmod ' . ($isDirectory ? '2775' : '0664') . ' ' . escapeshellarg($path);
+
+		foreach ($commands as $command) {
+			@exec($command . ' 2>/dev/null');
+		}
+	}
+}
+
+function getListFileTypeDisplayDateValue($fileName, $fallbackDay='') {
+	if (preg_match('/(\d{14})/', $fileName, $matches)) {
+		$dateTime = DateTimeImmutable::createFromFormat('YmdHis', $matches[1], new DateTimeZone('UTC'));
+		if ($dateTime !== false) {
+			return $dateTime->format('Y-m-d\TH:i:s\Z');
+		}
+	}
+
+	if ($fallbackDay !== '' && preg_match('/^\d{8}$/', $fallbackDay)) {
+		$date = DateTimeImmutable::createFromFormat('Ymd', $fallbackDay);
+		if ($date !== false) {
+			return $date->format('Y-m-d');
+		}
+	}
+
+	return '';
+}
+
+function getListFileTypePictureThumbnailUrl($day, $dir, $fileName, $fallbackUrl) {
+	$dirName = trim((string)$dir, '/');
+	$thumbnailDirectory = null;
+
+	if ($dirName === 'keogram') {
+		$thumbnailDirectory = 'keogramthumbnail';
+	} else if ($dirName === 'startrails') {
+		$thumbnailDirectory = 'startrailsthumbnail';
+	}
+
+	if ($thumbnailDirectory === null || $day === '') {
+		return $fallbackUrl;
+	}
+
+	$thumbnailPath = ALLSKY_IMAGES . "/{$day}/{$thumbnailDirectory}/{$fileName}";
+	if (!file_exists($thumbnailPath)) {
+		return $fallbackUrl;
+	}
+
+	return "/images/{$day}/{$thumbnailDirectory}/" . rawurlencode($fileName);
 }
 
 // Run a command and display the appropriate status message.
@@ -998,7 +1340,7 @@ function haveSQLite() {
     $result = true;
 
 	try {
-    	$db = new SQLite3(ALLSKY_DATABASES);
+    	$db = new SQLite3(ALLSKY_DATABASE);
 	} catch (Exception $e) {
 		$db = false;
 	}
@@ -1054,6 +1396,150 @@ function getTOD() {
 	}
 	
 	return $tod;
+}
+
+function getDayNightStatus(): array {
+	global $settings_array;
+
+	$angle = getVariableOrDefault($settings_array, 'angle', -6);
+	$lat = getVariableOrDefault($settings_array, 'latitude', "");
+	$lon = getVariableOrDefault($settings_array, 'longitude', "");
+
+	$result = [
+		'state' => 'unknown',
+		'nextState' => null,
+		'nextTransitionTime' => null,
+		'transitionDuration' => null,
+		'dawn' => null,
+		'sunrise' => null,
+		'midday' => null,
+		'sunset' => null,
+		'dusk' => null,
+		'dayStart' => null,
+		'nightStart' => null,
+		'secondsUntil' => null,
+		'display' => 'Day/Night unavailable',
+	];
+
+	if ($lat === "" || $lon === "") {
+		return $result;
+	}
+
+	exec("sunwait poll exit set angle $angle $lat $lon", $return, $retval);
+	if ($retval === 2) {
+		$result['state'] = 'day';
+		$result['nextState'] = 'night';
+		$transition = 'set';
+	} else if ($retval === 3) {
+		$result['state'] = 'night';
+		$result['nextState'] = 'day';
+		$transition = 'rise';
+	} else {
+		$result['display'] = 'Day/Night unavailable';
+		return $result;
+	}
+
+	$output = [];
+	exec("sunwait list $transition angle $angle $lat $lon", $output, $listRetval);
+	if ($listRetval !== 0 || count($output) === 0) {
+		$result['display'] = ucfirst($result['state']);
+		return $result;
+	}
+
+	$timeString = trim(implode(" ", $output));
+	if (!preg_match('/(\d{1,2}):(\d{2})/', $timeString, $matches)) {
+		$result['display'] = ucfirst($result['state']);
+		return $result;
+	}
+
+	$hours = (int)$matches[1];
+	$minutes = (int)$matches[2];
+
+	$timezoneName = trim((string) @file_get_contents('/etc/timezone'));
+	if ($timezoneName === '') {
+		$timezoneName = date_default_timezone_get();
+	}
+	try {
+		$timezone = new DateTimeZone($timezoneName);
+	} catch (Exception $e) {
+		$timezone = new DateTimeZone(date_default_timezone_get());
+	}
+
+	$now = new DateTimeImmutable('now', $timezone);
+	$transitionDate = $now->format('Y-m-d');
+	$transitionTimestamp = DateTimeImmutable::createFromFormat(
+		'Y-m-d H:i:s',
+		$transitionDate . ' ' . sprintf('%02d:%02d:30', $hours, $minutes),
+		$timezone
+	);
+	if ($transitionTimestamp === false) {
+		$result['display'] = ucfirst($result['state']);
+		return $result;
+	}
+	if ($transitionTimestamp <= $now) {
+		$transitionTimestamp = $transitionTimestamp->modify('+1 day');
+	}
+
+	$secondsUntil = max(0, $transitionTimestamp->getTimestamp() - $now->getTimestamp());
+	$result['secondsUntil'] = $secondsUntil;
+
+	$hoursUntil = intdiv($secondsUntil, 3600);
+	$minutesUntil = intdiv($secondsUntil % 3600, 60);
+	$timeUntilParts = [];
+	if ($hoursUntil > 0) {
+		$timeUntilParts[] = $hoursUntil . 'h';
+	}
+	$timeUntilParts[] = $minutesUntil . 'm';
+	$timeUntil = implode(' ', $timeUntilParts);
+	$result['transitionDuration'] = $timeUntil;
+
+	$result['nextTransitionTime'] = sprintf('%02d:%02d', $hours, $minutes);
+
+	$allTransitions = [];
+	exec("sunwait list angle $angle $lat $lon", $allTransitions, $allTransitionsRetval);
+	if ($allTransitionsRetval === 0 && count($allTransitions) > 0) {
+		$transitionText = trim(implode(" ", $allTransitions));
+		if (preg_match('/(\d{1,2}:\d{2}),\s*(\d{1,2}:\d{2})/', $transitionText, $transitionMatches)) {
+			$result['dayStart'] = $transitionMatches[1];
+			$result['nightStart'] = $transitionMatches[2];
+		}
+	}
+
+	$getSunwaitTime = function (string $twilight, string $event) use ($lat, $lon): ?string {
+		$output = [];
+		exec("sunwait list $event $twilight $lat $lon", $output, $retval);
+		if ($retval !== 0 || count($output) === 0) {
+			return null;
+		}
+
+		$timeString = trim(implode(" ", $output));
+		if (!preg_match('/(\d{1,2}:\d{2})/', $timeString, $matches)) {
+			return null;
+		}
+
+		return $matches[1];
+	};
+
+	$result['dawn'] = $getSunwaitTime('civil', 'rise');
+	$result['sunrise'] = $getSunwaitTime('daylight', 'rise');
+	$result['sunset'] = $getSunwaitTime('daylight', 'set');
+	$result['dusk'] = $getSunwaitTime('civil', 'set');
+
+	if ($result['sunrise'] !== null && $result['sunset'] !== null) {
+		[$sunriseHour, $sunriseMinute] = array_map('intval', explode(':', $result['sunrise']));
+		[$sunsetHour, $sunsetMinute] = array_map('intval', explode(':', $result['sunset']));
+		$sunriseSeconds = ($sunriseHour * 3600) + ($sunriseMinute * 60);
+		$sunsetSeconds = ($sunsetHour * 3600) + ($sunsetMinute * 60);
+		if ($sunsetSeconds < $sunriseSeconds) {
+			$sunsetSeconds += 86400;
+		}
+		$middaySeconds = (int)round(($sunriseSeconds + $sunsetSeconds) / 2) % 86400;
+		$result['midday'] = sprintf('%02d:%02d', intdiv($middaySeconds, 3600), intdiv($middaySeconds % 3600, 60));
+	}
+
+	$result['display'] = ucfirst($result['state']) . ' > ' . ucfirst($result['nextState']) . ' in ' . $timeUntil;
+
+	return $result;
 }
 
 // Get the newest Allsky version string.

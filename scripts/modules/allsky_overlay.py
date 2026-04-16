@@ -34,6 +34,7 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 		"name": "Overlay Information on an Image",
 		"description": "Overlay information (text, images, etc.) on an image.",
 		"module": "allsky_overlay",
+  	"docs": "docs/allsky_guide/overlays/overview.html",
 		"group": "Image Analysis",
 		"version": "v1.0.1",
 		"centersettings": "false",

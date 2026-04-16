@@ -90,8 +90,8 @@ fi
 
 # Get all settings we're going to use.  Their bash names are prefixed by "S_".
 #shellcheck disable=SC2119
-getAllSettings --var "imageremovebadlow imageremovebadhigh imageremovebadhighdarkframe \
-	takedarkframes imageremovebadcount " || exit 1
+getAllSettings --var "imageremovebadlow imageremovebadhigh imageremovebadcount \
+	imageremovebadhighdarkframe takedarkframes " || exit 1
 
 #shellcheck disable=SC2154
 HIGH="${S_imageremovebadhigh}"
@@ -107,6 +107,7 @@ if [[ ${S_takedarkframes} == "true" ]]; then
 fi
 #shellcheck disable=SC2154
 BAD_LIMIT="${S_imageremovebadcount}"
+[[ -z ${BAD_LIMIT} ]] && BAD_LIMIT=5	# imageremovebadcount many not be defined.
 
 # Find the full size image-*jpg and image-*png files (not the thumbnails) and
 # have "convert" compute a histogram in order to capture any error messages and determine

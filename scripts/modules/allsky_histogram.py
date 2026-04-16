@@ -18,6 +18,8 @@ class ALLSKYHISTOGRAM(ALLSKYMODULEBASE):
     meta_data = {
         "name": "Display Image Histogram",
         "description": "Add an image's histogram to the image.",
+		"version": "v1.0.0",  
+  	    "docs": "docs/allsky_modules/core/histogram.html",         
         "module": "allsky_histogram",
         "group": "Image Adjustments",
         "events": [
@@ -79,7 +81,16 @@ class ALLSKYHISTOGRAM(ALLSKYMODULEBASE):
 					"step": "1"
 				}
 			}
-        }
+        },
+		"changelog": {
+			"v1.0.0" : [
+				{
+					"author": "Alex Greenland",
+					"authorurl": "https://github.com/allskyteam",
+					"changes": "Initial Release"
+				}
+			]   
+		}  
     }
 
     def _draw_histogram(self, x = 2500, y=2000, width=1000, height=500):

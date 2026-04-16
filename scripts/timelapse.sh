@@ -9,7 +9,6 @@ source "${ALLSKY_HOME}/variables.sh"		|| exit "${EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${EXIT_ERROR_STOP}"
 
-
 DEBUG="false"
 DO_HELP="false"
 IS_MINI="false"
@@ -361,6 +360,14 @@ if [[ ${RET} -ne -0 ]]; then
 	rm -f "${OUTPUT}"	# don't leave around to confuse user
 	[[ -n ${ALLSKY_TIMELAPSE_PID_FILE} ]] && rm -f "${ALLSKY_TIMELAPSE_PID_FILE}"
 	exit 1
+fi
+
+# Create thumbnail of timelapse
+DATE=${OUTPUT%/*}
+DATE=${DATE##*/}
+# Mini timelapses are not saved in ${ALLSKY_IMAGES}, so don't create a thumbnail for them.
+if [[ ${DATE} != "$( basename "${ALLSKY_CURRENT_DIR}" )" ]]; then
+	RES="$( "${ALLSKY_UTILITIES}/thumbnail.sh" -t timelapse -d "${DATE}" --force )"
 fi
 
 # if the user wants output, give it to them

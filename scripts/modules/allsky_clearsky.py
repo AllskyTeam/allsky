@@ -19,6 +19,7 @@ class ALLSKYCLEARSKY(ALLSKYMODULEBASE):
 		"description": "Indicate if the sky is clear or cloudy based on the number of stars in an image.",
 		"module": "allsky_clearsky",
 		"version": "v1.0.3",
+  	"docs": "docs/allsky_modules/core/clear_sky.html",  
 		"extradatafilename": "allsky_clearsky.json",
 		"events": [
 			"day",

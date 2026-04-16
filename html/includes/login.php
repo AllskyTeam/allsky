@@ -41,22 +41,37 @@ function DisplayLoginPage()
             <meta charset="utf-8">
             <title>Allsky Login</title>
             <meta name="viewport" content="width=device-width, initial-scale=1">
+            <script>
+                (function () {
+                    var theme = (localStorage.getItem('theme') || 'light').toLowerCase();
+                    if (theme !== 'dark') {
+                        theme = 'light';
+                    }
+                    document.documentElement.classList.remove('light', 'dark');
+                    document.documentElement.classList.add(theme);
+                })();
+            </script>
             <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
             <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
             <link rel="shortcut icon" href="/favicon.ico" />
             <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
             <link rel="manifest" href="/site.webmanifest" />            
-            <link href="documentation/bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+            <link href="js/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
 		    <link rel="stylesheet" href="allsky/font-awesome/css/all.min.css" type="text/css">            
+            <link rel="stylesheet" href="/css/allsky.css">
             <link rel="stylesheet" href="/css/login.css">
         </head>
-        <body>
+        <body class="light">
+            <script>
+                document.body.classList.remove('light', 'dark');
+                document.body.classList.add(document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+            </script>
             <canvas id="bgCanvas"></canvas>
             <canvas id="tailCanvas"></canvas>
             <canvas id="planeCanvas"></canvas>
             <canvas id="fxCanvas"></canvas>
             <div class="login-panel noselect">
-                <div class="login-avatar" aria-hidden="true"><img src="documentation/img/logo.png" alt="Allsky Logo" class="login-logo noselect"></div>
+                <div class="login-avatar" aria-hidden="true"><img src="documentation/img/logo-alt.png" alt="Allsky Logo" class="login-logo noselect"></div>
                 <div class="panel panel-default">
                     <div class="panel-body text-center">
                         <?= $alert ?>
@@ -81,7 +96,7 @@ function DisplayLoginPage()
                     </div>
                 </div>
             </div>
-            <script src="documentation/bower_components/jquery/dist/jquery.min.js"></script>
+            <script src="/js/jquery/dist/jquery.min.js"></script>
             <script src="/js/login.js"></script>
         </body>
     </html>

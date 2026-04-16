@@ -19,7 +19,7 @@
   var darkTheme = {
     colors: ['#8087E8', '#A3EDBA', '#F19E53', '#6699A1', '#E1D369', '#87B4E7', '#DA6D85', '#BBBAC5'],
     chart: {
-      backgroundColor: '#272727',
+      backgroundColor: '#1f2937',
       style: { fontFamily: 'IBM Plex Sans, sans-serif' },
       borderColor: '#3a3a3a', borderWidth: 1,
       plotBorderColor: '#3a3a3a', plotBorderWidth: 1
@@ -57,7 +57,7 @@
       gridLineColor: '#707073',
       labels: { style: { color: '#fff', fontSize: '12px' } },
       lineColor: '#707073', minorGridLineColor: '#505053', tickColor: '#707073', tickWidth: 1,
-      title: { style: { color: '#fff', fontWeight: '300' } }
+      title: { style: { color: '#fff', fontWeight: '300', fontSize: '1.5em' } }
     },
     colorAxis: {
       gridLineColor: '#45445d',
@@ -79,11 +79,36 @@
       plotBorderColor: '#eaeaea', plotBorderWidth: 1
     },
     title: { style: { color: '#333333', fontSize: '18px' } },
-    xAxis: { labels: { style: { color: '#666666' } } },
-    yAxis: { labels: { style: { color: '#666666' } } },
+    xAxis: { 
+      labels: { 
+        style: { color: '#666666' } 
+      },
+      title: { 
+        style: { 
+          color: '#666666',
+          fontWeight: '300',
+          fontSize: '1.5em'
+        }
+      }      
+    },
+    yAxis: {
+      gridLineColor: '#c2c2c3', 
+      labels: { 
+        style: { 
+          color: '#666666'
+        }
+      },
+      title: { 
+        style: { 
+          color: '#666666',
+          fontWeight: '300',
+          fontSize: '1.5em'
+        }
+      }      
+    },
     legend: { itemStyle: { color: '#333333' }, itemHoverStyle: { color: '#000000' } },
     tooltip: { backgroundColor: 'rgba(255, 255, 255, 0.85)', style: { color: '#333333' } },
-    colors: ['#7cb5ec', '#434348', '#90ed7d', '#f7a35c', '#8085e9', '#f15c80', '#e4d354', '#2b908f', '#f45b5b', '#91e8e1']
+    colors: ['#7cb5ec', '#A3EDBA', '#90ed7d', '#f7a35c', '#8085e9', '#f15c80', '#e4d354', '#2b908f', '#f45b5b', '#91e8e1']
   };
 
   function isDarkMode() { return document.body.classList.contains('dark'); }
@@ -143,8 +168,8 @@
         var cell = data[0];
         v = (typeof cell === 'boolean') ? (cell ? 1 : 0)
           : (isNumber(cell)) ? (cell ? 1 : 0)
-          : (typeof cell === 'string') ? (cell.trim().length ? 1 : 0)
-          : 0;
+            : (typeof cell === 'string') ? (cell.trim().length ? 1 : 0)
+              : 0;
       }
       return [v];
     }
@@ -213,11 +238,12 @@
     column3d: {
       chart: {
         type: 'column',
-        options3d: { enabled: true, alpha: 10, beta: 15, depth: 50, viewDistance: 25,
+        options3d: {
+          enabled: true, alpha: 10, beta: 15, depth: 50, viewDistance: 25,
           frame: {
             bottom: { size: 1, color: 'rgba(0,0,0,0.05)' },
-            back:   { size: 1, color: 'rgba(0,0,0,0.03)' },
-            side:   { size: 1, color: 'rgba(0,0,0,0.03)' }
+            back: { size: 1, color: 'rgba(0,0,0,0.03)' },
+            side: { size: 1, color: 'rgba(0,0,0,0.03)' }
           }
         }
       },
@@ -241,11 +267,12 @@
     area3d: {
       chart: {
         type: 'area',
-        options3d: { enabled: true, alpha: 15, beta: 15, depth: 70, viewDistance: 25,
+        options3d: {
+          enabled: true, alpha: 15, beta: 15, depth: 70, viewDistance: 25,
           frame: {
             bottom: { size: 1, color: 'rgba(0,0,0,0.05)' },
-            back:   { size: 1, color: 'rgba(0,0,0,0.03)' },
-            side:   { size: 1, color: 'rgba(0,0,0,0.03)' }
+            back: { size: 1, color: 'rgba(0,0,0,0.03)' },
+            side: { size: 1, color: 'rgba(0,0,0,0.03)' }
           }
         }
       },
@@ -496,8 +523,8 @@
     var normType = normalizeType(cfg.type);
     var resolvedChartSeriesType =
       rawType === 'area3d' ? 'area' :
-      rawType === 'column3d' ? 'column' :
-      rawType;
+        rawType === 'column3d' ? 'column' :
+          rawType;
 
     // Array form: [{ name, data, ... }, ...]
     if (Array.isArray(cfg.series)) {
@@ -604,7 +631,7 @@
     // Card container styling
     if (this.$wrapper) {
       this.$wrapper.css($.extend({}, bb, {
-        backgroundColor: bg,
+
         borderColor: (theme.chart && theme.chart.borderColor) || (isDarkMode() ? '#3a3a3a' : '#ddd'),
         boxShadow: isDarkMode() ? '0 2px 10px rgba(0,0,0,.35)' : '0 2px 8px rgba(0,0,0,.15)'
       }));
@@ -614,7 +641,7 @@
 
     // Progress bar color tracks theme
     if (this.$progressBar) {
-      var color = (theme.colors && theme.colors[0]) || (isDarkMode() ? '#A3EDBA' : '#7cb5ec');
+      var color = (isDarkMode() ? '#8087E8' : '#20ad07');
       this.$progressBar.css({ backgroundColor: color });
     }
 
@@ -806,13 +833,13 @@
       var cell = series.data[0];
       v = (typeof cell === 'boolean') ? (cell ? 1 : 0)
         : (isNumber(cell)) ? (cell ? 1 : 0)
-        : (typeof cell === 'string') ? (cell.trim().length ? 1 : 0)
-        : (Array.isArray(cell) ? (cell[1] ? 1 : 0) : 0);
+          : (typeof cell === 'string') ? (cell.trim().length ? 1 : 0)
+            : (Array.isArray(cell) ? (cell[1] ? 1 : 0) : 0);
     }
 
     var theme = getActiveTheme();
     var defaultYes = (theme.colors && theme.colors[0]) || '#2ecc71';
-    var defaultNo  = '#DF5353';
+    var defaultNo = '#DF5353';
 
     return {
       truthy: !!v,
@@ -895,7 +922,7 @@
       if (reqSeries.length) this.chart.redraw();
 
     } catch (e) {
-      try { console.warn('[asHc] post-render series fix failed:', e); } catch (_) {}
+      try { console.warn('[asHc] post-render series fix failed:', e); } catch (_) { }
     }
 
     // Final sizing/theming pass
@@ -939,7 +966,7 @@
             var body = JSON.parse(ax.data);
             body._ts = Date.now();
             ax.data = JSON.stringify(body);
-          } catch (_e) {}
+          } catch (_e) { }
         }
       } else if (ax.data && typeof ax.data === 'object') {
         if (cacheBust) ax.data._ts = Date.now();
@@ -968,7 +995,7 @@
         } else {
           if (obj.contentType && obj.contentType.indexOf('application/json') !== -1) {
             if (typeof obj.data === 'string') {
-              try { var b = JSON.parse(obj.data); b._ts = Date.now(); obj.data = JSON.stringify(b); } catch (_e) {}
+              try { var b = JSON.parse(obj.data); b._ts = Date.now(); obj.data = JSON.stringify(b); } catch (_e) { }
             } else if (obj.data && typeof obj.data === 'object') {
               obj.data._ts = Date.now();
               obj.data = JSON.stringify(obj.data);
@@ -1055,8 +1082,9 @@
     this.$progressBar = $('<div class="as-hc-progress-bar"></div>').css({
       position: 'absolute',
       left: 0, bottom: 0,
-      height: '1px', width: '100%',
-      backgroundColor: (getActiveTheme().colors && getActiveTheme().colors[0]) || '#7cb5ec',
+      height: (isDarkMode() ? '1px' : '2px'), 
+      width: '100%',
+      backgroundColor: (isDarkMode() ? '#8087E8' : '#20ad07'),
       transform: 'translateZ(0)'
     });
     this.$progress.append(this.$progressBar);
@@ -1456,11 +1484,10 @@
     var bb = { boxSizing: 'border-box' };
 
     // Wrapper (card)
-    this.$wrapper = $('<div class="as-hc-wrapper"></div>').css($.extend({}, bb, {
+    this.$wrapper = $('<div class="as-hc-wrapper panel"></div>').css($.extend({}, bb, {
       position: 'absolute',
       top: initTop, left: initLeft, width: initW, height: initH,
       display: 'flex', flexDirection: 'column',
-      background: bg,
       boxShadow: isDarkMode() ? '0 2px 10px rgba(0,0,0,.35)' : '0 2px 8px rgba(0,0,0,.15)',
       border: '1px solid ' + (isDarkMode() ? '#3a3a3a' : '#ddd'),
       overflow: 'hidden'
@@ -1471,7 +1498,7 @@
     });
 
     // Header (title + tools)
-    this.$header = $('<div class="as-hc-header"></div>').css($.extend({}, bb, {
+    this.$header = $('<div class="as-hc-header panel-heading"></div>').css($.extend({}, bb, {
       position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       padding: '6px 8px', gap: '8px',
       userSelect: 'none',
@@ -1485,7 +1512,7 @@
 
     // REFRESH button
     if (this.opts.showToolbar && this.opts.showRefreshButton) {
-      this.$refreshBtn = $('<button type="button" class="as-hc-btn as-hc-refresh-btn" title="' + this.opts.refreshLabel + '"></button>')
+      this.$refreshBtn = $('<button type="button" class="btn btn-sm btn-primary" title="' + this.opts.refreshLabel + '"></button>')
         .css({ display: 'inline-flex', alignItems: 'center', gap: 0, padding: '4px 8px', cursor: 'pointer' })
         .append('<i class="fa fa-refresh" aria-hidden="true"></i>')
         .on('click', (e) => {
@@ -1498,7 +1525,7 @@
 
     // TOOLTIP toggle
     if (this.opts.showToolbar && this.opts.showTooltipToggle) {
-      this.$tooltipBtn = $('<button type="button" class="as-hc-btn as-hc-tooltip-btn" title="Toggle tooltips"></button>')
+      this.$tooltipBtn = $('<button type="button" class="btn btn-sm btn-primary" title="Toggle tooltips"></button>')
         .css({ display: 'inline-flex', alignItems: 'center', gap: 0, padding: '4px 8px', cursor: 'pointer' })
         .append('<i class="far fa-comment" aria-hidden="true"></i>')
         .on('click', (e) => {
@@ -1516,7 +1543,7 @@
     // AUTO-REFRESH select
     if (this.opts.showToolbar && this.opts.autoRefresh && this.opts.autoRefresh.enabled) {
       var options = this.opts.autoRefresh.options || [0, 10, 20, 30, 60, 120];
-      var $sel = $('<select class="as-hc-autorefresh" title="Auto refresh interval"></select>').css({ padding: '3px 6px' });
+      var $sel = $('<select title="Auto refresh interval"></select>').css({ padding: '3px 6px' });
       options.forEach((sec) => {
         var label = sec === 0 ? 'None' : (sec + 's');
         var $opt = $('<option></option>').val(String(sec)).text(label);
@@ -1528,7 +1555,7 @@
         var secs = parseInt($sel.val(), 10) || 0;
         this.setAutoRefresh(secs);
         if (typeof this.opts.onAutoRefreshChange === 'function') {
-          try { this.opts.onAutoRefreshChange(secs, this); } catch (e) {}
+          try { this.opts.onAutoRefreshChange(secs, this); } catch (e) { }
         }
         this.$host.trigger('asHc.autorefreshchange', [{ seconds: secs }, this]);
       });
@@ -1537,7 +1564,7 @@
 
     // DELETE button
     if (this.opts.showToolbar && this.opts.showDeleteButton) {
-      var $btnDelete = $('<button type="button" class="as-hc-btn as-hc-delete-btn" title="' + this.opts.deleteLabel + '"></button>')
+      var $btnDelete = $('<button type="button" class="btn btn-sm btn-danger " title="' + this.opts.deleteLabel + '"></button>')
         .css({ display: 'inline-flex', alignItems: 'center', gap: 0, padding: '4px 8px', cursor: 'pointer' })
         .append('<i class="fa fa-trash" aria-hidden="true"></i>')
         .on('click', (e) => {

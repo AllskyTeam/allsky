@@ -120,7 +120,7 @@ fi
 
 # Get all settings we're going to use.
 #shellcheck disable=SC2119
-getAllSettings --var "lastchanged cameranumber locale" || exit 1
+getAllSettings --var "lastchanged cameranumber locale imageremovebadlow imageremovebadhigh imageremovebadcount" || exit 1
 
 # If the "lastchanged" setting is missing, the user needs to review/change the settings.
 # This will happen after an installation or upgrade, which also sets the Allsky status.
@@ -390,6 +390,10 @@ fi
 	# These aren't settings but are needed by the capture programs.
 	echo "version=${ALLSKY_VERSION}"
 	echo "save_dir=${ALLSKY_CURRENT_DIR}"
+	echo "imageremovebadlow=${S_imageremovebadlow}"
+	echo "imageremovebadhigh=${S_imageremovebadhigh}"
+	[[ -z ${S_imageremovebadcount} ]] && S_imageremovebadcount=5
+	echo "imageremovebadcount=${S_imageremovebadcount}"
 	echo "bad_image_count_file=${ALLSKY_BAD_IMAGE_COUNT}"
 	[[ ${PREVIEW} == "true" ]] && echo "preview=true"
 } > "${ARGS_FILE}"

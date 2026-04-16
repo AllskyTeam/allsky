@@ -19,6 +19,12 @@ class ALLSKY {
 					interval: allskystatus_interval,
 					updateelement: '#allskyStatus',
 					wait: false
+				},
+				daynightstatus: {
+					url: 'includes/uiutil.php?request=DayNightStatus',
+					interval: 60 * 1000,
+					updateelement: '#as-daynight-status',
+					wait: false
 				}
 			}
 		},
@@ -92,14 +98,14 @@ class ALLSKY {
 			}
 		});
 
-		$(document).ajaxComplete(function(event, xhr, settings) {
-				try {
-						var response = xhr.responseJSON || JSON.parse(xhr.responseText);
-						if (response && response.redirect) {
-								window.location.href = response.redirect;
-						}
-				} catch (e) {
+		$(document).ajaxComplete(function (event, xhr, settings) {
+			try {
+				var response = xhr.responseJSON || JSON.parse(xhr.responseText);
+				if (response && response.redirect) {
+					window.location.href = response.redirect;
 				}
+			} catch (e) {
+			}
 		});
 
 	}
@@ -123,13 +129,21 @@ class ALLSKY {
 	};
 
 	#setupBigScreen() {
-		$('#live_container').click(function () {
-			if (BigScreen.enabled) {
-				BigScreen.toggle(this, null, null, null);
-			} else {
+		$('#live_container').on('click', function () {
+			if (!document.fullscreenEnabled) {
 				console.log('Not Supported');
+				return;
+			}
+
+			if (document.fullscreenElement === this) {
+				document.exitFullscreen();
+			} else {
+				this.requestFullscreen().catch(function (error) {
+					console.log('Fullscreen failed:', error);
+				});
 			}
 		});
+
 	}
 
 	#addTimestamp(id) {
@@ -219,6 +233,11 @@ class ALLSKY {
 		});
 	}
 
+	refreshHeaderStatus() {
+		this.fetchAndUpdate('allskystatus', this.#pageTimers.all.timers.allskystatus);
+		this.fetchAndUpdate('daynightstatus', this.#pageTimers.all.timers.daynightstatus);
+	}
+
 	#stopAllTimers() {
 		for (const name in this.#timers) {
 			clearInterval(this.#timers[name]);
@@ -262,13 +281,44 @@ class ALLSKY {
 		});
 
 		var $sidebar = $('#sidebar');
+		var $sidebarCollapseIcon = $('#sidebarCollapseHandle i');
 		var $activeFlyout = null;
 		var flyoutOwner = null; // the <li.sidebar-dropdown> that owns current flyout
+		var SIDEBAR_COLLAPSED_KEY = 'sidebarCollapsed';
+
+		function getSidebarCollapsedPreference() {
+			return localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === 'true';
+		}
+
+		function setSidebarCollapsedPreference(isCollapsed) {
+			localStorage.setItem(SIDEBAR_COLLAPSED_KEY, isCollapsed ? 'true' : 'false');
+		}
+
+		function updateSidebarCollapseIcon() {
+			var isCollapsed = $sidebar.hasClass('collapsed');
+			$sidebarCollapseIcon.attr('class', isCollapsed ? 'fa-solid fa-chevron-right' : 'fa-solid fa-chevron-left');
+		}
+
+		function applySidebarState() {
+			if (window.innerWidth < 768) {
+				$sidebar.addClass('collapsed');
+			} else {
+				$sidebar.toggleClass('collapsed', getSidebarCollapsedPreference());
+			}
+			updateSidebarCollapseIcon();
+		}
+
+		function toggleSidebar() {
+			$sidebar.toggleClass('collapsed');
+			setSidebarCollapsedPreference($sidebar.hasClass('collapsed'));
+			updateSidebarCollapseIcon();
+		}
 
 		// Collapse toggle
-		$('#toggleNav').on('click', function () { $sidebar.toggleClass('collapsed'); });
-		function autoCollapse() { (window.innerWidth < 768) ? $sidebar.addClass('collapsed') : $sidebar.removeClass('collapsed'); }
-		$(window).on('resize', autoCollapse); $(document).ready(autoCollapse);
+		$('#toggleNav').on('click', toggleSidebar);
+		$('#sidebarCollapseHandle').on('click', toggleSidebar);
+		$(window).on('resize', applySidebarState);
+		$(document).ready(applySidebarState);
 
 		// ===== timings =====
 		var OPEN_DELAY = 160;   // hover before opening
@@ -386,8 +436,79 @@ class ALLSKY {
 
 		// clicks inside flyout shouldn't bubble
 		$(document).on('click', '.floating-flyout', function (e) { e.stopPropagation(); });
+
+		$(document).on('click', '.header-daynight-toggle', function (e) {
+			e.preventDefault();
+			e.stopPropagation();
+			var $card = $(this).closest('.header-daynight-card');
+			$('.header-daynight-card, .header-status-card').not($card).removeClass('open');
+			$card.toggleClass('open');
+		});
+
+		$(document).on('click', '.header-daynight-menu', function (e) {
+			e.stopPropagation();
+		});
+
+		$(document).on('click', '.header-status-toggle', function (e) {
+			e.preventDefault();
+			e.stopPropagation();
+			var $card = $(this).closest('.header-status-card');
+			$('.header-daynight-card, .header-status-card').not($card).removeClass('open');
+			$card.toggleClass('open');
+		});
+
+		$(document).on('click', '.header-status-menu', function (e) {
+			e.stopPropagation();
+		});
+
+		$(document).on('click', '.header-status-action', (e) => {
+			e.preventDefault();
+			e.stopPropagation();
+
+			const $button = $(e.currentTarget);
+			const action = String($button.data('action') || '').toLowerCase();
+			if (!action) {
+				return;
+			}
+
+			$button.prop('disabled', true);
+
+			$.ajax({
+				url: 'includes/uiutil.php?request=AllskyControl',
+				type: 'POST',
+				dataType: 'json',
+				contentType: 'application/json',
+				data: JSON.stringify({ action: action }),
+				headers: { "X-Requested-With": "XMLHttpRequest" },
+				success: (response) => {
+					if (!response || response.ok !== true) {
+						alert((response && response.message) ? response.message : 'Unable to ' + action + ' Allsky.');
+						return;
+					}
+
+					$('.header-status-card').removeClass('open');
+					this.refreshHeaderStatus();
+					window.setTimeout(() => this.refreshHeaderStatus(), 2000);
+					window.setTimeout(() => this.refreshHeaderStatus(), 5000);
+				},
+				error: (xhr) => {
+					let message = 'Unable to ' + action + ' Allsky.';
+					if (xhr && xhr.responseJSON && xhr.responseJSON.message) {
+						message = xhr.responseJSON.message;
+					}
+					alert(message);
+				},
+				complete: () => {
+					$button.prop('disabled', false);
+				}
+			});
+		});
+
+		$(document).on('click', function () {
+			$('.header-daynight-card, .header-status-card').removeClass('open');
+		});
 	}
-1
+	1
 	#setupMenuHandlers() {
 		$(document).on('click', '.allsky-js-handler', function (e) {
 			e.preventDefault();
@@ -429,7 +550,6 @@ class ALLSKY {
 		this.#setupCloseSystemMessages();
 		this.#setupTruncatedText();
 		this.#setupMenuHandlers();
-		includeHTML();
 	}
 
 }
@@ -438,3 +558,15 @@ $(document).ready(function () {
 	const allsky = new ALLSKY(allskyPage);
 	allsky.init();
 });
+
+window.csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+function CheckPSK(psk, id) {
+	if (psk.value.length < 8 || psk.value.length > 63) {
+		psk.style.background = '#FFD0D0';
+		document.getElementById(id).disabled = true;
+	} else {
+		psk.style.background = '#D0FFD0';
+		document.getElementById(id).disabled = false;
+	}
+}

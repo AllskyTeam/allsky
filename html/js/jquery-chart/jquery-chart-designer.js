@@ -128,7 +128,33 @@
       title: { text: null },
       credits: { enabled: false },
       legend: { enabled: true },
-      xAxis: { title: { text: null } },
+      xAxis: {
+        title: {
+          text: null
+        },
+        title: { 
+          style: { 
+            color: '#666666',
+            fontWeight: '300',
+            fontSize: '1em'
+          }
+        }         
+      },
+      yAxis: {
+        gridLineColor: '#c2c2c3', 
+        labels: { 
+          style: { 
+            color: '#666666'
+          }
+        },
+        title: { 
+          style: { 
+            color: '#666666',
+            fontWeight: '300',
+            fontSize: '1em'
+          }
+        } 
+      },
       tooltip: { shared: true },
       plotOptions: { series: { turboThreshold: 0, marker: { enabled: false } } }
     },
@@ -216,46 +242,56 @@
     return cfg;
   }
 
+  function previewPlaceholderHtml(){
+    return '<p class="text-muted">Select variables and preview the chart.</p>';
+  }
+
+  function emptyDropHtml(label){
+    return '<p class="text-muted small">' + escapeHtml(label) + '</p>';
+  }
+
   /** Modal markup rendered once per plugin instance. */
   var MODAL_HTML = `
     <div class="modal fade ascd-modal" tabindex="-1" role="dialog" aria-hidden="true">
       <div class="modal-dialog modal-lg"><div class="modal-content">
         <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
           <h4 class="modal-title">Design a Custom Chart</h4>
         </div>
         <div class="modal-body">
-          <div class="row" style="display:flex;">
+          <div class="row">
             <!-- Left rail: type & basic details -->
-            <div class="col-sm-2">
+            <div class="col-sm-3">
               <div class="panel panel-default">
                 <div class="panel-heading"><strong>Chart Type</strong></div>
                 <div class="list-group ascd-type-list">
-                  <a href="#" class="list-group-item" data-type="line">Line</a>
-                  <a href="#" class="list-group-item" data-type="spline">Spline</a>
-                  <a href="#" class="list-group-item" data-type="area">Area</a>
-                  <a href="#" class="list-group-item" data-type="column">Column</a>
-                  <a href="#" class="list-group-item" data-type="bar">Bar</a>
-                  <a href="#" class="list-group-item" data-type="column3d">Column 3D</a>
-                  <a href="#" class="list-group-item" data-type="area3d">Area 3D</a>
-                  <a href="#" class="list-group-item" data-type="gauge">Gauge</a>
-                  <a href="#" class="list-group-item" data-type="yesno">Yes / No</a>
+                  <a href="#" class="list-group-item" data-type="line"><i class="fas fa-chart-line"></i> Line</a>
+                  <a href="#" class="list-group-item" data-type="spline"><i class="fas fa-wave-square"></i> Spline</a>
+                  <a href="#" class="list-group-item" data-type="area"><i class="fas fa-chart-area"></i> Area</a>
+                  <a href="#" class="list-group-item" data-type="column"><i class="fas fa-chart-bar"></i> Column</a>
+                  <a href="#" class="list-group-item" data-type="bar"><i class="fas fa-bars"></i> Bar</a>
+                  <a href="#" class="list-group-item" data-type="column3d"><i class="fas fa-cube"></i> Column 3D</a>
+                  <a href="#" class="list-group-item" data-type="area3d"><i class="fas fa-cubes"></i> Area 3D</a>
+                  <a href="#" class="list-group-item" data-type="gauge"><i class="fas fa-gauge"></i> Gauge</a>
+                  <a href="#" class="list-group-item" data-type="yesno"><i class="fas fa-toggle-on"></i> Yes / No</a>
                 </div>
               </div>
               <div class="panel panel-default">
                 <div class="panel-heading">
-                  <h5 class="panel-title" style="margin:0;">
+                  <h5 class="panel-title">
                     <a data-toggle="collapse" href="#ascd-details">Chart Details</a>
                   </h5>
                 </div>
-                <div id="ascd-details" class="panel-collapse">
+                <div id="ascd-details" class="panel-collapse collapse in">
                   <div class="panel-body">
-                    <div class="form-group">
-                      <label>Title</label>
-                      <input type="text" class="form-control input-sm ascd-title" placeholder="Chart title" />
+                    <div class="form-group ascd-title-group">
+                      <label>Title <span class="text-danger">*</span></label>
+                      <input type="text" class="form-control ascd-title" placeholder="Enter a chart title" />
+                      <p class="help-block ascd-title-help">Required before the chart can be saved.</p>
                     </div>
                     <div class="form-group hidden">
                       <label>Group</label>
-                      <input type="text" class="form-control input-sm ascd-group" value="Custom" />
+                      <input type="text" class="form-control ascd-group" value="Custom" />
                     </div>
                   </div>
                 </div>
@@ -263,44 +299,42 @@
             </div>
 
             <!-- Middle: preview + mapping areas -->
-            <div class="col-sm-6">
+            <div class="col-sm-5">
               <div class="panel panel-default">
-                <div class="panel-heading" style="display:flex; align-items:center;">
-                  <strong>Preview</strong>
-                  <div style="margin-left:auto; display:flex; gap:6px;">
-                    <button type="button" class="btn btn-default btn-xs ascd-time-btn" title="Time Range"><i class="fa fa-clock"></i></button>
-                    <button type="button" class="btn btn-default btn-xs ascd-preview" title="Preview"><i class="fa fa-refresh"></i></button>
+                <div class="panel-heading clearfix">
+                  <strong class="pull-left">Preview</strong>
+                  <div class="btn-group btn-group-xs pull-right" role="group">
+                    <button type="button" class="btn btn-default ascd-time-btn" title="Time Range"><i class="fa fa-clock"></i> Range</button>
+                    <button type="button" class="btn btn-primary ascd-preview" title="Preview"><i class="fa fa-refresh"></i> Preview</button>
                   </div>
                 </div>
-                <div class="panel-body">
-                  <div id="ascd-preview"></div>
-                </div>
+                <div class="panel-body well text-center ascd-preview-body">${previewPlaceholderHtml()}</div>
               </div>
 
               <!-- Cartesian mapping (two Y-axes) -->
-              <div class="panel panel-default ascd-mapping-cart" style="margin-top:10px;">
+              <div class="panel panel-default ascd-mapping-cart">
                 <div class="panel-heading"><strong>Axis Variables</strong></div>
                 <div class="panel-body">
-                  <div class="ascd-y-columns" style="margin-top:8px; display:flex; gap:16px;">
-                    <div class="ascd-y-col" style="flex:1;">
+                  <div class="row">
+                    <div class="col-sm-6">
                       <label class="control-label">Y (Left)</label>
-                      <div class="ascd-drop ascd-drop-y-left" data-accept="measure" style="min-height:72px;border:1px dashed #bbb;border-radius:4px;padding:6px;"></div>
-                      <div class="clearfix" style="margin-top:6px; display:flex; justify-content:space-between; align-items:center;">
-                        <div class="checkbox ascd-thumb-toggle" style="margin:0;">
-                          <label><input type="checkbox" class="ascd-thumb-left"> Thumbnails on Left</label>
+                      <div class="well well-sm ascd-drop ascd-drop-y-left" data-accept="measure">${emptyDropHtml('Drop one or more variables here.')}</div>
+                      <div class="clearfix">
+                        <div class="checkbox pull-left">
+                          <label><input type="checkbox" class="ascd-thumb-left"> Thumbs on Left</label>
                         </div>
-                        <button class="btn btn-xs btn-default ascd-clear-y-left">Clear</button>
+                        <button class="btn btn-default btn-xs pull-right ascd-clear-y-left">Clear</button>
                       </div>
                     </div>
 
-                    <div class="ascd-y-col" style="flex:1;">
+                    <div class="col-sm-6">
                       <label class="control-label">Y (Right)</label>
-                      <div class="ascd-drop ascd-drop-y-right" data-accept="measure" style="min-height:72px;border:1px dashed #bbb;border-radius:4px;padding:6px;"></div>
-                      <div class="clearfix" style="margin-top:6px; display:flex; justify-content:space-between; align-items:center;">
-                        <div class="checkbox ascd-thumb-toggle" style="margin:0;">
-                          <label><input type="checkbox" class="ascd-thumb-right"> Thumbnails on Right</label>
+                      <div class="well well-sm ascd-drop ascd-drop-y-right" data-accept="measure">${emptyDropHtml('Drop one or more variables here.')}</div>
+                      <div class="clearfix">
+                        <div class="checkbox pull-left">
+                          <label><input type="checkbox" class="ascd-thumb-right"> Thumbs on Right</label>
                         </div>
-                        <button class="btn btn-xs btn-default ascd-clear-y-right">Clear</button>
+                        <button class="btn btn-default btn-xs pull-right ascd-clear-y-right">Clear</button>
                       </div>
                     </div>
                   </div>
@@ -308,25 +342,25 @@
               </div>
 
               <!-- Gauge mapping -->
-              <div class="panel panel-default ascd-mapping-gauge" style="display:none; margin-top:10px;">
+              <div class="panel panel-default ascd-mapping-gauge" style="display:none;">
                 <div class="panel-heading"><strong>Gauge Target</strong></div>
                 <div class="panel-body">
                   <label class="control-label">Value (measure)</label>
-                  <div class="ascd-drop ascd-drop-gauge" data-accept="measure" style="min-height:38px;border:1px dashed #bbb;border-radius:4px;padding:6px;"></div>
-                  <div class="clearfix" style="margin-top:6px; display:flex; justify-content:flex-end; gap:8px;">
-                    <button class="btn btn-xs btn-default ascd-clear-gauge">Clear</button>
+                  <div class="well well-sm ascd-drop ascd-drop-gauge" data-accept="measure">${emptyDropHtml('Drop a single variable here.')}</div>
+                  <div class="text-right">
+                    <button class="btn btn-default btn-xs ascd-clear-gauge">Clear</button>
                   </div>
                 </div>
               </div>
 
               <!-- Yes/No mapping -->
-              <div class="panel panel-default ascd-mapping-yesno" style="display:none; margin-top:10px;">
+              <div class="panel panel-default ascd-mapping-yesno" style="display:none;">
                 <div class="panel-heading"><strong>Yes / No Target</strong></div>
                 <div class="panel-body">
                   <label class="control-label">Value (measure)</label>
-                  <div class="ascd-drop ascd-drop-yesno" data-accept="measure" style="min-height:38px;border:1px dashed #bbb;border-radius:4px;padding:6px;"></div>
-                  <div class="clearfix" style="margin-top:6px; display:flex; justify-content:flex-end; gap:8px;">
-                    <button class="btn btn-xs btn-default ascd-clear-yesno">Clear</button>
+                  <div class="well well-sm ascd-drop ascd-drop-yesno" data-accept="measure">${emptyDropHtml('Drop a single variable here.')}</div>
+                  <div class="text-right">
+                    <button class="btn btn-default btn-xs ascd-clear-yesno">Clear</button>
                   </div>
                 </div>
               </div>
@@ -336,9 +370,9 @@
 
             <!-- Right rail: variable catalog grouped by 'group' -->
             <div class="col-sm-4">
-              <div class="panel panel-default">
+              <div class="panel panel-default ascd-variables-panel">
                 <div class="panel-heading"><strong>Variables</strong></div>
-                <div class="panel-body">
+                <div class="panel-body ascd-variables-body">
                   <div class="panel-group ascd-measure-groups"></div>
                 </div>
               </div>
@@ -347,7 +381,7 @@
         </div>
 
         <div class="modal-footer">
-          <span class="text-muted ascd-status pull-left" style="margin-top:8px;"></span>
+          <span class="text-muted ascd-status pull-left"></span>
           <button type="button" class="btn btn-danger ascd-reset" disabled>Reset</button>
           <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
           <button type="button" class="btn btn-success ascd-save" disabled>Save</button>
@@ -366,7 +400,7 @@
     var modal = $(MODAL_HTML).appendTo('body');
     var types = modal.find('.ascd-type-list');
     var statusEl = modal.find('.ascd-status');
-    var preview = modal.find('#ascd-preview');
+    var preview = modal.find('.ascd-preview-body');
     var btnPreview = modal.find('.ascd-preview');
     var btnSave = modal.find('.ascd-save');
     var btnReset = modal.find('.ascd-reset');
@@ -381,19 +415,35 @@
     var clearGauge = modal.find('.ascd-clear-gauge');
     var clearYesNo = modal.find('.ascd-clear-yesno');
     var titleInput = modal.find('.ascd-title');
+    var titleGroup = modal.find('.ascd-title-group');
+    var titleHelp = modal.find('.ascd-title-help');
     var groupInput = modal.find('.ascd-group');
     var thumbLeft = modal.find('.ascd-thumb-left');
     var thumbRight = modal.find('.ascd-thumb-right');
+
+    function resetPreview(){
+      preview.html(previewPlaceholderHtml());
+    }
+
+    function setDropEmpty(drop, message){
+      drop.html(emptyDropHtml(message));
+    }
+
+    function ensureDropHasContent(drop){
+      drop.find('.text-muted').remove();
+    }
 
     // Optional Developer Console slot setup
     var dev = { enabled: !!opts.showDevPanel };
     if (dev.enabled) {
       var devHtml = `
-      <div class="panel panel-default ascd-dev" style="margin-top:10px;">
-        <div class="panel-heading">
-          Developer Console
-          <button type="button" class="btn btn-xs btn-default ascd-send-preview">Send Preview Request</button>
-          <button type="button" class="btn btn-xs btn-default ascd-send-vars">Send VariableSeriesData</button>
+      <div class="panel panel-default ascd-dev">
+        <div class="panel-heading clearfix">
+          <strong class="pull-left">Developer Console</strong>
+          <div class="btn-group btn-group-xs pull-right" role="group">
+            <button type="button" class="btn btn-default ascd-send-preview">Send Preview Request</button>
+            <button type="button" class="btn btn-default ascd-send-vars">Send VariableSeriesData</button>
+          </div>
         </div>
         <div class="panel-body">
           <div class="row">
@@ -485,25 +535,31 @@
       modal.find('.ascd-mapping-yesno').toggle(isYesNo);
       updateAxisControls();
       updateResetEnabled();
-      if (canPreviewNow()) previewChart(); else { status(''); state.lastOutput=null; btnSave.prop('disabled', true); preview.empty(); }
+      if (canPreviewNow()) previewChart(); else { status(''); state.lastOutput=null; btnSave.prop('disabled', true); resetPreview(); }
     }
 
     /** Render a small removable pill for a mapped measure. */
     function badge(id, label){
       return `
-        <span class="label label-primary ascd-badge" data-id="${escapeHtml(id)}" style="display:inline-block;margin:2px;">
-          ${escapeHtml(label)}
-          <span class="fa-solid fa-trash ascd-remove" title="Remove" style="margin-left:4px; cursor:pointer;"></span>
-        </span>
+        <div class="ascd-drop-entry">
+          <span class="label label-primary ascd-badge" data-id="${escapeHtml(id)}">
+            ${escapeHtml(label)}
+            <span class="fa fa-times ascd-remove" title="Remove"></span>
+          </span>
+        </div>
       `;
     }
 
     /** Replace content of a single-target drop (gauge/yesno). */
-    function setSingleTarget(drop, field){ drop.empty().append($(badge(field.id, field.label))); }
+    function setSingleTarget(drop, field){
+      drop.empty().append($(badge(field.id, field.label)));
+      ensureDropHasContent(drop);
+    }
 
     /** Append a measure to a multi-target drop (left/right Y). */
     function addMultiTarget(drop, field, arr){
       if(arr.indexOf(field.id)===-1){
+        ensureDropHasContent(drop);
         arr.push(field.id);
         drop.append($(badge(field.id, field.label)));
       }
@@ -515,11 +571,20 @@
     function removeBadge(b){
       var id=b.data('id');
       var container = b.closest('.ascd-drop');
-      b.remove();
+      var entry = b.closest('.ascd-drop-entry');
+      if (entry.length) entry.remove();
+      else b.remove();
       if (container.hasClass('ascd-drop-gauge'))      state.gaugeVal=null;
       else if (container.hasClass('ascd-drop-yesno')) state.yesnoVal=null;
       else if (container.hasClass('ascd-drop-y-left'))  state.yLeft = state.yLeft.filter(function(y){ return y!==id; });
       else if (container.hasClass('ascd-drop-y-right')) state.yRight = state.yRight.filter(function(y){ return y!==id; });
+      if (!container.find('.ascd-badge').length){
+        if (container.hasClass('ascd-drop-gauge') || container.hasClass('ascd-drop-yesno')) {
+          setDropEmpty(container, 'Drop a single variable here.');
+        } else {
+          setDropEmpty(container, 'Drop one or more variables here.');
+        }
+      }
       updateAxisControls();
       updateResetEnabled();
       maybeAutoPreview();
@@ -529,15 +594,15 @@
     function maybeAutoPreview(){
       updateSaveEnabled();
       if (canPreviewNow()) previewChart();
-      else { preview.empty(); state.lastOutput=null; btnSave.prop('disabled', true); }
+      else { resetPreview(); state.lastOutput=null; btnSave.prop('disabled', true); }
     }
 
     /** Make a drop-zone accept JSON drag payloads with a `kind` discriminator. */
     function bindDrop(drop, accept, onAdd){
-      drop.on('dragover',function(ev){ ev.preventDefault(); $(this).css('border','1px dashed #44ff44'); })
-          .on('dragleave',function(){ $(this).css('border','1px dashed #bbb'); })
+      drop.on('dragover',function(ev){ ev.preventDefault(); $(this).addClass('bg-info text-info'); })
+          .on('dragleave',function(){ $(this).removeClass('bg-info text-info'); })
           .on('drop',function(ev){
-            ev.preventDefault(); $(this).css('border','1px dashed #bbb');
+            ev.preventDefault(); $(this).removeClass('bg-info text-info');
             try{
               var data=JSON.parse(ev.originalEvent.dataTransfer.getData('text/plain'));
               if(!data || data.kind!==accept) return;
@@ -557,19 +622,17 @@
     function mkMeasurePill(m){
       var labelText = m.label || m.id;
       var titleTip = (m.label||m.id) + ' — ' + (m.id) + (m.table?(' — table: '+m.table):'');
-      var wrap = $('<div class="ascd-measure-pill"></div>');
-
-      var label = $('<span class="label label-default" draggable="true"></span>')
+      var label = $('<a href="#" class="list-group-item" draggable="true"></a>')
         .attr('title', escapeHtml(titleTip))
-        .html(`<strong>${escapeHtml(labelText)}</strong>`)
+        .html(`<strong>${escapeHtml(labelText)}</strong><br><small>${escapeHtml(m.id)}</small>`)
         .data('field', { id:m.id, label:labelText, table:m.table||'', kind:'measure' });
 
       label.on('dragstart', function(ev){
         ev.originalEvent.dataTransfer.setData('text/plain', JSON.stringify($(this).data('field')));
       });
+      label.on('click', function(ev){ ev.preventDefault(); });
 
-      wrap.append(label);
-      return wrap;
+      return label;
     }
 
     /** Group measures by "group" property for accordion rendering. */
@@ -591,7 +654,7 @@
 
         panel.append($(`
           <div class="panel-heading">
-            <h5 class="panel-title" style="margin:0;">
+            <h5 class="panel-title">
               <a data-toggle="collapse" href="#${gid}">
                 ${tcase(name)} <span class="text-muted">(${items.length})</span>
               </a>
@@ -601,11 +664,11 @@
 
         var body = $(
           `<div id="${gid}" class="panel-collapse collapse">
-            <div class="panel-body"></div>
+            <div class="list-group"></div>
           </div>`
         );
 
-        items.forEach(function(m){ body.find('.panel-body').append(mkMeasurePill(m)); });
+        items.forEach(function(m){ body.find('.list-group').append(mkMeasurePill(m)); });
 
         panel.append(body);
         groups.append(panel);
@@ -617,6 +680,18 @@
     }
 
     /** Enable the Save button only after a successful preview exists. */
+    function hasTitle(){
+      return !!$.trim(titleInput.val());
+    }
+
+    function updateTitleValidation(showError){
+      var missing = !hasTitle();
+      titleGroup.toggleClass('has-error', !!(showError && missing));
+      titleHelp.text(missing ? 'Required before the chart can be saved.' : 'Title looks good.');
+      titleHelp.toggleClass('text-danger', !!(showError && missing));
+    }
+
+    /** Enable the Save button only after a successful preview exists. */
     function updateSaveEnabled(){
       var ok=false;
       switch(state.type){
@@ -624,7 +699,8 @@
         case 'yesno': ok=!!state.yesnoVal; break;
         default: ok=(state.yLeft.length || state.yRight.length);
       }
-      btnSave.prop('disabled', !(ok && state.lastOutput));
+      btnSave.prop('disabled', !(ok && state.lastOutput && hasTitle()));
+      updateTitleValidation(false);
     }
 
     /**
@@ -761,11 +837,8 @@
     function renderYesNoLabel(value, intoEl){
       var truthy = toBool(value);
       var txt = truthy ? 'YES' : 'NO';
-      var cls = truthy ? 'yes-chip' : 'no-chip';
       $(intoEl).html(`
-        <div class="yesno-wrap">
-          <span class="yesno-chip ${cls}">${txt}</span>
-        </div>
+        <p><span class="label ${truthy ? 'label-success' : 'label-danger'}">${txt}</span></p>
       `);
       return { kind:'yesnoLabel', value:value, truthy:truthy };
     }
@@ -792,7 +865,7 @@
       if (query.type === 'yesno') {
         var yn = data && data.value;
         if (yn && typeof yn === 'object') { if ('value' in yn) yn = yn.value; else if ('y' in yn) yn = yn.y; }
-        return renderYesNoLabel(yn, $('#ascd-preview')[0]);
+        return renderYesNoLabel(yn, preview[0]);
       }
 
       var isCol3D = (query.type==='column3d');
@@ -994,7 +1067,11 @@
         dropYLeft.empty(); dropYRight.empty(); dropGauge.empty(); dropYesNo.empty();
         state.yLeft = []; state.yRight = []; state.gaugeVal = null; state.yesnoVal = null;
         thumbLeft.prop('checked', false); thumbRight.prop('checked', false);
-        preview.empty(); state.lastOutput = null;
+        setDropEmpty(dropYLeft, 'Drop one or more variables here.');
+        setDropEmpty(dropYRight, 'Drop one or more variables here.');
+        setDropEmpty(dropGauge, 'Drop a single variable here.');
+        setDropEmpty(dropYesNo, 'Drop a single variable here.');
+        resetPreview(); state.lastOutput = null;
 
         if (cfg.title) titleInput.val(String(cfg.title));
         groupInput.val(String(cfg.group || 'Custom'));
@@ -1065,26 +1142,30 @@
     clearYLeft.on('click',function(e){
       e.preventDefault();
       dropYLeft.empty(); state.yLeft=[];
+      setDropEmpty(dropYLeft, 'Drop one or more variables here.');
       updateAxisControls(); updateResetEnabled(); updateSaveEnabled();
-      if (state.yRight.length>0) previewChart(); else { preview.empty(); state.lastOutput=null; btnSave.prop('disabled', true); }
+      if (state.yRight.length>0) previewChart(); else { resetPreview(); state.lastOutput=null; btnSave.prop('disabled', true); }
     });
     clearYRight.on('click',function(e){
       e.preventDefault();
       dropYRight.empty(); state.yRight=[];
+      setDropEmpty(dropYRight, 'Drop one or more variables here.');
       updateAxisControls(); updateResetEnabled(); updateSaveEnabled();
-      if (state.yLeft.length>0) previewChart(); else { preview.empty(); state.lastOutput=null; btnSave.prop('disabled', true); }
+      if (state.yLeft.length>0) previewChart(); else { resetPreview(); state.lastOutput=null; btnSave.prop('disabled', true); }
     });
     clearGauge.on('click',function(e){
       e.preventDefault();
       dropGauge.empty(); state.gaugeVal=null;
+      setDropEmpty(dropGauge, 'Drop a single variable here.');
       updateResetEnabled(); updateSaveEnabled();
-      preview.empty(); state.lastOutput=null; btnSave.prop('disabled', true);
+      resetPreview(); state.lastOutput=null; btnSave.prop('disabled', true);
     });
     clearYesNo.on('click',function(e){
       e.preventDefault();
       dropYesNo.empty(); state.yesnoVal=null;
+      setDropEmpty(dropYesNo, 'Drop a single variable here.');
       updateResetEnabled(); updateSaveEnabled();
-      preview.empty(); state.lastOutput=null; btnSave.prop('disabled', true);
+      resetPreview(); state.lastOutput=null; btnSave.prop('disabled', true);
     });
 
     // Thumbnail toggle impacts variable id suffix → triggers preview
@@ -1162,7 +1243,13 @@
 
     // Initial type selection and form bindings
     selectType(state.type);
-    titleInput.on('input', updateSaveEnabled);
+    updateTitleValidation(false);
+    titleInput.on('input', function(){
+      updateSaveEnabled();
+      if (hasTitle()) updateTitleValidation(false);
+    }).on('blur', function(){
+      updateTitleValidation(true);
+    });
 
     // Reset wipes all mappings and preview output
     btnReset.on('click', function(){
@@ -1170,13 +1257,23 @@
       dropYLeft.empty(); dropYRight.empty(); dropGauge.empty(); dropYesNo.empty();
       state.yLeft=[]; state.yRight=[]; state.gaugeVal=null; state.yesnoVal=null;
       thumbLeft.prop('checked', false); thumbRight.prop('checked', false);
-      preview.empty(); state.lastOutput=null;
+      setDropEmpty(dropYLeft, 'Drop one or more variables here.');
+      setDropEmpty(dropYRight, 'Drop one or more variables here.');
+      setDropEmpty(dropGauge, 'Drop a single variable here.');
+      setDropEmpty(dropYesNo, 'Drop a single variable here.');
+      resetPreview(); state.lastOutput=null;
       updateAxisControls(); updateResetEnabled(); updateSaveEnabled();
     });
 
     // Save emits final config + last preview options and closes the modal
     btnSave.on('click', function(){
       if (!state.lastOutput){ status('Preview first.', true); return; }
+      if (!hasTitle()){
+        updateTitleValidation(true);
+        titleInput.focus();
+        status('Enter a chart title before saving.', true);
+        return;
+      }
       var finalCfg = buildChartConfig();
       var payloadOut={ configJSON: finalCfg, previewOutput: state.lastOutput };
       host.trigger('allskyChartDesigner:save', payloadOut);

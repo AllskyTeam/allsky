@@ -13,7 +13,7 @@ if (! is_dir(ALLSKY_SUPPORT_DIR)) {
 	}
 }
 
-  global $pageHeaderTitle, $pageIcon;
+  global $pageHeaderTitle, $pageIcon, $pageHelp;
 	
 ?>
 
@@ -115,7 +115,14 @@ if (! is_dir(ALLSKY_SUPPORT_DIR)) {
 </div>
 
 <div class="panel panel-allsky">
-	<div class="panel-heading"><i class="<?php echo $pageIcon ?>"></i> <?php echo $pageHeaderTitle ?></div>
+	<div class="panel-heading clearfix">
+        <span><i class="<?php echo $pageIcon ?>"></i> <?php echo $pageHeaderTitle ?></span>
+<?php if (!empty($pageHelp)) { ?>
+        <a class="pull-right" href="<?php echo $pageHelp; ?>" target="_blank" rel="noopener noreferrer" data-toggle="tooltip" data-container="body" data-placement="left" title="Help">
+            <i class="fa-solid fa-circle-question"></i> Help
+        </a>
+<?php } ?>
+    </div>
 	<div class="panel-body as-support-loading">
 		<div class="panel panel-default">
 <!-- none of the other pages have this:
@@ -235,5 +242,4 @@ if (! is_dir(ALLSKY_SUPPORT_DIR)) {
 <script src="/js/bootbox/bootbox.all.js?c=<?php echo $V; ?>"></script>
 <script src="/js/bootbox/bootbox.locales.min.js?c=<?php echo $V; ?>"></script>
 
-<link rel="stylesheet" type="text/css" href="documentation/css/light.css?c=<?php echo $V; ?>" />
-<link rel="stylesheet" type="text/css" href="documentation/css/documentation.css?c=<?php echo $V; ?>" />
+<link rel="stylesheet" type="text/css" href="css/allsky.css?c=<?php echo $V; ?>" />

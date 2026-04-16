@@ -46,6 +46,7 @@ class OEUIMANAGER {
     #floatingToolbarPlaceholderId = 'oe-editor-toolbar-placeholder'
     #toolbarDockRect = null
     #toolbarDockSnapDistance = 40
+    #floatingDialogZIndex = 2100
 
     constructor(imageObj) {
 
@@ -165,6 +166,143 @@ class OEUIMANAGER {
 
     get transformer() {
         return this.#transformer;
+    }
+
+    #clampFloatingPosition(left, top, element) {
+        const elementWidth = element.outerWidth() || 0;
+        const elementHeight = element.outerHeight() || 0;
+        const maxLeft = Math.max(10, $(window).width() - elementWidth - 10);
+        const maxTop = Math.max(10, $(window).height() - elementHeight - 10);
+
+        return {
+            left: Math.min(Math.max(10, left), maxLeft),
+            top: Math.min(Math.max(10, top), maxTop)
+        };
+    }
+
+    #startFloatingDrag(element, event, onStop = null) {
+        if (event.which && event.which !== 1) {
+            return;
+        }
+
+        event.preventDefault();
+
+        const rect = element[0].getBoundingClientRect();
+        const startLeft = rect.left;
+        const startTop = rect.top;
+        const startX = event.clientX;
+        const startY = event.clientY;
+
+        $(document).off('.oe-floating-drag');
+        $(document).on('mousemove.oe-floating-drag', (moveEvent) => {
+            const position = this.#clampFloatingPosition(
+                startLeft + (moveEvent.clientX - startX),
+                startTop + (moveEvent.clientY - startY),
+                element
+            );
+
+            element.css({
+                left: position.left,
+                top: position.top
+            });
+        });
+
+        $(document).on('mouseup.oe-floating-drag', () => {
+            $(document).off('.oe-floating-drag');
+            if (typeof onStop === 'function') {
+                onStop();
+            }
+        });
+    }
+
+    #bringFloatingDialogToFront(dialog) {
+        this.#floatingDialogZIndex += 1;
+        dialog.css('z-index', this.#floatingDialogZIndex);
+    }
+
+    #initializeFloatingDialog(selector) {
+        const dialog = $(selector);
+        if (!dialog.length || dialog.data('oeFloatingDialogInit')) {
+            return dialog;
+        }
+
+        dialog.data('oeFloatingDialogInit', true);
+
+        dialog.on('mousedown.oe-dialog', () => {
+            this.#bringFloatingDialogToFront(dialog);
+        });
+
+        dialog.find('[data-role="oe-dialog-close"]').off('click.oe-dialog').on('click.oe-dialog', (event) => {
+            event.preventDefault();
+            this.#hideFloatingDialog(selector);
+        });
+
+        dialog.find('.modal-header').off('mousedown.oe-dialog').on('mousedown.oe-dialog', (event) => {
+            if ($(event.target).closest('button, a, input, select, textarea').length) {
+                return;
+            }
+
+            this.#bringFloatingDialogToFront(dialog);
+            this.#startFloatingDrag(dialog, event);
+        });
+
+        return dialog;
+    }
+
+    #showFloatingDialog(selector, options = {}) {
+        const dialog = this.#initializeFloatingDialog(selector);
+        if (!dialog.length) {
+            return;
+        }
+
+        if (options.beforeClose !== undefined) {
+            dialog.data('oeBeforeClose', options.beforeClose);
+        }
+        if (options.onClose !== undefined) {
+            dialog.data('oeOnClose', options.onClose);
+        }
+
+        const width = options.width || dialog.data('dialog-width');
+        if (width) {
+            dialog.css('width', width);
+        }
+
+        dialog.removeClass('hidden');
+
+        if (!dialog.data('oePositioned')) {
+            const initialPosition = this.#clampFloatingPosition(dialog.position().left || 20, dialog.position().top || 90, dialog);
+            dialog.css({
+                left: initialPosition.left,
+                top: initialPosition.top
+            });
+            dialog.data('oePositioned', true);
+        }
+
+        this.#bringFloatingDialogToFront(dialog);
+    }
+
+    #hideFloatingDialog(selector) {
+        const dialog = $(selector);
+        if (!dialog.length || dialog.hasClass('hidden')) {
+            return;
+        }
+
+        const beforeClose = dialog.data('oeBeforeClose');
+        if (typeof beforeClose === 'function' && beforeClose() === false) {
+            return;
+        }
+
+        dialog.addClass('hidden');
+
+        const onClose = dialog.data('oeOnClose');
+        if (typeof onClose === 'function') {
+            onClose();
+        }
+    }
+
+    #isFloatingDialogVisible(selector) {
+        const dialog = $(selector);
+        return dialog.length > 0 && !dialog.hasClass('hidden');
     }
 
     #resizeWindow() {
@@ -307,9 +445,8 @@ class OEUIMANAGER {
         const toolbar = $('#oe-editor-toolbar');
         const placeholder = $('#' + this.#floatingToolbarPlaceholderId);
 
-        if (toolbar.data('ui-draggable')) {
-            toolbar.draggable('destroy');
-        }
+        $(document).off('.oe-toolbar-drag');
+        toolbar.off('.oe-toolbar');
 
         if (placeholder.length) {
             placeholder.replaceWith(toolbar);
@@ -349,13 +486,35 @@ class OEUIMANAGER {
             return;
         }
 
-        if (toolbar.data('ui-draggable')) {
-            toolbar.draggable('destroy');
-        }
-
         handle.off('mousedown.oe-toolbar');
-        handle.on('mousedown.oe-toolbar', () => {
+        handle.on('mousedown.oe-toolbar', (event) => {
             if (toolbar.hasClass('oe-editor-toolbar-floating')) {
+                this.#startFloatingDrag(toolbar, event, () => {
+                    if (!toolbar.hasClass('oe-editor-toolbar-floating') || this.#toolbarDockRect === null) {
+                        return;
+                    }
+
+                    const rect = toolbar[0].getBoundingClientRect();
+                    const navbar = toolbar.closest('body').find('#oe-main-navbar').first();
+                    let overlapsNavbar = false;
+
+                    if (navbar.length) {
+                        const navbarRect = navbar[0].getBoundingClientRect();
+                        overlapsNavbar =
+                            rect.left < navbarRect.right &&
+                            rect.right > navbarRect.left &&
+                            rect.top < navbarRect.bottom &&
+                            rect.bottom > navbarRect.top;
+                    }
+
+                    const withinDockZone =
+                        Math.abs(rect.top - this.#toolbarDockRect.top) <= this.#toolbarDockSnapDistance &&
+                        Math.abs(rect.left - this.#toolbarDockRect.left) <= this.#toolbarDockSnapDistance;
+
+                    if (withinDockZone || overlapsNavbar) {
+                        this.dockFloatingToolbar();
+                    }
+                });
                 return;
             }
 
@@ -379,6 +538,33 @@ class OEUIMANAGER {
                     width: toolbar[0].scrollWidth,
                     position: 'fixed'
                 });
+
+            this.#startFloatingDrag(toolbar, event, () => {
+                if (!toolbar.hasClass('oe-editor-toolbar-floating') || this.#toolbarDockRect === null) {
+                    return;
+                }
+
+                const currentRect = toolbar[0].getBoundingClientRect();
+                const navbar = toolbar.closest('body').find('#oe-main-navbar').first();
+                let overlapsNavbar = false;
+
+                if (navbar.length) {
+                    const navbarRect = navbar[0].getBoundingClientRect();
+                    overlapsNavbar =
+                        currentRect.left < navbarRect.right &&
+                        currentRect.right > navbarRect.left &&
+                        currentRect.top < navbarRect.bottom &&
+                        currentRect.bottom > navbarRect.top;
+                }
+
+                const withinDockZone =
+                    Math.abs(currentRect.top - this.#toolbarDockRect.top) <= this.#toolbarDockSnapDistance &&
+                    Math.abs(currentRect.left - this.#toolbarDockRect.left) <= this.#toolbarDockSnapDistance;
+
+                if (withinDockZone || overlapsNavbar) {
+                    this.dockFloatingToolbar();
+                }
+            });
         });
 
         handle.off('dblclick.oe-toolbar');
@@ -387,41 +573,6 @@ class OEUIMANAGER {
                 this.dockFloatingToolbar();
             }
         });
-
-        toolbar
-            .draggable({
-                handle: '.oe-toolbar-handle',
-                containment: 'window',
-                scroll: false,
-                stop: () => {
-                    if (!toolbar.hasClass('oe-editor-toolbar-floating') || this.#toolbarDockRect === null) {
-                        return;
-                    }
-
-                    const rect = toolbar[0].getBoundingClientRect();
-                    const navbar = toolbar.closest('body').find('#oe-main-navbar').first();
-                    let overlapsNavbar = false;
-
-                    if (navbar.length) {
-                        const navbarRect = navbar[0].getBoundingClientRect();
-                        overlapsNavbar =
-                            rect.left < navbarRect.right &&
-                            rect.right > navbarRect.left &&
-                            rect.top < navbarRect.bottom &&
-                            rect.bottom > navbarRect.top;
-                    }
-
-                    const withinDockZone =
-                        Math.abs(rect.top - this.#toolbarDockRect.top) <= this.#toolbarDockSnapDistance &&
-                        Math.abs(rect.left - this.#toolbarDockRect.left) <= this.#toolbarDockSnapDistance;
-
-                    if (withinDockZone) {
-                        this.dockFloatingToolbar();
-                    } else if (overlapsNavbar) {
-                        this.dockFloatingToolbar();
-                    }
-                }
-            });
     }
 
     setupImageManagerEvents() {
@@ -2135,9 +2286,7 @@ class OEUIMANAGER {
         if (this.#debugPosMode) {
             this.#createDebugWindow();
         } else {
-            if ($('#debugdialog').hasClass('ui-dialog-content')) {
-                $('#debugdialog').dialog('destroy');
-            }
+            this.#hideFloatingDialog('#debugdialog');
         }
     }
 
@@ -2469,8 +2618,8 @@ class OEUIMANAGER {
 
     hidePropertyEditor() {
         if (this.#selected instanceof OETEXTFIELD) {
-            if ($("#textdialog").hasClass('ui-dialog-content')) {
-                $('#textdialog').dialog('close');
+            if (this.#isFloatingDialogVisible('#textdialog')) {
+                this.#hideFloatingDialog('#textdialog');
                 $('#textpropgrid').jqPropertyGrid('Destroy');
                 try {
                     $('#oe-default-font-colour').spectrum('Destroy');
@@ -2479,21 +2628,21 @@ class OEUIMANAGER {
         }
 
         if (this.#selected instanceof OEIMAGEFIELD) {
-            if ($("#imagedialog").hasClass('ui-dialog-content')) {
+            if (this.#isFloatingDialogVisible('#imagedialog')) {
                 $('#imagepropgrid').jqPropertyGrid('Destroy');
-                $('#imagedialog').dialog('close');
+                this.#hideFloatingDialog('#imagedialog');
             }
         }
 
         if (this.#selected instanceof OERECTFIELD) {
-            if ($("#rectdialog").hasClass('ui-dialog-content')) {
+            if (this.#isFloatingDialogVisible('#rectdialog')) {
                 $('#rectpropgrid').jqPropertyGrid('Destroy');
-                $('#rectdialog').dialog('close');
+                this.#hideFloatingDialog('#rectdialog');
             }
         }
 
-        if ($("#formatdialog").hasClass('ui-dialog-content')) {
-            $('#formatdialog').dialog('close');
+        if (this.#isFloatingDialogVisible('#formatdialog')) {
+            this.#hideFloatingDialog('#formatdialog');
         }
         
     }
@@ -2524,27 +2673,27 @@ class OEUIMANAGER {
 			}*/
 
             let textVisible = false;
-            if ($('#textdialog').closest('.ui-dialog').is(':visible')) {
+            if (this.#isFloatingDialogVisible('#textdialog')) {
                 textVisible = true;
             }
             let imageVisible = false;
-            if ($('#imagedialog').closest('.ui-dialog').is(':visible')) {
+            if (this.#isFloatingDialogVisible('#imagedialog')) {
                 imageVisible = true;
             }
             let rectVisible = false;
-            if ($('#rectdialog').closest('.ui-dialog').is(':visible')) {
+            if (this.#isFloatingDialogVisible('#rectdialog')) {
                 rectVisible = true;
             }
 
             if (this.#selected instanceof OETEXTFIELD) {
                 if (imageVisible) {
                     $('#imagepropgrid').jqPropertyGrid('Destroy');
-                    $('#imagedialog').dialog('close');
+                    this.#hideFloatingDialog('#imagedialog');
                     this.#createTextPropertyEditor();
                 }
                 if (rectVisible) {
                     $('#rectpropgrid').jqPropertyGrid('Destroy');
-                    $('#rectdialog').dialog('close');
+                    this.#hideFloatingDialog('#rectdialog');
                     this.#createTextPropertyEditor();
                 }
                 let strokeColour = this.#selected.stroke;
@@ -2570,13 +2719,13 @@ class OEUIMANAGER {
             }
             if (this.#selected instanceof OEIMAGEFIELD) {
                 if (textVisible) {
-                    $('#textdialog').dialog('close');
+                    this.#hideFloatingDialog('#textdialog');
                     $('#textpropgrid').jqPropertyGrid('Destroy');
                     this.#createImagePropertyEditor();                    
                 }
                 if (rectVisible) {
                     $('#rectpropgrid').jqPropertyGrid('Destroy');
-                    $('#rectdialog').dialog('close');
+                    this.#hideFloatingDialog('#rectdialog');
                     this.#createImagePropertyEditor();
                 }
                 $('#imagepropgrid').jqPropertyGrid('set', {
@@ -2591,13 +2740,13 @@ class OEUIMANAGER {
 
             if (this.#selected instanceof OERECTFIELD) {
                 if (textVisible) {
-                    $('#textdialog').dialog('close');
+                    this.#hideFloatingDialog('#textdialog');
                     $('#textpropgrid').jqPropertyGrid('Destroy');
                     this.#createRectPropertyEditor();                    
                 }
                 if (imageVisible) {
                     $('#imagepropgrid').jqPropertyGrid('Destroy');
-                    $('#imagedialog').dialog('close');
+                    this.#hideFloatingDialog('#imagedialog');
                     this.#createRectPropertyEditor();
                 }
                 $('#rectpropgrid').jqPropertyGrid('set', {
@@ -2780,13 +2929,10 @@ class OEUIMANAGER {
         };
 
         $('#rectpropgrid').jqPropertyGrid(rectData, options);
-        $('#rectdialog').dialog({
-            resizable: false,
-            closeOnEscape: false,
+        this.#showFloatingDialog('#rectdialog', {
             width: 350,
-            beforeClose: function (event, ui) {
-                let uiManager = window.oedi.get('uimanager');
-                uiManager.setFieldOpacity(false);
+            beforeClose: () => {
+                this.setFieldOpacity(false);
             }
         });
 
@@ -2847,6 +2993,46 @@ class OEUIMANAGER {
             })
         });
 
+        $(document).off('click', '#oe-edit-label-field');
+        $(document).on('click', '#oe-edit-label-field', () => {
+            const $field = $('#pgtextlabel');
+            const $dialog = $('#oe-text-edit-dialog');
+
+            $dialog.data('target', '#pgtextlabel');
+            $('#oe-text-edit-dialog-value').val($field.val());
+            $dialog.modal('show');
+        });
+
+        $('#oe-text-edit-dialog').off('hidden.bs.modal');
+        $('#oe-text-edit-dialog').on('hidden.bs.modal', () => {
+            const $dialog = $('#oe-text-edit-dialog');
+            const target = $dialog.data('target');
+
+            if (!target) {
+                return;
+            }
+
+            const $field = $(target);
+            if ($field.length === 0) {
+                $dialog.removeData('target');
+                return;
+            }
+
+            const value = $('#oe-text-edit-dialog-value').val();
+            if ($field.val() !== value) {
+                $field.val(value);
+                $field.trigger('input');
+                $field.trigger('change');
+            }
+
+            $dialog.removeData('target');
+        });
+
+        $(document).off('click', '#oe-text-edit-dialog-apply');
+        $(document).on('click', '#oe-text-edit-dialog-apply', () => {
+            $('#oe-text-edit-dialog').modal('hide');
+        });
+
         $(document).off('click', '#oe-format-field');
         $(document).on('click', '#oe-format-field', (e) => {
 		    let selected = this.#selected
@@ -2859,7 +3045,7 @@ class OEUIMANAGER {
                 group: 'Label', 
                 name: 'Item', 
                 type: 'text', 
-                postHTML: '<button type="button" id="oe-swap-field" class="btn btn-primary btn-sm btn-oe-small"><i class="fa-solid fa-arrow-right-arrow-left"></i></button>' 
+                postHTML: '<button type="button" id="oe-swap-field" class="btn btn-primary btn-sm btn-oe-small"><i class="fa-solid fa-arrow-right-arrow-left"></i></button><button type="button" id="oe-edit-label-field" class="btn btn-primary btn-sm btn-oe-small"><i class="fa-solid fa-pen-to-square"></i></button>' 
             },
             type: { 
                 group: 'Label', 
@@ -2951,14 +3137,10 @@ class OEUIMANAGER {
         };
 
         $('#textpropgrid').jqPropertyGrid(textData, options);
-        $('#textdialog').dialog({
-            resizable: false,
-            closeOnEscape: false,
-            width: 500,
-            beforeClose: function (event, ui) {
-                let uiManager = window.oedi.get('uimanager');
-               // uiManager.selected = null;
-                uiManager.setFieldOpacity(false);
+        this.#showFloatingDialog('#textdialog', {
+            width: 400,
+            beforeClose: () => {
+                this.setFieldOpacity(false);
             }
         });
     }
@@ -3025,13 +3207,8 @@ class OEUIMANAGER {
         };
 
         $('#imagepropgrid').jqPropertyGrid(imageData, options);
-        $('#imagedialog').dialog({
-            resizable: false,
-            closeOnEscape: false,
-            beforeClose: function (event, ui) {
-                let uiManager = window.oedi.get('uimanager');
-               // uiManager.selected = null;
-            }
+        this.#showFloatingDialog('#imagedialog', {
+            width: 380
         });
     }
 
@@ -3175,16 +3352,17 @@ class OEUIMANAGER {
         };
 
         $('#debugpropgrid').jqPropertyGrid(debugData, options);
-        $('#debugdialog').dialog({
-            resizable: false,
-            closeOnEscape: false,
+        this.#showFloatingDialog('#debugdialog', {
+            width: 380
         });
     }
 
     #createFormatHelpWindow(type) {
 		var filterType = type
         var fType = ''		// ECC testing
-        $('#formatlisttable').DataTable().destroy()
+        if ($.fn.DataTable.isDataTable('#formatlisttable')) {
+            $('#formatlisttable').DataTable().destroy()
+        }
         $('#formatlisttable').removeClass('hidden')
         $(document).off('click', '.oe-format-replace')
         $(document).off('click', '.oe-format-add')
@@ -3328,19 +3506,19 @@ class OEUIMANAGER {
                 formatTable.draw(false);
             });  
 
-        $('#formatdialog').dialog({
-            resizable: false,
-            closeOnEscape: false,
+        this.#showFloatingDialog('#formatdialog', {
             width: 900,
-            close: function(event, ui) {
+            onClose: () => {
 				$(document).off('click', '.oe-format-replace')
 				$(document).off('click', '.oe-format-add')
 				$(document).off('click', '#oe-format-filters-close')
 				$('#oe-format-filters').off('change')
 				$('#formatlisttable').off('preXhr.dt')
-				$('#formatlisttable').off('xhr.dt')					
-				$('#formatlisttable').DataTable().destroy()
-			}			
+				$('#formatlisttable').off('xhr.dt')
+                if ($.fn.DataTable.isDataTable('#formatlisttable')) {
+    				$('#formatlisttable').DataTable().destroy()
+                }
+			}
         })
         
 		$(document).off('click', '.oe-format-replace')
@@ -3395,7 +3573,7 @@ class OEUIMANAGER {
 
         $(document).off('click', '#oe-format-filters-close')		
         $(document).on('click', '#oe-format-filters-close', (event) => {
-			$('#formatdialog').dialog('close')
+			this.#hideFloatingDialog('#formatdialog')
         })
 		
     }

@@ -12,13 +12,21 @@ class MODULESEDITOR {
 	#events = []
 	#errors = []
 	#dialogRowGroups = {}
+	#installerBranch = null
+	#installerData = null
+	#installerQueueRunning = false
+	#installerReturnToDialog = false
+	#installerCancelRequested = false
+	#installerCurrentRequest = null
+	#installerPendingRefreshText = null
+	#installerPendingEditorRefreshText = null
 
 	constructor() {
 
 	}
 
-	#buildUI() {
-		$.LoadingOverlay('show');
+	#buildUI(overlayText = null) {
+		$.LoadingOverlay('show', overlayText ? { text: overlayText } : {});
 
 		$('[data-toggle="tooltip"]').tooltip();
 
@@ -219,6 +227,8 @@ class MODULESEDITOR {
 					group: 'list',
 					animation: 200,
 					ghostClass: 'ghost',
+					forceFallback: true,
+					fallbackOnBody: true,
 					filter: '.filtered',
 					onMove: function (evt) {
 
@@ -248,6 +258,8 @@ class MODULESEDITOR {
 					group: 'list',
 					animation: 200,
 					ghostClass: 'ghost',
+					forceFallback: true,
+					fallbackOnBody: true,
 					filter: '.filtered',
 					onMove: function (evt) {
 
@@ -500,9 +512,16 @@ class MODULESEDITOR {
 		let locked = ''
 		let enabledHTML = ''
 		let lockedHTML = ''
+		let lockedOverlayHTML = ''
 		if (data.position !== undefined) {
 			locked = 'filtered locked ' + data.position;
 			lockedHTML = '<i class="fa-solid fa-lock" title="Module cannot be moved"></i> '
+			lockedHTML = ''
+			lockedOverlayHTML = `
+				<div class="module-locked-overlay">
+					<div class="label label-default"><i class="fa-solid fa-lock"></i> Locked</div>
+				</div>
+			`
 		} else {
 			let enabled = '';
 			if (data.enabled !== undefined) {
@@ -526,6 +545,10 @@ class MODULESEDITOR {
 			hidden = 'hidden';
 		}
 
+		let docsHTML = '';
+		if (data.metadata.docs !== undefined && data.metadata.docs !== '') {
+			docsHTML = '<a type="button" class="btn btn-xs btn-link pull-right" target="_blank" rel="noopener noreferrer" href="' + data.metadata.docs + '" title="Help"><i class="fa-solid fa-question-circle"></i> Help</a>';
+		}
 
 		let deprecated = this.#getNested(data.metadata, 'deprecation.deprecated', 'false')
 
@@ -569,8 +592,8 @@ class MODULESEDITOR {
 		let template = `
             <div id="${moduleKey}" data-id="${data.module}" class="list-group-item allskymodule ${locked}" data-search="${data.metadata.description} ${data.metadata.name}" data-group="${data.metadata.group}">
                 <div class="panel panel-default">
-                    <div class="panel-heading"><span class="warning" data-toggle="popover" data-delay=\'{"show": 1000, "hide": 200}\' data-placement="top" data-trigger="hover" data-placement="top" title="" data-content=""><i class="fa-solid fa-2x fa-triangle-exclamation"></i></span> ${lockedHTML}${data.metadata.name} ${version} ${enabledHTML}</div> 
-                    <div class="panel-body">${nameData} <div class="pull-right">${settingsHtml} ${addHTML}</div></div> 
+                    <div class="panel-heading"><span class="warning" data-toggle="popover" data-delay=\'{"show": 1000, "hide": 200}\' data-placement="top" data-trigger="hover" data-placement="top" title="" data-content=""><i class="fa-solid fa-2x fa-triangle-exclamation"></i></span> ${lockedHTML}${data.metadata.name} ${version} ${docsHTML} ${enabledHTML}</div> 
+                    <div class="panel-body">${lockedOverlayHTML}${nameData} <div class="pull-right">${settingsHtml} ${addHTML}</div></div> 
                 </div> 
             </div>`;
 
@@ -1877,9 +1900,9 @@ class MODULESEDITOR {
 			}
 		}
 
-		let helpLink = '';
-		if (moduleData.metadata.help !== undefined) {
-			helpLink = `<a type="button" class="btn btn-danger mr-4" target="_blank" href="${moduleData.metadata.help}"><i class="fa-solid fa-question"></i></a>`;
+		let docsLink = '';
+		if (moduleData.metadata.docs !== undefined) {
+			docsLink = `<a type="button" class="btn btn-danger mr-4" target="_blank" href="${moduleData.metadata.docs}"><i class="fa-solid fa-question"></i></a>`;
 		}
 
 		let dialogTemplate = `
@@ -1899,7 +1922,7 @@ class MODULESEDITOR {
                         <div class="modal-footer">
                             ${testButton}
 														<div class="pull-right">
-															${helpLink}
+															${docsLink}
 															<button type="button" class="btn btn-danger" data-dismiss="modal">Cancel</button>
 															<button type="button" class="btn btn-primary" id="module-settings-dialog-save">Save</button>
 														</div>
@@ -2681,7 +2704,1141 @@ class MODULESEDITOR {
 
 	}
 
+	#escapeHtml(value) {
+		return $('<div>').text(value ?? '').html();
+	}
+
+	#moduleHasChangelog(module) {
+		if (!module || module.changelog === null || module.changelog === undefined) {
+			return false;
+		}
+
+		return Object.keys(module.changelog).length > 0;
+	}
+
+	#renderModuleChangelogHtml(changelog) {
+		if (changelog === null || changelog === undefined || Object.keys(changelog).length === 0) {
+			return '<div class="alert alert-info" style="margin-bottom: 0;">No changelog is available for this module.</div>';
+		}
+
+		const wrapperId = 'module-installer-changelog-' + Date.now() + '-' + Math.floor(Math.random() * 100000);
+		let state = ' in';
+		let idCounter = 0;
+		let html = '\
+			<div class="clearfix" style="margin-bottom: 10px;">\
+				<button type="button" class="btn btn-default btn-sm pull-right module-installer-changelog-toggle-all" data-target="#' + wrapperId + '" data-expanded="false">Show All Changes</button>\
+			</div>\
+			<div class="panel-group" id="' + wrapperId + '" role="tablist">';
+
+		Object.entries(changelog).reverse().forEach(([version, versionChangeData]) => {
+			let changeHTML = '';
+			Object.entries(versionChangeData || {}).forEach(([, changeList]) => {
+				let firstChange = '';
+				let subsequentChangesHTML = '';
+
+				if (typeof changeList.changes === 'string') {
+					firstChange = '&bull; ' + this.#escapeHtml(changeList.changes);
+				} else {
+					const changeArray = Object.values(changeList.changes || {});
+					firstChange = '&bull; ' + this.#escapeHtml(changeArray[0] || '');
+					for (let i = 1; i < changeArray.length; i++) {
+						subsequentChangesHTML += '\
+							<div class="row">\
+								<div class="col-md-6 col-md-offset-4">&bull; ' + this.#escapeHtml(changeArray[i]) + '</div>\
+							</div>';
+					}
+				}
+
+				let author = 'Unknown Author';
+				if (changeList.author !== undefined) {
+					author = this.#escapeHtml(changeList.author);
+				}
+
+				if (changeList.authorurl !== undefined) {
+					author = '<a href="' + this.#escapeHtml(changeList.authorurl) + '" target="_blank" rel="noopener noreferrer">' + author + '</a>';
+				}
+
+				changeHTML += '\
+					<div class="row">\
+						<div class="col-md-4">' + author + '</div>\
+						<div class="col-md-6">' + firstChange + '</div>\
+					</div>\
+					' + subsequentChangesHTML;
+			});
+
+			const id = 'module-installer-changelog-' + idCounter++;
+			html += '\
+				<div class="panel panel-default">\
+					<div class="panel-heading" role="tab">\
+						<h4 class="panel-title">\
+							<a role="button" data-toggle="collapse" href="#' + id + '" aria-expanded="' + (state !== '' ? 'true' : 'false') + '">Version - ' + this.#escapeHtml(version) + '</a>\
+						</h4>\
+					</div>\
+					<div id="' + id + '" class="panel-collapse collapse' + state + '" role="tabpanel">\
+						<div class="panel-body">\
+							' + changeHTML + '\
+						</div>\
+					</div>\
+				</div>';
+			state = '';
+		});
+
+		html += '</div>';
+		return html;
+	}
+
+	#showModuleChangelog(moduleName) {
+		const allModules = []
+			.concat((this.#installerData && this.#installerData.modules) || [])
+			.concat((this.#installerData && this.#installerData.coreModules) || []);
+		const module = allModules.find((item) => item.module === moduleName) || null;
+		const title = module ? this.#escapeHtml(module.displayName || module.module) : this.#escapeHtml(moduleName);
+		const html = this.#renderModuleChangelogHtml(module ? module.changelog : null);
+
+		bootbox.dialog({
+			title: '<h4>Change Log: ' + title + '</h4>',
+			message: '<div style="max-height: 60vh; overflow-y: auto;">' + html + '</div>',
+			size: 'large',
+			buttons: {
+				main: {
+					label: 'Close',
+					className: 'btn-primary'
+				}
+			}
+		});
+	}
+
+	#selectedInstallerBranch() {
+		return $('#module-installer-branch').val() || this.#installerBranch || '';
+	}
+
+	#moduleMatchesInstallerSearch(module, searchText) {
+		if (!searchText) {
+			return true;
+		}
+
+		const haystack = [
+			module.displayName,
+			module.module,
+			module.description,
+			module.group,
+			(module.differingFlows || []).join(' ')
+		].join(' ').toLowerCase();
+
+		return haystack.includes(searchText);
+	}
+
+	#isReleaseBranch(branch) {
+		if (!branch) {
+			return false;
+		}
+
+		return branch === 'master' || branch === 'legacy' || branch.startsWith('v');
+	}
+
+	#adjustInstallerModalHeight() {
+		const modal = $('#module-installer-dialog');
+		if (!modal.length || !modal.is(':visible')) {
+			return;
+		}
+
+		const dialog = modal.find('.modal-dialog');
+		const content = modal.find('.modal-content');
+		const header = modal.find('.modal-header');
+		const body = modal.find('.modal-body');
+		const footer = modal.find('.modal-footer');
+		const tabs = modal.find('.nav-tabs').first();
+		const fixed = $('#module-installer-fixed');
+		const list = $('#module-installer-list');
+		const tabContent = list.find('.tab-content');
+		const installerTab = $('#module-installer-tab');
+		const installerGroups = $('#module-installer-groups');
+		const coreTab = $('#module-core-tab');
+		const suggestedTab = $('#module-suggested-tab');
+		const fixedHeight = installerTab.hasClass('active') ? (fixed.outerHeight(true) || 0) : 0;
+
+		dialog.css({
+			'margin-top': '10px',
+			'margin-bottom': '10px'
+		});
+
+		const viewportHeight = $(window).height();
+		const dialogMargins = parseInt(dialog.css('margin-top'), 10) + parseInt(dialog.css('margin-bottom'), 10);
+		const contentHeight = Math.max(420, viewportHeight - dialogMargins);
+		const chromeHeight = header.outerHeight(true) + footer.outerHeight(true);
+		const bodyHeight = Math.max(320, contentHeight - chromeHeight);
+		const tabsHeight = tabs.outerHeight(true) || 0;
+		const listHeight = Math.max(240, bodyHeight - tabsHeight);
+		const installerGroupsHeight = Math.max(180, listHeight - fixedHeight);
+
+		content.css('height', `${contentHeight}px`);
+
+		body.css({
+			'height': `${bodyHeight}px`,
+			'max-height': `${bodyHeight}px`,
+			'overflow-y': 'hidden',
+			'padding-bottom': '0'
+		});
+
+		list.css({
+			'max-height': `${listHeight}px`,
+			'height': `${listHeight}px`,
+			'overflow-y': 'hidden',
+			'overflow-x': 'hidden'
+		});
+
+		tabContent.css({
+			'height': `${listHeight}px`,
+			'max-height': `${listHeight}px`,
+			'overflow-x': 'hidden'
+		});
+
+		installerTab.css({
+			'height': `${listHeight}px`,
+			'max-height': `${listHeight}px`,
+			'overflow-y': 'hidden',
+			'overflow-x': 'hidden'
+		});
+
+		installerGroups.css({
+			'height': `${installerGroupsHeight}px`,
+			'max-height': `${installerGroupsHeight}px`,
+			'overflow-y': 'auto',
+			'overflow-x': 'hidden'
+		});
+
+		coreTab.css({
+			'height': `${listHeight}px`,
+			'max-height': `${listHeight}px`,
+			'overflow-y': 'auto',
+			'overflow-x': 'hidden'
+		});
+
+		suggestedTab.css({
+			'height': `${listHeight}px`,
+			'max-height': `${listHeight}px`,
+			'overflow-y': 'auto',
+			'overflow-x': 'hidden'
+		});
+	}
+
+	#installerQueueModules() {
+		if (this.#installerData === null) {
+			return [];
+		}
+
+		const searchText = ($('#module-installer-search').val() || '').trim().toLowerCase();
+		const filterMode = $('#module-installer-filter').val() || 'all';
+		return (this.#installerData.modules || []).filter((module) => {
+			if (filterMode === 'updateable' && !module.updateAvailable) {
+				return false;
+			}
+			if (filterMode === 'migrateable' && !module.migrationRequired) {
+				return false;
+			}
+			if (filterMode === 'not-installed') {
+				if (module.installed) {
+					return false;
+				}
+				if (module.replacedBy && String(module.replacedBy).trim() !== '') {
+					return false;
+				}
+			}
+			if (!this.#moduleMatchesInstallerSearch(module, searchText)) {
+				return false;
+			}
+
+			return !module.installed && !module.deprecated && module.valid;
+		}).map((module) => module.module);
+	}
+
+	#updateableModulesVisible() {
+		if (this.#installerData === null) {
+			return [];
+		}
+
+		const searchText = ($('#module-installer-search').val() || '').trim().toLowerCase();
+		const filterMode = $('#module-installer-filter').val() || 'all';
+		return (this.#installerData.modules || []).filter((module) => {
+			if (filterMode === 'migrateable' && !module.migrationRequired) {
+				return false;
+			}
+			if (filterMode === 'not-installed' && !module.installed) {
+				return false;
+			}
+			if (!this.#moduleMatchesInstallerSearch(module, searchText)) {
+				return false;
+			}
+
+			return module.installed && module.updateAvailable;
+		}).map((module) => module.module);
+	}
+
+	#installedModulesForVerification() {
+		if (this.#installerData === null) {
+			return [];
+		}
+
+		return (this.#installerData.modules || [])
+			.filter((module) => module.installed)
+			.map((module) => module.module);
+	}
+
+	#resetInstallerProgress() {
+		$('#module-installer-progress-status').text('');
+		$('#module-installer-progress-log').text('');
+		$('#module-installer-progress-cancel').prop('disabled', false).show();
+		$('#module-installer-progress-close').prop('disabled', true);
+		this.#installerPendingRefreshText = null;
+		this.#installerPendingEditorRefreshText = null;
+	}
+
+	#appendInstallerProgress(message) {
+		const log = $('#module-installer-progress-log');
+		const current = log.text();
+		log.text(current ? `${current}\n${message}` : message);
+		log.scrollTop(log[0].scrollHeight);
+	}
+
+	#setInstallerProgressStatus(message) {
+		$('#module-installer-progress-status').text(message);
+	}
+
+	#setInstallerQueueState(running) {
+		this.#installerQueueRunning = running;
+		$('#module-installer-install-all').prop('disabled', running);
+		$('#module-installer-update-all').prop('disabled', running);
+		$('#module-installer-verify-all').prop('disabled', running);
+		$('.module-installer-action').prop('disabled', running);
+		$('.module-suggested-install').prop('disabled', running);
+		if (!running) {
+			this.#installerCurrentRequest = null;
+		}
+	}
+
+	#showInstallerProgressModal(title, status, body, returnToDialog = true) {
+		const installerDialog = $('#module-installer-dialog');
+		const progressModal = $('#module-installer-progress-modal');
+		if (progressModal.length && progressModal.parent()[0] !== document.body) {
+			progressModal.appendTo('body');
+		}
+
+		this.#installerReturnToDialog = returnToDialog && installerDialog.is(':visible');
+		if (this.#installerReturnToDialog) {
+			installerDialog.modal('hide');
+		}
+
+		progressModal.find('.modal-title').text(title);
+		$('#module-installer-progress-status').text(status);
+		$('#module-installer-progress-log').text(body || '');
+		$('#module-installer-progress-cancel').hide();
+		$('#module-installer-progress-close').prop('disabled', false);
+		progressModal.modal({
+			backdrop: 'static',
+			keyboard: true,
+			show: true
+		});
+	}
+
+	#runInstallerQueue(modules, action, title) {
+		const queue = Array.isArray(modules) ? modules.slice() : [];
+		if (queue.length === 0 || this.#installerQueueRunning) {
+			return;
+		}
+
+		const installerDialog = $('#module-installer-dialog');
+		const progressModal = $('#module-installer-progress-modal');
+		if (progressModal.length && progressModal.parent()[0] !== document.body) {
+			progressModal.appendTo('body');
+		}
+		this.#installerReturnToDialog = installerDialog.is(':visible');
+		if (this.#installerReturnToDialog) {
+			installerDialog.modal('hide');
+		}
+
+		this.#installerCancelRequested = false;
+		this.#installerCurrentRequest = null;
+		$('#module-installer-progress-log').text('');
+		progressModal.modal({
+			backdrop: 'static',
+			keyboard: false,
+			show: true
+		});
+		progressModal.find('.modal-title').text('Installer Progress');
+		this.#setInstallerQueueState(true);
+		$('#module-installer-progress-cancel').prop('disabled', false).show();
+		$('#module-installer-progress-close').prop('disabled', true);
+		this.#setInstallerProgressStatus(`${title}: 0 of ${queue.length} complete`);
+		this.#appendInstallerProgress(`Starting ${title.toLowerCase()} for ${queue.length} module${queue.length === 1 ? '' : 's'}.`);
+
+		const runNext = (index) => {
+			if (this.#installerCancelRequested) {
+				this.#setInstallerProgressStatus(`${title}: cancelled`);
+				this.#appendInstallerProgress('Installation cancelled by user.');
+				this.#setInstallerQueueState(false);
+				$('#module-installer-progress-cancel').hide();
+				$('#module-installer-progress-close').prop('disabled', false);
+				this.#installerPendingRefreshText = 'Refreshing installer after cancellation...';
+				this.#installerPendingEditorRefreshText = 'Refreshing module editor...';
+				return;
+			}
+
+			if (index >= queue.length) {
+				this.#setInstallerProgressStatus(`${title}: complete`);
+				this.#appendInstallerProgress('All queued modules processed.');
+				this.#setInstallerQueueState(false);
+				$('#module-installer-progress-cancel').hide();
+				$('#module-installer-progress-close').prop('disabled', false);
+				this.#installerPendingRefreshText = 'Refreshing installer after installation...';
+				this.#installerPendingEditorRefreshText = 'Refreshing module editor...';
+				return;
+			}
+
+			const moduleName = queue[index];
+			this.#setInstallerProgressStatus(`${title}: ${index + 1} of ${queue.length} - ${moduleName}`);
+			this.#appendInstallerProgress(`[${index + 1}/${queue.length}] ${action} ${moduleName}...`);
+
+			this.#installerCurrentRequest = $.ajax({
+				url: 'includes/moduleinstallerutil.php?request=Action&_=' + new Date().getTime(),
+				type: 'POST',
+				dataType: 'json',
+				cache: false,
+				data: {
+					module: moduleName,
+					action: action,
+					branch: this.#selectedInstallerBranch()
+				},
+				context: this
+			}).done((result) => {
+				this.#appendInstallerProgress(`OK: ${moduleName}`);
+				if (result.message) {
+					this.#appendInstallerProgress(result.message);
+				}
+				this.#installerCurrentRequest = null;
+				runNext(index + 1);
+			}).fail((xhr) => {
+				this.#installerCurrentRequest = null;
+				if (this.#installerCancelRequested || xhr.statusText === 'abort') {
+					runNext(index + 1);
+					return;
+				}
+
+				let message = `Failed to ${action} ${moduleName}.`;
+				if (xhr.responseJSON?.message) {
+					message = xhr.responseJSON.message;
+				}
+				this.#appendInstallerProgress(`FAILED: ${moduleName}`);
+				this.#appendInstallerProgress(message);
+				this.#setInstallerProgressStatus(`${title}: failed on ${moduleName}`);
+				this.#setInstallerQueueState(false);
+				$('#module-installer-progress-cancel').hide();
+				$('#module-installer-progress-close').prop('disabled', false);
+				bootbox.alert(message);
+			});
+		};
+
+		runNext(0);
+	}
+
+	#runVerificationQueue(modules) {
+		const queue = Array.isArray(modules) ? modules.slice() : [];
+		if (queue.length === 0 || this.#installerQueueRunning) {
+			return;
+		}
+
+		const installerDialog = $('#module-installer-dialog');
+		const progressModal = $('#module-installer-progress-modal');
+		if (progressModal.length && progressModal.parent()[0] !== document.body) {
+			progressModal.appendTo('body');
+		}
+		this.#installerReturnToDialog = installerDialog.is(':visible');
+		if (this.#installerReturnToDialog) {
+			installerDialog.modal('hide');
+		}
+
+		this.#installerCancelRequested = false;
+		this.#installerCurrentRequest = null;
+		progressModal.find('.modal-title').text('Module Verification');
+		$('#module-installer-progress-log').text('');
+		progressModal.modal({
+			backdrop: 'static',
+			keyboard: false,
+			show: true
+		});
+		this.#setInstallerQueueState(true);
+		$('#module-installer-progress-cancel').prop('disabled', false).show();
+		$('#module-installer-progress-close').prop('disabled', true);
+		this.#setInstallerProgressStatus(`Verifying installed modules: 0 of ${queue.length} complete`);
+		this.#appendInstallerProgress(`Starting verification for ${queue.length} module${queue.length === 1 ? '' : 's'}.`);
+
+		const runNext = (index) => {
+			if (this.#installerCancelRequested) {
+				this.#setInstallerProgressStatus('Verification cancelled');
+				this.#appendInstallerProgress('Verification cancelled by user.');
+				this.#setInstallerQueueState(false);
+				$('#module-installer-progress-cancel').hide();
+				$('#module-installer-progress-close').prop('disabled', false);
+				this.#installerPendingRefreshText = 'Refreshing installer after verification cancellation...';
+				return;
+			}
+
+			if (index >= queue.length) {
+				this.#setInstallerProgressStatus('Verification complete');
+				this.#appendInstallerProgress('All installed modules verified.');
+				this.#setInstallerQueueState(false);
+				$('#module-installer-progress-cancel').hide();
+				$('#module-installer-progress-close').prop('disabled', false);
+				this.#installerPendingRefreshText = 'Refreshing installer after verification...';
+				return;
+			}
+
+			const moduleName = queue[index];
+			this.#setInstallerProgressStatus(`Verifying installed modules: ${index + 1} of ${queue.length} - ${moduleName}`);
+			this.#appendInstallerProgress(`[${index + 1}/${queue.length}] verify ${moduleName}...`);
+
+			this.#installerCurrentRequest = $.ajax({
+				url: 'includes/moduleinstallerutil.php?request=Action&_=' + new Date().getTime(),
+				type: 'POST',
+				dataType: 'json',
+				cache: false,
+				data: {
+					module: moduleName,
+					action: 'verify',
+					branch: this.#selectedInstallerBranch()
+				},
+				context: this
+			}).done((result) => {
+				this.#installerCurrentRequest = null;
+				this.#appendInstallerProgress(result.message || `Module: ${moduleName}\nResult: OK`);
+				this.#appendInstallerProgress('');
+				runNext(index + 1);
+			}).fail((xhr) => {
+				this.#installerCurrentRequest = null;
+				if (this.#installerCancelRequested || xhr.statusText === 'abort') {
+					runNext(index + 1);
+					return;
+				}
+
+				const message = xhr.responseJSON?.message || `Failed to verify ${moduleName}.`;
+				this.#appendInstallerProgress(`Module: ${moduleName}\nResult: FAILED\nERROR: ${message}`);
+				this.#appendInstallerProgress('');
+				runNext(index + 1);
+			});
+		};
+
+		runNext(0);
+	}
+
+	#renderInstallerModules(result) {
+		this.#installerData = result;
+		this.#installerBranch = result.branch;
+		$('#module-installer-repo').text(result.repo || '');
+		this.#renderCoreModules(result.coreModules || []);
+
+		const branchSelect = $('#module-installer-branch');
+		const currentOptions = Array.from(branchSelect.find('option')).map((option) => option.value);
+		const newOptions = result.branches || [];
+		if (currentOptions.join('|') !== newOptions.join('|')) {
+			branchSelect.empty();
+			const stableGroup = $('<optgroup>', { label: 'Stable' });
+			const developmentGroup = $('<optgroup>', { label: 'Development' });
+
+			newOptions.forEach((branch) => {
+				const option = new Option(branch, branch, false, branch === result.branch);
+				if (this.#isReleaseBranch(branch)) {
+					stableGroup.append(option);
+				} else {
+					developmentGroup.append(option);
+				}
+			});
+
+			if (stableGroup.children().length > 0) {
+				branchSelect.append(stableGroup);
+			}
+			if (developmentGroup.children().length > 0) {
+				branchSelect.append(developmentGroup);
+			}
+		} else {
+			branchSelect.val(result.branch);
+		}
+
+		const groupsContainer = $('#module-installer-groups');
+		const summaryContainer = $('#module-installer-summary');
+		groupsContainer.empty();
+		summaryContainer.empty();
+
+		const searchText = ($('#module-installer-search').val() || '').trim().toLowerCase();
+		const autoExpandGroups = searchText !== '';
+		const filterMode = $('#module-installer-filter').val() || 'all';
+		const modules = (result.modules || []).filter((module) => {
+			if (filterMode === 'updateable' && !module.updateAvailable) {
+				return false;
+			}
+			if (filterMode === 'migrateable' && !module.migrationRequired) {
+				return false;
+			}
+			if (filterMode === 'not-installed') {
+				if (module.installed) {
+					return false;
+				}
+				if (module.replacedBy && String(module.replacedBy).trim() !== '') {
+					return false;
+				}
+			}
+			return this.#moduleMatchesInstallerSearch(module, searchText);
+		});
+		const installableCount = modules.filter((module) => !module.installed && !module.deprecated && module.valid).length;
+		const updateableCount = modules.filter((module) => module.installed && module.updateAvailable).length;
+		$('#module-installer-install-all')
+			.prop('disabled', installableCount === 0 || this.#installerQueueRunning)
+			.html(`<i class="fa-solid fa-layer-group fa-fw"></i>`);
+		$('#module-installer-update-all')
+			.prop('disabled', updateableCount === 0 || this.#installerQueueRunning)
+			.html(`<i class="fa-solid fa-download fa-fw"></i>`);
+		const installedCount = modules.filter((module) => module.installed).length;
+		const updateCount = modules.filter((module) => module.updateAvailable).length;
+		const migrationCount = modules.filter((module) => module.migrationRequired).length;
+		const deprecatedCount = modules.filter((module) => module.deprecated).length;
+
+		summaryContainer.append(`
+			<div class="row">
+				<div class="col-sm-6 col-md-2">
+					<div class="panel panel-default"><div class="panel-body text-center"><small>Total Modules</small><div><strong>${modules.length}</strong></div></div></div>
+				</div>
+				<div class="col-sm-6 col-md-2">
+					<div class="panel panel-default"><div class="panel-body text-center"><small>Installed</small><div><strong>${installedCount}</strong></div></div></div>
+				</div>
+				<div class="col-sm-6 col-md-2">
+					<div class="panel panel-default"><div class="panel-body text-center"><small>Updates</small><div><strong>${updateCount}</strong></div></div></div>
+				</div>
+				<div class="col-sm-6 col-md-2">
+					<div class="panel panel-default"><div class="panel-body text-center"><small>Migration</small><div><strong>${migrationCount}</strong></div></div></div>
+				</div>
+				<div class="col-sm-6 col-md-2">
+					<div class="panel panel-default"><div class="panel-body text-center"><small>Deprecated</small><div><strong>${deprecatedCount}</strong></div></div></div>
+				</div>
+				<div class="col-sm-6 col-md-2">
+					<div class="panel panel-default"><div class="panel-body text-center"><small>Branch</small><div><strong>${this.#escapeHtml(result.branch || '')}</strong></div></div></div>
+				</div>
+			</div>
+		`);
+
+		const groupedModules = {};
+		modules.forEach((module) => {
+			const groupName = module.group || 'Ungrouped';
+			if (groupedModules[groupName] === undefined) {
+				groupedModules[groupName] = [];
+			}
+			groupedModules[groupName].push(module);
+		});
+
+		Object.keys(groupedModules).sort((a, b) => a.localeCompare(b)).forEach((groupName) => {
+			const groupId = `module-installer-group-${this.#escapeHtml(groupName).replace(/[^a-zA-Z0-9_-]/g, '-')}`;
+			const expandedClass = autoExpandGroups ? 'in' : '';
+			const toggleClass = autoExpandGroups ? 'module-installer-toggle' : 'module-installer-toggle collapsed';
+			const expandedState = autoExpandGroups ? 'true' : 'false';
+			const iconClass = autoExpandGroups ? 'fa-solid fa-chevron-down fa-fw' : 'fa-solid fa-chevron-right fa-fw';
+			let groupHtml = `
+				<div class="panel panel-default panel-shadow">
+					<div class="panel-heading">
+						<a class="${toggleClass}" data-toggle="collapse" href="#${groupId}" aria-expanded="${expandedState}" aria-controls="${groupId}">
+							<i class="${iconClass}"></i> <span>${this.#escapeHtml(groupName)}</span>
+							<span class="pull-right text-muted">${groupedModules[groupName].length} module${groupedModules[groupName].length === 1 ? '' : 's'}</span>
+						</a>
+					</div>
+					<div id="${groupId}" class="panel-collapse collapse ${expandedClass}">
+						<div class="panel-body">
+							<div class="list-group">
+			`;
+
+			groupedModules[groupName].forEach((module) => {
+			let actions = `
+				<div class="btn-group" role="group">
+					<button type="button" class="btn btn-primary module-installer-action" data-action="status" data-module="${this.#escapeHtml(module.module)}" title="Status"><i class="fa-solid fa-circle-info fa-fw"></i></button>
+				</div>
+			`;
+			if (this.#moduleHasChangelog(module)) {
+				actions += ` <div class="btn-group" role="group"><button type="button" class="btn btn-default module-installer-changelog" data-module="${this.#escapeHtml(module.module)}" title="Change Log"><i class="fa-solid fa-clock-rotate-left fa-fw"></i></button></div>`;
+			} else {
+				actions += ` <div class="btn-group" role="group"><button type="button" class="btn btn-default" title="No changelog available" disabled="disabled"><i class="fa-solid fa-clock-rotate-left fa-fw"></i></button></div>`;
+			}
+			if (module.docs) {
+				actions += ` <div class="btn-group" role="group"><a class="btn btn-info" href="${this.#escapeHtml(module.docs)}" target="_blank" rel="noopener noreferrer" title="Docs"><i class="fa-solid fa-circle-question fa-fw"></i></a></div>`;
+			}
+			if (module.installed) {
+				if (module.updateAvailable) {
+					actions += ` <div class="btn-group" role="group"><button type="button" class="btn btn-primary module-installer-action" data-action="update" data-module="${this.#escapeHtml(module.module)}" title="Update"><i class="fa-solid fa-download fa-fw"></i></button></div>`;
+				}
+				actions += ` <div class="btn-group" role="group"><button type="button" class="btn btn-warning module-installer-action" data-action="reinstall" data-module="${this.#escapeHtml(module.module)}" title="Reinstall"><i class="fa-solid fa-rotate-right fa-fw"></i></button></div>`;
+				if (module.migrationRequired) {
+					actions += ` <div class="btn-group" role="group"><button type="button" class="btn btn-info module-installer-action" data-action="migrate" data-module="${this.#escapeHtml(module.module)}" title="Migrate"><i class="fa-solid fa-right-left fa-fw"></i></button></div>`;
+				}
+				actions += ` <div class="btn-group" role="group"><button type="button" class="btn btn-danger module-installer-action" data-action="uninstall" data-module="${this.#escapeHtml(module.module)}" title="Uninstall"><i class="fa-solid fa-trash fa-fw"></i></button></div>`;
+			} else if (!module.deprecated && module.valid) {
+				actions += ` <div class="btn-group" role="group"><button type="button" class="btn btn-success module-installer-action" data-action="install" data-module="${this.#escapeHtml(module.module)}" title="Install"><i class="fa-solid fa-plus fa-fw"></i></button></div>`;
+			}
+
+			const errors = []
+				.concat(module.sourceErrors || [])
+				.concat(module.installed ? (module.installedErrors || []) : []);
+			const errorText = errors.length > 0
+				? this.#escapeHtml(errors.join(' | '))
+				: '';
+			const replacedBy = module.replacedBy
+				? `<div class="text-warning"><small>Replaced by ${this.#escapeHtml(module.replacedBy)}</small></div>`
+				: '';
+			const migrationBadge = (module.differingFlows || []).length > 0
+				? `<span class="badge">Migration Required</span>`
+				: '';
+			const flowsBlock = (module.differingFlows || []).length > 0
+				? `<div><strong>Flows:</strong> ${this.#escapeHtml(module.differingFlows.join(', '))}</div>`
+				: '';
+			const shortDescription = this.#escapeHtml(module.description || '');
+			let statusIcon = '<i class="fa-regular fa-circle text-muted" title="Available"></i>';
+			if (module.installed) {
+				statusIcon = '<i class="fa-solid fa-circle-check text-success" title="Installed"></i>';
+			} else if (module.deprecated) {
+				statusIcon = '<i class="fa-solid fa-triangle-exclamation text-warning" title="Deprecated"></i>';
+			}
+			const versionLine = `
+				<span class="badge">Installed: ${this.#escapeHtml(module.installedVersion || 'No')}</span>
+				<span class="badge">Available: ${this.#escapeHtml(module.sourceVersion || 'Unknown')}</span>
+			`;
+
+			groupHtml += `
+				<div class="list-group-item" data-module="${this.#escapeHtml(module.module)}">
+						<div class="row">
+							<div class="col-sm-8">
+								<div class="row">
+									<div class="col-xs-12">
+										<h4>
+											${statusIcon} ${this.#escapeHtml(module.displayName)}
+										</h4>
+									</div>
+								</div>
+								<div class="row">
+									<div class="col-xs-12">
+										<p class="text-muted">${shortDescription}</p>
+									</div>
+								</div>
+								<div class="row">
+									<div class="col-xs-12">
+										<p class="help-block"><span class="badge">${this.#escapeHtml(module.module)}</span> ${versionLine} ${migrationBadge}</p>
+									</div>
+								</div>
+								${replacedBy ? `<div class="row"><div class="col-xs-12">${replacedBy}</div></div>` : ''}
+								${errorText ? `<div class="row"><div class="col-xs-12"><div class="text-danger"><small>${errorText}</small></div></div></div>` : ''}
+								${flowsBlock ? `<div class="row"><div class="col-xs-12">${flowsBlock}</div></div>` : ''}
+							</div>
+							<div class="col-sm-4 text-right">
+								<div class="btn-toolbar pull-right" role="toolbar">
+									${actions}
+								</div>
+							</div>
+						</div>
+				</div>
+			`;
+			});
+
+			groupHtml += '</div></div></div></div>';
+			groupsContainer.append(groupHtml);
+		});
+
+		if (modules.length === 0) {
+			let emptyTitle = 'No Modules Found';
+			let emptyMessage = 'No repository modules are available for the selected branch.';
+
+			if ((result.modules || []).length > 0) {
+				emptyTitle = 'No Matching Modules';
+				emptyMessage = 'No modules match the current filter or search text. Try changing the Show option or clearing the filter.';
+			}
+
+			groupsContainer.append(`
+				<div id="module-installer-empty" class="panel panel-default">
+					<div class="panel-body">
+						<div class="alert alert-info text-center" style="margin-bottom: 0;">
+							<h4>${emptyTitle}</h4>
+							<p class="mb-0">${emptyMessage}</p>
+						</div>
+					</div>
+				</div>
+			`);
+		}
+	}
+
+	#renderCoreModules(coreModules) {
+		const container = $('#module-core-groups');
+		container.empty();
+
+		const modules = Array.isArray(coreModules) ? coreModules : [];
+		if (modules.length === 0) {
+			container.append(`
+				<div class="panel panel-default">
+					<div class="panel-body">
+						<div class="alert alert-info text-center" style="margin-bottom: 0;">
+							<h4>No Core Modules Found</h4>
+							<p>No built-in Allsky core modules were detected in scripts/modules.</p>
+						</div>
+					</div>
+				</div>
+			`);
+			return;
+		}
+
+		container.append(`
+			<div class="panel panel-info">
+				<div class="panel-body">
+					<p class="help-block" style="margin-bottom: 0;">Core modules are built into Allsky. They are shown here for reference and documentation only, and cannot be installed, updated, or removed from the package manager.</p>
+				</div>
+			</div>
+		`);
+
+		const groupedModules = {};
+		modules.forEach((module) => {
+			const groupName = module.group || 'Allsky Core';
+			if (groupedModules[groupName] === undefined) {
+				groupedModules[groupName] = [];
+			}
+			groupedModules[groupName].push(module);
+		});
+
+		Object.keys(groupedModules).sort((a, b) => a.localeCompare(b)).forEach((groupName) => {
+			const groupId = `module-core-group-${this.#escapeHtml(groupName).replace(/[^a-zA-Z0-9_-]/g, '-')}`;
+			let groupHtml = `
+				<div class="panel panel-default panel-shadow">
+					<div class="panel-heading">
+						<a class="module-core-toggle collapsed" data-toggle="collapse" href="#${groupId}" aria-expanded="false" aria-controls="${groupId}">
+							<i class="fa-solid fa-chevron-right fa-fw"></i> <span>${this.#escapeHtml(groupName)}</span>
+							<span class="pull-right text-muted">${groupedModules[groupName].length} module${groupedModules[groupName].length === 1 ? '' : 's'}</span>
+						</a>
+					</div>
+					<div id="${groupId}" class="panel-collapse collapse">
+						<div class="panel-body">
+							<div class="list-group">
+			`;
+
+			groupedModules[groupName].forEach((module) => {
+				let actions = '';
+				if (this.#moduleHasChangelog(module)) {
+					actions += `<div class="btn-group" role="group"><button type="button" class="btn btn-default module-installer-changelog" data-module="${this.#escapeHtml(module.module)}" title="Change Log"><i class="fa-solid fa-clock-rotate-left fa-fw"></i></button></div>`;
+				} else {
+					actions += `<div class="btn-group" role="group"><button type="button" class="btn btn-default" title="No changelog available" disabled="disabled"><i class="fa-solid fa-clock-rotate-left fa-fw"></i></button></div>`;
+				}
+				if (module.docs) {
+					actions += ` <div class="btn-group" role="group"><a class="btn btn-info" href="${this.#escapeHtml(module.docs)}" target="_blank" rel="noopener noreferrer" title="Docs"><i class="fa-solid fa-circle-question fa-fw"></i></a></div>`;
+				}
+
+				const errors = [].concat(module.sourceErrors || []);
+				const errorText = errors.length > 0
+					? this.#escapeHtml(errors.join(' | '))
+					: '';
+				const replacedBy = module.replacedBy
+					? `<div class="text-warning"><small>Replaced by ${this.#escapeHtml(module.replacedBy)}</small></div>`
+					: '';
+				const shortDescription = this.#escapeHtml(module.description || '');
+				let statusIcon = '<i class="fa-solid fa-circle-check text-success" title="Core Module"></i>';
+				if (module.deprecated) {
+					statusIcon = '<i class="fa-solid fa-triangle-exclamation text-warning" title="Deprecated"></i>';
+				} else if (!module.valid) {
+					statusIcon = '<i class="fa-solid fa-circle-xmark text-danger" title="Invalid"></i>';
+				}
+				const versionLine = `
+					<span class="badge">Installed: ${this.#escapeHtml(module.installedVersion || 'Built-in')}</span>
+					<span class="badge">Available: ${this.#escapeHtml(module.sourceVersion || 'Built-in')}</span>
+				`;
+
+				groupHtml += `
+					<div class="list-group-item" data-module="${this.#escapeHtml(module.module)}">
+						<div class="row">
+							<div class="col-sm-8">
+								<div class="row">
+									<div class="col-xs-12">
+										<h4>
+											${statusIcon} ${this.#escapeHtml(module.displayName)}
+										</h4>
+									</div>
+								</div>
+								<div class="row">
+									<div class="col-xs-12">
+										<p class="text-muted">${shortDescription}</p>
+									</div>
+								</div>
+								<div class="row">
+									<div class="col-xs-12">
+										<p class="help-block"><span class="badge">${this.#escapeHtml(module.module)}</span> ${versionLine}</p>
+									</div>
+								</div>
+								${replacedBy ? `<div class="row"><div class="col-xs-12">${replacedBy}</div></div>` : ''}
+								${errorText ? `<div class="row"><div class="col-xs-12"><div class="text-danger"><small>${errorText}</small></div></div></div>` : ''}
+							</div>
+							<div class="col-sm-4 text-right">
+								${actions ? `<div class="btn-toolbar pull-right" role="toolbar">${actions}</div>` : ''}
+							</div>
+						</div>
+					</div>
+				`;
+			});
+
+			groupHtml += '</div></div></div></div>';
+			container.append(groupHtml);
+		});
+	}
+
+	#renderSuggestedModules(suggestedData, installerData = null) {
+		const container = $('#module-suggested-groups');
+		container.empty();
+
+		const suggestionInfo = suggestedData && typeof suggestedData.info === 'string'
+			? suggestedData.info
+			: '';
+		const suggestionList = Array.isArray(suggestedData)
+			? suggestedData
+			: ((suggestedData && Array.isArray(suggestedData.suggestions)) ? suggestedData.suggestions : []);
+		const moduleIndex = {};
+		((installerData && installerData.modules) || []).forEach((module) => {
+			moduleIndex[module.module] = module;
+		});
+
+		if (suggestionInfo) {
+			container.append(`
+				<div class="panel panel-info">
+					<div class="panel-body">
+						<p class="help-block">${this.#escapeHtml(suggestionInfo)}</p>
+					</div>
+				</div>
+			`);
+		}
+
+		if (suggestionList.length === 0) {
+			container.append(`
+				<div class="panel panel-default">
+					<div class="panel-body">
+						<div class="alert alert-info text-center" style="margin-bottom: 0;">
+							<h4>No Suggestions Available</h4>
+							<p>No suggested module groups are defined.</p>
+						</div>
+					</div>
+				</div>
+			`);
+			return;
+		}
+
+		suggestionList.forEach((suggestion, index) => {
+			const title = this.#escapeHtml(suggestion.title || 'Suggested Modules');
+			const description = suggestion.description
+				? `<div class="well well-sm"><p class="text-muted" style="margin-bottom: 0;">${this.#escapeHtml(suggestion.description)}</p></div>`
+				: '';
+			const modules = Array.isArray(suggestion.modules) ? suggestion.modules : [];
+			const collapseId = `module-suggested-collapse-${index}`;
+			const installableModules = modules.filter((moduleName) => {
+				const module = moduleIndex[moduleName] || null;
+				return module && !module.installed && !module.deprecated && module.valid;
+			});
+			const installButtonDisabled = installableModules.length === 0 ? ' disabled="disabled"' : '';
+			const installButtonData = this.#escapeHtml(JSON.stringify(installableModules));
+			let panelHtml = `
+				<div class="panel panel-default panel-shadow">
+					<div class="panel-heading">
+						<div class="row">
+							<div class="col-xs-8">
+								<a class="module-suggested-toggle collapsed" role="button" data-toggle="collapse" href="#${collapseId}" aria-expanded="false" aria-controls="${collapseId}">
+									<i class="fa-solid fa-chevron-right fa-fw"></i> <strong>${title}</strong>
+								</a>
+							</div>
+							<div class="col-xs-4 text-right">
+								<button type="button" class="btn btn-success btn-sm module-suggested-install"${installButtonDisabled} data-modules='${installButtonData}'>
+									<i class="fa-solid fa-plus fa-fw"></i> Install
+								</button>
+							</div>
+						</div>
+					</div>
+					<div id="${collapseId}" class="panel-collapse collapse">
+						<div class="panel-body">
+							${description}
+							<div class="row">
+								<div class="col-xs-12">
+									<h4 class="text-muted">Required Modules</h4>
+								</div>
+							</div>
+							<div class="list-group">
+			`;
+
+			modules.forEach((moduleName) => {
+				const module = moduleIndex[moduleName] || null;
+				const safeModuleName = this.#escapeHtml(moduleName);
+				const displayName = this.#escapeHtml(module ? (module.displayName || module.module) : moduleName);
+				const statusText = module
+					? (module.installed ? 'Installed' : 'Not Installed')
+					: 'Not Available In Repository';
+				const statusClass = module
+					? (module.installed ? 'label-success' : 'label-default')
+					: 'label-warning';
+				let actions = '';
+
+				if (module) {
+					if (this.#moduleHasChangelog(module)) {
+						actions += `<div class="btn-group" role="group"><button type="button" class="btn btn-default module-installer-changelog" data-module="${safeModuleName}" title="Change Log"><i class="fa-solid fa-clock-rotate-left fa-fw"></i></button></div>`;
+					} else {
+						actions += `<div class="btn-group" role="group"><button type="button" class="btn btn-default" title="No changelog available" disabled="disabled"><i class="fa-solid fa-clock-rotate-left fa-fw"></i></button></div>`;
+					}
+				}
+				if (module && module.docs) {
+					actions += ` <div class="btn-group" role="group"><a class="btn btn-info" href="${this.#escapeHtml(module.docs)}" target="_blank" rel="noopener noreferrer" title="Docs"><i class="fa-solid fa-circle-question fa-fw"></i></a></div>`;
+				}
+				if (module && !module.installed && !module.deprecated && module.valid) {
+					actions += ` <div class="btn-group" role="group"><button type="button" class="btn btn-success module-installer-action" data-action="install" data-module="${safeModuleName}" title="Install"><i class="fa-solid fa-plus fa-fw"></i></button></div>`;
+				} else if (module && module.installed && module.updateAvailable) {
+					actions += ` <div class="btn-group" role="group"><button type="button" class="btn btn-primary module-installer-action" data-action="update" data-module="${safeModuleName}" title="Update"><i class="fa-solid fa-download fa-fw"></i></button></div>`;
+				}
+
+				panelHtml += `
+					<div class="list-group-item">
+						<div class="row">
+							<div class="col-sm-8">
+								<div><strong>${displayName}</strong></div>
+							</div>
+							<div class="col-sm-4 text-right">
+								<p class="help-block"><span class="label ${statusClass}">${statusText}</span></p>
+								${actions ? `<div class="btn-toolbar pull-right" role="toolbar">${actions}</div>` : ''}
+							</div>
+						</div>
+					</div>
+				`;
+			});
+
+			panelHtml += `
+							</div>
+						</div>
+					</div>
+				</div>
+			`;
+			container.append(panelHtml);
+		});
+	}
+
+	#runSuggestedInstall(modules) {
+		this.#runInstallerQueue(modules, 'install', 'Suggested Install');
+	}
+
+	#loadSuggestedModules() {
+		return $.ajax({
+			url: 'config/suggested_modules.json?_=' + new Date().getTime(),
+			type: 'GET',
+			dataType: 'json',
+			cache: false,
+			context: this
+		}).done((result) => {
+			this.#renderSuggestedModules(result, this.#installerData);
+		}).fail(() => {
+			$('#module-suggested-groups').html(`
+				<div class="panel panel-default">
+					<div class="panel-body">
+						<div class="alert alert-warning text-center" style="margin-bottom: 0;">
+							<h4>Unable To Load Suggestions</h4>
+							<p>The suggested module list could not be loaded from config/suggested_modules.json.</p>
+						</div>
+					</div>
+				</div>
+			`);
+		});
+	}
+
+	#loadInstallerModules(refresh = false, overlayText = null) {
+		const branch = this.#selectedInstallerBranch();
+		$.LoadingOverlay('show', overlayText ? { text: overlayText } : {});
+
+		return $.ajax({
+			url: 'includes/moduleinstallerutil.php',
+			type: 'GET',
+			dataType: 'json',
+			cache: false,
+			data: {
+				request: 'Modules',
+				branch: branch,
+				refresh: refresh
+			},
+			context: this
+		}).done((result) => {
+			this.#renderInstallerModules(result);
+			this.#renderSuggestedModules([], result);
+			this.#loadSuggestedModules();
+			this.#adjustInstallerModalHeight();
+		}).fail((xhr) => {
+			let message = 'Failed to load the module installer data.';
+			if (xhr.responseJSON?.message) {
+				message = xhr.responseJSON.message;
+			}
+			bootbox.alert(message);
+		}).always(() => {
+			$.LoadingOverlay('hide');
+		});
+	}
+
+	#runInstallerAction(moduleName, action) {
+		if (this.#installerQueueRunning) {
+			return;
+		}
+
+		if (action === 'install') {
+			this.#runInstallerQueue([moduleName], 'install', `Install ${moduleName}`);
+			return;
+		}
+
+		const destructive = action === 'uninstall';
+		if (destructive && !window.confirm(`Are you sure you want to ${action} ${moduleName}?`)) {
+			return;
+		}
+
+		const actionLabels = {
+			status: `Loading module information for ${moduleName}...`,
+			install: `Installing ${moduleName}. This may take a while if dependencies are needed...`,
+			update: `Updating ${moduleName}. This may take a while if dependencies are needed...`,
+			reinstall: `Reinstalling ${moduleName}. This may take a while if dependencies are needed...`,
+			migrate: `Loading migration information for ${moduleName}...`,
+			uninstall: `Uninstalling ${moduleName}...`
+		};
+
+		$.LoadingOverlay('show', {
+			text: actionLabels[action] || `Processing ${moduleName}...`
+		});
+		$.ajax({
+			url: 'includes/moduleinstallerutil.php?request=Action&_=' + new Date().getTime(),
+			type: 'POST',
+			dataType: 'json',
+			cache: false,
+			data: {
+				module: moduleName,
+				action: action,
+				branch: this.#selectedInstallerBranch()
+			},
+			context: this
+		}).done((result) => {
+			bootbox.alert({
+				title: `${action.charAt(0).toUpperCase()}${action.slice(1)} ${moduleName}`,
+				message: `<pre>${this.#escapeHtml(result.message || 'Done')}</pre>`
+			});
+			this.#loadInstallerModules(false);
+			this.#buildUI();
+		}).fail((xhr) => {
+			let message = 'The module action failed.';
+			if (xhr.responseJSON?.message) {
+				message = xhr.responseJSON.message;
+			}
+			bootbox.alert(message);
+		}).always(() => {
+			$.LoadingOverlay('hide');
+		});
+	}
+
 	run() {
+		const installerDialog = $('#module-installer-dialog');
+		if (installerDialog.length && installerDialog.parent()[0] !== document.body) {
+			installerDialog.appendTo('body');
+		}
+		const installerProgressDialog = $('#module-installer-progress-modal');
+		if (installerProgressDialog.length && installerProgressDialog.parent()[0] !== document.body) {
+			installerProgressDialog.appendTo('body');
+		}
 
 		$(document).on('click', '#module-editor-restore', (event) => {
 			if (window.confirm('Are you sure you wish to restore this Flow. The last saved configuration for this flow will be restored. This process CANNOT be undone?')) {
@@ -2747,6 +3904,175 @@ class MODULESEDITOR {
 				clearTimeout(loadingTimer);
 				$.LoadingOverlay('hide');
 			});
+		});
+
+		$(document).on('click', '#module-installer-manager', () => {
+			$('#module-installer-dialog').modal('show');
+			this.#resetInstallerProgress();
+			this.#loadInstallerModules(false);
+		});
+
+		$(document).on('shown.bs.modal', '#module-installer-dialog', () => {
+			this.#adjustInstallerModalHeight();
+		});
+
+		$(document).off('hidden.bs.modal', '#module-installer-progress-modal');
+		$(document).on('hidden.bs.modal', '#module-installer-progress-modal', () => {
+			const refreshText = this.#installerPendingRefreshText;
+			const editorRefreshText = this.#installerPendingEditorRefreshText;
+			this.#installerPendingRefreshText = null;
+			this.#installerPendingEditorRefreshText = null;
+
+			if (refreshText !== null) {
+				this.#loadInstallerModules(false, refreshText);
+			}
+			if (editorRefreshText !== null) {
+				this.#buildUI(editorRefreshText);
+			}
+
+			if (this.#installerReturnToDialog) {
+				this.#installerReturnToDialog = false;
+				$('#module-installer-dialog').modal('show');
+			}
+		});
+
+		$(document).off('click', '#module-installer-progress-cancel');
+		$(document).on('click', '#module-installer-progress-cancel', () => {
+			if (!this.#installerQueueRunning) {
+				return;
+			}
+			this.#installerCancelRequested = true;
+			$('#module-installer-progress-cancel').prop('disabled', true);
+			this.#setInstallerProgressStatus('Cancelling after current step...');
+			this.#appendInstallerProgress('Cancel requested.');
+			if (this.#installerCurrentRequest !== null) {
+				this.#installerCurrentRequest.abort();
+			}
+		});
+
+		$(document).on('shown.bs.tab', '#module-installer-dialog a[data-toggle="tab"]', () => {
+			this.#adjustInstallerModalHeight();
+		});
+
+		$(window).off('resize.moduleinstaller');
+		$(window).on('resize.moduleinstaller', () => {
+			this.#adjustInstallerModalHeight();
+		});
+
+		$(document).on('change', '#module-installer-branch', () => {
+			this.#installerBranch = $('#module-installer-branch').val();
+			this.#loadInstallerModules(false);
+		});
+
+		$(document).on('input', '#module-installer-search', () => {
+			if (this.#installerData !== null) {
+				this.#renderInstallerModules(this.#installerData);
+			}
+		});
+
+		$(document).on('change', '#module-installer-filter', () => {
+			if (this.#installerData !== null) {
+				this.#renderInstallerModules(this.#installerData);
+				this.#adjustInstallerModalHeight();
+			}
+		});
+
+		$(document).off('click', '.module-installer-action');
+		$(document).on('click', '.module-installer-action', (event) => {
+			const button = $(event.currentTarget);
+			this.#runInstallerAction(button.data('module'), button.data('action'));
+		});
+
+		$(document).off('click', '.module-installer-changelog');
+		$(document).on('click', '.module-installer-changelog', (event) => {
+			const button = $(event.currentTarget);
+			this.#showModuleChangelog(button.data('module'));
+		});
+
+		$(document).off('click', '.module-installer-changelog-toggle-all');
+		$(document).on('click', '.module-installer-changelog-toggle-all', (event) => {
+			const button = $(event.currentTarget);
+			const target = $(button.attr('data-target'));
+			if (!target.length) {
+				return;
+			}
+
+			const expanded = button.attr('data-expanded') === 'true';
+			const sections = target.find('.panel-collapse');
+			if (expanded) {
+				sections.collapse('hide');
+				sections.first().collapse('show');
+				button.attr('data-expanded', 'false');
+				button.text('Show All Changes');
+			} else {
+				sections.collapse('show');
+				button.attr('data-expanded', 'true');
+				button.text('Collapse Changes');
+			}
+		});
+
+		$(document).off('click', '#module-installer-install-all');
+		$(document).on('click', '#module-installer-install-all', () => {
+			const modules = this.#installerQueueModules();
+			if (modules.length === 0) {
+				return;
+			}
+			this.#runInstallerQueue(modules, 'install', 'Bulk Install');
+		});
+
+		$(document).off('click', '#module-installer-update-all');
+		$(document).on('click', '#module-installer-update-all', () => {
+			const modules = this.#updateableModulesVisible();
+			if (modules.length === 0) {
+				return;
+			}
+			this.#runInstallerQueue(modules, 'update', 'Bulk Update');
+		});
+
+		$(document).off('click', '#module-installer-verify-all');
+		$(document).on('click', '#module-installer-verify-all', () => {
+			this.#runVerificationQueue(this.#installedModulesForVerification());
+		});
+
+		$(document).off('click', '.module-suggested-install');
+		$(document).on('click', '.module-suggested-install', (event) => {
+			const button = $(event.currentTarget);
+			if (button.is(':disabled')) {
+				return;
+			}
+
+			let modules = [];
+			try {
+				modules = JSON.parse(button.attr('data-modules') || '[]');
+			} catch (error) {
+				modules = [];
+			}
+
+			this.#runSuggestedInstall(modules);
+		});
+
+		$(document).off('shown.bs.collapse hidden.bs.collapse', '#module-suggested-groups .panel-collapse');
+		$(document).on('shown.bs.collapse hidden.bs.collapse', '#module-suggested-groups .panel-collapse', (event) => {
+			const collapse = $(event.currentTarget);
+			const icon = collapse.closest('.panel').find('.module-suggested-toggle .fa-solid').first();
+			icon.attr('class', collapse.hasClass('in') ? 'fa-solid fa-chevron-down fa-fw' : 'fa-solid fa-chevron-right fa-fw');
+			this.#adjustInstallerModalHeight();
+		});
+
+		$(document).off('shown.bs.collapse hidden.bs.collapse', '#module-installer-groups .panel-collapse');
+		$(document).on('shown.bs.collapse hidden.bs.collapse', '#module-installer-groups .panel-collapse', (event) => {
+			const collapse = $(event.currentTarget);
+			const icon = collapse.closest('.panel').find('.module-installer-toggle .fa-solid').first();
+			icon.attr('class', collapse.hasClass('in') ? 'fa-solid fa-chevron-down fa-fw' : 'fa-solid fa-chevron-right fa-fw');
+			this.#adjustInstallerModalHeight();
+		});
+
+		$(document).off('shown.bs.collapse hidden.bs.collapse', '#module-core-groups .panel-collapse');
+		$(document).on('shown.bs.collapse hidden.bs.collapse', '#module-core-groups .panel-collapse', (event) => {
+			const collapse = $(event.currentTarget);
+			const icon = collapse.closest('.panel').find('.module-core-toggle .fa-solid').first();
+			icon.attr('class', collapse.hasClass('in') ? 'fa-solid fa-chevron-down fa-fw' : 'fa-solid fa-chevron-right fa-fw');
+			this.#adjustInstallerModalHeight();
 		});
 
 

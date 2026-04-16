@@ -169,7 +169,7 @@ function DisplayAllskyConfig() {
 	global $endSetting;
 	global $saveChangesLabel;
 	global $forceRestart;
-	global $pageHeaderTitle, $pageIcon;
+	global $pageHeaderTitle, $pageIcon, $pageHelp;
 
 	$cameraTypeName = "cameratype";			// json setting name
 	$cameraModelName = "cameramodel";		// json setting name
@@ -763,7 +763,12 @@ if ($debug) {
 	} else {
 		$x = "<i class='$pageIcon'></i> ";
 	}
-	echo "<div class='panel-heading'>$x $pageHeaderTitle for &nbsp;<b>$cameraType $cameraModel</b></div>";
+	$helpHtml = "";
+	if (!empty($pageHelp)) {
+		$helpUrl = htmlspecialchars($pageHelp, ENT_QUOTES);
+		$helpHtml = "<a class='pull-right' href='{$helpUrl}' target='_blank' rel='noopener noreferrer' data-toggle='tooltip' data-container='body' data-placement='left' title='Help'><i class='fa-solid fa-circle-question'></i> Help</a>";
+	}
+	echo "<div class='panel-heading clearfix'><span>$x $pageHeaderTitle for &nbsp;<b>$cameraType $cameraModel</b></span>{$helpHtml}</div>";
 	echo "<div class='panel-body' style='padding: 5px;'>";
 	if ($formReadonly != "readonly") {
 		echo "<div id='messages'>";
@@ -1162,15 +1167,15 @@ if ($debug) { echo ": &nbsp; value=$value"; }
 							$type == "float" || $type == "percent") {
 								$type = "text";
 						}
-						echo "\n\t\t<input class='form-control boxShadow settingInput settingInputTextNumber'" .
+						echo "\n\t\t<input class='form-control settingInput settingInputTextNumber'" .
 							" type='$type' $readonly $readonlyForm name='$name' value='$value' >";
 
 					} else if ($type == "widetext"){
-						echo "\n\t\t<input class='form-control boxShadow settingInputWidetext'" .
+						echo "\n\t\t<input class='form-control settingInputWidetext'" .
 							" type='text' $readonlyForm name='$name' value='$value'>";
 
 					} else if ($type == "select"){
-						echo "\n\t\t<select class='form-control boxShadow settingInput settingInputSelect'" .
+						echo "\n\t\t<select class='form-control settingInput settingInputSelect'" .
 							" $readonlyForm name='$name'>";
 						foreach($option['options'] as $opt){
 							$val = getVariableOrDefault($opt, 'value', "?");
@@ -1184,7 +1189,7 @@ if ($debug) { echo ": &nbsp; value=$value"; }
 						echo "</select>";
 
 					} else if ($type == "boolean"){
-						echo "\n\t\t<div class='switch-field boxShadow settingInput settingInputBoolean'>";
+						echo "\n\t\t<div class='switch-field settingInput settingInputBoolean'>";
 							echo "\n\t\t<input id='switch_no_$name' class='form-control' type='radio' ".
 								"$readonlyForm name='$name' value='false' ".
 								($value == "false" ? " checked " : "").  ">";
@@ -1268,7 +1273,7 @@ if ($debug) { echo ": &nbsp; value=$value"; }
 
 			if ($numMissingHasDefault > 0) {
 				$msg = "<strong>";
-				$msg .= "Required field" . ($numMissingHasDefault === 1 ? " was" : "s were");
+				$msg .= "Required field" . ($numMissingHasDefault === 1 ? " is" : "s are");
 				$msg .= " missing but replaced by the default:";
 				$msg .= "</strong>";
 				$msg .= "<br><strong>$missingSettingsHasDefault</strong>";

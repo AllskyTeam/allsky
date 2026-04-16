@@ -18,7 +18,7 @@ $resizeImage = true;		// allow for this to be a setting in the future.
 	<meta name="description" content="">
 	<meta name="author" content="Thomas Jacquin">
 	<script src="documentation/bower_components/jquery/dist/jquery.min.js"></script>
-	<link href="documentation/css/custom.css" rel="stylesheet">
+	<link href="css/allsky.css" rel="stylesheet">
 <?php if ($resizeImage) { ?>
 	<style>
 		.live_container {

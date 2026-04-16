@@ -4,6 +4,7 @@
             "primary_key": "id",
             "columns": {
 				"id" : "int",
+				"date" : "int",
 				"directory" : "varchar",
 				"minimum" : "float",
 				"maximum" : "float",

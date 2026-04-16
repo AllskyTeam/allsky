@@ -94,7 +94,7 @@ switch ($ID) {
 			echo "{$eS}ERROR: Argument not given to command ID: '{$ID}'.{$eE}";
 			exit(1);
 		}
-		$CMD = ALLSKY_SCRIPTS . "/allsky-config show_supported_cameras";
+		$CMD = ALLSKY_SCRIPTS . "/allsky-config show_supported_cameras --html";
 		execute($CMD, $ARGS);
 
 		rm_msg($ID);
@@ -127,9 +127,12 @@ function checkRet($cmd, $return_code, $return_string)
 {
 	global $use_TEXT, $eS, $eE, $sep;
 
-	if ($return_code !== 0) {
-		echo "{$eS}ERROR while executing:{$sep}{$cmd}{$eE}";
+	if ($return_code === ALLSKY_EXIT_ERROR_STOP) {
+		echo "{$eS}ERROR while executing:{$sep}{$cmd}; return code: $return_code{$eE}.";
+	} else if ($return_code === ALLSKY_EXIT_PARTIAL_OK) {
+		$return_code = 0;
 	}
+
 	if ($return_string != null) {
 		if ($use_TEXT) {
 			echo $return_string;

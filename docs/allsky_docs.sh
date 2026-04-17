@@ -15,10 +15,12 @@ usage() {
 Usage:
   ./allsky_docs.sh dev
   ./allsky_docs.sh build [site_dir]
+  ./allsky_docs.sh deploy
 
 Commands:
   dev               Run the MkDocs development server on 0.0.0.0:8000
   build [site_dir]  Build docs into site_dir (default: html/docs)
+  deploy            Publish docs to GitHub Pages with mkdocs gh-deploy
 EOF
 }
 
@@ -91,6 +93,13 @@ run_dev() {
     mkdocs serve -f "${MKDOCS_CONFIG}" --dev-addr=0.0.0.0:8000 --livereload
 }
 
+run_deploy() {
+    ensure_mkdocs
+
+    echo "==> Deploying MkDocs to GitHub Pages"
+    mkdocs gh-deploy --clean -f "${MKDOCS_CONFIG}"
+}
+
 command="${1:-}"
 
 case "${command}" in
@@ -99,6 +108,9 @@ case "${command}" in
         ;;
     build)
         build_docs "${2:-${REPO_ROOT}/html/docs}"
+        ;;
+    deploy)
+        run_deploy
         ;;
     -h|--help|help|"")
         usage >&2

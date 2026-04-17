@@ -191,7 +191,8 @@ class ALLSKYDB:
         # Output result and exit with appropriate code
         query_type = query_result.get('type')
         if query_type == 'select' or not query_result['ok']:
-            print(result)
+            if result != "":
+                print(result)
         else:
             self._print_status(result)
         sys.exit(0 if query_result['ok'] else 1)

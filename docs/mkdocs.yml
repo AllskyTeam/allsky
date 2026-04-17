@@ -8,6 +8,10 @@ repo_name: Allsky
 
 use_directory_urls: false
 
+validation:
+  links:
+    absolute_links: relative_to_docs
+    
 theme:
   name: material
   logo: assets/images/logo.png

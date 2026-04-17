@@ -100,7 +100,7 @@ class UIUTIL extends UTILBASE {
      * @param float|int   $max              Upper bound for clamping
      * @param float|int   $danger           Threshold for red (>=)
      * @param float|int   $warning          Threshold for yellow (>=)
-     * @param string      $status_override  Force bar state ('success'|'warning'|'danger'|_)
+     * @param string      $status_override  Force bar state ('success'|'warning'|'danger'|...)
      *
      * @return string HTML <div> for a progress-bar-* element
      */
@@ -186,7 +186,7 @@ class UIUTIL extends UTILBASE {
         ]);
     }
 
-    /** CPU load as a percentage progress bar (green+yellow+red) */
+    /** CPU load as a percentage progress bar (green->yellow->red) */
     public function getCPULoad()
     {
         $cpuLoad = (float)getCPULoad(1);
@@ -356,8 +356,8 @@ class UIUTIL extends UTILBASE {
      *
      * Response:
      * {
-     *   "CPULoad": "<div class='progress-bar _'>_</div>",
-     *   "CPUTemp": "<div class='progress-bar _'>_</div>",
+     *   "CPULoad": "<div class='progress-bar ...'>...</div>",
+     *   "CPUTemp": "<div class='progress-bar ...'>...</div>",
      *   "Uptime":  "1 day 02:33:10"
      * }
      *

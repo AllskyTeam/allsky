@@ -120,7 +120,7 @@ fi
 
 # Get all settings we're going to use.
 #shellcheck disable=SC2119
-getAllSettings --var "lastchanged cameranumber locale imageremovebadlow imageremovebadhigh imageremovebadcount" || exit 1
+getAllSettings --var "lastchanged cameranumber locale imageremovebadlow imageremovebadhigh imageremovebadcount imageremovebadhighdarkframe" || exit 1
 
 # If the "lastchanged" setting is missing, the user needs to review/change the settings.
 # This will happen after an installation or upgrade, which also sets the Allsky status.
@@ -395,6 +395,8 @@ fi
 	[[ -z ${S_imageremovebadcount} ]] && S_imageremovebadcount=5
 	echo "imageremovebadcount=${S_imageremovebadcount}"
 	echo "bad_image_count_file=${ALLSKY_BAD_IMAGE_COUNT}"
+	[[ -z ${S_imageremovebadhighdarkframe} ]] && S_imageremovebadhighdarkframe="0.05"
+	echo "imageremovebadhighdarkframe=${S_imageremovebadhighdarkframe}"
 	[[ ${PREVIEW} == "true" ]] && echo "preview=true"
 } > "${ARGS_FILE}"
 

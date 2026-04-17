@@ -48,7 +48,7 @@ function stretchSettings()
 			</ol>
 			See the
 			<a external="true"
-				href="/documentation/explanations/exposureGainSaturation.html#stretch">stretch settings</a>
+				href="/docs/allsky_guide/howtos/exposure_settings.html#stretch">stretch settings</a>
 			page for an explanation of these settings.
 			</p>
 

@@ -481,7 +481,7 @@ function validate_camera()
 			E_ "\n${MSG}\n"
 		else
 			MSG+="\n\nClick this message to ask that Allsky support this camera."
-			URL="/documentation/explanations/requestCameraSupport.html";
+			URL="/docs/allsky_guide/howtos/new_camera.html";
 			local CMD_MSG="Click here to see the supported ${CT} cameras."
 			[[ ${CT} == "ZWO" ]] && CMD_MSG+=" WARNING: the list is long!"
 			"${ALLSKY_SCRIPTS}/addMessage.sh" \

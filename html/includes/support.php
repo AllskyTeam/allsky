@@ -189,7 +189,7 @@ if (! is_dir(ALLSKY_SUPPORT_DIR)) {
 					<br>
 					<p><strong>If the above steps didn't work</strong>,
 					<a allsky="true" external="true"
-						href="/documentation/troubleshooting/reportingProblems.html#manualMethod">
+						href="/docs/allsky_guide/using/support.html#if-the-automatic-process-does-not-work">
 						manually run them
 					</a>.
 					</p>

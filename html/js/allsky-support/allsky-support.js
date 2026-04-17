@@ -1,7 +1,7 @@
 "use strict";
 
 let externalIcon = '&nbsp;<i class="fa fa-external-link-alt fa_external"></i>';
-let troubleshootingMsg = ' Please refer to the WebUI <a target="_blank" href="/documentation/troubleshooting/reportingProblems.html#supportErrors">Getting&nbsp;Support';
+let troubleshootingMsg = ' Please refer to the WebUI <a target="_blank" href="/docs/allsky_guide/using/support.html#supportErrors">Getting&nbsp;Support';
 troubleshootingMsg += externalIcon;
 troubleshootingMsg += '</a> page';
 

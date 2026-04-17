@@ -71,7 +71,7 @@ function DisplayLoginPage()
             <canvas id="planeCanvas"></canvas>
             <canvas id="fxCanvas"></canvas>
             <div class="login-panel noselect">
-                <div class="login-avatar" aria-hidden="true"><img src="documentation/img/logo-alt.png" alt="Allsky Logo" class="login-logo noselect"></div>
+                <div class="login-avatar" aria-hidden="true"><img src="/logo-alt.png" alt="Allsky Logo" class="login-logo noselect"></div>
                 <div class="panel panel-default">
                     <div class="panel-body text-center">
                         <?= $alert ?>

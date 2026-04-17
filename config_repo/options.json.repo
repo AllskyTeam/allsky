@@ -827,6 +827,15 @@
 "action" : "stop"
 },
 {
+"name" : "imageremovebadhighdarkframe",
+"default" : 0.05,
+"description" : "Ignore dark frames brighter than this.",
+"label" : "Remove Bad Darks Threshold High",
+"type" : "float",
+"usage" : "capture",
+"action" : "reload"
+},
+{
 "name" : "usedarkframes",
 "default" : false,
 "description" : "Enables dark frame subtraction if you have dark frames.",

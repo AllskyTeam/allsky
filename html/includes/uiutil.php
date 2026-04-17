@@ -334,12 +334,15 @@ class UIUTIL extends UTILBASE {
         $type = (string)($_GET['type'] ?? '');
         $chosenDay = (string)($_GET['day'] ?? '');
         $listNames = in_array(strtolower((string)($_GET['listNames'] ?? '0')), ['1', 'true', 'yes'], true);
+        $useThumbnails = in_array(strtolower((string)($_GET['useThumbnails'] ?? '1')), ['1', 'true', 'yes'], true);
 
         if (!in_array($type, ['picture', 'video'], true)) {
             $this->send400('Invalid file type.');
         }
 
-        $html = renderListFileTypeContent($dir, $imageFileName, $formalImageTypeName, $type, $listNames, $chosenDay);
+        $html = renderListFileTypeContent($dir, $imageFileName, $formalImageTypeName, $type, $listNames, $chosenDay, [
+            'useThumbnails' => $useThumbnails,
+        ]);
         $this->sendHTTPResponse($html);
     }
 

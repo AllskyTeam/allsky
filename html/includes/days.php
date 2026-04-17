@@ -209,7 +209,6 @@ foreach ($days as $day) {
 	</div><!-- /.panel-primary -->
 	</div><!-- /.col-lg-12 -->
 </div><!-- /.row -->
-<script src="js/days.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 <?php
 }
 

@@ -6427,11 +6427,11 @@
 <li><code>Max PWM % = 100</code></li>
 </ul>
 <p>Then the basic control picture looks like this:</p>
-<p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="/assets/module_images/dew_heater_thresholds.svg" data-desc-position="bottom"><img alt="" src="/assets/module_images/dew_heater_thresholds.svg" width="100%"></a></p>
+<p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../../assets/module_images/dew_heater_thresholds.svg" data-desc-position="bottom"><img alt="" src="../../assets/module_images/dew_heater_thresholds.svg" width="100%"></a></p>
 <p>At or below <code>0.5</code>, the heater is allowed to use the configured maximum PWM output. Between <code>0.5</code> and <code>4.0</code>, the module calculates a PWM percentage according to the selected curve. Above <code>4.0</code>, output falls to zero. The diagram is useful because it makes it clear that PWM control is still tied to specific thresholds. It is not vague or free-form; it is a structured response to the current dew margin.</p>
 <h3 id="comparing-the-curves">Comparing The Curves<a class="headerlink" href="#comparing-the-curves" title="Permanent link">¶</a></h3>
 <p>The three available curves are shown below:</p>
-<p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="/assets/module_images/dew_heater_pwm_curves.svg" data-desc-position="bottom"><img alt="" src="/assets/module_images/dew_heater_pwm_curves.svg" width="100%"></a></p>
+<p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../../assets/module_images/dew_heater_pwm_curves.svg" data-desc-position="bottom"><img alt="" src="../../assets/module_images/dew_heater_pwm_curves.svg" width="100%"></a></p>
 <p>The <code>linear</code> curve changes output evenly across the usable range. It is easy to reason about and is a good choice if you want a direct and predictable relationship between dew margin and output.</p>
 <p>The default curve is <code>quadratic</code>. This keeps more heat near the danger zone and then backs off more noticeably as the conditions become safer. In practice it often feels like a sensible middle ground because it is assertive when the dome is close to dew, without having to run at very high output all the time.</p>
 <p>The <code>aggressive</code> curve keeps PWM output higher for longer and then drops it more sharply. This can be useful when the heater needs to overcome more thermal inertia, when dew forms quickly at your location, or when experience shows that a gentler curve simply responds too slowly.</p>
@@ -6675,7 +6675,7 @@
 <p>Debug mode is especially useful when you want to prove the control logic step by step. For example, you can set a small dew margin and confirm that the heater turns on or increases PWM output. You can then set a safer margin and verify that the heater turns off or drops back. In that sense debug mode turns the module from a weather-driven black box into something you can test deliberately.</p>
 <h2 id="schematics">Schematics<a class="headerlink" href="#schematics" title="Permanent link">¶</a></h2>
 <figure>
-<p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="/assets/module_images/dew_heater.png" data-desc-position="bottom"><img alt="" src="/assets/module_images/dew_heater.png" width="50%"></a></p>
+<p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../../assets/module_images/dew_heater.png" data-desc-position="bottom"><img alt="" src="../../assets/module_images/dew_heater.png" width="50%"></a></p>
 <figcaption>
 <p>Example Mosfet driven dew heater</p>
 </figcaption>

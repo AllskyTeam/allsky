@@ -33,6 +33,7 @@ function DisplayOverlay($image_name)
     <script src="/js/bootbox/bootbox.all.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
     <script src="/js/bootbox/bootbox.locales.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
+<!-- FIX: checkbox.css no longer exists -->
     <link rel='stylesheet' href='/css/checkbox.css?c=<?php echo ALLSKY_VERSION; ?>' />
 
     <link rel="stylesheet" href="/js/bootstrap-slider/dist/css/bootstrap-slider.css?c=<?php echo ALLSKY_VERSION; ?>">
@@ -759,7 +760,8 @@ function DisplayOverlay($image_name)
                     <div>
 
                         <div class="alert alert-success mt-3" role="alert" id="oe-fontuploaddialog-info">
-                            Please refer to the <a href="/documentation/overlays/overlays.html" target="_blank">documentation</a> before uploading zip files. Please ensure the zip file only contains fonts
+                            Please refer to the <a href="/docs/allsky_guide/overlays/overview.html" target="_blank">documentation</a>
+							before uploading zip files. Please ensure the zip file only contains fonts
                         </div>
 
                         <div class="alert alert-danger hidden oe-fontuploaddialog-error" id="oe-fontuploaddialog-invalid">

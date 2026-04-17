@@ -17,7 +17,9 @@ $resizeImage = true;		// allow for this to be a setting in the future.
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<meta name="description" content="">
 	<meta name="author" content="Thomas Jacquin">
+<!--  FIX: this no longer exists
 	<script src="documentation/bower_components/jquery/dist/jquery.min.js"></script>
+-->
 	<link href="css/allsky.css" rel="stylesheet">
 <?php if ($resizeImage) { ?>
 	<style>

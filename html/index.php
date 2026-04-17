@@ -223,12 +223,14 @@ $pageInfo = [
 	"documentation" => [
 		"title" => "Allsky Documentation",
 		"icon" => "fa fa-book fa-fw",
+		"icon2" => ALLSKY_EXTERNAL_ICON,
 		"href" => "/docs'",
 	],
 	"mini_timelapse" => [
 		"title" => "View Mini-Timelapse",
 		"icon" => "fa fa-file-video fa-fw",
-		"href" => ALLSKY_MINITIMELAPSE_URL . "' external='true'"
+		"icon2" => ALLSKY_EXTERNAL_ICON,
+		"href" => ALLSKY_MINITIMELAPSE_URL
 	],
 	"notFound" => [
 		"headerTitle" => "Unknown page - contact Allsky support",
@@ -264,6 +266,11 @@ function getPageIcon($p) {
 	global $pageInfo;
 
 	return $pageInfo[$p]['icon'] ?? "";
+}
+function getPageIcon2($p) {
+	global $pageInfo;
+
+	return $pageInfo[$p]['icon2'] ?? "";
 }
 function getPageHelp($p) {
 	global $pageInfo;
@@ -316,8 +323,10 @@ function insertHref($p, $day, $displayTitle=false, $iconImage="") {
 	if ($day !== "") $href .= "&day=$day";
 	if ($iconImage === "") {
 		$icon = getPageIcon($p);
+		$icon2 = getPageIcon2($p);
 	} else {
 		$icon = $iconImage;
+		$icon2 = "";
 	}
 	if ($icon === "") {
 		echo "<span style='color: red' title='$title'>???</span>";
@@ -329,6 +338,7 @@ function insertHref($p, $day, $displayTitle=false, $iconImage="") {
 			echo $iconImage;
 		}
 		if ($displayTitle) echo " $title";
+		if ($icon2 !== "") echo $icon2;
 		echo "</a>";
 	}
 }
@@ -344,6 +354,7 @@ function insertMenuItem($p, $day, $type="", $href_only=false) {
 
 	$title = getPageTitle($p, $day);
 	$icon = getPageIcon($p);
+	$icon2 = getPageIcon2($p);
 	$href = getVariableOrDefault($t, "href", "index.php?page=$p");
 	$jsHandler = getJSHandler($p);
 	$extraCSS = getextraCss($p);
@@ -359,6 +370,7 @@ function insertMenuItem($p, $day, $type="", $href_only=false) {
 		if ($type !== "dropdown") echo "<span class='menu-text'>";
 		echo " $title";
 		if ($type !== "dropdown") echo "</span>";
+		if ($icon2 !== "") echo $icon2;
 		echo "</a>";
 		echo "</li>\n";
 	} else {
@@ -367,6 +379,7 @@ function insertMenuItem($p, $day, $type="", $href_only=false) {
 		echo "<li>";
 		echo "<a id='$p' href='$href' class='allsky-js-handler' data-jsclass='$jsHandler'><i class='$icon $extraiconcss'></i>";
 		echo "<span class='menu-text $extratextcss'>$title</span>";
+		if ($icon2 !== "") echo $icon2;
 		echo "</a>";
 		echo "</li>\n";
 	}

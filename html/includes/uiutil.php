@@ -100,7 +100,7 @@ class UIUTIL extends UTILBASE {
      * @param float|int   $max              Upper bound for clamping
      * @param float|int   $danger           Threshold for red (>=)
      * @param float|int   $warning          Threshold for yellow (>=)
-     * @param string      $status_override  Force bar state ('success'|'warning'|'danger'|…)
+     * @param string      $status_override  Force bar state ('success'|'warning'|'danger'|_)
      *
      * @return string HTML <div> for a progress-bar-* element
      */
@@ -138,10 +138,10 @@ class UIUTIL extends UTILBASE {
         $remoteWebsiteBadgeText = $useRemoteWebsite ? 'Enabled' : 'Disabled';
         $remoteWebsiteVersion = $this->getRemoteWebsiteVersionText();
         $localWebsiteLink = $useLocalWebsite
-            ? "<a external='true' target='_blank' rel='noopener noreferrer' href='allsky/index.php'>View</a>"
+            ? "<a external='true' target='_blank' rel='noopener noreferrer' href='allsky/index.php'>View " . ALLSKY_EXTERNAL_ICON . "</a>"
             : "";
         $remoteWebsiteLink = $useRemoteWebsite
-            ? "<a external='true' target='_blank' rel='noopener noreferrer' href='{$remoteWebsiteURL}'>View {$remoteWebsiteVersion}</a>"
+            ? "<a external='true' target='_blank' rel='noopener noreferrer' href='{$remoteWebsiteURL}'>View {$remoteWebsiteVersion} " .ALLSKY_EXTERNAL_ICON . "</a>"
             : "";
         $websiteHtml = "<div class='header-status-row'><span class='header-status-row-label'>Local:</span><span class='header-status-row-value'><span class='label {$localWebsiteBadgeClass}'>{$localWebsiteBadgeText}</span> {$localWebsiteLink}</span></div><div class='header-status-row'><span class='header-status-row-label'>Remote:</span><span class='header-status-row-value'><span class='label {$remoteWebsiteBadgeClass}'>{$remoteWebsiteBadgeText}</span> {$remoteWebsiteLink}</span></div>";
 
@@ -186,7 +186,7 @@ class UIUTIL extends UTILBASE {
         ]);
     }
 
-    /** CPU load as a percentage progress bar (green→yellow→red) */
+    /** CPU load as a percentage progress bar (green+yellow+red) */
     public function getCPULoad()
     {
         $cpuLoad = (float)getCPULoad(1);
@@ -356,8 +356,8 @@ class UIUTIL extends UTILBASE {
      *
      * Response:
      * {
-     *   "CPULoad": "<div class='progress-bar …'>…</div>",
-     *   "CPUTemp": "<div class='progress-bar …'>…</div>",
+     *   "CPULoad": "<div class='progress-bar _'>_</div>",
+     *   "CPUTemp": "<div class='progress-bar _'>_</div>",
      *   "Uptime":  "1 day 02:33:10"
      * }
      *

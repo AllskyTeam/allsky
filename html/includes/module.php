@@ -10,9 +10,6 @@ function DisplayModule()
 	global $pageHeaderTitle, $pageIcon, $pageHelp;
 ?>
 
-<!-- FIX: /documentation no longer exists -->
-<script src="/documentation/js/all.min.js?c=<?php echo ALLSKY_VERSION; ?>" type="application/javascript"></script>
-
 <script src="/js/sortable/sortable.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 <script src="/js/sortable/jquery-sortable.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
@@ -68,9 +65,6 @@ function DisplayModule()
 <link rel="stylesheet" href="/js/jquery-urlcheck/jquery-urlcheck.css?c=<?php echo ALLSKY_VERSION; ?>">
 <script src="/js/jquery-urlcheck/jquery-urlcheck.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
-<!-- FIX: checkbox.css no longer exists -->
-<link rel='stylesheet' href='/css/checkbox.css?c=<?php echo ALLSKY_VERSION; ?>' />
-
 <script src="/js/jquery-devicemanager/jquery-devicemanager.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
 <script src="/js/highcharts/code/highcharts.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
@@ -81,9 +75,6 @@ function DisplayModule()
 <script src="/js/highcharts/code/modules/no-data-to-display.js"></script>
 
 <script src="/js/jquery-chart/jquery-chart.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-
-<!-- FIX: charts.css no longer exists -->
-<link rel="stylesheet" href="/css/charts.css?c=<?php echo ALLSKY_VERSION; ?>" />
 
 <script src="/js/jquery-satpicker/jquery-satpicker.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 

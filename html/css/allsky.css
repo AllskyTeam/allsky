@@ -4,8 +4,8 @@
     --bs3-body-color: #2e3c4d;
     --bs3-text-muted: #6b7b8c;
     --bs3-heading-color: #1f3447;
-    --bs3-link: #1a6184;
-    --bs3-link-hover: #134b66;
+    --bs3-link: #2232e4;
+    --bs3-link-hover: #414ee0;
     --bs3-header-card-value: #2e3c4d;
 
     /* Generic surfaces */
@@ -276,6 +276,10 @@
     --switch-colour: rgba(0, 0, 0, 0.6);
     --switch-bg-checked: #3a9e55;
     --switch-colour-checked: #fff;
+
+    /* Settings Page */
+    --WebUI-subSetting-background-color: #bbb;
+
 }
 
 body.dark {
@@ -556,6 +560,10 @@ body.dark {
     --switch-colour: rgba(0, 0, 0, 0.6);
     --switch-bg-checked: #3a9e55;
     --switch-colour-checked: #fff;    
+
+    /* Settings Page */
+    --WebUI-subSetting-background-color: #3a4658;
+
 }
 
 /* Core */
@@ -1356,7 +1364,6 @@ input, textarea, select, [contenteditable="true"], .allow-select, .allow-select 
     left: 0;
     right: 0;
     height: 78px;
-    alex-height: 100px;
     padding: 5px 12px;
     z-index: 400;
     border-bottom: 1px solid var(--bs3-navbar-border);
@@ -1473,7 +1480,6 @@ div.dt-container div.dt-scroll-body {
 .sidebar {
     position: fixed;
     top: 68px;
-    alex-top: 90px;
     left: 0;
     bottom: 0;
     width: 220px;
@@ -1582,7 +1588,6 @@ div.dt-container div.dt-scroll-body {
 .content {
     position: fixed;
     top: 75px;
-    alex-top: 100px;
     right: 0;
     bottom: 0;
     left: 220px;
@@ -1769,7 +1774,6 @@ div.dt-container div.dt-scroll-body {
     height: 70px;
     display: inline-block;
     margin-right: 0px;
-    alex-margin-left: 20px;
     margin-top: -4px;
 }
 
@@ -1796,8 +1800,11 @@ div.dt-container div.dt-scroll-body {
 
     .header .navbar-brand > .version-title:not(.header-daynight) {
         margin-left: 20px;
-        alex-margin-left: 75px;
     }
+}
+
+.navbar-default .navbar-collapse, .navbar-default .navbar-form {
+    border: none !important;
 }
 
 .version-title-color {
@@ -1807,12 +1814,9 @@ div.dt-container div.dt-scroll-body {
 .header-status-card {
     display: inline-block;
     margin-top: -3px;
-    alex-padding: 4px 14px;
     text-align: left;
     vertical-align: top;
     font-size: 11px;
-    alex-background-color: var(--bs3-panel-bg);
-    alex-border: 1px solid var(--bs3-border);
     border-radius: 8px;
     box-shadow: 0 1px 2px rgba(0, 0, 0, .08);
 }
@@ -1822,7 +1826,6 @@ div.dt-container div.dt-scroll-body {
     grid-template-columns: 84px minmax(0, 1fr);
     align-items: center;
     min-height: 20px;
-    alex-min-height: 24px;
     column-gap: 0;
 }
 
@@ -1868,14 +1871,12 @@ div.dt-container div.dt-scroll-body {
     gap: 6px;
     margin-bottom: 4px;
     min-height: 20px;
-    alex-min-height: 24px;
 }
 
 .header-status-title {
     display: inline-flex;
     align-items: center;
     min-height: 20px;
-    alex-min-height: 24px;
     line-height: 1;
     font-size: 11px;
     font-weight: 600;
@@ -1889,7 +1890,6 @@ div.dt-container div.dt-scroll-body {
     align-items: center;
     gap: 4px;
     min-height: 20px;
-    alex-min-height: 24px;
 }
 
 .header-status-inline-label {
@@ -2063,13 +2063,10 @@ div.dt-container div.dt-scroll-body {
 
 .header-daynight-card {
     display: inline-block;
-    margin-top: -3px;
-    alex-padding: 4px 14px;
+    margin-top: -3px;;
     text-align: left;
     vertical-align: top;
     font-size: 11px;
-    alex-background-color: var(--bs3-panel-bg);
-    alex-border: 1px solid var(--bs3-border);
     border-radius: 8px;
     box-shadow: 0 1px 2px rgba(0, 0, 0, .08);
 }
@@ -3529,7 +3526,7 @@ body.dark .as-system-entries-browser-list .list-group-item .badge {
     background-color: var(--bs3-panel-bg);
     border: 1px solid var(--bs3-border-soft);
     border-radius: 8px;
-    padding: 14px 16px;
+    padding: 7px 8px;
 }
 
 .days-grid-list {
@@ -3542,7 +3539,7 @@ body.dark .as-system-entries-browser-list .list-group-item .badge {
 .days-grid-row {
     display: flex;
     align-items: flex-start;
-    padding: 14px 16px;
+    padding: 7px 8px;
 }
 
 .days-grid-list > .days-grid-row {
@@ -4612,3 +4609,25 @@ table.dataTable .selected .as-variable-has-value {
 	overflow-x: hidden !important;
 }
 /** End Variable Manager **/
+
+/** Error Messages **/
+.errorMsg,
+.errorMsgBig {
+        color: red;
+}
+
+.errorMsgBig {
+        font-size: 200%;
+}
+
+.errorMsgBox {
+        border: 2px solid red;
+        padding-left: 5px;
+        padding-right: 5px
+}
+
+.EXPIRED {
+        color: red;
+        font-weight: bold;
+}
+/** End Error Messages **/

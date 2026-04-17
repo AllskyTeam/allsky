@@ -17,6 +17,7 @@ include_once('../includes/functions.php');
 
 	<link href="../css/allsky.css" rel="stylesheet">
 	<link rel="shortcut icon" type="image/ico" href="../favicon.ico">
+	<script src="/js/jquery/dist/jquery.min.js"></script>	
 </head>
 <body>
 
@@ -29,7 +30,7 @@ $filetype = getVariableOrDefault($_REQUEST, 'filetype', "picture");
 // Prepend "X" to the file name prefix so ListFileType() looks for files whose
 // names are "${pre}.*", rather than "${pre}-YYYYMMDD.*".
 // true == list the file names
-ListFileType("", "X${pre}", $type, $filetype, true); 
+ListFileType("", "X${pre}", $type, $filetype, true, false); 
 ?>
 
 </body>

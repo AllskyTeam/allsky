@@ -666,12 +666,26 @@ function getValidImageNames($dir, $stopAfterOne=false) {
 * or only for the specified day.
 * If $dir is not null, it ends in "/".
 */
-function renderListFileTypeContent($dir, $imageFileName, $formalImageTypeName, $type, $listNames=false, $chosen_day=null) {
+function normalizeListFileTypeOptions($options=[]) {
+	if (is_bool($options)) {
+		$options = ['useThumbnails' => $options];
+	} else if (! is_array($options)) {
+		$options = [];
+	}
+
+	return [
+		'useThumbnails' => array_key_exists('useThumbnails', $options) ? (bool) $options['useThumbnails'] : true,
+	];
+}
+
+function renderListFileTypeContent($dir, $imageFileName, $formalImageTypeName, $type, $listNames=false, $chosen_day=null, $options=[]) {
 	// "/images" is an alias in the web server for ALLSKY_IMAGES
 	$images_dir = "/images";
 	$thumbnailWarnings = [];
 	$itemCount = 0;
 	$chosen_day = $chosen_day ?? getVariableOrDefault($_REQUEST, 'day', null);
+	$options = normalizeListFileTypeOptions($options);
+	$useThumbnails = $options['useThumbnails'];
 
 	ob_start();
 
@@ -712,7 +726,7 @@ function renderListFileTypeContent($dir, $imageFileName, $formalImageTypeName, $
 						$imageType_name = basename($imageType);
 						$fullFilename = "$images_dir/$day/$dir$imageType_name";
 						if ($type == "picture") {
-							$thumbUrl = getListFileTypePictureThumbnailUrl($day, $dir, $imageType_name, $fullFilename);
+							$thumbUrl = $useThumbnails ? getListFileTypePictureThumbnailUrl($day, $dir, $imageType_name, $fullFilename) : $fullFilename;
 							$itemCount += 1;
 							echo "<a href='$fullFilename' class='images-grid-item functions-listfiletype-item' data-lg-size='1600-2400'>";
 							echo "<img src='" . htmlspecialchars($thumbUrl, ENT_QUOTES) . "' class='functions-listfiletype-media' />";
@@ -721,7 +735,7 @@ function renderListFileTypeContent($dir, $imageFileName, $formalImageTypeName, $
 							echo "</a>\n";
 						} else {
 							$itemCount += 1;
-							$thumbInfo = getVideoThumbnailInfo($day, $imageType, $fullFilename);
+							$thumbInfo = getVideoThumbnailInfo($day, $imageType, $fullFilename, $useThumbnails);
 							if (! empty($thumbInfo['warning'])) {
 								$thumbnailWarnings[$thumbInfo['warning']] = true;
 							}
@@ -773,7 +787,7 @@ function renderListFileTypeContent($dir, $imageFileName, $formalImageTypeName, $
 				$name = basename($fullFilename);
 				$itemDateValue = getListFileTypeDisplayDateValue($imageType_name, $chosen_day);
 				if ($type == "picture") {
-					$thumbUrl = getListFileTypePictureThumbnailUrl($chosen_day, $dir, $imageType_name, $fullFilename . $ts);
+					$thumbUrl = $useThumbnails ? getListFileTypePictureThumbnailUrl($chosen_day, $dir, $imageType_name, $fullFilename . $ts) : $fullFilename . $ts;
 					$itemCount += 1;
 					echo "<a href='$fullFilename' class='images-grid-item functions-listfiletype-item' data-lg-size='1600-2400'>";
 					echo "<img src='" . htmlspecialchars($thumbUrl, ENT_QUOTES) . "' class='functions-listfiletype-media' />";
@@ -782,7 +796,7 @@ function renderListFileTypeContent($dir, $imageFileName, $formalImageTypeName, $
 					echo "</a>\n";
 				} else {
 					$itemCount += 1;
-					$thumbInfo = getVideoThumbnailInfo($chosen_day, $imageType, $fullFilename . $ts);
+					$thumbInfo = getVideoThumbnailInfo($chosen_day, $imageType, $fullFilename . $ts, $useThumbnails);
 					if (! empty($thumbInfo['warning'])) {
 						$thumbnailWarnings[$thumbInfo['warning']] = true;
 					}
@@ -826,9 +840,15 @@ function renderListFileTypeContent($dir, $imageFileName, $formalImageTypeName, $
 	return ob_get_clean();
 }
 
-function ListFileType($dir, $imageFileName, $formalImageTypeName, $type, $listNames=false) {
+function ListFileType($dir, $imageFileName, $formalImageTypeName, $type, $listNames=false, $options=[]) {
 	global $pageHeaderTitle, $pageIcon, $pageHelp;
 	$chosen_day = getVariableOrDefault($_REQUEST, 'day', null);
+	$options = normalizeListFileTypeOptions($options);
+	$useThumbnails = $options['useThumbnails'];
+	$loadingTitle = $useThumbnails ? 'Preparing previews...' : 'Loading files...';
+	$loadingText = $useThumbnails
+		? 'This page is loading in the background. If video thumbnails are missing they will be generated now.'
+		: 'This page is loading in the background without thumbnail generation.';
 	echo "<div class='panel panel-allsky'>";
 	echo "<div class='panel-heading clearfix'>";
 	echo "<span><i class='{$pageIcon}'></i> $formalImageTypeName - $chosen_day</span>";
@@ -847,27 +867,28 @@ function ListFileType($dir, $imageFileName, $formalImageTypeName, $type, $listNa
 	echo "<div id='functions-listfiletype-content'>";
 	echo "<div class='as-wifi-placeholder functions-listfiletype-loading'>";
 	echo "<div class='as-wifi-placeholder-icon'><i class='fa fa-spinner fa-spin'></i></div>";
-	echo "<div class='as-wifi-placeholder-title as-wifi-placeholder-title-lg'>Preparing previews...</div>";
-	echo "<div class='as-wifi-placeholder-text'>This page is loading in the background. If video thumbnails are missing they will be generated now.</div>";
+	echo "<div class='as-wifi-placeholder-title as-wifi-placeholder-title-lg'>{$loadingTitle}</div>";
+	echo "<div class='as-wifi-placeholder-text'>{$loadingText}</div>";
 	echo "</div>";
 	echo "</div>";
 	echo "</div></div>";
 ?>
-<link type="text/css" rel="stylesheet" href="js/lightgallery/css/lightgallery-bundle.min.css" />
-<link type="text/css" rel="stylesheet" href="js/lightgallery/css/lg-transitions.css" />
-<script src="js/lightgallery/lightgallery.min.js"></script>
-<script src="js/lightgallery/plugins/zoom/lg-zoom.min.js"></script>
-<script src="js/lightgallery/plugins/thumbnail/lg-thumbnail.min.js"></script>
-<script src="js/lightgallery/plugins/video/lg-video.min.js"></script>
+<link type="text/css" rel="stylesheet" href="/js/lightgallery/css/lightgallery-bundle.min.css" />
+<link type="text/css" rel="stylesheet" href="/js/lightgallery/css/lg-transitions.css" />
+<script src="/js/lightgallery/lightgallery.min.js"></script>
+<script src="/js/lightgallery/plugins/zoom/lg-zoom.min.js"></script>
+<script src="/js/lightgallery/plugins/thumbnail/lg-thumbnail.min.js"></script>
+<script src="/js/lightgallery/plugins/video/lg-video.min.js"></script>
 <script>
 $(document).ready(function () {
 	const contentElement = document.getElementById('functions-listfiletype-content');
-	const requestUrl = 'includes/uiutil.php?request=ListFileTypeContent&day=' + encodeURIComponent(<?php echo json_encode((string)$chosen_day, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>) +
+	const requestUrl = '/includes/uiutil.php?request=ListFileTypeContent&day=' + encodeURIComponent(<?php echo json_encode((string)$chosen_day, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>) +
 		'&dir=' + encodeURIComponent(<?php echo json_encode((string)$dir, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>) +
 		'&imageFileName=' + encodeURIComponent(<?php echo json_encode((string)$imageFileName, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>) +
 		'&formalImageTypeName=' + encodeURIComponent(<?php echo json_encode((string)$formalImageTypeName, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>) +
 		'&type=' + encodeURIComponent(<?php echo json_encode((string)$type, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>) +
-		'&listNames=' + encodeURIComponent(<?php echo json_encode($listNames ? '1' : '0'); ?>);
+		'&listNames=' + encodeURIComponent(<?php echo json_encode($listNames ? '1' : '0'); ?>) +
+		'&useThumbnails=' + encodeURIComponent(<?php echo json_encode($useThumbnails ? '1' : '0'); ?>);
 
 	function initialiseGallery() {
 		const galleryElement = document.querySelector('.functions-listfiletype-grid');
@@ -944,8 +965,29 @@ $(document).ready(function () {
 <?php
 }
 
-function getVideoThumbnailInfo($day, $videoPath, $videoUrl) {
+function getListFileTypeVideoPlaceholderUrl() {
+	$svg = <<<SVG
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
+<rect width="400" height="300" fill="#16202a"/>
+<circle cx="200" cy="132" r="48" fill="#ffffff" fill-opacity="0.14"/>
+<polygon points="186,104 186,160 234,132" fill="#ffffff"/>
+<text x="200" y="228" text-anchor="middle" fill="#d7e1ea" font-family="Arial, sans-serif" font-size="26">Video</text>
+</svg>
+SVG;
+
+	return 'data:image/svg+xml,' . rawurlencode($svg);
+}
+
+function getVideoThumbnailInfo($day, $videoPath, $videoUrl, $useThumbnails=true) {
 	global $settings_array;
+
+	if (! $useThumbnails) {
+		return [
+			'thumbFile' => null,
+			'thumbUrl' => getListFileTypeVideoPlaceholderUrl(),
+			'warning' => null,
+		];
+	}
 
 	$dayDirectory = ALLSKY_IMAGES . "/{$day}";
 	$thumbDirectory = $dayDirectory . "/videothumbnail";

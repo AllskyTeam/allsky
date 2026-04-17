@@ -33,8 +33,6 @@ function DisplayOverlay($image_name)
     <script src="/js/bootbox/bootbox.all.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
     <script src="/js/bootbox/bootbox.locales.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
-<!-- FIX: checkbox.css no longer exists -->
-    <link rel='stylesheet' href='/css/checkbox.css?c=<?php echo ALLSKY_VERSION; ?>' />
 
     <link rel="stylesheet" href="/js/bootstrap-slider/dist/css/bootstrap-slider.css?c=<?php echo ALLSKY_VERSION; ?>">
     <script src="/js/bootstrap-slider/dist/bootstrap-slider.js?c=<?php echo ALLSKY_VERSION; ?>"></script>

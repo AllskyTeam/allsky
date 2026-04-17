@@ -56,7 +56,7 @@ function timelapseSettings()
 			</ol>
 			See the
 			<a external="true"
-				href="/documentation/settings/allsky.html#dailytimelapse">timelapse</a>
+				href="/docs/allsky_guide/settings/allsky.html#dailytimelapse">timelapse</a>
 			page for an explanation of these settings.
 			</p>
 			<p>

@@ -306,6 +306,8 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" || ${1} == "--force" ]]; then
 	ALLSKY_PI_OS="${ALLSKY_PI_OS/VERSION_CODENAME=/}"
 	ALLSKY_PI_OS="${ALLSKY_PI_OS,,}"
 
+	ALLSKY_EXTERNAL_ICON=" <i class='fa fa-external-link-alt fa_external'></i>"
+
 	# If a user wants to define new variables or assign variables differently,
 	# then load their file if it exists.
 	ALLSKY_USER_VARIABLES="${ALLSKY_CONFIG}/uservariables.sh"

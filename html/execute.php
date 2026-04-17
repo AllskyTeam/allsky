@@ -50,7 +50,7 @@ if ($use_TEXT) {
 	<meta http-equiv="Expires" content="0" />
 
 	<link href="css/allsky.css" rel="stylesheet">
-	<link rel="shortcut icon" type="image/png" href="documentation/img/allsky-favicon.png">
+	<link rel="shortcut icon" type="image/png" href="/favicon.ico">
 	<title>Execute <?php echo "$ID"; ?></title>
 </head>
 <body>

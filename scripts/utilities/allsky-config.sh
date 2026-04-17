@@ -181,7 +181,7 @@ function show_installed_locales()
 		echo " see the 'Locale' setting on the WebUI's"
 		echo "'Settings -> Allsky' Documentation page for instructions on how to install it."
 	else
-		echo " <a href='/documentation/settings/allsky.html#locale'>click here</a>"
+		echo " <a href='/docs/allsky_guide/settings/allsky.html#locale'>click here</a>"
 		echo "for instructions on how to install it."
 		HTML="--html"
 	fi

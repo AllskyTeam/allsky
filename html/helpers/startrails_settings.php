@@ -37,7 +37,7 @@ function startrailsSettings()
 			<br>
 			See the
 			<a external="true"
-				href="/documentation/explanations/startrails.html#brightnessthreshold">startrails settings</a>
+				href="/docs/allsky_guide/howtos/startrails.html#brightnessthreshold">startrails settings</a>
 			for an explanation of this setting.
 			</p>
 

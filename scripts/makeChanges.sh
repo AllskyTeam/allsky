@@ -6,13 +6,13 @@
 ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck source-path=.
-source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/checkFunctions.sh"			|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/checkFunctions.sh"			|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 function usage_and_exit()
 {
@@ -357,7 +357,7 @@ do
 				if [[ ! -e "${ALLSKY_BIN}/capture_${CAMERA_TYPE}" ]]; then
 					MSG="Unknown ${WSNs}${LABEL}${WSNe}: '${CAMERA_TYPE}'."
 					wE_ "${ERROR_PREFIX}ERROR: ${MSG}"
-					exit "${EXIT_NO_CAMERA}"
+					exit "${ALLSKY_EXIT_NO_CAMERA}"
 				fi
 			fi
 
@@ -443,8 +443,8 @@ do
 					# Restore prior cc file if there was one.
 					[[ -f ${CC_FILE_OLD} ]] && mv "${CC_FILE_OLD}" "${ALLSKY_CC_FILE}"
 
-					# Invoker displays error message on EXIT_NO_CAMERA.
-					if [[ ${RET} -ne "${EXIT_NO_CAMERA}" ]]; then
+					# Invoker displays error message on ALLSKY_EXIT_NO_CAMERA.
+					if [[ ${RET} -ne "${ALLSKY_EXIT_NO_CAMERA}" ]]; then
 						E="${wBR}ERROR: "
 						if [[ ${RET} -eq 139 ]]; then
 							E+="Segmentation fault in ${CMD}"
@@ -1048,7 +1048,7 @@ done
 
 [[ ${OK} == "false" ]] && exit 1
 
-[[ ${NUM_CHANGED} -le 0 ]] && exit "${EXIT_PARTIAL_OK}" 		# Nothing changed
+[[ ${NUM_CHANGED} -le 0 ]] && exit "${ALLSKY_EXIT_PARTIAL_OK}" 		# Nothing changed
 
 USE_REMOTE_WEBSITE="${S_useremotewebsite}"
 USE_REMOTE_SERVER="${S_useremoteserver}"
@@ -1088,7 +1088,7 @@ if [[ ${USE_REMOTE_WEBSITE} == "true" || ${USE_REMOTE_SERVER} == "true" ]]; then
 			W+="${wBR}Please do so now."
 			if [[ ${FROM} == "webui" ]]; then
 				W+="${wBR}See <a allsky='true' external='true'"
-				W+=" href='/documentation/installations/AllskyWebsite.html'>the documentation</a>"
+				W+=" href='/docs/allsky_guide/allsky.html'>the documentation</a>"
 			fi
 			wW_ "${W}"
 			[[ ${WEBSITES} != "local" ]] && WEBSITES=""

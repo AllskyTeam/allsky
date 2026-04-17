@@ -3,22 +3,22 @@
 
 ![](./assets/allsky_camera.png)
 
-Allsky transforms a camera into a tireless, intelligent observer of the night sky — an automated system that watches, records, and analyses everything that happens above you.
+Allsky transforms a camera into a tireless, intelligent observer of the night sky - an automated system that watches, records, and analyses everything that happens above you.
 
-Using a high-sensitivity camera, powerful Raspberry Pi-based software, and modular extensions, Allsky captures meteors, satellites, aurora, and passing cloud, 24 hours a day. Each frame is processed in real time to reveal events invisible to the naked eye — and every night becomes its own story told through data, images, and motion.
+Using a high-sensitivity camera, powerful Raspberry Pi-based software, and modular extensions, Allsky captures meteors, satellites, aurora, and passing cloud, 24 hours a day. Each frame is processed in real time to reveal events invisible to the naked eye - and every night becomes its own story told through data, images, and motion.
 
-But Allsky is more than just a camera — it’s an ecosystem.
+But Allsky is more than just a camera - it's an ecosystem.
 The web-based interface lets you monitor your system live, review captured events, design custom overlays, visualise sensor data, and automate your setup with a flexible module system. From temperature and dew heater control to star detection and meteor analytics, every feature works together in a single, polished dashboard.
 
-Built by enthusiasts for enthusiasts, Allsky is open, extensible, and endlessly curious — a fusion of astrophotography, automation, and discovery.
+Built by enthusiasts for enthusiasts, Allsky is open, extensible, and endlessly curious - a fusion of astrophotography, automation, and discovery.
 
 
 
 > The Allsky Camera software was originally created by Thomas Jacquin, a developer and astrophotography  enthusiast based in Canada.
 >
-> Thomas released the first version of Allsky around 2018, designed to run on a Raspberry Pi with a ZWO ASI or Raspberry Pi HQ camera to capture images of the entire sky — automatically creating timelapses, keograms, and detecting meteors.
+> Thomas released the first version of Allsky around 2018, designed to run on a Raspberry Pi with a ZWO ASI or Raspberry Pi HQ camera to capture images of the entire sky - automatically creating timelapses, keograms, and detecting meteors.
 >
->Since then, the project has grown into a large open-source community effort on GitHub under the Allsky Team￼ organisation, with contributions from many developers and users:
+>Since then, the project has grown into a large open-source community effort on GitHub under the Allsky Team organisation, with contributions from many developers and users:
 >
 >Thomas continues to be recognised as the founder and original author, while the Allsky Team now maintains and evolves the software collaboratively.
 >
@@ -66,7 +66,7 @@ Skip the details and **[head straight to the setup guide](#requirements)** to be
    * Choose exactly which data fields to display from a rich, dynamic list
    * Group related fields together for easier movement and organization
    * Fine-tune layouts with precise alignment and spacing controls
-   * Insert predefined blocks — such as all Sun-related data — with a single click
+   * Insert predefined blocks - such as all Sun-related data - with a single click
    * Use any font to style your overlays your way
    * Customize the format of every field for consistent presentation
    * Add your own images, logos, or icons to any overlay for a personal touch
@@ -74,28 +74,28 @@ Skip the details and **[head straight to the setup guide](#requirements)** to be
    * Modular architecture allowing you to add only the features you need
    * Developers can create new modules using the provided developer documentation
    * Developers can contribute modules to the main Allsky project for the community
-   * Multiple “flows” determine when modules run:
-      * Daytime Capture – Modules that run during the day
-      * Nighttime Capture – Modules that run during the night
-      * Day → Night – Modules that run during the day-to-night transition
-      * Night → Day – Modules that run during the night-to-day transition
-      * Periodic – Modules that run at regular intervals
+   * Multiple "flows" determine when modules run:
+      * Daytime Capture - Modules that run during the day
+      * Nighttime Capture - Modules that run during the night
+      * Day -&gt; Night - Modules that run during the day-to-night transition
+      * Night -&gt; Day - Modules that run during the night-to-day transition
+      * Periodic - Modules that run at regular intervals
    * Key Modules (include but not limited to):
       > <br>
       > NOTE: Some modules require external hardware or third-party services.
       > <br><br>
-      * Star Count – Counts stars in captured images
-      * Meteor Detection – Detects meteors automatically
-      * Environment – Captures environmental data using sensors or APIs
-      * Dew Heater – Controls an external dew-heater system
-      * Hardware Status – Monitors CPU temperature, memory, and disk usage
-      * Cloud Detection – Determines sky clarity via sensors or AI methods
-      * ADSB – Displays aircraft data from local or online sources
-      * Fans – Controls external cooling or ventilation fans
-      * Solar System – Calculates data for the Sun, Moon, planets, and satellites
-      * Power – Measures power consumption (e.g., dew-heater usage)
-      * SQM – Sky Quality Meter reporting Lux and estimated Bortle class
-      * GPS – Sets location and time from an external GPS receiver
+      * Star Count - Counts stars in captured images
+      * Meteor Detection - Detects meteors automatically
+      * Environment - Captures environmental data using sensors or APIs
+      * Dew Heater - Controls an external dew-heater system
+      * Hardware Status - Monitors CPU temperature, memory, and disk usage
+      * Cloud Detection - Determines sky clarity via sensors or AI methods
+      * ADSB - Displays aircraft data from local or online sources
+      * Fans - Controls external cooling or ventilation fans
+      * Solar System - Calculates data for the Sun, Moon, planets, and satellites
+      * Power - Measures power consumption (e.g., dew-heater usage)
+      * SQM - Sky Quality Meter reporting Lux and estimated Bortle class
+      * GPS - Sets location and time from an external GPS receiver
    * Supported Sensors / 3rd-Party Integrations
       | Integration / Sensor | Description |
       |:----------------------|:-------------|
@@ -134,16 +134,16 @@ Skip the details and **[head straight to the setup guide](#requirements)** to be
       | **Weather Underground** | Retrieve weather data |
       | **NOAA** | Access space-weather data |
 
-      * *And more…*
+      * *And more...
       > <br>
-      > If you have a sensor that isn’t currently supported, please contact us.
+      > If you have a sensor that isn't currently supported, please contact us.
       > <br><br>
    * Charts System
       * Display data from various sources such as:
          * Camera Sensor
          * Environment
          * Dew Heater
-         * *And more…*
+         * *And more...
       * Create your own custom charts
 
 
@@ -183,7 +183,7 @@ In order to run the Allsky software you need:
 <!-- =============================================================================== --> 
 ## Software Installation
 
-See the [detailed installation instructions](./html/documentation/installations/Allsky.html).
+See the [detailed installation instructions](./html/docs/allsky_guide/allsky.html).
 
 ---
 
@@ -227,19 +227,19 @@ The overlay editor allows you to add custom data to your captured images. This d
       * Core Allsky generates a large amount of data, which is further extended by additional modules. All of this data is available for display on your overlays
    * Simple graphics to highlight or group related fields
 
-Since you may not want the same data on daytime and nighttime captures — for example, displaying a star count during the day doesn’t make sense — you can create separate overlays for day and night. In fact, you can build a library of overlays and switch between them as needed.
+Since you may not want the same data on daytime and nighttime captures - for example, displaying a star count during the day doesn't make sense - you can create separate overlays for day and night. In fact, you can build a library of overlays and switch between them as needed.
 
 All data captured by Allsky is stored internally in precise formats. The overlay editor allows you to format this data however you wish. For example, if temperature is stored to three decimal places but you only want to show one, simply set the appropriate format in the format editor.
 
 You can upload TrueType or OpenType fonts for use in your overlays.
 
-If you’d like to add images — such as a compass or logo — a core set of images is included, and you can also upload your own.
+If you'd like to add images - such as a compass or logo - a core set of images is included, and you can also upload your own.
 
-Several modules require masks, which are applied to images to blank out regions before processing. This is important for tasks like meteor detection, where false positives must be avoided. The overlay editor includes a built-in mask drawing tool so you can create and save masks directly — no need for GIMP or Photoshop anymore.
+Several modules require masks, which are applied to images to blank out regions before processing. This is important for tasks like meteor detection, where false positives must be avoided. The overlay editor includes a built-in mask drawing tool so you can create and save masks directly - no need for GIMP or Photoshop anymore.
 
 Aligning fields on the overlay can be tricky, so the editor provides alignment tools to help. Fields can also be grouped, allowing you to move aligned items together as one unit.
 
-Allsky and several modules provide “blocks” of fields. When you add one of these blocks to the overlay, all relevant fields are automatically added. For example, adding the Sun block inserts all sun-related times in one step — a quick way to add multiple fields at once.
+Allsky and several modules provide "blocks" of fields. When you add one of these blocks to the overlay, all relevant fields are automatically added. For example, adding the Sun block inserts all sun-related times in one step - a quick way to add multiple fields at once.
 
 There are many more features available so please see the main documentation for full details.
 
@@ -293,14 +293,14 @@ You can also create custom charts from all of the available data in a variety of
 The local Allsky Website (i.e., on the Pi) is installed with Allsky but must be enabled in the WebUI in order to use it.
 You can also install the Allsky Website on a remote server so it can be viewable via the Internet.
 
-See [Installation / Upgrading --> Website](https://htmlpreview.github.io/?https://raw.githubusercontent.com/AllskyTeam/allsky/master/html/documentation/installations/AllskyWebsite.html) for information on how to install and configure an Allsky Website.
+See [Installation / Upgrading --> Website](https://htmlpreview.github.io/?https://raw.githubusercontent.com/AllskyTeam/allsky/master/html/docs/allsky_guide/website.html) for information on how to install and configure an Allsky Website.
 
 
 
 ## Remote server
 Allsky images, keograms, startrails, and timelapse videos can optionally be uploaded to a remote server __not__ running an Allsky Website.  This is useful if you have a personal website and want to include the most recent Allsky images.
 
-See [Installation / Upgrading --> Remote server](https://htmlpreview.github.io/?https://raw.githubusercontent.com/AllskyTeam/allsky/master/html/documentation/installations/RemoteServer.html) for information on how to configure a remote server.
+See [Installation / Upgrading --> Remote server](https://htmlpreview.github.io/?https://raw.githubusercontent.com/AllskyTeam/allsky/master/html/docs/allsky_guide/installations/server.html) for information on how to configure a remote server.
 
 ---
 
@@ -312,7 +312,7 @@ Allsky supports running "modules" after each picture is taken to change the imag
 
 The Overlay Editor lets you easily specify what text and images you want in your overlay, and place them using drag-and-drop.  Each field can be formatted however you want (font, color, size, position, rotation, etc.).  The only limit is your imagination!!
 
-See [Explanations / How To -> Overlays](https://htmlpreview.github.io/?https://raw.githubusercontent.com/AllskyTeam/allsky/master/html/documentation/overlays/overlays.html) and [Explanations / How To -> Modules](https://htmlpreview.github.io/?https://raw.githubusercontent.com/AllskyTeam/allsky/master/html/documentation/modules/modules.html) for more information.
+See [Explanations / How To -> Overlays](https://htmlpreview.github.io/?https://raw.githubusercontent.com/AllskyTeam/allsky/master/html/docs/allsky_guide/overlays/overview.html) and [Explanations / How To -> Modules](https://htmlpreview.github.io/?https://raw.githubusercontent.com/AllskyTeam/allsky/master/html/docs/allsky_modules/introduction.html) for more information.
 
 ---
 
@@ -320,7 +320,7 @@ See [Explanations / How To -> Overlays](https://htmlpreview.github.io/?https://r
 
 Dark frame subtraction removes white (i.e., "hot") pixels from images by taking images with a cover over the camera lens and subtracting those images from images.
 
-See [Explanations / How To -> Dark frames](https://htmlpreview.github.io/?https://raw.githubusercontent.com/AllskyTeam/allsky/master/html/documentation/explanations/darkFrames.html) for more information.
+See [Explanations / How To -> Dark frames](https://htmlpreview.github.io/?https://raw.githubusercontent.com/AllskyTeam/allsky/master/html/docs/allsky_guide/howtos/dark_frames.html) for more information.
 
 ---
 
@@ -330,7 +330,7 @@ By default, a timelapse video is generated at the end of nighttime from all of t
 
 "Mini" timelapse videos can also be created every few images, and contain the last several images.  They are useful to see what the sky was recently like.
 
-See [Explanations / How To --> Timelapses](https://htmlpreview.github.io/?https://raw.githubusercontent.com/AllskyTeam/allsky/master/html/documentation/explanations/timelapses.html).
+See [Explanations / How To --> Timelapses](https://htmlpreview.github.io/?https://raw.githubusercontent.com/AllskyTeam/allsky/master/html/docs/allsky_guide/howtos/timelapse.html).
 
 ---
 
@@ -341,7 +341,7 @@ See [Explanations / How To --> Timelapses](https://htmlpreview.github.io/?https:
 A __Keogram__ is an image giving a quick view of the day's activity.
 For each image a central vertical column 1 pixel wide is extracted. All these columns are then stitched together from left to right. This results in a timeline that reads from dawn to the end of nighttime (the image above only shows nighttime data since daytime images were turned off).
 
-See [Explanations / How To --> Keograms](https://htmlpreview.github.io/?https://raw.githubusercontent.com/AllskyTeam/allsky/master/html/documentation/explanations/keograms.html).
+See [Explanations / How To --> Keograms](https://htmlpreview.github.io/?https://raw.githubusercontent.com/AllskyTeam/allsky/master/html/docs/allsky_guide/howtos/keograms.html).
 
 ---
 
@@ -352,7 +352,7 @@ See [Explanations / How To --> Keograms](https://htmlpreview.github.io/?https://
 __Startrails__ are generated by stacking all the images from a night on top of each other.
 In the image above, Polaris is centered about one-fourth the way from the top.
 
-See [Explanations / How To --> Startrails](https://htmlpreview.github.io/?https://raw.githubusercontent.com/AllskyTeam/allsky/master/html/documentation/explanations/startrails.html).
+See [Explanations / How To --> Startrails](https://htmlpreview.github.io/?https://raw.githubusercontent.com/AllskyTeam/allsky/master/html/docs/allsky_guide/howtos/startrails.html).
 	
 ---
 
@@ -362,7 +362,7 @@ See [Explanations / How To --> Startrails](https://htmlpreview.github.io/?https:
 You can specify how many days worth of images to keep in order to keep the Raspberry Pi SD card from filling up.  If you are using the Allsky Website on your Pi, you can specify how many days worth of its imags to keep.
 
 
-See the __Days to Keep on Pi Website__ and __Web Days To Keep on Remote Website__ settings in [Settings --> Allsky](https://htmlpreview.github.io/?https://raw.githubusercontent.com/AllskyTeam/allsky/master/html/documentation/settings/allsky.html).
+See the __Days to Keep on Pi Website__ and __Web Days To Keep on Remote Website__ settings in [Settings --> Allsky](https://htmlpreview.github.io/?https://raw.githubusercontent.com/AllskyTeam/allsky/master/html/docs/allsky_guide/settings/allsky.html).
 
 ---
 
@@ -370,7 +370,7 @@ See the __Days to Keep on Pi Website__ and __Web Days To Keep on Remote Website_
 
 ![](./assets/allsky-map-with-pins.png)
 
-If you want your allsky camera added to the [Allsky map](http://www.thomasjacquin.com/allsky-map), see [Put your camera on Allsky Map](https://htmlpreview.github.io/?https://raw.githubusercontent.com/AllskyTeam/allsky/master/html/documentation/miscellaneous/AllskyMap.html).
+If you want your allsky camera added to the [Allsky map](http://www.thomasjacquin.com/allsky-map), see [Put your camera on Allsky Map](https://htmlpreview.github.io/?https://raw.githubusercontent.com/AllskyTeam/allsky/master/html/docs/allsky_guide/howtos/allsky_map.html).
 
 If you know anyone in Greenland or Antartica, send them a camera!!
 
@@ -394,7 +394,7 @@ If you know anyone in Greenland or Antartica, send them a camera!!
 ## Release changes
 
 See the
-[Allsky Version Change Log](https://htmlpreview.github.io/?https://raw.githubusercontent.com/AllskyTeam/allsky/master/html/documentation/changeLog.html)
+[Allsky Version Change Log](https://htmlpreview.github.io/?https://raw.githubusercontent.com/AllskyTeam/allsky/master/html/docs/allsky_guide/changelog.html)
 for a list of changes in this release and all prior releases.
 
 ---

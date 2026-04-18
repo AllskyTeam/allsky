@@ -2872,6 +2872,13 @@ label.el-checkbox {
     user-select: none;
 }
 
+body.dark #oe-editor-toolbar .navbar-btn:hover,
+body.dark #oe-editor-toolbar .navbar-btn:focus {
+    background-color: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.18);
+    color: var(--bs3-navbar-hover-text);
+}
+
 .navbar-default .navbar-nav>.active>a, .navbar-default .navbar-nav>.active>a:focus, .navbar-default .navbar-nav>.active>a:hover {
     background: none !important;
 }
@@ -3459,6 +3466,13 @@ div.dtsp-searchPane div.dtsp-topRow {
 .system-action-navbar .navbar-right .btn {
     margin-top: 8px;
     margin-bottom: 8px;
+}
+
+body.dark #oe-module-editor-navbar .navbar-right .navbar-btn:hover,
+body.dark #oe-module-editor-navbar .navbar-right .navbar-btn:focus {
+    background-color: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.18);
+    color: var(--bs3-navbar-hover-text);
 }
 
 .system-user-actions-panel {

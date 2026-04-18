@@ -106,6 +106,8 @@ class ALLSKY {
 				}
 			} catch (e) {
 			}
+
+			$('a[external="true"]').attr('target', '_blank');
 		});
 
 	}
@@ -169,6 +171,10 @@ class ALLSKY {
 		this.#addTimestamp('system');
 		this.#addTimestamp('auth_conf');
 		this.#addTimestamp('support');
+	}
+
+	#setupExternalLinks() {
+		$('a[external="true"]').attr('target', '_blank');
 	}
 
 	#initTimers(page) {
@@ -540,6 +546,7 @@ class ALLSKY {
 	init() {
 		this.#setupTheme();
 		this.#setupBigScreen();
+		this.#setupExternalLinks();
 		this.#setupTimestamps();
 		// initialize timers that apply to all pages
 		this.#initTimers('all');

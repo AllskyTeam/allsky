@@ -319,6 +319,13 @@ function insertHref($p, $day, $displayTitle=false, $iconImage="") {
 		if ($AllTitle !== null)
 			$title = $AllTitle;
 	}
+
+	$external = getExternal($p);	
+	$external_attr = "";
+	if ($external === "true") {
+		$external_attr = 'external="true"';
+	}
+
 	$href = getVariableOrDefault($t, "href", "index.php?page=$p");
 	if ($day !== "") $href .= "&day=$day";
 	if ($iconImage === "") {
@@ -336,16 +343,13 @@ function insertHref($p, $day, $displayTitle=false, $iconImage="") {
 		} else {
 			$target = "";
 		}
-		echo "<a id='$p' href='$href' title='$title' $target>";
+		echo "<a id='$p' $external_attr href='$href' title='$title' $target>";
 		if ($iconImage === "") {
 			echo "<i class='$icon'></i>";
 		} else {
 			echo $iconImage;
 		}
 		if ($displayTitle) echo " $title";
-		if ($external === "true") {
-			echo " " . ALLSKY_EXTERNAL_ICON;
-		}
 		echo "</a>";
 	}
 }
@@ -371,26 +375,26 @@ function insertMenuItem($p, $day, $type="", $href_only=false) {
 		$target = ' target="_blank" rel="noopener noreferrer"';
 	}
 
+	$external_attr = "";
+	if ($external === "true") {
+		$external_attr = 'external="true"';
+	}
+
 	if ($jsHandler === null) {
 		echo "<li>";
-		echo "<a id='$p' href='$href' $target><i class='$icon'></i>";
+		echo "<a id='$p' $external_attr href='$href' $target><i class='$icon'></i>";
 		if ($type !== "dropdown") echo "<span class='menu-text'>";
 		echo " $title";
 		if ($type !== "dropdown") echo "</span>";
-		if ($external === "true") {
-			echo " " . ALLSKY_EXTERNAL_ICON;
-		}
 		echo "</a>";
 		echo "</li>\n";
 	} else {
 		$extraiconcss = $extraCSS["extraiconcss"];
 		$extratextcss = $extraCSS["extratextcss"];
 		echo "<li>";
-		echo "<a id='$p' href='$href' class='allsky-js-handler' data-jsclass='$jsHandler'><i class='$icon $extraiconcss'></i>";
+		echo "<a id='$p' $external_attr href='$href' class='allsky-js-handler' data-jsclass='$jsHandler'><i class='$icon $extraiconcss'></i>";
 		echo "<span class='menu-text $extratextcss'>$title</span>";
-		if ($external === "true") {
-			echo " " . ALLSKY_EXTERNAL_ICON;
-		}
+
 		echo "</a>";
 		echo "</li>\n";
 	}

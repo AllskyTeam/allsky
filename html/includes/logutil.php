@@ -22,7 +22,7 @@ class LOGUTIL extends UTILBASE
 
     public function __construct()
     {
-        $configBase = defined('ALLSKY_CONFIG') ? ALLSKY_CONFIG : (defined('ALLSKY_HOME') ? (ALLSKY_HOME . '/config') : '/home/pi/allsky/config');
+        $configBase = defined('ALLSKY_MYFILES_DIR') ? ALLSKY_MYFILES_DIR : '/home/pi/allsky/myFiles';
         $this->configFile = $configBase . '/monitorable_logs.json';
 
         $defaults = [
@@ -74,8 +74,9 @@ class LOGUTIL extends UTILBASE
 
         $parsed = $this->parseLogs($decoded);
         if ($parsed['logs']) {
+            $mergedLogs = array_merge($fallbackLogs['logs'], $parsed['logs']);
             $this->defaultLogId = $parsed['default'] ?? $this->defaultLogId;
-            return $parsed['logs'];
+            return $mergedLogs;
         }
 
         return $fallbackLogs['logs'];

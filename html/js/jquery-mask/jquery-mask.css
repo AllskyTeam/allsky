@@ -17,11 +17,39 @@
       }
 
       /* Toolbar styling */
-      #allsky-mask #allsky-mask-toolbar {
+      #allsky-mask #allsky-mask-toolbar-nav {
       	flex: 0 0 auto;
-      	padding: 10px;
-      	background: #eee;
-      	border-bottom: 1px solid #ccc;
+      	margin-bottom: 0;
+      	border-radius: 0;
+      }
+
+      #allsky-mask #allsky-mask-toolbar-nav .container-fluid {
+      	position: relative;
+      }
+
+      #allsky-mask #allsky-mask-toolbar {
+      	display: flex;
+      	flex-wrap: wrap;
+      	align-items: center;
+      }
+
+      #allsky-mask #allsky-mask-toolbar > li {
+      	float: none;
+      	display: flex;
+      	align-items: center;
+      }
+
+      #allsky-mask #allsky-mask-toolbar .navbar-btn {
+      	margin-top: 8px;
+      	margin-bottom: 8px;
+      }
+
+      #allsky-mask #allsky-mask-toolbar .btn-group {
+      	margin: 8px 10px 8px 0;
+      }
+
+      #allsky-mask #allsky-mask-toolbar .dropdown-menu {
+      	margin-top: 0;
       }
 
       #allsky-mask #allsky-mask-container {
@@ -30,13 +58,20 @@
       	width: 100%;
       }
 
-      #allsky-mask .dropdown,
-      #allsky-mask .allsky-mask-tool-button {
+      #allsky-mask .allsky-mask-tool-button,
+      #allsky-mask .allsky-mask-toolbar-group {
       	margin-right: 5px;
       }
 
       #allsky-mask label {
       	margin-right: 10px;
+      }
+
+      body.dark #allsky-mask #allsky-mask-toolbar .navbar-btn:hover,
+      body.dark #allsky-mask #allsky-mask-toolbar .navbar-btn:focus {
+      	background-color: rgba(255, 255, 255, 0.08);
+      	border-color: rgba(255, 255, 255, 0.18);
+      	color: var(--bs3-navbar-hover-text);
       }
 
       #allsky-mask-brush-soft {

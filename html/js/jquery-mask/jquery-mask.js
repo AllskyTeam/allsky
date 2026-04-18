@@ -85,74 +85,99 @@
 									<button type="button" class="close" data-dismiss="modal" aria-label="Close">
 										<span>&times;</span>
 									</button>
+									<a class="pull-right mr-4" href="/docs/allsky_guide/overlays/interface.html#the-mask-editor" target="_blank" rel="noopener noreferrer" data-toggle="tooltip" data-container="body" data-placement="left" title="Help">
+										<i class="fa-solid fa-circle-question"></i> Help
+									</a>
 									<h4 class="modal-title" id="allsky-mask-drawingModalLabel">Allsky Mask Editor</h4>
 								</div>
 								<div class="modal-body">
-									<div id="allsky-mask-toolbar">
-										<button class="allsky-mask-tool-button btn btn-default" id="allsky-mask-newBtn" title="Clear mask and start again"><i class="fa-solid fa-file"></i></button>
-										<div class="btn-group" role="group">
-											<button type="button" class="btn btn-default active" id="allsky-mask-easyModeBtn" title="Easy mode - can only create a circle">Easy</button>
-											<button type="button" class="btn btn-default" id="allsky-mask-expertModeBtn" title="Expert mode">Expert</button>
-										</div>                
-										<div class="dropdown" style="display:inline-block;">
-										<button id="drawingToolDropdown" class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" title="Pick how to create the mask">
-											<i class="fas fa-brush"></i> <span class="caret"></span>
-										</button>
-										<ul class="dropdown-menu">
-											<li><a href="#" data-tool="freehand"><i class="fas fa-brush" title="Use a brush to draw"></i> Freehand brush</a></li>
-											<li><a href="#" data-tool="square"><i class="fa-solid fa-square" title="Create a square"></i> Square</a></li>
-											<li><a href="#" data-tool="circle"><i class="fa-solid fa-circle" title="Create a circle"></i> Circle</a></li>
-											<li><a href="#" data-tool="filledPath"><i class="fa-solid fa-draw-polygon" title="Draw a shape"></i> Draw shape</a></li>
-											<li><a href="#" data-tool="feather"><i class="fa-solid fa-feather" title="Use a feather to draw"></i> Feather</a></li>
-										</ul>
-									</div>
-									<button class="allsky-mask-tool-button btn btn-default mr-0" id="allsky-mask-undoBtn" title="Undo"><i class="fa-solid fa-rotate-left"></i></button>
-									<button class="allsky-mask-tool-button btn btn-default" id="allsky-mask-redoBtn" title="Redo"><i class="fa-solid fa-rotate-right"></i></button>
-									<div class="dropdown mr-0" style="display:inline-block;">
-										<button class="btn btn-default dropdown-toggle navbar-btn" type="button" data-toggle="dropdown" title="Change mask opacity">
-											<i class="fa-solid fa-filter"></i>
-											<span class="caret"></span>
-										</button>
-										<ul class="dropdown-menu allsky-mask-brush-dropdown-background">
-											<li class="ml-4 mr-4">
-												<input type="text" id="allsky-mask-opacitySlider" type="text" data-slider-min="0" data-slider-max="100" data-slider-step="1" data-slider-value="100" />
-											</li>
-										</ul>
-									</div>	
-									<div class="dropdown mr-0" style="display:inline-block;">
-										<button class="btn btn-default dropdown-toggle navbar-btn" type="button" data-toggle="dropdown" title="Change image brightness">
-											<i class="fa-solid fa-lightbulb"></i>
-											<span class="caret"></span>
-										</button>
-										<ul class="dropdown-menu allsky-mask-brush-dropdown-background">
-											<li class="ml-4 mr-4">
-												<input type="text" id="allsky-mask-brightnessSlider" type="text" data-slider-min="0" data-slider-max="1" data-slider-step="0.1" data-slider-value="0" />
-											</li>
-										</ul>
-									</div>	                
-									<div class="dropdown mr-0" style="display:inline-block;">
-										<button class="btn btn-default dropdown-toggle navbar-btn" type="button" data-toggle="dropdown" title="Adjust brush size">
-											<i class="fa-solid fa-expand"></i>
-											<span class="caret"></span>
-										</button>
-										<ul class="dropdown-menu allsky-mask-brush-dropdown-background">
-											<li class="ml-4 mr-4">
-												<input type="text" id="allsky-mask-brushSizeSlider" type="text" data-slider-min="0" data-slider-max="100" data-slider-step="1" data-slider-value="10" />
-											</li>
-										</ul>
-									</div>	   
-									<div class="dropdown mr-0" style="display:inline-block;">
-										<button class="btn btn-default dropdown-toggle navbar-btn" type="button" data-toggle="dropdown" title="Zoom image">
-											<i class="fa-solid fa-magnifying-glass"></i>
-											<span class="caret"></span>
-										</button>
-										<ul class="dropdown-menu allsky-mask-brush-dropdown-background">
-											<li class="ml-4 mr-4">
-												<input type="text" id="allsky-mask-zoomSlider" type="text" data-slider-min="0.5" data-slider-max="3" data-slider-step="0.05" data-slider-value="1" />
-											</li>
-										</ul>
-									</div>	   
-								</div>
+									<nav class="navbar navbar-default" id="allsky-mask-toolbar-nav">
+										<div class="container-fluid">
+											<ul class="nav navbar-nav" id="allsky-mask-toolbar">
+												<li>
+													<button class="allsky-mask-tool-button btn btn-lg navbar-btn btn-default" id="allsky-mask-newBtn" title="Clear mask and start again"><i class="fa-solid fa-file"></i></button>
+												</li>
+												<li class="allsky-mask-toolbar-group">
+													<div class="btn-group" role="group">
+														<button type="button" class="btn btn-default active" id="allsky-mask-easyModeBtn" title="Easy mode - can only create a circle">Easy</button>
+														<button type="button" class="btn btn-default" id="allsky-mask-expertModeBtn" title="Expert mode">Expert</button>
+													</div>
+												</li>
+												<li class="allsky-mask-toolbar-group">
+													<div class="dropdown">
+														<button id="drawingToolDropdown" class="btn btn-lg navbar-btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" title="Pick how to create the mask">
+															<i class="fas fa-brush"></i> <span class="caret"></span>
+														</button>
+														<ul class="dropdown-menu">
+															<li><a href="#" data-tool="freehand"><i class="fas fa-brush" title="Use a brush to draw"></i> Freehand brush</a></li>
+															<li><a href="#" data-tool="square"><i class="fa-solid fa-square" title="Create a square"></i> Square</a></li>
+															<li><a href="#" data-tool="circle"><i class="fa-solid fa-circle" title="Create a circle"></i> Circle</a></li>
+															<li><a href="#" data-tool="filledPath"><i class="fa-solid fa-draw-polygon" title="Draw a shape"></i> Draw shape</a></li>
+															<li><a href="#" data-tool="feather"><i class="fa-solid fa-feather" title="Use a feather to draw"></i> Feather</a></li>
+														</ul>
+													</div>
+												</li>
+												<li>
+													<button class="allsky-mask-tool-button btn btn-lg navbar-btn btn-default" id="allsky-mask-undoBtn" title="Undo"><i class="fa-solid fa-rotate-left"></i></button>
+												</li>
+												<li>
+													<button class="allsky-mask-tool-button btn btn-lg navbar-btn btn-default" id="allsky-mask-redoBtn" title="Redo"><i class="fa-solid fa-rotate-right"></i></button>
+												</li>
+												<li class="allsky-mask-toolbar-group">
+													<div class="dropdown">
+														<button class="btn btn-lg navbar-btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" title="Change mask opacity">
+															<i class="fa-solid fa-filter"></i>
+															<span class="caret"></span>
+														</button>
+														<ul class="dropdown-menu allsky-mask-brush-dropdown-background">
+															<li class="ml-4 mr-4">
+																<input type="text" id="allsky-mask-opacitySlider" type="text" data-slider-min="0" data-slider-max="100" data-slider-step="1" data-slider-value="100" />
+															</li>
+														</ul>
+													</div>
+												</li>
+												<li class="allsky-mask-toolbar-group">
+													<div class="dropdown">
+														<button class="btn btn-lg navbar-btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" title="Change image brightness">
+															<i class="fa-solid fa-lightbulb"></i>
+															<span class="caret"></span>
+														</button>
+														<ul class="dropdown-menu allsky-mask-brush-dropdown-background">
+															<li class="ml-4 mr-4">
+																<input type="text" id="allsky-mask-brightnessSlider" type="text" data-slider-min="0" data-slider-max="1" data-slider-step="0.1" data-slider-value="0" />
+															</li>
+														</ul>
+													</div>
+												</li>
+												<li class="allsky-mask-toolbar-group">
+													<div class="dropdown">
+														<button class="btn btn-lg navbar-btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" title="Adjust brush size">
+															<i class="fa-solid fa-expand"></i>
+															<span class="caret"></span>
+														</button>
+														<ul class="dropdown-menu allsky-mask-brush-dropdown-background">
+															<li class="ml-4 mr-4">
+																<input type="text" id="allsky-mask-brushSizeSlider" type="text" data-slider-min="0" data-slider-max="100" data-slider-step="1" data-slider-value="10" />
+															</li>
+														</ul>
+													</div>
+												</li>
+												<li class="allsky-mask-toolbar-group">
+													<div class="dropdown">
+														<button class="btn btn-lg navbar-btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" title="Zoom image">
+															<i class="fa-solid fa-magnifying-glass"></i>
+															<span class="caret"></span>
+														</button>
+														<ul class="dropdown-menu allsky-mask-brush-dropdown-background">
+															<li class="ml-4 mr-4">
+																<input type="text" id="allsky-mask-zoomSlider" type="text" data-slider-min="0.5" data-slider-max="3" data-slider-step="0.05" data-slider-value="1" />
+															</li>
+														</ul>
+													</div>
+												</li>
+											</ul>
+										</div>
+									</nav>
 								<div id="allsky-mask-container"></div>
 								</div>
 								<div class="modal-footer">

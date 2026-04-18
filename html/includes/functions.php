@@ -847,7 +847,7 @@ function ListFileType($dir, $imageFileName, $formalImageTypeName, $type, $listNa
 	$useThumbnails = $options['useThumbnails'];
 	$loadingTitle = $useThumbnails ? 'Preparing previews...' : 'Loading files...';
 	$loadingText = $useThumbnails
-		? 'This page is loading in the background. If video thumbnails are missing they will be generated now.'
+		? 'This page is loading in the background. If a video thumbnail is missing, a placeholder image will be shown.'
 		: 'This page is loading in the background without thumbnail generation.';
 	echo "<div class='panel panel-allsky'>";
 	echo "<div class='panel-heading clearfix'>";
@@ -979,8 +979,6 @@ SVG;
 }
 
 function getVideoThumbnailInfo($day, $videoPath, $videoUrl, $useThumbnails=true) {
-	global $settings_array;
-
 	if (! $useThumbnails) {
 		return [
 			'thumbFile' => null,
@@ -989,46 +987,9 @@ function getVideoThumbnailInfo($day, $videoPath, $videoUrl, $useThumbnails=true)
 		];
 	}
 
-	$dayDirectory = ALLSKY_IMAGES . "/{$day}";
-	$thumbDirectory = $dayDirectory . "/videothumbnail";
-	$thumbWidth = (int) getVariableOrDefault($settings_array, 'thumbnailsizex', 100);
-	$thumbHeight = (int) getVariableOrDefault($settings_array, 'thumbnailsizey', 75);
 	$videoName = pathinfo($videoPath, PATHINFO_FILENAME);
-	$thumbFile = $thumbDirectory . "/{$videoName}.jpg";
+	$thumbFile = ALLSKY_IMAGES . "/{$day}/videothumbnail/{$videoName}.jpg";
 	$thumbUrl = "/images/{$day}/videothumbnail/" . rawurlencode($videoName . '.jpg');
-	$warning = null;
-
-	if (! file_exists($thumbFile)) {
-		if (! is_dir($thumbDirectory)) {
-			if (! @mkdir($thumbDirectory, 0775, true) && ! is_dir($thumbDirectory)) {
-				$warning = "The WebUI could not create <code>{$thumbDirectory}</code>. Make sure the image day folders are writable by the web server.";
-			} else {
-				setListFileTypePathOwnership($thumbDirectory, true);
-			}
-		}
-
-		if (is_dir($thumbDirectory) && is_writable($thumbDirectory)) {
-			$width = max($thumbWidth * 2, 1);
-			$height = max($thumbHeight * 2, 1);
-			$ffmpeg = '/usr/bin/ffmpeg';
-			$cmd = sprintf(
-				'%s -y -loglevel error -ss 00:00:00.2 -i %s -frames:v 1 -vf %s %s 2>&1',
-				escapeshellcmd($ffmpeg),
-				escapeshellarg($videoPath),
-				escapeshellarg("thumbnail,scale={$width}:{$height}:force_original_aspect_ratio=decrease"),
-				escapeshellarg($thumbFile)
-			);
-			@exec($cmd, $output, $returnCode);
-			if (file_exists($thumbFile)) {
-				setListFileTypePathOwnership($thumbFile, false);
-			}
-			if ($returnCode !== 0 && ! file_exists($thumbFile)) {
-				$warning = "The WebUI could not create a thumbnail for <code>" . htmlspecialchars(basename($videoPath)) . "</code>. Check that <code>ffmpeg</code> is installed and that the images folders are writable by the web server.";
-			}
-		} elseif ($warning === null) {
-			$warning = "The WebUI cannot write to <code>{$thumbDirectory}</code>. Make sure the image day folders are writable by the web server.";
-		}
-	}
 
 	if (file_exists($thumbFile)) {
 		return [
@@ -1040,8 +1001,8 @@ function getVideoThumbnailInfo($day, $videoPath, $videoUrl, $useThumbnails=true)
 
 	return [
 		'thumbFile' => null,
-		'thumbUrl' => $videoUrl,
-		'warning' => $warning,
+		'thumbUrl' => getListFileTypeVideoPlaceholderUrl(),
+		'warning' => null,
 	];
 }
 

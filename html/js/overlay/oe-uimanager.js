@@ -1013,6 +1013,16 @@ class OEUIMANAGER {
                 return newField
             }
 
+            const positionTextField = (field, targetTlx, targetTly) => {
+                const size = field.shape.measureSize(field.label);
+                field.shape.offset({
+                    x: (size.width / 2) | 0,
+                    y: (size.height / 2) | 0
+                });
+                field.x = targetTlx + field.shape.offsetX();
+                field.y = targetTly + field.shape.offsetY();
+            }
+
             if (this.#selected !== null && this.#selected.fieldType === 'fields' && this.#selected.canSplit) {
 
                 let fieldInfo = this.#selected.split;
@@ -1029,10 +1039,13 @@ class OEUIMANAGER {
 
                         if (field) {
                             if (index === 0) {
+                                const selectedTlx = this.#selected.tlx;
+                                const selectedTly = this.#selected.tly;
                                 this.#selected.label = variable;
                                 this.#selected.type = "text";
                                 this.#selected.sample = "";
                                 this.#selected.format = "";
+                                positionTextField(this.#selected, selectedTlx, selectedTly);
                                 prevField = this.#selected
                             } else {
                                 let fieldFormat = field.format
@@ -1043,24 +1056,29 @@ class OEUIMANAGER {
                                 newField.font = this.#selected.font;
                                 newField.fontsize = this.#selected.fontsize;
                                 newField.fill = this.#selected.colour;
-                                newField.tlx = calcTLX(prevField);
-                                newField.tly = this.#selected.tly;
+                                const newTlx = calcTLX(prevField);
+                                const newTly = this.#selected.tly;
+                                positionTextField(newField, newTlx, newTly);
                                 prevField = newField
                             }
                         } else {
                             if (index === 0) {
+                                const selectedTlx = this.#selected.tlx;
+                                const selectedTly = this.#selected.tly;
                                 this.#selected.label = variable;
                                 this.#selected.type = "text";
                                 this.#selected.sample = "";
                                 this.#selected.format = "";
+                                positionTextField(this.#selected, selectedTlx, selectedTly);
                                 prevField = this.#selected
                             }  else {
                                 let newField = createField(variable, "", "")
                                 newField.font = this.#selected.font;
                                 newField.fontsize = this.#selected.fontsize;
                                 newField.fill = this.#selected.colour;        
-                                newField.tlx = calcTLX(prevField);
-                                newField.tly = this.#selected.tly;
+                                const newTlx = calcTLX(prevField);
+                                const newTly = this.#selected.tly;
+                                positionTextField(newField, newTlx, newTly);
                                 prevField = newField
                             }  
                         }

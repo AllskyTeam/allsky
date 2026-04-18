@@ -1,3 +1,10 @@
+---
+tags:
+  - Allsky Guide
+  - Overlays
+  - Tips
+---
+
 ### Best Practice { data-toc-label="Best Practice" }
 
 **Create separate overlys for day and night**

@@ -1,17 +1,31 @@
+:root {
+  --red: #e53935;
+  --orange: #fb8c00;
+  --green: #43a047;
+  --blue: #1e88e5;
+
+  --settings-colour: #2f2f9e;
+}
+
+body[data-md-color-scheme="slate"] {
+  --red: #ff5250;  
+  --settings-colour: #6262ee;
+}
+
 .red {
-  color: #e53935;
+  color: var(--red);
 }
 
 .orange {
-  color: #fb8c00;
+  color: var(--orange);
 }
 
 .green {
-  color: #43a047;
+  color: var(--green);
 }
 
 .blue {
-  color: #1e88e5;
+  color: var(--blue);
 }
 
 img.center {
@@ -32,13 +46,7 @@ img.center {
 }
 
 .web-ui-setting {
-  color: rgb(0, 0, 155);
-  font-weight: bold;
-}
-
-.camera-dependent,
-.allsky-website-dependent, .red {
-  color: rgb(155, 0, 0);
+  color: rgb(47, 47, 184);
   font-weight: bold;
 }
 
@@ -86,24 +94,20 @@ td, th {
 
 /* Highjack markdown 'mark' for settings indicator */
 .md-typeset mark {
-  color: #00009b !important;
+  color: var(--settings-colour) !important;
   font-weight: bold !important;
   background-color: transparent !important;
 }
 
 /* Add external link icon to links marked with class "external" */
-a.external::after {
-  content: "";
-  display: inline-block;
-  width: 1em;
-  height: 1em;
-  margin-left: 0.25em;
-
-  background-color: currentColor;
-
-  /* SVG external-link icon as a mask */
-  -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='currentColor' d='M5 5h6v2H7v10h10v-4h2v6H5z'/><path fill='currentColor' d='M13 5V3h8v8h-2V7.414l-7.293 7.293-1.414-1.414L17.586 6H13z'/></svg>") no-repeat center / contain;
-          mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='currentColor' d='M5 5h6v2H7v10h10v-4h2v6H5z'/><path fill='currentColor' d='M13 5V3h8v8h-2V7.414l-7.293 7.293-1.414-1.414L17.586 6H13z'/></svg>") no-repeat center / contain;
+a[external="true"]::after {
+    font-family: "Font Awesome 6 Free";
+    content: "\f35d";
+    font-weight: 900;
+    margin-left: 6px;
+    font-size: 0.85em;
+    vertical-align: middle;
+    opacity: 0.7;
 }
 
 /* Make the table wrapper full width */

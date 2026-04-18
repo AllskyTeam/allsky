@@ -1,3 +1,11 @@
+---
+tags:
+  - Allsky Guide
+  - Troubleshooting
+  - ZWO
+  - Camera
+---
+
 ## ZWO camera not found { data-toc-label="ZWO camera not found" }
 If you have a new ZWO camera model that Allsky doesn't support you'll get an appropriate message in the WebUI when you start Allsky. The message will also tell you how to request support.
 

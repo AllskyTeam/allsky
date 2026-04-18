@@ -1,3 +1,10 @@
+---
+tags:
+  - Allsky Guide
+  - Backup & Restore
+  - Overview
+---
+
 # Backup and Restore Overview
 
 The **Backup and Restore** area exists for a simple reason: at some point, almost every Allsky installation needs a safe way to recover.

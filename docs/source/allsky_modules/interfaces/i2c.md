@@ -1,3 +1,10 @@
+---
+tags:
+  - Module Reference
+  - Module Interface
+  - I2C
+---
+
 # I²C Interface (Inter-Integrated Circuit)
 
 **I²C (Inter-Integrated Circuit)** is a simple, low-speed communication bus used to connect sensors, displays, and other peripherals to a controller such as a Raspberry Pi using only two signal wires.

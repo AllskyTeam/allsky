@@ -1,3 +1,10 @@
+---
+tags:
+  - Developer Guide
+  - Building Modules
+  - Tutorial
+---
+
 Lets build a simple module. The module will
 
 - Read data from a json file somewhere in the filesystem

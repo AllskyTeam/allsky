@@ -1,3 +1,10 @@
+---
+tags:
+  - Developer Guide
+  - Building Modules
+  - Overview
+---
+
 This section provides guides on building some example modules for Allsky. 
 
 The following points should be considered when developing modules

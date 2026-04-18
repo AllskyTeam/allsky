@@ -1,3 +1,9 @@
+---
+tags:
+  - Developer Guide
+  - Charts
+---
+
 Charts allows you to display data from Allsky and modules within the WebUI
 
 ![WebUI Charts](/assets/developer_images/webuicharts.png)

@@ -1,3 +1,10 @@
+---
+tags:
+  - Allsky Guide
+  - How To
+  - Timelapse
+---
+
 A timelapse is a video created by combining a sequence of images taken at regular intervals and playing them back at a much higher speed than they were captured. This compression of time allows slow or gradual changes to be observed in a short, continuous video.
 
 In an all-sky imaging context, timelapses are commonly used to show:

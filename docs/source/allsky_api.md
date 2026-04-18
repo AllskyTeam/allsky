@@ -1,3 +1,9 @@
+---
+tags:
+  - API
+  - Reference
+---
+
 # Allsky Server API
 The Allsky Server is a separate process that runs alongside Allsky its primary job is to handle longer running processes and to manage GPIO Coontrol. Its core functions are
 

@@ -1,3 +1,9 @@
+---
+tags:
+  - Allsky Guide
+  - Installation
+---
+
 !!! danger "Before you install"
 
     Your camera must be connected to the Raspberry Pi before you install Allsky.

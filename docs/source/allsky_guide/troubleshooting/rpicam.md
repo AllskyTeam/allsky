@@ -1,3 +1,11 @@
+---
+tags:
+  - Allsky Guide
+  - Troubleshooting
+  - Raspberry Pi Camera
+  - Camera
+---
+
 This page describes known issues with RPi and RPi-compatible cameras.
 
 !!! warning  "Warning"

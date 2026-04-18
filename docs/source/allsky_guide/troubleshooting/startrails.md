@@ -1,3 +1,10 @@
+---
+tags:
+  - Allsky Guide
+  - Troubleshooting
+  - Startrails
+---
+
 A startrails is an image that contains all the images from a night on top of each other in order to show star movement.
 
 !!! info  "Info"

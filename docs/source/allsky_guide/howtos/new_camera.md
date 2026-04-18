@@ -1,3 +1,10 @@
+---
+tags:
+  - Allsky Guide
+  - How To
+  - Camera
+---
+
 This page describes how to request that Allsky support a camera.
 
 ## ZWO Cameras { data-toc-label="ZWO Cameras" }

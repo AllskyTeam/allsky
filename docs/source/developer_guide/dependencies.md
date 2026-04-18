@@ -1,3 +1,9 @@
+---
+tags:
+  - Developer Guide
+  - Dependencies
+---
+
 ## The installer.json file { data-toc-label="The installer.json file" }
 
 This file allows you to configure dependencies and post installation scripts for the module.

@@ -1,3 +1,10 @@
+---
+tags:
+  - Allsky Guide
+  - How To
+  - Sun & Moon
+---
+
 The time the sun actually sets and rises at your location is dependent on the day of the year and your latitude and longitude, and defines what people call daytime and nighttime. Allsky also has a daytime and nighttime, but they determine when to use your daytime and nighttime settings, and can be changed as described below.
 
 !!! info  "Info"

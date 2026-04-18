@@ -1,3 +1,10 @@
+---
+tags:
+  - Allsky Guide
+  - Troubleshooting
+  - Hardware
+---
+
 Problems with your Raspberry Pi are not an issue with the AllSky software, but we're providing this page as a service to Allsky users.
 
 ## My Pi isn't using all its disk space { data-toc-label="My Pi isn't using all" }

@@ -1,3 +1,10 @@
+---
+tags:
+  - Developer Guide
+  - Reference
+  - Blocks
+---
+
 Blocks are designed to simplify the adding of fields to the overlay. Some modules, the solar system moduloe for example, produce a lot of variables that can be added to the overlay. Manually adding each one can be tedious.
 
 Blocks are predefined groups of variables defined in a column/row layout that can be added to the overlay together.

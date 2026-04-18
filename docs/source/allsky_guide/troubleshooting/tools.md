@@ -1,3 +1,10 @@
+---
+tags:
+  - Allsky Guide
+  - Troubleshooting
+  - Tools
+---
+
 This pages lists some tools and techniques to aid in troubleshooting Allsky. If you have any other tools, please submit a GitHub Discussion and let the Allsky developers know.
 
 **allsky-config command**

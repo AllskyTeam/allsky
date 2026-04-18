@@ -1,3 +1,9 @@
+---
+tags:
+  - Allsky Guide
+  - WebUI
+---
+
 The **WebUI** is the main control surface for Allsky. It is where you configure the system, watch the current image, review what has been captured, adjust overlays, manage modules, inspect the health of the Pi, and access tools that would otherwise require command-line work. In day to day use, this is the part of Allsky most people spend their time in. Even though the actual image capture is being done by the Allsky service in the background, the WebUI is the place where all of that activity becomes visible and manageable.
 
 In practical terms, the WebUI serves two roles at the same time. First, it is an administration interface for Allsky itself. That includes camera settings, upload behaviour, image processing, overlays, modules, charts, and system options. Second, it acts as a viewing and monitoring interface. From the same environment you can watch the latest image, browse saved images, open timelapses, inspect keograms and startrails, and see whether the system is healthy or reporting problems. That combination is one of the reasons the WebUI feels central to the whole project rather than just being a settings page.

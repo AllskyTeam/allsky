@@ -1,3 +1,11 @@
+---
+tags:
+  - Allsky Guide
+  - How To
+  - Helper Tools
+  - Startrails
+---
+
 The WebUI Helper Tools do what the name suggests - they "help" you do something, often helping determine what settings to use.
 
 ## Startrails { data-toc-label="Startrails" }

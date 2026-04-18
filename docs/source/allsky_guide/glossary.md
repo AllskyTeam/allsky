@@ -1,3 +1,9 @@
+---
+tags:
+  - Allsky Guide
+  - Glossary
+---
+
 # Glossary
 
 !!! info "Core Terms"

@@ -1,3 +1,10 @@
+---
+tags:
+  - Developer Guide
+  - Reference
+  - Fields
+---
+
 # Available fields
 
 ## Text field { data-toc-label="Text field" }

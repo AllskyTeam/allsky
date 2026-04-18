@@ -1,3 +1,9 @@
+---
+tags:
+  - Developer Guide
+  - Shared Library
+---
+
 ### The Allsky Base Module { data-toc-label="The Allsky Base Module" }
 Every module class must extend this base class. The base class does the following
 In the constructor;

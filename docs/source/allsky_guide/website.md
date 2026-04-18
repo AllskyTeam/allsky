@@ -1,3 +1,9 @@
+---
+tags:
+  - Allsky Guide
+  - Website
+---
+
 This page describes how to install a new Allsky Website or upgrade an existing Website.
 
 An Allsky Website running on your Pi is called a **local Website** because it is local to your Pi.  

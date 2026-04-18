@@ -1,3 +1,9 @@
+---
+tags:
+  - Allsky Guide
+  - Server
+---
+
 This page describes how to prepare a remote server to accept uploads of the current Allsky image as well as startrails, keograms, and timelapse videos.
 
 !!! danger "Warning"

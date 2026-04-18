@@ -1,3 +1,10 @@
+---
+tags:
+  - Allsky Guide
+  - Backup & Restore
+  - Backup
+---
+
 # Creating Backups
 
 This guide walks through the backup process in a more practical, real-world way.

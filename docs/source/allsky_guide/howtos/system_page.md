@@ -1,3 +1,11 @@
+---
+tags:
+  - Allsky Guide
+  - How To
+  - WebUI
+  - System
+---
+
 You can add information and buttons to the WebUI's System page without having to change any Allsky files. The data can be anything you want, but often contains weather, dew heater, and/or fan data.
 
 This documentation page assumes you are familiar with writing scripts; if so, adding the information is straightforward if you follow the instructions on this page.

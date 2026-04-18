@@ -1,3 +1,10 @@
+---
+tags:
+  - Module Reference
+  - Module Interface
+  - PWM
+---
+
 # Pulse Width Modulation (PWM)
 
 PWM (Pulse Width Modulation) is a method of controlling the power delivered to a device—such as a fan or a dew heater—by rapidly switching the power on and off instead of reducing the voltage.

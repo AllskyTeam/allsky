@@ -1,3 +1,10 @@
+---
+tags:
+  - Developer Guide
+  - Building Modules
+  - Sensors
+---
+
 In this tutorial we will write a module that accesses an I²C sensor to get temperature data. We will use the [Adafruit sht40](https://learn.adafruit.com/adafruit-sht40-temperature-humidity-sensor/overview){ target="_blank" rel="noopener" .external } sensor.
 
 !!! important  "Important"

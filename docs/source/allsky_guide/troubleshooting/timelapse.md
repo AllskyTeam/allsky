@@ -1,3 +1,10 @@
+---
+tags:
+  - Allsky Guide
+  - Troubleshooting
+  - Timelapse
+---
+
 Timelapse video creation can fail or result in poor quality videos for a number of reasons. The steps below, which apply to both the daily- and mini-timelapse, will almost always fix it.
 
 ## Timelapse video is not created { data-toc-label="Timelapse video created" }

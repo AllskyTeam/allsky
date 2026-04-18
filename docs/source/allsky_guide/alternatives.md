@@ -1,3 +1,9 @@
+---
+tags:
+  - Allsky Guide
+  - Alternatives
+---
+
 
 === "Software"
     

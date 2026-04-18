@@ -1,3 +1,10 @@
+---
+tags:
+  - Allsky Guide
+  - Backup & Restore
+  - Restore
+---
+
 # Restoring Backups
 
 This guide explains how restore operations work in practice, not just which buttons to click.

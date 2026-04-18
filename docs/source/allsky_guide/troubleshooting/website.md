@@ -1,3 +1,10 @@
+---
+tags:
+  - Allsky Guide
+  - Troubleshooting
+  - Website
+---
+
 This page lists various issues you may have with the Allsky Website and how to solve them.
 
 ## WARNING: Sunset ... { data-toc-label="WARNING: Sunset" }

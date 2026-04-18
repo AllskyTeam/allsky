@@ -1,3 +1,10 @@
+---
+tags:
+  - Developer Guide
+  - Meta Data
+  - Example
+---
+
 # Example Meta Data
 
 ```

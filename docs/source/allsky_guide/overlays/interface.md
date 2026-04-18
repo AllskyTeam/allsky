@@ -1,3 +1,10 @@
+---
+tags:
+  - Allsky Guide
+  - Overlays
+  - WebUI
+---
+
 # Editor Interface
 
 The Overlay Editor web page consists of two key areas:

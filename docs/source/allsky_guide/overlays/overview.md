@@ -1,3 +1,10 @@
+---
+tags:
+  - Allsky Guide
+  - Overlays
+  - Overview
+---
+
 An overlay is information that is added, i.e., overlayed, on top of each captured Allsky image. This often includes the time the image was taken, the sensor temperature, and the exposure length, but can include any other text or images you want.
 
 ## TL;DR { data-toc-label="TL;DR" }

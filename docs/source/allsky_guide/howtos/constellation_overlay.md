@@ -1,3 +1,11 @@
+---
+tags:
+  - Allsky Guide
+  - How To
+  - Overlays
+  - Constellations
+---
+
 The Allsky Website allows an overlay to appear over the image which can contain constellations, stars, objects, and other items. This overlay is called the "constellation overlay" and should not be confused with "image overlays" which contain text and other items that are embedded in captured images. You can view the constellation overlay by clicking on the constellation icon on the left side of the Website page (the icon looks like Cassiopeia).
 
 !!! info  "Info"

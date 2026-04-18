@@ -1,3 +1,10 @@
+---
+tags:
+  - Allsky Guide
+  - How To
+  - Startrails
+---
+
 A startrail image shows the apparent paths of stars across the sky over an extended period of time. It is created by combining many individual long-exposure or short-exposure images taken sequentially, typically over several hours, and stacking them so that each star’s movement forms a continuous arc.
 
 These arcs are caused by the rotation of the Earth, which makes the stars appear to move around the celestial poles. The length of each trail corresponds to the duration of time covered by the images, while the curvature and direction of the trails depend on the camera’s orientation and the observer’s latitude.

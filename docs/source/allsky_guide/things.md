@@ -1,3 +1,9 @@
+---
+tags:
+  - Allsky Guide
+  - Things
+---
+
 
 ## [ESP32-P4 AllSky Display](https://github.com/chvvkumar/ESP32-P4-Allsky-Display) { target="_blank" rel="noopener" .external data-toc-label="ESP32-P4 AllSky Display" }
 

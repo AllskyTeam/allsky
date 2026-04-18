@@ -1,3 +1,9 @@
+---
+tags:
+  - Developer Guide
+  - Contributing
+---
+
 # Contributing
 
 Contributions to Allsky are welcome, whether they are fixes, new features, documentation improvements, UI work, module development, refactoring, or test coverage. This page is aimed at developers and assumes you are comfortable working with Git, branches, and pull requests.

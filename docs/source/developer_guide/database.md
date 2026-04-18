@@ -1,3 +1,9 @@
+---
+tags:
+  - Developer Guide
+  - Database
+---
+
 A module can store data in the Allsky database, primarily this is used in the creation of charts but could also be used for other things
 
 The database is configured at installation and in the main Allsky setting. Currently there are two available database types

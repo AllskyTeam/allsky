@@ -1,3 +1,10 @@
+---
+tags:
+  - Allsky Guide
+  - Troubleshooting
+  - Uploads
+---
+
 Uploading a file means copying it to a different computer. Allsky supports several ways to upload files including ```ftp```, ```scp```, and others.
 
 ### Testing an upload { data-toc-label="Testing an upload" }

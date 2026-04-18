@@ -1,3 +1,10 @@
+---
+tags:
+  - Allsky Guide
+  - WebUI
+  - Charts
+---
+
 # Charts
 
 The **Charts** page is where you look at Allsky data over time instead of as a single current value. It is designed for browsing trends, comparing related measurements, and building a workspace that helps you understand how your system has behaved across hours, days, or longer periods. While other parts of the WebUI are more focused on current status or individual events, the Charts page is for looking at the bigger picture.

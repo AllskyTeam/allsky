@@ -1,3 +1,10 @@
+---
+tags:
+  - Allsky Guide
+  - Troubleshooting
+  - General
+---
+
 This pages lists how to troubleshoot other problems that don't deserve their own page.
 
 ## USB reset messages in system logs { data-toc-label="USB reset messages" }

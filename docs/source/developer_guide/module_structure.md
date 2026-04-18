@@ -1,3 +1,10 @@
+---
+tags:
+  - Developer Guide
+  - Reference
+  - Module Structure
+---
+
 # Module Structure
 
 ## Anatomy of a module { data-toc-label="Anatomy of a module" }

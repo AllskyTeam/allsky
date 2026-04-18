@@ -1,3 +1,10 @@
+---
+tags:
+  - Allsky Guide
+  - Settings
+  - Allsky Settings
+---
+
 After you install Allsky for the first time there are many settings you must modify via the WebUI's Allsky Settings page. If you are upgrading from a recent prior release those settings can optionally be brought to the new release. Settings that change the look and feel of an Allsky Website are described [here](settings/website.md)  .
 
 The list of settings available in the WebUI depends on your camera model; settings specific to a camera type (e.g., RPi or ZWO) are indicated as such in the table below. Where appropriate, the WebUI displays the minimum, maximum, and default values when you hover over a value, and only displays settings the camera supports, like cooler temperature for cooled cameras.
@@ -13,8 +20,200 @@ The Allsky Settings Page
 AllskySettings
 
 !!! note "Legend"
-    - <span class="red">CD</span> indicates the setting's default is Camera Dependent and is displayed in the WebUI by hovering your cursor over the value.
-    - <span class="red">AW</span> indicates a setting who's value is uploaded to your Allsky Website(s) when changed.
+    - <span class="red">CD</span> indicates the setting's default is <span class="red">C</span>amera <span class="red">D</span>ependent and is displayed in the WebUI by hovering your cursor over the value.
+    - <span class="red">AW</span> indicates a setting who's value is uploaded to your <span class="red">A</span>llsky <span class="red">W</span>ebsite(s) when changed.
+
+??? info "Quick Start: the settings most people change first"
+
+    If you are new to Allsky, this page can feel like far too much all at once. That is normal. The Allsky Settings page is a full operational control panel, not a small first-run wizard, and most users do **not** need to understand every setting before they can get good results.
+
+    In practical use, people usually begin by adjusting a smaller set of settings that has the biggest effect on everyday capture and publishing. The groups below are the settings that most often need attention first. They are not the only settings that matter, but they are the ones that usually make the biggest difference when you are moving from “it runs” to “it works well”.
+
+    ### Day capture
+
+    Daytime capture is usually about getting a clean, stable image without blown highlights, washed-out skies, or strange colour. It is also where many people decide whether they want to save daytime images at all, since saving them continuously will increase disk usage over time.
+
+    The settings people most often revisit are:
+
+    - **Daytime Capture**: turn this on if you want Allsky to capture images during daylight hours.
+    - **Daytime Save**: turn this on if you want daytime images to be kept. This is one of the first settings to think about in terms of storage, because saving daytime frames can use a lot more disk space than many new users expect.
+    - **Auto-Exposure** and **Max Auto-Exposure**: these are among the most important controls for daytime image quality and usually the first place to look if brightness is wrong.
+    - **Auto-Gain**, **Max Auto-Gain**, and **Gain**: these affect brightness and noise. For some cameras they can make daytime capture much easier, while for others they are better used more conservatively.
+    - **Auto White Balance**, **Red Balance**, and **Blue Balance**: these are often adjusted when daytime colour looks unnatural.
+    - **Delay**: this controls how often daytime frames are taken. Shorter delays mean more captures, which can also mean more disk usage if you are saving daytime images.
+    - **Tuning File**: Raspberry Pi camera users sometimes revisit this if they are using a custom daytime tuning profile.
+
+    A sensible aim for daytime capture is not “the brightest possible image”. It is a reliable image that looks natural, updates at a sensible rate, and does not generate more stored data than you actually want to keep.
+
+    ### Night capture
+
+    Night capture is where Allsky usually needs the most care. This is the part of the system most people are ultimately interested in, and small changes in settings can make a surprisingly large difference to stars, cloud structure, noise, and overall image character.
+
+    The settings users most often revisit are:
+
+    - **Auto-Exposure** and **Max Auto-Exposure**: these usually have the biggest effect on how well stars, clouds, and faint detail are recorded.
+    - **Manual Exposure**: important if you are not relying fully on auto-exposure, or if you want a more fixed and predictable capture style.
+    - **Auto-Gain**, **Max Auto-Gain**, and **Gain**: these are often tuned very carefully because gain improves brightness but also increases noise.
+    - **Stretch Amount** and **Stretch Mid Point**: these can make faint detail more visible, but they can also change the look of the image dramatically, so they are best adjusted with care.
+    - **Delay**: this affects how often frames are taken. Smaller delays mean more nighttime frames and therefore more saved data if you are keeping everything.
+    - **Binning**: sometimes adjusted for sensitivity, noise, or performance depending on the camera and your goals.
+    - **Cooling** and **Target Temp**: relevant for cooled ZWO cameras.
+    - **Take Dark Frames** and **Use Dark Frames**: often revisited once a user wants better nighttime noise control and more consistent results.
+
+    Night settings nearly always need more testing than daytime ones. The right choices depend heavily on your camera, lens, sky brightness, local light pollution, and what you want the finished images and timelapse videos to look like.
+
+    ### Local website
+
+    If you want to use the website hosted on the Raspberry Pi itself, the first settings to think about are the ones that affect whether output is published at all and how much of it is retained locally.
+
+    The settings most often changed are:
+
+    - **Use Local Website**: this is the main switch that enables the local website workflow.
+    - **Days To Keep on Pi Website**: controls how much website data is kept locally before old files are removed. This is an important disk-usage setting, especially on smaller SD cards.
+    - **Upload Every X Images**: determines how often the current image is updated to the website.
+    - **Upload Daily Timelapse**, **Upload Keogram**, **Upload Startrails**, and related thumbnail options: these decide which generated outputs are published to the website.
+    - **Display Settings**: enable this if you want a settings link shown on the website.
+    - **Filename**, **Latitude**, **Longitude**, and **Angle**: these are not website-only settings, but they often matter to how the website behaves or what it displays.
+
+    The local website is usually the simplest publishing option because it does not require remote upload credentials. Even so, it is worth remembering that local publishing still uses disk space on the Pi. If you keep images, thumbnails, timelapses, keograms, and startrails for long periods, storage planning matters.
+
+    ### Remote website
+
+    If you are publishing to a remote Allsky website, the settings that matter most are the ones that control where files go, how they are transferred, and how much data you send.
+
+    The settings users most often need to review are:
+
+    - **Use Remote Website**: enables the remote website workflow.
+    - **Image Directory**: one of the settings that causes the most confusion, and one of the most important to get right.
+    - **Protocol**: choose the upload method such as `ftps`, `sftp`, `scp`, `rsync`, `s3`, or `gcs`.
+    - **Remote Website Port**, **User Name**, and **Password**: required for many remote upload setups.
+    - **Website URL** and **Image URL**: these must match the way the remote website is actually served.
+    - **Upload Every X Images** and the upload options for timelapse, keograms, startrails, and mini-timelapses: these control what gets sent and how often. They are important not only for bandwidth, but also for remote storage use if your hosting space is limited.
+    - **Resize Uploaded Images Width** and **Resize Uploaded Images Height**: often revisited to reduce upload size, bandwidth use, and the amount of storage consumed remotely.
+    - **Upload With Original Name**: usually left off unless you have a specific reason to preserve timestamped filenames remotely.
+
+    Remote website settings usually take a little more care than local ones because they depend on the configuration of the destination server, not just on the Raspberry Pi. They also affect network usage and, depending on how the remote site is managed, can affect storage costs or storage limits there as well.
+
+    ### One practical approach
+
+    If you are not sure where to start, a sensible order is:
+
+    1. Get daytime capture working acceptably.
+    2. Tune nighttime capture once the camera is running reliably.
+    3. Enable the local website if you want simple on-device publishing.
+    4. Move on to the remote website only after the local capture and output workflow already makes sense.
+
+    That sequence usually keeps the initial setup much easier to understand.
+
+??? info "Choosing between Auto and Fixed exposure or gain"
+
+    One of the most common practical decisions in Allsky is whether you should let the software control exposure and gain automatically or whether you should set them to fixed values yourself.
+
+    This is not just a technical preference. It changes how Allsky behaves across the night, how consistent your saved images look, how clean your timelapse videos appear, and how much manual tuning you need to do over time.
+
+    There is no universal answer that suits every camera, every sky, and every style of use. The best choice depends on what matters most to you:
+
+    - convenience,
+    - consistency,
+    - responsiveness to changing conditions,
+    - noise,
+    - and how much time you want to spend refining the setup.
+
+    ### Auto-Exposure
+
+    In Allsky, auto-exposure is often the easiest way to get a new installation working reasonably well without constant manual intervention.
+
+    **Benefits**
+
+    - It adapts to changing sky brightness automatically.
+    - It is especially useful when brightness changes quickly because of cloud, haze, twilight, Moon phase, or local lighting.
+    - It is usually the best starting point for users who are still learning how their own camera behaves.
+    - It reduces the amount of retuning needed as conditions change through the year.
+
+    **Drawbacks**
+
+    - Exposure can vary from frame to frame, which may make a timelapse look less consistent.
+    - If the scene contains strong bright areas, the automatic system may make choices that are technically reasonable but not visually what you wanted.
+    - Users who want tightly controlled comparisons between nights often prefer less automatic variation.
+    - If the maximum allowed exposure is set too high, the system may spend long periods taking and saving slow frames. That does not necessarily increase the total number of files, but it does affect the rhythm of capture and therefore the look of saved sequences and timelapses.
+
+    **When to use it**
+
+    Auto-exposure is usually the best choice for most users at the start, especially:
+
+    - during the day,
+    - during twilight,
+    - when sky conditions change frequently,
+    - when you are still learning how your camera behaves.
+
+    **When fixed exposure may be better**
+
+    Fixed exposure can be a better choice when:
+
+    - you already know the exposure range that works well for your site,
+    - you want more consistent frame-to-frame behaviour,
+    - you are deliberately testing or comparing results in a controlled way,
+    - you want a more repeatable look in saved images and timelapses,
+    - you are trying to remove one source of variation while tuning other settings.
+
+    ### Auto-Gain
+
+    In Allsky, gain is one of the settings that most obviously trades brightness against image cleanliness. That is why auto-gain needs a little more care than auto-exposure.
+
+    **Benefits**
+
+    - It helps keep images bright enough as conditions change.
+    - It can be useful when exposure alone is not giving stable results.
+    - It is often helpful with Raspberry Pi cameras, where automatic behaviour can be more practical than constant manual refinement.
+
+    **Drawbacks**
+
+    - Increasing gain also increases noise.
+    - Images may become brighter but also rougher, grainier, or less natural.
+    - At night, aggressive gain changes can have a strong effect on how clean the final images and timelapses look.
+    - On some cameras, especially in nighttime use, auto-gain can produce behaviour that feels less predictable than many users expect.
+    - With some ZWO workflows, combining auto-exposure and auto-gain can need careful testing because the two systems may interact in ways that are harder to tune by eye.
+
+    **When to use it**
+
+    Auto-gain is often useful when:
+
+    - you want Allsky to look after itself more aggressively,
+    - conditions vary enough that fixed gain becomes frustrating,
+    - you are using a Raspberry Pi camera and want a simpler starting point,
+    - convenience matters more to you than getting the cleanest possible image every time.
+
+    **When fixed gain may be better**
+
+    Fixed gain is often preferred when:
+
+    - you want to minimise noise,
+    - you already know a gain value that works well for your camera and sky,
+    - you are tuning nighttime capture carefully,
+    - you want more predictable results from one image to the next,
+    - you care about giving your timelapse a steadier visual character.
+
+    ### Auto plus fixed starting values
+
+    A detail that is easy to miss in Allsky is that enabling auto-exposure or auto-gain does not always make the fixed-value fields irrelevant.
+
+    In several cases, the manual exposure or gain value becomes the **starting point** from which the automatic system begins adjusting. This means those fields still matter even when you are operating in automatic mode. If the starting point is poor, Allsky may take longer to settle, especially after startup or around the day-to-night and night-to-day transitions.
+
+    ### A practical rule of thumb
+
+    If you are unsure what to do:
+
+    - start with **auto-exposure** enabled,
+    - use **auto-gain** more cautiously,
+    - prefer lower fixed gain when image noise matters to you,
+    - move to fixed values only after you understand how your own camera, lens, and sky conditions behave.
+
+    In practical use, many people end up with a mixed approach:
+
+    - automatic control where conditions vary a great deal,
+    - fixed values where they want more consistency, less noise, or a steadier timelapse.
+
+    That is often the most sensible Allsky balance. Use the automatic controls to get stable and usable capture first, then move towards fixed values only if you have a clear reason to prefer consistency over flexibility.
 
 ## Daytime { data-toc-label="Daytime" }
 ???+ info "Settings"
@@ -51,6 +250,8 @@ AllskySettings
 
     | WebUI Setting { .w-20p } | Default { .w-10p }  | Description |
     |---|---:|---|
+    | ==Nightime Capture== | Yes | Enable to ==capture== images during the night. |
+    | ==Nightime Save== <span class="red">AW</span> | No | Enable to ==save== images during the night. Only applies if ==Nightime Capture== is enabled. |    
     | ==Auto-Exposure== | Yes |  |
     | ==Max Auto-Exposure== <span class="red">CD</span> | <span class="red">CD</span> |  |
     | ==Manual Exposure== | 10000 |  |
@@ -305,5 +506,3 @@ AllskySettings
     |---|---:|---|
     | ==Camera Type== |  | The type of camera you are using: ZWO or RPi. To select a camera of a different ==Camera Type==:  <br>1. Select the Type.  <br>2. Save the change via the ==Save changes== button.  <br>3. Update the ==Camera Model== as desired.  <br><br>If you connect or disconnect a camera on the Pi, select ==Refresh== to update the list of camera types and models. |
     | ==Camera Model== |  | The model of camera you are using. Note this list is only the models of the current ==Camera Type==. |
-
-

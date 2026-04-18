@@ -1,3 +1,9 @@
+---
+tags:
+  - Home
+  - Documentation
+---
+
 # Introduction
 
 Allsky transforms a camera into a tireless, intelligent observer of the night sky: an automated system that watches, records, and analyses everything that happens above you.

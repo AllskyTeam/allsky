@@ -1,3 +1,10 @@
+---
+tags:
+  - Developer Guide
+  - Building Modules
+  - Database
+---
+
 In this tutorial we will modify the API module to save values to the Allsky database
 
 !!! warning  "Warning"

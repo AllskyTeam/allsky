@@ -1,3 +1,10 @@
+---
+tags:
+  - Allsky Guide
+  - How To
+  - Files
+---
+
 This page describes how to copy files to and from the Pi.
 
 ### Small text files { data-toc-label="Small text files" }

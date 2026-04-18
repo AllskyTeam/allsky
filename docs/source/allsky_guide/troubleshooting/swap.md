@@ -1,3 +1,10 @@
+---
+tags:
+  - Allsky Guide
+  - Troubleshooting
+  - Swap
+---
+
 If you see a Killed or a RETCODE=137 message in /var/log/allsky.log, there's a good chance you need to increase the amount of swap space you Pi has. It's easy to do:
 
 ```

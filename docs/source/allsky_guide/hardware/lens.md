@@ -1,3 +1,10 @@
+---
+tags:
+  - Allsky Guide
+  - Hardware
+  - Lens
+---
+
 ## Choosing A lens { data-toc-label="Choosing A lens" }
 
 Lenses have a few attributes you'll want to be aware of, and together with the camera sensor determine what kind of image you'll see.

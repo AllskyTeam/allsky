@@ -1,3 +1,11 @@
+---
+tags:
+  - Allsky Guide
+  - How To
+  - Maps
+  - Server
+---
+
 !!! warning  "Info"
 
     If you have a remote Allsky Website or a remote Server, the Server Name, URL, and Image Directory settings in the WebUI can be very confusing.

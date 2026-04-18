@@ -1,3 +1,10 @@
+---
+tags:
+  - Developer Guide
+  - Building Modules
+  - API
+---
+
 In this tutorial we will write a module that accesses the Openweathermap api to retrieve weather data
 
 !!! warning  "Warning"

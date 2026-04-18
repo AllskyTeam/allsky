@@ -1,3 +1,11 @@
+---
+tags:
+  - Allsky Guide
+  - How To
+  - Website
+  - Layout
+---
+
 When you install Allsky, it creates its files and directories under the home directory of the user you installed it as, which is often `pi`. In most examples throughout the documentation this appears as `~/allsky`.
 
 You do not need to understand every file in that tree to use Allsky successfully, but it is useful to know the broad layout. It helps when you are following troubleshooting steps, making backups, browsing saved images, or simply trying to understand what Allsky has stored on the Pi.

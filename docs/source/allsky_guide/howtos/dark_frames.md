@@ -1,3 +1,10 @@
+---
+tags:
+  - Allsky Guide
+  - How To
+  - Dark Frames
+---
+
 All cameras produce noise, which is shown in the picture below (click on it to show a larger version where the noise is more apparent). A theoretical "perfect" camera would produce a pure black image.
 
 Noise can be one or more of the following:

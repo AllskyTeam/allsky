@@ -1,3 +1,9 @@
+---
+tags:
+  - Allsky Guide
+  - Changelog
+---
+
 This page lists the major changes to all Allsky releases.
 You can also see the
 [Known Issues and Limitations](knownIssues.html)
@@ -30,6 +36,8 @@ of the current release.
           For example, the **Settings** group contains **Allsky Settings** and **Editor**.
 
         - New header. Shows more information abotu what state Allsky is in
+
+        - New help system
 
         - **Improved Login System**
             - The old login system has been removed and a new version implemented

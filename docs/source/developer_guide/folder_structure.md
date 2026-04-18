@@ -1,3 +1,10 @@
+---
+tags:
+  - Developer Guide
+  - Reference
+  - Folder Structure
+---
+
 # Module folder structure
 
 There are two relevant folder structures, that used when developing a module and that used after a module has been installed.

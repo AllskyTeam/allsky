@@ -1,3 +1,10 @@
+---
+tags:
+  - Allsky Guide
+  - WebUI
+  - System
+---
+
 # System Status
 
 The **System** tab is the main health dashboard for your Allsky installation. If you are not sure where to begin, this is usually the right page to open first. It is designed to answer the everyday questions most users have when checking on their system, such as:

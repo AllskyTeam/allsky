@@ -1,3 +1,10 @@
+---
+tags:
+  - Allsky Guide
+  - How To
+  - Exposure
+---
+
 There are several settings that determine what an image looks like - how bright it is, how colorful it is, and its color balance.
 The WebUI lets you manually set those settings, or have them automatically set by the software.
 

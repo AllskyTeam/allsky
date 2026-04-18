@@ -1,3 +1,10 @@
+---
+tags:
+  - Allsky Guide
+  - Troubleshooting
+  - Support
+---
+
 Regardless of what you want to ask or report, first look at the existing GitHub [Discussions](https://github.com/AllskyTeam/allsky-modules/discussions){ target="_blank" rel="noopener" } and [Issues](https://github.com/AllskyTeam/allsky-modules/issues){ target="_blank" rel="noopener" }.
 
 If someone else has reported it, add to their post; do not create a new one.

@@ -1,3 +1,9 @@
+---
+tags:
+  - Module Reference
+  - Overview
+---
+
 Modules can be used to enhance images created by Allsky. Different modules perform different tasks, the Module Manager allows you to control which modules run and when.
 
 There are two types of modules:

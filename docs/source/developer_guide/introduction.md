@@ -1,3 +1,9 @@
+---
+tags:
+  - Developer Guide
+  - Introduction
+---
+
 # Introduction
 
 The Allsky system is designed to be modular, extensible, and developer-friendly — allowing you to add new capabilities without modifying the core software.

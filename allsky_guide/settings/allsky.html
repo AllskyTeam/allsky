@@ -244,7 +244,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#daytime" class="md-skip">
+        <a href="#day-capture" class="md-skip">
           Skip to content
         </a>
       
@@ -882,6 +882,105 @@
       Table of contents
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+      
+        <li class="md-nav__item">
+  <a href="#day-capture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Day capture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#night-capture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Night capture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#local-website" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Local website
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#remote-website" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Remote website
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#one-practical-approach" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        One practical approach
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#auto-exposure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Auto-Exposure
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#auto-gain" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Auto-Gain
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#auto-plus-fixed-starting-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Auto plus fixed starting values
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a-practical-rule-of-thumb" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A practical rule of thumb
+      
+    </span>
+  </a>
+  
+</li>
       
         <li class="md-nav__item">
   <a href="#daytime" class="md-nav__link">
@@ -6132,6 +6231,40 @@
                 
                   
 
+  <nav class="md-tags">
+    
+      
+      
+      
+        
+        
+      
+      
+        <a href="../../tags.html#tag:allsky-guide" class="md-tag md-tag-icon">Allsky Guide</a>
+      
+    
+      
+      
+      
+        
+        
+      
+      
+        <a href="../../tags.html#tag:allsky-settings" class="md-tag md-tag-icon">Allsky Settings</a>
+      
+    
+      
+      
+      
+        
+        
+      
+      
+        <a href="../../tags.html#tag:settings" class="md-tag md-tag-icon">Settings</a>
+      
+    
+  </nav>
+
 
   
   
@@ -6151,10 +6284,173 @@
 <div class="admonition note">
 <p class="admonition-title">Legend</p>
 <ul>
-<li><span class="red">CD</span> indicates the setting's default is Camera Dependent and is displayed in the WebUI by hovering your cursor over the value.</li>
-<li><span class="red">AW</span> indicates a setting who's value is uploaded to your Allsky Website(s) when changed.</li>
+<li><span class="red">CD</span> indicates the setting's default is <span class="red">C</span>amera <span class="red">D</span>ependent and is displayed in the WebUI by hovering your cursor over the value.</li>
+<li><span class="red">AW</span> indicates a setting who's value is uploaded to your <span class="red">A</span>llsky <span class="red">W</span>ebsite(s) when changed.</li>
 </ul>
 </div>
+<details class="info">
+<summary>Quick Start: the settings most people change first</summary>
+<p>If you are new to Allsky, this page can feel like far too much all at once. That is normal. The Allsky Settings page is a full operational control panel, not a small first-run wizard, and most users do <strong>not</strong> need to understand every setting before they can get good results.</p>
+<p>In practical use, people usually begin by adjusting a smaller set of settings that has the biggest effect on everyday capture and publishing. The groups below are the settings that most often need attention first. They are not the only settings that matter, but they are the ones that usually make the biggest difference when you are moving from “it runs” to “it works well”.</p>
+<h3 id="day-capture">Day capture<a class="headerlink" href="#day-capture" title="Permanent link">¶</a></h3>
+<p>Daytime capture is usually about getting a clean, stable image without blown highlights, washed-out skies, or strange colour. It is also where many people decide whether they want to save daytime images at all, since saving them continuously will increase disk usage over time.</p>
+<p>The settings people most often revisit are:</p>
+<ul>
+<li><strong>Daytime Capture</strong>: turn this on if you want Allsky to capture images during daylight hours.</li>
+<li><strong>Daytime Save</strong>: turn this on if you want daytime images to be kept. This is one of the first settings to think about in terms of storage, because saving daytime frames can use a lot more disk space than many new users expect.</li>
+<li><strong>Auto-Exposure</strong> and <strong>Max Auto-Exposure</strong>: these are among the most important controls for daytime image quality and usually the first place to look if brightness is wrong.</li>
+<li><strong>Auto-Gain</strong>, <strong>Max Auto-Gain</strong>, and <strong>Gain</strong>: these affect brightness and noise. For some cameras they can make daytime capture much easier, while for others they are better used more conservatively.</li>
+<li><strong>Auto White Balance</strong>, <strong>Red Balance</strong>, and <strong>Blue Balance</strong>: these are often adjusted when daytime colour looks unnatural.</li>
+<li><strong>Delay</strong>: this controls how often daytime frames are taken. Shorter delays mean more captures, which can also mean more disk usage if you are saving daytime images.</li>
+<li><strong>Tuning File</strong>: Raspberry Pi camera users sometimes revisit this if they are using a custom daytime tuning profile.</li>
+</ul>
+<p>A sensible aim for daytime capture is not “the brightest possible image”. It is a reliable image that looks natural, updates at a sensible rate, and does not generate more stored data than you actually want to keep.</p>
+<h3 id="night-capture">Night capture<a class="headerlink" href="#night-capture" title="Permanent link">¶</a></h3>
+<p>Night capture is where Allsky usually needs the most care. This is the part of the system most people are ultimately interested in, and small changes in settings can make a surprisingly large difference to stars, cloud structure, noise, and overall image character.</p>
+<p>The settings users most often revisit are:</p>
+<ul>
+<li><strong>Auto-Exposure</strong> and <strong>Max Auto-Exposure</strong>: these usually have the biggest effect on how well stars, clouds, and faint detail are recorded.</li>
+<li><strong>Manual Exposure</strong>: important if you are not relying fully on auto-exposure, or if you want a more fixed and predictable capture style.</li>
+<li><strong>Auto-Gain</strong>, <strong>Max Auto-Gain</strong>, and <strong>Gain</strong>: these are often tuned very carefully because gain improves brightness but also increases noise.</li>
+<li><strong>Stretch Amount</strong> and <strong>Stretch Mid Point</strong>: these can make faint detail more visible, but they can also change the look of the image dramatically, so they are best adjusted with care.</li>
+<li><strong>Delay</strong>: this affects how often frames are taken. Smaller delays mean more nighttime frames and therefore more saved data if you are keeping everything.</li>
+<li><strong>Binning</strong>: sometimes adjusted for sensitivity, noise, or performance depending on the camera and your goals.</li>
+<li><strong>Cooling</strong> and <strong>Target Temp</strong>: relevant for cooled ZWO cameras.</li>
+<li><strong>Take Dark Frames</strong> and <strong>Use Dark Frames</strong>: often revisited once a user wants better nighttime noise control and more consistent results.</li>
+</ul>
+<p>Night settings nearly always need more testing than daytime ones. The right choices depend heavily on your camera, lens, sky brightness, local light pollution, and what you want the finished images and timelapse videos to look like.</p>
+<h3 id="local-website">Local website<a class="headerlink" href="#local-website" title="Permanent link">¶</a></h3>
+<p>If you want to use the website hosted on the Raspberry Pi itself, the first settings to think about are the ones that affect whether output is published at all and how much of it is retained locally.</p>
+<p>The settings most often changed are:</p>
+<ul>
+<li><strong>Use Local Website</strong>: this is the main switch that enables the local website workflow.</li>
+<li><strong>Days To Keep on Pi Website</strong>: controls how much website data is kept locally before old files are removed. This is an important disk-usage setting, especially on smaller SD cards.</li>
+<li><strong>Upload Every X Images</strong>: determines how often the current image is updated to the website.</li>
+<li><strong>Upload Daily Timelapse</strong>, <strong>Upload Keogram</strong>, <strong>Upload Startrails</strong>, and related thumbnail options: these decide which generated outputs are published to the website.</li>
+<li><strong>Display Settings</strong>: enable this if you want a settings link shown on the website.</li>
+<li><strong>Filename</strong>, <strong>Latitude</strong>, <strong>Longitude</strong>, and <strong>Angle</strong>: these are not website-only settings, but they often matter to how the website behaves or what it displays.</li>
+</ul>
+<p>The local website is usually the simplest publishing option because it does not require remote upload credentials. Even so, it is worth remembering that local publishing still uses disk space on the Pi. If you keep images, thumbnails, timelapses, keograms, and startrails for long periods, storage planning matters.</p>
+<h3 id="remote-website">Remote website<a class="headerlink" href="#remote-website" title="Permanent link">¶</a></h3>
+<p>If you are publishing to a remote Allsky website, the settings that matter most are the ones that control where files go, how they are transferred, and how much data you send.</p>
+<p>The settings users most often need to review are:</p>
+<ul>
+<li><strong>Use Remote Website</strong>: enables the remote website workflow.</li>
+<li><strong>Image Directory</strong>: one of the settings that causes the most confusion, and one of the most important to get right.</li>
+<li><strong>Protocol</strong>: choose the upload method such as <code>ftps</code>, <code>sftp</code>, <code>scp</code>, <code>rsync</code>, <code>s3</code>, or <code>gcs</code>.</li>
+<li><strong>Remote Website Port</strong>, <strong>User Name</strong>, and <strong>Password</strong>: required for many remote upload setups.</li>
+<li><strong>Website URL</strong> and <strong>Image URL</strong>: these must match the way the remote website is actually served.</li>
+<li><strong>Upload Every X Images</strong> and the upload options for timelapse, keograms, startrails, and mini-timelapses: these control what gets sent and how often. They are important not only for bandwidth, but also for remote storage use if your hosting space is limited.</li>
+<li><strong>Resize Uploaded Images Width</strong> and <strong>Resize Uploaded Images Height</strong>: often revisited to reduce upload size, bandwidth use, and the amount of storage consumed remotely.</li>
+<li><strong>Upload With Original Name</strong>: usually left off unless you have a specific reason to preserve timestamped filenames remotely.</li>
+</ul>
+<p>Remote website settings usually take a little more care than local ones because they depend on the configuration of the destination server, not just on the Raspberry Pi. They also affect network usage and, depending on how the remote site is managed, can affect storage costs or storage limits there as well.</p>
+<h3 id="one-practical-approach">One practical approach<a class="headerlink" href="#one-practical-approach" title="Permanent link">¶</a></h3>
+<p>If you are not sure where to start, a sensible order is:</p>
+<ol>
+<li>Get daytime capture working acceptably.</li>
+<li>Tune nighttime capture once the camera is running reliably.</li>
+<li>Enable the local website if you want simple on-device publishing.</li>
+<li>Move on to the remote website only after the local capture and output workflow already makes sense.</li>
+</ol>
+<p>That sequence usually keeps the initial setup much easier to understand.</p>
+</details>
+<details class="info">
+<summary>Choosing between Auto and Fixed exposure or gain</summary>
+<p>One of the most common practical decisions in Allsky is whether you should let the software control exposure and gain automatically or whether you should set them to fixed values yourself.</p>
+<p>This is not just a technical preference. It changes how Allsky behaves across the night, how consistent your saved images look, how clean your timelapse videos appear, and how much manual tuning you need to do over time.</p>
+<p>There is no universal answer that suits every camera, every sky, and every style of use. The best choice depends on what matters most to you:</p>
+<ul>
+<li>convenience,</li>
+<li>consistency,</li>
+<li>responsiveness to changing conditions,</li>
+<li>noise,</li>
+<li>and how much time you want to spend refining the setup.</li>
+</ul>
+<h3 id="auto-exposure">Auto-Exposure<a class="headerlink" href="#auto-exposure" title="Permanent link">¶</a></h3>
+<p>In Allsky, auto-exposure is often the easiest way to get a new installation working reasonably well without constant manual intervention.</p>
+<p><strong>Benefits</strong></p>
+<ul>
+<li>It adapts to changing sky brightness automatically.</li>
+<li>It is especially useful when brightness changes quickly because of cloud, haze, twilight, Moon phase, or local lighting.</li>
+<li>It is usually the best starting point for users who are still learning how their own camera behaves.</li>
+<li>It reduces the amount of retuning needed as conditions change through the year.</li>
+</ul>
+<p><strong>Drawbacks</strong></p>
+<ul>
+<li>Exposure can vary from frame to frame, which may make a timelapse look less consistent.</li>
+<li>If the scene contains strong bright areas, the automatic system may make choices that are technically reasonable but not visually what you wanted.</li>
+<li>Users who want tightly controlled comparisons between nights often prefer less automatic variation.</li>
+<li>If the maximum allowed exposure is set too high, the system may spend long periods taking and saving slow frames. That does not necessarily increase the total number of files, but it does affect the rhythm of capture and therefore the look of saved sequences and timelapses.</li>
+</ul>
+<p><strong>When to use it</strong></p>
+<p>Auto-exposure is usually the best choice for most users at the start, especially:</p>
+<ul>
+<li>during the day,</li>
+<li>during twilight,</li>
+<li>when sky conditions change frequently,</li>
+<li>when you are still learning how your camera behaves.</li>
+</ul>
+<p><strong>When fixed exposure may be better</strong></p>
+<p>Fixed exposure can be a better choice when:</p>
+<ul>
+<li>you already know the exposure range that works well for your site,</li>
+<li>you want more consistent frame-to-frame behaviour,</li>
+<li>you are deliberately testing or comparing results in a controlled way,</li>
+<li>you want a more repeatable look in saved images and timelapses,</li>
+<li>you are trying to remove one source of variation while tuning other settings.</li>
+</ul>
+<h3 id="auto-gain">Auto-Gain<a class="headerlink" href="#auto-gain" title="Permanent link">¶</a></h3>
+<p>In Allsky, gain is one of the settings that most obviously trades brightness against image cleanliness. That is why auto-gain needs a little more care than auto-exposure.</p>
+<p><strong>Benefits</strong></p>
+<ul>
+<li>It helps keep images bright enough as conditions change.</li>
+<li>It can be useful when exposure alone is not giving stable results.</li>
+<li>It is often helpful with Raspberry Pi cameras, where automatic behaviour can be more practical than constant manual refinement.</li>
+</ul>
+<p><strong>Drawbacks</strong></p>
+<ul>
+<li>Increasing gain also increases noise.</li>
+<li>Images may become brighter but also rougher, grainier, or less natural.</li>
+<li>At night, aggressive gain changes can have a strong effect on how clean the final images and timelapses look.</li>
+<li>On some cameras, especially in nighttime use, auto-gain can produce behaviour that feels less predictable than many users expect.</li>
+<li>With some ZWO workflows, combining auto-exposure and auto-gain can need careful testing because the two systems may interact in ways that are harder to tune by eye.</li>
+</ul>
+<p><strong>When to use it</strong></p>
+<p>Auto-gain is often useful when:</p>
+<ul>
+<li>you want Allsky to look after itself more aggressively,</li>
+<li>conditions vary enough that fixed gain becomes frustrating,</li>
+<li>you are using a Raspberry Pi camera and want a simpler starting point,</li>
+<li>convenience matters more to you than getting the cleanest possible image every time.</li>
+</ul>
+<p><strong>When fixed gain may be better</strong></p>
+<p>Fixed gain is often preferred when:</p>
+<ul>
+<li>you want to minimise noise,</li>
+<li>you already know a gain value that works well for your camera and sky,</li>
+<li>you are tuning nighttime capture carefully,</li>
+<li>you want more predictable results from one image to the next,</li>
+<li>you care about giving your timelapse a steadier visual character.</li>
+</ul>
+<h3 id="auto-plus-fixed-starting-values">Auto plus fixed starting values<a class="headerlink" href="#auto-plus-fixed-starting-values" title="Permanent link">¶</a></h3>
+<p>A detail that is easy to miss in Allsky is that enabling auto-exposure or auto-gain does not always make the fixed-value fields irrelevant.</p>
+<p>In several cases, the manual exposure or gain value becomes the <strong>starting point</strong> from which the automatic system begins adjusting. This means those fields still matter even when you are operating in automatic mode. If the starting point is poor, Allsky may take longer to settle, especially after startup or around the day-to-night and night-to-day transitions.</p>
+<h3 id="a-practical-rule-of-thumb">A practical rule of thumb<a class="headerlink" href="#a-practical-rule-of-thumb" title="Permanent link">¶</a></h3>
+<p>If you are unsure what to do:</p>
+<ul>
+<li>start with <strong>auto-exposure</strong> enabled,</li>
+<li>use <strong>auto-gain</strong> more cautiously,</li>
+<li>prefer lower fixed gain when image noise matters to you,</li>
+<li>move to fixed values only after you understand how your own camera, lens, and sky conditions behave.</li>
+</ul>
+<p>In practical use, many people end up with a mixed approach:</p>
+<ul>
+<li>automatic control where conditions vary a great deal,</li>
+<li>fixed values where they want more consistency, less noise, or a steadier timelapse.</li>
+</ul>
+<p>That is often the most sensible Allsky balance. Use the automatic controls to get stable and usable capture first, then move towards fixed values only if you have a clear reason to prefer consistency over flexibility.</p>
+</details>
 <h2 id="daytime">Daytime<a class="headerlink" href="#daytime" title="Permanent link">¶</a></h2>
 <details class="info" open="open">
 <summary>Settings</summary>
@@ -6291,6 +6587,16 @@
 </tr>
 </thead>
 <tbody>
+<tr>
+<td><mark>Nightime Capture</mark></td>
+<td style="text-align: right;">Yes</td>
+<td>Enable to <mark>capture</mark> images during the night.</td>
+</tr>
+<tr>
+<td><mark>Nightime Save</mark> <span class="red">AW</span></td>
+<td style="text-align: right;">No</td>
+<td>Enable to <mark>save</mark> images during the night. Only applies if <mark>Nightime Capture</mark> is enabled.</td>
+</tr>
 <tr>
 <td><mark>Auto-Exposure</mark></td>
 <td style="text-align: right;">Yes</td>
@@ -7304,6 +7610,9 @@
 
 
 
+
+  
+  
 
 
 

@@ -39,19 +39,9 @@ class SYSTEMBUTTONSUTIL extends UTILBASE
         return rtrim(ALLSKY_CONFIG, '/') . '/settings.json';
     }
 
-    private function getConfigDirectory(): string
-    {
-        if (defined('ALLSKY_MYFILES_DIR')) {
-            return rtrim(ALLSKY_MYFILES_DIR, '/');
-        }
-
-        return rtrim(ALLSKY_CONFIG, '/') . '/myFiles';
-    }
-
     private function isWithinConfigDirectory(string $path): bool
     {
-        $configDir = $this->getConfigDirectory();
-        return $path === $configDir || strpos($path, $configDir . '/') === 0;
+        return $path === ALLSKY_MYFILES_DIR || strpos($path, ALLSKY_MYFILES_DIR . '/') === 0;
     }
 
     private function sanitizeField(string $value): string
@@ -93,7 +83,7 @@ class SYSTEMBUTTONSUTIL extends UTILBASE
     {
         $path = trim($path);
         if ($path === '') {
-            $path = $this->getConfigDirectory();
+            $path = ALLSKY_MYFILES_DIR;
         }
 
         if ($path[0] !== '/') {
@@ -660,13 +650,13 @@ class SYSTEMBUTTONSUTIL extends UTILBASE
             'files' => $result,
             'configuredFiles' => $configuredFiles,
             'file' => $requestedFile,
-            'configDir' => $this->getConfigDirectory(),
+            'configDir' => ALLSKY_MYFILES_DIR,
         ]);
     }
 
     public function getBrowseFiles(): void
     {
-        $path = $this->normalizeDirectory((string)($_GET['path'] ?? $this->getConfigDirectory()));
+        $path = $this->normalizeDirectory((string)($_GET['path'] ?? ALLSKY_MYFILES_DIR));
         $entries = [];
 
         $parent = dirname($path);
@@ -724,7 +714,7 @@ class SYSTEMBUTTONSUTIL extends UTILBASE
         $this->sendResponse([
             'path' => $path,
             'entries' => array_merge($entries, $directories, $files),
-            'configDir' => $this->getConfigDirectory(),
+            'configDir' => ALLSKY_MYFILES_DIR,
         ]);
     }
 

@@ -222,10 +222,12 @@ class OETEXTFIELD extends OEFIELD {
     return this.fieldData.fontsize;
   }
   set fontsize(fontsize) {
+    const leftEdge = this.tlx;
     this.fieldData.fontsize = parseInt(fontsize);
     this.shape.fontSize(fontsize);
     let size = this.shape.measureSize(this.shape.text());      
-    this.shape.offset({x:  size.width/2, y: size.height/2});    
+    this.shape.offset({x:  size.width/2, y: size.height/2});
+    this.x = leftEdge + this.shape.offsetX();
     this.dirty = true;
   }
 

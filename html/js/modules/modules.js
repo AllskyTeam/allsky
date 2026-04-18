@@ -22,7 +22,22 @@ class MODULESEDITOR {
 	#installerPendingEditorRefreshText = null
 
 	constructor() {
+		this.#portalEditorModals();
+	}
 
+	#portalEditorModals() {
+		[
+			'#module-editor-settings-dialog',
+			'#module-editor-debug-dialog',
+			'#module-upload-dialog',
+			'#module-installer-dialog',
+			'#module-installer-progress-modal'
+		].forEach((selector) => {
+			const modal = $(selector);
+			if (modal.length && modal.parent()[0] !== document.body) {
+				modal.appendTo('body');
+			}
+		});
 	}
 
 	#buildUI(overlayText = null) {
@@ -715,6 +730,12 @@ class MODULESEDITOR {
 
 	#disposeFieldHelpPopovers() {
 		$('#module-settings-dialog .as-field-help-toggle').each(function() {
+			$(this).popover('hide');
+		});
+	}
+
+	#disposeEditorSettingsHelpPopovers() {
+		$('#module-editor-settings-dialog .as-field-help-toggle').each(function() {
 			$(this).popover('hide');
 		});
 	}
@@ -2130,13 +2151,21 @@ class MODULESEDITOR {
 			this.#disposeFieldHelpPopovers();
 		});
 
+		$(document).off('show.bs.popover.module-settings-help');
+		$(document).on('show.bs.popover.module-settings-help', '#module-settings-dialog .as-field-help-toggle', (event) => {
+			$('#module-settings-dialog .as-field-help-toggle').not(event.currentTarget).each(function() {
+				$(this).popover('hide');
+			});
+		});
+
 		$(document).off('click', '.as-field-help-toggle');
 		$(document).on('click', '.as-field-help-toggle', (event) => {
+			event.preventDefault();
 			event.stopPropagation();
 		});
 
-		$(document).off('click', '#module-settings-dialog');
-		$(document).on('click', '#module-settings-dialog', (event) => {
+		$(document).off('click.module-settings-help');
+		$(document).on('click.module-settings-help', (event) => {
 			if (!$(event.target).closest('.popover, .as-field-help-toggle').length) {
 				this.#disposeFieldHelpPopovers();
 			}
@@ -3904,6 +3933,25 @@ class MODULESEDITOR {
 				clearTimeout(loadingTimer);
 				$.LoadingOverlay('hide');
 			});
+		});
+
+		$('#module-editor-settings-dialog').off('hide.bs.modal');
+		$('#module-editor-settings-dialog').on('hide.bs.modal', () => {
+			this.#disposeEditorSettingsHelpPopovers();
+		});
+
+		$(document).off('show.bs.popover.module-editor-settings-help');
+		$(document).on('show.bs.popover.module-editor-settings-help', '#module-editor-settings-dialog .as-field-help-toggle', (event) => {
+			$('#module-editor-settings-dialog .as-field-help-toggle').not(event.currentTarget).each(function() {
+				$(this).popover('hide');
+			});
+		});
+
+		$(document).off('click.module-editor-settings-help');
+		$(document).on('click.module-editor-settings-help', (event) => {
+			if (!$(event.target).closest('#module-editor-settings-dialog .popover, #module-editor-settings-dialog .as-field-help-toggle').length) {
+				this.#disposeEditorSettingsHelpPopovers();
+			}
 		});
 
 		$(document).on('click', '#module-installer-manager', () => {

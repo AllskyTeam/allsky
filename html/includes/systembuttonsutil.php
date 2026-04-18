@@ -41,7 +41,11 @@ class SYSTEMBUTTONSUTIL extends UTILBASE
 
     private function getConfigDirectory(): string
     {
-        return rtrim(ALLSKY_CONFIG, '/');
+        if (defined('ALLSKY_MYFILES_DIR')) {
+            return rtrim(ALLSKY_MYFILES_DIR, '/');
+        }
+
+        return rtrim(ALLSKY_CONFIG, '/') . '/myFiles';
     }
 
     private function isWithinConfigDirectory(string $path): bool
@@ -79,7 +83,7 @@ class SYSTEMBUTTONSUTIL extends UTILBASE
 
         $normalizedPath = rtrim($directory, '/') . '/' . basename($path);
         if (!$this->isWithinConfigDirectory($normalizedPath)) {
-            $this->send400('System Page Additions files must be stored in ~/allsky/config.');
+            $this->send400('System Page Additions files must be stored in ~/allsky/config/myFiles.');
         }
 
         return $normalizedPath;
@@ -106,7 +110,7 @@ class SYSTEMBUTTONSUTIL extends UTILBASE
         }
 
         if (!$this->isWithinConfigDirectory($realPath)) {
-            $this->send403('You can only browse files in ~/allsky/config.');
+            $this->send403('You can only browse files in ~/allsky/config/myFiles.');
         }
 
         return $realPath;
@@ -194,7 +198,7 @@ class SYSTEMBUTTONSUTIL extends UTILBASE
     private function buildWritableError(string $path, string $targetType): string
     {
         return sprintf(
-            '%s "%s" is not writable by the WebUI user. System Page Additions files must be stored in the ~/allsky/config folder.',
+            '%s "%s" is not writable by the WebUI user. System Page Additions files must be stored in the ~/allsky/config/myFiles folder.',
             ucfirst($targetType),
             $path
         );
@@ -701,7 +705,7 @@ class SYSTEMBUTTONSUTIL extends UTILBASE
                     'path' => $realPath,
                     'type' => 'directory',
                 ];
-            } elseif (is_file($realPath)) {
+            } elseif (is_file($realPath) && strcasecmp(pathinfo($item, PATHINFO_EXTENSION), 'txt') === 0) {
                 $files[] = [
                     'name' => $item,
                     'path' => $realPath,

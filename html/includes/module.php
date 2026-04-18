@@ -234,41 +234,49 @@ function DisplayModule()
             <div class="modal-body">
                 <form id="oe-debug-dialog-form" class="form-horizontal">
                     <div class="form-group">
-                        <label for="autoenable" class="control-label col-xs-4">Auto Enable</label> 
-                        <div class="col-xs-8">
+                        <label for="autoenable" class="control-label col-xs-4">Auto Enable</label>
+                        <div class="col-xs-1">
+                            <button type="button" class="btn btn-link btn-xs as-field-help-toggle" data-toggle="popover" data-container="body" data-trigger="focus click" data-placement="left" title="Auto Enable" data-content="Auto enable modules when selected." aria-label="Show help for Auto Enable"><i class="fa-solid fa-circle-info"></i></button>
+                        </div>
+                        <div class="col-xs-7">
                             <label class="el-switch el-switch-sm el-switch-green">
                                 <input type="checkbox" id="autoenable">
                                 <span class="el-switch-style"></span>
                             </label>
-                            <p class="help-block">Auto enable modules when selected</p>
                         </div>
-                    </div>                                      
+                    </div>
                     <div class="form-group">
-                        <label for="debugmode" class="control-label col-xs-4">Debug Mode</label> 
-                        <div class="col-xs-8">
+                        <label for="debugmode" class="control-label col-xs-4">Debug Mode</label>
+                        <div class="col-xs-1">
+                            <button type="button" class="btn btn-link btn-xs as-field-help-toggle" data-toggle="popover" data-container="body" data-trigger="focus click" data-placement="left" title="Debug Mode" data-content="Enable debug mode. An additional icon will appear in the toolbar showing the last results of each running module." aria-label="Show help for Debug Mode"><i class="fa-solid fa-circle-info"></i></button>
+                        </div>
+                        <div class="col-xs-7">
                             <label class="el-switch el-switch-sm el-switch-green">
                                 <input type="checkbox" id="debugmode">
                                 <span class="el-switch-style"></span>
                             </label>
-                            <p class="help-block">Enable debug mode. An additional icon will appear inthe toolbar showing the last results of each running module</p>
                         </div>
                     </div>
                     <div class="form-group">
                         <label for="watchdog-timeout" class="col-sm-4 control-label">Periodic Timer</label>
-                        <div class="col-sm-8">
+                        <div class="col-sm-1">
+                            <button type="button" class="btn btn-link btn-xs as-field-help-toggle" data-toggle="popover" data-container="body" data-trigger="focus click" data-placement="left" title="Periodic Timer" data-content="The delay between running periodic modules in seconds." aria-label="Show help for Periodic Timer"><i class="fa-solid fa-circle-info"></i></button>
+                        </div>
+                        <div class="col-sm-7">
                             <div class="input-group">
                                 <input id="periodic-timer" name="periodic-timer" type="number" min="0" max="3600" step="1" class="form-control">
                             </div>
-                            <p class="help-block">The delay between running periodic modules in seconds</p>
                         </div>
                     </div>
                     <div class="form-group">
                         <label for="watchdog-timeout" class="col-sm-4 control-label">Data Expiry</label>
-                        <div class="col-sm-8">
+                        <div class="col-sm-1">
+                            <button type="button" class="btn btn-link btn-xs as-field-help-toggle" data-toggle="popover" data-container="body" data-trigger="focus click" data-placement="left" title="Data Expiry" data-content="Max age extra data will be kept before being deleted." aria-label="Show help for Data Expiry"><i class="fa-solid fa-circle-info"></i></button>
+                        </div>
+                        <div class="col-sm-7">
                             <div class="input-group">
                                 <input id="expiry-age" name="expiry-age" type="number" min="0" max="600000" step="1" class="form-control">
                             </div>
-                            <p class="help-block">Max age extra data will be kept before being deleted</p>
                         </div>
                     </div>               
                 </form>                          

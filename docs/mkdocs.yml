@@ -148,6 +148,8 @@ nav:
       - allsky_guide/allsky.md
       - allsky_guide/website.md
       - allsky_guide/server.md
+    - Upgrade Notes:
+      - v2026.05.01: allsky_guide/upgrade/v2025.05.01.md
     - Settings:
       - allsky_guide/settings/allsky.md
       - allsky_guide/settings/website.md

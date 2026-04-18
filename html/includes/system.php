@@ -624,7 +624,7 @@ function DisplaySystem()
 							</div>
 						</div>
 						<div class="row">
-							<div class="col-xs-12 allow-select">
+							<div class="col-xs-12">
 								<div id="as-system-log-warning" class="alert alert-warning" style="display:none; margin-bottom:10px;"></div>
 								<div id="as-system-log-meta" class="text-muted" style="margin-bottom:6px;"></div>
 								<style>
@@ -632,7 +632,7 @@ function DisplaySystem()
 									.log-warn { color: #ffd166; font-weight: 600; }
 									.log-info { color: #8fd3ff; }
 								</style>
-								<pre id="as-system-log-output" style="height: 420px; overflow-y: auto; background:#111; color:#e6e6e6; padding:10px; border-radius:4px;"></pre>
+								<pre id="as-system-log-output" class="allow-select" style="height: 420px; overflow-y: auto; background:#111; color:#e6e6e6; padding:10px; border-radius:4px;"></pre>
 							</div>
 						</div>
 					</div>

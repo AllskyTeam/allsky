@@ -13,6 +13,7 @@ import os
 import sys
 import argparse
 import json
+import traceback
 
 # Determine the directory of this script
 here = os.path.dirname(os.path.abspath(__file__))
@@ -183,7 +184,10 @@ class ALLSKYDB:
                     result = 'Ok'
             else:
                 # Query execution error
-                result = query_result.get('error_code', 'Unknown')
+                error_code = query_result.get('error_code', 'Unknown')
+                error_message = str(query_result.get('message', '') or '').strip()
+                error_message = " ".join(error_message.split())
+                result = f"{error_code}: {error_message}" if error_message else error_code
         else:
             # Database connection failed
             result = 'Connection failed'
@@ -467,5 +471,9 @@ if __name__ == "__main__":
         if args.table and args.values:
             allsky_db.save_from_definition(args.table, args.values, args.event)
     except Exception as e:
-        print(f"ERROR: {e}", file=sys.stderr)
+        if args.run:
+            full_error = traceback.format_exc().strip().replace("\n", " | ")
+            print(f"ERROR: {full_error}", file=sys.stderr)
+        else:
+            print(f"ERROR: {e}", file=sys.stderr)
         sys.exit(1)

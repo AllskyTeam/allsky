@@ -495,86 +495,115 @@ function DisplayOverlay($image_name)
                                 <br />
 
                                 <form id="oe-defaults-form" class="form-horizontal">
-                                    <div class="form-group">
-                                        <label for="defaultimagetopacity" class="control-label col-xs-4">Default Image
-                                            Opacity</label>
-                                        <div class="col-xs-8">
-                                            <div class="input-group">
-                                                <input id="defaultimagetopacity" name="defaultimagetopacity" type="number" min="0" max="100" step="1" class="form-control layoutfield">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="defaultimagetopacity" class="control-label col-xs-5">Default Image Opacity</label>
+                                                <div class="col-xs-1"><button type="button" class="btn btn-link btn-xs as-field-help-toggle" data-toggle="popover" data-container="body" data-trigger="focus click" data-placement="left" title="Default Image Opacity" data-content="Sets the default opacity for new image fields." aria-label="Show help for Default Image Opacity"><i class="fa-solid fa-circle-info"></i></button></div>
+                                                <div class="col-xs-6">
+                                                    <div class="input-group">
+                                                        <input id="defaultimagetopacity" name="defaultimagetopacity" type="number" min="0" max="100" step="1" class="form-control layoutfield">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="defaultimagerotation" class="control-label col-xs-5">Default Image Rotation</label>
+                                                <div class="col-xs-1"><button type="button" class="btn btn-link btn-xs as-field-help-toggle" data-toggle="popover" data-container="body" data-trigger="focus click" data-placement="left" title="Default Image Rotation" data-content="Sets the default rotation for new image fields." aria-label="Show help for Default Image Rotation"><i class="fa-solid fa-circle-info"></i></button></div>
+                                                <div class="col-xs-6">
+                                                    <div class="input-group">
+                                                        <input id="defaultimagerotation" name="defaultimagerotation" type="number" min="0" max="359" step="1" class="form-control layoutfield">
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="form-group">
-                                        <label for="defaultimagerotation" class="control-label col-xs-4">Default Image
-                                            Rotation</label>
-                                        <div class="col-xs-8">
-                                            <div class="input-group">
-                                                <input id="defaultimagerotation" name="defaultimagerotation" type="number" min="0" max="359" step="1" class="form-control layoutfield">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="defaultfont" class="control-label col-xs-5">Default Font</label>
+                                                <div class="col-xs-1"><button type="button" class="btn btn-link btn-xs as-field-help-toggle" data-toggle="popover" data-container="body" data-trigger="focus click" data-placement="left" title="Default Font" data-content="Sets the default font for new text fields." aria-label="Show help for Default Font"><i class="fa-solid fa-circle-info"></i></button></div>
+                                                <div class="col-xs-6">
+                                                    <div class="input-group">
+                                                        <select id="defaultfont" name="defaultfont" class="form-control layoutfield">
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="defaultfontsize" class="control-label col-xs-5">Default Font Size</label>
+                                                <div class="col-xs-1"><button type="button" class="btn btn-link btn-xs as-field-help-toggle" data-toggle="popover" data-container="body" data-trigger="focus click" data-placement="left" title="Default Font Size" data-content="Sets the default size for new text fields." aria-label="Show help for Default Font Size"><i class="fa-solid fa-circle-info"></i></button></div>
+                                                <div class="col-xs-6">
+                                                    <div class="input-group">
+                                                        <input id="defaultfontsize" name="defaultfontsize" type="number" min="8" max="64" step="1" class="form-control layoutfield">
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="form-group">
-                                        <label for="defaultfont" class="control-label col-xs-4">Default Font</label>
-                                        <div class="col-xs-8">
-                                            <div class="input-group">
-                                                <select id="defaultfont" name="defaultfont" class="form-control layoutfield">
-                                                </select>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="defaultfontopacity" class="control-label col-xs-5">Default Font Opacity</label>
+                                                <div class="col-xs-1"><button type="button" class="btn btn-link btn-xs as-field-help-toggle" data-toggle="popover" data-container="body" data-trigger="focus click" data-placement="left" title="Default Font Opacity" data-content="Sets the default opacity for new text fields." aria-label="Show help for Default Font Opacity"><i class="fa-solid fa-circle-info"></i></button></div>
+                                                <div class="col-xs-6">
+                                                    <div class="input-group">
+                                                        <input id="defaultfontopacity" name="defaultfontopacity" type="number" min="0" max="100" step="1" class="form-control layoutfield">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="oe-default-font-colour" class="control-label col-xs-5">Default Font Colour</label>
+                                                <div class="col-xs-1"><button type="button" class="btn btn-link btn-xs as-field-help-toggle" data-toggle="popover" data-container="body" data-trigger="focus click" data-placement="left" title="Default Font Colour" data-content="Sets the default colour for new text fields." aria-label="Show help for Default Font Colour"><i class="fa-solid fa-circle-info"></i></button></div>
+                                                <div class="col-xs-6">
+                                                    <div class="input-group">
+                                                        <input id="oe-default-font-colour" name="oe-default-font-colour" type="input" class="form-control layoutfield">
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="form-group">
-                                        <label for="defaultfontsize" class="control-label col-xs-4">Default Font
-                                            Size</label>
-                                        <div class="col-xs-8">
-                                            <div class="input-group">
-                                                <input id="defaultfontsize" name="defaultfontsize" type="number" min="8" max="64" step="1" class="form-control layoutfield">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="defaulttextrotation" class="control-label col-xs-5">Default Text Rotation</label>
+                                                <div class="col-xs-1"><button type="button" class="btn btn-link btn-xs as-field-help-toggle" data-toggle="popover" data-container="body" data-trigger="focus click" data-placement="left" title="Default Text Rotation" data-content="Sets the default rotation for new text fields." aria-label="Show help for Default Text Rotation"><i class="fa-solid fa-circle-info"></i></button></div>
+                                                <div class="col-xs-6">
+                                                    <div class="input-group">
+                                                        <input id="defaulttextrotation" name="defaulttextrotation" type="number" min="0" max="359" step="1" class="form-control layoutfield">
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="defaultfontopacity" class="control-label col-xs-4">Default Font
-                                            Opacity</label>
-                                        <div class="col-xs-8">
-                                            <div class="input-group">
-                                                <input id="defaultfontopacity" name="defaultfontopacity" type="number" min="0" max="100" step="1" class="form-control layoutfield">
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="oe-default-font-colour" class="control-label col-xs-4">Default Font
-                                            Colour</label>
-                                        <div class="col-xs-8">
-                                            <div class="input-group">
-                                                <input id="oe-default-font-colour" name="oe-default-font-colour" type="input" class="form-control layoutfield">
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="defaulttextrotation" class="control-label col-xs-4">Default Text
-                                            Rotation</label>
-                                        <div class="col-xs-8">
-                                            <div class="input-group">
-                                                <input id="defaulttextrotation" name="defaulttextrotation" type="number" min="0" max="359" step="1" class="form-control layoutfield">
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="oe-default-stroke-colour" class="control-label col-xs-4">Default Stroke
-                                            Colour</label>
-                                        <div class="col-xs-8">
-                                            <div class="input-group">
-                                                <input id="oe-default-stroke-colour" name="oe-default-stroke-colour" type="input" class="form-control layoutfield">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="oe-default-stroke-colour" class="control-label col-xs-5">Default Stroke Colour</label>
+                                                <div class="col-xs-1"><button type="button" class="btn btn-link btn-xs as-field-help-toggle" data-toggle="popover" data-container="body" data-trigger="focus click" data-placement="left" title="Default Stroke Colour" data-content="Sets the default stroke colour for new text fields." aria-label="Show help for Default Stroke Colour"><i class="fa-solid fa-circle-info"></i></button></div>
+                                                <div class="col-xs-6">
+                                                    <div class="input-group">
+                                                        <input id="oe-default-stroke-colour" name="oe-default-stroke-colour" type="input" class="form-control layoutfield">
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div class="form-group">
-                                        <label for="defaultexpirytext" class="control-label col-xs-4">Expiry Text</label>
-                                        <div class="col-xs-8">
-                                            <div class="input-group">
-                                                <input id="defaultexpirytext" name="defaultexpirytext" type="text" class="form-control layoutfield">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="defaultexpirytext" class="control-label col-xs-5">Expiry Text</label>
+                                                <div class="col-xs-1"><button type="button" class="btn btn-link btn-xs as-field-help-toggle" data-toggle="popover" data-container="body" data-trigger="focus click" data-placement="left" title="Expiry Text" data-content="If blank then any expired fields will be removed. If non blank the value of an expired field will be replaced with this text." aria-label="Show help for Expiry Text"><i class="fa-solid fa-circle-info"></i></button></div>
+                                                <div class="col-xs-6">
+                                                    <div class="input-group">
+                                                        <input id="defaultexpirytext" name="defaultexpirytext" type="text" class="form-control layoutfield">
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <p class="help-block">If blank then any expired fields will be removed. If non blank the value of an expired field will be replaced with this text</p>
                                         </div>
                                     </div>
 
@@ -587,132 +616,163 @@ function DisplayOverlay($image_name)
                                 <br />
 
                                 <form id="oe-app-settings-form" class="form-horizontal">
-                                    <div class="form-group">
-                                        <label for="e-app-options-show-grid" class="col-sm-4 control-label">Show Grid</label>
-                                        <div class="col-sm-8">
-                                            <div class="checkbox">
-                                                <label class="el-switch el-switch-sm el-switch-green">
-                                                    <input type="checkbox" id="oe-app-options-show-grid">
-                                                    <span class="el-switch-style"></span>
-                                                </label>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="oe-app-options-confirm-delete" class="col-xs-7 control-label">Confirm before deleting</label>
+                                                <div class="col-xs-5">
+                                                    <div class="checkbox">
+                                                        <label class="el-switch el-switch-sm el-switch-green">
+                                                            <input type="checkbox" id="oe-app-options-confirm-delete">
+                                                            <span class="el-switch-style"></span>
+                                                        </label>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="form-group">
-                                        <label for="oe-app-options-confirm-delete" class="col-sm-4 control-label">Confirm before deleting fields</label>
-                                        <div class="col-sm-8">
-                                            <div class="checkbox">
-                                                <label class="el-switch el-switch-sm el-switch-green">
-                                                    <input type="checkbox" id="oe-app-options-confirm-delete">
-                                                    <span class="el-switch-style"></span>
-                                                </label>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="e-app-options-show-grid" class="col-xs-7 control-label">Show Grid</label>
+                                                <div class="col-xs-5">
+                                                    <div class="checkbox">
+                                                        <label class="el-switch el-switch-sm el-switch-green">
+                                                            <input type="checkbox" id="oe-app-options-show-grid">
+                                                            <span class="el-switch-style"></span>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="oe-app-options-snap-background" class="col-xs-7 control-label">Show Snap Rectangle</label>
+                                                <div class="col-xs-5">
+                                                    <div class="checkbox">
+                                                        <label class="el-switch el-switch-sm el-switch-green">
+                                                            <input type="checkbox" id="oe-app-options-snap-background">
+                                                            <span class="el-switch-style"></span>
+                                                        </label>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="form-group">
-                                        <label for="oe-app-options-grid-size" class="col-sm-4 control-label">Grid Size</label>
-                                        <div class="col-sm-8">
-                                            <div class="input-group">
-                                                <select class="form-control" id="oe-app-options-grid-size" name="oe-app-options-grid-size">
-                                                    <option value="0">None</option>
-                                                    <option value="5">5x5</option>
-                                                    <option value="10">10x10</option>
-                                                    <option value="15">15x15</option>
-                                                    <option value="20">20x20</option>
-                                                    <option value="25">25x25</option>
-                                                    <option value="30">30x30</option>
-                                                    <option value="35">35x35</option>
-                                                    <option value="40">40x40</option>
-                                                    <option value="45">45x45</option>
-                                                    <option value="50">50x50</option>
-                                                </select>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="oe-app-options-grid-size" class="col-xs-7 control-label">Grid Size</label>
+                                                <div class="col-xs-5">
+                                                    <div class="input-group">
+                                                        <select class="form-control" id="oe-app-options-grid-size" name="oe-app-options-grid-size">
+                                                            <option value="0">None</option>
+                                                            <option value="5">5x5</option>
+                                                            <option value="10">10x10</option>
+                                                            <option value="15">15x15</option>
+                                                            <option value="20">20x20</option>
+                                                            <option value="25">25x25</option>
+                                                            <option value="30">30x30</option>
+                                                            <option value="35">35x35</option>
+                                                            <option value="40">40x40</option>
+                                                            <option value="45">45x45</option>
+                                                            <option value="50">50x50</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="oe-app-options-grid-colour" class="control-label col-xs-7">Grid Colour</label>
+                                                <div class="col-xs-5">
+                                                    <div class="input-group">
+                                                        <input id="oe-app-options-grid-colour" name="oe-app-options-grid-colour" type="input" class="form-control">
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="form-group">
-                                        <label for="oe-app-options-grid-colour" class="control-label col-xs-4">Grid Colour</label>
-                                        <div class="col-sm-8">
-                                            <div class="input-group">
-                                                <input id="oe-app-options-grid-colour" name="oe-app-options-grid-colour" type="input" class="form-control">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="oe-app-options-grid-opacity" class="col-xs-7 control-label">Grid Brightness <button type="button" class="btn btn-link btn-xs as-field-help-toggle" data-toggle="popover" data-container="body" data-trigger="focus click" data-placement="left" title="Grid Brightness" data-content="0 = Lowest, 100 = Brightest" aria-label="Show help for Grid Brightness"><i class="fa-solid fa-circle-info"></i></button></label>
+                                                <div class="col-xs-5">
+                                                    <div class="input-group">
+                                                        <input id="oe-app-options-grid-opacity" name="oe-app-options-grid-opacity" type="number" min="0" max="100" step="5" class="form-control">
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="form-group">
-                                        <label for="oe-app-options-grid-opacity" class="col-sm-4 control-label">Grid Brightness</label>
-                                        <div class="col-sm-8">
-                                            <div class="input-group">
-                                                <input id="oe-app-options-grid-opacity" name="oe-app-options-grid-opacity" type="number" min="0" max="100" step="5" class="form-control">
-
-                                            </div>
-                                            <p class="help-block">0 = Lowest, 100 = Brightest</p>
-                                        </div>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="oe-app-options-snap-background" class="col-sm-4 control-label">Show Snap Rectangle</label>
-                                        <div class="col-sm-8">
-                                            <div class="checkbox">
-                                                <label class="el-switch el-switch-sm el-switch-green">
-                                                    <input type="checkbox" id="oe-app-options-snap-background">
-                                                    <span class="el-switch-style"></span>
-                                                </label>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="oe-app-options-background-opacity" class="col-xs-7 control-label">Background Brightness <button type="button" class="btn btn-link btn-xs as-field-help-toggle" data-toggle="popover" data-container="body" data-trigger="focus click" data-placement="left" title="Background Brightness" data-content="0 = Lowest, 100 = Brightest" aria-label="Show help for Background Brightness"><i class="fa-solid fa-circle-info"></i></button></label>
+                                                <div class="col-xs-5">
+                                                    <div class="input-group">
+                                                        <input id="oe-app-options-background-opacity" name="oe-app-options-background-opacity" type="number" min="0" max="100" step="10" class="form-control">
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="form-group">
-                                        <label for="oe-app-options-add-list-size" class="col-sm-4 control-label">Add List Page Size</label>
-                                        <div class="col-sm-8">
-                                            <div class="input-group">
-                                                <select class="form-control" id="oe-app-options-add-list-size" name="oe-app-options-add-list-size">
-                                                    <option value="5">5</option>
-                                                    <option value="10">10</option>
-                                                    <option value="15">15</option>
-                                                    <option value="20">20</option>
-                                                    <option value="25">25</option>
-                                                    <option value="30">30</option>
-                                                    <option value="35">35</option>
-                                                    <option value="40">40</option>
-                                                    <option value="45">45</option>
-                                                    <option value="50">50</option>
-                                                </select>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="oe-app-options-add-list-size" class="col-xs-7 control-label">Add List Page Size</label>
+                                                <div class="col-xs-5">
+                                                    <div class="input-group">
+                                                        <select class="form-control" id="oe-app-options-add-list-size" name="oe-app-options-add-list-size">
+                                                            <option value="5">5</option>
+                                                            <option value="10">10</option>
+                                                            <option value="15">15</option>
+                                                            <option value="20">20</option>
+                                                            <option value="25">25</option>
+                                                            <option value="30">30</option>
+                                                            <option value="35">35</option>
+                                                            <option value="40">40</option>
+                                                            <option value="45">45</option>
+                                                            <option value="50">50</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="oe-app-options-mousewheel-zoom" class="col-xs-7 control-label">Zoom with Mouse Wheel</label>
+                                                <div class="col-xs-5">
+                                                    <div class="checkbox">
+                                                        <label class="el-switch el-switch-sm el-switch-green">
+                                                            <input type="checkbox" id="oe-app-options-mousewheel-zoom">
+                                                            <span class="el-switch-style"></span>
+                                                        </label>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="form-group">
-                                        <label for="oe-app-options-add-field-opacity" class="col-sm-4 control-label">Add Field Brightness</label>
-                                        <div class="col-sm-8">
-                                            <div class="input-group">
-                                                <input id="oe-app-options-add-field-opacity" name="oe-app-options-add-field-opacity" type="number" min="0" max="100" step="5" class="form-control">
-                                            </div>
-                                            <p class="help-block">The brightness existing fields will be set to when adding a field. 0 = Lowest, 100 = Brightest</p>
-                                        </div>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="oe-app-options-select-field-opacity" class="col-sm-4 control-label">Select Field Brightness</label>
-                                        <div class="col-sm-8">
-                                            <div class="input-group">
-                                                <input id="oe-app-options-select-field-opacity" name="oe-app-options-select-field-opacity" type="number" min="0" max="100" step="5" class="form-control">
-                                            </div>
-                                            <p class="help-block">The brightness existing fields will be set to when selecting a field. 0 = Lowest, 100 = Brightest</p>
-                                        </div>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="oe-app-options-mousewheel-zoom" class="col-sm-4 control-label">Zoom with Mouse Wheel</label>
-                                        <div class="col-sm-8">
-                                            <div class="checkbox">
-                                                <label class="el-switch el-switch-sm el-switch-green">
-                                                    <input type="checkbox" id="oe-app-options-mousewheel-zoom">
-                                                    <span class="el-switch-style"></span>
-                                                </label>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="oe-app-options-add-field-opacity" class="col-xs-7 control-label">Add Field Brightness <button type="button" class="btn btn-link btn-xs as-field-help-toggle" data-toggle="popover" data-container="body" data-trigger="focus click" data-placement="left" title="Add Field Brightness" data-content="The brightness existing fields will be set to when adding a field. 0 = Lowest, 100 = Brightest" aria-label="Show help for Add Field Brightness"><i class="fa-solid fa-circle-info"></i></button></label>
+                                                <div class="col-xs-5">
+                                                    <div class="input-group">
+                                                        <input id="oe-app-options-add-field-opacity" name="oe-app-options-add-field-opacity" type="number" min="0" max="100" step="5" class="form-control">
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="oe-app-options-background-opacity" class="col-sm-4 control-label">Background Image Brightness</label>
-                                        <div class="col-sm-8">
-                                            <div class="input-group">
-                                                <input id="oe-app-options-background-opacity" name="oe-app-options-background-opacity" type="number" min="0" max="100" step="10" class="form-control">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label for="oe-app-options-select-field-opacity" class="col-xs-7 control-label">Select Field Brightness <button type="button" class="btn btn-link btn-xs as-field-help-toggle" data-toggle="popover" data-container="body" data-trigger="focus click" data-placement="left" title="Select Field Brightness" data-content="The brightness existing fields will be set to when selecting a field. 0 = Lowest, 100 = Brightest" aria-label="Show help for Select Field Brightness"><i class="fa-solid fa-circle-info"></i></button></label>
+                                                <div class="col-xs-5">
+                                                    <div class="input-group">
+                                                        <input id="oe-app-options-select-field-opacity" name="oe-app-options-select-field-opacity" type="number" min="0" max="100" step="5" class="form-control">
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <p class="help-block">0 = Lowest, 100 = Brightest</p>
                                         </div>
                                     </div>
                                 </form>

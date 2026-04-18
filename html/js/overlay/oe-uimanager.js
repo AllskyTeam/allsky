@@ -438,6 +438,22 @@ class OEUIMANAGER {
         this.checkFieldstimer()
 
         $('[data-toggle="tooltip"]').tooltip()
+        $('[data-toggle="popover"]').popover()
+        $(document).off('click.oe-popover-toggle', '.as-field-help-toggle')
+        $(document).on('click.oe-popover-toggle', '.as-field-help-toggle', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+        });
+        $(document).off('show.bs.popover.oe-popover')
+        $(document).on('show.bs.popover.oe-popover', '[data-toggle="popover"]', function() {
+            $('[data-toggle="popover"]').not(this).popover('hide');
+        });
+        $(document).off('click.oe-popover-dismiss')
+        $(document).on('click.oe-popover-dismiss', (event) => {
+            if (!$(event.target).closest('.popover, [data-toggle="popover"]').length) {
+                $('[data-toggle="popover"]').popover('hide');
+            }
+        });
         $('.modal').on('shown.bs.modal', this.alignModal)
     }
 

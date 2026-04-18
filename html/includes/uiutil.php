@@ -138,10 +138,10 @@ class UIUTIL extends UTILBASE {
         $remoteWebsiteBadgeText = $useRemoteWebsite ? 'Enabled' : 'Disabled';
         $remoteWebsiteVersion = $this->getRemoteWebsiteVersionText();
         $localWebsiteLink = $useLocalWebsite
-            ? "<a external='true' target='_blank' rel='noopener noreferrer' href='allsky/index.php'>View " . ALLSKY_EXTERNAL_ICON . "</a>"
+            ? "<a external='true' target='_blank' rel='noopener noreferrer' href='allsky/index.php'>View</a>"
             : "";
         $remoteWebsiteLink = $useRemoteWebsite
-            ? "<a external='true' target='_blank' rel='noopener noreferrer' href='{$remoteWebsiteURL}'>View {$remoteWebsiteVersion} " .ALLSKY_EXTERNAL_ICON . "</a>"
+            ? "<a external='true' target='_blank' rel='noopener noreferrer' href='{$remoteWebsiteURL}'>View {$remoteWebsiteVersion}</a>"
             : "";
         $websiteHtml = "<div class='header-status-row'><span class='header-status-row-label'>Local:</span><span class='header-status-row-value'><span class='label {$localWebsiteBadgeClass}'>{$localWebsiteBadgeText}</span> {$localWebsiteLink}</span></div><div class='header-status-row'><span class='header-status-row-label'>Remote:</span><span class='header-status-row-value'><span class='label {$remoteWebsiteBadgeClass}'>{$remoteWebsiteBadgeText}</span> {$remoteWebsiteLink}</span></div>";
 

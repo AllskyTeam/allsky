@@ -1312,6 +1312,16 @@ input, textarea, select, [contenteditable="true"], .allow-select, .allow-select 
   user-select: text !important;
 }
 
+a[external="true"]::after {
+    font-family: "Font Awesome 6 Free";
+    content: "\f35d";
+    font-weight: 900;
+    margin-left: 6px;
+    font-size: 0.85em;
+    vertical-align: middle;
+    opacity: 0.7;
+}
+
 .panel-body .row {
     margin: 0;
 }

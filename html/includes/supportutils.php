@@ -75,16 +75,25 @@ class SUPPORTUTIL extends UTILBASE {
         $name = basename($name);
         if ($name === '' || $name === '.' || $name === '..') return null;
 
-        $full = $this->issueDir . DIRECTORY_SEPARATOR . $name;
         $realBase = realpath($this->issueDir);
-        $realFull = realpath($full);
+        if ($realBase === false) return null;
 
-        if ($realBase === false || $realFull === false) return null;
+        // Reject names that changed when normalized to a basename.
+        if ($name !== trim($name) || str_contains($name, DIRECTORY_SEPARATOR)) return null;
 
-        // Verify the resolved path is still under the base directory
-        if (strpos($realFull, $realBase . DIRECTORY_SEPARATOR) !== 0 && $realFull !== $realBase) return null;
+        $full = $realBase . DIRECTORY_SEPARATOR . $name;
 
-        return $realFull;
+        // Existing files can be verified via realpath().
+        if (file_exists($full)) {
+            $realFull = realpath($full);
+            if ($realFull === false) return null;
+            if (strpos($realFull, $realBase . DIRECTORY_SEPARATOR) !== 0 && $realFull !== $realBase) return null;
+            return $realFull;
+        }
+
+        // For new files, returning the constructed path is safe because the
+        // basename check above prevents directory traversal outside $realBase.
+        return $full;
     }
 
     /**
@@ -203,11 +212,11 @@ class SUPPORTUTIL extends UTILBASE {
         $newBase = "support-{$repo}-{$newType}-{$newId}-{$timestamp}.{$ext}";
         $newPath = $this->safePathFromBasename($newBase);
         if ($newPath === null) {
-            $this->send500("Invalid destination name.");
+            $this->send500("Invalid destination name. ". $newBase);
         }
 
         // Attempt to rename the file; log internal errors if it fails
-        if (@rename($path, $newPath) === false) {
+        if (rename($path, $newPath) === false) {
             $msg = error_get_last()['message'] ?? 'rename failed';
             error_log("rename failed: {$msg}");
             $this->send500("Rename failed.");

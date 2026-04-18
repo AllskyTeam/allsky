@@ -254,8 +254,8 @@ Inside that dialog, you work with one additions file at a time. The editor can o
 This is an important detail for everyday use. You are not expected to hunt through the filesystem looking for the right place to store these files. The editor is designed to guide you towards the supported location and to make opening, creating, and saving additions files feel like a normal WebUI task.
 
 <div style="display: flex; gap: 1rem; align-items: flex-start;">
-  <img src="/assets/guide_images/system-add-open.png" alt="Open System Page Additions file" style="width: 50%;">
-  <img src="/assets/guide_images/system-add-new.png" alt="Create System Page Additions file" style="width: 50%;">
+  <img src="../../../assets/guide_images/system-add-open.png" alt="Open System Page Additions file" style="width: 50%;">
+  <img src="../../../assets/guide_images/system-add-new.png" alt="Create System Page Additions file" style="width: 50%;">
 </div>
 
 /// caption

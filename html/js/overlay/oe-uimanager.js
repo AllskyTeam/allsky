@@ -47,6 +47,14 @@ class OEUIMANAGER {
     #toolbarDockRect = null
     #toolbarDockSnapDistance = 40
     #floatingDialogZIndex = 2100
+    #lastMouseContext = {
+        screenX: null,
+        screenY: null,
+        imageX: null,
+        imageY: null
+    }
+    #lastDragEndContext = null
+    #lastTransformEndContext = null
 
     constructor(imageObj) {
 
@@ -101,6 +109,12 @@ class OEUIMANAGER {
 
         this.#oeEditorStage.on('mousemove', (e) => {
             let mousePos = this.#oeEditorStage.getPointerPosition();
+            this.#lastMouseContext = {
+                screenX: mousePos.x,
+                screenY: mousePos.y,
+                imageX: mousePos.x / this.#oeEditorStage.scaleX(),
+                imageY: mousePos.y / this.#oeEditorStage.scaleY()
+            };
             this.updateDebugWindowMousePos(mousePos.x, mousePos.y);
             this.updateDebugWindow();
         });
@@ -967,12 +981,14 @@ class OEUIMANAGER {
 
         $(document).on('click', '#oe-toobar-debug-button', (event) => {
 
-            let data = JSON.stringify(this.#configManager.config);
+            let data = JSON.stringify(this.#configManager.config, null, 2);
             $('#oe-debug-dialog-overlay').val(data);
-            data = JSON.stringify(this.#configManager.dataFields);
+            data = JSON.stringify(this.#configManager.dataFields, null, 2);
             $('#oe-debug-dialog-fields').val(data);
-            data = JSON.stringify(this.#configManager.appConfig);
+            data = JSON.stringify(this.#configManager.appConfig, null, 2);
             $('#oe-debug-dialog-config').val(data);
+            data = JSON.stringify(this.#buildRuntimeDiagnostics(), null, 2);
+            $('#oe-debug-dialog-runtime').val(data);
 
             $('#oe-debug-dialog').modal({
                 keyboard: false
@@ -1409,6 +1425,18 @@ class OEUIMANAGER {
                     this.#selected.rotation = shape.rotation();
                     this.updatePropertyEditor();
                 }
+                this.#lastTransformEndContext = {
+                    id: shape.id(),
+                    className: shape.getClassName(),
+                    x: shape.x() | 0,
+                    y: shape.y() | 0,
+                    width: shape.width() | 0,
+                    height: shape.height() | 0,
+                    rotation: shape.rotation() | 0,
+                    scaleX: shape.scaleX(),
+                    scaleY: shape.scaleY(),
+                    timestamp: new Date().toISOString()
+                };
                 this.updateToolbar();
             }
 
@@ -1933,6 +1961,19 @@ class OEUIMANAGER {
 
                 field.x = shape.x() | 0
                 field.y = shape.y() | 0
+
+                this.#lastDragEndContext = {
+                    id: shape.id(),
+                    className: shape.getClassName(),
+                    x: shape.x() | 0,
+                    y: shape.y() | 0,
+                    tlx: (shape.x() - shape.offsetX()) | 0,
+                    tly: (shape.y() - shape.offsetY()) | 0,
+                    offsetX: shape.offsetX() | 0,
+                    offsetY: shape.offsetY() | 0,
+                    rotation: shape.rotation() | 0,
+                    timestamp: new Date().toISOString()
+                };
 
                 if (field.fieldType === 'rect') {
                     field.width = shape.width() | 0
@@ -3266,6 +3307,299 @@ class OEUIMANAGER {
         var rotatedY = Math.sin(angle) * (pt.x - o.x) + Math.cos(angle) * (pt.y - o.y) + o.y;  
       
         return {x: rotatedX, y: rotatedY};
+    }
+
+    #roundDebugValue(value, digits = 2) {
+        if (!Number.isFinite(value)) {
+            return value;
+        }
+        return Number(value.toFixed(digits));
+    }
+
+    #buildFieldDebugSummary(field) {
+        const shape = field.shape;
+        const gridSize = Number(this.#configManager.gridSize) || 0;
+        const clientRect = shape.getClientRect();
+        const rawTopLeft = {
+            x: shape.x() - shape.offsetX(),
+            y: shape.y() - shape.offsetY()
+        };
+        const rotatedTopLeft = this.rotatePoint(
+            rawTopLeft,
+            { x: shape.x(), y: shape.y() },
+            shape.rotation()
+        );
+        const outOfBounds = this.isFieldOutsideViewport(field);
+        const snappedTopLeft = gridSize > 0 ? {
+            x: Math.round(rawTopLeft.x / gridSize) * gridSize,
+            y: Math.round(rawTopLeft.y / gridSize) * gridSize
+        } : null;
+        const savePreview = field.getJSON();
+        if (field instanceof OEIMAGEFIELD || field instanceof OERECTFIELD) {
+            delete savePreview.src;
+        }
+
+        const warnings = [];
+        if (Math.abs(field.x - shape.x()) > 0.5 || Math.abs(field.y - shape.y()) > 0.5) {
+            warnings.push('stored x/y differ from shape x/y');
+        }
+        if (Math.abs(field.tlx - rotatedTopLeft.x) > 1 || Math.abs(field.tly - rotatedTopLeft.y) > 1) {
+            warnings.push('stored tlx/tly differ from rotated top-left');
+        }
+        if (!Number.isFinite(field.x) || !Number.isFinite(field.y) || !Number.isFinite(field.tlx) || !Number.isFinite(field.tly)) {
+            warnings.push('non-finite coordinate detected');
+        }
+
+        return {
+            id: field.id,
+            type: field instanceof OEIMAGEFIELD ? 'image' : (field instanceof OERECTFIELD ? 'rect' : 'text'),
+            fieldType: field.fieldType,
+            label: field.label ?? null,
+            image: field.image ?? null,
+            group: field.group,
+            loaded: field.loaded,
+            dirty: field.dirty,
+            canSplit: typeof field.canSplit === 'boolean' ? field.canSplit : null,
+            splitTokens: field.split ?? null,
+            x: this.#roundDebugValue(field.x),
+            y: this.#roundDebugValue(field.y),
+            tlx: this.#roundDebugValue(field.tlx),
+            tly: this.#roundDebugValue(field.tly),
+            calcX: this.#roundDebugValue(typeof field.calcX === 'number' ? field.calcX : null),
+            calcY: this.#roundDebugValue(typeof field.calcY === 'number' ? field.calcY : null),
+            offsetX: this.#roundDebugValue(shape.offsetX()),
+            offsetY: this.#roundDebugValue(shape.offsetY()),
+            shapeX: this.#roundDebugValue(shape.x()),
+            shapeY: this.#roundDebugValue(shape.y()),
+            width: this.#roundDebugValue(shape.width()),
+            height: this.#roundDebugValue(shape.height()),
+            clientRect: {
+                x: this.#roundDebugValue(clientRect.x),
+                y: this.#roundDebugValue(clientRect.y),
+                width: this.#roundDebugValue(clientRect.width),
+                height: this.#roundDebugValue(clientRect.height)
+            },
+            rotation: this.#roundDebugValue(shape.rotation()),
+            scale: field instanceof OEIMAGEFIELD ? this.#roundDebugValue(field.scale, 3) : null,
+            rawTopLeft: {
+                x: this.#roundDebugValue(rawTopLeft.x),
+                y: this.#roundDebugValue(rawTopLeft.y)
+            },
+            rotatedTopLeft: {
+                x: this.#roundDebugValue(rotatedTopLeft.x),
+                y: this.#roundDebugValue(rotatedTopLeft.y)
+            },
+            snappedTopLeft: snappedTopLeft === null ? null : {
+                x: this.#roundDebugValue(snappedTopLeft.x),
+                y: this.#roundDebugValue(snappedTopLeft.y)
+            },
+            isSnapped: snappedTopLeft === null ? null : (
+                Math.abs(rawTopLeft.x - snappedTopLeft.x) < 1 &&
+                Math.abs(rawTopLeft.y - snappedTopLeft.y) < 1
+            ),
+            outOfBounds,
+            savePreview,
+            warnings
+        };
+    }
+
+    #buildRuntimeDiagnostics() {
+        const fields = [];
+        const savePreview = {
+            fields: [],
+            images: [],
+            rects: []
+        };
+        const inconsistentFields = [];
+        const typeCounts = {
+            text: 0,
+            image: 0,
+            rect: 0
+        };
+        const groups = new Set();
+        const splitCapableFields = [];
+        const unloadedFields = [];
+        const dirtyFields = [];
+        const outOfBoundsFields = [];
+        const fieldIds = [];
+        const labelCollisions = {};
+        const bounds = {
+            minX: null,
+            minY: null,
+            maxX: null,
+            maxY: null
+        };
+
+        for (let [fieldName, field] of this.#fieldManager.fields.entries()) {
+            const summary = this.#buildFieldDebugSummary(field);
+            fields.push(summary);
+            fieldIds.push(summary.id);
+            if (summary.type === 'text') {
+                typeCounts.text += 1;
+                savePreview.fields.push(summary.savePreview);
+            } else if (summary.type === 'image') {
+                typeCounts.image += 1;
+                savePreview.images.push(summary.savePreview);
+            } else if (summary.type === 'rect') {
+                typeCounts.rect += 1;
+                savePreview.rects.push(summary.savePreview);
+            }
+            if (summary.group !== null && summary.group !== undefined) {
+                groups.add(summary.group);
+            }
+            if (summary.canSplit) {
+                splitCapableFields.push({
+                    id: summary.id,
+                    label: summary.label ?? summary.id,
+                    splitTokens: summary.splitTokens
+                });
+            }
+            if (!summary.loaded) {
+                unloadedFields.push({
+                    id: summary.id,
+                    label: summary.label ?? summary.image ?? summary.id,
+                    type: summary.type
+                });
+            }
+            if (summary.dirty) {
+                dirtyFields.push({
+                    id: summary.id,
+                    label: summary.label ?? summary.image ?? summary.id,
+                    type: summary.type
+                });
+            }
+            if (summary.label !== null) {
+                labelCollisions[summary.label] = (labelCollisions[summary.label] ?? 0) + 1;
+            }
+            if (summary.clientRect !== null) {
+                const minX = summary.clientRect.x;
+                const minY = summary.clientRect.y;
+                const maxX = summary.clientRect.x + summary.clientRect.width;
+                const maxY = summary.clientRect.y + summary.clientRect.height;
+
+                bounds.minX = bounds.minX === null ? minX : Math.min(bounds.minX, minX);
+                bounds.minY = bounds.minY === null ? minY : Math.min(bounds.minY, minY);
+                bounds.maxX = bounds.maxX === null ? maxX : Math.max(bounds.maxX, maxX);
+                bounds.maxY = bounds.maxY === null ? maxY : Math.max(bounds.maxY, maxY);
+            }
+            if (summary.warnings.length > 0 || summary.outOfBounds.outOfBounds) {
+                const inconsistentField = {
+                    id: summary.id,
+                    label: summary.label ?? summary.image ?? summary.id,
+                    warnings: summary.warnings,
+                    outOfBounds: summary.outOfBounds
+                };
+                inconsistentFields.push(inconsistentField);
+                if (summary.outOfBounds.outOfBounds) {
+                    outOfBoundsFields.push(inconsistentField);
+                }
+            }
+        }
+
+        const transformerNodes = this.#transformer.nodes().map((node) => ({
+            id: node.id(),
+            className: node.getClassName()
+        }));
+        const selectionRectVisible = this.#selectionRect.visible();
+        const selectionRect = {
+            visible: selectionRectVisible,
+            x: this.#roundDebugValue(this.#selectionRect.x()),
+            y: this.#roundDebugValue(this.#selectionRect.y()),
+            width: this.#roundDebugValue(this.#selectionRect.width()),
+            height: this.#roundDebugValue(this.#selectionRect.height())
+        };
+        const stagePosition = this.#oeEditorStage.position();
+        const backgroundRect = this.#backgroundImage.getClientRect();
+        const duplicateLabels = Object.entries(labelCollisions)
+            .filter(([, count]) => count > 1)
+            .map(([label, count]) => ({ label, count }));
+
+        return {
+            overlay: {
+                selectedOverlay: this.#configManager.selectedOverlay,
+                fieldCount: fields.length,
+                fieldIds,
+                fieldTypeCounts: typeCounts,
+                groupCount: groups.size,
+                splitCapableFieldCount: splitCapableFields.length,
+                splitCapableFields,
+                unloadedFieldCount: unloadedFields.length,
+                unloadedFields,
+                dirtyFieldCount: dirtyFields.length,
+                dirtyFields,
+                errorFieldCount: this.#errorFields.length,
+                errorFields: this.#errorFields.map((field) => ({
+                    id: field.id,
+                    name: field.name,
+                    type: field.type
+                })),
+                duplicateLabels,
+                occupiedBounds: bounds,
+                outOfBoundsFieldCount: outOfBoundsFields.length,
+                outOfBoundsFields
+            },
+            editorState: {
+                debugMode: this.#debugMode,
+                debugPositionMode: this.#debugPosMode,
+                testMode: this.#testMode,
+                dirty: this.dirty,
+                configDirty: this.#configManager.dirty,
+                fieldDirty: this.#fieldManager.dirty,
+                stageMode: this.#stageMode,
+                stageScale: this.#roundDebugValue(this.#stageScale, 4),
+                stageDraggable: this.#oeEditorStage.draggable(),
+                stagePosition: {
+                    x: this.#roundDebugValue(stagePosition.x),
+                    y: this.#roundDebugValue(stagePosition.y)
+                },
+                viewport: {
+                    width: $('#oe-viewport').width() ?? null,
+                    height: $('#oe-viewport').height() ?? null
+                },
+                stageSize: {
+                    width: this.#oeEditorStage.width(),
+                    height: this.#oeEditorStage.height()
+                },
+                backgroundImage: {
+                    width: this.#backgroundImage.width(),
+                    height: this.#backgroundImage.height(),
+                    clientRect: {
+                        x: this.#roundDebugValue(backgroundRect.x),
+                        y: this.#roundDebugValue(backgroundRect.y),
+                        width: this.#roundDebugValue(backgroundRect.width),
+                        height: this.#roundDebugValue(backgroundRect.height)
+                    },
+                    opacity: this.#roundDebugValue(this.#backgroundImage.opacity(), 3)
+                },
+                selection: {
+                    active: this.#selectionActive,
+                    transformerNodeCount: transformerNodes.length,
+                    transformerNodes,
+                    selectionRect
+                }
+            },
+            gridAndSnap: {
+                visible: this.#configManager.gridVisible,
+                size: Number(this.#configManager.gridSize) || 0,
+                colour: this.#configManager.gridColour,
+                opacity: this.#configManager.gridOpacity,
+                snapBackground: this.#configManager.snapBackground,
+                snapRectangleVisible: this.#snapRectangle?.visible() ?? false
+            },
+            interactionContext: {
+                lastMouse: this.#lastMouseContext,
+                lastDragEnd: this.#lastDragEndContext,
+                lastTransformEnd: this.#lastTransformEndContext
+            },
+            configSnapshot: {
+                app: this.#configManager.appConfig,
+                layoutDefaults: this.#configManager.config,
+                fieldDefinitions: this.#configManager.dataFields
+            },
+            savePreview,
+            inconsistentFields,
+            fields
+        };
     }
 
     updateDebugWindow() {

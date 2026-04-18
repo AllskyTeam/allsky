@@ -435,32 +435,52 @@ function DisplayOverlay($image_name)
                     <h4 class="modal-title">Debug Info</h4>
                 </div>
                 <div class="modal-body">
-                    <form id="oe-debug-dialog-form" class="form-horizontal">
-                        <div class="form-group">
-                            <label for="oe-debug-dialog-overlay" class="col-sm-2 control-label">Overlay Data</label>
-                            <div class="col-sm-10">
-                                <div class="input-group">
-                                    <textarea id="oe-debug-dialog-overlay" name="oe-debug-dialog-overlay" rows="10" cols="80" disabled="disabled"></textarea>
+                    <ul class="nav nav-tabs" role="tablist">
+                        <li role="presentation" class="active"><a href="#oe-debug-dialog-config-tab" aria-controls="oe-debug-dialog-config-tab" role="tab" data-toggle="tab">Config</a></li>
+                        <li role="presentation"><a href="#oe-debug-dialog-diagnostics-tab" aria-controls="oe-debug-dialog-diagnostics-tab" role="tab" data-toggle="tab">Diagnostics</a></li>
+                    </ul>
+                    <div class="tab-content mt-3">
+                        <div role="tabpanel" class="tab-pane active" id="oe-debug-dialog-config-tab">
+                            <form id="oe-debug-dialog-form" class="form-horizontal">
+                                <div class="form-group">
+                                    <label for="oe-debug-dialog-overlay" class="col-sm-2 control-label">Overlay Data</label>
+                                    <div class="col-sm-10">
+                                        <div class="input-group">
+                                            <textarea id="oe-debug-dialog-overlay" name="oe-debug-dialog-overlay" rows="10" cols="80" disabled="disabled"></textarea>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="oe-debug-dialog-fields" class="col-sm-2 control-label">Field Data</label>
-                            <div class="col-sm-10">
-                                <div class="input-group">
-                                    <textarea id="oe-debug-dialog-fields" name="oe-debug-dialog-fields" rows="10" cols="80" disabled="disabled"></textarea>
+                                <div class="form-group">
+                                    <label for="oe-debug-dialog-fields" class="col-sm-2 control-label">Field Data</label>
+                                    <div class="col-sm-10">
+                                        <div class="input-group">
+                                            <textarea id="oe-debug-dialog-fields" name="oe-debug-dialog-fields" rows="10" cols="80" disabled="disabled"></textarea>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="oe-debug-dialog-config" class="col-sm-2 control-label">Editor Config</label>
-                            <div class="col-sm-10">
-                                <div class="input-group">
-                                    <textarea id="oe-debug-dialog-config" name="oe-debug-dialog-config" rows="10" cols="80" disabled="disabled"></textarea>
+                                <div class="form-group">
+                                    <label for="oe-debug-dialog-config" class="col-sm-2 control-label">Editor Config</label>
+                                    <div class="col-sm-10">
+                                        <div class="input-group">
+                                            <textarea id="oe-debug-dialog-config" name="oe-debug-dialog-config" rows="10" cols="80" disabled="disabled"></textarea>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
+                            </form>
                         </div>
-                    </form>
+                        <div role="tabpanel" class="tab-pane" id="oe-debug-dialog-diagnostics-tab">
+                            <form class="form-horizontal">
+                                <div class="form-group">
+                                    <label for="oe-debug-dialog-runtime" class="col-sm-2 control-label">Runtime Diagnostics</label>
+                                    <div class="col-sm-10">
+                                        <div class="input-group">
+                                            <textarea id="oe-debug-dialog-runtime" name="oe-debug-dialog-runtime" rows="24" cols="80" disabled="disabled"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>

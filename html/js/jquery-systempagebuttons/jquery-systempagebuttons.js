@@ -6,7 +6,7 @@
             this.$trigger = $(element);
             this.files = [];
             this.configuredFiles = [];
-            this.configDir = "/home/pi/allsky/config";
+            this.configDir = "";
             this.activePath = "";
             this.editIndex = -1;
             this.$modal = null;
@@ -203,7 +203,7 @@
                                         <div class="form-group">
                                             <div class="row">
                                                 <div class="col-sm-8">
-                                                    <label>Browse Files In ~/allsky/config</label>
+                                                    <label>Browse Files In ~/allsky/config/myFiles</label>
                                                     <div class="help-block" id="as-system-entries-browser-root" style="margin-top: 0; margin-bottom: 0;"></div>
                                                 </div>
                                                 <div class="col-sm-4 text-right" style="padding-top: 22px;">
@@ -224,10 +224,10 @@
                                         <div class="form-group">
                                             <label for="as-system-entries-new-path">Filename</label>
                                             <div class="input-group">
-                                                <span class="input-group-addon" id="as-system-entries-new-prefix">~/allsky/config/</span>
+                                                <span class="input-group-addon" id="as-system-entries-new-prefix">~/allsky/config/myFiles/</span>
                                                 <input type="text" id="as-system-entries-new-path" class="form-control" placeholder="my_buttons.txt">
                                             </div>
-                                            <div class="help-block" style="margin-bottom: 0;">New additions files are always stored in <code>~/allsky/config</code>.</div>
+                                            <div class="help-block" style="margin-bottom: 0;">New additions files are always stored in <code>~/allsky/config/myFiles</code> and saved with a <code>.txt</code> extension.</div>
                                         </div>
                                     </div>
                                 </div>
@@ -258,7 +258,7 @@
             this.$browserModal.on("click", "#as-system-entries-browser-create-footer", () => {
                 const fileName = $.trim(this.$browserModal.find("#as-system-entries-new-path").val() || "");
                 if (fileName === "") {
-                    this.setMessage("Enter the filename you want to create in ~/allsky/config.");
+                    this.setMessage("Enter the filename you want to create in ~/allsky/config/myFiles.");
                     return;
                 }
                 const path = this.buildConfigFilePath(fileName);
@@ -705,7 +705,7 @@
         }
 
         browseDirectory(path) {
-            const browsePath = $.trim(path || this.configDir || "/home/pi/allsky/config");
+            const browsePath = $.trim(path || this.configDir || "");
             this.$browserList.html('<div class="list-group-item text-muted">Loading...</div>');
 
             $.ajax({
@@ -747,7 +747,7 @@
         openBrowser(mode) {
             this.ensureBrowserModal();
             this.renderConfiguredFileList();
-            const browsePath = this.configDir;
+            const browsePath = this.configDir || "";
             const $openPanel = this.$browserModal.find(".as-system-entries-open-panel");
             const $newPanel = this.$browserModal.find(".as-system-entries-new-panel");
             const $title = this.$browserModal.find("#as-system-entries-browser-title");
@@ -793,7 +793,7 @@
         }
 
         buildConfigFilePath(fileName) {
-            const safeName = fileName.replace(/^\/+/, "");
+            const safeName = fileName.replace(/^\/+/, "").replace(/\.txt$/i, "") + ".txt";
             return `${this.configDir}/${safeName}`;
         }
 

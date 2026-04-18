@@ -1285,6 +1285,24 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Logs
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="logs.html" class="md-nav__link md-nav__link--active">
         
   
@@ -1301,6 +1319,213 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+      
+        <li class="md-nav__item">
+  <a href="#why-this-page-matters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why It Matters
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-the-page-shows" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What It Shows
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#choosing-the-right-log" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Choosing A Log
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reading-the-log-viewer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reading The Viewer
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#using-follow-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Follow Mode
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#truncation-and-resets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Truncation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-use-this-page-in-practice" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        In Practice
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="In Practice">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-json-file-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The JSON File Structure
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The JSON File Structure">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#required-fields" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Required fields
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#id" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        id
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#description" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        description
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#location" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        location
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#default" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        default
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example file
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#practical-advice" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Practical advice
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -5984,25 +6209,225 @@
 
 
 <h1 id="logs">Logs<a class="headerlink" href="#logs" title="Permanent link">¶</a></h1>
-<p>The <strong>Logs</strong> tab is where the WebUI shifts from summary information to raw evidence. When something is not behaving as expected, the status page can tell you that there is a problem, but the logs are often where you discover what actually happened. This page gives you a browser-based way to inspect the key log files that have been made available to the WebUI, without having to open a terminal on the Pi first.</p>
+<p>The <strong>Logs</strong> tab is where the WebUI moves from symptoms to evidence. Other pages can tell you that something looks wrong. The Logs page helps you see what the system actually reported when it happened.</p>
+<p>This is one of the most useful pages in the WebUI when you are troubleshooting, because it gives you browser-based access to important log files without needing to open a terminal first. If Allsky failed to start, if a periodic task is misbehaving, if the web server has reported an error, or if a script is producing warnings, this is often the page that turns a vague problem into something concrete.</p>
+<p>In practical terms, the Logs page helps answer questions such as:</p>
+<ul>
+<li>What happened when Allsky started?</li>
+<li>Did the web server report an error?</li>
+<li>Is a script failing repeatedly?</li>
+<li>Did a service log a warning just before something stopped working?</li>
+<li>What changed when I tested a setting or restarted a process?</li>
+</ul>
+<p>That is what makes the page so useful. It does not just show status. It shows evidence.</p>
 <figure>
-<p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="/assets/using_images/system_logs_main.png" data-desc-position="bottom"><img alt="" src="/assets/using_images/system_logs_main.png" width="100%"></a></p>
+<p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../../../assets/guide_images/system-logs.png" data-desc-position="bottom"><img alt="" src="../../../assets/guide_images/system-logs.png" width="100%"></a></p>
 <figcaption>
-<p>Placeholder: Logs tab main view</p>
+<p>Logs tab main view</p>
 </figcaption>
 </figure>
-<p>At the top of the page is the log selector. This lets you choose which monitored log file you want to view. On a default system that will usually include the main Allsky log, the Allsky periodic log, and the Lighttpd error log, though the exact list depends on the log configuration available to the installation. That matters because the useful log is not always the same one. If the capture process is failing, the Allsky log is usually the right place to start. If a scheduled or periodic task is the problem, the periodic log may be more revealing. If the WebUI or web-serving layer is involved, the Lighttpd error log may tell the more useful story.</p>
-<p>The large log viewer below the selector is designed to be readable for ongoing troubleshooting rather than just for static inspection. The output area is tall enough to make scanning easier, and log levels such as warnings and errors are visually highlighted so they stand out from routine informational lines. That does not replace careful reading, but it does make the page more usable when you are searching for the part of the log that actually matters.</p>
-<p>One of the most useful controls on this page is the <strong>Follow</strong> switch. When follow mode is enabled, the viewer behaves more like a live tail. As new content is written to the selected log, the page updates so you can watch the file change in near real time. This is particularly helpful when you are actively reproducing a problem, testing a configuration change, or restarting a service and wanting to see the resulting messages as they appear. It turns the page from a passive log viewer into a practical diagnostic tool.</p>
-<figure>
-<p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="/assets/using_images/system_logs_follow.png" data-desc-position="bottom"><img alt="" src="/assets/using_images/system_logs_follow.png" width="100%"></a></p>
-<figcaption>
-<p>Placeholder: Logs tab with Follow enabled</p>
-</figcaption>
-</figure>
-<p>The page also shows metadata and warnings when needed. If the current view has been truncated, reset, or otherwise adjusted to keep the browser display manageable, the warning area explains that. This is an important detail because log files can grow quickly, and a WebUI log viewer has to balance completeness against performance. If you are looking at a very busy log, you may be seeing the most recent portion rather than the entire file. That is usually exactly what you want during troubleshooting, but it is worth understanding so you do not assume the page is meant to function as a full historical archive.</p>
-<p>In practical use, the <strong>Logs</strong> tab works best when approached with a specific question. If you open it and simply scroll without knowing what you are looking for, it can feel noisy. If, on the other hand, you come to it asking “What happened when Allsky started?”, “Why did this upload fail?”, or “Did the web server report an error at the same time?”, it becomes much more effective. The status pages tell you that something is wrong. The logs often tell you what wrong actually means.</p>
-<p>For deeper investigation, especially over a long period or across very large files, a terminal-based view may still be more appropriate. Even so, the WebUI logs page is often the fastest way to get from symptom to evidence, particularly when you are already working in the browser and want to confirm a suspicion before reaching for command-line tools.</p>
+<h2 id="why-this-page-matters">Why This Page Matters<a class="headerlink" href="#why-this-page-matters" title="Permanent link">¶</a></h2>
+<p>Many problems cannot be understood from status indicators alone. A page may tell you that something failed, stopped, or did not update, but that still leaves the most important question unanswered: why?</p>
+<p>The Logs page is often the first place you can answer that question properly.</p>
+<p>Instead of showing summaries, it shows the messages written by the software itself. Those messages may include:</p>
+<ul>
+<li>normal informational output,</li>
+<li>warnings,</li>
+<li>errors,</li>
+<li>repeated failures,</li>
+<li>startup messages,</li>
+<li>web server problems,</li>
+<li>script output.</li>
+</ul>
+<p>This matters because troubleshooting becomes far easier once you are no longer guessing. A symptom may suggest several possible causes. A log message often narrows that to one or two realistic ones very quickly.</p>
+<h2 id="what-the-page-shows">What The Page Shows<a class="headerlink" href="#what-the-page-shows" title="Permanent link">¶</a></h2>
+<p>The Logs page is built around two main parts:</p>
+<ul>
+<li>a selector for choosing which monitored log file to view,</li>
+<li>a large viewer area that displays the current contents of the selected log.</li>
+</ul>
+<p>On many systems, the default list includes logs such as:</p>
+<ul>
+<li>the main Allsky log,</li>
+<li>the Allsky periodic log,</li>
+<li>the Lighttpd error log.</li>
+</ul>
+<p>The exact list depends on how your system is configured, and it can be customised. That is important because the most useful log depends on the problem you are trying to solve. A capture issue, a scheduling issue, and a web-serving issue do not always show up in the same file.</p>
+<p>The viewer itself is intended to be practical rather than decorative. It gives you enough space to scan recent log output and to spot what changed after a restart, a button press, or a configuration adjustment.</p>
+<h2 id="choosing-the-right-log">Choosing The Right Log<a class="headerlink" href="#choosing-the-right-log" title="Permanent link">¶</a></h2>
+<p>One of the main skills in using this page well is choosing the log file that best matches the problem you are seeing.</p>
+<p>As a general rule:</p>
+<ul>
+<li>start with the <strong>Allsky</strong> log when the main capture or processing behaviour looks wrong,</li>
+<li>use the <strong>Allsky periodic</strong> log when the issue appears related to scheduled or repeated tasks,</li>
+<li>use the <strong>Lighttpd</strong> error log when the problem looks more like a WebUI or web-serving issue.</li>
+</ul>
+<p>This is not a strict rule, but it is a useful starting point. If you open the wrong log first, the page may feel noisy and unhelpful. If you open the right one, the relevant messages often stand out much more quickly.</p>
+<p>The Logs page is therefore most effective when approached with a question in mind. It works best when you are asking something specific such as:</p>
+<ul>
+<li>What happened when Allsky restarted?</li>
+<li>Why did this upload fail?</li>
+<li>Did the web server complain at the same time?</li>
+<li>What was written to the log when I pressed this button?</li>
+</ul>
+<p>That is usually a better approach than opening the page and scrolling without any clear goal.</p>
+<h2 id="reading-the-log-viewer">Reading The Log Viewer<a class="headerlink" href="#reading-the-log-viewer" title="Permanent link">¶</a></h2>
+<p>The main viewer area shows the contents of the currently selected log. In normal use, you will often be looking at the most recent part of the file rather than its entire historical contents.</p>
+<p>This is usually exactly what you want. During troubleshooting, the most valuable messages are often the recent ones:</p>
+<ul>
+<li>the lines written when a service started,</li>
+<li>the lines written just before a failure,</li>
+<li>the messages produced when you tested a change,</li>
+<li>the warnings that appeared when the system misbehaved.</li>
+</ul>
+<p>The viewer is designed to make that recent activity easier to work with in the browser. It is not meant to replace a full terminal session for very large or long-term investigations. Instead, it is intended to get you to the important evidence quickly.</p>
+<h2 id="using-follow-mode">Using Follow Mode<a class="headerlink" href="#using-follow-mode" title="Permanent link">¶</a></h2>
+<p>One of the most useful controls on the Logs page is the <strong>Follow</strong> option.</p>
+<p>When Follow is enabled, the viewer behaves more like a live <code>tail</code> command. As new lines are written to the selected log file, the page updates so you can watch the file change in near real time.</p>
+<p>This is especially useful when you are actively testing something, for example:</p>
+<ul>
+<li>restarting Allsky,</li>
+<li>pressing a button in the WebUI,</li>
+<li>reproducing a problem,</li>
+<li>changing a setting and watching what gets logged,</li>
+<li>checking whether a repeated error continues to appear.</li>
+</ul>
+<p>In these cases, Follow mode turns the page from a static viewer into a live troubleshooting tool.</p>
+<p>Follow mode is particularly helpful because it lets you connect cause and effect more clearly. You take an action, and then you immediately see what the software wrote in response. That makes it much easier to understand whether the system accepted the action, ignored it, rejected it, or failed partway through.</p>
+<h2 id="truncation-and-resets">Truncation And Resets<a class="headerlink" href="#truncation-and-resets" title="Permanent link">¶</a></h2>
+<p>Log files can become large very quickly, especially on busy systems. For that reason, the WebUI does not try to behave like a full archive browser for arbitrarily large logs.</p>
+<p>Instead, the page is designed to keep the browser view manageable. If the current display has been truncated, reset, or otherwise adjusted to keep the page responsive, the warning area on the page tells you that.</p>
+<p>This is an important detail to understand. If you are viewing a busy log, you may be looking at the most recent section rather than every line ever written to the file. In practical troubleshooting, that is usually fine and often preferable. But it does mean you should not treat the WebUI viewer as the complete historical record of the file in all circumstances.</p>
+<p>For deeper, longer, or more exhaustive inspection, a terminal-based view may still be more appropriate.</p>
+<h2 id="how-to-use-this-page-in-practice">How To Use This Page In Practice<a class="headerlink" href="#how-to-use-this-page-in-practice" title="Permanent link">¶</a></h2>
+<p>The Logs page works best when used as part of a larger troubleshooting flow.</p>
+<p>A common pattern is:</p>
+<ol>
+<li>Notice a symptom in the system.</li>
+<li>Use the <strong>System</strong> page to confirm that something is wrong.</li>
+<li>Use <strong>Watchdogs</strong> if you need to identify which supervised service looks unhealthy.</li>
+<li>Open the <strong>Logs</strong> page to see what the software actually reported.</li>
+<li>Use Follow mode if you need to watch the effect of a restart, test, or repeated action.</li>
+</ol>
+<p>This is one of the reasons the Logs page is so valuable. It fits naturally after the higher-level pages. The other pages tell you where to look. The Logs page often tells you what happened there.</p>
+<details class="note">
+<summary>Advanced: Customising Which Logs Are Shown</summary>
+<p>Most users do not need to change the list of logs shown in the WebUI, and the built-in defaults are usually the right place to start.</p>
+<p>You should normally leave this alone unless you already have a clear reason to add a custom log, replace one of the built-in entries, or adapt the page for a more specialised installation. If you are simply trying to understand how to use the Logs page day to day, you can safely skip this section and return to it later only if your setup requires it.</p>
+<p>The list of logs shown in the WebUI can be customised by creating a file called:</p>
+<div class="highlight"><pre><span></span><code>~/allsky/myFiles/monitorable_logs.json
+</code></pre></div>
+<p>If this file exists and contains valid JSON in the expected format, its entries are added to the built-in log list used by the Logs page.</p>
+<p>In normal use, this means you can define extra logs without losing the standard ones that Allsky already provides. If one of your custom entries uses the same <code>id</code> as a built-in log, the custom entry takes precedence and replaces the built-in definition for that one log. This allows you to either add new logs or deliberately override a default one.</p>
+<p>This is mainly useful when:</p>
+<ul>
+<li>you want the Logs page to show a different set of files,</li>
+<li>you want to remove logs you do not care about,</li>
+<li>you want to add logs from custom scripts or services,</li>
+<li>you want to make a different log the default selection.</li>
+</ul>
+<p>For advanced users, this is a practical way to adapt the Logs page to a specific installation without changing the application code.</p>
+<h3 id="the-json-file-structure">The JSON File Structure<a class="headerlink" href="#the-json-file-structure" title="Permanent link">¶</a></h3>
+<p>If you do decide to use this feature, the JSON structure needs to be correct. The WebUI expects a specific format, and small mistakes in field names, paths, or JSON syntax can prevent the custom entries from working as intended.</p>
+<p>The <code>monitorable_logs.json</code> file must contain a top-level JSON object with a <code>logs</code> array.</p>
+<p>Each item in the <code>logs</code> array defines one log file that can appear in the Logs page.</p>
+<p>The basic structure looks like this:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">"logs"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"allsky"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Allsky Log"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"location"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/var/log/allsky.log"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"default"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"lighttpd"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Lighttpd Error Log"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"location"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/var/log/lighttpd/error.log"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"default"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</code></pre></div>
+<h4 id="required-fields">Required fields<a class="headerlink" href="#required-fields" title="Permanent link">¶</a></h4>
+<p>Each log entry should contain the following fields:</p>
+<ul>
+<li><code>id</code></li>
+<li><code>description</code></li>
+<li><code>location</code></li>
+</ul>
+<p>These fields are required for the entry to be accepted.</p>
+<h4 id="id"><code>id</code><a class="headerlink" href="#id" title="Permanent link">¶</a></h4>
+<p>The <code>id</code> field is the internal identifier for the log.</p>
+<p>It:</p>
+<ul>
+<li>must be unique within the file,</li>
+<li>must begin with a letter,</li>
+<li>may contain letters, numbers, underscores, and hyphens.</li>
+</ul>
+<p>This field is mainly used internally by the WebUI, so it should be short and stable rather than descriptive prose.</p>
+<p>Examples:</p>
+<ul>
+<li><code>allsky</code></li>
+<li><code>allskyperiodic</code></li>
+<li><code>lighttpd</code></li>
+<li><code>my_script_log</code></li>
+</ul>
+<h4 id="description"><code>description</code><a class="headerlink" href="#description" title="Permanent link">¶</a></h4>
+<p>The <code>description</code> field is the user-facing label shown in the log selector on the Logs page.</p>
+<p>This should be written in a way that makes sense to a human reading the WebUI. It is the name you will choose from in the browser, so clarity matters.</p>
+<p>Examples:</p>
+<ul>
+<li><code>Allsky Log</code></li>
+<li><code>Allsky Periodic Log</code></li>
+<li><code>Lighttpd Error Log</code></li>
+<li><code>Custom Upload Script Log</code></li>
+</ul>
+<h4 id="location"><code>location</code><a class="headerlink" href="#location" title="Permanent link">¶</a></h4>
+<p>The <code>location</code> field is the full absolute path to the log file on the Raspberry Pi.</p>
+<p>This must be an absolute path beginning with <code>/</code>.</p>
+<p>Examples:</p>
+<ul>
+<li><code>/var/log/allsky.log</code></li>
+<li><code>/var/log/allskyperiodic.log</code></li>
+<li><code>/var/log/lighttpd/error.log</code></li>
+<li><code>/home/pi/myLogs/custom-script.log</code></li>
+</ul>
+<p>If the file does not exist or is not readable by the WebUI, it will not be viewable successfully even if the JSON entry itself is valid.</p>
+<h4 id="default"><code>default</code><a class="headerlink" href="#default" title="Permanent link">¶</a></h4>
+<p>The <code>default</code> field is optional and should be <code>true</code> or <code>false</code>.</p>
+<p>If set to <code>true</code>, that log becomes the default selection in the Logs page. If more than one entry is marked as default, the first one encountered is used.</p>
+<p>If you omit the field, it is treated as <code>false</code>.</p>
+<p>This is useful when there is one log you usually want to see first whenever you open the page.</p>
+<h3 id="example-file">Example file<a class="headerlink" href="#example-file" title="Permanent link">¶</a></h3>
+<p>Here is a simple example showing how you might add one custom log alongside the standard built-in logs:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">"logs"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"uploader"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Uploader Script Log"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"location"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/home/pi/myLogs/uploader.log"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"default"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>This example adds a custom uploader log. Because the file is additive, the built-in logs remain available as well, even though they do not appear in this JSON file.</p>
+<h3 id="practical-advice">Practical advice<a class="headerlink" href="#practical-advice" title="Permanent link">¶</a></h3>
+<p>If you use <code>~/allsky/myFiles/monitorable_logs.json</code>, it is worth keeping a few practical points in mind:</p>
+<ul>
+<li>the file must contain valid JSON,</li>
+<li>the top-level object must contain a <code>logs</code> array,</li>
+<li>every log entry needs a valid <code>id</code>, <code>description</code>, and <code>location</code>,</li>
+<li>the file extends the default log list rather than replacing it,</li>
+<li>if a custom entry uses the same <code>id</code> as a built-in entry, the custom one overrides that built-in entry,</li>
+<li>the log files themselves still need to exist and be readable.</li>
+</ul>
+<p>A good approach is to treat this as a controlled advanced change: start with a small, correct file and test it before adding more entries. If something looks wrong in the Logs page afterwards, the first things to check are the JSON syntax, the field names, and the filesystem paths.</p>
+</details>
+<h2 id="summary">Summary<a class="headerlink" href="#summary" title="Permanent link">¶</a></h2>
+<p>The <strong>Logs</strong> page is one of the WebUI’s most important troubleshooting tools. It lets you inspect monitored log files directly in the browser, follow them live while testing, and move from symptoms to actual evidence much more quickly.</p>
+<p>If you need to customise which logs appear in the page, create <code>~/allsky/myFiles/monitorable_logs.json</code> and define the logs you want there. This is best treated as an advanced configuration step for installations with custom scripts, additional services, or a more specialised troubleshooting workflow.</p>
 
 
 

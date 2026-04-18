@@ -1257,6 +1257,24 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Watchdog
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="watchdog.html" class="md-nav__link md-nav__link--active">
         
   
@@ -1273,6 +1291,157 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+      
+        <li class="md-nav__item">
+  <a href="#why-this-page-matters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why It Matters
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-the-page-shows" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What It Shows
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reading-the-service-name-column" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Service Names
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#understanding-the-status-column" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Status
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#understanding-the-pid-column" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PID
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#understanding-the-actions-column" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Actions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-the-services-affect-each-other" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Service Relationships
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-use-this-page-in-practice" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        In Practice
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-this-page-is-not" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What It Is Not
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#when-to-move-on-to-logs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When To Use Logs
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#practical-reading-tips" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reading Tips
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -5984,18 +6153,136 @@
 
 
 <h1 id="watchdogs">Watchdogs<a class="headerlink" href="#watchdogs" title="Permanent link">¶</a></h1>
-<p>The <strong>Watchdogs</strong> tab is the place to look when you want to understand the state of the service-level watchdog processes that help supervise the Allsky system. Unlike the main <strong>System</strong> tab, which is focused on broad health and resource status, this page is narrower and more operational. It is concerned with whether specific monitored services are present, whether they appear to be running correctly, what process ID they currently have, and what actions are available for them.</p>
+<p>The <strong>Watchdogs</strong> tab is the part of the WebUI that helps you keep an eye on supervised background services. While the <strong>System</strong> page gives you a broad view of the Raspberry Pi and the Allsky installation as a whole, the <strong>Watchdogs</strong> page is more focused. It is concerned with specific services that Allsky expects to be present and with whether those services appear to be healthy right now.</p>
+<p>This page is useful when you want to answer practical questions such as:</p>
+<ul>
+<li>Is a supervised service running?</li>
+<li>Has a service stopped unexpectedly?</li>
+<li>Does a service currently have a process ID?</li>
+<li>Is there an obvious recovery action available from the WebUI?</li>
+<li>Which service should I investigate next?</li>
+</ul>
+<p>In other words, this page is not mainly about overall system health. It is about service-level supervision. If the <strong>System</strong> page tells you that something is wrong, the <strong>Watchdogs</strong> page often helps narrow that down to a smaller and more actionable question.</p>
 <figure>
-<p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="/assets/using_images/system_watchdogs.png" data-desc-position="bottom"><img alt="" src="/assets/using_images/system_watchdogs.png" width="100%"></a></p>
+<p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../../../assets/guide_images/system-watchdogs.png" data-desc-position="bottom"><img alt="" src="../../../assets/guide_images/system-watchdogs.png" width="100%"></a></p>
 <figcaption>
-<p>Placeholder: Watchdogs tab</p>
+<p>Watchdogs tab</p>
 </figcaption>
 </figure>
-<p>The table is intentionally simple. Each row corresponds to a service, and the columns show the service name, its current status, its PID, and a set of actions. That simplicity is useful because watchdog information is most valuable when it is immediately understandable. If something is meant to be running and is not, you do not want to hunt through a complicated interface to work that out. You want to see, as quickly as possible, whether the service is active, whether it has a current process ID, and whether there is an obvious recovery action available.</p>
-<p>What makes this page different from a generic process listing is that it presents only the parts of the system that Allsky considers relevant to watchdog supervision. In other words, it is not trying to be a replacement for <code>ps</code>, <code>top</code>, or <code>systemctl status</code>. It is a focused view into the service components that matter to the WebUI’s own operational model. That makes it a good page for confirming that expected background pieces are alive without needing to leave the browser and inspect the Pi manually.</p>
-<p>The PID column is more useful than it may first appear. A PID confirms that there really is a current process attached to that service status, and it can also help when you are correlating information across tools. If you later inspect logs or run command-line diagnostics, the PID shown here gives you a concrete anchor point. It is also a quick way to notice when a service is restarting frequently, because the PID may change between checks even though the service remains nominally active.</p>
-<p>The action controls exist so that the page is not only descriptive but also practical. If a service is stopped, stuck, or behaving in a way that suggests it needs intervention, the actions column is the natural place to try that recovery. Exactly which actions are available depends on the service and on how the page is configured, but the intent is straightforward: this tab should let you move from noticing a watchdog problem to responding to it without having to switch context unnecessarily.</p>
-<p>Used properly, the <strong>Watchdogs</strong> tab sits between the broad overview of the <strong>System</strong> page and the lower-level detail of the <strong>Logs</strong> page. If the System page tells you that Allsky or the host is not behaving normally, Watchdogs can help narrow the question to “Which supervised service looks wrong?” Once you have that answer, the Logs page is usually where you go next to understand why.</p>
+<h2 id="why-this-page-matters">Why This Page Matters<a class="headerlink" href="#why-this-page-matters" title="Permanent link">¶</a></h2>
+<p>Many problems do not begin as full system failures. The Raspberry Pi may still be up, the network may still be working, and the WebUI may still open normally, but one background service may have stopped, restarted, or become unhealthy. When that happens, the overall system can look partly functional while still not behaving the way you expect.</p>
+<p>That is where the <strong>Watchdogs</strong> page becomes useful. It helps you move from a vague concern such as “something is not working properly” to a more specific observation such as “this particular supervised service is stopped” or “this service is active but seems to have restarted”.</p>
+<p>This matters because troubleshooting becomes much easier once the problem is more clearly defined. It is one thing to know that the system seems wrong. It is much more useful to know which supervised part of it looks wrong.</p>
+<h2 id="what-the-page-shows">What The Page Shows<a class="headerlink" href="#what-the-page-shows" title="Permanent link">¶</a></h2>
+<p>The Watchdogs page is usually presented as a simple table. Each row represents one supervised service, and each column gives you a different piece of operational information about that service.</p>
+<p>Although the exact layout may vary slightly, the page generally shows:</p>
+<ul>
+<li>the service name,</li>
+<li>the current status,</li>
+<li>the PID,</li>
+<li>any available actions.</li>
+</ul>
+<p>This simple layout is one of the page’s strengths. Service supervision is easiest to use when it is direct and immediately understandable. If something that should be running is not running, you want to see that straight away. You do not want to search through a complex interface just to find out whether a service is up.</p>
+<p>The Watchdogs page is therefore designed less like a diagnostic laboratory and more like an operational checklist. It answers the most important first questions without forcing you to leave the browser or open a terminal.</p>
+<h2 id="reading-the-service-name-column">Reading The Service Name Column<a class="headerlink" href="#reading-the-service-name-column" title="Permanent link">¶</a></h2>
+<p>The service name tells you which supervised component each row refers to. For many users, this will be the first column they look at because it establishes what they are actually inspecting.</p>
+<p>This is important because the page is not showing every process on the Raspberry Pi. It is showing the services that matter to Allsky’s watchdog view of the system. That makes the page much more focused than a generic process listing.</p>
+<p>From an end-user point of view, that focus is useful. You do not need to mentally filter dozens or hundreds of unrelated processes. Instead, you are looking only at the services the WebUI considers relevant to operational supervision.</p>
+<h2 id="understanding-the-status-column">Understanding The Status Column<a class="headerlink" href="#understanding-the-status-column" title="Permanent link">¶</a></h2>
+<p>The status column is usually the most important part of the table. This is where you see whether a service appears to be active, stopped, or otherwise in a state that needs attention.</p>
+<p>When everything is healthy, this column gives you reassurance that the supervised services are currently where they should be. When something is wrong, this is often the first place it becomes obvious.</p>
+<p>The value of this column is not just technical. It is practical. A stopped service tells you something useful immediately:</p>
+<ul>
+<li>a feature may not be working,</li>
+<li>a background task may not be running,</li>
+<li>the next step may be to restart or inspect that service,</li>
+<li>the issue may not be with the whole Raspberry Pi, but with one service.</li>
+</ul>
+<p>The status display is especially useful when compared with your real-world symptoms. If a feature in the WebUI is not behaving properly and the corresponding supervised service shows an unhealthy or inactive status, that is a strong clue about where to investigate next.</p>
+<h2 id="understanding-the-pid-column">Understanding The PID Column<a class="headerlink" href="#understanding-the-pid-column" title="Permanent link">¶</a></h2>
+<p>The PID, or process ID, may look like a small technical detail, but it is often more useful than it first appears.</p>
+<p>A PID confirms that there is a current running process associated with that service. That matters because it distinguishes between a service that is merely expected to be running and one that actually has a live process at the moment.</p>
+<p>For everyday users, the PID is helpful in a few practical ways:</p>
+<ul>
+<li>it confirms that the service really is running now,</li>
+<li>it can help you notice whether a service has restarted,</li>
+<li>it gives you a reference point if you later inspect logs or use command-line tools,</li>
+<li>it helps separate “active and stable” from “active but changing”.</li>
+</ul>
+<p>For example, if the service still shows as active but the PID changes unexpectedly between checks, that may suggest the service has restarted. That does not always mean there is a problem, but it is a useful clue, especially when you are already investigating unusual behaviour.</p>
+<h2 id="understanding-the-actions-column">Understanding The Actions Column<a class="headerlink" href="#understanding-the-actions-column" title="Permanent link">¶</a></h2>
+<p>The actions column exists so that the page is not purely descriptive. It is meant to help you respond as well as observe.</p>
+<p>Depending on the service and the way your system is configured, the page may provide one or more actions that let you interact with that service directly from the WebUI. The exact options can vary, but the idea is consistent: if a supervised service looks wrong, the Watchdogs page should help you take the next obvious step.</p>
+<p>From a user point of view, this is convenient because it reduces context switching. Instead of noticing a problem in the browser and then immediately moving to the terminal, the page may already give you a practical recovery action.</p>
+<p>That said, these controls should still be used thoughtfully. Restarting or otherwise intervening in a service may be appropriate, but it is still worth considering what symptom you are trying to fix and whether you need supporting evidence from the logs first.</p>
+<h2 id="how-the-services-affect-each-other">How The Services Affect Each Other<a class="headerlink" href="#how-the-services-affect-each-other" title="Permanent link">¶</a></h2>
+<p>One important detail to understand on this page is that the supervised services are not always independent of one another.</p>
+<p>In normal use, the main <strong>Allsky</strong> process acts as the core of the running system. Because of that, stopping the Allsky process does not only stop that one row in the table. It also stops the related supervised services that depend on it. From an end-user point of view, this means that stopping Allsky is usually a wider action than it first appears. You are not simply pausing one component. You are effectively bringing down the rest of the supervised Allsky activity with it.</p>
+<p>The relationship also works in the other direction. If one of the other supervised services is started from the Watchdogs page, Allsky itself will also be started. This is helpful because it means you do not have to manually work out the correct startup order for the dependent pieces. The system handles that relationship for you.</p>
+<p>In practical terms, this means:</p>
+<ul>
+<li>stopping <strong>Allsky</strong> will also stop the other supervised Allsky services,</li>
+<li>starting one of the other supervised services will also start <strong>Allsky</strong>,</li>
+<li>actions on one row may therefore have wider effects than the row alone suggests.</li>
+</ul>
+<p>This behaviour is worth remembering when you are troubleshooting. If you stop Allsky as part of a test, expect the other supervised services to stop as well. If you start a related service and then notice that Allsky is now running too, that is normal and expected rather than a separate surprise event.</p>
+<p>Understanding that relationship makes the Watchdogs page much easier to interpret. It helps explain why several rows may change together after a single action and prevents you from mistaking normal dependency behaviour for an additional fault.</p>
+<h2 id="how-to-use-this-page-in-practice">How To Use This Page In Practice<a class="headerlink" href="#how-to-use-this-page-in-practice" title="Permanent link">¶</a></h2>
+<p>The best way to use the <strong>Watchdogs</strong> page is usually as a follow-up page rather than a starting page.</p>
+<p>A common real-world flow looks like this:</p>
+<ol>
+<li>You notice that something in Allsky does not seem right.</li>
+<li>You open the <strong>System</strong> page to confirm whether the Pi and Allsky look broadly healthy.</li>
+<li>If the issue appears to be more specific than general, you open <strong>Watchdogs</strong>.</li>
+<li>You check which supervised service looks unhealthy, missing, or unexpected.</li>
+<li>You decide whether to use an available action or move on to <strong>Logs</strong> for deeper investigation.</li>
+</ol>
+<p>This makes the Watchdogs page particularly useful when the system is only partly broken. If the whole Pi is down, this page is unlikely to help because the WebUI itself may be unreachable. But when the Pi is up and one feature seems wrong, Watchdogs is often exactly the right page to narrow the problem.</p>
+<h2 id="what-this-page-is-not">What This Page Is Not<a class="headerlink" href="#what-this-page-is-not" title="Permanent link">¶</a></h2>
+<p>It is important to understand what the Watchdogs page is not trying to be.</p>
+<p>It is not a replacement for:</p>
+<ul>
+<li><code>ps</code>,</li>
+<li><code>top</code>,</li>
+<li><code>htop</code>,</li>
+<li><code>systemctl status</code>,</li>
+<li>detailed log analysis.</li>
+</ul>
+<p>Those tools still have their place, especially when you are doing deeper technical troubleshooting. The Watchdogs page is more focused and more selective. It shows the supervised services that matter to the WebUI’s operational model rather than trying to expose every possible process detail on the Raspberry Pi.</p>
+<p>That is not a limitation so much as a design choice. The page is intended to be immediately useful for operational checks, not to replace full Linux process inspection tools.</p>
+<h2 id="when-to-move-on-to-logs">When To Move On To Logs<a class="headerlink" href="#when-to-move-on-to-logs" title="Permanent link">¶</a></h2>
+<p>The Watchdogs page is very good at helping you answer the question “which service looks wrong?” It is much less effective at answering the question “why did it go wrong?”</p>
+<p>That second question is usually where the <strong>Logs</strong> page becomes more important.</p>
+<p>If the Watchdogs page shows a service that is stopped, unstable, or otherwise unexpected, the next step is often to open the relevant logs and look for:</p>
+<ul>
+<li>startup failures,</li>
+<li>permission errors,</li>
+<li>missing files,</li>
+<li>repeated restarts,</li>
+<li>timeouts,</li>
+<li>script or configuration errors.</li>
+</ul>
+<p>Seen this way, the relationship between the pages becomes very clear:</p>
+<ul>
+<li><strong>System</strong> tells you whether the installation looks broadly healthy.</li>
+<li><strong>Watchdogs</strong> helps identify which supervised service looks wrong.</li>
+<li><strong>Logs</strong> help you understand why it looks wrong.</li>
+</ul>
+<p>That workflow is often the quickest route to a meaningful diagnosis.</p>
+<h2 id="practical-reading-tips">Practical Reading Tips<a class="headerlink" href="#practical-reading-tips" title="Permanent link">¶</a></h2>
+<p>When you look at the Watchdogs page, it helps to avoid reading it as a static inventory. Instead, treat it as a live operational snapshot.</p>
+<p>Useful questions to ask yourself include:</p>
+<ul>
+<li>Does every service I expect to see appear in the table?</li>
+<li>Does the status of each service make sense right now?</li>
+<li>Is there a PID where I would expect one?</li>
+<li>Has the PID changed since the last time I checked?</li>
+<li>Is there an obvious action I should take here, or do I need logs first?</li>
+</ul>
+<p>That way of reading the page makes it much more valuable. You are not just observing data. You are deciding whether the current service state matches what should be happening on the system.</p>
+<h2 id="summary">Summary<a class="headerlink" href="#summary" title="Permanent link">¶</a></h2>
+<p>The <strong>Watchdogs</strong> tab is the WebUI’s focused service-supervision page. It is most useful when the Raspberry Pi is still reachable and the system seems only partly wrong rather than completely unavailable.</p>
+<p>Use it when you need to understand which supervised service looks unhealthy, stopped, or unexpected. Used together with the <strong>System</strong> and <strong>Logs</strong> pages, it helps turn a vague operational problem into a clearer and more actionable diagnosis.</p>
 
 
 

@@ -223,12 +223,14 @@ $pageInfo = [
 	"documentation" => [
 		"title" => "Allsky Documentation",
 		"icon" => "fa fa-book fa-fw",
+		"external" => "true",
 		"href" => "/docs'",
 	],
 	"mini_timelapse" => [
 		"title" => "View Mini-Timelapse",
 		"icon" => "fa fa-file-video fa-fw",
-		"href" => ALLSKY_MINITIMELAPSE_URL . "' external='true'"
+		"external" => "true",
+		"href" => ALLSKY_MINITIMELAPSE_URL
 	],
 	"notFound" => [
 		"headerTitle" => "Unknown page - contact Allsky support",
@@ -264,6 +266,11 @@ function getPageIcon($p) {
 	global $pageInfo;
 
 	return $pageInfo[$p]['icon'] ?? "";
+}
+function getExternal($p) {
+	global $pageInfo;
+
+	return $pageInfo[$p]['external'] ?? "false";
 }
 function getPageHelp($p) {
 	global $pageInfo;
@@ -316,19 +323,29 @@ function insertHref($p, $day, $displayTitle=false, $iconImage="") {
 	if ($day !== "") $href .= "&day=$day";
 	if ($iconImage === "") {
 		$icon = getPageIcon($p);
+		$external = getExternal($p);
 	} else {
 		$icon = $iconImage;
+		$external = "false";
 	}
 	if ($icon === "") {
 		echo "<span style='color: red' title='$title'>???</span>";
 	} else {
-		echo "<a id='$p' href='$href' title='$title'>";
+		if ($external === "true") {
+			$target = "target='_blank'";
+		} else {
+			$target = "";
+		}
+		echo "<a id='$p' href='$href' title='$title' $target>";
 		if ($iconImage === "") {
 			echo "<i class='$icon'></i>";
 		} else {
 			echo $iconImage;
 		}
 		if ($displayTitle) echo " $title";
+		if ($external === "true") {
+			echo " " . ALLSKY_EXTERNAL_ICON;
+		}
 		echo "</a>";
 	}
 }
@@ -344,6 +361,7 @@ function insertMenuItem($p, $day, $type="", $href_only=false) {
 
 	$title = getPageTitle($p, $day);
 	$icon = getPageIcon($p);
+	$external = getExternal($p);
 	$href = getVariableOrDefault($t, "href", "index.php?page=$p");
 	$jsHandler = getJSHandler($p);
 	$extraCSS = getextraCss($p);
@@ -359,6 +377,9 @@ function insertMenuItem($p, $day, $type="", $href_only=false) {
 		if ($type !== "dropdown") echo "<span class='menu-text'>";
 		echo " $title";
 		if ($type !== "dropdown") echo "</span>";
+		if ($external === "true") {
+			echo " " . ALLSKY_EXTERNAL_ICON;
+		}
 		echo "</a>";
 		echo "</li>\n";
 	} else {
@@ -367,6 +388,9 @@ function insertMenuItem($p, $day, $type="", $href_only=false) {
 		echo "<li>";
 		echo "<a id='$p' href='$href' class='allsky-js-handler' data-jsclass='$jsHandler'><i class='$icon $extraiconcss'></i>";
 		echo "<span class='menu-text $extratextcss'>$title</span>";
+		if ($external === "true") {
+			echo " " . ALLSKY_EXTERNAL_ICON;
+		}
 		echo "</a>";
 		echo "</li>\n";
 	}

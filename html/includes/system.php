@@ -624,7 +624,7 @@ function DisplaySystem()
 							</div>
 						</div>
 						<div class="row">
-							<div class="col-xs-12">
+							<div class="col-xs-12 allow-select">
 								<div id="as-system-log-warning" class="alert alert-warning" style="display:none; margin-bottom:10px;"></div>
 								<div id="as-system-log-meta" class="text-muted" style="margin-bottom:6px;"></div>
 								<style>

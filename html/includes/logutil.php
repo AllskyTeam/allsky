@@ -22,8 +22,7 @@ class LOGUTIL extends UTILBASE
 
     public function __construct()
     {
-        $configBase = defined('ALLSKY_MYFILES_DIR') ? ALLSKY_MYFILES_DIR : '/home/pi/allsky/myFiles';
-        $this->configFile = $configBase . '/monitorable_logs.json';
+        $this->configFile = ALLSKY_MYFILES_DIR . '/monitorable_logs.json';
 
         $defaults = [
             'logs' => [

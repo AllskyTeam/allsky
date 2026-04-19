@@ -6,12 +6,18 @@ include_once('authenticate.php');
 $src = isset($_GET['src']) ? (string) $_GET['src'] : '';
 $type = isset($_GET['type']) ? (string) $_GET['type'] : 'video/mp4';
 
-$allowedPrefixes = ['/images/'];
+$parsedSrcPath = parse_url($src, PHP_URL_PATH);
 $isAllowed = false;
-foreach ($allowedPrefixes as $prefix) {
-	if (strncmp($src, $prefix, strlen($prefix)) === 0) {
+if (is_string($parsedSrcPath) && $parsedSrcPath !== '') {
+	$hasScheme = parse_url($src, PHP_URL_SCHEME) !== null;
+	$hasHost = parse_url($src, PHP_URL_HOST) !== null;
+	$hasTraversal = strpos($parsedSrcPath, '..') !== false;
+	$isRootRelative = strncmp($parsedSrcPath, '/', 1) === 0;
+	$extension = strtolower((string) pathinfo($parsedSrcPath, PATHINFO_EXTENSION));
+	$allowedExtensions = ['mp4', 'webm', 'ogg', 'ogv'];
+
+	if (! $hasScheme && ! $hasHost && ! $hasTraversal && $isRootRelative && in_array($extension, $allowedExtensions, true)) {
 		$isAllowed = true;
-		break;
 	}
 }
 

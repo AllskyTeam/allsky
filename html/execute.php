@@ -48,7 +48,7 @@ if ($use_TEXT) {
 	<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 	<meta http-equiv="Pragma" content="no-cache" />
 	<meta http-equiv="Expires" content="0" />
-
+	<link rel="stylesheet" type="text/css" href="allsky/font-awesome/css/all.min.css">
 	<link href="css/allsky.css" rel="stylesheet">
 	<link rel="shortcut icon" type="image/png" href="/favicon.ico">
 	<title>Execute <?php echo "$ID"; ?></title>

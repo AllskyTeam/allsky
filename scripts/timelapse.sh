@@ -5,9 +5,9 @@
 ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck source-path=.
-source "${ALLSKY_HOME}/variables.sh"		|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"		|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 DEBUG="false"
 DO_HELP="false"
@@ -21,6 +21,7 @@ OUTPUT_DIR=""		# Used when more granularity is needed
 OUTPUT_FILE=""		# Used when more granularity is needed
 FPS=""
 TIMELAPSE_BITRATE=""
+DO_THUMBNAIL="true"
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
 	case "${ARG,,}" in
@@ -69,6 +70,9 @@ while [[ $# -gt 0 ]]; do
 			--bitrate)
 				TIMELAPSE_BITRATE="${2}"
 				shift
+				;;
+			--nothumbnail)
+				DO_THUMBNAIL="false"
 				;;
 			-*)
 				E_ "${ME}: Unknown argument '${ARG}'." >&2
@@ -366,7 +370,7 @@ fi
 DATE=${OUTPUT%/*}
 DATE=${DATE##*/}
 # Mini timelapses are not saved in ${ALLSKY_IMAGES}, so don't create a thumbnail for them.
-if [[ ${DATE} != "$( basename "${ALLSKY_CURRENT_DIR}" )" ]]; then
+if [[ ${DO_THUMBNAIL} == "true" &&  ${DATE} != "$( basename "${ALLSKY_CURRENT_DIR}" )" ]]; then
 	RES="$( "${ALLSKY_UTILITIES}/thumbnail.sh" -t timelapse -d "${DATE}" --force )"
 fi
 

@@ -756,7 +756,7 @@ if ($debug) {
 	if ($formReadonly != "readonly") $settingsDescription = "";
 ?>
 
-<div class="panel panel-allsky" id="settingsPanel">
+<div class="panel panel-allsky allow-select" id="settingsPanel">
 <?php
 	if ($formReadonly == "readonly") {
 		$x = "(READ ONLY) &nbsp; &nbsp; ";

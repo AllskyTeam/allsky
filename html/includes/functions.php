@@ -739,17 +739,9 @@ function renderListFileTypeContent($dir, $imageFileName, $formalImageTypeName, $
 							if (! empty($thumbInfo['warning'])) {
 								$thumbnailWarnings[$thumbInfo['warning']] = true;
 							}
-							$videoData = htmlspecialchars(json_encode([
-								'source' => [[
-									'src' => $fullFilename,
-									'type' => 'video/mp4',
-								]],
-								'attributes' => [
-									'controls' => true,
-									'preload' => 'metadata',
-								],
-							], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), ENT_QUOTES);
-							echo "<a href='$fullFilename' class='images-grid-item functions-listfiletype-item functions-listfiletype-video-item' data-video='{$videoData}'>";
+							$videoMimeType = getListFileTypeVideoMimeType($imageType_name);
+							$playerUrl = getListFileTypeVideoPlayerUrl($fullFilename, $videoMimeType);
+							echo "<a href='" . htmlspecialchars($playerUrl, ENT_QUOTES) . "' class='images-grid-item functions-listfiletype-item functions-listfiletype-video-item' data-iframe='true' data-download-url='" . htmlspecialchars($fullFilename, ENT_QUOTES) . "'>";
 							echo "<span class='functions-listfiletype-video-thumb-wrap'>";
 							echo "<img src='" . htmlspecialchars($thumbInfo['thumbUrl'], ENT_QUOTES) . "' class='functions-listfiletype-media functions-listfiletype-video-thumb' />";
 							echo "<span class='functions-listfiletype-video-badge'><i class='fa fa-play'></i></span>";
@@ -800,17 +792,9 @@ function renderListFileTypeContent($dir, $imageFileName, $formalImageTypeName, $
 					if (! empty($thumbInfo['warning'])) {
 						$thumbnailWarnings[$thumbInfo['warning']] = true;
 					}
-					$videoData = htmlspecialchars(json_encode([
-						'source' => [[
-							'src' => $fullFilename . $ts,
-							'type' => 'video/mp4',
-						]],
-						'attributes' => [
-							'controls' => true,
-							'preload' => 'metadata',
-						],
-					], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), ENT_QUOTES);
-					echo "<a href='$fullFilename' class='images-grid-item functions-listfiletype-item functions-listfiletype-video-item' data-video='{$videoData}'>";
+					$videoMimeType = getListFileTypeVideoMimeType($imageType_name);
+					$playerUrl = getListFileTypeVideoPlayerUrl($fullFilename . $ts, $videoMimeType);
+					echo "<a href='" . htmlspecialchars($playerUrl, ENT_QUOTES) . "' class='images-grid-item functions-listfiletype-item functions-listfiletype-video-item' data-iframe='true' data-download-url='" . htmlspecialchars($fullFilename . $ts, ENT_QUOTES) . "'>";
 					echo "<span class='functions-listfiletype-video-thumb-wrap'>";
 					echo "<img src='" . htmlspecialchars($thumbInfo['thumbUrl'], ENT_QUOTES) . "' class='functions-listfiletype-media functions-listfiletype-video-thumb' />";
 					echo "<span class='functions-listfiletype-video-badge'><i class='fa fa-play'></i></span>";
@@ -896,15 +880,18 @@ $(document).ready(function () {
 			return;
 		}
 
-		lightGallery(galleryElement, {
+		const gallery = lightGallery(galleryElement, {
 			cssEasing: 'cubic-bezier(0.680, -0.550, 0.265, 1.550)',
 			selector: 'a',
-			plugins: [lgZoom, lgThumbnail, lgVideo],
+			plugins: [lgZoom, lgThumbnail],
 			mode: 'lg-slide-circular',
 			speed: 400,
 			download: false,
-			thumbnail: true
+			thumbnail: true,
+			iframeMaxWidth: '90%',
+			iframeMaxHeight: '90%'
 		});
+		return gallery;
 	}
 
 	function initialiseLocaleDates() {
@@ -1057,6 +1044,23 @@ function getListFileTypeDisplayDateValue($fileName, $fallbackDay='') {
 	}
 
 	return '';
+}
+
+function getListFileTypeVideoMimeType($fileName) {
+	$extension = strtolower((string) pathinfo($fileName, PATHINFO_EXTENSION));
+
+	if ($extension === 'webm') {
+		return 'video/webm';
+	}
+	if ($extension === 'ogg' || $extension === 'ogv') {
+		return 'video/ogg';
+	}
+
+	return 'video/mp4';
+}
+
+function getListFileTypeVideoPlayerUrl($videoUrl, $mimeType) {
+	return '/includes/video_player.php?src=' . rawurlencode((string) $videoUrl) . '&type=' . rawurlencode((string) $mimeType);
 }
 
 function getListFileTypePictureThumbnailUrl($day, $dir, $fileName, $fallbackUrl) {

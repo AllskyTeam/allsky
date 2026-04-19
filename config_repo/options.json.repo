@@ -932,11 +932,11 @@
 },
 {
 "name" : "imageremovebadcount",
-"settingsonly" : true,
 "default" : 5,
 "description" : "After this many 'bad' images display a message.",
-"label" : "NOT DISPLAYED IN WebUI",
-"type" : "integer"
+"label" : Remove Bad Images Threshold Count"",
+"type" : "integer",
+"action" : "restart"
 },
 {
 "name" : "imagecreatethumbnails",

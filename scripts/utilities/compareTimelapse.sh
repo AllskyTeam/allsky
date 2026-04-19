@@ -227,8 +227,10 @@ if [[ -z ${COUNT} ]]; then
 				E_ "'${COUNT}' must be a number or 'all'; try again." >&2
 				continue
 			fi
+			break
 		else
 			COUNT="${d_COUNT}"
+			break
 		fi
 	done
 	echo
@@ -239,18 +241,15 @@ if [[ -z ${BITRATE_VALUES} ]]; then
 	#### Get bitrates
 	echo "Enter one or more space-separated Bitrates to use."
 	echo "If you don't enter anything, ${d_BITRATE_VALUES} will be used."
-	while true
-	do
-		echo -e "${cYELLOW}${cBOLD}"
-		echo -en "Enter the bitrate value(s): ${cNC}"
-		# shellcheck disable=SC2034
-		read -r BITRATE_VALUES
-		if [[ -n ${BITRATE_VALUES} ]]; then
-			[[ ${BITRATE_VALUES} == "q" ]] && exit 0
-		else
-			BITRATE_VALUES="${d_BITRATE_VALUES}"
-		fi
-	done
+	echo -e "${cYELLOW}${cBOLD}"
+	echo -en "Enter the bitrate value(s): ${cNC}"
+	# shellcheck disable=SC2034
+	read -r BITRATE_VALUES
+	if [[ -n ${BITRATE_VALUES} ]]; then
+		[[ ${BITRATE_VALUES} == "q" ]] && exit 0
+	else
+		BITRATE_VALUES="${d_BITRATE_VALUES}"
+	fi
 	echo
 	echo
 fi
@@ -279,18 +278,15 @@ if [[ -z ${FPS_VALUES} ]]; then
 	#### Get fps values.
 	echo "Enter one or more space-separated Frames Per Second (FPS) to use."
 	echo "If you don't enter anything, ${d_FPS_VALUES} will be used."
-	while true
-	do
-		echo -e "${cYELLOW}${cBOLD}"
-		echo -en "Enter the FPS value(s): ${cNC}"
-		# shellcheck disable=SC2034
-		read -r FPS_VALUES
-		if [[ -n ${FPS_VALUES} ]]; then
-			[[ ${FPS_VALUES} == "q" ]] && exit 0
-		else
-			FPS_VALUES="${d_BITRATE_VALUES}"
-		fi
-	done
+	echo -e "${cYELLOW}${cBOLD}"
+	echo -en "Enter the FPS value(s): ${cNC}"
+	# shellcheck disable=SC2034
+	read -r FPS_VALUES
+	if [[ -n ${FPS_VALUES} ]]; then
+		[[ ${FPS_VALUES} == "q" ]] && exit 0
+	else
+		FPS_VALUES="${d_BITRATE_VALUES}"
+	fi
 	echo
 	echo
 fi
@@ -425,7 +421,7 @@ do
 				OUT="${OUTPUT_FILE_NAME/.mp4/.jpg}"
 # TODO: FIX: thumbnail.sh creates a small thumbnail - too small to show as a "poster" image
 # where we want the user to be able to read the text we add.
-if false; then
+if true; then
 				THUMB_DIR="${OUT_DIRECTORY}/videothumbnail"
 				mkdir -p "${THUMB_DIR}" && cp "${POSTER}" "${THUMB_DIR}"
 else

@@ -6,7 +6,7 @@ tags:
 
 # Introduction
 
-Allsky transforms a camera into a tireless, intelligent observer of the night sky: an automated system that watches, records, and analyses everything that happens above you.
+Allsky Eric transforms a camera into a tireless, intelligent observer of the night sky: an automated system that watches, records, and analyses everything that happens above you.
 
 Using a high-sensitivity camera, powerful Raspberry Pi-based software, and modular extensions, Allsky captures meteors, satellites, aurora, and passing cloud, 24 hours a day. Each frame is processed in real time to reveal events invisible to the naked eye, and every night becomes its own story told through data, images, and motion.
 

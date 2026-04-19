@@ -408,9 +408,9 @@ do
 			# Create a "poster" for it.
 			POSTER="${OUTPUT_FILE/.mp4/.jpg}"
 ###				-filter:v scale="${THUMBNAIL_SIZE_X:-100}:-1" \
-			ffmpeg -loglevel error -ss "00:00:00.2" -i "${OUTPUT_FILE}" \
-				-frames:v 1 "${POSTER}"
-			if [[ $? -eq 0 ]]; then
+			T="$( ffmpeg -loglevel error -ss "00:00:00.2" -i "${OUTPUT_FILE}" -frames:v 1 "${POSTER}" 2>&1 )"
+			RET=$?
+			if [[ ${RET} -eq 0 ]]; then
 				# Add text
 				   TEXT="FPS:     ${FPS}"
 			 	TEXT+="\nBitrate: ${BITRATE}k"
@@ -440,6 +440,8 @@ else
 					echo "WARNING: Unable to make thumbnail: ${RES}."
 				fi
 fi
+			else
+				echo "WARNING: Unable to make thumbnail: ${T}."
 			fi
 		else
 			E_ "Unable to make timelapse for FPS ${FPS} and bitrate ${BITRATE}:\n${ERR}"

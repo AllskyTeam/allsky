@@ -391,16 +391,19 @@ for BITRATE in ${BITRATE_VALUES}
 do
 	for FPS in ${FPS_VALUES}
 	do
-		OUTPUT_FILE="${OUT_DIRECTORY}/timelapse-fps_${FPS}-bitrate_${BITRATE}.mp4"
+		OUTPUT_FILE_NAME="timelapse-fps_${FPS}-bitrate_${BITRATE}.mp4"
+		OUTPUT_FILE="${OUT_DIRECTORY}/${OUTPUT_FILE_NAME}"
 
 # TODO: determine time to create first timelapse,
 # then tell user estimate remaining time.
 
+		# Don't create a thumbnail since it'll get overwritten on the next timelapse.
 		ERR="$( "${ALLSKY_SCRIPTS}/timelapse.sh" \
 			--fps "${FPS}" \
 			--bitrate "${BITRATE}" \
 			--images "${IMAGES_FILE}" \
 			--output "${OUTPUT_FILE}" \
+			--nothumbnail \
 			2>&1 )"
 		if [[ $? -eq 0 ]]; then
 			(( NUM_CREATED++ ))
@@ -417,6 +420,30 @@ do
 			 	TEXT+="\nBitrate: ${BITRATE}k"
 				# 200 px from bottom to avoid video playback controls
 				addTextToImage --stroke-width 1 --y -200 "${POSTER}" "${POSTER}" "${TEXT}" 2>&1
+
+				# Make thumbnail for show_images.php.
+				OUT="${OUTPUT_FILE_NAME/.mp4/.jpg}"
+# TODO: FIX: thumbnail.sh creates a small thumbnail - too small to show as a "poster" image
+# where we want the user to be able to read the text we add.
+if false; then
+				THUMB_DIR="${OUT_DIRECTORY}/videothumbnail"
+				mkdir -p "${THUMB_DIR}" && cp "${POSTER}" "${THUMB_DIR}"
+else
+				RES="$( "${ALLSKY_UTILITIES}/thumbnail.sh" \
+						-t timelapse -d "${OUT_DIRECTORY##*/}" --force \
+						-S "${OUTPUT_FILE_NAME}" -D "${OUT}" \
+					2>&1 )"
+				if [[ $? -eq 0 ]]; then
+					# Add text
+				   	TEXT="FPS:     ${FPS}"
+			 		TEXT+="\nBitrate: ${BITRATE}k"
+					# 200 px from bottom to avoid video playback controls
+					THUMB="${OUT_DIRECTORY}/${OUT}"
+					addTextToImage --stroke-width 1 --y -200 "${THUMB}" "${THUMB}" "${TEXT}" 2>&1
+				else
+					echo "WARNING: Unable to make thumbnail: ${RES}."
+				fi
+fi
 			fi
 		else
 			E_ "Unable to make timelapse for FPS ${FPS} and bitrate ${BITRATE}:\n${ERR}"

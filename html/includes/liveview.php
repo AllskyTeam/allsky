@@ -25,30 +25,30 @@ function DisplayLiveView($image_name, $delay, $daydelay, $daydelay_postMsg, $nig
 		$msg .= " nighttime every $s seconds$nightdelay_postMsg";
 		$myStatus->addMessage("$msg", "message", false);
 	}
+
+	$miniTimelapsePlayerUrl = null;
+	if (file_exists(ALLSKY_MINITIMELAPSE_FILE)) {
+		$miniTimelapsePlayerUrl = getListFileTypeVideoPlayerUrl(
+			ALLSKY_MINITIMELAPSE_URL,
+			getListFileTypeVideoMimeType(basename(ALLSKY_MINITIMELAPSE_URL))
+		);
+	}
 ?>
 
-<script>
-		function getImage() {
-			var newImg = new Image();
-			newImg.src = '<?php echo $image_name ?>?_ts=' + new Date().getTime();
-			newImg.id = "current";
-			newImg.className = "current";
-			newImg.decode().then(() => {
-				$("#live_container").empty().append(newImg);
-			}).catch((err) => {
-				if (!this.complete || typeof this.naturalWidth == "undefined" || this.naturalWidth == 0) {
-					console.log('broken image: ', err);
-				}
-			}).finally(() => {
-				// Use tail recursion to trigger the next invocation after `$delay` milliseconds
-				setTimeout(function () { getImage(); }, <?php echo $delay ?>);
-			});
-		};
+<link type="text/css" rel="stylesheet" href="/js/lightgallery/css/lightgallery-bundle.min.css" />
+<link type="text/css" rel="stylesheet" href="/js/lightgallery/css/lg-transitions.css" />
+<script src="/js/lightgallery/lightgallery.min.js"></script>
+<script src="/js/lightgallery/plugins/zoom/lg-zoom.min.js"></script>
+<script src="/js/lightgallery/plugins/thumbnail/lg-thumbnail.min.js"></script>
+<script src="/js/liveview.js"></script>
 
-		getImage();
-</script>
-
-	<div class="panel panel-allsky">
+	<div
+		class="panel panel-allsky"
+		id="liveview-root"
+		data-image-name="<?php echo htmlspecialchars($image_name, ENT_QUOTES); ?>"
+		data-refresh-delay="<?php echo (int) $delay; ?>"
+		data-mini-player-url="<?php echo htmlspecialchars((string) ($miniTimelapsePlayerUrl ?? ''), ENT_QUOTES); ?>"
+	>
 		<div class="panel-heading clearfix">
             <span class="pull-left"><i class="<?php echo $pageIcon ?>"></i> <?php echo $pageHeaderTitle ?>
 <?php
@@ -56,7 +56,9 @@ function DisplayLiveView($image_name, $delay, $daydelay, $daydelay_postMsg, $nig
 ?>
 
 			<span class='nowrap'>&nbsp; &nbsp;&nbsp; &nbsp;
-			<?php echo insertHref("mini_timelapse", "", true); ?></span>
+			<a id="mini_timelapse_lightbox" href="<?php echo htmlspecialchars($miniTimelapsePlayerUrl ?? ALLSKY_MINITIMELAPSE_URL, ENT_QUOTES); ?>" title="View Mini-Timelapse">
+				<i class="fa fa-file-video fa-fw"></i> View Mini-Timelapse
+			</a></span>
 <?php
 		}
 ?>

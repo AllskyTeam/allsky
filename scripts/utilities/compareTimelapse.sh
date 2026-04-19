@@ -9,9 +9,9 @@ ME="$( basename "${BASH_ARGV0}" )"
 COMMAND_LINE="${*}"
 
 #shellcheck source-path=.
-source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 usage_and_exit()
 {
@@ -430,7 +430,7 @@ if [[ ${NUM_CREATED} -gt 0 ]]; then
 		DAY="$( basename "${OUT_DIRECTORY}" )"
 		echo -n "Click <a href='/helpers/show_images.php?_ts=${RANDOM}"
 		echo -n "&day=${DAY}&pre=timelapse-&type=Test Timelapses&filetype=video"
-		echo    "'>here</a> to see the results."
+		echo    "' external='true'>here</a> to see the results."
 	else
 		echo -e "\nThe ${NUM_CREATED} timelapse video(s) are in '${OUT_DIRECTORY}'.\n"
 	fi

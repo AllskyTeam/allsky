@@ -100,6 +100,7 @@ while [[ $# -gt 0 ]]; do
 	esac
 	shift
 done
+
 [[ ${DO_HELP} == "true" ]] && usage_and_exit 0
 [[ ${OK} == "false" ]] && usage_and_exit "${ALLSKY_EXIT_ERROR_STOP}"
 if [[ ${HTML} == "true" &&
@@ -245,7 +246,7 @@ if [[ ${NIGHT_ONLY} == "true" ]]; then
 fi
 if [[ ${NUM_IMAGES} -eq 0 ]]; then
 	NIGHT=""
-	find "${IN_DIRECTORY}" -type f -name "*.${ALLSKY_EXTENSION}" 2>/dev/null |
+	find "${IN_DIRECTORY}" -type f -name "*.${ALLSKY_EXTENSION}" -maxdepth 1 2>/dev/null |
 		head -"${COUNT}" > "${IMAGES}"
 fi
 
@@ -317,7 +318,7 @@ if [[ ${NUM_CREATED} -gt 0 ]]; then
 		DAY="$( basename "${OUT_DIRECTORY}" )"
 		echo -n "Click <a href='/helpers/show_images.php?_ts=${RANDOM}"
 		echo -n "&day=${DAY}&pre=startrails_&type=Test Startrails"
-		echo    "'>here</a> to see the results."
+		echo    "' external='true' >here</a> to see the results."
 	else
 		echo -e "\nThe ${NUM_CREATED} startrails image(s) are in '${OUT_DIRECTORY}'.\n"
 	fi

@@ -934,7 +934,7 @@
 "name" : "imageremovebadcount",
 "default" : 5,
 "description" : "After this many 'bad' images display a message.",
-"label" : Remove Bad Images Threshold Count"",
+"label" : "Remove Bad Images Threshold Count",
 "type" : "integer",
 "action" : "restart"
 },

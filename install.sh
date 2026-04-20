@@ -53,7 +53,7 @@ NOT_RESTORED="NO PRIOR VERSION"
 PI_MODEL=""								# The numeric model of Raspberry Pi
 THIS_PI_MODEL=""						# The model of this Raspberry Pi
 
-declare -r TMP_FILE="/tmp/x"			# temporary file used by many functions
+declare -r TMP_FILE="/tmp/allsky-x"		# temporary file used by many functions
 declare -r TAB="$( echo -e '\t' )"
 declare -r NEW_STYLE_ALLSKY="newStyle"
 declare -r OLD_STYLE_ALLSKY="oldStyle"

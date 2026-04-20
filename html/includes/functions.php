@@ -758,14 +758,19 @@ function renderListFileTypeContent($dir, $imageFileName, $formalImageTypeName, $
 			}
 		}
 	} else {
-		$expr = ALLSKY_IMAGES . "/{$chosen_day}/{$dir}";
+		$EXPR = ALLSKY_IMAGES . "/{$chosen_day}/{$dir}";
 		if (substr($imageFileName, 0, 1) == "X") {
-			$expr .= substr($imageFileName, 1) . "*";
+			$expr = $EXPR . substr($imageFileName, 1) . "*";
+			$ts = "?_ts=" . time();
+		} else if (substr($chosen_day, 0, 5) == "test_") {
+			$EXPR = ALLSKY_IMAGES . "/{$chosen_day}/{$dir}";
+			$expr = $EXPR . strtolower($formalImageTypeName) . "-*";
 			$ts = "?_ts=" . time();
 		} else {
-			$expr .= "{$imageFileName}-{$chosen_day}*";
+			$expr = "$EXPR{$imageFileName}-{$chosen_day}*";
 			$ts = "";
 		}
+
 		$imageTypes = array();
 		foreach (glob($expr) as $imageType) {
 			$imageTypes[] = $imageType;

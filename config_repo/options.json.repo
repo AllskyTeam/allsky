@@ -2214,8 +2214,8 @@
 "type" : "select_text",
 "carryforward" : true,
 "options" : [
-	{"value" : "mysql", "label" : "MySQL"},
 	{"value" : "sqlite", "label" : "SQLite"}
+	{"value" : "mysql", "label" : "MySQL"},
 ],
 "optional" : true
 },

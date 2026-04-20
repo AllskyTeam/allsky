@@ -264,11 +264,30 @@
     --Layout-sidebar-width: 250px;
     --WebUI-setting-color: #00009b;
     --WebUI-setting-color-dark: #68a0ff;
+    --WebUI-subSetting-background-color: #bbb;
     --WebUI-value-color: #555;
     --WebUI-value-background-color: #e4e4e4;
     --WebUI-link-color: #4b4a4b;
     --WebUI-link-background-color: #f8f8f8;
     --navbar-border-color: #e7e7e7;
+
+    --color-attention-fg: #9a6700;
+    --color-attention-emphasis: #bf8700;
+    --color-attention-muted: rgba(212,167,44,0.4);
+    --color-attention-subtle: #fff8c5;
+    --color-attention-verysubtle: #fffbdf;
+    --color-success-fg: #1a7f37;
+    --color-success-emphasis: #2da44e;
+    --color-success-muted: rgba(74,194,107,0.4);
+    --color-success-subtle: #dafbe1;
+    --color-danger-fg: #cf222e;
+    --color-danger-emphasis: #cf222e;
+    --color-danger-muted: rgba(255,129,130,0.4);
+    --color-danger-subtle: #FFEBE9;
+    --color-severe-fg: #bc4c00;
+    --color-severe-emphasis: #bc4c00;
+    --color-severe-muted: rgba(251,143,68,0.4);
+    --color-severe-subtle: #fff1e5;
 
     /* Switch */
     --switch-bg: #e4e4e4;
@@ -276,10 +295,6 @@
     --switch-colour: rgba(0, 0, 0, 0.6);
     --switch-bg-checked: #3a9e55;
     --switch-colour-checked: #fff;
-
-    /* Settings Page */
-    --WebUI-subSetting-background-color: #bbb;
-
 }
 
 body.dark {
@@ -563,6 +578,23 @@ body.dark {
 
     /* Settings Page */
     --WebUI-subSetting-background-color: #3a4658;
+    --color-success-fg: #1a7f37;
+    --color-success-emphasis: #2da44e;
+    --color-success-muted: rgba(74,194,107,0.4);
+    --color-success-subtle: #dafbe1;
+    --color-attention-fg: #9a6700;
+    --color-attention-emphasis: #bf8700;
+    --color-attention-muted: rgba(212,167,44,0.4);
+    --color-attention-subtle: #fff8c5;
+	--color-attention-verysubtle: #fff8c555;
+    --color-severe-fg: #bc4c00;
+    --color-severe-emphasis: #bc4c00;
+    --color-severe-muted: rgba(251,143,68,0.4);
+    --color-severe-subtle: #fff1e5;
+    --color-danger-fg: #cf222e;
+    --color-danger-emphasis: #cf222e;
+    --color-danger-muted: rgba(255,129,130,0.4);
+    --color-danger-subtle: #FFEBE9;
 
 }
 
@@ -2208,6 +2240,16 @@ div.subSettingsHeader {
     font-size: 0.95em;
 }
 
+.WebUIWebPage, /* old name */
+.WebUILink {	/* link on the WebUI to one of its pages */
+	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+	padding: 0 .2em;
+	color: var(--WebUI-link-color);
+	background-color: var(--WebUI-link-background-color);
+	border-top: 2px solid var(--navbar-border-color);
+	border-bottom: 2px solid var(--navbar-border-color);
+}
+
 .WebUISetting {
     /* Matches what's in the WebUI */
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -2224,6 +2266,20 @@ div.subSettingsHeader {
     border: 1px solid #ccc;
     border-radius: 4px;
 }
+
+.fileName {
+	padding: 0 .2em .1em .2em;
+	margin: 0;
+	font-size: 90%;
+	border-radius: 6px;
+	background-color: var(--color-attention-verysubtle);
+	border: 1px solid var(--color-attention-muted);
+}
+blockquote .fileName {	/* Make class stand out from blockquote. */
+	color: var(--color-fg-default);
+	border-width: 2px;
+}
+
 
 .headingRow {
     font-size: 110%;

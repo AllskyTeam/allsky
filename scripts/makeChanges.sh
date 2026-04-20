@@ -886,7 +886,16 @@ do
 							MSG+="The ${STRONGs}url${STRONGe} field for ${FIELD} in the "
 							MSG+="Allsky Website's configuration file is empty."
 							MSG+="${NL}"
-							MSG+="See the Allsky Documentation for what it should be set to."
+							MSG+="Change it on the <span class='WebUILink'>Settings - Editor</span> page in the WebUI."
+							MSG+="${NL}"
+							if [[ ${S_uselocalwebsite} == "true" ]]; then
+								MSG+="For ${STRONGs}local${STRONGe} Websites it should be ${WSFs}/current/mini-timelapse.mp4${WSFe}."
+								MSG+="${NL}"
+							fi
+							if [[ ${S_useremotewebsite} == "true" ]]; then
+								MSG+="For ${STRONGs}remote${STRONGe} Websites it should be ${WSFs}mini-timelapse.mp4${WSFe}."
+								MSG+="${NL}"
+							fi
 							wW_ "${MSG}"
 						fi
 					fi
@@ -901,7 +910,7 @@ do
 							[[ -n ${F} ]] && F+=" and "
 							F+="${WSFs}${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME}${WSFe}"
 						fi
-						wI_ "${MSG} ${F} file(s) in the WebUI's 'Editor' page."
+						wW_ "${MSG} ${F} file(s) in the WebUI's <span class='WebUILink'>Settings - Editor</span> page."
 					fi
 				else
 					W="WARNING: Unable read '${FIELD}' in '${CONFIG}'."

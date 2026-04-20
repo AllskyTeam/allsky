@@ -243,7 +243,13 @@ function doImage()
 		TEXT+="\nMid Point:      ${M}"
 	fi
 	addTextToImage --extra-args "${HOW} ${A}x${M}" "${FROM_FILE}" "${TO_FILE}" "${TEXT}" 2>&1
+
+	# Create a thumbnail for the WebUI "Images" page.
+	cp "${TO_FILE}" "${THUMBNAILS_DIR}"
 }
+
+THUMBNAILS_DIR="${OUT_DIRECTORY}/thumbnails"
+mkdir -p "${THUMBNAILS_DIR}"
 
 if [[ ${CREATE_NO_STRETCH_IMAGE} == "true" ]]; then
 	# Do a "no stretch" version so the user can compare.

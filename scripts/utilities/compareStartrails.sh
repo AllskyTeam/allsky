@@ -217,7 +217,6 @@ sudo chown "${ALLSKY_OWNER}:${WEBSERVER_GROUP}" "${OUT_DIRECTORY}"
 
 IMAGES="${OUT_DIRECTORY}/images.txt"
 
-### TODO: replace with DB query.  Add intelligence to list, e.g., night only, ...
 NIGHT_ONLY="$( settings ".startrailsnightonly" )"
 [[ -z ${NIGHT_ONLY} ]] && NIGHT_ONLY="false"
 
@@ -277,6 +276,9 @@ if [[ -n ${ERRORS} ]]; then
 fi
 
 # Create the startrails.
+THUMBNAILS_DIR="${OUT_DIRECTORY}/thumbnails"
+mkdir -p "${THUMBNAILS_DIR}"
+
 NUM_CREATED=0
 for THRESHOLD in ${THRESHOLDS}
 do
@@ -305,6 +307,9 @@ do
 		TEXT="Brightness Threshold: ${THRESHOLD}"
 		TEXT+="\n${NUM_USED} of ${COUNT} images used."
 		addTextToImage "${OUTPUT}" "${OUTPUT}" "${TEXT}" 2>&1
+
+		# Create a thumbnail for the WebUI "Images" page.
+		cp "${OUTPUT}" "${THUMBNAILS_DIR}"
 	else
 		echo -e "ERROR: Unable to make startrails.  Quitting." >&2
 		remove_colors "${MSG}" >&2

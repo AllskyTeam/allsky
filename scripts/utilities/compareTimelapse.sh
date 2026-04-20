@@ -381,6 +381,11 @@ if [[ ${HTML} == "false" ]]; then
 	# Display msg because it can take a while to process.
 	I_ "================ Creating timelapses with ${COUNT} images from '${IN_DIRECTORY}'."
 fi
+THUMBNAILS_DIR="${OUT_DIRECTORY}/thumbnails"
+mkdir -p "${THUMBNAILS_DIR}"
+THUMB_DIR="${OUT_DIRECTORY}/videothumbnail"
+mkdir -p "${THUMB_DIR}"
+
 NUM_CREATED=0
 FILES=()
 for BITRATE in ${BITRATE_VALUES}
@@ -417,13 +422,15 @@ do
 				# 200 px from bottom to avoid video playback controls
 				addTextToImage --stroke-width 1 --y -200 "${POSTER}" "${POSTER}" "${TEXT}" 2>&1
 
+				# Create a thumbnail for the WebUI "Images" page.
+				ln "${POSTER}" "${THUMBNAILS_DIR}"
+
 				# Make thumbnail for show_images.php.
 				OUT="${OUTPUT_FILE_NAME/.mp4/.jpg}"
 # TODO: FIX: thumbnail.sh creates a small thumbnail - too small to show as a "poster" image
 # where we want the user to be able to read the text we add.
 if true; then
-				THUMB_DIR="${OUT_DIRECTORY}/videothumbnail"
-				mkdir -p "${THUMB_DIR}" && cp "${POSTER}" "${THUMB_DIR}"
+				ln "${POSTER}" "${THUMB_DIR}"
 else
 				RES="$( "${ALLSKY_UTILITIES}/thumbnail.sh" \
 						-t timelapse -d "${OUT_DIRECTORY##*/}" --force \

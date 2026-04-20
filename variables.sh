@@ -207,7 +207,7 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" || ${1} == "--force" ]]; then
 	ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE="${ALLSKY_CONFIG}/${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME}"
 
 	# Holds all the Allsky documentation.
-	ALLSKY_DOCUMENTATION="${ALLSKY_WEBUI}/documentation"
+	ALLSKY_DOCUMENTATION="${ALLSKY_WEBUI}/docs"
  
  	# Holds the version of the Pi.
 	ALLSKY_PI_VERSION_FILE="${ALLSKY_CONFIG}/piversion.txt"

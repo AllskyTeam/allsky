@@ -96,16 +96,7 @@ function getAllskyUptimeText()
 		}
 
 		$seconds = $now->getTimestamp() - $started->getTimestamp();
-		$hours = intdiv($seconds, 3600);
-		$minutes = intdiv($seconds % 3600, 60);
-
-		$parts = [];
-		if ($hours > 0) {
-			$parts[] = $hours . ' Hour' . ($hours === 1 ? '' : 's');
-		}
-		$parts[] = $minutes . ' Min' . ($minutes === 1 ? '' : 's');
-
-		return implode(', ', $parts);
+		return formatDurationForUptime($seconds);
 	} catch (Throwable $e) {
 		return 'Unavailable';
 	}

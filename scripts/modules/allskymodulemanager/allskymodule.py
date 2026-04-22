@@ -146,7 +146,6 @@ class ALLSKYMODULE:
     def winstalled(self):
         return 'ON' if self.installed else 'OFF'
         
-    @staticmethod
     def ensure_valid(method):
         @wraps(method)
         def wrapper(self, *args, **kwargs): 

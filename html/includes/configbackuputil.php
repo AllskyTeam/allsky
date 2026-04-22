@@ -249,14 +249,17 @@ class CONFIGBACKUPUTIL extends UTILBASE
                     if (strpos($normalizedPath, '/__pycache__/') !== false) {
                         continue;
                     }
-                    $bytes += (int)$item->getSize();
+                    $size = $item->getSize();
+                    if ($size !== false) {
+                        $bytes += (int)$size;
+                    }
                 }
             }
         } catch (Throwable $e) {
             return 0;
         }
 
-        return max(0, $bytes);
+        return (int)max(0, $bytes);
     }
 
     private function getPathSizeBytes(string $relativePath): int
@@ -371,14 +374,14 @@ class CONFIGBACKUPUTIL extends UTILBASE
                 'sizeBytes' => $sizeBytes,
                 'estimatedCompressedBytes' => $estimatedBytes,
             ];
-            $totalSize += $sizeBytes;
-            $totalEstimated += $estimatedBytes;
+            $totalSize += (int)$sizeBytes;
+            $totalEstimated += (int)$estimatedBytes;
         }
 
         return [
             'folders' => $stats,
-            'totalSizeBytes' => max(0, $totalSize),
-            'totalEstimatedCompressedBytes' => max(0, $totalEstimated),
+            'totalSizeBytes' => (int)max(0, $totalSize),
+            'totalEstimatedCompressedBytes' => (int)max(0, $totalEstimated),
         ];
     }
 

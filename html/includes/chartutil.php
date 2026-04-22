@@ -138,7 +138,7 @@ class CHARTUTIL extends UTILBASE
         $t = strtotime((string)$dbTs);
 
         // If successful, multiply by 1000 to get milliseconds; otherwise, return 0 for invalid date
-        return $t !== false ? $t * $unit : 0;
+        return $t !== false ? (int)($t * $unit) : 0;
     }
 
     /**
@@ -612,6 +612,9 @@ class CHARTUTIL extends UTILBASE
             if (!is_array($config)) {
                 throw new RuntimeException("Invalid JSON in {$configPath}: " . json_last_error_msg());
             }
+        } elseif (isset($req['series']) && is_array($req['series'])) {
+            // Backward-compatible fallback for callers that POST the chart config directly.
+            $config = $req;
         } else {
             throw new InvalidArgumentException('Provide either "filename" or "chartConfig" in the request body.');
         }

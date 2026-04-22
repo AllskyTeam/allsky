@@ -3272,6 +3272,8 @@ install_Python()
 	fi
 
 	OLD_VENV="${ALLSKY_PRIOR_DIR}/venv"
+	# If we're in "SKIP" mode and the prior venv directory exists,
+	# copy it to the new release.  Don't install any dependencies.
 	if [[ ${USE_PRIOR_ALLSKY} == "true" && -d ${OLD_VENV} && (${SKIP} == "true" || ${SKIP2} == "true" ) ]]; then
 		display_msg --log progress "Copying ${OLD_VENV} to ${ALLSKY_HOME}."
 		cp -r -a "${OLD_VENV}" "${ALLSKY_HOME}"
@@ -3287,7 +3289,7 @@ install_Python()
 		NAME="Python_dependencies"
 
 		# If the requirements file is the same as the in the prior Allsky version,
-		# don't re-install these packages.
+		# AND we're in "SKIP" mode, don't re-install these packages.
 		local PRIOR_REQ="${REQUIREMENTS_FILE/${ALLSKY_HOME}/${ALLSKY_PRIOR_DIR}}"
 		if [[ ${WILL_USE_PRIOR} == "true" && (${SKIP} == "true" || ${SKIP2} == "true") && -f ${PRIOR_REQ} ]] && \
 			cmp --silent "${REQUIREMENTS_FILE}" "${PRIOR_REQ}" ; then

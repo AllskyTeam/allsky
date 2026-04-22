@@ -87,19 +87,21 @@ function ListImages() {
 		echo "      <p>{$sortOrder}</p>";
 	}
 	echo "      </div>";
-	foreach ($images as $image) {
-		$imageTimestampIso = '';
-		if (preg_match('/(\d{14})/', $image, $matches)) {
-			$imageDateTime = DateTimeImmutable::createFromFormat('YmdHis', $matches[1], new DateTimeZone('UTC'));
-			if ($imageDateTime !== false) {
-				$imageTimestampIso = $imageDateTime->format('Y-m-d\TH:i:s\Z');
+		foreach ($images as $image) {
+			$imageTimestampIso = '';
+			$imagePath = $dir . '/' . $image;
+			if (preg_match('/(\d{14})/', $image, $matches)) {
+				$imageDateTime = DateTimeImmutable::createFromFormat('YmdHis', $matches[1], new DateTimeZone('UTC'));
+				if ($imageDateTime !== false) {
+					$imageTimestampIso = $imageDateTime->format('Y-m-d\TH:i:s\Z');
+				}
 			}
+			$imageItems[] = [
+				'name' => $image,
+				'timestamp' => $imageTimestampIso,
+				'lgSize' => getLightboxSizeAttribute($imagePath),
+			];
 		}
-		$imageItems[] = [
-			'name' => $image,
-			'timestamp' => $imageTimestampIso,
-		];
-	}
 	echo "      <div class='images-grid' id='lightgallery'></div>";
 	echo "      <div class='images-grid-loading' id='images-grid-loading'>Loading images...</div>";
 	echo "      <div class='images-grid-sentinel' id='images-grid-sentinel' aria-hidden='true'></div>";
@@ -140,11 +142,12 @@ $(document).ready(function () {
       .replace(/'/g, '&#39;');
   }
 
-  function buildImageItem(item) {
-    const safeName = escapeHtml(item.name || '');
-    const imagePath = '/images/' + encodeURIComponent(chosenDay) + '/' + encodeURIComponent(item.name || '');
-    const thumbPath = '/images/' + encodeURIComponent(chosenDay) + '/thumbnails/' + encodeURIComponent(item.name || '');
-    let dateHtml = '';
+	  function buildImageItem(item) {
+	    const safeName = escapeHtml(item.name || '');
+	    const imagePath = '/images/' + encodeURIComponent(chosenDay) + '/' + encodeURIComponent(item.name || '');
+	    const thumbPath = '/images/' + encodeURIComponent(chosenDay) + '/thumbnails/' + encodeURIComponent(item.name || '');
+	    const lightboxSize = escapeHtml(item.lgSize || '1600-2400');
+	    let dateHtml = '';
 
     if (item.timestamp) {
       const date = new Date(item.timestamp);
@@ -153,11 +156,11 @@ $(document).ready(function () {
       }
     }
 
-    return (
-      '<a class="images-grid-item" href="' + imagePath + '" data-lg-size="1600-2400">' +
-        '<img alt="' + safeName + '" width="' + thumbWidth + '" height="' + thumbHeight + '" src="' + thumbPath + '" loading="lazy" decoding="async" fetchpriority="low" />' +
-        '<span class="images-grid-name">' + safeName + '</span>' +
-        dateHtml +
+	    return (
+	      '<a class="images-grid-item" href="' + imagePath + '" data-lg-size="' + lightboxSize + '">' +
+	        '<img alt="' + safeName + '" width="' + thumbWidth + '" height="' + thumbHeight + '" src="' + thumbPath + '" loading="lazy" decoding="async" fetchpriority="low" />' +
+	        '<span class="images-grid-name">' + safeName + '</span>' +
+	        dateHtml +
       '</a>'
     );
   }

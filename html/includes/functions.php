@@ -678,6 +678,25 @@ function normalizeListFileTypeOptions($options=[]) {
 	];
 }
 
+function getLightboxSizeAttribute($filePath, $default = '1600-2400') {
+	if (! is_string($filePath) || $filePath === '' || ! is_file($filePath)) {
+		return $default;
+	}
+
+	$size = @getimagesize($filePath);
+	if ($size === false || ! isset($size[0], $size[1])) {
+		return $default;
+	}
+
+	$width = (int) $size[0];
+	$height = (int) $size[1];
+	if ($width <= 0 || $height <= 0) {
+		return $default;
+	}
+
+	return $width . '-' . $height;
+}
+
 function renderListFileTypeContent($dir, $imageFileName, $formalImageTypeName, $type, $listNames=false, $chosen_day=null, $options=[]) {
 	// "/images" is an alias in the web server for ALLSKY_IMAGES
 	$images_dir = "/images";
@@ -725,13 +744,14 @@ function renderListFileTypeContent($dir, $imageFileName, $formalImageTypeName, $
 					foreach ($imageTypes as $imageType) {
 						$imageType_name = basename($imageType);
 						$fullFilename = "$images_dir/$day/$dir$imageType_name";
-						if ($type == "picture") {
-							$thumbUrl = $useThumbnails ? getListFileTypePictureThumbnailUrl($day, $dir, $imageType_name, $fullFilename) : $fullFilename;
-							$itemCount += 1;
-							echo "<a href='$fullFilename' class='images-grid-item functions-listfiletype-item' data-lg-size='1600-2400'>";
-							echo "<img src='" . htmlspecialchars($thumbUrl, ENT_QUOTES) . "' class='functions-listfiletype-media' />";
-							echo "<span class='images-grid-name functions-listfiletype-name'>$day</span>";
-							echo "<span class='images-grid-date functions-listfiletype-date' data-listfiletype-day='{$day}'></span>";
+							if ($type == "picture") {
+								$thumbUrl = $useThumbnails ? getListFileTypePictureThumbnailUrl($day, $dir, $imageType_name, $fullFilename) : $fullFilename;
+								$lightboxSize = getLightboxSizeAttribute($imageType);
+								$itemCount += 1;
+								echo "<a href='$fullFilename' class='images-grid-item functions-listfiletype-item' data-lg-size='" . htmlspecialchars($lightboxSize, ENT_QUOTES) . "'>";
+								echo "<img src='" . htmlspecialchars($thumbUrl, ENT_QUOTES) . "' class='functions-listfiletype-media' />";
+								echo "<span class='images-grid-name functions-listfiletype-name'>$day</span>";
+								echo "<span class='images-grid-date functions-listfiletype-date' data-listfiletype-day='{$day}'></span>";
 							echo "</a>\n";
 						} else {
 							$itemCount += 1;
@@ -778,13 +798,14 @@ function renderListFileTypeContent($dir, $imageFileName, $formalImageTypeName, $
 				$fullFilename = "$images_dir/$chosen_day/$dir$imageType_name";
 				$name = basename($fullFilename);
 				$itemDateValue = getListFileTypeDisplayDateValue($imageType_name, $chosen_day);
-				if ($type == "picture") {
-					$thumbUrl = $useThumbnails ? getListFileTypePictureThumbnailUrl($chosen_day, $dir, $imageType_name, $fullFilename . $ts) : $fullFilename . $ts;
-					$itemCount += 1;
-					echo "<a href='$fullFilename' class='images-grid-item functions-listfiletype-item' data-lg-size='1600-2400'>";
-					echo "<img src='" . htmlspecialchars($thumbUrl, ENT_QUOTES) . "' class='functions-listfiletype-media' />";
-					echo "<span class='images-grid-name functions-listfiletype-name'>" . htmlspecialchars($name) . "</span>";
-					echo "<span class='images-grid-date functions-listfiletype-date' data-listfiletype-date='" . htmlspecialchars($itemDateValue, ENT_QUOTES) . "'></span>";
+					if ($type == "picture") {
+						$thumbUrl = $useThumbnails ? getListFileTypePictureThumbnailUrl($chosen_day, $dir, $imageType_name, $fullFilename . $ts) : $fullFilename . $ts;
+						$lightboxSize = getLightboxSizeAttribute($imageType);
+						$itemCount += 1;
+						echo "<a href='$fullFilename' class='images-grid-item functions-listfiletype-item' data-lg-size='" . htmlspecialchars($lightboxSize, ENT_QUOTES) . "'>";
+						echo "<img src='" . htmlspecialchars($thumbUrl, ENT_QUOTES) . "' class='functions-listfiletype-media' />";
+						echo "<span class='images-grid-name functions-listfiletype-name'>" . htmlspecialchars($name) . "</span>";
+						echo "<span class='images-grid-date functions-listfiletype-date' data-listfiletype-date='" . htmlspecialchars($itemDateValue, ENT_QUOTES) . "'></span>";
 					echo "</a>\n";
 				} else {
 					$itemCount += 1;
@@ -880,17 +901,17 @@ $(document).ready(function () {
 			return;
 		}
 
-		const gallery = lightGallery(galleryElement, {
-			cssEasing: 'cubic-bezier(0.680, -0.550, 0.265, 1.550)',
-			selector: 'a',
-			plugins: [lgZoom, lgThumbnail],
-			mode: 'lg-slide-circular',
-			speed: 400,
-			download: false,
-			thumbnail: true,
-			iframeMaxWidth: '90%',
-			iframeMaxHeight: '90%'
-		});
+			const gallery = lightGallery(galleryElement, {
+				cssEasing: 'cubic-bezier(0.680, -0.550, 0.265, 1.550)',
+				selector: 'a',
+				plugins: [lgZoom, lgThumbnail],
+				mode: 'lg-slide-circular',
+				speed: 400,
+				download: false,
+				thumbnail: true,
+				iframeMaxWidth: '90%',
+				iframeMaxHeight: '90%'
+			});
 		return gallery;
 	}
 

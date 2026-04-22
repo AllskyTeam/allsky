@@ -9,6 +9,8 @@ This module counts the number of stars in an image.
 Expected parameters:
 None
 '''
+from __future__ import annotations
+
 import allsky_shared as allsky_shared
 from allsky_base import ALLSKYMODULEBASE
 import cv2

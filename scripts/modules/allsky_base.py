@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import allsky_shared as allsky_shared
 import os
 import json

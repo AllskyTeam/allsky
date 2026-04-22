@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import time
 import locale
 import re
@@ -725,4 +727,3 @@ class AllskyFormatters:
 		return f'{value}{distunit}'
 
 allsky_formatters = AllskyFormatters()
-

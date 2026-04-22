@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 
+from __future__ import annotations
+
 # TODO - Add deprectaed flag and use in installer
 # TODO - Save the migrated flows, ensure Allsky is stopped? Or add soemthing to the flow runner to suspend flows whilst the update happens
 # TODO - Do somehting with the messages in installer, i.e. have an invalid modules menu option

@@ -6,6 +6,8 @@ Part of allsky postprocess.py modules.
 https://github.com/AllskyTeam/allsky
 
 '''
+from __future__ import annotations
+
 import allsky_shared as allsky_shared
 from allsky_base import ALLSKYMODULEBASE
 import shutil

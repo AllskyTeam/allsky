@@ -16,6 +16,8 @@ It provides helpers for:
 - Overlay "extra data" JSON formatting and persistence
 """
 
+from __future__ import annotations
+
 import time
 import os
 import traceback

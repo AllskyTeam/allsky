@@ -18,6 +18,8 @@ Usage:
     python3 overlay_manager.py --auto --oldpath /path/to/old/allsky --camera RPi
     python3 overlay_manager.py --debug
 """
+from __future__ import annotations
+
 
 import os
 import sys

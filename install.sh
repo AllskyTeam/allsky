@@ -3280,6 +3280,10 @@ install_Python()
 		python3 -m venv "${ALLSKY_PYTHON_VENV}" --system-site-packages
 		activate_python_venv
 
+		# force local setup tools
+		TMP="${ALLSKY_LOGS}/python3-setup-tools.log"		
+		pip3 install --upgrade pip setuptools wheel  > "${TMP}" 2>&1
+
 		NAME="Python_dependencies"
 
 		# If the requirements file is the same as the in the prior Allsky version,

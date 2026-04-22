@@ -7,17 +7,17 @@ unset ALLSKY_VARIABLE_SET		# To force variables.sh to be read
 ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck source-path=.
-source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/checkFunctions.sh"			|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/checkFunctions.sh"			|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 # Default may be 700 (HOME) or 750 (ALLSKY_HOME) so web server can't read it
-chmod 755 "${HOME}" "${ALLSKY_HOME}"					|| exit "${EXIT_ERROR_STOP}"
-cd "${ALLSKY_HOME}"  									|| exit "${EXIT_ERROR_STOP}"
+chmod 755 "${HOME}" "${ALLSKY_HOME}"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
+cd "${ALLSKY_HOME}"  									|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 [[ ! -d ${ALLSKY_TMP} ]] && mkdir -p "${ALLSKY_TMP}"
 
@@ -509,7 +509,7 @@ get_connected_cameras()
 		MSG="No connected cameras were detected.  The installation will exit."
 		MSG+="\nMake sure a camera is plugged in and working prior to restarting"
 		MSG+=" the installation."
-		if [[ ${CMD_RET} -eq "${EXIT_ERROR_STOP}" ]]; then
+		if [[ ${CMD_RET} -eq "${ALLSKY_EXIT_ERROR_STOP}" ]]; then
 			# RPi command timed out.
 			MSG+="\n\nIf you have an RPi camera attached, double check the cable -"
 			MSG+=" it may be bad or not seated properly."
@@ -696,10 +696,11 @@ do_save_camera_capabilities()
 	M="$( eval "${ALLSKY_SCRIPTS}/"${CMD} 2> "${TMP}" )"
 	RET=$?
 	if [[ ${RET} -ne 0 ]]; then
-		if [[ ${RET} -eq ${EXIT_NO_CAMERA} ]]; then
+		if [[ ${RET} -eq ${ALLSKY_EXIT_NO_CAMERA} ]]; then
 			MSG="No camera was found;"
 			MSG+=" one must be connected and working for the installation to succeed.\n"
 			MSG+="After connecting your camera, re-run the installation."
+			[[ -n ${M} ]] && MSG+="Output from makeChanges.sh: ${M}"
 			whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 
 			display_msg --log error "No camera detected - installation aborted."
@@ -728,7 +729,7 @@ do_save_camera_capabilities()
 	MSG="$( check_settings_link "${ALLSKY_SETTINGS_FILE}" )"
 	RET=$?
 	if [[ ${RET} -ne 0 ]]; then
-		if [[ ${RET} -eq "${EXIT_ERROR_STOP}" ]]; then
+		if [[ ${RET} -eq "${ALLSKY_EXIT_ERROR_STOP}" ]]; then
 			display_msg --log error "${MSG}"
 			return 1
 		else
@@ -1740,11 +1741,11 @@ update_allsky_common()
 		-e "s;XX_ALLSKY_SCRIPTS_XX;${ALLSKY_SCRIPTS};" \
 		-e "s;XX_CONNECTED_CAMERAS_FILE_XX;${ALLSKY_CONNECTED_CAMERAS_INFO};" \
 		-e "s;XX_RPI_CAMERA_INFO_FILE_XX;${ALLSKY_RPi_SUPPORTED_CAMERAS};" \
-		-e "s;XX_EXIT_OK_XX;${EXIT_OK};" \
-		-e "s;XX_EXIT_RESTARTING_XX;${EXIT_RESTARTING};" \
-		-e "s;XX_EXIT_RESET_USB_XX;${EXIT_RESET_USB};" \
-		-e "s;XX_EXIT_ERROR_STOP_XX;${EXIT_ERROR_STOP};" \
-		-e "s;XX_EXIT_NO_CAMERA_XX;${EXIT_NO_CAMERA};" \
+		-e "s;XX_EXIT_OK_XX;${ALLSKY_EXIT_OK};" \
+		-e "s;XX_EXIT_RESTARTING_XX;${ALLSKY_EXIT_RESTARTING};" \
+		-e "s;XX_EXIT_RESET_USB_XX;${ALLSKY_EXIT_RESET_USB};" \
+		-e "s;XX_EXIT_ERROR_STOP_XX;${ALLSKY_EXIT_ERROR_STOP};" \
+		-e "s;XX_EXIT_NO_CAMERA_XX;${ALLSKY_EXIT_NO_CAMERA};" \
 		"${ALLSKY_HOME}/src/include/allsky_common.h.repo" \
 	> "${ALLSKY_HOME}/src/include/allsky_common.h"
 }
@@ -2391,7 +2392,7 @@ restore_prior_settings_file()
 		MSG="$( check_settings_link ${CHECK_UPPER} "${PRIOR_SETTINGS_FILE}" )"
 		RET=$?
 		if [[ ${RET} -ne 0 ]]; then
-			if [[ ${RET} -eq "${EXIT_ERROR_STOP}" ]]; then
+			if [[ ${RET} -eq "${ALLSKY_EXIT_ERROR_STOP}" ]]; then
 				display_msg --log error "${MSG}"
 				FORCE_CREATING_DEFAULT_SETTINGS_FILE="true"
 			else

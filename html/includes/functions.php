@@ -758,19 +758,14 @@ function renderListFileTypeContent($dir, $imageFileName, $formalImageTypeName, $
 			}
 		}
 	} else {
-		$EXPR = ALLSKY_IMAGES . "/{$chosen_day}/{$dir}";
+		$expr = ALLSKY_IMAGES . "/{$chosen_day}/{$dir}";
 		if (substr($imageFileName, 0, 1) == "X") {
-			$expr = $EXPR . substr($imageFileName, 1) . "*";
-			$ts = "?_ts=" . time();
-		} else if (substr($chosen_day, 0, 5) == "test_") {
-			$EXPR = ALLSKY_IMAGES . "/{$chosen_day}/{$dir}";
-			$expr = $EXPR . strtolower($formalImageTypeName) . "-*";
+			$expr .= substr($imageFileName, 1) . "*";
 			$ts = "?_ts=" . time();
 		} else {
-			$expr = "$EXPR{$imageFileName}-{$chosen_day}*";
+			$expr .= "{$imageFileName}-{$chosen_day}*";
 			$ts = "";
 		}
-
 		$imageTypes = array();
 		foreach (glob($expr) as $imageType) {
 			$imageTypes[] = $imageType;
@@ -1629,9 +1624,8 @@ function getNewestAllskyVersion(&$changed=null)
 	return($version_array);
 }
 
-function getUptime() {
-	$uparray = explode(" ", exec("cat /proc/uptime"));
-	$seconds = round($uparray[0], 0);
+function formatDurationForUptime($seconds) {
+	$seconds = round($seconds, 0);
 	$minutes = $seconds / 60;
 	$hours = $minutes / 60;
 	$days = floor($hours / 24);
@@ -1649,6 +1643,11 @@ function getUptime() {
 	}
 
 	return $uptime;
+}
+
+function getUptime() {
+	$uparray = explode(" ", exec("cat /proc/uptime"));
+	return formatDurationForUptime($uparray[0]);
 }
 
 function getCPULoad($secs=2) 

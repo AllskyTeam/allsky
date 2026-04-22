@@ -60,7 +60,7 @@ class CHARTUTIL extends UTILBASE
      * @return PDO|bool  Returns a PDO object on success, or false if the SQLite file is missing.
      * @throws RuntimeException If the database type is unsupported.
      */
-    private function makePdo(): PDO|bool
+    private function makePdo()
     {
         // Retrieve connection details from a helper that loads secure config (e.g. from variables.json or .env)
         $secretData = getDatabaseConfig();

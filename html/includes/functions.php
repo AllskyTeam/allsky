@@ -1724,8 +1724,8 @@ function getCPUTemp()
 {
 	global $temptype;
 	
-	$temperature = file_get_contents("/sys/class/thermal/thermal_zone0/temp");
-	$temperature = round($temperature / 1000, 2);
+	$temperatureRaw = trim((string)file_get_contents("/sys/class/thermal/thermal_zone0/temp"));
+	$temperature = is_numeric($temperatureRaw) ? round(((float)$temperatureRaw) / 1000, 2) : 0.0;
 	if ($temperature < 0) {
 		$temperature_status = "danger";
 	} elseif ($temperature < 10) {
@@ -1751,12 +1751,12 @@ function getCPUTemp()
 function getMemoryUsed() 
 {
 	exec("free -m | gawk '/Mem:/ { total=$2 } /buffers\/cache/ { used=$3 } END { print used/total*100}'", $memarray);
-	$memused = floor($memarray[0]);
+	$memused = floor((float)trim((string)($memarray[0] ?? 0)));
 	// check if memused is unreasonably low, if so repeat
 	if ($memused < 0.1) {
 		unset($memarray);
 		exec("free -m | gawk '/Mem:/ { total=$2 } /Mem:/ { used=$3 } END { print used/total*100}'", $memarray);
-		$memused = floor($memarray[0]);
+		$memused = floor((float)trim((string)($memarray[0] ?? 0)));
 	}
 	
 	return $memused;

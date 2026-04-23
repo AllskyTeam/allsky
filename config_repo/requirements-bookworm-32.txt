@@ -23,3 +23,5 @@ flask-login
 gunicorn
 flask-jwt-extended
 bcrypt
+RPi.GPIO
+gpiozero

@@ -112,7 +112,6 @@ valid_module_paths = [allsky_my_files_folder, allsky_modules_location, allsky_mo
 for valid_module_path in valid_module_paths:
     sys.path.append(os.path.abspath(valid_module_path))
 
-from gpiozero import Device            
 import allsky_shared as shared
 
 shared.setup_for_command_line()
@@ -290,8 +289,8 @@ class ALLSKYDATABASEMANAGER:
         int
             Major version number parsed from model string; 0 if unknown.
         """
-        Device.ensure_pin_factory()
-        pi_full_version = Device.pin_factory.board_info.model
+        pi_info = shared.get_pi_board_info()
+        pi_full_version = pi_info.model if pi_info is not None else ""
 
         match = re.match(r"(\d+)", pi_full_version)
         pi_version = int(match.group(1)) if match else 0

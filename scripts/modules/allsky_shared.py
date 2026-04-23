@@ -318,18 +318,44 @@ def get_pi_info(info):
         The requested value, or None if ``info`` does not match a
         supported constant.
     """
-    from gpiozero import Device, CPUTemperature
-    resukt = None
+    from gpiozero import CPUTemperature
+    result = None
     
     if info == PI_INFO_MODEL:
-        Device.ensure_pin_factory()
-        pi_info = Device.pin_factory.board_info
-        result = pi_info.model
+        pi_info = get_pi_board_info()
+        if pi_info is not None:
+            result = pi_info.model
 
     if info == Pi_INFO_CPU_TEMPERATURE:
         result = CPUTemperature().temperature
                             
     return result
+
+
+def get_pi_board_info():
+    """
+    Return gpiozero board information when the active pin factory exposes it.
+
+    Older gpiozero builds provide ``Device.ensure_pin_factory()``, while some
+    newer or differently packaged variants expose only the ``pin_factory``
+    property. This helper tolerates both cases and returns ``None`` if board
+    metadata is unavailable instead of raising.
+    """
+    from gpiozero import Device
+
+    ensure_pin_factory = getattr(Device, "ensure_pin_factory", None)
+    if callable(ensure_pin_factory):
+        ensure_pin_factory()
+
+    pin_factory = getattr(Device, "pin_factory", None)
+    if pin_factory is None:
+        default_factory = getattr(Device, "_default_pin_factory", None)
+        if callable(default_factory):
+            pin_factory = default_factory()
+            if pin_factory is not None:
+                Device.pin_factory = pin_factory
+
+    return getattr(pin_factory, "board_info", None)
         
 
 def obfuscate_secret(secret, visible_chars=3):

@@ -13,7 +13,7 @@ from allsky_base import ALLSKYMODULEBASE
 import shutil
 import psutil
 from vcgencmd import Vcgencmd
-from gpiozero import CPUTemperature, Device
+from gpiozero import CPUTemperature
 from datetime import timedelta
 
 class ALLSKYPISTATUS(ALLSKYMODULEBASE):
@@ -309,10 +309,10 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 			extra_data['AS_CPUTEMP'] = temp   
 			extra_data['AS_CPUTEMP_C'] = temp   
 
-			Device.ensure_pin_factory()
-			board_info = Device.pin_factory.board_info
-			extra_data['AS_PIMODEL'] = board_info.model
-			self.log(4, f'INFO: Pi Model {board_info.model}')
+			board_info = allsky_shared.get_pi_board_info()
+			if board_info is not None:
+				extra_data['AS_PIMODEL'] = board_info.model
+				self.log(4, f'INFO: Pi Model {board_info.model}')
 
 			throttled = vcgm.get_throttled()
 			text = []

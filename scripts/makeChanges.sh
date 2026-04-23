@@ -454,6 +454,7 @@ do
 						wE_ "${E}"
 					fi
 # TODO: re-set settings to prior values?
+					echo "'${CMD}' failed with RET=${RET}: ${R}."
 					exit "${RET}"		# the actual exit code is important
 				fi
 				[[ -n ${R} ]] && echo -e "${R}"

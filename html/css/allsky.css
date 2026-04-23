@@ -1064,6 +1064,12 @@ fieldset[disabled] .form-control {
     border-color: var(--bs3-alert-danger-border);
     color: var(--bs3-alert-danger-text);
 }
+.alert-info a,
+.alert-success a,
+.alert-warning a,
+.alert-danger a {
+    color: var(--bs3-link);
+}
 
 /* Wells */
 .well,

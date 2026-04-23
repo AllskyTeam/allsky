@@ -747,7 +747,16 @@
 "label" : "Record Focus",
 "type" : "boolean",
 "usage" : "capture",
-"action" : "stop"
+"action" : "reload"
+},
+{
+"name" : "focusmode",
+"default" : false,
+"description" : "Enable enter focus mode.",
+"label" : "Focus Mode",
+"type" : "boolean",
+"usage" : "capture",
+"action" : "reload"
 },
 {
 "name" : "consistentdelays",

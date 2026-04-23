@@ -705,7 +705,12 @@ do_save_camera_capabilities()
 			MSG="No camera was found or the camera software was unable to open the camera;"
 			MSG+=" if your camera is not connected the installation will fail.\n"
 			MSG+="After connecting your camera, re-run the installation."
-			[[ -n ${M} ]] && display_msg --log info "makeChanges.sh output: ${M}"
+			if [[ -n ${M} ]]; then
+				display_msg --log info "makeChanges.sh output: ${M}"
+			else
+				display_msg --log info "No output from makeChanges.sh on error?"
+			fi
+
 			whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 
 			display_msg --log error "Unable to open camera - installation aborted."

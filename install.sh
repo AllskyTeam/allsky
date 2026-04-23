@@ -29,6 +29,7 @@ rm -f "${ALLSKY_REBOOT_NEEDED}"				# In case it's left over from a prior install
 SHORT_TITLE="Allsky Installer"
 TITLE="${SHORT_TITLE} - ${ALLSKY_VERSION}"
 FINAL_SUDOERS_FILE="/etc/sudoers.d/allsky"
+ZWO_FILE="${ALLSKY_HOME}/src/lib/armv7/libASICamera2.a"
 OLD_RASPAP_DIR="/etc/raspap"			# used to contain WebUI configuration files
 SETTINGS_FILE_NAME="$( basename "${ALLSKY_SETTINGS_FILE}" )"
 FORCE_CREATING_DEFAULT_SETTINGS_FILE="false"	# should a default settings file be created?
@@ -499,8 +500,12 @@ get_connected_cameras()
 		do
 			MODEL="${X//++/ }"
 			[[ -z ${FUNCTION} ]] && display_msg --log progress "Found" " ZWO ${MODEL}"
-			CT+=( "${NUM_ZWO};ZWO;${MODEL}" "ZWO     ${MODEL}" )
-			((NUM_ZWO++))
+			if ! strings "${ZWO_FILE}" | grep "${MODEL}" ; then
+				display_msg --log warning "ZWO ${MODEL} not supported; ignoring"
+			else
+				CT+=( "${NUM_ZWO};ZWO;${MODEL}" "ZWO     ${MODEL}" )
+				((NUM_ZWO++))
+			fi
 		done
 	fi
 
@@ -697,15 +702,15 @@ do_save_camera_capabilities()
 	RET=$?
 	if [[ ${RET} -ne 0 ]]; then
 		if [[ ${RET} -eq ${ALLSKY_EXIT_NO_CAMERA} ]]; then
-			MSG="No camera was found;"
-			MSG+=" one must be connected and working for the installation to succeed.\n"
+			MSG="No camera was found or the camera software was unable to open the camera;"
+			MSG+=" if your camera is not connected the installation will fail.\n"
 			MSG+="After connecting your camera, re-run the installation."
-			[[ -n ${M} ]] && MSG+="Output from makeChanges.sh: ${M}"
+			[[ -n ${M} ]] && display_msg --log info "makeChanges.sh output: ${M}"
 			whiptail --title "${TITLE}" --msgbox "${MSG}" 12 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 
-			display_msg --log error "No camera detected - installation aborted."
+			display_msg --log error "Unable to open camera - installation aborted."
 			[[ -s ${TMP} ]] && display_msg --log error "$( < "${TMP}" )"
-			exit_with_image 1 "${STATUS_ERROR}" "No camera detected"
+			exit_with_image 1 "${STATUS_ERROR}" "Unable to open camera"
 		elif [[ ${OPTIONSFILEONLY} == "false" ]]; then
 			display_msg --log error "Unable to save camera capabilities."
 			[[ -s ${TMP} ]] && display_msg --log info "TMP=$( < "${TMP}" )"

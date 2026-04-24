@@ -27,7 +27,6 @@ function DisplayCharts()
       </div>
 
       <div class="pull-right">
-		<?php if (!empty($pageHelp)) { doHelpLink($pageHelp); } ?>
         <button type="button" id="as-tr-btn" class="btn btn-primary btn-xs mr-2" title="Time range">
           <i class="fa-regular fa-clock"></i>
         </button>
@@ -40,6 +39,7 @@ function DisplayCharts()
         <button type="button" id="as-charts-menu" class="btn btn-default btn-xs">
           <i class="fa fa-bars"></i>
         </button>
+		&nbsp; <?php if (!empty($pageHelp)) { doHelpLink($pageHelp); } ?>
       </div>
     </div>
 

@@ -6282,7 +6282,7 @@
 
 
 <div class="admonition danger">
-<p class="admonition-title">Before you install</p>
+<p class="admonition-title">Before you install Allsky</p>
 <p>Your camera must be connected to the Raspberry Pi before you install Allsky.</p>
 <p>If you are using a Raspberry Pi camera, check that the operating system can see it:</p>
 <div class="highlight"><pre><span></span><code>rpicam-still<span class="w"> </span>--list-cameras
@@ -6299,7 +6299,7 @@
 <p>For most users, the overall process is simple: prepare the Pi, make sure the camera and network are working, download the Allsky source, run the installer, then complete the first-time setup in the WebUI. None of those steps is especially difficult on its own, but it is worth doing them in order so that you are not trying to diagnose several unrelated problems at once.</p>
 <h3 id="before-installing">Before Installing<a class="headerlink" href="#before-installing" title="Permanent link">¶</a></h3>
 <p>Before you install Allsky for the first time, make sure the Pi itself is in a sensible starting state.</p>
-<p>The Raspberry Pi should already be running Raspberry Pi OS. In most cases, the Desktop version is recommended because it tends to make general setup and troubleshooting easier, especially while you are still getting the system working. Headless setups are absolutely possible, but if this is your first installation the Desktop version usually gives you a smoother starting point.</p>
+<p>The Raspberry Pi should already be running Raspberry Pi OS. The Desktop version is recommended because it tends to make general setup and troubleshooting easier, especially while you are still getting the system working.</p>
 <p>The Pi should also have a working Internet connection. A wired network connection is preferable if you can use one, because it is generally faster and more reliable than Wi-Fi during installation. This matters more than it may first appear. The installer may need to fetch packages, update components, and compile software, and that is all easier when the connection is stable. If you are using Power over Ethernet, that can make deployment especially neat because you only need one cable to the Pi.</p>
 <p>You also need <code>git</code> installed:</p>
 <div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>git
@@ -6343,21 +6343,21 @@
 </div>
 <h3 id="downloading-allsky">Downloading Allsky<a class="headerlink" href="#downloading-allsky" title="Permanent link">¶</a></h3>
 <p>Allsky is installed into <code>~/allsky</code>. With the exception of some system-level files created during setup, that directory becomes the main home for the installation.</p>
-<p>Clone the repository like this:</p>
+<p>Download the Allsky software from GitHub like this:</p>
 <div class="highlight"><pre><span></span><code><span class="nb">cd</span>
 git<span class="w"> </span>clone<span class="w"> </span>--depth<span class="o">=</span><span class="m">1</span><span class="w"> </span>--recursive<span class="w"> </span>https://github.com/AllskyTeam/allsky.git
 </code></pre></div>
-<p>This can take a little while depending on the Pi model, storage speed, and network speed. When it finishes, the new <code>allsky</code> directory will normally be around 150 MB.</p>
+<p>This can take a little while depending on the Pi model, storage speed, and network speed. When it finishes, the new <code>allsky</code> directory will normally be around 650 MB.</p>
 <p>You should see output broadly similar to this:</p>
 <div class="highlight"><pre><span></span><code>Cloning into 'allsky'...
 remote: Enumerating objects: 891, done.
-...  more commands here
+...  more commands here ...
 Receiving objects: 100% (891/891), 46.25 MiB | 17.82 MiB/s, done.
 Resolving deltas: 100% (100/100), done.
 Submodule 'src/sunwait-src' (https://github.com/risacher/sunwait) registered for ...
 Cloning into '/home/pi/allsky/src/sunwait-src'...
 remote: Enumerating objects: 119, done.
-...  more commands here
+...  more commands here ...
 Submodule path 'src/sunwait-src': checked out '151d8340a748a4dac7752ebcd38983b2887f5f0c'
 </code></pre></div>
 <h3 id="running-the-installer">Running The Installer<a class="headerlink" href="#running-the-installer" title="Permanent link">¶</a></h3>
@@ -6370,11 +6370,11 @@ Submodule path 'src/sunwait-src': checked out '151d8340a748a4dac7752ebcd38983b28
 <h4 id="host-name">Host name<a class="headerlink" href="#host-name" title="Permanent link">¶</a></h4>
 <p>If the Raspberry Pi still has its default host name, you may be asked to choose a new one. The default suggestion is usually <code>allsky</code>. If you have more than one Pi on the same network, they must all have unique names. A test machine might be named <code>allsky-test</code>, for example.</p>
 <h4 id="locale">Locale<a class="headerlink" href="#locale" title="Permanent link">¶</a></h4>
-<p>You may be asked which locale to use. This affects details such as the decimal separator in log output. The development environment uses <code>en_GB.UTF-8</code> by default.</p>
+<p>You may be asked which locale to use. This affects details such as the decimal separator in log output. The default is <code>en_GB.UTF-8</code> since the Raspberry Pi company is from Great Britian.</p>
 <h4 id="swap-space">Swap space<a class="headerlink" href="#swap-space" title="Permanent link">¶</a></h4>
 <p>The installer may offer to add swap space. This effectively gives the system more working memory, and that can be important on smaller Pis. Insufficient swap space is one of the more common causes of timelapse creation problems.</p>
 <h4 id="temporary-directory-in-memory">Temporary directory in memory<a class="headerlink" href="#temporary-directory-in-memory" title="Permanent link">¶</a></h4>
-<p>You may be asked whether <code>~/allsky/tmp</code> should be placed in memory rather than on the SD card. This directory is used heavily for temporary files, and keeping it in memory can significantly reduce SD card writes. That generally improves card longevity.</p>
+<p>You may be asked whether <code>~/allsky/tmp</code> should be placed in memory rather than on the SD card. This directory is used heavily for temporary files, and keeping it in memory can significantly reduce SD card writes, improving card longevity.</p>
 <h4 id="latitude-and-longitude">Latitude and longitude<a class="headerlink" href="#latitude-and-longitude" title="Permanent link">¶</a></h4>
 <p>On a new installation, the installer will ask for the location. In many cases it can suggest defaults based on the network environment. These values matter because Allsky uses them for sunrise, sunset, and other time-dependent behaviour.</p>
 <h4 id="reboot">Reboot<a class="headerlink" href="#reboot" title="Permanent link">¶</a></h4>
@@ -6387,7 +6387,7 @@ Submodule path 'src/sunwait-src': checked out '151d8340a748a4dac7752ebcd38983b28
 </div>
 <h3 id="after-installation">After Installation<a class="headerlink" href="#after-installation" title="Permanent link">¶</a></h3>
 <p>Once installation finishes, reboot the Pi if you were told to do so. After that, open the WebUI and complete the initial configuration.</p>
-<p>Use one of the following in a web browser:</p>
+<p>Use one of the following in a web browser (assuming you named the Pi "allsky"):</p>
 <ul>
 <li><code>http://allsky.local</code></li>
 <li><code>http://allsky.localhost</code></li>

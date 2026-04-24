@@ -70,10 +70,10 @@ Most users do not need the whole guide on day one. What they need is a clear pat
 
     Start with:
 
-    - [Installing Allsky](allsky.md)
+    - [Installing Allsky](allsky_guide/allsky.md)
     - the hardware pages under `hardware`
-    - [FAQ](faq.md)
-    - [Glossary](glossary.md)
+    - [FAQ](allsky_guide/faq.md)
+    - [Glossary](allsky_guide/glossary.md)
 
     That will give you the basic vocabulary, installation flow, and answers to the most common early questions.
 
@@ -93,20 +93,20 @@ Most users do not need the whole guide on day one. What they need is a clear pat
     Start with:
 
     - pages under `troubleshooting`
-    - [FAQ](faq.md)
-    - [Glossary](glossary.md)
+    - [FAQ](allsky_guide/faq.md)
+    - [Glossary](allsky_guide/glossary.md)
 
     If the issue is operational rather than purely technical, the backup and restore pages are also worth reading before you start making recovery changes.
 
 ## The WebUI and the Website are not the same thing {data-toc-label="WebUI vs Website"}
 
-One distinction matters early because it affects how many other pages in the guide make sense: the **WebUI** is not the same as an **Allsky Website**.
+One distinction matters early because it affects how many other pages in the guide make sense: the **WebUI** is not the same as a local or remote **Allsky Website**.
 
 The **WebUI** is the administration and monitoring interface. It is where you change settings, inspect the system, view status, manage modules and overlays, and work with the running installation.
 
-An **Allsky Website**, by contrast, is intended for viewing and sharing output. It presents the current image and other generated results such as timelapses, keograms, and startrails. It can run on the same Pi or on a remote server.
+A local or remote **Allsky Website**, by contrast, is intended for viewing and sharing output. It presents the current image and other generated results such as timelapses, keograms, and startrails. It can run on the same Pi (called a "local Website") or on a remote server (called a "remote Website").
 
-That distinction shows up throughout the guide. If a page is about operating the system, it usually belongs to the WebUI side. If it is about presenting results to viewers, it usually belongs to the Website side.
+That distinction shows up throughout this guide. If a page is about operating the system, it usually belongs to the WebUI side. If it is about presenting results to viewers, it usually belongs to the Website side.
 
 ## What matters most in regular use {data-toc-label="Regular Use"}
 
@@ -143,18 +143,15 @@ You do not need to become an expert in every part of the system. But the more cl
 
 ## Development Team { data-toc-label="Development Team" }
 
-!!! info "Allsky Developers"
-    The Allsky Camera software was originally created by Thomas Jacquin, a developer and astrophotography  enthusiast based in Canada.
+ The Allsky Camera software was originally created by Thomas Jacquin, a developer and astrophotography enthusiast based in Canada.  He released the first version of Allsky around 2018, designed to run on a Raspberry Pi with a ZWO ASI or Raspberry Pi HQ camera to capture images of the entire sky - automatically creating timelapses and keograms.
 
-    Thomas released the first version of Allsky around 2018, designed to run on a Raspberry Pi with a ZWO ASI or Raspberry Pi HQ camera to capture images of the entire sky — automatically creating timelapses, and keograms.
+ Since then, the project has grown into a large open-source community effort on GitHub under the Allsky Team's organisation, with contributions from many developers and users.
 
-    Since then, the project has grown into a large open-source community effort on GitHub under the Allsky Team￼ organisation, with contributions from many developers and users:
+ Thomas continues to be recognised as the founder and original author, while the Allsky Team now maintains and evolves the software collaboratively.
 
-    Thomas continues to be recognised as the founder and original author, while the Allsky Team now maintains and evolves the software collaboratively.
-
-    The current maintainers are  
-    - Eric Claeys - @EricClaeys  
-    - Alex Greenland - @Alex-developer 
+ The current maintainers are:
+    - Eric Claeys - @EricClaeys
+    - Alex Greenland - @Alex-developer
 
 ## Contributing { data-toc-label="Contributing" }
 If you would like to contribute code to Allsky then please see the [Contributing Guide](developer_guide/contributing.md)

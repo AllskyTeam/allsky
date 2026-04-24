@@ -4,7 +4,7 @@ tags:
   - Installation
 ---
 
-!!! danger "Before you install"
+!!! danger "Before you install Allsky"
 
     Your camera must be connected to the Raspberry Pi before you install Allsky.
 
@@ -36,7 +36,7 @@ For most users, the overall process is simple: prepare the Pi, make sure the cam
 
 Before you install Allsky for the first time, make sure the Pi itself is in a sensible starting state.
 
-The Raspberry Pi should already be running Raspberry Pi OS. In most cases, the Desktop version is recommended because it tends to make general setup and troubleshooting easier, especially while you are still getting the system working. Headless setups are absolutely possible, but if this is your first installation the Desktop version usually gives you a smoother starting point.
+The Raspberry Pi should already be running Raspberry Pi OS. The Desktop version is recommended because it tends to make general setup and troubleshooting easier, especially while you are still getting the system working.
 
 The Pi should also have a working Internet connection. A wired network connection is preferable if you can use one, because it is generally faster and more reliable than Wi-Fi during installation. This matters more than it may first appear. The installer may need to fetch packages, update components, and compile software, and that is all easier when the connection is stable. If you are using Power over Ethernet, that can make deployment especially neat because you only need one cable to the Pi.
 
@@ -101,27 +101,27 @@ After that, decide what you want to do with the existing installation. There are
 
 Allsky is installed into `~/allsky`. With the exception of some system-level files created during setup, that directory becomes the main home for the installation.
 
-Clone the repository like this:
+Download the Allsky software from GitHub like this:
 
 ```bash
 cd
 git clone --depth=1 --recursive https://github.com/AllskyTeam/allsky.git
 ```
 
-This can take a little while depending on the Pi model, storage speed, and network speed. When it finishes, the new `allsky` directory will normally be around 150 MB.
+This can take a little while depending on the Pi model, storage speed, and network speed. When it finishes, the new `allsky` directory will normally be around 650 MB.
 
 You should see output broadly similar to this:
 
 ```text
 Cloning into 'allsky'...
 remote: Enumerating objects: 891, done.
-...  more commands here
+...  more commands here ...
 Receiving objects: 100% (891/891), 46.25 MiB | 17.82 MiB/s, done.
 Resolving deltas: 100% (100/100), done.
 Submodule 'src/sunwait-src' (https://github.com/risacher/sunwait) registered for ...
 Cloning into '/home/pi/allsky/src/sunwait-src'...
 remote: Enumerating objects: 119, done.
-...  more commands here
+...  more commands here ...
 Submodule path 'src/sunwait-src': checked out '151d8340a748a4dac7752ebcd38983b2887f5f0c'
 ```
 
@@ -144,7 +144,7 @@ If the Raspberry Pi still has its default host name, you may be asked to choose 
 
 #### Locale { data-toc-label="Locale" }
 
-You may be asked which locale to use. This affects details such as the decimal separator in log output. The development environment uses `en_GB.UTF-8` by default.
+You may be asked which locale to use. This affects details such as the decimal separator in log output. The default is `en_GB.UTF-8` since the Raspberry Pi company is from Great Britian.
 
 #### Swap space { data-toc-label="Swap space" }
 
@@ -152,7 +152,7 @@ The installer may offer to add swap space. This effectively gives the system mor
 
 #### Temporary directory in memory { data-toc-label="Temporary directory" }
 
-You may be asked whether `~/allsky/tmp` should be placed in memory rather than on the SD card. This directory is used heavily for temporary files, and keeping it in memory can significantly reduce SD card writes. That generally improves card longevity.
+You may be asked whether `~/allsky/tmp` should be placed in memory rather than on the SD card. This directory is used heavily for temporary files, and keeping it in memory can significantly reduce SD card writes, improving card longevity.
 
 #### Latitude and longitude { data-toc-label="Latitude and longitude" }
 
@@ -174,7 +174,7 @@ If the installer tells you that there are post-installation actions to complete,
 
 Once installation finishes, reboot the Pi if you were told to do so. After that, open the WebUI and complete the initial configuration.
 
-Use one of the following in a web browser:
+Use one of the following in a web browser (assuming you named the Pi "allsky"):
 
 - `http://allsky.local`
 - `http://allsky.localhost`

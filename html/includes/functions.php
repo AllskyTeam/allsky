@@ -2016,4 +2016,11 @@ function useLogin() {
 	return $csrf_token;
 }
 
+
+function doHelpLink($helpLink)
+{
+	echo "<a class='pull-right' href='$helpLink' external='true' rel='noopener noreferrer' data-toggle='tooltip' data-container='body' data-placement='left' title='Help'>";
+	echo "<i class='fa-solid fa-circle-question'></i> Help</a>";
+}
+
 ?>

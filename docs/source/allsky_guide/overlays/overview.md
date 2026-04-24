@@ -13,13 +13,13 @@ An overlay is information that is added, i.e., overlayed, on top of each capture
 
 - :fontawesome-solid-bomb: **Yes**, there are detailed instructions for the Overlay Manager… but if you’d rather skip the homework and start clicking buttons like a caffeinated raccoon, go right ahead. It’s surprisingly hard to break anything.
 
-    - Click the Variable Manager to add data to the overlay
-    - Click the Image icon to add an image (use the Image Manager to upload new images)
+    - Click the "Variable Manager" icon to add data to the overlay
+    - Click the "Image" icon to add an image (use the Image Manager to upload new images)
     - Click a field to set its properties (font, size, etc.)
-    - Click the Preview button to preview the overlay — Allsky must be running
+    - Click the "Display Sample Data" button to preview the overlay — Allsky must be running
     - Click and drag to select fields. Once selected:
-        - Click the Group button to group fields
-        - Click the Left Align button to align the fields
+        - Click the "Group Fields" button to group fields
+        - Click the "Left Align" button to align the fields
 
 </div>
 

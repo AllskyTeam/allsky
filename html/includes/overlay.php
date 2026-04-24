@@ -79,11 +79,7 @@ function DisplayOverlay($image_name)
             </div> 
 			<div class="panel-heading clearfix">
                 <span><i class="<?php echo $pageIcon ?>"></i> <?php echo $pageHeaderTitle ?></span>
-<?php if (!empty($pageHelp)) { ?>
-                <a class="pull-right" href="<?php echo $pageHelp; ?>" target="_blank" rel="noopener noreferrer" data-toggle="tooltip" data-container="body" data-placement="left" title="Help">
-                    <i class="fa-solid fa-circle-question"></i> Help
-                </a>
-<?php } ?>
+				<?php if (!empty($pageHelp)) { doHelpLink($pageHelp); } ?>
             </div>
                 <p id="editor-messages"><?php $myStatus->showMessages(); ?></p>
                 <nav class="navbar navbar-default">

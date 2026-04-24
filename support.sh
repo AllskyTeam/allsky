@@ -337,15 +337,67 @@ function generate_support_info()
 		print "${RPI_CAMERAS}"
 	} > "${LIBCAMERA_FILE}"
 
-	local LOG_FILE
+	# GitHub supports uploads up to ${GIT_HUB_LIMIT} MB.
+	# It's not unusual for the allsky logs to be bigger than that; if so,
+	# first drop the ".1" log.  If it's STILL to large, do a "tail" on the files.
+	# Assume the log files zip to 1/10 their size.
+	# Also assume everything else in the support log except the Allsky log files is up to 5 MB.
+
+	function get_total_size()
+	{
+		ls -l "${@}" | gawk 'BEGIN { TOTAL=0 }
+			{ TOTAL += $5; }
+			END { printf("%d", TOTAL / 10 / 1024 / 1024); }'
+	}
+
+	local GIT_HUB_LIMIT_MB=25
+	local LOG_LIMIT_MB=$(( ( GIT_HUB_LIMIT_MB - 5 ) ))		# MB limit of log files
+	declare -a ALL_LOGS=()
+	local INDEX=-1
+	local LOG1=""		# If the ".1" log file exist this will be it's index in the array.
+
+	# First get list of logs that exist, and note the ".1" log file.
  	for L in "${ALLSKY_LOG}" "${ALLSKY_LOG}.1" "${ALLSKY_PERIODIC_LOG}" ; do
 		if [[ -f ${L} ]]; then
-  			LOG_FILE="${TEMP_DIR}/$( basename "${L}" ).txt"
-			if [[ ${LOG_LINES} == "all" ]]; then
-				cp "${L}" "${LOG_FILE}"
-			else
-				tail -n "${LOG_LINES}" "${L}" > "${LOG_FILE}"
+			INDEX=$(( INDEX + 1 ))
+			[[ ${L} == "${ALLSKY_LOG}.1" ]] && LOG1="${INDEX}"
+			ALL_LOGS[${INDEX}]="${L}"
+		fi
+	done
+	# Get the total size.
+	local TOTAL_SIZE_MB="$( get_total_size ${ALL_LOGS[@]} )"
+
+	local LOG_LINES_TEMP="${LOG_LINES}"
+	if [[ ${TOTAL_SIZE_MB} -gt ${LOG_LIMIT_MB} ]]; then
+		if [[ ${DEBUG} == "true" ]]; then
+			echo "Total size of zipped log files is ${TOTAL_SIZE_MB} MB."
+			echo "This is bigger than the GitHub limit of ${LOG_LIMIT_MB} MB."
+		fi
+		# If the ".1" log file is in the list, delete it, then recalculate the size.
+		if [[ -n ${LOG1} ]]; then
+			unset ALL_LOGS[${LOG1}]
+			TOTAL_SIZE_MB="$( get_total_size ${ALL_LOGS[@]} )"
+			if [[ ${DEBUG} == "true" ]]; then
+				echo "Not including ${ALLSKY_LOG}.1 gives a new size of ${TOTAL_SIZE_MB} MB."
 			fi
+		fi
+	fi
+
+	# If the new total size is STILL to big,
+	# only get the last ${LOG_LINES_TEMP} lines of the remaining logs.
+	if [[ ${TOTAL_SIZE_MB} -gt ${LOG_LIMIT_MB} ]]; then
+		LOG_LINES_TEMP=2000		# Seems reasonable
+		if [[ ${DEBUG} == "true" ]]; then
+			echo "Still too large, only getting last ${LOG_LINES_TEMP} lines of the log files."
+		fi
+	fi
+	local LOG_FILE
+ 	for L in ${ALL_LOGS[@]} ; do
+  		LOG_FILE="${TEMP_DIR}/$( basename "${L}" ).txt"
+		if [[ ${LOG_LINES_TEMP} == "all" ]]; then
+			cp "${L}" "${LOG_FILE}"
+		else
+			tail -n "${LOG_LINES_TEMP}" "${L}" > "${LOG_FILE}"
 		fi
   	done
 
@@ -363,6 +415,8 @@ function generate_support_info()
 			! \( -path "${ALLSKY_TMP}" -o -name "sequence-timelapse*" -o -name __pycache__ \) \
 			-exec cp -ar {} "${TEMP_DIR}/tmp" \;
 	fi
+	# The mini-timelapse can be several MB and we don't need it.
+	rm -f "${TEMP_DIR}/tmp/current_images/mini-timelapse.mp4"
 
 	# Copy ${ALLSKY_CONFIG} directory, then truncate files we don't want.
 	# The directory should exists unless installation failed.
@@ -504,15 +558,16 @@ function usage_and_exit()
 {
 	local RET=${1}
 	exec 2>&1
-	local USAGE="\nUsage: ${ME} [--help] [--tree] [--type t] [--repo r] [--number n] [--fullusb] "
+	local USAGE="\nUsage: ${ME} [--help] [--tree] [--type t] [--repo r] [--number n] [--fullusb] [--debug]"
 	if [[ ${RET} -ne 0 ]]; then
 		E_ "${USAGE}"
 	else
 		echo -e "${USAGE}"
 	fi
 	echo
-	echo "Where:"
+	echo "Arguments:"
 	echo "	--help        Displays this message and exits."
+	echo "	--debug       Displays debugging information (developer use only)."
 	echo "	--text        Use text mode. Options must be specified on the command line."
 	echo "	--auto        Auto accept any prompts and produce no output except for errors."
 	echo "	--type t      'D' for Github Discussion, 'I' for Issue."
@@ -527,6 +582,7 @@ function usage_and_exit()
 ############################################## main body
 
 OK="true"
+DEBUG="false"
 TEXT_ONLY="false"		# Also used by display_box()
 GITHUB_NUMBER="none"
 GITHUB_REPO=""
@@ -539,6 +595,10 @@ while [[ $# -gt 0 ]]; do
 	case "${ARG,,}" in
 		--help)
 			DO_HELP="true"
+			;;
+
+		--debug)
+			DEBUG="true"
 			;;
 
 		--text)

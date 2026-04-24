@@ -27,11 +27,7 @@ function DisplayCharts()
       </div>
 
       <div class="pull-right">
-<?php if (!empty($pageHelp)) { ?>
-        <a href="<?php echo $pageHelp; ?>" target="_blank" rel="noopener noreferrer" class="btn btn-default btn-xs mr-2" title="Help">
-          <i class="fa-solid fa-circle-question"></i> Help
-        </a>
-<?php } ?>
+		<?php if (!empty($pageHelp)) { doHelpLink($pageHelp); } ?>
         <button type="button" id="as-tr-btn" class="btn btn-primary btn-xs mr-2" title="Time range">
           <i class="fa-regular fa-clock"></i>
         </button>

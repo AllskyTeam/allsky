@@ -63,11 +63,7 @@ function DisplayLiveView($image_name, $delay, $daydelay, $daydelay_postMsg, $nig
 		}
 ?>
             </span>
-<?php if (!empty($pageHelp)) { ?>
-            <a class="pull-right" href="<?php echo $pageHelp; ?>" target="_blank" rel="noopener noreferrer" data-toggle="tooltip" data-container="body" data-placement="left" title="Help">
-                <i class="fa-solid fa-circle-question"></i> Help
-            </a>
-<?php } ?>
+			<?php if (!empty($pageHelp)) { doHelpLink($pageHelp); } ?>
 		</div>
 		<div class="panel-body">
 			<?php if ($myStatus->isMessage()) echo "<p>" . $myStatus->showMessages() . "</p>"; ?>

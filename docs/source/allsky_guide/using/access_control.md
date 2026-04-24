@@ -15,7 +15,7 @@ For some installations, requiring a login is essential. For others, especially i
 
 ## What login protects { data-toc-label="What login protects" }
 
-When WebUI login is enabled, it protects the administration side of Allsky.
+When WebUI "Require WebUI Login" setting is enabled, it protects the administration side of Allsky.
 
 That includes access to things like:
 
@@ -79,7 +79,7 @@ Many users want two different things at the same time:
 
 The right solution is usually:
 
-1. Keep WebUI login enabled.
+1. Keep "Require WebUI Login" enabled.
 2. Use an Allsky Website or `public.php` for viewing.
 
 That gives you a public-facing image page without exposing the management interface.
@@ -92,7 +92,7 @@ There are only a few main pieces to understand, but they work together.
 
 ### Require WebUI Login { data-toc-label="Require WebUI Login" }
 
-This is the main access-control setting in **Allsky Settings** under **WebUI Configuration**.
+This is the main access-control setting in **Settings - Allsky Settings** in the **WebUI Configuration** section.
 
 - Setting: **Require WebUI Login**
 - Default: **Yes**
@@ -101,7 +101,7 @@ When enabled, users must sign in to the WebUI before they can use the protected 
 
 When disabled, the WebUI is open to anyone who can reach it over the network.
 
-The existing settings documentation is explicit here: if your Pi is accessible on the Internet, do not disable this setting.
+**If your Pi is accessible on the Internet, do NOT disable this setting.**
 
 ### WebUI username and password { data-toc-label="WebUI username password" }
 
@@ -122,7 +122,7 @@ The WebUI credentials are stored in `env.json`.
 
 ### Change Password { data-toc-label="Change Password" }
 
-The guide already references a **Change Password** link for updating the WebUI credentials. That is the normal way to move away from the default `admin` / `secret` login after installation.
+The guide already references a **Change Password** link for updating the WebUI credentials. That is the normal way to move away from the default `admin` / `secret` credentials after installation.
 
 If you enable login, changing the password should be part of the initial setup, not something left for later.
 

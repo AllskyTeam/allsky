@@ -7,7 +7,7 @@ tags:
 
 # Charts
 
-The **Charts** page is where you look at Allsky data over time instead of as a single current value. It is designed for browsing trends, comparing related measurements, and building a workspace that helps you understand how your system has behaved across hours, days, or longer periods. While other parts of the WebUI are more focused on current status or individual events, the Charts page is for looking at the bigger picture.
+The **Charts** page is where you look at Allsky data over time instead of as a single current value. It is designed for browsing trends, comparing related measurements, and building a workspace that helps you understand how your system has behaved across time. While other parts of the WebUI are more focused on current status or individual events, the Charts page is for looking at the bigger picture.
 
 For many users, this page becomes most useful when they need to answer questions such as:
 
@@ -24,25 +24,28 @@ Charts are often the easiest way to answer those questions because they let you 
 Charts page main layout
 ///
 
-Rather than thinking of the Charts page as a single graph, it is better to think of it as a workspace. You can open different charts, organise them into tabs, resize them, move them around, and return later to find the layout still available. That makes the page flexible enough to suit very different needs. One user might create a simple layout for routine monitoring. Another might build several tabs for investigating system behaviour in more detail. Another might mainly use the page to compare a small number of important values over long periods.
+Rather than thinking of the Charts page as a single graph, it is better to think of it as a workspace. You can open different charts, organise them into tabs, resize them, move them around, and return later to find the layout still available.
+Because the layout is something you can shape, the page rewards a little time spent arranging it properly.
 
-Because the layout is something you can shape, the page rewards a little time spent arranging it properly. Once you have built a view that suits the way you work, the Charts page becomes much easier to use as part of your normal routine.
-
+<!--  FIX: This was already said above.
 !!! info "Think of Charts as a working area"
 
     The page is most useful when you treat it as a place to build views around your own questions. You are not limited to one fixed dashboard. Instead, you can create a layout that reflects what matters most in your own Allsky installation.
+-->
 
 ### What The Page Is For { data-toc-label="What The Page Is For" }
 
 The main purpose of the Charts page is to help you understand patterns and relationships in recorded data. A single number may tell you what something is right now, but it does not show whether that value has been steady, rising, falling, or changing repeatedly. A chart adds that missing context.
 
+<!--  FIX: This was already said above.
 This is especially useful when you are trying to interpret behaviour that develops over time. You might want to see whether conditions became worse over the course of a night, whether a change happened at the same time every evening, or whether one value appears to respond to another. In those situations, the chart view is often much easier to use than reading logs line by line or repeatedly checking current status values.
+-->
 
-The page is also useful because it does not force you into a single fixed layout. You can keep one tab for general monitoring, another for more detailed investigation, and another for custom charts that answer a very specific question. That flexibility is important because not every user is interested in the same set of measurements or the same style of view.
+The page is also useful because it does not force you into a single fixed layout. You can keep one tab for general monitoring, another for more detailed investigation, and another for custom charts that answer a very specific question. <!-- That flexibility is important because not every user is interested in the same set of measurements or the same style of view. -->
 
-### Understanding The Header Controls { data-toc-label="Understanding Header" }
+### Understanding The Header Buttons { data-toc-label="Understanding Header" }
 
-The controls in the top-right corner affect how you work with the Charts page. They are small, but each one serves a different purpose and is worth understanding before you start building a larger workspace.
+The icons in the top-right corner affect how you work with the Charts page. <!-- They are small, but each one serves a different purpose and is worth understanding before you start building a larger workspace. -->
 
 === "Time Range"
 
@@ -52,7 +55,7 @@ The controls in the top-right corner affect how you work with the Charts page. T
 
 === "Custom Chart"
 
-    The plus button opens the **custom chart editor**. This is used when you want to create a new chart definition of your own rather than simply place an existing chart into the page. That distinction matters. If you want to use one of the charts that already exists in the chart library, you open the chart menu and add it from there. If you want to create something new, the plus button is where you begin.
+    The plus button opens the **custom chart editor**. This is used when you want to create a **new chart** definition of your own rather than simply place an existing chart into the page. That distinction matters. If you want to use one of the charts that already exists in the chart library, you open the chart menu and add it from there. If you want to create something new, the plus button is where you begin.
 
     This is helpful when the built-in charts do not show the combination of information you need, or when you want a chart that is better suited to your own recurring tasks.
 

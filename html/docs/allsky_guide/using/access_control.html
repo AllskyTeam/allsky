@@ -6285,7 +6285,7 @@
 <p>In simple terms, the key question is this: <strong>who can reach your WebUI, and what could they do if they got in?</strong></p>
 <p>For some installations, requiring a login is essential. For others, especially isolated local systems, a lighter setup may be acceptable. This page explains when login protection makes sense, when it may be reasonable not to use it, and what settings are available.</p>
 <h2 id="what-login-protects">What login protects<a class="headerlink" href="#what-login-protects" title="Permanent link">¶</a></h2>
-<p>When WebUI login is enabled, it protects the administration side of Allsky.</p>
+<p>When WebUI "Require WebUI Login" setting is enabled, it protects the administration side of Allsky.</p>
 <p>That includes access to things like:</p>
 <ul>
 <li>Allsky settings,</li>
@@ -6342,7 +6342,7 @@ It is easier to keep protection in place than to recover from an exposed WebUI l
 </ul>
 <p>The right solution is usually:</p>
 <ol>
-<li>Keep WebUI login enabled.</li>
+<li>Keep "Require WebUI Login" enabled.</li>
 <li>Use an Allsky Website or <code>public.php</code> for viewing.</li>
 </ol>
 <p>That gives you a public-facing image page without exposing the management interface.</p>
@@ -6350,14 +6350,14 @@ It is easier to keep protection in place than to recover from an exposed WebUI l
 <h2 id="access-control-settings-and-related-options">Access control settings and related options<a class="headerlink" href="#access-control-settings-and-related-options" title="Permanent link">¶</a></h2>
 <p>There are only a few main pieces to understand, but they work together.</p>
 <h3 id="require-webui-login">Require WebUI Login<a class="headerlink" href="#require-webui-login" title="Permanent link">¶</a></h3>
-<p>This is the main access-control setting in <strong>Allsky Settings</strong> under <strong>WebUI Configuration</strong>.</p>
+<p>This is the main access-control setting in <strong>Settings - Allsky Settings</strong> in the <strong>WebUI Configuration</strong> section.</p>
 <ul>
 <li>Setting: <strong>Require WebUI Login</strong></li>
 <li>Default: <strong>Yes</strong></li>
 </ul>
 <p>When enabled, users must sign in to the WebUI before they can use the protected interface.</p>
 <p>When disabled, the WebUI is open to anyone who can reach it over the network.</p>
-<p>The existing settings documentation is explicit here: if your Pi is accessible on the Internet, do not disable this setting.</p>
+<p><strong>If your Pi is accessible on the Internet, do NOT disable this setting.</strong></p>
 <h3 id="webui-username-and-password">WebUI username and password<a class="headerlink" href="#webui-username-and-password" title="Permanent link">¶</a></h3>
 <p>The WebUI uses a username and password for sign-in.</p>
 <p>On a default installation, the initial credentials are:</p>
@@ -6373,7 +6373,7 @@ It is easier to keep protection in place than to recover from an exposed WebUI l
 A login screen is only useful if the credentials are not widely known.</p>
 </div>
 <h3 id="change-password">Change Password<a class="headerlink" href="#change-password" title="Permanent link">¶</a></h3>
-<p>The guide already references a <strong>Change Password</strong> link for updating the WebUI credentials. That is the normal way to move away from the default <code>admin</code> / <code>secret</code> login after installation.</p>
+<p>The guide already references a <strong>Change Password</strong> link for updating the WebUI credentials. That is the normal way to move away from the default <code>admin</code> / <code>secret</code> credentials after installation.</p>
 <p>If you enable login, changing the password should be part of the initial setup, not something left for later.</p>
 <h3 id="remember-me">Remember me<a class="headerlink" href="#remember-me" title="Permanent link">¶</a></h3>
 <p>The login page includes a <strong>Remember me</strong> checkbox.</p>

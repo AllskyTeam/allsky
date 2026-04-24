@@ -13,14 +13,14 @@ The **Live View** page is the quickest way to see what your Allsky camera is doi
 Main Live View page
 ///
 
-When everything is working normally, the page simply shows the latest image being produced by Allsky and updates it automatically. During the day and at night the refresh timing can be different, because Allsky itself may be capturing images at different intervals in those periods. If the page is opened during the daytime it will use the daytime refresh interval, and if it is opened at night it will use the nighttime interval. One small detail worth knowing is that if you leave the page open across a day to night or night to day transition, the refresh timing may no longer match the new capture interval exactly. If that happens, just reload the page and it will immediately pick up the correct timing again.
+When everything is working normally, the page simply shows the latest image being produced by Allsky and updates it automatically. Daytime and nighttime refresh timings can be different, because Allsky itself may be capturing images at different intervals in those periods. If the page is opened during the daytime it will use the daytime refresh interval, and if it is opened at night it will use the nighttime interval. One small detail worth knowing is that if you leave the page open across a day to night or night to day transition, the refresh timing may no longer match the new capture interval exactly. If that happens, just reload the page and it will immediately pick up the correct timing again.
 
-Depending on your settings, you may also see a message explaining how often daytime and nighttime images are updated. That message is simply there as a reminder of the expected refresh cadence, so if the image seems slow to change you have some context for what is normal. If you prefer a cleaner page, that message can be hidden with the **Show Updated Message** setting in the Allsky settings.
+Depending on your settings, you may also see a message explaining how often daytime and nighttime images are updated. That message is simply there as a reminder of the expected refresh cadence, so if the image seems slow to change you have some context for what is normal. If you prefer a cleaner page, that message can be hidden with the **Show Updated Message** setting in the **Settings - Allsky Settings** page.
 
 The image itself can be clicked to switch into fullscreen mode. This is especially handy when you want to inspect cloud movement, check whether stars are sharp, or simply use the page as a larger live monitor. Clicking again, or exiting fullscreen in the usual browser way, returns you to the normal page layout.
 
 
-If a mini-timelapse has been created, a link to it appears in the header area of the page. That gives you a quick way to move from the current live image to a short recent playback without having to navigate somewhere else first. It is a small feature, but in practice it is very convenient when you are trying to understand whether something you are seeing is a one-off frame or part of a longer trend.
+If a mini-timelapse has been created, a link to it appears in the header of the page. This is a small feature, but in practice it is very convenient when you are trying to understand whether something you are seeing is a one-off frame or part of a longer trend.
 
 ![](/assets/guide_images/liveview-minitimelapse.png){ width="100%" }
 

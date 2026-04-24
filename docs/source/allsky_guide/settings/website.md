@@ -15,7 +15,7 @@ Steps to configure an Allsky Website are below.
 
 ## Configure Website Settings { data-toc-label="Configure Website" }
 
-- In the WebUI, click on the Editor link.
+- In the WebUI, click on the "Settings - Editor" link.
 - In the drop-down at the bottom of the page, select one of the following, depending on which Website you want to configure:
 
     - ```configuration.json (local Allsky Website)``` or
@@ -34,7 +34,7 @@ Example Remote Configuration Settings
 
 ??? info "Using the Editor"
 
-    The WebUI's Editor page allows editing Allsky configuration files. Items in the editor window are color-coded depending on what they are.
+    The WebUI's "Settings - Editor" page allows editing Allsky configuration files. Items in the editor window are color-coded depending on what they are.
 
     !!! info  "Tip"
 
@@ -58,7 +58,7 @@ Example Remote Configuration Settings
 
       - Colors for setting **values** vary based on value's type:
       
-        - **Text** (anything surrounded by quotes): <span class="editorString">"sample text"</span>. Note that a number surrounded by quotes like <span class="editorString">"41.79"</span> is treated as text and is confusing to people looking at the value. If a value is supposed to be a number, don't add quotes.
+        - **Text** (anything surrounded by quotes): <span class="editorString">"sample text"</span>. Note that a number surrounded by quotes like <span class="editorString">"41.79"</span> is treated as text and is confusing to people looking at the value.  If a value is supposed to be a number, don't add quotes.
         - **Numbers** (when not quoted): <span class="editorNum">41.79</span>, <span class="editorNum">-88.1</span>.
         - **Booleans** (when not quoted): <span class="editorBool">true</span>, <span class="editorBool">false</span>.
       
@@ -134,8 +134,8 @@ Example Remote Configuration Settings
 
 ## Enable The Website { data-toc-label="Enable The Website" }
 
-1. On the WebUI's Allsky Settings page display the Website and Remote Server Settings section.
-2. Enable the Website in either the Local Website Settings or Remote Website Settings subsection, depending on which Website you are configuring.
+1. On the WebUI's "Settings - Allsky Settings" page display the "Website and Remote Server Settings" section.
+2. Enable the Website in either the "Local Website Settings" or "Remote Website Settings" subsection, depending on which Website you are configuring.
 3. Change the other settings in that subsection as needed. Remote Websites need to know the server name, login, etc.
 
 The subsections below describe the settings in the json files, their default values, and a description.

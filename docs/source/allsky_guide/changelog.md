@@ -28,8 +28,8 @@ of the current release.
 
     #### Enhancements / Changes
 
-    - **Install and Update System
-        - Minor versions can now be installed with a git pull, no need to do a full upgrade :-)
+    - **Install and Update System**
+        - Minor versions can now be installed with a `git pull` - no need to do a full upgrade :-)
 
     - **WebUI changes:**
         - Several menu items are now grouped together; putting your cursor over them or clicking on them shows a list of choices.  
@@ -42,11 +42,11 @@ of the current release.
         - **Improved Login System**
             - The old login system has been removed and a new version implemented
             - Existing login details are not affected
-            - Only used if WebUI login is enabled
+            - Only used if the WebUI "Require WebUI Login" setting is enabled
             - Provides stronger passwords if the Pi will be exposed to the internet
 
         - **New Database**
-            - Stores information on every image taken (exposure, day/night, etc.)
+            - Stores information on every image taken (exposure, day/night, etc.) and every startrails created
             - Modules can add derived data such as star and meteor counts
             - Makes it easier to filter images (e.g. only nighttime startrails)
             - Choice of zero-configuration internal DB or advanced configuration
@@ -79,7 +79,7 @@ of the current release.
             - Rectangles can now be drawn with configurable border and background colours
             - Solar calculations moved to the new **Solar System** module
             - Font Manager now auto-detects fonts in use
-            - The toolbar can now be dragged around the screen, this is useful if you are adding fields and have to scroll the page
+            - The toolbar can now be dragged around the screen; this is useful if you are adding fields and have to scroll the page
             - **Mask Editor**
                 - Create and edit masks directly in the WebUI
                 - Accessible from the Image Manager
@@ -148,7 +148,7 @@ of the current release.
                 - Yes/No
 
         - **System page**
-            - Editor for system page additions
+            - Editor for System Page Additions
             - Auto refresh
             - Watchdog service control
 
@@ -159,7 +159,7 @@ of the current release.
             - Allows selective restore from backups
 
         - **Helper Tools**
-            - **Check Allsky** — runs `checkAllsky.sh`
+            - **Check Allsky** — runs `checkAllsky.sh` to display potential problems in your setup
             - **Startrails** — brightness threshold tuning
             - **Image Stretch** — stretch comparison
             - **Timelapse** — bitrate and FPS tuning
@@ -172,13 +172,13 @@ of the current release.
 
     - Camera images now save to `~/allsky/tmp/current_images`
       and Live View reads from there.
-      The website `imageName` is now `/current/image.jpg`.
+      The local Website `imageName` field is now `/current/image.jpg`.
 
     - `generateForDay.sh` accepts additional arguments for keogram,
       startrails, and timelapse creation.
 
     - `allsky-config bad_images_info --show_bad_images`
-      helps tune **Remove Bad Images Threshold** values.
+      helps tune **Remove Bad Images Threshold** values in the WebUI.
 
     - Updated to ZWO SDK v1.39 (new camera support, 366MC Pro removed)
     - Improved security for internet-connected Allsky cameras
@@ -220,7 +220,7 @@ of the current release.
 
         - When 4 consecutive errors occur while capturing images with an RPi camera, the last error is now shown in the WebUI's "System Messages" section.
         - The `allsky-config get_brightness_info` command now outputs the number of images used and not used in the startrails.
-        - Added a [Troubleshooting Tools](/documentation/troubleshooting/troubleshootingTools.html) documentation page to list tools to aid in troubleshooting.
+        - Added a Troubleshooting Tools documentation page to list tools to aid in troubleshooting.
 
         #### Bug Fixes
 
@@ -253,7 +253,7 @@ of the current release.
           To be consistent with the hex order and with web pages, the order of the first format is now:
           `red_number green_number blue_number` (red and blue switched places).  
           The order of the second format did not change but it now accepts either 3 or 6 hex digits.  
-          See [the documentation](/documentation/settings/allsky.html#keogramfontcolor) for more details on this setting.
+          See the documentation for more details on this setting.
 
         #### Enhancements / Changes
 
@@ -290,7 +290,7 @@ of the current release.
           To be consistent with the hex order and with web pages, the order of the first format is now:
           `red_number green_number blue_number` (red and blue switched places).  
           The order of the second format did not change but it now accepts either 3 or 6 hex digits.  
-          See [the documentation](/documentation/settings/allsky.html#keogramfontcolor) for more details on this setting.
+          See the documentation for more details on this setting.
 
         #### Enhancements / Changes
 
@@ -454,8 +454,8 @@ of the current release.
 
         - The WebUI now displays the status of Allsky (Running, Stopped, etc.).
         - You can specify a location to store images outside `~/allsky/images` (e.g. SSD) via `allsky-config move_images`.
-        - `allsky-config get_brightness_info` helps tune the **Brightness Threshold**. See [Startrails settings](/documentation/explanations/startrails.html#brightnessthreshold).
-        - `allsky-config compare_paths` helps map upload locations to URLs. See [Mapping Server Locations to URLs](/documentation/explanations/serverLocationToURL.html).
+        - `allsky-config get_brightness_info` helps tune the **Brightness Threshold**. See the Startrails settings documentation page.
+        - `allsky-config compare_paths` helps map upload locations to URLs. See the Mapping Server Locations to URLs documentation page
         - `allsky-config` can also adjust `~/allsky/tmp` size and swap; run `allsky-config` for options.
         - New `meteors` directory exists in Websites (upload support added in a future release).
         - `remoteWebsiteInstall.sh` now prompts to upload startrails/keograms/timelapse and is more robust.
@@ -518,7 +518,7 @@ of the current release.
         - Remote install is easier using `remoteWebsiteInstall.sh` (uploads files and removes old ones).
         - Images/videos/keograms/startrails can be written to a remote server in addition to (or instead of) a remote Website.
         - New `allsky-config` command (similar to `raspi-config`); run it to see options.
-        - `allsky-config samba` helps mount `~/allsky` on a PC/Mac. See [Copy files to / from a Pi](/documentation/explanations/SAMBA.html).
+        - `allsky-config samba` helps mount `~/allsky` on a PC/Mac. See the Copy files to / from a Pi documentation page.
         - `testUpload.sh` uploads a test file and attempts to explain failures and fixes.
         - Allsky only restarts when needed; tooltips indicate what will happen after changing settings.
         - **Overlay Method** `module` is now default for new installs; `legacy` will be removed in the next major release.
@@ -546,7 +546,7 @@ of the current release.
               See [Ensure overlay fields stay within bounds](https://github.com/AllskyTeam/allsky/issues/3317).
             - **Overlay Editor** won’t start if images aren’t being captured (prevents using notification image as background).
 
-        - See [Modules Documentation](/documentation/modules/modules.html) for details on Extra Module changes.
+        - See the Modules Documentation for details on Extra Module changes.
 
         - New Modules:
             - **Allsky AI** — Detects cloud cover using AI

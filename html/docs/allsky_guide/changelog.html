@@ -7080,9 +7080,9 @@ after upgrading, check that your settings and images look right.</p>
 <h4 id="enhancements-changes">Enhancements / Changes<a class="headerlink" href="#enhancements-changes" title="Permanent link">¶</a></h4>
 <ul>
 <li>
-<p>**Install and Update System</p>
+<p><strong>Install and Update System</strong></p>
 <ul>
-<li>Minor versions can now be installed with a git pull, no need to do a full upgrade :-)</li>
+<li>Minor versions can now be installed with a <code>git pull</code> - no need to do a full upgrade :-)</li>
 </ul>
 </li>
 <li>
@@ -7103,14 +7103,14 @@ after upgrading, check that your settings and images look right.</p>
 <ul>
 <li>The old login system has been removed and a new version implemented</li>
 <li>Existing login details are not affected</li>
-<li>Only used if WebUI login is enabled</li>
+<li>Only used if the WebUI "Require WebUI Login" setting is enabled</li>
 <li>Provides stronger passwords if the Pi will be exposed to the internet</li>
 </ul>
 </li>
 <li>
 <p><strong>New Database</strong></p>
 <ul>
-<li>Stores information on every image taken (exposure, day/night, etc.)</li>
+<li>Stores information on every image taken (exposure, day/night, etc.) and every startrails created</li>
 <li>Modules can add derived data such as star and meteor counts</li>
 <li>Makes it easier to filter images (e.g. only nighttime startrails)</li>
 <li>Choice of zero-configuration internal DB or advanced configuration</li>
@@ -7158,7 +7158,7 @@ after upgrading, check that your settings and images look right.</p>
 <li>Rectangles can now be drawn with configurable border and background colours</li>
 <li>Solar calculations moved to the new <strong>Solar System</strong> module</li>
 <li>Font Manager now auto-detects fonts in use</li>
-<li>The toolbar can now be dragged around the screen, this is useful if you are adding fields and have to scroll the page</li>
+<li>The toolbar can now be dragged around the screen; this is useful if you are adding fields and have to scroll the page</li>
 <li><strong>Mask Editor</strong><ul>
 <li>Create and edit masks directly in the WebUI</li>
 <li>Accessible from the Image Manager</li>
@@ -7251,7 +7251,7 @@ after upgrading, check that your settings and images look right.</p>
 <li>
 <p><strong>System page</strong></p>
 <ul>
-<li>Editor for system page additions</li>
+<li>Editor for System Page Additions</li>
 <li>Auto refresh</li>
 <li>Watchdog service control</li>
 </ul>
@@ -7268,7 +7268,7 @@ after upgrading, check that your settings and images look right.</p>
 <li>
 <p><strong>Helper Tools</strong></p>
 <ul>
-<li><strong>Check Allsky</strong> — runs <code>checkAllsky.sh</code></li>
+<li><strong>Check Allsky</strong> — runs <code>checkAllsky.sh</code> to display potential problems in your setup</li>
 <li><strong>Startrails</strong> — brightness threshold tuning</li>
 <li><strong>Image Stretch</strong> — stretch comparison</li>
 <li><strong>Timelapse</strong> — bitrate and FPS tuning</li>
@@ -7289,7 +7289,7 @@ after upgrading, check that your settings and images look right.</p>
 <li>
 <p>Camera images now save to <code>~/allsky/tmp/current_images</code>
   and Live View reads from there.
-  The website <code>imageName</code> is now <code>/current/image.jpg</code>.</p>
+  The local Website <code>imageName</code> field is now <code>/current/image.jpg</code>.</p>
 </li>
 <li>
 <p><code>generateForDay.sh</code> accepts additional arguments for keogram,
@@ -7297,7 +7297,7 @@ after upgrading, check that your settings and images look right.</p>
 </li>
 <li>
 <p><code>allsky-config bad_images_info --show_bad_images</code>
-  helps tune <strong>Remove Bad Images Threshold</strong> values.</p>
+  helps tune <strong>Remove Bad Images Threshold</strong> values in the WebUI.</p>
 </li>
 <li>
 <p>Updated to ZWO SDK v1.39 (new camera support, 366MC Pro removed)</p>
@@ -7339,7 +7339,7 @@ after upgrading, check that your settings and images look right.</p>
 <ul>
 <li>When 4 consecutive errors occur while capturing images with an RPi camera, the last error is now shown in the WebUI's "System Messages" section.</li>
 <li>The <code>allsky-config get_brightness_info</code> command now outputs the number of images used and not used in the startrails.</li>
-<li>Added a <a href="/documentation/troubleshooting/troubleshootingTools.html">Troubleshooting Tools</a> documentation page to list tools to aid in troubleshooting.</li>
+<li>Added a Troubleshooting Tools documentation page to list tools to aid in troubleshooting.</li>
 </ul>
 <h4 id="bug-fixes_1">Bug Fixes<a class="headerlink" href="#bug-fixes_1" title="Permanent link">¶</a></h4>
 <ul>
@@ -7377,7 +7377,7 @@ after upgrading, check that your settings and images look right.</p>
 <p>To be consistent with the hex order and with web pages, the order of the first format is now:
   <code>red_number green_number blue_number</code> (red and blue switched places).<br>
   The order of the second format did not change but it now accepts either 3 or 6 hex digits.<br>
-  See <a href="/documentation/settings/allsky.html#keogramfontcolor">the documentation</a> for more details on this setting.</p>
+  See the documentation for more details on this setting.</p>
 <h4 id="enhancements-changes_2">Enhancements / Changes<a class="headerlink" href="#enhancements-changes_2" title="Permanent link">¶</a></h4>
 <ul>
 <li>The <code>allsky-config get_brightness_info</code> command now displays how many images were used, and not used, in each startrail image.
@@ -7416,7 +7416,7 @@ after upgrading, check that your settings and images look right.</p>
 <p>To be consistent with the hex order and with web pages, the order of the first format is now:
   <code>red_number green_number blue_number</code> (red and blue switched places).<br>
   The order of the second format did not change but it now accepts either 3 or 6 hex digits.<br>
-  See <a href="/documentation/settings/allsky.html#keogramfontcolor">the documentation</a> for more details on this setting.</p>
+  See the documentation for more details on this setting.</p>
 <h4 id="enhancements-changes_3">Enhancements / Changes<a class="headerlink" href="#enhancements-changes_3" title="Permanent link">¶</a></h4>
 <ul>
 <li>The <code>allsky-config get_brightness_info</code> command now displays how many images were used, and not used, in each startrails image.
@@ -7591,8 +7591,8 @@ after upgrading, check that your settings and images look right.</p>
 <p>The WebUI now displays the status of Allsky (Running, Stopped, etc.).</p>
 </li>
 <li>You can specify a location to store images outside <code>~/allsky/images</code> (e.g. SSD) via <code>allsky-config move_images</code>.</li>
-<li><code>allsky-config get_brightness_info</code> helps tune the <strong>Brightness Threshold</strong>. See <a href="/documentation/explanations/startrails.html#brightnessthreshold">Startrails settings</a>.</li>
-<li><code>allsky-config compare_paths</code> helps map upload locations to URLs. See <a href="/documentation/explanations/serverLocationToURL.html">Mapping Server Locations to URLs</a>.</li>
+<li><code>allsky-config get_brightness_info</code> helps tune the <strong>Brightness Threshold</strong>. See the Startrails settings documentation page.</li>
+<li><code>allsky-config compare_paths</code> helps map upload locations to URLs. See the Mapping Server Locations to URLs documentation page</li>
 <li><code>allsky-config</code> can also adjust <code>~/allsky/tmp</code> size and swap; run <code>allsky-config</code> for options.</li>
 <li>New <code>meteors</code> directory exists in Websites (upload support added in a future release).</li>
 <li><code>remoteWebsiteInstall.sh</code> now prompts to upload startrails/keograms/timelapse and is more robust.</li>
@@ -7664,7 +7664,7 @@ after upgrading, check that your settings and images look right.</p>
 <li>Remote install is easier using <code>remoteWebsiteInstall.sh</code> (uploads files and removes old ones).</li>
 <li>Images/videos/keograms/startrails can be written to a remote server in addition to (or instead of) a remote Website.</li>
 <li>New <code>allsky-config</code> command (similar to <code>raspi-config</code>); run it to see options.</li>
-<li><code>allsky-config samba</code> helps mount <code>~/allsky</code> on a PC/Mac. See <a href="/documentation/explanations/SAMBA.html">Copy files to / from a Pi</a>.</li>
+<li><code>allsky-config samba</code> helps mount <code>~/allsky</code> on a PC/Mac. See the Copy files to / from a Pi documentation page.</li>
 <li><code>testUpload.sh</code> uploads a test file and attempts to explain failures and fixes.</li>
 <li>Allsky only restarts when needed; tooltips indicate what will happen after changing settings.</li>
 <li><strong>Overlay Method</strong> <code>module</code> is now default for new installs; <code>legacy</code> will be removed in the next major release.</li>
@@ -7699,7 +7699,7 @@ RPi list:<br>
 </ul>
 </li>
 <li>
-<p>See <a href="/documentation/modules/modules.html">Modules Documentation</a> for details on Extra Module changes.</p>
+<p>See the Modules Documentation for details on Extra Module changes.</p>
 </li>
 <li>
 <p>New Modules:</p>

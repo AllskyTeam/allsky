@@ -376,7 +376,7 @@ function generate_support_info()
 		fi
 		# If the ".1" log file is in the list, delete it, then recalculate the size.
 		if [[ -n ${LOG1} ]]; then
-			unset ALL_LOGS["${LOG1}"]
+			unset "ALL_LOGS["${LOG1}"]"
 			TOTAL_SIZE_MB="$( get_total_size "${ALL_LOGS[@]}" )"
 			if [[ ${DEBUG} == "true" ]]; then
 				echo "Not including ${ALLSKY_LOG}.1 gives a new size of ${TOTAL_SIZE_MB} MB."

@@ -345,13 +345,14 @@ function generate_support_info()
 
 	function get_total_size()
 	{
+		# shellcheck disable=SC2012
 		ls -l "${@}" | gawk 'BEGIN { TOTAL=0 }
 			{ TOTAL += $5; }
 			END { printf("%d", TOTAL / 10 / 1024 / 1024); }'
 	}
 
 	local GIT_HUB_LIMIT_MB=25
-	local LOG_LIMIT_MB=$(( ( GIT_HUB_LIMIT_MB - 5 ) ))		# MB limit of log files
+	local LOG_LIMIT_MB=$(( GIT_HUB_LIMIT_MB - 5 ))		# MB limit of log files
 	declare -a ALL_LOGS=()
 	local INDEX=-1
 	local LOG1=""		# If the ".1" log file exist this will be it's index in the array.
@@ -365,7 +366,7 @@ function generate_support_info()
 		fi
 	done
 	# Get the total size.
-	local TOTAL_SIZE_MB="$( get_total_size ${ALL_LOGS[@]} )"
+	local TOTAL_SIZE_MB="$( get_total_size "${ALL_LOGS[@]}" )"
 
 	local LOG_LINES_TEMP="${LOG_LINES}"
 	if [[ ${TOTAL_SIZE_MB} -gt ${LOG_LIMIT_MB} ]]; then
@@ -375,8 +376,8 @@ function generate_support_info()
 		fi
 		# If the ".1" log file is in the list, delete it, then recalculate the size.
 		if [[ -n ${LOG1} ]]; then
-			unset ALL_LOGS[${LOG1}]
-			TOTAL_SIZE_MB="$( get_total_size ${ALL_LOGS[@]} )"
+			unset ALL_LOGS["${LOG1}"]
+			TOTAL_SIZE_MB="$( get_total_size "${ALL_LOGS[@]}" )"
 			if [[ ${DEBUG} == "true" ]]; then
 				echo "Not including ${ALLSKY_LOG}.1 gives a new size of ${TOTAL_SIZE_MB} MB."
 			fi
@@ -392,7 +393,7 @@ function generate_support_info()
 		fi
 	fi
 	local LOG_FILE
- 	for L in ${ALL_LOGS[@]} ; do
+ 	for L in "${ALL_LOGS[@]}" ; do
   		LOG_FILE="${TEMP_DIR}/$( basename "${L}" ).txt"
 		if [[ ${LOG_LINES_TEMP} == "all" ]]; then
 			cp "${L}" "${LOG_FILE}"

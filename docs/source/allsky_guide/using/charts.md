@@ -183,7 +183,7 @@ Over time, a small collection of custom charts can make the Charts page much mor
 
 One of the strengths of the Charts page is that built-in charts and custom charts work together in the same library and the same workspace. Once a custom chart has been saved, it behaves like the other available charts and can be added to tabs in the same way.
 
-That means you can mix built-in and custom charts freely. A built-in chart might provide broad context, while a custom chart focuses on one specific comparison that matters to your installation. Used together, they can create a much more useful workspace than either type alone. -->
+That means you can mix built-in and custom charts freely. A built-in chart might provide broad context, while a custom chart focuses on one specific comparison that matters to your installation. Used together, they can create a much more useful workspace than either type alone. --> 
 
 ### Making The Most Of The Page { data-toc-label="Making Most Page" }
 

@@ -763,12 +763,10 @@ if ($debug) {
 	} else {
 		$x = "<i class='$pageIcon'></i> ";
 	}
-	$helpHtml = "";
-	if (!empty($pageHelp)) {
-		$helpUrl = htmlspecialchars($pageHelp, ENT_QUOTES);
-		$helpHtml = "<a class='pull-right' href='{$helpUrl}' target='_blank' rel='noopener noreferrer' data-toggle='tooltip' data-container='body' data-placement='left' title='Help'><i class='fa-solid fa-circle-question'></i> Help</a>";
-	}
-	echo "<div class='panel-heading clearfix'><span>$x $pageHeaderTitle for &nbsp;<b>$cameraType $cameraModel</b></span>{$helpHtml}</div>";
+	echo "<div class='panel-heading clearfix'>";
+		echo "<span>$x $pageHeaderTitle for &nbsp;<b>$cameraType $cameraModel</b></span>";
+		if (!empty($pageHelp)) { doHelpLink(htmlspecialchars($pageHelp, ENT_QUOTES)); }
+	echo "</div>";
 	echo "<div class='panel-body' style='padding: 5px;'>";
 	if ($formReadonly != "readonly") {
 		echo "<div id='messages'>";

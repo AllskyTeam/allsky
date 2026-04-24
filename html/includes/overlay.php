@@ -138,10 +138,10 @@ function DisplayOverlay($image_name)
 
 
                                 <li>
-                                    <div class="btn btn-lg navbar-btn oe-button border-left" id="oe-split-field" data-toggle="tooltip" data-container="body" data-placement="top" title="Split Field"><i class="fa-regular fa-arrows-left-right-to-line"></i></div>
+                                    <div class="btn btn-lg navbar-btn oe-button border-left" id="oe-split-field" data-toggle="tooltip" data-container="body" data-placement="top" title="Split Field"><i class="fa-solid fa-arrows-left-right-to-line"></i></div>
                                 </li>
                                 <li>
-                                    <div class="btn btn-lg navbar-btn oe-button border-left" id="oe-snap-fields" data-toggle="tooltip" data-container="body" data-placement="top" title="Snap fields to grid"><i class="fa-regular fa-grip"></i></div>
+                                    <div class="btn btn-lg navbar-btn oe-button border-left" id="oe-snap-fields" data-toggle="tooltip" data-container="body" data-placement="top" title="Snap fields to grid"><i class="fa-solid fa-grip"></i></div>
                                 </li>
 
                                 <li>

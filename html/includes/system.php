@@ -406,10 +406,7 @@ function DisplaySystem()
 		<div class="panel panel-allsky">
 			<div class="panel-heading clearfix">
                 <span><i class="<?php echo $pageIcon ?>"></i> <?php echo $pageHeaderTitle ?></span>
-<?php if (!empty($pageHelp)) { ?>
-                <a class="pull-right" href="<?php echo $pageHelp; ?>" external="true" rel="noopener noreferrer" data-toggle="tooltip" data-container="body" data-placement="left" title="Help">
-                    <i class="fa-solid fa-circle-question"></i> Help</a>
-<?php } ?>
+				<?php if (!empty($pageHelp)) { doHelpLink($pageHelp); } ?>
             </div>
 			<div class="panel-body">
 

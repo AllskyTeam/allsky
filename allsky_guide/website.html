@@ -6210,34 +6210,36 @@ An Allsky Website running on anywhere else is called a <strong>remote Website</s
 <h4 id="new-allsky-installations-or-upgrades-with-no-prior-local-website">New Allsky installations or upgrades with no prior local Website<a class="headerlink" href="#new-allsky-installations-or-upgrades-with-no-prior-local-website" title="Permanent link">¶</a></h4>
 <p>The new local Website needs to be <strong>enabled</strong> and <strong>configured</strong> before it can be used. If you go to the Website prior to that you'll get an error message telling you what to do.</p>
 <ul>
-<li><strong>Enable</strong> the Website by going to the <code>Allsky Settings</code> page in the WebUI and enabling the Use <ins>Local Website</ins> setting in the <strong>Websites and Remote Server Settings</strong> section. This will create a default configuration file you'll use in the next step.</li>
-<li><strong>Configure</strong> the Website in the <code>Editor page</code> in the WebUI by selecting <code>configuration.json (local Allsky Website)</code>. from the drop-down. You will see one or more <mark>XX_NEED_TO_UPDATE_XX</mark> entries that need changing. Set the remaining entries to your liking.</li>
+<li><strong>Enable</strong> the Website by going to the <code>Settings -&gt; Allsky Settings</code> page in the WebUI and enabling the <ins>Use Local Website</ins> setting in the <strong>Websites and Remote Server Settings</strong> section. This will create a default configuration file you'll use in the next step.</li>
+<li><strong>Configure</strong> the Website in the <code>Settings -&gt; Editor</code> page in the WebUI by selecting <code>configuration.json (local Allsky Website)</code>. from the drop-down. You will see one or more <mark>XX_NEED_TO_UPDATE_XX</mark> entries that need changing. Set the remaining entries to your liking.</li>
 </ul>
 <p>See the <a href="settings/website.html">Website Settings</a>  page for a description of the settings.</p>
 <h4 id="allsky-upgrades-with-an-existing-local-website">Allsky Upgrades with an existing local Website<a class="headerlink" href="#allsky-upgrades-with-an-existing-local-website" title="Permanent link">¶</a></h4>
-<p>The Allsky upgrade will use your prior local Website configuration and automatically enable the new Website. Any existing images and videos from the prior Website will be moved to to the new Website. You are done unless the prior Website was version <strong>v2022.03.01+</strong> or earlier, in which case you need to:</p>
-<ul>
-<li>Manually copy your prior settings from <mark>/var/www/html/allsky/config.js</mark> to <mark>configuration.json</mark> by going to the <code>Editor</code> page in the WebUI and selecting <code>configuration.json (local Allsky Website)</code>. Note that there are more settings in the new configuration file, but it should be straightforward to map settings from the old file to the new file.</li>
-<li>After configuring the local Website, check in <mark>/var/www/html/allsky</mark> for any files you may have manually added and store them in <mark>~/allsky/html/allsky/myFiles</mark>.</li>
-<li>Save <mark>config.js</mark> somewhere in case you need it later.</li>
-<li>Remove the old Website:<br>
-<code>rm -fr /var/www/html/allsky</code></li>
-</ul>
+<p>If you are upgrading Allsky and have an existing local Website, the upgrade will use your prior local Website configuration and automatically enable the new Website. Any existing images and videos from the prior Website will be moved to to the new Website.</p>
+<!-- You are done unless the prior Website was version **v2022.03.01+** or earlier, in which case you need to:
+
+- Manually copy your prior settings from ==/var/www/html/allsky/config.js== to ==configuration.json== by going to the ```Settings -> Editor``` page in the WebUI and selecting ```configuration.json (local Allsky Website)```. Note that there are more settings in the new configuration file, but it should be straightforward to map settings from the old file to the new file.
+- After configuring the local Website, check in ==/var/www/html/allsky== for any files you may have manually added and store them in ==~/allsky/html/allsky/myFiles==.
+- Save ==config.js== somewhere in case you need it later.
+- Remove the old Website:  
+  ```rm -fr /var/www/html/allsky```
+-->
+
 <h3 id="remote-website">Remote Website<a class="headerlink" href="#remote-website" title="Permanent link">¶</a></h3>
-<p>Most people have their Pi on a home network where it's not accessible from the Internet, so they install the Allsky Website on a different machine that is accessible on the Internet.</p>
+<p>Most people have their Pi on a home network where it's not accessible from the Internet, so they install a <strong>remote</strong> Allsky Website on a different machine that is accessible on the Internet.</p>
 <p>Prior to installing a remote Website, make sure Allsky is working on your Pi. If you will also have a local Website, get it working to your liking before enabling the remote Website so you don't have to update settings in both places.</p>
 <p>Do the following:</p>
 <ul>
 <li>On the remote server:<ul>
-<li>Create an allsky directory to hold the Website. Keep track of where on your server you created the directory - you will need that information later when you tell Allsky where to upload the images.</li>
+<li>Create an <code>allsky</code> directory to hold the Website. Keep track of where on your server you created the directory - you will need that information later when you tell Allsky where to upload the images.</li>
 </ul>
 </li>
 <li>
 <p>On the Pi:</p>
 <ul>
-<li>Go to the Websites and Remote Server Settings section in the WebUI's Allsky Settings page. Update the settings in the Remote Website subsection. Do NOT enable Use Remote Website yet, but update the other settings so Allsky knows how to upload a file to the Website. The Website will be automatically enabled in the next step.</li>
-<li>Run cd ~/allsky; ./remoteWebsiteInstall.sh to upload the Website code and create a default remote configuration file.<ul>
-<li>The installation will try to upload a file to the server; If that fails it should tell you why. If not, see the Troubleshooting uploads page on how to debug the problem.</li>
+<li>Go to the <strong>Websites and Remote Server Settings</strong> section of the WebUI's <code>Settings -&gt; Allsky Settings``` page. Update the settings in the "Remote Website" subsection. Do NOT enable ```Use Remote Website</code> yet, but update the other settings so Allsky knows how to upload a file to the Website. The Website will be automatically enabled in the next step.</li>
+<li>Run <code>cd ~/allsky; ./remoteWebsiteInstall.sh</code> to upload the Website code and create a default remote configuration file.<ul>
+<li>The installation will try to upload a file to the server; If that fails it should tell you why. If not, see the <a href="troubleshooting/uploads.html">Troubleshooting Uploads</a> page on how to debug the problem.</li>
 <li>If you previously enabled the local Allsky Website, the remote configuration file will be identical to the local one with the exception of the imageName setting which will be configured for the remote Website.</li>
 <li>If you want the remote configuration to differ from the local one (for example, to add a background image to the remote Website), edit the remote configuration file - see the next step.</li>
 </ul>
@@ -6245,14 +6247,14 @@ An Allsky Website running on anywhere else is called a <strong>remote Website</s
 <li>
 <p>Configure the remote Website:</p>
 <ul>
-<li>In the WebUI, click on the Editor link.</li>
-<li>In the drop-down at the bottom of the page, select remote_configuration.json (remote Allsky Website).</li>
-<li>See the Settings -&gt; Allsky Website   page for details on the settings.</li>
+<li>In the WebUI, click on the <code>Settings -&gt; Editor</code> link.</li>
+<li>In the drop-down at the bottom of the page, select <code>remote_configuration.json (remote Allsky Website)</code>.</li>
+<li>See the <code>Settings -&gt; Allsky Website</code> page for details on the settings.</li>
 <li>A copy of the remote Website configuration file will be uploaded to the server.</li>
 </ul>
 <div class="admonition danger">
 <p class="admonition-title">Warning</p>
-<p>Whenever you update the remote Website's configuration you must do so via WebUI following the steps above. Do NOT edit the configuration file directly on the remote server.</p>
+<p>Whenever you update the remote Website's configuration you must do so via the WebUI following the steps above. Do NOT edit the configuration file directly on the remote server.</p>
 </div>
 </li>
 </ul>
@@ -6272,7 +6274,7 @@ An Allsky Website running on anywhere else is called a <strong>remote Website</s
 <p>Most hosting solutions don't support those commands for security reasons. In that case, make sure Upload Timelapse Thumbnail is enabled (and Upload Mini-Timelapse Thumbnail if you are creating mini timelapses). Failure to set those variables will result in "No thumbnail" messages when viewing videos. Everything else will still work.</p>
 </div>
 <h3 id="post-installation">Post installation<a class="headerlink" href="#post-installation" title="Permanent link">¶</a></h3>
-<p>Change Allsky Website Settings as desired so the Website looks and behaves like you want. Changes to both local Websites and remote Websites are done via the WebUI.</p>
+<p>Change Allsky Website Settings as desired so the Website looks and behaves like you want.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>If you have both a local and a remote Website, they each have their own configuration file which is accessible via the WebUI's Editor page. They are NOT automatically kept in sync so if you change something, for example, the lens, you'll need to change it in both files.</p>

@@ -46,4 +46,4 @@ Almost any information can be added to a captured Allsky image. Some of the key 
     - Any image can be uploaded  
     - Images can be scaled and rotated and their opacity changed  
 - **Shapes**  
-    - **Rectangles** - You can draw on the overlay with a fill, border and transparency. This can be used to help highlight groupd of fields
+    - **Rectangles** - You can draw on the overlay with a fill, border and transparency. This can be used to help highlight groups of fields

@@ -8,26 +8,31 @@ tags:
 
 You can add information and buttons to the WebUI's System page without having to change any Allsky files. The data can be anything you want, but often contains weather, dew heater, and/or fan data.
 
-This documentation page assumes you are familiar with writing scripts; if so, adding the information is straightforward if you follow the instructions on this page.
-The image below shows the types of items that can be added:
+!!! note
+	You'll normally use the [System Page Additions Editor](http://allsky-test3:8000/allsky_guide/using/system/status.html#additionsEditor) to make the additions, but for finer control you can manually edit the configuration file as described on this page.
 
-1. Simple data: "Allsky is the     BEST!!!"
-2. Progress bar: "Dew heater status"
+This documentation page assumes you are familiar with writing scripts; if so, adding the information is straightforward if you follow the instructions on this page.
+The image below shows the three types of items that can be added:
+
+1. Progress bar: "DEW HEATER STATUS"
+2. Simple data: "ALLSKY IS THE     BEST!!!"
 3. Buttons: "Heater ON" and "Heater OFF". Clicking a button performs an action that you define.
 
-![](/assets/howtos_images/systemAdditionsExample.png){ width="100%" }
+![](/assets/guide_images/system-additions.png){ width="100%" }
 
 /// caption
-Example System Page With Added Buttons
+Example System Page With Added Entries
 ///
 
 ## Details { data-toc-label="Details" }
 
-The information to display on the System page is described in one or more "data files" which are listed in the System Page Additions setting. This section describes the format of those data files.
+The information to display on the System page is described in one or more "data files" which are listed in the ```System Page Additions``` setting. This section describes the format of those data files.
 
-Each data file contains one or more lines. Blank lines and lines that begin with # are ignored. Each remaining line will display something on the System page and must contain the fields listed in the tables below, separated by tabs.
+Each data file contains one or more lines. Blank lines and lines that begin with ```#``` are ignored. Each remaining line will display something on the System page and must contain the fields listed in the tables below, separated by **tabs**.
 
-As a very simple example, if you want to add the 2 buttons in the image above to turn your dew heater on and off you'd have a file called, for example, ```/home/pi/my_buttons.txt```. That file needs 2 lines describing the attributes for each button such as color and what it should say (e.g., "Heater ON"). The exact contents of those lines are described below. The buttons appear on the System page when you set the System Page Additions setting to ```/home/pi/my_buttons.txt```.
+Data files should be stored in the ```~/allsky/config/myFiles``` directory so they are propogated to new releases of Allsky.  The [System Page Additions Editor](http://allsky-test3:8000/allsky_guide/using/system/status.html#additionsEditor) stores files there automatically.
+
+As a very simple example, if you want to add the 2 buttons in the image above to turn your dew heater on and off you'd have a file called, for example, ```~/allsky/config/myFiles/my_buttons.txt```. That file needs 2 lines describing the attributes for each button such as color and what it should say (e.g., "Heater ON"). The exact contents of those lines are described below. The buttons appear on the System page when you set the ```System Page Additions``` setting to ```~/allsky/config/myFiles/my_buttons.txt```.
 
 There are three types of lines in a data file. The first word of a line determines what type of line it is:
 

@@ -7,9 +7,9 @@ tags:
 
 # System Status
 
-The **System** tab is the main health dashboard for your Allsky installation. If you are not sure where to begin, this is usually the right page to open first. It is designed to answer the everyday questions most users have when checking on their system, such as:
+The WebUI's **System** page is the main health dashboard for your Allsky installation. If you are not sure where to begin, this is usually the right page to open first. It is designed to answer the everyday questions most users have when checking on their system, such as:
 
-- Is the Raspberry Pi up and reachable?
+<!-- - Is the Raspberry Pi up and reachable? -->
 - Is Allsky currently running?
 - Has the system been running for a long time or did it recently restart?
 - Is the Pi getting too hot?
@@ -18,15 +18,17 @@ The **System** tab is the main health dashboard for your Allsky installation. If
 
 In other words, this page is less about detailed troubleshooting and more about quick understanding. It gives you a broad picture of the current state of both the Raspberry Pi and the Allsky software, with the most important controls close at hand in case you need to intervene.
 
+This documentation page covers the **System** tab; other documentation pages cover the **Watdogs**, **Logs**, and **Backups** tabs.
+
 ![](/assets/guide_images/system-status.png){ width="100%" }
 
 /// caption
 System tab overview
 ///
 
-## Why This Page Matters { data-toc-label="Why It Matters" }
+## Why This Tab Matters { data-toc-label="Why It Matters" }
 
-When an Allsky system is behaving normally, the **System** tab gives you confidence that everything is healthy. When something is wrong, this page often tells you that very quickly, even before you open logs or other diagnostic pages.
+When an Allsky system is behaving normally, the **System** tab gives you confidence that everything is healthy. When something is wrong, this tab often tells you that very quickly, even before you open logs or other diagnostic pages.
 
 For example, you might come here because:
 
@@ -37,27 +39,25 @@ For example, you might come here because:
 - you want to restart Allsky after changing a setting,
 - you want to confirm the machine has the correct IP address before connecting remotely.
 
-The page is useful because it combines several kinds of information that are related but not identical. The Raspberry Pi itself can be healthy while Allsky is stopped. Allsky can be running while the Pi is low on disk space. The network can be fine while the CPU is overheating. Seeing all of these together makes it much easier to decide what to do next.
+This tab is useful because it combines several kinds of information that are related but not identical. The Raspberry Pi itself can be healthy while Allsky is stopped. Allsky can be running while the Pi is low on disk space. The network can be fine while the CPU is overheating. Seeing all of these together makes it much easier to decide what to do next.
 
 ## The Action Buttons { data-toc-label="Action Buttons" }
 
-Near the top of the page you will see the main control buttons.
-
-Depending on your installation, the page may include buttons to:
+Near the top of the tab you will see the main control buttons.  Depending on your installation, this may include buttons to:
 
 - start Allsky,
 - stop Allsky,
 - reboot the Raspberry Pi,
 - shut down the Raspberry Pi,
-- open an editor for custom System page items.
+- open an editor for custom System tab items.
 
-These controls make the **System** tab more than a passive dashboard. It is also a practical operating page. If Allsky has stopped and you simply need to bring it back up, you can usually do that here without leaving the browser. If you are about to unplug hardware or perform maintenance, this page may also be the most convenient place to shut the Pi down cleanly first.
+These controls make the **System** tab more than a passive dashboard. It is also a practical operating tab. If Allsky has stopped and you simply need to bring it back up, you can usually do that here without leaving the browser. If you are about to unplug hardware or perform maintenance, this tab may also be the most convenient place to shut the Pi down cleanly first.
 
 It is worth using these buttons carefully, especially on remote systems. A reboot or shutdown may temporarily remove your web access. That is not usually a problem when the Pi is nearby, but it matters more if the system is mounted outdoors, installed at a remote site, or accessed over a less reliable network connection.
 
 ## The Host Information Panel { data-toc-label="Host Info" }
 
-One of the first things this page shows is basic information about the Raspberry Pi. This section typically includes items such as:
+One of the first things this tab shows is basic information about the Raspberry Pi. This section typically includes items such as:
 
 - the hostname,
 - one or more IP addresses,
@@ -94,7 +94,7 @@ The Allsky uptime is especially valuable because it tells you how long the servi
 
 ## Reading The Health Indicators { data-toc-label="Health Indicators" }
 
-The lower section of the page as seen below is often the part users watch most closely. This area contains the live health indicators and resource bars. These displays are intended to help you judge the condition of the system quickly, without needing to log into the Pi and run command-line tools.
+The lower section of this tab as seen below is often the part users watch most closely. This area contains the live health indicators and resource bars. These displays are intended to help you judge the condition of the system quickly, without needing to log into the Pi and run command-line tools.
 
 ![](/assets/guide_images/system-bars.png){ width="100%" }
 
@@ -140,11 +140,11 @@ What matters most is the overall pattern. If memory usage stays high for long pe
 
 CPU load gives you a sense of how busy the processor currently is. A brief spike is not necessarily a problem. Many normal tasks can cause the CPU to work harder for a while, especially on smaller Pi models.  Timelapse, keogram, and startrails creation are especially CPU intensive.
 
-However, if the CPU load remains persistently high, and especially if that happens together with high temperature or slow performance, it may point to a system that is struggling to keep up. In that case, the **System** tab helps you see the symptom, while the **Logs** and **Watchdogs** pages may help you understand the cause.
+However, if the CPU load remains persistently high, and especially if that happens together with high temperature or slow performance, it may point to a system that is struggling to keep up. In that case, the **System** tab helps you see the symptom, while the **Logs** and **Watchdogs** tabs may help you understand the cause.
 
 ### CPU Temperature
 
-Temperature is one of the most practical readings on the page. Outdoor and enclosed Allsky systems do not always have ideal airflow, and heat-related issues can be subtle at first.
+Temperature is one of the most practical readings on the **System** tab. Outdoor and enclosed Allsky systems do not always have ideal airflow, and heat-related issues can be subtle at first.
 
 If the CPU temperature is consistently high, the system may become unstable or begin throttling. Even if the system has not yet reported an obvious thermal warning, a steadily elevated temperature is worth paying attention to. It is often easier to improve cooling early than to wait for intermittent failures later.
 
@@ -154,7 +154,7 @@ The disk usage row helps you understand how much space remains on the storage de
 
 When storage gets low, the symptoms can appear in many different ways. Captures may fail, uploads may stop, temporary files may not be created correctly, and parts of the system may behave unpredictably. Because of that, disk usage is something worth checking regularly rather than only after a problem appears.
 
-One especially useful detail is that the page shows more than just a percentage. It also shows the total size and the remaining free space. A value such as 80 percent used may or may not be urgent depending on the total capacity and the rate at which your system is generating data.
+One especially useful detail is that the tab shows more than just a percentage. It also shows the total size and the remaining free space. A value such as 80 percent used may or may not be urgent depending on the total capacity and the rate at which your system is generating data.
 
 The ```~/allsky/images``` folder is normally the one in Allsky that uses the most disk space.  If you connect a USB thumbdrive to the Pi, you can move this directory to the USB device.  Run ```allsky-config``` and pick the option to move the images directory.
 
@@ -165,9 +165,9 @@ Allsky temporary storage is another value that can become important during norma
 !!! note
 During installation of Allsky, the amount of temporary storage is determined based on the amount of RAM your Pi has.  If the Allsky temporary storage is filling up, contact the Allsky team via GitHub.
 
-## Custom Items On The System Page { data-toc-label="Custom Items" }
+## Custom Items On The System Tab { data-toc-label="Custom Items" }
 
-Your **System** tab may contain more than the built-in Allsky indicators shown in the examples above. Allsky allows custom additions to this page, so some installations include extra lines, progress bars, or buttons created by the user.
+Your **System** tab may contain more than the built-in Allsky indicators shown in the examples above. Allsky allows custom additions to this tab, so some installations include extra lines, progress bars, or buttons created by the user.
 
 These custom items can be used to display site-specific information such as:
 
@@ -188,11 +188,11 @@ System tab Additions
 ///
 
 <!--
-If your System page contains additional items that are not mentioned in the standard documentation, that does not necessarily mean something is wrong. It may simply mean your installation has been customized. -->
+If your System tab contains additional items that are not mentioned in the standard documentation, that does not necessarily mean something is wrong. It may simply mean your installation has been customized. -->
 
-## How To Use The System Page In Practice { data-toc-label="In Practice" }
+## How To Use The System Tab In Practice { data-toc-label="In Practice" }
 <!--
-Most users do not need to study every number on this page every day. The best way to use the **System** tab is as a quick operational checkpoint. -->
+Most users do not need to study every number on this tab every day. The best way to use the **System** tab is as a quick operational checkpoint. -->
 
 A practical routine might look like this:
 
@@ -200,19 +200,19 @@ A practical routine might look like this:
 2. Check whether Allsky is running and whether its uptime looks sensible.
 3. Scan the various indicators for anything obviously unhealthy.
 4. If needed, use the control buttons to start or stop Allsky, or reboot the Pi.
-5. If the page shows a problem but not the reason for it, check the **Logs** or **Watchdogs** pages for more detail.
+5. If the tab shows a problem but not the reason for it, check the **Logs** or **Watchdogs** tabs for more detail.
 
-This page is often enough to answer broad questions like:
+This tab is often enough to answer broad questions like:
 
 - Is the system healthy?
 - Is the system overheating?
 - Is storage running out?
 
-If the answer is still unclear after checking the System page, that usually means the problem is no longer a high-level status issue and should be investigated in more detail elsewhere in the WebUI.
+If the answer is still unclear after checking this tab, that usually means the problem is no longer a high-level status issue and should be investigated in more detail elsewhere in the WebUI.
 
 ## When To Look Somewhere Else { data-toc-label="When To Look Elsewhere" }
 <!--
-The **System** tab is an excellent summary page, but it is not meant to answer every possible diagnostic question. -->
+The **System** tab is an excellent summary, but it is not meant to answer every possible diagnostic question. -->
 
 You should usually move to another page in the WebUI when:
 
@@ -227,17 +227,17 @@ In those cases:
 - use the **Watchdogs** tab when you want to inspect monitored services,
 - use the **Charts** page when you want to understand changes over time.
 <!--
-That relationship is important to understand. The **System** tab tells you whether the installation looks healthy right now. The other pages help explain why it does or does not. -->
+That relationship is important to understand. The **System** tab tells you whether the installation looks healthy right now. The other tabs help explain why it does or does not. -->
 
 ## System Page Additions Editor { data-toc-label="Additions Editor" id="additionsEditor" }
 
-The **System** page also includes a built-in editor for **System Page Additions**. This is the part of the page that lets you create and manage your own extra rows, progress bars, and action buttons without manually editing the additions files in a text editor.
+The **System** tab also includes a built-in editor for **System Page Additions**. This is the part of the tab that lets you create and manage your own extra rows, progress bars, and action buttons without manually editing the additions files in a text editor.
 
 At a high-level, details on the additions are stored in a configuration file.  The editor is a front end to the file that allows you to modify it without actually opening it.
 
 For many users, this editor is the easiest way to customise the System tab. Instead of remembering the exact file format used by additions files, you work with a form-based interface in the WebUI. You choose the kind of item you want to add, fill in the fields you care about, and save the file. The editor then writes the additions file for you in the correct format.
 <!--
-This makes the feature much more approachable, especially if your goal is practical rather than technical. You may simply want the System page to show a weather reading, a dew heater status line, a fan speed indicator, or a button that runs a maintenance script. In those cases, the editor is often a much more comfortable starting point than hand-building the file structure yourself. -->
+This makes the feature much more approachable, especially if your goal is practical rather than technical. You may simply want the System tab to show a weather reading, a dew heater status line, a fan speed indicator, or a button that runs a maintenance script. In those cases, the editor is often a much more comfortable starting point than hand-building the file structure yourself. -->
 
 ![](/assets/guide_images/system-add-editor.png){ width="100%" }
 
@@ -249,7 +249,7 @@ System tab Additions Editor
 
 The editor is used as an aid in creating the configuration file that defines what additional items to add to the **System** tab, without manually editting the file.  Note in the "System tab Additions" image earlier and the "System tab Additions Editor" above two buttions, some data, and a progress bar were added.  These types of entries are described below.
 <!--
-The additions editor is used when the built-in System page information is not enough for your installation and you want to place extra information or controls alongside the normal Allsky status items.
+The additions editor is used when the built-in System tab information is not enough for your installation and you want to place extra information or controls alongside the normal Allsky status items.
 Typical uses include:
 
 - showing weather station data,
@@ -258,11 +258,11 @@ Typical uses include:
 - creating a button that runs a script,
 - exposing site-specific operational checks on the main status page.
 
-The important idea is that these additions are meant to make the System page more useful for your own setup. They are not limited to Allsky’s default information. If your installation has extra hardware, extra scripts, or extra monitoring that matters to you, the editor gives you a structured way to surface that information in the WebUI. -->
+The important idea is that these additions are meant to make the System tab more useful for your own setup. They are not limited to Allsky’s default information. If your installation has extra hardware, extra scripts, or extra monitoring that matters to you, the editor gives you a structured way to surface that information in the WebUI. -->
 
 ### Opening The Editor { data-toc-label="Open The Editor" }
 
-If the editor is available on your system, click the "Edit Additions" button on the **System** tab. The editor opens in a separate dialog window over the page as seen above.
+If the editor is available on your system, click the "Edit Additions" button on the **System** tab. The editor opens in a separate dialog window over the tab as seen above.
 
 Inside that dialog, you work with one additions file at a time. The editor can open an existing additions file, or it can create a new one for you. New files are stored in the Allsky configuration area, which helps keep them separate from the core application files and makes them easier to preserve across upgrades.
 <!--
@@ -279,7 +279,7 @@ Opening or creating a System Page Additions file
 
 ### Working With Files { data-toc-label="Working With Files" }
 
-The editor revolves around additions files because that is how the System page stores custom rows and buttons. Each file contains one or more entries, and the editor presents those entries as a list you can review and manage.
+The editor revolves around additions files because that is how the System tab stores custom rows and buttons. Each file contains one or more entries, and the editor presents those entries as a list you can review and manage.
 
 When you open a file, the editor shows:
 
@@ -295,7 +295,7 @@ If a file is new and empty, the editor simply gives you a blank starting point. 
 
 ### The Three Kinds Of Additions { data-toc-label="Entry Types" }
 
-The editor supports the same three broad kinds of System page additions that the underlying additions files support, but it presents them in a more approachable form.
+The editor supports the same three broad kinds of System tab additions that the underlying additions files support, but it presents them in a more approachable form.
 
 #### Data entries
 
@@ -308,11 +308,11 @@ This is the simplest type of custom addition. It is suitable for information suc
 - the current operating mode of an attached device,
 - a plain status line produced by a script.
 
-You normally provide a label, a displayed value, and an optional timeout. The timeout controls how long the data is considered current. If the data gets too old, the System page can mark it as expired so you do not mistake stale information for live information.
+You normally provide a label, a displayed value, and an optional timeout. The timeout controls how long the data is considered current. If the data gets too old, the System tab can mark it as expired so you do not mistake stale information for live information.
 
 #### Progress entries
 
-Use a **progress** entry when the value has a meaningful range and you want the System page to show it visually as a bar.
+Use a **progress** entry when the value has a meaningful range and you want the System tab to show it visually as a bar.
 
 This type is useful for values such as:
 
@@ -322,11 +322,11 @@ This type is useful for values such as:
 - temperatures with warning thresholds,
 - any reading that is easier to interpret as a scale than as plain text.
 
-In addition to the label and displayed value, you provide the minimum, current, and maximum values, along with warning and danger thresholds. <!-- The practical benefit is that the System page can do more than show a number. --> This can help you see whether that number looks healthy at a glance.
+In addition to the label and displayed value, you provide the minimum, current, and maximum values, along with warning and danger thresholds. <!-- The practical benefit is that the System tab can do more than show a number. --> This can help you see whether that number looks healthy at a glance.
 
 #### Button entries
 
-Use a **button** entry when you want the System page to perform an action.
+Use a **button** entry when you want the System tab to perform an action.
 
 This is the most interactive type of addition. A button can be used to:
 
@@ -351,13 +351,13 @@ When you add a new entry or edit an existing one, the editor opens a form with f
 
 For a simple data row, the form stays fairly short. For a progress bar, the form expands to include the range and threshold settings. For a button, the form focuses on the command, the label, the colour, the icon, and the success message.
 <!--
-This is exactly how a good end-user editor should feel. It helps you think in terms of what you want to achieve on the page rather than how the underlying file syntax works. -->
+This is exactly how a good end-user editor should feel. It helps you think in terms of what you want to achieve on the tab rather than how the underlying file syntax works. -->
 
 ### Testing Buttons { data-toc-label="Testing Buttons" }
 
 One of the most useful features in the editor is the ability to test a button command before relying on it in normal use.
 
-When you are working with a button entry, the editor provides a **Test Script** action. This is important because button entries are usually the most sensitive additions on the page. They do not just display information; they try to do something. If the command path is wrong, if permissions are missing, or if the script fails, you want to know that before you assume the button is ready for real use.
+When you are working with a button entry, the editor provides a **Test Script** action. This is important because button entries are usually the most sensitive additions on the tab. They do not just display information; they try to do something. If the command path is wrong, if permissions are missing, or if the script fails, you want to know that before you assume the button is ready for real use.
 
 Testing from the editor helps you confirm:
 
@@ -378,11 +378,11 @@ Second, when you choose **Save File**, you write those changes back to the actua
 
 This distinction is useful because it lets you make several edits before committing them to the file. You can add a row, adjust a progress bar, change a button label, review the results in the editor, and then save the whole file once you are happy with it.
 
-Depending on your setup, you may also be asked whether the WebUI setting for **System Page Additions** should be updated to use the file you just saved. From a user point of view, that is simply the system checking whether the file you edited is the one the System page is actually configured to use. If it is not, the WebUI gives you the option of switching to the newly saved file.
+Depending on your setup, you may also be asked whether the WebUI setting for **System Page Additions** should be updated to use the file you just saved. From a user point of view, that is simply the system checking whether the file you edited is the one the System tab is actually configured to use. If it is not, the WebUI gives you the option of switching to the newly saved file.
 
-### What You Will See On The System Page { data-toc-label="What You'll See" }
+### What You Will See On The System Tab { data-toc-label="What You'll See" }
 
-Once your additions file is configured and saved, its entries appear on the System page alongside the built-in information.
+Once your additions file is configured and saved, its entries appear on the System tab alongside the built-in information.
 
 In practical terms:
 
@@ -390,7 +390,7 @@ In practical terms:
 - progress entries appear as extra progress bars,
 - button entries appear as additional action buttons.
 <!--
-This means the **System** tab can gradually become tailored to your installation. A simple setup may only add one or two useful readings. A more advanced setup may turn the page into a full operational dashboard that includes environmental status, hardware controls, and custom monitoring information. -->
+This means the **System** tab can gradually become tailored to your installation. A simple setup may only add one or two useful readings. A more advanced setup may turn the tab into a full operational dashboard that includes environmental status, hardware controls, and custom monitoring information. -->
 
 ### When The Editor Is Enough And When You Need More { data-toc-label="Editor Limits" }
 
@@ -406,7 +406,7 @@ If you are new to the additions editor, a sensible approach is:
 
 1. Create or open one additions file.
 2. Add a single simple data row first.
-3. Save the file and confirm it appears on the System page.
+3. Save the file and confirm it appears on the System tab.
 4. Add a progress bar only after you are comfortable with the basic workflow.
 5. Test button entries carefully before relying on them.
 
@@ -416,5 +416,5 @@ Starting small is usually the best approach. It gives you confidence in how the 
 
 For most users, the **System** tab is the first and most important operational page in the Allsky WebUI. It combines status, control, and health information in one place and makes it easy to answer the practical questions that come up during normal use.
 
-If you only remember one thing about this page, remember this: when Allsky seems wrong, start here. Very often the page will either show the problem directly or point you toward the next place to investigate.
+If you only remember one thing about this tab, remember this: when Allsky seems wrong, start here. Very often the tab will either show the problem directly or point you toward the next place to investigate.
 

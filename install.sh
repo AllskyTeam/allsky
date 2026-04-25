@@ -3207,7 +3207,7 @@ install_dependencies()
 
 		L="${TMP}.${COUNT}.log"
 		M="${NAME} [${PACKAGE}] failed"
-		pip3 install --upgrade --no-warn-script-location -r /tmp/package > "${L}" 2>&1
+		pip3 install --upgrade --ignore-installed --no-warn-script-location -r /tmp/package > "${L}" 2>&1
 		# These files are too big to display so pass in "0" instead of ${DEBUG}.
 		if ! check_success $? "${M}" "${L}" 0 ; then
 			rm -fr "${PIP3_BUILD}"
@@ -3294,7 +3294,7 @@ install_Python()
 
 		# force local setup tools
 		TMP="${ALLSKY_LOGS}/python3-setup-tools.log"		
-		pip3 install --upgrade pip setuptools wheel  > "${TMP}" 2>&1
+		pip3 install --ignore-installed --upgrade pip setuptools wheel  > "${TMP}" 2>&1
 
 		NAME="Python_dependencies"
 

@@ -1776,7 +1776,7 @@ def install_requirements(req_file: str | Path, log_file: str | Path) -> bool:
         for pkg in packages:
             log.write(f"\n--- Installing {pkg} ---\n")
             result = subprocess.run(
-                [sys.executable, "-m", "pip", "install", pkg],
+                [sys.executable, "-m", "pip", "install", "--ignore-installed", pkg],
                 stdout=log,
                 stderr=log
             )

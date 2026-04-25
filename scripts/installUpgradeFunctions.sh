@@ -604,6 +604,8 @@ function replace_website_placeholders()
 		IMAGE_NAME="${ALLSKY_FULL_FILENAME}"
 	fi
 
+	display_msg --logonly info "Updating entries in ${FILE}."
+
 	"${ALLSKY_SCRIPTS}/updateJsonFile.sh" --verbosity silent --file "${FILE}" \
 		config.imageName			"imageName"			"${IMAGE_NAME}" \
 		config.latitude				"latitude"			"${LATITUDE}" \

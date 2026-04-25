@@ -219,6 +219,12 @@ class MODULESEDITOR {
 					$(document).trigger('module:dirty');
 				});
 
+				const interactiveModuleControls = '.allskymodule button, .allskymodule a, .allskymodule input, .allskymodule select, .allskymodule textarea, .allskymodule label';
+				$(document).off('mousedown touchstart pointerdown', interactiveModuleControls);
+				$(document).on('mousedown touchstart pointerdown', interactiveModuleControls, (event) => {
+					event.stopPropagation();
+				});
+
 				$(document).off('click', '.module-settings-button');
 				$(document).on('click', '.module-settings-button', (event) => {
 					event.preventDefault();
@@ -248,7 +254,7 @@ class MODULESEDITOR {
 					ghostClass: 'ghost',
 					forceFallback: true,
 					fallbackOnBody: true,
-					filter: '.filtered',
+					filter: '.filtered, button, a, input, select, textarea, label, .btn, .el-switch',
 					onMove: function (evt) {
 
 						if (evt.related.classList.contains('filtered')) {
@@ -279,7 +285,7 @@ class MODULESEDITOR {
 					ghostClass: 'ghost',
 					forceFallback: true,
 					fallbackOnBody: true,
-					filter: '.filtered',
+					filter: '.filtered, button, a, input, select, textarea, label, .btn, .el-switch',
 					onMove: function (evt) {
 
 						if (evt.related.classList.contains('filtered')) {

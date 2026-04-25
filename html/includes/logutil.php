@@ -39,6 +39,12 @@ class LOGUTIL extends UTILBASE
                     'default' => true,
                 ],
                 [
+                    'id' => 'allsky1',
+                    'description' => 'Allsky Log (prior copy)',
+                    'location' => '/var/log/allsky.log.1',
+                    'default' => false,
+                ],                
+                [
                     'id' => 'allskyperiodic',
                     'description' => 'Allsky Periodic Log',
                     'location' => '/var/log/allskyperiodic.log',

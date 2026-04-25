@@ -221,12 +221,16 @@ class MODULESEDITOR {
 
 				$(document).off('click', '.module-settings-button');
 				$(document).on('click', '.module-settings-button', (event) => {
+					event.preventDefault();
+					event.stopPropagation();
 
 					/*var loadingTimer = setTimeout(() => {
 						$.LoadingOverlay('show', {text : 'Sorry this is taking longer than expected ...'});
 							}, 10);
 					*/
-					this.#createSettingsDialog(event.currentTarget);
+					if (!this.#createSettingsDialog(event.currentTarget)) {
+						return;
+					}
 					/*
 					$('#module-settings-dialog').off('shown.bs.modal').on('shown.bs.modal', () => {
 						clearTimeout(loadingTimer);
@@ -515,7 +519,7 @@ class MODULESEDITOR {
 				if (element == '#modules-available') {
 					disabled = 'style="display: none"'
 				} else {
-					if (data.corrupt !== undefined) {
+					if (data.corrupt === true) {
 						disabled = 'disabled="disabled"'
 					}
 				}
@@ -765,7 +769,19 @@ class MODULESEDITOR {
 		let allskyModuleShortName = moduleShortName;
 		moduleShortName = moduleShortName.replace('allsky_', '')
 		let moduleData = this.#findModuleData(module)
+		if (moduleData === null || moduleData.data === null || moduleData.data === undefined) {
+			bootbox.alert('Unable to find settings data for module ' + module + '. Refresh the module list and try again.');
+			return false;
+		}
 		moduleData = moduleData.data
+		if (moduleData.corrupt === true) {
+			bootbox.alert('The metadata for module ' + module + ' is corrupt, so settings cannot be opened.');
+			return false;
+		}
+		if (moduleData.metadata === undefined || moduleData.metadata.argumentdetails === undefined) {
+			bootbox.alert('Module ' + module + ' does not define any settings.');
+			return false;
+		}
 		let dependenciesset = {};
 
 		let fieldsHTML = ''
@@ -2249,6 +2265,7 @@ class MODULESEDITOR {
 		})
 
 		this.#setFormState()
+		return true;
 	}
 
 	handleDependentSelect(e) {

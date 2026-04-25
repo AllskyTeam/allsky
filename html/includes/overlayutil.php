@@ -685,7 +685,7 @@ class OVERLAYUTIL extends UTILBASE {
     // Delete a user-provided font; built-ins are not removed here
     public function deleteFont(): void
     {
-        $fontName = $this->safeFileName($_GET['fontName'] ?? '', ['ttf','otf']);
+        $fontName = $this->safeFileName(basename((string)($_GET['fontName'] ?? '')), ['ttf','otf']);
         if ($fontName === '') $this->sendHTTPResponse('Missing fontName.', 400);
 
         $path = $this->joinPath($this->overlayPath . '/fonts', $fontName);

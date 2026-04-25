@@ -362,6 +362,8 @@ class OEUIMANAGER {
         $(document).off('click', '#oe-font-dialog-upload-font');
         $(document).off('click', '#oe-upload-font');
         $(document).off('click', '.oe-list-font-delete');
+        $(document).off('click', '#oe-font-delete-dialog-do-delete');
+        $('#oe-font-delete-dialog').off('hidden.bs.modal');
         $(document).off('click', '.oe-zoom');
         $(document).off('click', '#oe-show-image-manager');
         $(document).off('oe-imagemanager-add');
@@ -1680,7 +1682,7 @@ class OEUIMANAGER {
                             if (item.type == 'user' && item.name !== defaultFont) {
                                 buttons += `
                                     <span data-toggle="tooltip" title="${tooltip}">
-                                        <button type="button" class="btn btn-danger btn-xs oe-list-font-delete" data-fontname="${item.name}"><i class="fa-solid fa-trash"></i></button>
+                                        <button type="button" class="btn btn-danger btn-xs oe-list-font-delete" data-fontname="${item.path}"><i class="fa-solid fa-trash"></i></button>
                                     </span>`;
                             }
                             return buttons;
@@ -1703,25 +1705,46 @@ class OEUIMANAGER {
         $(document).off('click', '.oe-list-font-delete');
         $(document).on('click', '.oe-list-font-delete', (event) => {
             event.stopPropagation();
-            
-            $('#oe-font-delete-dialog').modal({
+
+            var fontName = $(event.currentTarget).data('fontname');
+            if (typeof fontName === 'undefined') {
+                return;
+            }
+
+            let $dialog = $('#oe-font-delete-dialog');
+            $dialog.data('fontname', fontName);
+            $('#oe-font-delete-dialog-font-name').text(fontName);
+            $('#oe-font-delete-dialog-font-used').toggleClass('hidden', !this.#fieldManager.isFontUsed(fontName));
+            $('#oe-font-delete-dialog-do-delete').prop('disabled', false);
+
+            $dialog.modal({
                 keyboard: false,
                 width: 500
             });
-            
-            /*var fontName = $(event.currentTarget).data('fontname');
-            if (fontName !== 'undefined') {
+        });
 
-                if (this.#fieldManager.isFontUsed(fontName)) {
-                    debugger;
-                }
-                if (window.confirm('Are you sure you wish to delete this font? If the font is in use then all fields will be set to the default font.')) {
-                        let uiManager = window.oedi.get('uimanager');
-                        uiManager.deleteFont(fontName);
-                        this.#configManager.dirty = true;
-                        this.updateToolbar();
-                }
-            }*/
+        $(document).off('click', '#oe-font-delete-dialog-do-delete');
+        $(document).on('click', '#oe-font-delete-dialog-do-delete', () => {
+            let $dialog = $('#oe-font-delete-dialog');
+            let fontName = $dialog.data('fontname');
+            if (typeof fontName === 'undefined') {
+                return;
+            }
+
+            $('#oe-font-delete-dialog-do-delete').prop('disabled', true);
+            $dialog.modal('hide');
+            this.deleteFont(fontName);
+            this.#configManager.dirty = true;
+            this.updateToolbar();
+        });
+
+        $('#oe-font-delete-dialog').off('hidden.bs.modal');
+        $('#oe-font-delete-dialog').on('hidden.bs.modal', () => {
+            let $dialog = $('#oe-font-delete-dialog');
+            $dialog.removeData('fontname');
+            $('#oe-font-delete-dialog-font-name').text('');
+            $('#oe-font-delete-dialog-font-used').addClass('hidden');
+            $('#oe-font-delete-dialog-do-delete').prop('disabled', true);
         });
 
     }
@@ -2565,7 +2588,7 @@ class OEUIMANAGER {
             let result = document.fonts.delete(fontToDelete);
             if (result) {
                 $.ajax({
-                    url: 'includes/overlayutil.php?request=font&fontName=' + fontName,
+                    url: 'includes/overlayutil.php?request=Font&fontName=' + encodeURIComponent(fontName),
                     type: 'DELETE',
                     context: this
                 }).done((result) => {

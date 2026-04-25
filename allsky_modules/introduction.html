@@ -1343,7 +1343,7 @@
   <a href="#the-important-tab" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The 'Important' tab
+        The IMPORTANT tab
       
     </span>
   </a>
@@ -3987,7 +3987,7 @@
   <a href="#the-important-tab" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The 'Important' tab
+        The IMPORTANT tab
       
     </span>
   </a>
@@ -6459,30 +6459,30 @@
 
   <h1>Modules</h1>
 
-<p>Modules can be used to enhance images created by Allsky. Different modules perform different tasks, the Module Manager allows you to control which modules run and when.</p>
+<p>Modules can be used to enhance images created by Allsky. Different modules perform different tasks and the <strong>Module Manager</strong> WebUI page allows you to control which modules run and when.</p>
 <p>There are two types of modules:</p>
-<ul>
+<ol>
 <li>
 <p>Allsky Modules are developed and maintained by the Allsky team and are installed with Allsky.</p>
 </li>
 <li>
 <p>User Modules are developed and maintained by other people and can optionally be installed and deleted if no longer required.</p>
 </li>
-</ul>
+</ol>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>User Modules should only be installed from the official user-modules   repository using the directions listed there. Installing from other source can be dangerous.</p>
+<p>User Modules should only be installed from the official Allsky <a href="https://github.com/AllskyTeam/allsky-modules">allsky-modules</a> repository using the directions listed there. Installing from other source can be dangerous.</p>
 </div>
 <p>Warning:</p>
 <p>Some modules are shown as experimental. Before using these modules you should ensure that you are proficient in analysing Linux log files. Experimental modules can be unstable and as such may "break" Allsky.</p>
-<p>Some modules are designed to operate with external hardware, typically connected to the Pi's GPIO pins. Before attempting to use any of these modules make sure you have an understanding of interfacing hardware to the PI's GPIO.</p>
+<p>Some modules are designed to operate with external hardware, typically connected to the Pi's GPIO pins. Before attempting to use any of these modules make sure you have an understanding of interfacing hardware to the Pi's GPIO.</p>
 <p>Don't be discouraged by the above warnings - the module system is very flexible and allows you to customise Allsky without having to change any Allsky code.</p>
 <h2 id="what-are-modules">What Are Modules<a class="headerlink" href="#what-are-modules" title="Permanent link">¶</a></h2>
 <p>Modules are Python components that extend the functionality of Allsky. They typically fall into one of several categories:</p>
 <ul>
-<li><strong>Data-enhancement modules</strong> — These add extra information that can be used in overlays. For example, the Solar System module provides details about celestial objects such as the Moon’s position.</li>
+<li><strong>Data-enhancement modules</strong> — These add extra information that can be used in overlays. For example, the Solar System module provides details about celestial objects like the Moon’s position.</li>
 <li><strong>Hardware-control modules</strong> — These interact with external devices. A common example is the Dew Heater module, which reads sensor data and automatically adjusts the dew heater.</li>
-<li><strong>Image-processing modules</strong> — These operate on the captured images. Some modify the image itself (such as the Mask module), while others analyse the image to generate additional overlay data, such as the Star Count module.</li>
+<li><strong>Image-processing modules</strong> — These operate on the captured images. Some modify the image itself (like the Mask module), while others analyse the image to generate additional overlay data, like the Star Count module.</li>
 </ul>
 <h2 id="available-pipelines-flows">Available Pipelines (flows)<a class="headerlink" href="#available-pipelines-flows" title="Permanent link">¶</a></h2>
 <p>There are 5 pipelines available in Allsky.</p>
@@ -6552,7 +6552,7 @@
 <p>Pipelines are managed by adding and removing modules via the Module Manager.</p>
 <div class="admonition info">
 <p class="admonition-title">Default Pipline</p>
-<p>When entering the module manager the default pipeline will be either Day or Night depending upon the time of day</p>
+<p>When entering the Module Manager the default pipeline will be either Daytime Capture or Nighttime Capture depending upon the time of day.</p>
 </div>
 <figure>
 <p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../assets/module_images/module_manager.png" data-desc-position="bottom"><img alt="Module Manager" src="../assets/module_images/module_manager.png"></a></p>
@@ -6571,13 +6571,13 @@
 <tbody>
 <tr>
 <td>1</td>
-<td>Save The Current Pipeline</td>
-<td>USe this button to save the pipeline after you have made any changes to modules or module configuration.</td>
+<td>Save The Module Configuration</td>
+<td>Use this button to save the pipeline after you have made any changes to modules or module configuration.</td>
 </tr>
 <tr>
 <td>2</td>
 <td>Select Pipeline</td>
-<td>Selects the pipeline to manage</td>
+<td>Selects the pipeline to manage.</td>
 </tr>
 <tr>
 <td>3</td>
@@ -6587,12 +6587,12 @@
 <tr>
 <td>4</td>
 <td>Module Filter</td>
-<td>Filters modules in the available lkist by module type</td>
+<td>Filters modules in the available list by module type.</td>
 </tr>
 <tr>
 <td>5</td>
 <td>Package manager</td>
-<td>Manage modules, install, remove</td>
+<td>Manage modules, install, remove.</td>
 </tr>
 <tr>
 <td>6</td>
@@ -6601,13 +6601,13 @@
 </tr>
 <tr>
 <td>7</td>
-<td>Settings</td>
-<td>Displays the module manager settings</td>
+<td>Module Options</td>
+<td>Displays the Module Manager settings.</td>
 </tr>
 <tr>
 <td>8</td>
 <td>Debug</td>
-<td>Displays debug information for the last pipeline run</td>
+<td>Displays debug information for the last pipeline run.</td>
 </tr>
 <tr>
 <td>9</td>
@@ -6617,34 +6617,34 @@
 <tr>
 <td>10</td>
 <td>Available Modules</td>
-<td>Lists the modules available to be added to the pipeline</td>
+<td>Lists the modules available to be added to the pipeline.</td>
 </tr>
 <tr>
 <td>11</td>
 <td>Selected Modules</td>
-<td>Lists the modules selected for the  pipeline</td>
+<td>Lists the modules selected for the  pipeline.</td>
 </tr>
 </tbody>
 </table>
 <h3 id="enabling-a-module">Enabling a module<a class="headerlink" href="#enabling-a-module" title="Permanent link">¶</a></h3>
-<p>To enable a module drag it from the Available Modules column to the Selected Modules column and select the "Enabled" checkbox. The module will become active after the flow has been saved. You can set modules to be automatically enabled when dragging them to the Selected Modules column in the Module Editor Module Options.</p>
-<p>Most modules require some configuration after they have been moved to the Selected Modules column. Clicking the settings button will display any configuration options for the module.</p>
+<p>To enable a module drag it from the Available Modules column to the Selected Modules column and select the "Enabled" checkbox. The module will become active after the flow has been saved using the "Save The Module Configuration" button, which turns green after a change has been made. You can set modules to be automatically enabled when dragging them to the Selected Modules column via the Module Options button.</p>
+<p>Most modules require some configuration after they have been moved to the Selected Modules column. Clicking a module's cog button will display any configuration options for the module.</p>
 <h3 id="disabling-a-module">Disabling a Module<a class="headerlink" href="#disabling-a-module" title="Permanent link">¶</a></h3>
 <p>There are two ways to disable a module:</p>
-<ul>
-<li>Drag the module to the Available Modules column - this will disable the module and lose any settings for it.</li>
+<ol>
 <li>Uncheck the "Enabled" checkbox - this will disable the module but retain any settings. This is the preferred method if you just wish to temporarily disable a module.</li>
-</ul>
+<li>Drag the module to the Available Modules column - this will disable the module and lose any settings for it.</li>
+</ol>
 <h3 id="execution-order">Execution order<a class="headerlink" href="#execution-order" title="Permanent link">¶</a></h3>
-<p>The modules are run in the order they appear in the Selected Modules column. To change the order simply drag the modules up or down the list. Modules highlighted in red can not be moved.</p>
+<p>The modules are run in the order they appear in the Selected Modules column. To change the order simply drag the modules up or down the list. Locked modules can not be moved.</p>
 <div class="admonition info">
 <p class="admonition-title">Module Order</p>
-<p>The order modules run is important. For example dont put the overlay module before a module that generates data for it. If you do this the overlay will display the data from the previous run of the pipeline</p>
+<p>The order modules run in is important. For example don't put the overlay module before a module that generates data for it. If you do, the overlay will display the data from the previous run of the pipeline.</p>
 </div>
 <h2 id="module-settings">Module Settings<a class="headerlink" href="#module-settings" title="Permanent link">¶</a></h2>
-<p>Each module provides a dialog where its settings can be managed. These settings are divided into tabs. Each module will have different tabs but there are a few that are consistent across all modules</p>
+<p>Each module provides a dialog where its settings can be managed. These settings are divided into tabs. Each module will have different tabs but there are a few that are consistent across all modules.  Pressing a module's cog icon displays its settings.</p>
 <h3 id="the-history-tab">The History Tab<a class="headerlink" href="#the-history-tab" title="Permanent link">¶</a></h3>
-<p>If the module produces any graphs then the main graph will be displayed in the history tab</p>
+<p>If the module produces any graphs then the main graph will be displayed in the history tab.</p>
 <figure>
 <p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../assets/module_images/module_history.png" data-desc-position="bottom"><img alt="" src="../assets/module_images/module_history.png"></a> </p>
 <figcaption>
@@ -6652,7 +6652,7 @@
 </figcaption>
 </figure>
 <h3 id="the-variables-tab">The Variables Tab<a class="headerlink" href="#the-variables-tab" title="Permanent link">¶</a></h3>
-<p>This tab shows what variables the module will generate, these can then be used in the VAriable manager to add fields to the overlays. This is really only for information purposes.</p>
+<p>This tab shows what variables the module will generate, these can then be used in the Overlay Editor's "Variable Manager" to add fields to the overlays. This is really only for information purposes.</p>
 <figure>
 <p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../assets/module_images/module_variables.png" data-desc-position="bottom"><img alt="" src="../assets/module_images/module_variables.png"></a> </p>
 <figcaption>
@@ -6660,15 +6660,15 @@
 </figcaption>
 </figure>
 <h3 id="the-changelog-tab">The Changelog Tab<a class="headerlink" href="#the-changelog-tab" title="Permanent link">¶</a></h3>
-<p>This tab shows a history of the changes that have been mad to the module</p>
+<p>This tab shows a history of the changes that have been made to the module.</p>
 <figure>
 <p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../assets/module_images/module_changelog.png" data-desc-position="bottom"><img alt="" src="../assets/module_images/module_changelog.png"></a> </p>
 <figcaption>
 <p>The Change Log tab</p>
 </figcaption>
 </figure>
-<h3 id="the-important-tab">The 'Important' tab<a class="headerlink" href="#the-important-tab" title="Permanent link">¶</a></h3>
-<p>If this module or any portions of it are deprecated then this tab will display information about those deprecations</p>
+<h3 id="the-important-tab">The IMPORTANT tab<a class="headerlink" href="#the-important-tab" title="Permanent link">¶</a></h3>
+<p>If this module or any portions of it are deprecated then this tab will display information about those deprecations.</p>
 <figure>
 <p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../assets/module_images/module_dep.png" data-desc-position="bottom"><img alt="" src="../assets/module_images/module_dep.png"></a> </p>
 <figcaption>
@@ -6683,17 +6683,17 @@
 <p>The Test button</p>
 </figcaption>
 </figure>
-<p>clicking the test button will run the module with the current settings you have configured and display a results dialog with two tabs</p>
+<p>Clicking the test button will run the module with the current settings you have configured and display a results dialog with two tabs:</p>
 <figure>
 <p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../assets/module_images/module_test_result.png" data-desc-position="bottom"><img alt="" src="../assets/module_images/module_test_result.png"></a></p>
 <figcaption>
-<p>The Test results</p>
+<p>The Test Results tab</p>
 </figcaption>
 </figure>
 <figure>
 <p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../assets/module_images/module_test_result_data.png" data-desc-position="bottom"><img alt="" src="../assets/module_images/module_test_result_data.png"></a></p>
 <figcaption>
-<p>The Extra Data the test generated</p>
+<p>The Extra Data tab</p>
 </figcaption>
 </figure>
 

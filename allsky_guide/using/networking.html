@@ -1295,10 +1295,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#configure-wifi" class="md-nav__link">
+  <a href="#configure-wi-fi" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Configure WiFi
+        Configure Wi-Fi
       
     </span>
   </a>
@@ -6198,45 +6198,46 @@
   <h1>Networking</h1>
 
 <h3 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">¶</a></h3>
-<p>The networking area of the WebUI brings together three related pages: <strong>Configure WiFi</strong>, <strong>LAN Dashboard</strong>, and <strong>WLAN Dashboard</strong>. These pages work together, but they are not all meant for the same task. In simple terms, one page helps you connect to a wireless network, while the other two help you understand the current state of your wired and wireless interfaces.</p>
+<p>The networking area of the WebUI brings together three related pages: <strong>Configure Wi-Fi</strong>, <strong>LAN Dashboard</strong>, and <strong>WLAN Dashboard</strong>. The first page helps you connect to a wireless network, while the other two help you understand the current state of your wired and wireless interfaces.</p>
 <p>For most users, the networking section answers two broad questions:</p>
-<ul>
-<li>how do I connect the Pi to the network I want to use?</li>
-<li>once it is connected, what does the current connection look like?</li>
-</ul>
-<p>That distinction is useful because connecting to a network and diagnosing a network are related, but they are not the same job. The <strong>Configure WiFi</strong> page is mainly for taking action. The <strong>LAN Dashboard</strong> and <strong>WLAN Dashboard</strong> pages are mainly for checking status and understanding what is already happening.</p>
-<p>If you think of the networking area in that way, the structure makes more sense straight away. You use <strong>Configure WiFi</strong> when you want to connect, reconnect, or see what wireless networks are available nearby. You use the dashboard pages when you want to inspect the current interface in more detail, confirm that the connection looks sensible, or investigate a problem.</p>
-<h3 id="configure-wifi">Configure WiFi<a class="headerlink" href="#configure-wifi" title="Permanent link">¶</a></h3>
-<p>For many users, <strong>Configure WiFi</strong> is the page they will use most often. It is designed to make wireless setup much easier than editing network files by hand, particularly on a headless Allsky system or on a system installed somewhere awkward to access physically. Instead of remembering network names, typing commands, or checking scan results in the terminal, the page brings the most useful wireless tasks into one place in the WebUI.</p>
+<ol>
+<li>How do I connect the Pi to the network I want to use?</li>
+<li>Once it is connected, what does the current connection look like?</li>
+</ol>
+<p>That distinction is useful because connecting to a network and diagnosing a network are related, but they are not the same job. The <strong>Configure Wi-Fi</strong> page is mainly for taking action. The <strong>LAN Dashboard</strong> and <strong>WLAN Dashboard</strong> pages are mainly for checking status and understanding what is already happening.</p>
+<p>Use <strong>Configure Wi-Fi</strong> when you want to connect, reconnect, or see what wireless networks are available nearby. You use the dashboard pages when you want to inspect the current interface in more detail, confirm that the connection looks sensible, or investigate a problem.</p>
+<h3 id="configure-wi-fi">Configure Wi-Fi<a class="headerlink" href="#configure-wi-fi" title="Permanent link">¶</a></h3>
+<p>For many users, <strong>Configure Wi-Fi</strong> is the page they will use most often. It is designed to make wireless setup much easier than editing network files by hand, particularly on a headless Allsky system or on a system installed somewhere awkward to access physically. Instead of remembering network names, typing commands, or checking scan results in the terminal, the page brings the most useful wireless tasks into one place in the WebUI.</p>
 <figure>
 <p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../../assets/guide_images/net-wifi-config.png" data-desc-position="bottom"><img alt="" src="../../assets/guide_images/net-wifi-config.png" width="100%"></a></p>
 <figcaption>
-<p>Placeholder: Configure WiFi main page</p>
+<p>Placeholder: Configure Wi-Fi main page</p>
 </figcaption>
 </figure>
-<p>The page is organised by wireless adapter. If your system has more than one Wi-Fi interface, each one appears in its own tab. This is helpful because not every installation uses just a single built-in wireless device. Some systems have an additional USB Wi-Fi adapter, and some users may use one interface for their normal connection while keeping another available for testing, recovery, or a different network arrangement. Showing each adapter separately makes it much clearer which interface you are working with.</p>
+<p>The Wi-Fi page is organised by wireless adapter. If your system has more than one Wi-Fi interface, each one appears in its own tab. Some systems have an additional USB Wi-Fi adapter, and some users may use one interface for their normal connection while keeping another available for testing, recovery, or a different network arrangement. <!-- Showing each adapter separately makes it much clearer which interface you are working with. --></p>
 <p>Within each adapter tab, the page begins with a summary of the current wireless state. This normally includes the network the adapter is connected to, along with related details such as the security type, band, and channel. That summary gives you a quick way to see whether the adapter is already connected and, if it is, whether it is connected to the network you expected. This can save time when troubleshooting because it tells you immediately whether the interface is associated with the right access point or whether it may already be using a different network.</p>
 <p>Below that summary is the list of available wireless networks. This list is based on what the selected adapter can currently see. It is not a permanent list and it is not a record of all networks the Pi has ever known about. It is simply a view of the nearby wireless environment at the moment of the scan. That means the list can change depending on where the system is located, how strong the signal is, what obstacles are present, and whether the access point is currently reachable.</p>
-<p>Because of that, the refresh button is important. It is not just reloading the page visually. It is asking the interface to scan again and update the list of visible networks. If you move the Pi, reposition an antenna, power up a router, or simply wait for the local radio conditions to change, the scan results may be different the next time you refresh.</p>
+<p>Because of that, the refresh button near the top of the page is important, and it has the interface scan again and update the list of visible networks. If you move the Pi, reposition an antenna, power up a router, or simply wait for the local radio conditions to change, the scan results may be different the next time you refresh.</p>
 <div class="admonition warning">
 <p class="admonition-title">Wireless scans are not always complete on the first try</p>
 <p>A Wi-Fi scan is only a snapshot of what the adapter can see at that moment, and it is not always complete. A network may be temporarily missed, may only appear intermittently, or may take more than one scan to show up clearly, especially if the signal is weak or the wireless environment is busy.</p>
-<p>If you expect to see a network and it does not appear immediately, do not assume straight away that the access point is down or that something is wrong with Allsky. In many cases, the right next step is simply to refresh the scan and check again.</p>
-<p>This is especially common when the Pi is some distance from the router, when walls or obstructions weaken the signal, or when there are many nearby wireless networks competing for space on the same bands.</p>
+<p>If you expect to see a network and it does not appear immediately, do not assume straight away that the access point is down. In many cases, the right next step is simply to refresh the scan and check again.  This is especially common when the Pi is some distance from the router, when walls or obstructions weaken the signal, or when there are many nearby wireless networks competing for space on the same bands.</p>
 </div>
 <p>The network list is designed to show the details you are most likely to need when deciding which network to use. It includes information such as the SSID, whether the network is already in use, the channel, the band, signal strength, and the security type. These details matter because two visible networks may look similar at first glance but behave very differently in practice. One may be much stronger, one may use a different band, and one may require a different type of authentication.</p>
 <p>That makes the page useful not just for connecting, but also for making a sensible decision about which wireless network is likely to be the best choice. In some installations, a slightly weaker network may still be the right one if it is more stable or better suited to the location of the Pi. In others, signal strength may be the deciding factor. The page does not make that choice for you, but it does give you the information you need.</p>
-<p>When you choose to connect to a network, the page opens a connection dialog rather than switching immediately. This is helpful because it gives you a chance to confirm the adapter, network name, security type, channel, and band before proceeding. If the network is secured, the dialog also prompts you for the password.</p>
+<p>When you choose to connect to a network, the page opens a connection dialog rather than switching immediately. This gives you a chance to confirm the adapter, network name, security type, channel, and band before proceeding. If the network is secured, the dialog also prompts you for the password.</p>
 <figure>
 <p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../../assets/guide_images/net-wifi-connect.png" data-desc-position="bottom"><img alt="" src="../../assets/guide_images/net-wifi-connect.png" width="100%"></a></p>
 <figcaption>
-<p>Configure WiFi connection dialog</p>
+<p>Configure Wi-Fi connection dialog</p>
 </figcaption>
 </figure>
 <p>That extra confirmation step is useful in everyday use because it reduces the chances of connecting to the wrong network by mistake. It is particularly valuable in places where there may be several similar SSIDs, guest networks, or multiple access points with comparable names.</p>
-<p>The page also helps with one of the more frustrating wireless issues: a blocked radio. If Wi-Fi is blocked, the page tells you clearly instead of leaving you to wonder why no networks are appearing. A soft block usually means the radio has been disabled in software and can often be reversed with <code>sudo rfkill unblock wifi</code>. A hard block usually points to a lower-level restriction, such as a hardware switch, firmware setting, or another underlying system limitation. The difference matters because the likely fix is different in each case.</p>
-<p>Another useful feature is that the page distinguishes between different kinds of failure. If no Wi-Fi adapters are found at all, that usually suggests a hardware, driver, or detection issue. If an adapter is present but no networks appear, that points more towards radio conditions, weak signal, or a blocked interface. These are very different situations, and treating them separately makes troubleshooting much easier.</p>
-<p>In day-to-day use, <strong>Configure WiFi</strong> is best thought of as the practical action page. You come here when you want to see what wireless networks are available, connect to one of them, refresh the scan, or check quickly whether the adapter can see the network you expect. Once the connection has been made, the <strong>WLAN Dashboard</strong> is usually the better page for more detailed inspection.</p>
+<p>The page also helps with one of the more frustrating wireless issues: a blocked radio. If Wi-Fi is blocked, the page tells you clearly instead of leaving you to wonder why no networks are appearing. A soft block usually means the radio has been disabled in software and can often be reversed with <code>sudo rfkill unblock wifi</code>. A hard block usually points to a lower-level restriction, such as a hardware switch, firmware setting, or another underlying system limitation.</p>
+<p>Another useful feature is that the page distinguishes between different kinds of failure. If no Wi-Fi adapters are found at all, that usually suggests a hardware, driver, or detection issue. If an adapter is present but no networks appear, that points more towards radio conditions, weak signal, or a blocked interface.</p>
+<!--
+In day-to-day use, **Configure Wi-Fi** is best thought of as the practical action page. You come here when you want to see what wireless networks are available, connect to one of them, refresh the scan, or check quickly whether the adapter can see the network you expect. Once the connection has been made, the **WLAN Dashboard** is usually the better page for more detailed inspection. -->
+
 <h3 id="wlan-dashboard">WLAN Dashboard<a class="headerlink" href="#wlan-dashboard" title="Permanent link">¶</a></h3>
 <p>The <strong>WLAN Dashboard</strong> is the page you use when the wireless interface is already present and you want to understand what it is doing. It is arranged per wireless interface and shows a much fuller picture of the current wireless connection. Depending on the system and interface, this may include details such as SSID, BSSID, bitrate, transmit power, signal level, link quality, frequency, band, channel, IPv4 and IPv6 addressing, gateway, DNS servers, MTU, and regulatory domain.</p>
 <figure>
@@ -6245,10 +6246,12 @@
 <p>WLAN dashboard</p>
 </figcaption>
 </figure>
-<p>In practical terms, this is the page to use when Wi-Fi is technically connected but not behaving as expected. For example, the connection may exist but feel slower than it should, drop intermittently, or be using a different band than you intended. The dashboard gives you the kind of detail that helps you understand what the wireless interface is actually doing at that moment.</p>
+<p>Use this page when Wi-Fi is technically connected but not behaving as expected. For example, the connection may exist but feel slower than it should, drop intermittently, or be using a different band than you intended. The dashboard gives you the kind of detail that helps you understand what the wireless interface is actually doing at that moment.</p>
 <p>This is also where the difference between being connected and being well connected becomes clear. A system may be associated with a network and still perform poorly if the signal is weak, the bitrate is low, or the interface is using an unexpected frequency or channel. The dashboard helps you move beyond a simple yes-or-no view of connectivity and see whether the connection looks healthy.</p>
 <p>For many users, the most immediately useful items on this page are the network name, signal level, link quality, band, and bitrate. Together, these give you a rough picture of how strong and capable the connection appears to be. If you are also checking IP address, gateway, and DNS information, you can begin to tell whether the problem is with the wireless link itself or with the wider network configuration after the link has been established.</p>
-<p>The WLAN dashboard is therefore best viewed as a status and diagnostic page. It is not mainly about choosing a network. It is about understanding the network you are already using.</p>
+<!--
+The WLAN dashboard is therefore best viewed as a status and diagnostic page. It is not mainly about choosing a network. It is about understanding the network you are already using. -->
+
 <h3 id="lan-dashboard">LAN Dashboard<a class="headerlink" href="#lan-dashboard" title="Permanent link">¶</a></h3>
 <p>The <strong>LAN Dashboard</strong> performs a similar role for wired networking. Instead of focusing on Wi-Fi details, it shows the current state of Ethernet interfaces and the information needed to understand whether the wired connection is present, active, and behaving sensibly.</p>
 <figure>
@@ -6257,25 +6260,27 @@
 <p>LAN dashboard</p>
 </figcaption>
 </figure>
-<p>This page typically includes information such as link state, speed, duplex mode, auto-negotiation, IPv4 and IPv6 addressing, byte counts, packet counts, packet errors, packet drops, gateway, DNS, and MTU. In practical terms, this helps you answer a simple but important question: is the Ethernet interface merely connected physically, or is it actually up and working properly?</p>
+<!-- This page typically includes information such as link state, speed, duplex mode, auto-negotiation, IPv4 and IPv6 addressing, byte counts, packet counts, packet errors, packet drops, gateway, DNS, and MTU. -->
+<p>This page helps you answer a simple but important question: is the Ethernet interface merely connected physically, or is it actually up and working properly?</p>
 <p>That distinction matters because a cable plugged into the Pi does not automatically mean the network is functioning correctly. The interface may be present but down, negotiated at an unexpected speed, or suffering from packet errors. The LAN dashboard gives you a clearer view of that situation than a simple “cable connected” assumption ever could.</p>
 <p>This page is especially useful when the Pi appears to be connected by cable but the network still feels unreliable or does not behave as expected. Link state tells you whether the connection is genuinely up. Speed and duplex help confirm whether the connection negotiated in the way you expected. Packet errors and drops can suggest a cabling problem, switch issue, or another physical network fault. Gateway and DNS values help you see whether the broader network configuration looks sensible once the link itself is working.</p>
 <p>For installations that use Ethernet as the primary connection, this may become the main networking status page. Even on systems that primarily rely on Wi-Fi, it can still be useful for checking a backup wired connection or for comparing how both interfaces are currently configured.</p>
 <h3 id="how-the-pages-fit-together">How The Pages Fit Together<a class="headerlink" href="#how-the-pages-fit-together" title="Permanent link">¶</a></h3>
 <p>Although these are three separate pages, they make the most sense when understood as one related part of the WebUI. Each page covers a different stage of working with networking:</p>
 <ul>
-<li><strong>Configure WiFi</strong> is for choosing and connecting to wireless networks</li>
+<li><strong>Configure Wi-Fi</strong> is for choosing and connecting to wireless networks</li>
 <li><strong>WLAN Dashboard</strong> is for inspecting the current wireless connection in detail</li>
 <li><strong>LAN Dashboard</strong> is for inspecting the current wired connection in detail</li>
 </ul>
-<p>In real use, you will often move between them. For example, you might use <strong>Configure WiFi</strong> to join a new network, then open <strong>WLAN Dashboard</strong> to confirm that the adapter connected on the expected band and has a reasonable signal level. If the system also has Ethernet connected, you might then look at <strong>LAN Dashboard</strong> to see whether the wired interface is active as well.</p>
-<p>Thinking about the networking section in this sequence can be helpful:</p>
-<ol>
-<li>use <strong>Configure WiFi</strong> to make the connection you want</li>
-<li>use <strong>WLAN Dashboard</strong> or <strong>LAN Dashboard</strong> to confirm that the resulting connection looks healthy</li>
-<li>use the dashboard pages again later if you need to diagnose poor performance or unexpected behaviour</li>
-</ol>
-<p>For most users, the simplest way to remember the difference is this: use <strong>Configure WiFi</strong> when you want to make something happen, and use the <strong>LAN</strong> or <strong>WLAN</strong> dashboard pages when you want to understand what is already happening. Taken together, these pages give you both the controls you need to connect the system and the information you need to understand the quality and state of that connection afterwards.</p>
+<p>In real use, you will often move between them. For example, you might use <strong>Configure Wi-Fi</strong> to join a new network, then open <strong>WLAN Dashboard</strong> to confirm that the adapter connected on the expected band and has a reasonable signal level. If the system also has Ethernet connected, you might then look at <strong>LAN Dashboard</strong> to see whether the wired interface is active as well.</p>
+<!--
+Thinking about the networking section in this sequence can be helpful:
+
+1. use **Configure Wi-Fi** to make the connection you want
+2. use **WLAN Dashboard** or **LAN Dashboard** to confirm that the resulting connection looks healthy
+3. use the dashboard pages again later if you need to diagnose poor performance or unexpected behaviour
+
+For most users, the simplest way to remember the difference is this: use **Configure Wi-Fi** when you want to make something happen, and use the **LAN** or **WLAN** dashboard pages when you want to understand what is already happening. Taken together, these pages give you both the controls you need to connect the system and the information you need to understand the quality and state of that connection afterwards. -->
 
 
 

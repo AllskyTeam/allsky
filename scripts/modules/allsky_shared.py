@@ -1853,7 +1853,8 @@ def get_database_config():
         - ``databasetype``
         - ``databaseenabled``
     """
-    secret_data = get_secrets(['databasehost', 'databaseuser', 'databasepassword', 'databasedatabase'])
+    secret_data = get_secrets(['databasehost', 'databaseuser', 'databasepassword'])
+    secret_data['databasedatabase'] = get_setting('databasedatabase')
     secret_data['databasetype'] = get_setting('databasetype')
     secret_data['databaseenabled'] = get_setting('enabledatabase')
     

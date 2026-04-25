@@ -2212,8 +2212,7 @@
 "label" : "Database",
 "type" : "text",
 "carryforward" : true,
-"optional" : true,
-"source" : "${ALLSKY_ENV}"
+"optional" : true
 },
 {
 "name" : "databasetype",

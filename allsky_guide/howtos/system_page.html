@@ -6234,23 +6234,28 @@
   <h1>System Page Additions</h1>
 
 <p>You can add information and buttons to the WebUI's System page without having to change any Allsky files. The data can be anything you want, but often contains weather, dew heater, and/or fan data.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>You'll normally use the <a href="http://allsky-test3:8000/allsky_guide/using/system/status.html#additionsEditor">System Page Additions Editor</a> to make the additions, but for finer control you can manually edit the configuration file as described on this page.</p>
+</div>
 <p>This documentation page assumes you are familiar with writing scripts; if so, adding the information is straightforward if you follow the instructions on this page.
-The image below shows the types of items that can be added:</p>
+The image below shows the three types of items that can be added:</p>
 <ol>
-<li>Simple data: "Allsky is the     BEST!!!"</li>
-<li>Progress bar: "Dew heater status"</li>
+<li>Progress bar: "DEW HEATER STATUS"</li>
+<li>Simple data: "ALLSKY IS THE     BEST!!!"</li>
 <li>Buttons: "Heater ON" and "Heater OFF". Clicking a button performs an action that you define.</li>
 </ol>
 <figure>
-<p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../../assets/howtos_images/systemAdditionsExample.png" data-desc-position="bottom"><img alt="" src="../../assets/howtos_images/systemAdditionsExample.png" width="100%"></a></p>
+<p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../../assets/guide_images/system-additions.png" data-desc-position="bottom"><img alt="" src="../../assets/guide_images/system-additions.png" width="100%"></a></p>
 <figcaption>
-<p>Example System Page With Added Buttons</p>
+<p>Example System Page With Added Entries</p>
 </figcaption>
 </figure>
 <h2 id="details">Details<a class="headerlink" href="#details" title="Permanent link">¶</a></h2>
-<p>The information to display on the System page is described in one or more "data files" which are listed in the System Page Additions setting. This section describes the format of those data files.</p>
-<p>Each data file contains one or more lines. Blank lines and lines that begin with # are ignored. Each remaining line will display something on the System page and must contain the fields listed in the tables below, separated by tabs.</p>
-<p>As a very simple example, if you want to add the 2 buttons in the image above to turn your dew heater on and off you'd have a file called, for example, <code>/home/pi/my_buttons.txt</code>. That file needs 2 lines describing the attributes for each button such as color and what it should say (e.g., "Heater ON"). The exact contents of those lines are described below. The buttons appear on the System page when you set the System Page Additions setting to <code>/home/pi/my_buttons.txt</code>.</p>
+<p>The information to display on the System page is described in one or more "data files" which are listed in the <code>System Page Additions</code> setting. This section describes the format of those data files.</p>
+<p>Each data file contains one or more lines. Blank lines and lines that begin with <code>#</code> are ignored. Each remaining line will display something on the System page and must contain the fields listed in the tables below, separated by <strong>tabs</strong>.</p>
+<p>Data files should be stored in the <code>~/allsky/config/myFiles</code> directory so they are propogated to new releases of Allsky.  The <a href="http://allsky-test3:8000/allsky_guide/using/system/status.html#additionsEditor">System Page Additions Editor</a> stores files there automatically.</p>
+<p>As a very simple example, if you want to add the 2 buttons in the image above to turn your dew heater on and off you'd have a file called, for example, <code>~/allsky/config/myFiles/my_buttons.txt</code>. That file needs 2 lines describing the attributes for each button such as color and what it should say (e.g., "Heater ON"). The exact contents of those lines are described below. The buttons appear on the System page when you set the <code>System Page Additions</code> setting to <code>~/allsky/config/myFiles/my_buttons.txt</code>.</p>
 <p>There are three types of lines in a data file. The first word of a line determines what type of line it is:</p>
 <ol>
 <li>

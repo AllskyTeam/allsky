@@ -1368,7 +1368,7 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
       
         <li class="md-nav__item">
-  <a href="#why-this-page-matters" class="md-nav__link">
+  <a href="#why-this-tab-matters" class="md-nav__link">
     <span class="md-ellipsis">
       
         Why It Matters
@@ -1495,7 +1495,7 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#custom-items-on-the-system-page" class="md-nav__link">
+  <a href="#custom-items-on-the-system-tab" class="md-nav__link">
     <span class="md-ellipsis">
       
         Custom Items
@@ -1506,7 +1506,7 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#how-to-use-the-system-page-in-practice" class="md-nav__link">
+  <a href="#how-to-use-the-system-tab-in-practice" class="md-nav__link">
     <span class="md-ellipsis">
       
         In Practice
@@ -1656,7 +1656,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#what-you-will-see-on-the-system-page" class="md-nav__link">
+  <a href="#what-you-will-see-on-the-system-tab" class="md-nav__link">
     <span class="md-ellipsis">
       
         What You'll See
@@ -6480,9 +6480,9 @@
 
 
 <h1 id="system-status">System Status<a class="headerlink" href="#system-status" title="Permanent link">¶</a></h1>
-<p>The <strong>System</strong> tab is the main health dashboard for your Allsky installation. If you are not sure where to begin, this is usually the right page to open first. It is designed to answer the everyday questions most users have when checking on their system, such as:</p>
+<p>The WebUI's <strong>System</strong> page is the main health dashboard for your Allsky installation. If you are not sure where to begin, this is usually the right page to open first. It is designed to answer the everyday questions most users have when checking on their system, such as:</p>
+<!-- - Is the Raspberry Pi up and reachable? -->
 <ul>
-<li>Is the Raspberry Pi up and reachable?</li>
 <li>Is Allsky currently running?</li>
 <li>Has the system been running for a long time or did it recently restart?</li>
 <li>Is the Pi getting too hot?</li>
@@ -6490,14 +6490,15 @@
 <li>Is there an obvious problem that needs attention right now?</li>
 </ul>
 <p>In other words, this page is less about detailed troubleshooting and more about quick understanding. It gives you a broad picture of the current state of both the Raspberry Pi and the Allsky software, with the most important controls close at hand in case you need to intervene.</p>
+<p>This documentation page covers the <strong>System</strong> tab; other documentation pages cover the <strong>Watdogs</strong>, <strong>Logs</strong>, and <strong>Backups</strong> tabs.</p>
 <figure>
 <p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../../../assets/guide_images/system-status.png" data-desc-position="bottom"><img alt="" src="../../../assets/guide_images/system-status.png" width="100%"></a></p>
 <figcaption>
 <p>System tab overview</p>
 </figcaption>
 </figure>
-<h2 id="why-this-page-matters">Why This Page Matters<a class="headerlink" href="#why-this-page-matters" title="Permanent link">¶</a></h2>
-<p>When an Allsky system is behaving normally, the <strong>System</strong> tab gives you confidence that everything is healthy. When something is wrong, this page often tells you that very quickly, even before you open logs or other diagnostic pages.</p>
+<h2 id="why-this-tab-matters">Why This Tab Matters<a class="headerlink" href="#why-this-tab-matters" title="Permanent link">¶</a></h2>
+<p>When an Allsky system is behaving normally, the <strong>System</strong> tab gives you confidence that everything is healthy. When something is wrong, this tab often tells you that very quickly, even before you open logs or other diagnostic pages.</p>
 <p>For example, you might come here because:</p>
 <ul>
 <li>your website stopped updating,</li>
@@ -6507,21 +6508,20 @@
 <li>you want to restart Allsky after changing a setting,</li>
 <li>you want to confirm the machine has the correct IP address before connecting remotely.</li>
 </ul>
-<p>The page is useful because it combines several kinds of information that are related but not identical. The Raspberry Pi itself can be healthy while Allsky is stopped. Allsky can be running while the Pi is low on disk space. The network can be fine while the CPU is overheating. Seeing all of these together makes it much easier to decide what to do next.</p>
+<p>This tab is useful because it combines several kinds of information that are related but not identical. The Raspberry Pi itself can be healthy while Allsky is stopped. Allsky can be running while the Pi is low on disk space. The network can be fine while the CPU is overheating. Seeing all of these together makes it much easier to decide what to do next.</p>
 <h2 id="the-action-buttons">The Action Buttons<a class="headerlink" href="#the-action-buttons" title="Permanent link">¶</a></h2>
-<p>Near the top of the page you will see the main control buttons.</p>
-<p>Depending on your installation, the page may include buttons to:</p>
+<p>Near the top of the tab you will see the main control buttons.  Depending on your installation, this may include buttons to:</p>
 <ul>
 <li>start Allsky,</li>
 <li>stop Allsky,</li>
 <li>reboot the Raspberry Pi,</li>
 <li>shut down the Raspberry Pi,</li>
-<li>open an editor for custom System page items.</li>
+<li>open an editor for custom System tab items.</li>
 </ul>
-<p>These controls make the <strong>System</strong> tab more than a passive dashboard. It is also a practical operating page. If Allsky has stopped and you simply need to bring it back up, you can usually do that here without leaving the browser. If you are about to unplug hardware or perform maintenance, this page may also be the most convenient place to shut the Pi down cleanly first.</p>
+<p>These controls make the <strong>System</strong> tab more than a passive dashboard. It is also a practical operating tab. If Allsky has stopped and you simply need to bring it back up, you can usually do that here without leaving the browser. If you are about to unplug hardware or perform maintenance, this tab may also be the most convenient place to shut the Pi down cleanly first.</p>
 <p>It is worth using these buttons carefully, especially on remote systems. A reboot or shutdown may temporarily remove your web access. That is not usually a problem when the Pi is nearby, but it matters more if the system is mounted outdoors, installed at a remote site, or accessed over a less reliable network connection.</p>
 <h2 id="the-host-information-panel">The Host Information Panel<a class="headerlink" href="#the-host-information-panel" title="Permanent link">¶</a></h2>
-<p>One of the first things this page shows is basic information about the Raspberry Pi. This section typically includes items such as:</p>
+<p>One of the first things this tab shows is basic information about the Raspberry Pi. This section typically includes items such as:</p>
 <ul>
 <li>the hostname,</li>
 <li>one or more IP addresses,</li>
@@ -6550,7 +6550,7 @@
 <p>The website status lines tell you whether the local and remote Allsky Websites are enabled. That matters because many users first notice a problem when images stop appearing on a Website. If the relevant Website is disabled, the explanation may be very simple. If it is enabled but the site still is not updating, you know to keep investigating.</p>
 <p>The Allsky uptime is especially valuable because it tells you how long the service has been running, not just how long the computer has been powered on. If the Pi uptime is very long but the Allsky uptime is short, then Allsky has restarted at some point while the host remained up. That distinction can help you decide whether the issue is likely to be with the operating system, the service, or a configuration change that caused Allsky to restart.</p>
 <h2 id="reading-the-health-indicators">Reading The Health Indicators<a class="headerlink" href="#reading-the-health-indicators" title="Permanent link">¶</a></h2>
-<p>The lower section of the page as seen below is often the part users watch most closely. This area contains the live health indicators and resource bars. These displays are intended to help you judge the condition of the system quickly, without needing to log into the Pi and run command-line tools.</p>
+<p>The lower section of this tab as seen below is often the part users watch most closely. This area contains the live health indicators and resource bars. These displays are intended to help you judge the condition of the system quickly, without needing to log into the Pi and run command-line tools.</p>
 <figure>
 <p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../../../assets/guide_images/system-bars.png" data-desc-position="bottom"><img alt="" src="../../../assets/guide_images/system-bars.png" width="100%"></a></p>
 <figcaption>
@@ -6586,14 +6586,14 @@ Each of these tells you something different about the health of the system. -->
 <p>What matters most is the overall pattern. If memory usage stays high for long periods and the system feels sluggish, that may indicate the Pi is under pressure. Occasional increases are usually less concerning than a system that appears to remain close to its limit all the time.</p>
 <h3 id="cpu-load">CPU Load<a class="headerlink" href="#cpu-load" title="Permanent link">¶</a></h3>
 <p>CPU load gives you a sense of how busy the processor currently is. A brief spike is not necessarily a problem. Many normal tasks can cause the CPU to work harder for a while, especially on smaller Pi models.  Timelapse, keogram, and startrails creation are especially CPU intensive.</p>
-<p>However, if the CPU load remains persistently high, and especially if that happens together with high temperature or slow performance, it may point to a system that is struggling to keep up. In that case, the <strong>System</strong> tab helps you see the symptom, while the <strong>Logs</strong> and <strong>Watchdogs</strong> pages may help you understand the cause.</p>
+<p>However, if the CPU load remains persistently high, and especially if that happens together with high temperature or slow performance, it may point to a system that is struggling to keep up. In that case, the <strong>System</strong> tab helps you see the symptom, while the <strong>Logs</strong> and <strong>Watchdogs</strong> tabs may help you understand the cause.</p>
 <h3 id="cpu-temperature">CPU Temperature<a class="headerlink" href="#cpu-temperature" title="Permanent link">¶</a></h3>
-<p>Temperature is one of the most practical readings on the page. Outdoor and enclosed Allsky systems do not always have ideal airflow, and heat-related issues can be subtle at first.</p>
+<p>Temperature is one of the most practical readings on the <strong>System</strong> tab. Outdoor and enclosed Allsky systems do not always have ideal airflow, and heat-related issues can be subtle at first.</p>
 <p>If the CPU temperature is consistently high, the system may become unstable or begin throttling. Even if the system has not yet reported an obvious thermal warning, a steadily elevated temperature is worth paying attention to. It is often easier to improve cooling early than to wait for intermittent failures later.</p>
 <h3 id="disk-usage">Disk Usage<a class="headerlink" href="#disk-usage" title="Permanent link">¶</a></h3>
 <p>The disk usage row helps you understand how much space remains on the storage device that holds the system and its files. This is a critical metric for any system that continuously produces images, logs, and derived data.</p>
 <p>When storage gets low, the symptoms can appear in many different ways. Captures may fail, uploads may stop, temporary files may not be created correctly, and parts of the system may behave unpredictably. Because of that, disk usage is something worth checking regularly rather than only after a problem appears.</p>
-<p>One especially useful detail is that the page shows more than just a percentage. It also shows the total size and the remaining free space. A value such as 80 percent used may or may not be urgent depending on the total capacity and the rate at which your system is generating data.</p>
+<p>One especially useful detail is that the tab shows more than just a percentage. It also shows the total size and the remaining free space. A value such as 80 percent used may or may not be urgent depending on the total capacity and the rate at which your system is generating data.</p>
 <p>The <code>~/allsky/images</code> folder is normally the one in Allsky that uses the most disk space.  If you connect a USB thumbdrive to the Pi, you can move this directory to the USB device.  Run <code>allsky-config</code> and pick the option to move the images directory.</p>
 <h3 id="temporary-storage-usage">Temporary Storage Usage<a class="headerlink" href="#temporary-storage-usage" title="Permanent link">¶</a></h3>
 <p>Allsky temporary storage is another value that can become important during normal Allsky operation. Temporary Allsky files are often created as part of processing, uploads, and web-related tasks. If this space fills up, you may see failures that do not immediately look like disk-space problems unless you know where to look.  For that reason, it is worth treating temporary storage as a separate health signal rather than assuming it will always track the main disk usage in an obvious way.</p>
@@ -6601,8 +6601,8 @@ Each of these tells you something different about the health of the system. -->
 <p class="admonition-title">Note</p>
 </div>
 <p>During installation of Allsky, the amount of temporary storage is determined based on the amount of RAM your Pi has.  If the Allsky temporary storage is filling up, contact the Allsky team via GitHub.</p>
-<h2 id="custom-items-on-the-system-page">Custom Items On The System Page<a class="headerlink" href="#custom-items-on-the-system-page" title="Permanent link">¶</a></h2>
-<p>Your <strong>System</strong> tab may contain more than the built-in Allsky indicators shown in the examples above. Allsky allows custom additions to this page, so some installations include extra lines, progress bars, or buttons created by the user.</p>
+<h2 id="custom-items-on-the-system-tab">Custom Items On The System Tab<a class="headerlink" href="#custom-items-on-the-system-tab" title="Permanent link">¶</a></h2>
+<p>Your <strong>System</strong> tab may contain more than the built-in Allsky indicators shown in the examples above. Allsky allows custom additions to this tab, so some installations include extra lines, progress bars, or buttons created by the user.</p>
 <p>These custom items can be used to display site-specific information such as:</p>
 <ul>
 <li>a temperature sensor reading,</li>
@@ -6621,11 +6621,11 @@ Each of these tells you something different about the health of the system. -->
 </figcaption>
 </figure>
 <!--
-If your System page contains additional items that are not mentioned in the standard documentation, that does not necessarily mean something is wrong. It may simply mean your installation has been customized. -->
+If your System tab contains additional items that are not mentioned in the standard documentation, that does not necessarily mean something is wrong. It may simply mean your installation has been customized. -->
 
-<h2 id="how-to-use-the-system-page-in-practice">How To Use The System Page In Practice<a class="headerlink" href="#how-to-use-the-system-page-in-practice" title="Permanent link">¶</a></h2>
+<h2 id="how-to-use-the-system-tab-in-practice">How To Use The System Tab In Practice<a class="headerlink" href="#how-to-use-the-system-tab-in-practice" title="Permanent link">¶</a></h2>
 <!--
-Most users do not need to study every number on this page every day. The best way to use the **System** tab is as a quick operational checkpoint. -->
+Most users do not need to study every number on this tab every day. The best way to use the **System** tab is as a quick operational checkpoint. -->
 
 <p>A practical routine might look like this:</p>
 <ol>
@@ -6633,18 +6633,18 @@ Most users do not need to study every number on this page every day. The best wa
 <li>Check whether Allsky is running and whether its uptime looks sensible.</li>
 <li>Scan the various indicators for anything obviously unhealthy.</li>
 <li>If needed, use the control buttons to start or stop Allsky, or reboot the Pi.</li>
-<li>If the page shows a problem but not the reason for it, check the <strong>Logs</strong> or <strong>Watchdogs</strong> pages for more detail.</li>
+<li>If the tab shows a problem but not the reason for it, check the <strong>Logs</strong> or <strong>Watchdogs</strong> tabs for more detail.</li>
 </ol>
-<p>This page is often enough to answer broad questions like:</p>
+<p>This tab is often enough to answer broad questions like:</p>
 <ul>
 <li>Is the system healthy?</li>
 <li>Is the system overheating?</li>
 <li>Is storage running out?</li>
 </ul>
-<p>If the answer is still unclear after checking the System page, that usually means the problem is no longer a high-level status issue and should be investigated in more detail elsewhere in the WebUI.</p>
+<p>If the answer is still unclear after checking this tab, that usually means the problem is no longer a high-level status issue and should be investigated in more detail elsewhere in the WebUI.</p>
 <h2 id="when-to-look-somewhere-else">When To Look Somewhere Else<a class="headerlink" href="#when-to-look-somewhere-else" title="Permanent link">¶</a></h2>
 <!--
-The **System** tab is an excellent summary page, but it is not meant to answer every possible diagnostic question. -->
+The **System** tab is an excellent summary, but it is not meant to answer every possible diagnostic question. -->
 
 <p>You should usually move to another page in the WebUI when:</p>
 <ul>
@@ -6660,14 +6660,14 @@ The **System** tab is an excellent summary page, but it is not meant to answer e
 <li>use the <strong>Charts</strong> page when you want to understand changes over time.</li>
 </ul>
 <!--
-That relationship is important to understand. The **System** tab tells you whether the installation looks healthy right now. The other pages help explain why it does or does not. -->
+That relationship is important to understand. The **System** tab tells you whether the installation looks healthy right now. The other tabs help explain why it does or does not. -->
 
 <h2 id="additionsEditor">System Page Additions Editor<a class="headerlink" href="#additionsEditor" title="Permanent link">¶</a></h2>
-<p>The <strong>System</strong> page also includes a built-in editor for <strong>System Page Additions</strong>. This is the part of the page that lets you create and manage your own extra rows, progress bars, and action buttons without manually editing the additions files in a text editor.</p>
+<p>The <strong>System</strong> tab also includes a built-in editor for <strong>System Page Additions</strong>. This is the part of the tab that lets you create and manage your own extra rows, progress bars, and action buttons without manually editing the additions files in a text editor.</p>
 <p>At a high-level, details on the additions are stored in a configuration file.  The editor is a front end to the file that allows you to modify it without actually opening it.</p>
 <p>For many users, this editor is the easiest way to customise the System tab. Instead of remembering the exact file format used by additions files, you work with a form-based interface in the WebUI. You choose the kind of item you want to add, fill in the fields you care about, and save the file. The editor then writes the additions file for you in the correct format.</p>
 <!--
-This makes the feature much more approachable, especially if your goal is practical rather than technical. You may simply want the System page to show a weather reading, a dew heater status line, a fan speed indicator, or a button that runs a maintenance script. In those cases, the editor is often a much more comfortable starting point than hand-building the file structure yourself. -->
+This makes the feature much more approachable, especially if your goal is practical rather than technical. You may simply want the System tab to show a weather reading, a dew heater status line, a fan speed indicator, or a button that runs a maintenance script. In those cases, the editor is often a much more comfortable starting point than hand-building the file structure yourself. -->
 
 <figure>
 <p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../../../assets/guide_images/system-add-editor.png" data-desc-position="bottom"><img alt="" src="../../../assets/guide_images/system-add-editor.png" width="100%"></a></p>
@@ -6678,7 +6678,7 @@ This makes the feature much more approachable, especially if your goal is practi
 <h3 id="what-the-editor-is-for">What The Editor Is For<a class="headerlink" href="#what-the-editor-is-for" title="Permanent link">¶</a></h3>
 <p>The editor is used as an aid in creating the configuration file that defines what additional items to add to the <strong>System</strong> tab, without manually editting the file.  Note in the "System tab Additions" image earlier and the "System tab Additions Editor" above two buttions, some data, and a progress bar were added.  These types of entries are described below.</p>
 <!--
-The additions editor is used when the built-in System page information is not enough for your installation and you want to place extra information or controls alongside the normal Allsky status items.
+The additions editor is used when the built-in System tab information is not enough for your installation and you want to place extra information or controls alongside the normal Allsky status items.
 Typical uses include:
 
 - showing weather station data,
@@ -6687,10 +6687,10 @@ Typical uses include:
 - creating a button that runs a script,
 - exposing site-specific operational checks on the main status page.
 
-The important idea is that these additions are meant to make the System page more useful for your own setup. They are not limited to Allsky’s default information. If your installation has extra hardware, extra scripts, or extra monitoring that matters to you, the editor gives you a structured way to surface that information in the WebUI. -->
+The important idea is that these additions are meant to make the System tab more useful for your own setup. They are not limited to Allsky’s default information. If your installation has extra hardware, extra scripts, or extra monitoring that matters to you, the editor gives you a structured way to surface that information in the WebUI. -->
 
 <h3 id="opening-the-editor">Opening The Editor<a class="headerlink" href="#opening-the-editor" title="Permanent link">¶</a></h3>
-<p>If the editor is available on your system, click the "Edit Additions" button on the <strong>System</strong> tab. The editor opens in a separate dialog window over the page as seen above.</p>
+<p>If the editor is available on your system, click the "Edit Additions" button on the <strong>System</strong> tab. The editor opens in a separate dialog window over the tab as seen above.</p>
 <p>Inside that dialog, you work with one additions file at a time. The editor can open an existing additions file, or it can create a new one for you. New files are stored in the Allsky configuration area, which helps keep them separate from the core application files and makes them easier to preserve across upgrades.</p>
 <!--
 This is an important detail for everyday use. You are not expected to hunt through the filesystem looking for the right place to store these files. The editor is designed to guide you towards the supported location and to make opening, creating, and saving additions files feel like a normal WebUI task. -->
@@ -6706,7 +6706,7 @@ This is an important detail for everyday use. You are not expected to hunt throu
 </figcaption>
 </figure>
 <h3 id="working-with-files">Working With Files<a class="headerlink" href="#working-with-files" title="Permanent link">¶</a></h3>
-<p>The editor revolves around additions files because that is how the System page stores custom rows and buttons. Each file contains one or more entries, and the editor presents those entries as a list you can review and manage.</p>
+<p>The editor revolves around additions files because that is how the System tab stores custom rows and buttons. Each file contains one or more entries, and the editor presents those entries as a list you can review and manage.</p>
 <p>When you open a file, the editor shows:</p>
 <ul>
 <li>the current file name,</li>
@@ -6718,7 +6718,7 @@ This is an important detail for everyday use. You are not expected to hunt throu
 <p>This layout is useful because it gives you a clear overview before you change anything. You can see whether a file already contains the entries you need, whether something has been added before, and whether a button entry is likely to run the script you expect.</p>
 <p>If a file is new and empty, the editor simply gives you a blank starting point. From there, you add the first row yourself.</p>
 <h3 id="the-three-kinds-of-additions">The Three Kinds Of Additions<a class="headerlink" href="#the-three-kinds-of-additions" title="Permanent link">¶</a></h3>
-<p>The editor supports the same three broad kinds of System page additions that the underlying additions files support, but it presents them in a more approachable form.</p>
+<p>The editor supports the same three broad kinds of System tab additions that the underlying additions files support, but it presents them in a more approachable form.</p>
 <h4 id="data-entries">Data entries<a class="headerlink" href="#data-entries" title="Permanent link">¶</a></h4>
 <p>Use a <strong>data</strong> entry when you want to show a straightforward label and value.</p>
 <p>This is the simplest type of custom addition. It is suitable for information such as:</p>
@@ -6730,9 +6730,9 @@ This is an important detail for everyday use. You are not expected to hunt throu
 <li>the current operating mode of an attached device,</li>
 <li>a plain status line produced by a script.</li>
 </ul>
-<p>You normally provide a label, a displayed value, and an optional timeout. The timeout controls how long the data is considered current. If the data gets too old, the System page can mark it as expired so you do not mistake stale information for live information.</p>
+<p>You normally provide a label, a displayed value, and an optional timeout. The timeout controls how long the data is considered current. If the data gets too old, the System tab can mark it as expired so you do not mistake stale information for live information.</p>
 <h4 id="progress-entries">Progress entries<a class="headerlink" href="#progress-entries" title="Permanent link">¶</a></h4>
-<p>Use a <strong>progress</strong> entry when the value has a meaningful range and you want the System page to show it visually as a bar.</p>
+<p>Use a <strong>progress</strong> entry when the value has a meaningful range and you want the System tab to show it visually as a bar.</p>
 <p>This type is useful for values such as:</p>
 <ul>
 <li>humidity,</li>
@@ -6741,9 +6741,9 @@ This is an important detail for everyday use. You are not expected to hunt throu
 <li>temperatures with warning thresholds,</li>
 <li>any reading that is easier to interpret as a scale than as plain text.</li>
 </ul>
-<p>In addition to the label and displayed value, you provide the minimum, current, and maximum values, along with warning and danger thresholds. <!-- The practical benefit is that the System page can do more than show a number. --> This can help you see whether that number looks healthy at a glance.</p>
+<p>In addition to the label and displayed value, you provide the minimum, current, and maximum values, along with warning and danger thresholds. <!-- The practical benefit is that the System tab can do more than show a number. --> This can help you see whether that number looks healthy at a glance.</p>
 <h4 id="button-entries">Button entries<a class="headerlink" href="#button-entries" title="Permanent link">¶</a></h4>
-<p>Use a <strong>button</strong> entry when you want the System page to perform an action.</p>
+<p>Use a <strong>button</strong> entry when you want the System tab to perform an action.</p>
 <p>This is the most interactive type of addition. A button can be used to:</p>
 <ul>
 <li>run a maintenance script,</li>
@@ -6764,11 +6764,11 @@ This is an important detail for everyday use. You are not expected to hunt throu
 <p>When you add a new entry or edit an existing one, the editor opens a form with fields appropriate to that entry type. You are shown the fields that make sense for the kind of item you are creating. <!-- rather than one long confusing form covering every possible case. --></p>
 <p>For a simple data row, the form stays fairly short. For a progress bar, the form expands to include the range and threshold settings. For a button, the form focuses on the command, the label, the colour, the icon, and the success message.</p>
 <!--
-This is exactly how a good end-user editor should feel. It helps you think in terms of what you want to achieve on the page rather than how the underlying file syntax works. -->
+This is exactly how a good end-user editor should feel. It helps you think in terms of what you want to achieve on the tab rather than how the underlying file syntax works. -->
 
 <h3 id="testing-buttons">Testing Buttons<a class="headerlink" href="#testing-buttons" title="Permanent link">¶</a></h3>
 <p>One of the most useful features in the editor is the ability to test a button command before relying on it in normal use.</p>
-<p>When you are working with a button entry, the editor provides a <strong>Test Script</strong> action. This is important because button entries are usually the most sensitive additions on the page. They do not just display information; they try to do something. If the command path is wrong, if permissions are missing, or if the script fails, you want to know that before you assume the button is ready for real use.</p>
+<p>When you are working with a button entry, the editor provides a <strong>Test Script</strong> action. This is important because button entries are usually the most sensitive additions on the tab. They do not just display information; they try to do something. If the command path is wrong, if permissions are missing, or if the script fails, you want to know that before you assume the button is ready for real use.</p>
 <p>Testing from the editor helps you confirm:</p>
 <ul>
 <li>that the correct command is selected,</li>
@@ -6782,9 +6782,9 @@ This is exactly how a good end-user editor should feel. It helps you think in te
 <p>First, when you save an entry inside the dialog, you are saving that entry into the editor’s current working view of the additions file. In other words, you are updating the list of entries in the editor.</p>
 <p>Second, when you choose <strong>Save File</strong>, you write those changes back to the actual additions file on disk. That is the step that makes the changes real for ongoing use.</p>
 <p>This distinction is useful because it lets you make several edits before committing them to the file. You can add a row, adjust a progress bar, change a button label, review the results in the editor, and then save the whole file once you are happy with it.</p>
-<p>Depending on your setup, you may also be asked whether the WebUI setting for <strong>System Page Additions</strong> should be updated to use the file you just saved. From a user point of view, that is simply the system checking whether the file you edited is the one the System page is actually configured to use. If it is not, the WebUI gives you the option of switching to the newly saved file.</p>
-<h3 id="what-you-will-see-on-the-system-page">What You Will See On The System Page<a class="headerlink" href="#what-you-will-see-on-the-system-page" title="Permanent link">¶</a></h3>
-<p>Once your additions file is configured and saved, its entries appear on the System page alongside the built-in information.</p>
+<p>Depending on your setup, you may also be asked whether the WebUI setting for <strong>System Page Additions</strong> should be updated to use the file you just saved. From a user point of view, that is simply the system checking whether the file you edited is the one the System tab is actually configured to use. If it is not, the WebUI gives you the option of switching to the newly saved file.</p>
+<h3 id="what-you-will-see-on-the-system-tab">What You Will See On The System Tab<a class="headerlink" href="#what-you-will-see-on-the-system-tab" title="Permanent link">¶</a></h3>
+<p>Once your additions file is configured and saved, its entries appear on the System tab alongside the built-in information.</p>
 <p>In practical terms:</p>
 <ul>
 <li>data entries appear as extra information rows,</li>
@@ -6792,7 +6792,7 @@ This is exactly how a good end-user editor should feel. It helps you think in te
 <li>button entries appear as additional action buttons.</li>
 </ul>
 <!--
-This means the **System** tab can gradually become tailored to your installation. A simple setup may only add one or two useful readings. A more advanced setup may turn the page into a full operational dashboard that includes environmental status, hardware controls, and custom monitoring information. -->
+This means the **System** tab can gradually become tailored to your installation. A simple setup may only add one or two useful readings. A more advanced setup may turn the tab into a full operational dashboard that includes environmental status, hardware controls, and custom monitoring information. -->
 
 <h3 id="when-the-editor-is-enough-and-when-you-need-more">When The Editor Is Enough And When You Need More<a class="headerlink" href="#when-the-editor-is-enough-and-when-you-need-more" title="Permanent link">¶</a></h3>
 <p>For many users, the editor is enough on its own. If your needs are straightforward and the scripts you want to call already exist, the editor may be all you need to create and maintain your additions.</p>
@@ -6803,14 +6803,14 @@ This means the **System** tab can gradually become tailored to your installation
 <ol>
 <li>Create or open one additions file.</li>
 <li>Add a single simple data row first.</li>
-<li>Save the file and confirm it appears on the System page.</li>
+<li>Save the file and confirm it appears on the System tab.</li>
 <li>Add a progress bar only after you are comfortable with the basic workflow.</li>
 <li>Test button entries carefully before relying on them.</li>
 </ol>
 <p>Starting small is usually the best approach. It gives you confidence in how the editor behaves and makes it easier to spot mistakes. Once you understand the flow of open, add, test, and save, the editor becomes a very practical part of day-to-day administration.</p>
 <h2 id="summary">Summary<a class="headerlink" href="#summary" title="Permanent link">¶</a></h2>
 <p>For most users, the <strong>System</strong> tab is the first and most important operational page in the Allsky WebUI. It combines status, control, and health information in one place and makes it easy to answer the practical questions that come up during normal use.</p>
-<p>If you only remember one thing about this page, remember this: when Allsky seems wrong, start here. Very often the page will either show the problem directly or point you toward the next place to investigate.</p>
+<p>If you only remember one thing about this tab, remember this: when Allsky seems wrong, start here. Very often the tab will either show the problem directly or point you toward the next place to investigate.</p>
 
 
 

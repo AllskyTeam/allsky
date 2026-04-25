@@ -168,6 +168,11 @@
 	background-color: rgb(36, 34, 34) !important;
 }
 
+[data-bs-theme="dark"] .modal-header .btn-close:disabled,
+[data-bs-theme="dark"] .modal-header .btn-close.disabled {
+	opacity: 0.55;
+}
+
 /* Collapsible Card */
 .toggle-btn {
 	border: 0;

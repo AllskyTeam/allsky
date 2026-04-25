@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify, Response
-import lgpio
 import threading
 from modules.auth_utils import api_auth_required
+from modules.gpio.backends import GPIOBackendUnavailable, select_gpio_backend
 
 # ---------------------------------------------------------------------------
 # Blueprint
@@ -14,50 +14,35 @@ gpio_lock = threading.Lock()
 digital_pins = {}
 pwm_pins = {}
 pin_names = {}
-gpiochip_handle = None
-gpiochip_info = None
+gpio_backend = None
+gpio_backend_error = None
 
 # ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------
 
-def get_gpiochip_handle():
+def get_gpio_backend():
     """
-    Lazily open the first available gpiochip.
-
-    Returns:
-        int: lgpio handle for the active gpiochip.
+    Lazily select a GPIO backend.
     """
-    global gpiochip_handle, gpiochip_info
+    global gpio_backend, gpio_backend_error
 
-    if gpiochip_handle is not None:
-        return gpiochip_handle
+    if gpio_backend is not None:
+        return gpio_backend
 
-    last_error = None
-    for chip in range(8):
-        try:
-            handle = lgpio.gpiochip_open(chip)
-            info = lgpio.gpio_get_chip_info(handle)
-            gpiochip_handle = handle
-            gpiochip_info = info
-            return gpiochip_handle
-        except Exception as exc:
-            last_error = exc
-
-    raise RuntimeError(f"Unable to open a gpiochip: {last_error}")
+    try:
+        gpio_backend = select_gpio_backend()
+        return gpio_backend
+    except GPIOBackendUnavailable as exc:
+        gpio_backend_error = str(exc)
+        raise
 
 
 def get_gpio_count():
     """
-    Return the number of GPIO lines exposed by the active chip.
+    Return the number of GPIO lines exposed by the active backend.
     """
-    handle = get_gpiochip_handle()
-    del handle  # handle is only used to ensure the chip is opened
-
-    if gpiochip_info is None:
-        return 0
-
-    return int(gpiochip_info[1])
+    return get_gpio_backend().get_gpio_count()
 
 
 def normalise_pin(gpio_str):
@@ -85,43 +70,36 @@ def normalise_pin(gpio_str):
 
 def _release_digital_pin(pin):
     if pin in digital_pins:
-        handle = get_gpiochip_handle()
-        lgpio.gpio_free(handle, int(pin))
+        get_gpio_backend().free(int(pin))
         del digital_pins[pin]
 
 
 def _release_pwm_pin(pin):
     if pin in pwm_pins:
-        handle = get_gpiochip_handle()
-        lgpio.tx_pwm(handle, int(pin), 0, 0)
-        lgpio.gpio_free(handle, int(pin))
+        backend = get_gpio_backend()
+        backend.stop_pwm(int(pin))
+        backend.free(int(pin))
         del pwm_pins[pin]
 
 
 def _claim_input(pin_num):
-    handle = get_gpiochip_handle()
-    lgpio.gpio_claim_input(handle, pin_num)
+    get_gpio_backend().claim_input(pin_num)
 
 
 def _claim_output(pin_num, level=0):
-    handle = get_gpiochip_handle()
-    lgpio.gpio_claim_output(handle, pin_num, level=level)
+    get_gpio_backend().claim_output(pin_num, level=level)
 
 
 def _read_pin_value(pin_num):
-    handle = get_gpiochip_handle()
-    return bool(lgpio.gpio_read(handle, pin_num))
+    return get_gpio_backend().read(pin_num)
 
 
 def _write_pin_value(pin_num, level):
-    handle = get_gpiochip_handle()
-    lgpio.gpio_write(handle, pin_num, 1 if level else 0)
+    get_gpio_backend().write(pin_num, level)
 
 
 def _set_pwm_value(pin_num, frequency, duty):
-    handle = get_gpiochip_handle()
-    duty_percent = (float(duty) / 65535.0) * 100.0
-    lgpio.tx_pwm(handle, pin_num, int(frequency), duty_percent)
+    get_gpio_backend().pwm(pin_num, frequency, duty)
 
 
 def get_gpio_status() -> dict:
@@ -154,6 +132,17 @@ def get_gpio_status() -> dict:
     return all_status
 
 
+def gpio_backend_unavailable_response(exc):
+    return (
+        jsonify({
+            "error": "GPIO backend unavailable",
+            "type": type(exc).__name__,
+            "message": str(exc),
+        }),
+        503,
+    )
+
+
 # ---------------------------------------------------------------------------
 # API Endpoints
 # ---------------------------------------------------------------------------
@@ -167,6 +156,8 @@ def all_gpio_status() -> Response:
 
         return jsonify(all_status)
 
+    except GPIOBackendUnavailable as e:
+        return gpio_backend_unavailable_response(e)
     except Exception as e:
         return (
             jsonify({
@@ -199,6 +190,8 @@ def read_digital(pin) -> Response:
 
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
+    except GPIOBackendUnavailable as e:
+        return gpio_backend_unavailable_response(e)
     except Exception as e:
         return (
             jsonify({
@@ -232,6 +225,8 @@ def set_digital() -> Response:
 
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
+    except GPIOBackendUnavailable as e:
+        return gpio_backend_unavailable_response(e)
     except Exception as e:
         return (
             jsonify({
@@ -279,6 +274,8 @@ def set_pwm() -> Response:
 
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
+    except GPIOBackendUnavailable as e:
+        return gpio_backend_unavailable_response(e)
     except Exception as e:
         return (
             jsonify({
@@ -358,6 +355,8 @@ def status(format) -> Response:
 
         return Response(html, mimetype="text/html")
 
+    except GPIOBackendUnavailable as e:
+        return gpio_backend_unavailable_response(e)
     except Exception as e:
         return (
             jsonify({

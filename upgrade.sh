@@ -177,7 +177,7 @@ while [[ $# -gt 0 ]]; do
 			shift
 			;;
 		--doupgrade)
-			ACTION="doUpgrade"; WORD="Upgrading"
+			ACTION="doUpgrade"
 			;;
 		-*)
 			E_ "Unknown argument: '${ARG}'." >&2

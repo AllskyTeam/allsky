@@ -41,7 +41,7 @@ DISPLAY_MSG_LOG="${ALLSKY_LOGS}/upgrade.log"	# send log entries here
 
 ############################## functions
 ####
-do_initial_heading()
+function do_initial_heading()
 {
 	local MSG
 
@@ -95,7 +95,7 @@ function check_for_current()
 
 # Check if both the prior and the "oldest" directory exist.
 # If so, we can't continue since we can't rename the prior directory to the oldest.
-check_for_oldest()
+function check_for_oldest()
 {
 	[[ ! -d ${PRIOR_ALLSKY_DIR} ]] && return 0
 
@@ -113,7 +113,7 @@ check_for_oldest()
 }
 
 
-restore_directories()
+function restore_directories()
 {
 	display_msg --log info "Renaming '${PRIOR_ALLSKY_DIR}' back to '${ALLSKY_HOME}'."
 	echo mv "${PRIOR_ALLSKY_DIR}" "${ALLSKY_HOME}"
@@ -131,7 +131,7 @@ function usage_and_exit()
 	exec >&2
 
 	echo
-	local USAGE="Usage: ${ME} [--help] [--debug] [--branch branch]"
+	local USAGE="Usage: ${ME} [--help] [--debug] [--branch branch] [--doUpgrade]"
 	if [[ ${RET} -eq 0 ]]; then
 		echo "Upgrade the Allsky software to a newer version."
 		echo -e "\n${USAGE}"
@@ -142,7 +142,7 @@ function usage_and_exit()
 	echo "   --help            Displays this message and exits."
 	echo "   --debug           Displays debugging information."
 	echo "   --branch branch   Uses 'branch' instead of the production '${GITHUB_MAIN_BRANCH}' branch."
-	echo "   --function        Executes the specified function and quits."
+	echo "   --doUpgrade       Completes the upgrade."
 	echo
 	exit "${RET}"
 }
@@ -158,8 +158,10 @@ DEBUG="false"; DEBUG_ARG=""
 # shellcheck disable=SC2119
 BRANCH="$( get_branch )"
 [[ -z ${BRANCH} ]] && BRANCH="${ALLSKY_GITHUB_MAIN_BRANCH}"
-ACTION="upgrade"; WORD="Upgrade"		# default
-FUNCTION=""
+# Possible ACTION's: "upgrade" (to prepare things), "doUpgrade" (to actually do the upgrade)
+ACTION="upgrade"
+
+
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
 	case "${ARG,,}" in
@@ -174,9 +176,8 @@ while [[ $# -gt 0 ]]; do
 			BRANCH="${2}"
 			shift
 			;;
-		--function)
-			FUNCTION="${2}"
-			shift
+		--doupgrade)
+			ACTION="doUpgrade"; WORD="Upgrading"
 			;;
 		-*)
 			E_ "Unknown argument: '${ARG}'." >&2
@@ -193,24 +194,7 @@ done
 [[ ${OK} == "false" || $# -ne 0 ]] && usage_and_exit 1
 [[ ${DEBUG} == "true" ]] && echo "Running: ${ME} ${ALL_ARGS}"
 
-
-# TODO: these are here to keep shellcheck quiet while this script is incomplete.
-DEBUG_ARG="${DEBUG_ARG}"
-FUNCTION="${FUNCTION}"
-
-if ! NEWEST_VERSION="$( "${ALLSKY_UTILITIES}/getNewestAllskyVersion.sh" --branch "${BRANCH}" --version-only 2>&1 )" ; then
-	MSG="Unable to determine newest version; cannot continue."
-	if [[ ${BRANCH} != "${GITHUB_MAIN_BRANCH}" ]];
-	then
-		MSG2="Make sure '${BRANCH}' is a valid branch in GitHub."
-	else
-		MSG2=""
-	fi
-	display_msg --log error "${MSG}" "${MSG2}"
-	display_msg --logonly info "${NEWEST_VERSION}"		# is the error message.
-	echo
-	exit 2
-fi
+cd || exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 if [[ ! -d ${ALLSKY_CONFIG} ]]; then
 	MSG="Allsky does not appear to be installed; cannot continue."
@@ -220,16 +204,16 @@ if [[ ! -d ${ALLSKY_CONFIG} ]]; then
 	exit 2
 fi
 
-if [[ "${ACTION}" != "doUpgrade" ]]; then
+if [[ "${ACTION}" == "upgrade" ]]; then
 	echo
-	echo "***********************************************"
-	echo "*** Welcome to the Allsky Software ${WORD} ***"
-	echo "***********************************************"
+	echo "**********************************************"
+	echo "*** Welcome to the Allsky Software Upgrade ***"
+	echo "**********************************************"
 	echo
 else	# we're continuing where we left off, so don't welcome again.
-	echo -e "* ${GREEN}Continuing the ${WORD}...${NC}"
+	display_msg --log info "Continuing the upgrade..."
 fi
-#
+
 ##### Calculate whiptail sizes
 WT_WIDTH="$( calc_wt_size )"
 
@@ -238,16 +222,24 @@ TITLE="${SHORT_TITLE} - ${ALLSKY_VERSION}"
 OLDEST_DIR="${PRIOR_ALLSKY_DIR}-OLDEST"
 
 if [[ ${ACTION} == "upgrade" ]]; then
-	:
-
 	# First part of upgrade, executed by user in ${ALLSKY_HOME}.
 
-	# Make sure we can upgrade:
-	#	If config/ does NOT exist, the user hasn't installed Allsky.
-	#		Warn the user but let them continue (won't be able to restore from prior).
+	if ! NEWEST_VERSION="$( "${ALLSKY_UTILITIES}/getNewestAllskyVersion.sh" --branch "${BRANCH}" --version-only 2>&1 )" ; then
+		MSG="Unable to determine newest version; cannot continue."
+		if [[ ${BRANCH} != "${GITHUB_MAIN_BRANCH}" ]];
+		then
+			MSG2="Make sure '${BRANCH}' is a valid branch in GitHub."
+		else
+			MSG2=""
+		fi
+		display_msg --log error "${MSG}" "${MSG2}"
+		display_msg --logonly info "${NEWEST_VERSION}"		# is the error message.
+		echo
+		exit 2
+	fi
 
-	# Ask user if they want to upgrade in place (i.e., overwrite code),
-	# or move current code to ${ALLSKY_PRIOR_DIR}.
+	# Ask user if they want to move current code to ${ALLSKY_PRIOR_DIR},
+	# or upgrade in place (i.e., overwrite code).
 
 	# If move current code:
 	#	Check for prior Allsky versions:
@@ -269,6 +261,10 @@ if [[ ${ACTION} == "upgrade" ]]; then
 	#	?? anything else?
 
 	# Else (upgrade in place)
+	# 	Run "git pull", then "install.sh --noSkip" ????
+	#
+	# 		OR
+	#
 	#	Git new code into ${ALLSKY_HOME}-NEW
 	#	?? move ${ALLSKY_HOME}/upgrade.sh to ${ALLSKY_HOME}/upgrade-OLD.sh
 	#		exec ${ALLSKY_HOME}/upgrade-OLD.sh
@@ -279,35 +275,38 @@ if [[ ${ACTION} == "upgrade" ]]; then
 	#		How is --doUpgradeInPlace different from --doUpgrade ??
 	#	?? anything else?
 
-do_initial_heading
 
-check_for_current
+	do_initial_heading
 
-check_for_oldest
+	check_for_current
 
-display_msg --log progress "Stopping Allsky"
-stop_Allsky
+	check_for_oldest
 
-display_msg --log progress "Renaming '${ALLSKY_HOME}' to '${PRIOR_ALLSKY_DIR}'."
-mv "${ALLSKY_HOME}" "${PRIOR_ALLSKY_DIR}"
+	display_msg --log progress "Stopping Allsky"
+	stop_Allsky
 
-# Keep using same log file which is now in the "prior" directory.
-DISPLAY_MSG_LOG="${DISPLAY_MSG_LOG/${ALLSKY_HOME}/${PRIOR_ALLSKY_DIR}}"
+	display_msg --log progress "Renaming '${ALLSKY_HOME}' to '${PRIOR_ALLSKY_DIR}'."
+	mv "${ALLSKY_HOME}" "${PRIOR_ALLSKY_DIR}" || exit "${ALLSKY_EXIT_ERROR_STOP}"
 
-cd || exit "${ALLSKY_EXIT_ERROR_STOP}"
- 
+	# Keep using same log file which is now in the "prior" directory.
+	DISPLAY_MSG_LOG="${DISPLAY_MSG_LOG/${ALLSKY_HOME}/${PRIOR_ALLSKY_DIR}}"
 
-R="${GITHUB_ROOT}/${GITHUB_ALLSKY_REPO}.git"
-display_msg --log progress "Running: git clone --depth=1 --recursive --branch '${BRANCH}' '${R}'"
-if ! ERR="$( git clone --depth=1 --recursive --branch "${BRANCH}" "${R}" 2>&1 )" ; then
-	display_msg --log error "'git clone' failed." " ${ERR}"
-	restore_directories
-	exit 3
+	R="${GITHUB_ROOT}/${GITHUB_ALLSKY_REPO}.git"
+	display_msg --log progress "Running: git clone --depth=1 --recursive --branch '${BRANCH}' '${R}'"
+	if ! ERR="$( git clone --depth=1 --recursive --branch "${BRANCH}" "${R}" 2>&1 )" ; then
+		display_msg --log error "'git clone' failed." " ${ERR}"
+		restore_directories
+		exit 3
+	fi
+
+	cd "${ALLSKY_HOME}" || exit "${ALLSKY_EXIT_ERROR_STOP}"
+	#
+	# --doUpgrade tells it to use prior version without asking and to not display header,
+	# change messages to say "upgrade", not "install", etc.
+	# shellcheck disable=SC2086,SC2291
+	echo xxx	./install.sh ${DEBUG_ARG} --branch "${BRANCH}" --doUpgrade
+
+elif [[ ${ACTION} == "doUpgrade" ]]; then
+	:
+	# XXXX TODO: add code
 fi
-
-cd "${ALLSKY_HOME}" || exit "${ALLSKY_EXIT_ERROR_STOP}"
-#
-# --doUpgrade tells it to use prior version without asking and to not display header,
-# change messages to say "upgrade", not "install", etc.
-# shellcheck disable=SC2086,SC2291
-echo xxx	./install.sh ${DEBUG_ARG} --branch "${BRANCH}" --doUpgrade

@@ -2451,7 +2451,8 @@ class OEUIMANAGER {
             }).done( (fontData) => {
                 $('#oe-fontupload-submit').removeClass('disabled');
                 for (let i = 0; i < fontData.length; i++) {
-                    let fontFace = new FontFace(fontData[i].key, 'url(' + window.oedi.get('BASEDIR') + fontData[i].path + ')');
+                    let fontUrl = (window.oedi.get('BASEDIR') + fontData[i].path).split('/').map(encodeURIComponent).join('/');
+                    let fontFace = new FontFace(fontData[i].key, 'url("' + fontUrl + '")');
                     fontFace.load();
                     document.fonts.add(fontFace);
                 }

@@ -125,16 +125,24 @@ class OECONFIG {
                     const promises = [];
                     fontData.data.forEach(font => {
                         //console.log('url(' + window.oedi.get('BASEDIR') + font.path + ')');
-                        let fontFace = new FontFace(font.name, 'url(' + window.oedi.get('BASEDIR') + font.path + ')');
+                        let fontUrl = (window.oedi.get('BASEDIR') + font.path).split('/').map(encodeURIComponent).join('/');
+                        let fontFace = new FontFace(font.name, 'url("' + fontUrl + '")');
                         promises.push(
                             fontFace.load()
+                            .catch(err => {
+                                let fontName = font.name || font.path || 'unknown font';
+                                console.log(`Font failed to load: ${fontName}`, err);
+                                return null;
+                            })
                         );
                     });
 
                     Promise.all(promises)
                     .then(loadedFonts => {
                         for (let font in loadedFonts) {
-                            document.fonts.add(loadedFonts[font]);
+                            if (loadedFonts[font] !== null) {
+                                document.fonts.add(loadedFonts[font]);
+                            }
                         }
                         
                         $(document).trigger('oe-uimanager-fonts-loaded');

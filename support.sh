@@ -371,15 +371,15 @@ function generate_support_info()
 	local LOG_LINES_TEMP="${LOG_LINES}"
 	if [[ ${TOTAL_SIZE_MB} -gt ${LOG_LIMIT_MB} ]]; then
 		if [[ ${DEBUG} == "true" ]]; then
-			echo "Total size of zipped log files is ${TOTAL_SIZE_MB} MB."
-			echo "This is bigger than the GitHub limit of ${LOG_LIMIT_MB} MB."
+			echo "DEBUG: Total size of zipped log files is ${TOTAL_SIZE_MB} MB."
+			echo "DEBUG: This is bigger than the GitHub limit of ${LOG_LIMIT_MB} MB."
 		fi
 		# If the ".1" log file is in the list, delete it, then recalculate the size.
 		if [[ -n ${LOG1} ]]; then
 			unset "ALL_LOGS[${LOG1}]"
 			TOTAL_SIZE_MB="$( get_total_size "${ALL_LOGS[@]}" )"
 			if [[ ${DEBUG} == "true" ]]; then
-				echo "Not including ${ALLSKY_LOG}.1 gives a new size of ${TOTAL_SIZE_MB} MB."
+				echo "DEBUG: Not including ${ALLSKY_LOG}.1 gives a new size of ${TOTAL_SIZE_MB} MB."
 			fi
 		fi
 	fi
@@ -389,7 +389,7 @@ function generate_support_info()
 	if [[ ${TOTAL_SIZE_MB} -gt ${LOG_LIMIT_MB} ]]; then
 		LOG_LINES_TEMP=2000		# Seems reasonable
 		if [[ ${DEBUG} == "true" ]]; then
-			echo "Still too large, only getting last ${LOG_LINES_TEMP} lines of the log files."
+			echo "DEBUG: Still too large, only getting last ${LOG_LINES_TEMP} lines of the log files."
 		fi
 	fi
 	local LOG_FILE

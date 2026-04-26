@@ -953,7 +953,7 @@ install_webserver_et_al()
 		display_msg --log progress "Installing the web server."
 		TMP="${ALLSKY_LOGS}/lighttpd.install.log"
 		run_aptGet \
-			lighttpd  php-fpm  php-gd  php-sqlite3 php-curl avahi-daemon  hwinfo tree python3-picamera2 i2c-tools \
+			lighttpd php-fpm php-gd php-sqlite3 php-curl avahi-daemon hwinfo tree python3-picamera2 i2c-tools \
 			> "${TMP}" 2>&1
 # TODO: Remove in next major release: Used to install: dnsmasq
 		check_success $? "lighttpd installation failed" "${TMP}" "${DEBUG}" \
@@ -1381,6 +1381,11 @@ set_what_can_be_skipped()
 	local NEW_VERSION="${2}"
 	[[ ${NEW_VERSION} != "${OLD_VERSION}" ]] && grep --silent "Allsky " "${LIGHTTPD_CONFIG_FILE}" && return
 
+## TODO: FIX: on a clean install using allsky-OLD,
+# if something goes wrong and installation fails, some of the packages below may
+# be installed and others not.
+#### return
+
 	local MSG
 
 	# No changes to these packages so no need to reinstall.
@@ -1389,6 +1394,7 @@ set_what_can_be_skipped()
 	MSG+=", Truetype fonts"
 	MSG+=", Python"
 	display_msg --logonly info "${MSG}"
+
 	# shellcheck disable=SC2034
 	install_webserver_et_al="true"
 	# shellcheck disable=SC2034

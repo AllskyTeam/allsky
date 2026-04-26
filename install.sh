@@ -946,7 +946,7 @@ install_webserver_et_al()
 
 	sudo systemctl stop lighttpd 2>/dev/null
 
-	if [[ ${v} == "true" && -f "${LIGHTTPD_LOG_FILE}" ]]; then
+	if [[ ${v} == "true" ]] && grep --silent "Allsky " "${LIGHTTPD_CONFIG_FILE}" ; then
 		# Already installed it; just configure it.
 		display_msg --log progress "Preparing the web server."
 	else
@@ -1379,7 +1379,7 @@ set_what_can_be_skipped()
 
 	local OLD_VERSION="${1}"
 	local NEW_VERSION="${2}"
-	[[ ${NEW_VERSION} != "${OLD_VERSION}" && -f "${LIGHTTPD_LOG_FILE}" ]] && return
+	[[ ${NEW_VERSION} != "${OLD_VERSION}" ]] && grep --silent "Allsky " "${LIGHTTPD_CONFIG_FILE}" && return
 
 	local MSG
 

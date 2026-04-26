@@ -39,6 +39,12 @@ function DisplayEditor()
 	}
 	$envOK = "true";
 
+	$logN = "monitorable_logs.json";
+	$monitoredLogs = ALLSKY_MYFILES_DIR . "/" . $logN;
+	$logN_withComment = $logN;
+	$fullLogN = "config/" . ALLSKY_MYFILES_NAME . "/$logN";
+	$logOK = "true";
+
 	// See what files there are to edit.
 	$numFiles = 0;
 
@@ -124,6 +130,39 @@ function DisplayEditor()
 		$envN = null;
 	}
 
+	if (file_exists($monitoredLogs)) {
+		$ok = true;
+		if (filesize($monitoredLogs) === 0) {
+			# Add placeholder text because code below complains if the file is empty.
+			$f = fopen($monitoredLogs, 'w');
+			if (! $f || ! fwrite($f, "{\n}\n")) {
+				$ok = false;
+			} else {
+				fclose($f);
+			}
+		}
+		if ($ok === true) {
+			$numFiles++;
+			$returnedMsg = "";
+			$logContent = get_decoded_json_file($monitoredLogs, true, "", $returnedMsg);
+			if ($logContent === null) {
+				$logOK = "false";
+				$logContent = file_get_contents($monitoredLogs);
+			} else {
+				$logContent = json_encode($logContent, $mode);
+			}
+	
+			if ($onFile === null) {
+				$onFile = "log";
+				$content = $logContent;
+			}
+		} else {
+			$logN = null;
+		}
+	} else {
+		$logN = null;
+	}
+
 	if ($numFiles > 0) {
 		if ($onFile === null) {
 			if ($hasLocalWebsite) {
@@ -143,6 +182,7 @@ function DisplayEditor()
 				echo "let localOK = $localOK;";
 				echo "let remoteOK = $remoteOK;";
 				echo "let envOK = $envOK;";
+				echo "let logOK = $logOK;";
 			?>
 			let ALLSKY_NEED_TO_UPDATE = "<?php echo ALLSKY_NEED_TO_UPDATE ?>"
 			$(document).ready(function () {
@@ -173,6 +213,8 @@ function DisplayEditor()
 						ok = localOK;
 					} else if (fileType == "env") {
 						ok = envOK;
+					} else if (fileType == "log") {
+						ok = logOK;
 					} else {
 						ok = false;
 					}
@@ -279,6 +321,9 @@ function DisplayEditor()
 							fileName = path;
 						} else if (fileType == "env") {
 							envOK = true;
+							fileName = path;
+						} else if (fileType == "log") {
+							logOK = true;
 							fileName = path;
 						}
 
@@ -452,6 +497,12 @@ function DisplayEditor()
 								if ($envN !== null) {
 									echo "<option value='$fullEnvN'>";
 									echo "$envN_withComment";
+									echo "</option>\n";
+								}
+
+								if ($logN !== null) {
+									echo "<option value='$fullLogN'>";
+									echo "$logN_withComment";
 									echo "</option>\n";
 								}
 								?>

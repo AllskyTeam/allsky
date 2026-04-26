@@ -17,14 +17,25 @@
           <div class="panel-body token-source-zone" data-id="${collapseId}">
             <ul class="list-unstyled">`;
       tokens.forEach(([code, desc]) => {
-        html += `<li><span class="token token-source label label-info" draggable="true" data-format="${code}">${code}</span> <small>${desc}</small></li>`;
+        html += `<li><span class="token token-source label label-info" draggable="true" data-format="${encodeURIComponent(code)}">${getTokenLabel(code)}</span> <small>${desc}</small></li>`;
       });
       html += "</ul></div></div></div>";
       return html;
     }
 
+    function getTokenLabel(format) {
+      return format === " " ? "Space" : format;
+    }
+
+    function getTokenFormat(token) {
+      if (token.hasClass("token-source")) {
+        return decodeURIComponent(token.attr("data-format") || "");
+      }
+      return token.data("format");
+    }
+
     const modalHtml = `
-      <div class="modal fade" id="${uniqueId}" tabindex="-1" role="dialog">
+      <div class="modal fade date-format-builder-modal" id="${uniqueId}" tabindex="-1" role="dialog">
         <div class="modal-dialog modal-lg" role="document">
           <div class="modal-content">
             <div class="modal-header">
@@ -39,7 +50,7 @@
                     ${renderSection("Time Tokens", "time", [["%H", "Hour (00–23)"], ["%I", "Hour (01–12)"], ["%p", "AM/PM"], ["%M", "Minute"], ["%S", "Second"], ["%f", "Microsecond"]])}
                     ${renderSection("Week/ISO Tokens", "week", [["%U", "Week # (Sun)"], ["%W", "Week # (Mon)"], ["%V", "ISO week"], ["%u", "ISO weekday"], ["%G", "ISO year"]])}
                     ${renderSection("Timezone Tokens", "tz", [["%z", "UTC offset"], ["%Z", "Timezone name"]])}
-                    ${renderSection("Other Tokens", "other", [["%c", "Locale datetime"], ["%x", "Locale date"], ["%X", "Locale time"], ["%%", "Literal %"], ["-", "Dash"], ["/", "Slash"], [":", "Colon"], ["&nbsp;", "Space"], [",", "Comma"], [".", "Period"], ["%o", "Ordinal day"]])}
+                    ${renderSection("Other Tokens", "other", [["%c", "Locale datetime"], ["%x", "Locale date"], ["%X", "Locale time"], ["%%", "Literal %"], ["-", "Dash"], ["/", "Slash"], [":", "Colon"], [" ", "Space"], [",", "Comma"], [".", "Period"], ["%o", "Ordinal day"]])}
                   </div>
                 </div>
                 <div class="col-sm-8">
@@ -76,7 +87,7 @@
       return $("<span>")
         .addClass("token token-clone label label-success")
         .attr("draggable", "true")
-        .text(format)
+        .text(getTokenLabel(format))
         .data("format", format);
     }
 
@@ -97,6 +108,7 @@
       $(`${zoneSelector} .token-clone`).each(function () {
         format += $(this).data("format");
       });
+      format = format.replace(/&nbsp;/g, " ").replace(/\u00a0/g, " ");
       $(`#format-output-${uniqueId}`).val(format);
 
       $.ajax({ url: "/includes/overlayutil.php?request=PythonDate", method: "POST", data: { format } })
@@ -104,7 +116,13 @@
           $(`#preview-output-${uniqueId}`).val(response);
         })
         .fail(function (jqXHR, textStatus) {
-          $(`#preview-output-${uniqueId}`).val("Error generating preview: " + textStatus);
+          let message = textStatus;
+          if (jqXHR.responseJSON && jqXHR.responseJSON.message) {
+            message = jqXHR.responseJSON.message;
+          } else if (jqXHR.responseText) {
+            message = jqXHR.responseText;
+          }
+          $(`#preview-output-${uniqueId}`).val("Error generating preview: " + message);
         });
     }
 
@@ -128,12 +146,13 @@
     }
 
     function populateInitialValue() {
-      const initialValue = String(settings.initialValue || "").trim();
-      if (!initialValue) {
+      const initialValue = String(settings.initialValue || "");
+      if (initialValue.length === 0) {
         return;
       }
 
-      const matches = initialValue.match(/%[A-Za-z%]|&nbsp;|./g) || [];
+      const normalizedValue = initialValue.replace(/&nbsp;/g, " ").replace(/\u00a0/g, " ");
+      const matches = normalizedValue.match(/%[A-Za-z%]|./g) || [];
       matches.forEach((token) => {
         addTokenToDropZone(token);
       });
@@ -141,15 +160,16 @@
 
     $(document).on("dragstart", `${modalSelector} .token-source, ${modalSelector} .token-clone`, function (event) {
       const token = $(this);
+      const format = getTokenFormat(token);
       dragPayload = {
-        format: token.data("format"),
+        format: format,
         source: token.hasClass("token-clone") ? "zone" : "source",
         element: this
       };
 
       if (event.originalEvent.dataTransfer) {
         event.originalEvent.dataTransfer.effectAllowed = "move";
-        event.originalEvent.dataTransfer.setData("text/plain", token.data("format"));
+        event.originalEvent.dataTransfer.setData("text/plain", format);
       }
     });
 
@@ -201,13 +221,26 @@
     });
 
     $(document).on("dblclick", `${modalSelector} .token-source`, function () {
-      addTokenToDropZone($(this).data("format"));
+      addTokenToDropZone(getTokenFormat($(this)));
     });
 
     $(document).on("dblclick", `${modalSelector} .token-clone`, function () {
       $(this).remove();
       ensureEmptyMessage();
       updateFormatOutput();
+    });
+
+    $(`#${uniqueId}`).on("show.bs.modal", function () {
+      $(this).css("z-index", 10070);
+      $(this).find(".modal-dialog").css({
+        position: "relative",
+        zIndex: 10080
+      });
+      setTimeout(function () {
+        $(".modal-backdrop").last()
+          .addClass("date-format-builder-backdrop")
+          .css("z-index", 10060);
+      }, 0);
     });
 
     $(`#${uniqueId}`).on("shown.bs.modal", function () {

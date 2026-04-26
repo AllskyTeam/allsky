@@ -500,7 +500,7 @@ get_connected_cameras()
 		do
 			MODEL="${X//++/ }"
 			[[ -z ${FUNCTION} ]] && display_msg --log progress "Found" " ZWO ${MODEL}"
-			if ! strings "${ZWO_FILE}" | grep "${MODEL}" ; then
+			if ! strings "${ZWO_FILE}" | grep --silent "${MODEL}" ; then
 				display_msg --log warning "ZWO ${MODEL} not supported; ignoring"
 			else
 				CT+=( "${NUM_ZWO};ZWO;${MODEL}" "ZWO     ${MODEL}" )

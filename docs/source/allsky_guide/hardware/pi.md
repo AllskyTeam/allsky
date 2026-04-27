@@ -1,10 +1,3 @@
----
-tags:
-  - Allsky Guide
-  - Hardware
-  - Raspberry Pi
----
-
 ## Choosing a Pi Model { data-toc-label="Choosing a Pi Model" }
 
 For most people starting a new Allsky build today, the Raspberry Pi 5 with **8 GB** of memory is the best choice if the budget allows it. It gives you the most headroom, it handles current Allsky features comfortably, and it is the least likely to feel restrictive later as Allsky continues to grow.

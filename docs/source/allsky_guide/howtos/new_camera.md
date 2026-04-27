@@ -1,10 +1,3 @@
----
-tags:
-  - Allsky Guide
-  - How To
-  - Camera
----
-
 This page describes how to request that Allsky support a camera.
 
 ## ZWO Cameras { data-toc-label="ZWO Cameras" }
@@ -70,4 +63,4 @@ Allsky should now recognize your camera.
 
 - Step 2: Request support
 
-    If the longest exposure the camera supports is enough for you, open a new [Discussions](https://github.com/AllskyTeam/allsky-modules/discussions){ target="_blank" rel="noopener" .external } in GitHub with a New feature requests category. Attach the ```/home/pi/allsky/tmp/camera_data.txt``` file from above as well as a URL for information on the camera (often a URL of where you bought the camera).
+    If the longest exposure the camera supports is enough for you, open a new [Discussions](https://github.com/AllskyTeam/allsky-modules/discussions){ target="_blank" rel="noopener" .external } in GitHub with a New feature requests category. Attach the `/home/pi/allsky/tmp/camera_data.txt` file from above as well as a URL for information on the camera (often a URL of where you bought the camera).

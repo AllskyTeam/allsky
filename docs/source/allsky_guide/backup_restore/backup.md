@@ -1,10 +1,3 @@
----
-tags:
-  - Allsky Guide
-  - Backup & Restore
-  - Backup
----
-
 # Creating Backups
 
 This guide walks through the backup process in a more practical, real-world way.
@@ -16,16 +9,17 @@ It explains:
 - how size estimates are shown,
 - and what happens while a backup is being created.
 
-If this is your first time using the feature, read **Choosing the right backup type** and **Before you click Create Backup** before doing anything else.
+If this is your first time doing a backup, read **Choosing the right backup type** and **Before you click Create Backup** sections below before doing anything else.
 
 ## Open the backup dialog { data-toc-label="Open the backup dialog" }
 
-1. Go to **System > Backups**.
-2. Click **Create Backup**.
+1. Go to the WebUI's **System -> System** page.
+2. Click on the **Backups** tab.
+3. Click **Create Backup**.
 
 ![Create Backup button](/assets/guide_images/backup-create-button.png)
 /// caption
-Screenshot: Create Backup button in the panel header.
+Create Backup button.
 ///
 
 The create dialog opens with the backup type selector and the options relevant to the type you choose.
@@ -50,7 +44,7 @@ The most important decision is not the button click. It is choosing the backup t
 
 === "Images backup"
 
-    Use **Images backup** when your goal is to preserve captured image data.
+    Use **Images backup** when your goal is to preserve captured images.
 
     Typical situations:
 
@@ -63,7 +57,7 @@ The most important decision is not the button click. It is choosing the backup t
 
 ![Backup type selector](/assets/guide_images/backup-type-selector.png)
 /// caption
-Screenshot: Backup type selector in the create dialog.
+Backup type selector in the create dialog.
 ///
 
 !!! tip "Simple decision guide"
@@ -74,10 +68,10 @@ Screenshot: Backup type selector in the create dialog.
 
 ## Config backup in detail { data-toc-label="Config backup in detail" }
 
-Config backups are built in two parts:
+**Config** backups are built in two parts:
 
-- **Core Files**
-- **Optional Sections**
+1. **Core Files**
+2. **Optional Sections**
 
 This makes it possible to always capture the essential configuration while still letting you include heavier or more situational data when needed.
 
@@ -87,7 +81,7 @@ Core files are always included and cannot be disabled.
 
 These are the files Allsky needs in order to restore the main configuration state, including important areas such as:
 
-- camera-aware settings and `cc` files,
+- camera-aware settings,
 - overlays,
 - module configuration,
 - and environment or configuration files used for operation.
@@ -111,16 +105,16 @@ For each optional section, the dialog shows:
 
 ![Config optional sections](/assets/guide_images/backup-config-optional-sections.png)
 /// caption
-Screenshot: Optional section switches with size/estimate details.
+Optional section switches with size/estimate details.
 ///
 
 !!! tip "How to decide what to include"
     If you are preparing for a full migration or a serious recovery scenario, include the optional sections you may need.
-    If you only want a fast rollback point before changing settings, a smaller config-only backup is often enough.
+    If you only want a fast rollback point before changing settings, a smaller Config-only backup is often enough.
 
 ### Service pause behaviour for database consistency { data-toc-label="Service pause behaviour" }
 
-If you include database-related data, Allsky may stop the `allsky` service while the archive is being created.
+If you include database-related data, Allsky may stop while the archive is being created.
 
 This is done to avoid backing up files that are actively changing at the same time they are being read. Once the archive has been created, the service is started again.
 
@@ -133,12 +127,12 @@ This behaviour is normal, and it exists to prevent inconsistent database backups
 
 ## Images backup in detail { data-toc-label="Images backup in detail" }
 
-Images backups are focused on captured data rather than configuration.
+**Images** backups are focused on captured data rather than configuration.
 
 You can create them in two ways:
 
-- **All folders**,
-- or **Selected folders only**.
+1. **All folders**,
+2. or **Selected folders only**.
 
 The folder list is built from the image date folders available on your system.
 
@@ -149,12 +143,12 @@ Images backups can become large quickly, so the dialog shows estimates to help y
 You may see:
 
 - total selected raw size,
-- estimated compressed size,
+- estimated compressed size (images don't compress much, so the raw and estimated sizes will be similar),
 - and per-folder values when individual folders are selected.
 
 ![Images folder selection](/assets/guide_images/backup-images-folders.png)
 /// caption
-Screenshot: Images folder selection with per-folder size details.
+Images folder selection with per-folder size details.
 ///
 
 ### How folder selection behaves { data-toc-label="How folder selection" }
@@ -178,7 +172,7 @@ Run through this checklist:
 - You understand the backup may take a while, especially for large image sets.
 
 !!! warning "Avoid the common mismatch"
-    A config backup does not protect your image history, and an images backup does not protect your system configuration.
+    A Config backup does not protect your image history, and an Images backup does not protect your system configuration.
     If you need both, create both.
 
 ## What happens during backup creation { data-toc-label="What happens during" }
@@ -194,11 +188,11 @@ The modal shows:
 
 ![Backup progress modal](/assets/guide_images/backup-config-progress.png)
 /// caption
-Screenshot: Backup progress modal with stage list and progress bar.
+Backup progress modal with stage list and progress bar.
 ///
 
 !!! info "Image backup timing"
-    Large image backups can take a while.
+    Large Images backups can take a while.
     The actual runtime depends on the amount of data, storage speed, and the system load while compression is running.
 
 ## After the backup finishes { data-toc-label="After backup finishes" }
@@ -228,12 +222,12 @@ The system checks the archive structure and its metadata before accepting it int
 !!! tip "Recommended baseline"
     1. Keep at least one recent config backup and one older known-good config backup.
     2. Keep image backups for important nights before cleanup.
-    3. Download critical backups off the device.
+    3. Copy critical backups off the Pi.
     4. Create backups before maintenance, upgrades, or experiments.
 
 ## Common mistakes to avoid { data-toc-label="Common mistakes to avoid" }
 
-- Creating only image backups and assuming configuration can be recovered later.
+- Creating only Images backups and assuming configuration can be recovered later.
 - Forgetting optional sections before a migration or rebuild.
 - Not checking the contents of a newly created backup.
 - Keeping every backup on the same SD card or device and nowhere else.

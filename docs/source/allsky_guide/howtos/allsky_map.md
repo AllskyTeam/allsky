@@ -1,10 +1,3 @@
----
-tags:
-  - Allsky Guide
-  - How To
-  - Maps
----
-
 The [Allsky Map](https://www.thomasjacquin.com/allsky-map/){ target="_blank" rel="noopener" .external }  shows the location and basic information of all known allsky cameras. Clicking on a pin displays information about the camera and if the owner has set their image URL, you'll see their last image as well; clicking on the image takes you to their Allsky website.
 
 

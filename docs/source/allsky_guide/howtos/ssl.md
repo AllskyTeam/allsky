@@ -1,10 +1,3 @@
----
-tags:
-  - Allsky Guide
-  - How To
-  - SSL
----
-
 SSL, more accurately TLS, allows your Pi to serve the WebUI and local Allsky Website over `https://` instead of plain `http://`. If you are exposing your Pi to the Internet, this is not optional. You should not make the WebUI or website reachable from the public Internet without HTTPS.
 
 If your Pi is only ever accessed on your local network, you may decide not to use HTTPS. In that case this page does not apply.

@@ -1,10 +1,3 @@
----
-tags:
-  - Allsky Guide
-  - Troubleshooting
-  - Known Issues
----
-
 This page lists known issues and limitations with the current Allsky release. Workarounds and plans to address the items, if known, are also given.
 
 ## Image Capture { data-toc-label="Image Capture" }

@@ -1,10 +1,3 @@
----
-tags:
-  - Allsky Guide
-  - Alternatives
----
-
-
 === "Software"
     
     <div class="grid cards" markdown>
@@ -73,7 +66,7 @@ tags:
 
         ---
 
-        Provide enclosures for a variety of cameras
+        Provide enclosures for a variety of cameras.
 
         >The Altair Sentinus Allsky Dome Housing has been designed from the ground up and tested over a two year period by several Allsky enthusiasts to ensure durability and flexibility. There have been no less than 6 iterations of the product to refine the design.
         >
@@ -87,7 +80,7 @@ tags:
 
         ---
 
-        Provides a variety of hardware for building Allsky Cameras
+        Provides a variety of hardware for building Allsky Cameras.
 
         [Website](https://www.allskyoptics.com/store)
 
@@ -95,7 +88,7 @@ tags:
 
         ---
 
-        Provides a variety of hardware for building Allsky Cameras
+        Provides a variety of hardware for building Allsky Cameras.
 
         [Website](https://www.dewcontrol.com)
 
@@ -103,7 +96,7 @@ tags:
 
         ---
 
-        Provides a variety of hardware for building Allsky Cameras including Hats for the PI 4 and 5 to manage sensors and focus motors
+        Provides a variety of hardware for building Allsky Cameras including Hats for the PI 4 and 5 to manage sensors and focus motors.
 
         [Website](https://titanastro.com)
 
@@ -111,7 +104,7 @@ tags:
 
         ---
 
-        Provides an enclosure for you to add your own camera and Pi to
+        Provides an enclosure for you to add your own camera and Pi to.
 
         [Website](https://deepskydad.com/)
 
@@ -125,7 +118,7 @@ tags:
 
         ---
 
-        Provides a complete Allsky camera solution
+        Provides a complete Allsky camera solution.
 
         [Website](https://deepskydad.com/)
 
@@ -133,7 +126,7 @@ tags:
 
         ---
 
-        Provides a complete Allsky camera solution
+        Provides a complete Allsky camera solution.
 
         [Website](https://www.sxccd.com/cameras/oculus-all-sky-cameras/)
 

@@ -1449,150 +1449,6 @@
 
               
             
-              
-                
-  
-  
-  
-  
-    
-    
-    
-    
-      
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_4_11">
-        
-          
-          <label class="md-nav__link" for="__nav_2_4_11" id="__nav_2_4_11_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Helper Tools
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_4_11_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_4_11">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    Helper Tools
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix="">
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="helper_tools/startrails.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Startrails
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="helper_tools/image_stretch.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Image Stretch
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="helper_tools/timelapse.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Timelapse
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
           </ul>
         </nav>
       
@@ -1891,7 +1747,7 @@
   <span class="md-ellipsis">
     
   
-    Startrails
+    Startrails Helper Tool
   
 
     
@@ -1919,7 +1775,7 @@
   <span class="md-ellipsis">
     
   
-    Image Stretch
+    Image Stretch Helper Tool
   
 
     
@@ -1947,7 +1803,7 @@
   <span class="md-ellipsis">
     
   
-    Timelapse
+    Timelapse Helper Tool
   
 
     
@@ -2131,6 +1987,17 @@
     <span class="md-ellipsis">
       
         Startrails settings
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#create-test-startrails" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Create test startrails
       
     </span>
   </a>
@@ -6132,40 +5999,6 @@
                 
                   
 
-  <nav class="md-tags">
-    
-      
-      
-      
-        
-        
-      
-      
-        <a href="../../tags.html#tag:allsky-guide" class="md-tag md-tag-icon">Allsky Guide</a>
-      
-    
-      
-      
-      
-        
-        
-      
-      
-        <a href="../../tags.html#tag:how-to" class="md-tag md-tag-icon">How To</a>
-      
-    
-      
-      
-      
-        
-        
-      
-      
-        <a href="../../tags.html#tag:startrails" class="md-tag md-tag-icon">Startrails</a>
-      
-    
-  </nav>
-
 
   
   
@@ -6173,28 +6006,24 @@
 
   <h1>Startrails</h1>
 
-<p>A startrail image shows the apparent paths of stars across the sky over an extended period of time. It is created by combining many individual long-exposure or short-exposure images taken sequentially, typically over several hours, and stacking them so that each star’s movement forms a continuous arc.</p>
+<p>A startrail image shows the apparent paths of stars across the sky over an extended period of time. It is created by combining many individual images taken sequentially, typically over several hours, and stacking them so that each star’s movement forms a continuous arc.</p>
 <p>These arcs are caused by the rotation of the Earth, which makes the stars appear to move around the celestial poles. The length of each trail corresponds to the duration of time covered by the images, while the curvature and direction of the trails depend on the camera’s orientation and the observer’s latitude.</p>
-<p>In an Allsky context, startrails are used to:
-  - Illustrate Earth’s rotation in a visually intuitive way</p>
+<p>In an Allsky context, startrails are used to:</p>
 <ul>
-<li>
-<p>Summarise an entire night of observations in a single image</p>
-</li>
-<li>
-<p>Reveal cloud interruptions, gaps in imaging, or camera downtime</p>
-</li>
-<li>
-<p>Highlight the position of the celestial pole and overall sky coverage</p>
-</li>
-<li>
-<p>Highlight, meteor and aircraft trails</p>
-</li>
+<li>Illustrate Earth’s rotation in a visually intuitive way.</li>
+<li>Summarise an entire night of observations in a single image.</li>
+<li>Reveal cloud interruptions, gaps in imaging, or camera downtime.</li>
+<li>Highlight the position of the celestial pole and overall sky coverage.</li>
+<li>Highlight, meteor and aircraft trails.</li>
 </ul>
 <p>Startrail images provide both scientific and aesthetic value, turning many hours of sky monitoring into a single, easily interpreted visual record.</p>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>Be default, daytime and nighttime images are looked at when creating a startrails.  Typically the daytime images are too bright and are rejected, but it takes time to do that.  The startrails <code>Night images only</code> setting can be used to only look at night images.  Typically you'll want to enable that setting.</p>
+</div>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>Only nighttime images that are saved are included in a startrails, so if you don't save your nightime images, they won't be included.</p>
+<p>Only images that are saved are included in a startrails, so if you don't save your nightime images, they won't be included.</p>
 </div>
 <figure>
 <p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../../assets/howtos_images/startrails.png" data-desc-position="bottom"><img alt="" src="../../assets/howtos_images/startrails.png" width="100%"></a></p>
@@ -6203,17 +6032,16 @@
 </figcaption>
 </figure>
 <h2 id="creating-a-startrail">Creating a Startrail<a class="headerlink" href="#creating-a-startrail" title="Permanent link">¶</a></h2>
-<p>To have a startrails image automatically created at the end of each night, enable the Generate  setting in the Startrails sub-section of the WebUI.</p>
+<p>To have a startrails image automatically created at the end of each night, enable the <code>Generate</code>  setting in the <strong>Startrails</strong> sub-section of the WebUI.</p>
 <p>To manually create a startrails image run the generateForDay.sh command. For example, to create and then upload a startrails to any Allsky Website and/or remote server you have for July 10, 2025:</p>
 <div class="highlight"><pre><span></span><code>generateForDay.sh --startrails 20250710
 generateForDay.sh --upload --startrails 20250710
 </code></pre></div>
-<p>This will use the settings specified in the Startrails sub-section of the WebUI.</p>
 <p>If you want to experiment using other settings you can specify those settings as such:</p>
 <div class="highlight"><pre><span></span><code>generateForDay.sh --startrails 20240710 --startrails-params "--brightness 0.15 -o ~/allsky/tmp/test.jpg"
 </code></pre></div>
-<p>This will use a Brightness Threshold of 0.15 and put the resulting startrails in ~/allsky/tmp/test.jpg.</p>
-<p>Make sure the parameters are enclosed in quotes.</p>
+<p>This will use a <code>Brightness Threshold</code> of <code>0.15</code> and put the resulting startrails in <code>~/allsky/tmp/test.jpg</code>.</p>
+<p>Make sure the extra parameters are enclosed in quotes.</p>
 <p>See the Advanced section below for the possible parameters you can specify.</p>
 <details>
 <summary>Advanced users: running the startrails program manually</summary>
@@ -6246,9 +6074,9 @@ Usage: startrails [-v] -i <images-file> | -d <imagedir> -e <ext> \
   ./startrails -d images/20250710 -e jpg -b 0.15 -o images/20250710/startrails/startrails.jpg</code></p>
 </details>
 <h2 id="startrails-settings">Startrails settings<a class="headerlink" href="#startrails-settings" title="Permanent link">¶</a></h2>
-<p>The only configuration setting for startrails is Brightness Threshold. Images have an average, or "mean" brightness level from 0.0 (pure black) to 1.0 (pure white). The default Brightness Threshold is 0.1 which is a fairly dark image, typical of a moon-less night.</p>
-<p>Any image with an average brightness greater than the Brightness Threshold is skipped during startrails generation, so daytime images should be skipped. You need to experiment with this setting to get the best results, as allsky cameras, lenses, and sky conditions impact an image's average brightness, and hence what you use for this setting. Every time a startrails image is created a summary of brightness values is saved to the Allsky log file.</p>
-<p>If you aren't seeing trailed stars in your images and you get a message like "No images below threshold 0.100, writing the minimum image only", your images are too bright and Brightness Threshold needs to be reduced. To determine what number to use you need to know the typical nighttime sky brightness value. Do the following:</p>
+<p>The only configuration setting for startrails is <code>Brightness Threshold</code>. Images have an average, or "mean" brightness level from 0.0 (pure black) to 1.0 (pure white). The default <code>Brightness Threshold</code> is 0.1 which is a fairly dark image, typical of a moon-less night.</p>
+<p>Any image with an average brightness greater than the <code>Brightness Threshold</code> is skipped during startrails generation, so daytime images should be skipped. You need to experiment with this setting to get the best results, as allsky cameras, lenses, and sky conditions impact an image's average brightness, and hence what you use for this setting. Every time a startrails image is created a summary of brightness values is saved to the Allsky database.</p>
+<p>If you aren't seeing trailed stars in your images and you get a message like "No images below threshold 0.100, writing the minimum image only", your images are too bright and <code>Brightness Threshold</code> needs to be reduced. To determine what number to use you need to know the typical nighttime sky brightness value. Do the following:</p>
 <ul>
 <li>
 <p>Run <code>allsky-config get_startrails_info</code> to see what your brightness values are.</p>
@@ -6257,8 +6085,8 @@ Usage: startrails [-v] -i <images-file> | -d <imagedir> -e <ext> \
 <p>If there is no data yet a message will appear with a possible reason, otherwise the output will look like:
 </p><div class="highlight"><pre><span></span><code>Startrails date        Minimum   Maximum   Mean      Median    Images used   Not used  Threshold
 ------------------------------------------------------------------------------------------------
-2025-01-17  06:20:45   0.084     0.146     0.103     0.105     250           3         0.15
-2025-01-18  06:16:18   0.045     0.135     0.102     0.106     247           6         0.15
+2026-01-17  06:20:45   0.084     0.146     0.103     0.105     250           3         0.15
+2026-01-18  06:16:18   0.045     0.135     0.102     0.106     247           6         0.15
 ------------------------------------------------------------------------------------------------
 Averages               0.065     0.140     0.103     0.106     497           9         -
 
@@ -6268,67 +6096,38 @@ Averages               0.065     0.140     0.103     0.106     497           9  
 </ul>
 <div class="admonition warning">
 <p class="admonition-title">Note</p>
-<p>Note that the Mean brightness is determined by looking at the whole image, including any black areas. This number is likely different from the mean brightness that can be overlayed onto your images, which is determined by looking at the central portion of an image.</p>
-<p>If you crop your image, add a mask to it, or change cameras you'll most likely need to update the Brightness Threshold setting.</p>
+<p>Note that the Mean brightness is determined by looking at the <strong>whole</strong> image, including any black areas. This number is likely different from the mean brightness that can be overlayed onto your images, which is determined by looking at the <strong>central portion</strong> of an image.</p>
+<p>If you crop your image, add a mask to it, or change cameras you'll most likely need to update the <code>Brightness Threshold</code> setting.</p>
 </div>
 <ul>
-<li>Set the Brightness Threshold to the Maximum, or slightly below it. If you have an Averages line, use its Maximum.</li>
+<li>Set the <code>Brightness Threshold</code> to the Maximum, or slightly below it. If you have an Averages line, use its Maximum.</li>
 </ul>
-<p>You'll now create a startrails and if needed, change Brightness Threshold, then create another startrails, change the setting, etc.</p>
-<ul>
-<li>
-<p>To make startrails generation MUCH faster, do it using a small number of images.</p>
-</li>
-<li>
-<p>Create a temporary directory to hold some nighttime images: <code>mkdir ~/allsky/images/test</code>.</p>
-</li>
-<li>
-<p><code>cd ~/allsky/images/DATE</code>, replacing DATE with the date of a non-working startrails.</p>
-</li>
-<li>
-<p>Using the timestamp of each image, move a few hours of nighttime images to the ~/allsky/images/test directory:</p>
-<ul>
-<li>
-<p>If you are running SAMBA (<code>allsky-config samba</code>) you can view the files from your PC or Mac and then select some files with the mouse and drag to the test directory.</p>
-</li>
-<li>
-<p>If you are not running SAMBA and you are logged into the Pi desktop, open a "File Manager" window on the Pi and drag/drop the files.</p>
-</li>
-<li>
-<p>If neither of the above work for you, you'll need to use the mv command to move the files. Using the * wildcard in the file names will allow you to move multiple files at a time.</p>
-</li>
-</ul>
-<p>For example: <code>mv 2025071001* ../test</code> to move all the images taken from 1:00 AM to 1:59 AM.</p>
-</li>
-<li>
-<p>Run ``generateForDay.sh --startrails test``` to create a startrails file in the test directory. Look at the image using the Images page in the WebUI. Also look at the Images used and Not used columns of the output.</p>
-</li>
-<li>
-<p>As needed, adjust Brightness Threshold and re-run <code>generateForDay.sh</code>.</p>
-</li>
-<li>
-<p>When done, move all the images from the allsky/images/test directory back to allsky/images/DATE.</p>
-</li>
-<li>
-<p>Remove the temporary directory: <code>rmdir ~/allsky/images/test</code>.</p>
-</li>
-<li>
-<p>Now, create the final startrails:</p>
-<ul>
-<li>
-<p><code>generateForDay.sh --startrails DATE</code></p>
-</li>
-<li>
-<p>If you want to upload the file you just created, see the note generated by <code>generateForDay.sh</code>.</p>
-</li>
-</ul>
-</li>
-</ul>
+<h2 id="create-test-startrails">Create test startrails<a class="headerlink" href="#create-test-startrails" title="Permanent link">¶</a></h2>
+<p>See the <a href="helper_tools/startrails.html">Startrails Helper Tool</a> documentation page to help set the <code>Brightness Threshold</code>.</p>
+<!--
+
+You'll now create a startrails and if needed, change `Brightness Threshold`, then create another startrails, change the setting, etc.
+
+- To make startrails generation MUCH faster, do it using a small number of images.
+- Create a temporary directory to hold some nighttime images: `mkdir ~/allsky/images/test`.
+- `cd ~/allsky/images/DATE`, replacing DATE with the date of a non-working startrails.
+- Using the timestamp of each image, move a few hours of nighttime images to the `~/allsky/images/test` directory:
+
+    - If you are running SAMBA (`allsky-config samba`) you can view the files from your PC or Mac and then select some files with the mouse and drag to the `test` directory.
+    - If you are not running SAMBA and you are logged into the Pi desktop, open a "File Manager" window on the Pi and drag/drop the files.
+    - If neither of the above work for you, you'll need to use the `mv` command to move the files. Using the `*` wildcard in the file names will allow you to move multiple files at a time.
+      For example: `mv 2026071001* ../test` to move all the images taken from 1:00 AM to 1:59 AM.
+
+- Run `generateForDay.sh --startrails test` to create a startrails file in the test directory. Look at the image using the Images page in the WebUI. Also look at the Images used and Not used columns of the output.
+- As needed, adjust Brightness Threshold and re-run `generateForDay.sh`.
+- When done, move all the images from the allsky/images/test directory back to allsky/images/DATE.
+- Remove the temporary directory: `rmdir ~/allsky/images/test`.
+- Now, create the final startrails:
+
+    - `generateForDay.sh --startrails DATE`
+    - If you want to upload the file you just created, see the note generated by `generateForDay.sh`.
+-->
 <h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">¶</a></h2>
-<div class="admonition info">
-<p class="admonition-title">Info</p>
-<p>It's extremely rare that a startrails image isn't created at all. It's much more common that an image is created but none of the stars have trails. If none of the stars have trails, see the Startrails settings section above.</p>
-</div>
 <div class="admonition danger">
 <p class="admonition-title">Warning</p>
 <p>The resolution of all images must be identical; if not, only images with the same resolution as the FIRST image are used.</p>
@@ -6336,14 +6135,14 @@ Averages               0.065     0.140     0.103     0.106     497           9  
 </div>
 <ul>
 <li>
-<p>If a startrails image isn't being created, make sure the Startrails Generate setting is enabled. If it IS enabled, run:</p>
+<p>If a startrails image isn't being created, make sure the Startrails <code>Generate</code> setting is enabled. If it IS enabled, run:</p>
 <p><code>generateForDay.sh  --startrails  DATE</code></p>
-<p>replacing DATE with a valid date like 20250710 and check for errors.</p>
+<p>replacing DATE with a valid date like 20260710 and check for errors.</p>
 </li>
 <li>
-<p>If a startrails image is created but not uploaded, make sure the Startrails Upload setting is enabled. If that IS enabled, run:</p>
+<p>If a startrails image is created but not uploaded, make sure the Startrails <code>Upload</code> setting is enabled. If that IS enabled, run:</p>
 <p><code>generateForDay.sh  --upload  --debug  --startrails  DATE</code></p>
-<p>and check for errors. If needed, run testUpload.sh to see why the upload fails.</p>
+<p>and check for errors. If needed, run <code>testUpload.sh</code> to see why the upload fails.</p>
 </li>
 </ul>
 
@@ -6352,9 +6151,6 @@ Averages               0.065     0.140     0.103     0.106     497           9  
 
 
 
-
-  
-  
 
 
 

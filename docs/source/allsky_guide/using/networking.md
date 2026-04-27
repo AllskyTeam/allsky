@@ -1,10 +1,3 @@
----
-tags:
-  - Allsky Guide
-  - WebUI
-  - Networking
----
-
 ### Overview { data-toc-label="Overview" }
 
 The networking area of the WebUI brings together three related pages: **Configure Wi-Fi**, **LAN Dashboard**, and **WLAN Dashboard**. The first page helps you connect to a wireless network, while the other two help you understand the current state of your wired and wireless interfaces.

@@ -168,10 +168,6 @@ nav:
         - Logs: allsky_guide/using/system/logs.md
         - Backups: allsky_guide/backup_restore/overview.md
       - Support: allsky_guide/using/support.md
-      - Helper Tools:
-        - Startrails: allsky_guide/howtos/helper_tools/startrails.md
-        - Image Stretch: allsky_guide/howtos/helper_tools/image_stretch.md
-        - Timelapse: allsky_guide/howtos/helper_tools/timelapse.md
     - Backup and Restore:
       - Overview: allsky_guide/backup_restore/overview.md
       - Backup: allsky_guide/backup_restore/backup.md
@@ -179,9 +175,9 @@ nav:
     - Howtos:
       - Allsky layout: allsky_guide/howtos/layout.md
       - Helper Tools: 
-        - Startrails: allsky_guide/howtos/helper_tools/startrails.md
-        - Image Stretch: allsky_guide/howtos/helper_tools/image_stretch.md
-        - Timelapse: allsky_guide/howtos/helper_tools/timelapse.md
+        - Startrails Helper Tool: allsky_guide/howtos/helper_tools/startrails.md
+        - Image Stretch Helper Tool: allsky_guide/howtos/helper_tools/image_stretch.md
+        - Timelapse Helper Tool: allsky_guide/howtos/helper_tools/timelapse.md
       - Constellation Overlay: allsky_guide/howtos/constellation_overlay.md
       - Dark Frames: allsky_guide/howtos/dark_frames.md
       - Keograms: allsky_guide/howtos/keograms.md

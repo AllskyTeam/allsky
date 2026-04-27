@@ -215,7 +215,7 @@ AllskySettings
 
     That is often the most sensible Allsky balance. Use the automatic controls to get stable and usable capture first, then move towards fixed values only if you have a clear reason to prefer consistency over flexibility.
 
-## Daytime { data-toc-label="Daytime" }
+## Daytime { data-toc-label="Daytime" id="Daytime-settings"}
 ???+ info "Settings"
 
     | WebUI Setting { .w-20p } | Default { .w-10p }  | Description |
@@ -242,7 +242,7 @@ AllskySettings
     | ==Target Temp== | 0 | (ZWO cooled cameras only) Sensor's target temperature *when cooler is enabled*. In degrees Celsius. |
     | ==Tuning File== | No | (RPi on Bookworm and Bullseye only) Full path name of the optional daytime tuning file. See the [Raspberry Pi Documentation](https://www.raspberrypi.com/documentation/computers/camera_software.html#tuning-files) for more information.  <br><br> System-supplied tuning files on Raspberry Pi models prior to 5 are in `/usr/share/libcamera/ipa/rpi/vc4`. New Pi's files are in `/usr/share/libcamera/ipa/rpi/pisp`. |
 
-## Nighttime { data-toc-label="Nighttime" }
+## Nighttime { data-toc-label="Nighttime" id="Nighttime-settings"}
 ???+ info "Settings"
 
     !!! note
@@ -272,7 +272,7 @@ AllskySettings
     | ==Target Temp== | 0 | (ZWO cooled cameras only) |
     | ==Tuning File== | No | (RPi on Bookworm and Bullseye only) |
 
-## Day and Night { data-toc-label="Day and Night" }
+## Day and Night { data-toc-label="Day and Night" id="Both-settings"}
 ???+ info "Settings"
 
     | WebUI Setting { .w-20p } | Default { .w-10p }  | Description |
@@ -308,7 +308,7 @@ AllskySettings
     | ==Histogram Box== | 500 500 50 50 | (ZWO only) X and Y size of histogram box in pixels and the middle point of the box in percent. This box is used to determine the average brightness of the image for auto-exposure compensation. If the Sun goes through the center of your image you may want to move the box. |
     | ==Debug Level== | 1 | Determines the amount of output in the Allsky log file:  <br><br>- `0` outputs error messages only.  <br>- `1` outputs "what's happening" type messages.  <br>- `2` outputs more "what's happening" messages.  <br>- `3` outputs debugging information. ==Use this level when debugging problems.==  <br>- `4` outputs a LOT of INFO messages. Use only if directed to by an Allsky developer. |
 
-## Post Capture { data-toc-label="Post Capture" }
+## Post Capture { data-toc-label="Post Capture" id="Post-capture-settings"}
 ???+ info "Settings"
 
     | WebUI Setting { .w-20p } | Default { .w-10p }  | Description |
@@ -326,7 +326,7 @@ AllskySettings
     | ==Image Crop Bottom== | 0 | Number of pixels to crop off the bottom an image. |
     | ==Image Crop Left== | 0 | Number of pixels to crop off the left side of an image. |
 
-## Timelapse { data-toc-label="Timelapse" }
+## Timelapse { data-toc-label="Timelapse" id="Timelapse-settings"}
 ???+ info "Settings"
 
     ???+ note "Daily Timelapse"
@@ -364,7 +364,7 @@ AllskySettings
         | ==Pixel format== | yuv420p | Pixel format. Rarely changed. Run `allsky-config pix_fmts` for a (long) list. |
         | ==Log Level== | Warning | Level of debugging information output when creating a timelapse. Set to ==Info + Warnings + Errors== for more output. Primarily used for debugging or when tuning the algorithm. |
 
-## Keogram and Startrails { data-toc-label="Keogram / Startrails" }
+## Keogram and Startrails { data-toc-label="Keogram / Startrails" id="Keogram-startrails-settings"}
 ???+ info "Settings"
 
     ???+ note "Keograms"
@@ -387,7 +387,7 @@ AllskySettings
         | ==Brightness Threshold== | 0.1 | Average brightness level above which images are discarded (moon, headlights, aurora, etc.). If you are only getting very short trails, or none at all, adjust this number. Values are 0.0 (pure black, filters out nothing) to 1.0 (pure white, uses every image). |
         | ==Extra Parameters== |  | Optional additional startrails creation parameters. Execute `~/allsky/bin/startrails --help` for a list of options. |
 
-## Websites and Remote Server { data-toc-label="Websites / Remote" }
+## Websites and Remote Server { data-toc-label="Websites / Remote" id="Websites-settings"}
 ???+ info "Settings"
 
     !!! note
@@ -461,7 +461,7 @@ AllskySettings
         | ==Remote Keogram File Name== | keogram.jpg | Unless you are using the remote server as a backup, this is ==usually== used so the server knows the file name. |
         | ==Remote Startrails File Name== | startrails.jpg | Unless you are using the remote server as a backup, this is ==usually== used so the server knows the file name. |
 
-## Allsky Map { data-toc-label="Allsky Map" }
+## Allsky Map { data-toc-label="Allsky Map" id="Allsky-map-settings"}
 ???+ info "Settings"
 
     !!! note
@@ -475,7 +475,7 @@ AllskySettings
     | ==Lens== <span class="red">AW</span> |  | The lens you're using on your camera, for example: ==Arecont 1.55==. |
     | ==Equipment Info== <span class="red">AW</span> |  | Any optional information you want to add about the equipment you are using. For example, if you are using a camera with no infrared filter (a "NoIR" camera). |
 
-## WebUI { data-toc-label="WebUI" }
+## WebUI { data-toc-label="WebUI" id="WebUI-settings"}
 ???+ info "Settings"
 
     | WebUI Setting { .w-20p } | Default { .w-10p }  | Description |
@@ -485,7 +485,7 @@ AllskySettings
     | ==Require WebUI Login== | Yes | Determines if you need to log into the WebUI. ==If your Pi is accessible on the Internet, do NOT disable this!!== |
     | ==System Page Additions== |  | One or more colon-separated full path names to text files that contain user-supplied data to display on the WebUI's ==System== page. See [System Page Additions](/docs/allsky_guide/howtos/system_page.html) for more information and an example. |
 
-## Database { data-toc-label="Database" }
+## Database { data-toc-label="Database" id="Database-settings"}
 ???+ info "Settings"
 
     > ⚠️ Only change the database settings if you know what you are doing.
@@ -499,7 +499,7 @@ AllskySettings
     | ==Database User== |  | (MySQL only) The username used to connect to the database. Suggest using the same as your Pi login so you have one less thing to remember. |
     | ==User Password== |  | (MySQL only) The password used to connect to the database.  <br><br> Keep track of the User and Password - if `~/allsky/env.json` is accidently removed you'll need to enter the User and Password in order for the database to work. |
 
-## Camera { data-toc-label="Camera" }
+## Camera { data-toc-label="Camera" id="Camera-settings"}
 ???+ info "Settings"
 
     | WebUI Setting { .w-20p } | Default { .w-10p }  | Description |

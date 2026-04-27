@@ -1,10 +1,3 @@
----
-tags:
-  - Allsky Guide
-  - How To
-  - Exposure
----
-
 There are several settings that determine what an image looks like - how bright it is, how colorful it is, and its color balance.
 The WebUI lets you manually set those settings, or have them automatically set by the software.
 
@@ -35,39 +28,39 @@ Saturation determines how vivid the colors are, from black and white to very viv
 ## Stretch { data-toc-label="Stretch" }
 Stretching an image changes its contrast (difference between light and dark) and is good to bring out details in pictures. There are separate stretch settings for daytime and nighttime that work the same (daytime stretching is not very common). The stretch-related settings are:
 
-- Stretch Amount (default: ```0``` which disables stretching)
+- Stretch Amount (default: `0` which disables stretching)
     
     3 is typical and 20 is a lot. Higher numbers lighten the image more.
 
-- Stretch mid point (default: ```10```)
+- Stretch mid point (default: `10`)
 
     This specifies what part of the image should be lightened: 0 lightens black items, 50 lightens middle-gray items, and 100 lightens white items.
 
 You may find that you can decrease the gain, and hence the noise, by increasing the stretch. Experiment with the settings to get the results you want.
 
 ### Sample Stretch Images { data-toc-label="Sample Stretch Images" }
-Stretch Amount: ```0```
+Stretch Amount: `0`
 
 The exposure is 60 seconds; anything longer will produce streaks with most lenses. The gain is 250 which is near the maximum for the camera, and is already producing some noise.
 
 ![](/assets/howtos_images/Stretch_0.png){ width="75%" }
 
 
-Stretch Amount: ```10```, Stretch mid point: ```10```
+Stretch Amount: `10`, Stretch mid point: `10`
 
 Notice the dark parts of the image are much brighter, and the light stars are only a little brighter (but the dark stars are much brighter and easier to see).
 
 ![](/assets/howtos_images/Stretch_10x10.png){ width="75%" }
 
 
-Stretch Amount: ```10```, Stretch mid point: ```30```
+Stretch Amount: `10`, Stretch mid point: `30`
 
 Notice a very slight overall increase in brightness, but a noticable increase in brightness of the stars.
 
 ![](/assets/howtos_images/Stretch_10x30.png){ width="75%" }
 
 
-Stretch Amount: ```20```, Stretch mid point: ```10```
+Stretch Amount: `20`, Stretch mid point: `10`
 
 Compare this image to the Stretch Amount: 10 image; this one is even brighter.
 

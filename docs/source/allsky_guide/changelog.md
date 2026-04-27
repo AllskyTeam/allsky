@@ -1,9 +1,3 @@
----
-tags:
-  - Allsky Guide
-  - Changelog
----
-
 This page lists the major changes to all Allsky releases.
 You can also see the
 [Known Issues and Limitations](knownIssues.html)

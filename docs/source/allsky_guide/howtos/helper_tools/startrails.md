@@ -1,24 +1,21 @@
 ---
 tags:
   - Allsky Guide
-  - How To
   - Helper Tools
-  - Startrails
+  - Startrails Helper Tool
 ---
 
-The WebUI Helper Tools do what the name suggests - they "help" you do something, often helping determine what settings to use.
+The WebUI **Helper Tools** pages do what the name suggests - they "help" you do something, often helping determine what settings to use.
 
-## Startrails { data-toc-label="Startrails" }
+The Startrails Helper Tool page aids you in determining what Startrails `Brightness Threshold` setting to use.
 
-The Startrails helper tool aids you in determining what Brightness Threshold setting to use.
-
-Many people find the stars in their startrails images don't have trails. This can almost always be fixed by adjusting the startrails Brightness Threshold setting.
+Many people find the stars in their startrails images initially don't have trails. This can almost always be fixed by adjusting the startrails `Brightness Threshold` setting.
 This helper tool allows you to specify multiple settings and then look at the results and pick the setting that gives you the best trails without including too many bright images.
 
 ![](/assets/howtos_images/startrails_helper.png){ width="75%" }
 
 /// caption
-Typical Startrails Helper Tool page:
+Typical Startrails Helper Tool page
 ///
 
 The following information is needed:
@@ -29,7 +26,7 @@ The following information is needed:
 
     - If you don't change it, images from last night are used.
 
-    - If you enter a directory name that begins with a / then that full path name will be used.
+    - If you enter a directory name that begins with a **`/`** then that full path name will be used.
 
     - Otherwise the directory you enter is assumed to be in the same location as the daily images.
 
@@ -51,7 +48,7 @@ The following information is needed:
 
     Enabling this option displays summary information on each test startrails, including the number of images included and not included.
 
-A typical output is shown below. Note that no images were used in the first startrails with a Brightness Threshold of 0.30. This is probably because the moon is out on the right side of the image so the overall brightness of the image is somewhat high.
+A typical output is shown below. Note that no images were used in the first startrails with a Brightness Threshold of `0.30`. This is probably because the moon is out on the right side of the image so the overall brightness of the image is somewhat high.
 
 The second image has trails but only 13 of the 15 images were used so the ideal Brightness Threshold is probably a little higher than 0.35.
 

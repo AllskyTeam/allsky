@@ -1564,150 +1564,6 @@
 
               
             
-              
-                
-  
-  
-  
-  
-    
-    
-    
-    
-      
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_4_11">
-        
-          
-          <label class="md-nav__link" for="__nav_2_4_11" id="__nav_2_4_11_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Helper Tools
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_4_11_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_4_11">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    Helper Tools
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix="">
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="howtos/helper_tools/startrails.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Startrails
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="howtos/helper_tools/image_stretch.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Image Stretch
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="howtos/helper_tools/timelapse.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Timelapse
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
           </ul>
         </nav>
       
@@ -2006,7 +1862,7 @@
   <span class="md-ellipsis">
     
   
-    Startrails
+    Startrails Helper Tool
   
 
     
@@ -2034,7 +1890,7 @@
   <span class="md-ellipsis">
     
   
-    Image Stretch
+    Image Stretch Helper Tool
   
 
     
@@ -2062,7 +1918,7 @@
   <span class="md-ellipsis">
     
   
-    Timelapse
+    Timelapse Helper Tool
   
 
     
@@ -6171,30 +6027,6 @@
                 
                   
 
-  <nav class="md-tags">
-    
-      
-      
-      
-        
-        
-      
-      
-        <a href="../tags.html#tag:allsky-guide" class="md-tag md-tag-icon">Allsky Guide</a>
-      
-    
-      
-      
-      
-        
-        
-      
-      
-        <a href="../tags.html#tag:website" class="md-tag md-tag-icon">Website</a>
-      
-    
-  </nav>
-
 
   
   
@@ -6218,7 +6050,7 @@ An Allsky Website running on anywhere else is called a <strong>remote Website</s
 <p>If you are upgrading Allsky and have an existing local Website, the upgrade will use your prior local Website configuration and automatically enable the new Website. Any existing images and videos from the prior Website will be moved to to the new Website.</p>
 <!-- You are done unless the prior Website was version **v2022.03.01+** or earlier, in which case you need to:
 
-- Manually copy your prior settings from ==/var/www/html/allsky/config.js== to ==configuration.json== by going to the ```Settings -> Editor``` page in the WebUI and selecting ```configuration.json (local Allsky Website)```. Note that there are more settings in the new configuration file, but it should be straightforward to map settings from the old file to the new file.
+- Manually copy your prior settings from ==/var/www/html/allsky/config.js== to ==configuration.json== by going to the `Settings -> Editor` page in the WebUI and selecting `configuration.json (local Allsky Website)`. Note that there are more settings in the new configuration file, but it should be straightforward to map settings from the old file to the new file.
 - After configuring the local Website, check in ==/var/www/html/allsky== for any files you may have manually added and store them in ==~/allsky/html/allsky/myFiles==.
 - Save ==config.js== somewhere in case you need it later.
 - Remove the old Website:  
@@ -6237,7 +6069,7 @@ An Allsky Website running on anywhere else is called a <strong>remote Website</s
 <li>
 <p>On the Pi:</p>
 <ul>
-<li>Go to the <strong>Websites and Remote Server Settings</strong> section of the WebUI's <code>Settings -&gt; Allsky Settings``` page. Update the settings in the "Remote Website" subsection. Do NOT enable ```Use Remote Website</code> yet, but update the other settings so Allsky knows how to upload a file to the Website. The Website will be automatically enabled in the next step.</li>
+<li>Go to the <strong>Websites and Remote Server Settings</strong> section of the WebUI's <code>Settings -&gt; Allsky Settings` page. Update the settings in the "Remote Website" subsection. Do NOT enable `Use Remote Website</code> yet, but update the other settings so Allsky knows how to upload a file to the Website. The Website will be automatically enabled in the next step.</li>
 <li>Run <code>cd ~/allsky; ./remoteWebsiteInstall.sh</code> to upload the Website code and create a default remote configuration file.<ul>
 <li>The installation will try to upload a file to the server; If that fails it should tell you why. If not, see the <a href="troubleshooting/uploads.html">Troubleshooting Uploads</a> page on how to debug the problem.</li>
 <li>If you previously enabled the local Allsky Website, the remote configuration file will be identical to the local one with the exception of the imageName setting which will be configured for the remote Website.</li>
@@ -6285,9 +6117,6 @@ An Allsky Website running on anywhere else is called a <strong>remote Website</s
 
 
 
-
-  
-  
 
 
 

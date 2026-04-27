@@ -1,9 +1,3 @@
----
-tags:
-  - Allsky Guide
-  - FAQ
----
-
 # FAQ
 
 ## Startup and Capture { data-toc-label="Startup and Capture" }

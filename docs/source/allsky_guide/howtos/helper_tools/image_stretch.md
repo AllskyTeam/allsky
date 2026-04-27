@@ -1,14 +1,13 @@
 ---
 tags:
   - Allsky Guide
-  - How To
   - Helper Tools
   - Image Stretch
 ---
 
 The Image Stretch helper tool aids you in determining the best settings to stretch an image.
 
-If you want to lighten parts of your image to bring out details you can "stretch" your images. The Stretch Amount setting determines how much of a stretch is applied, and the Stretch Mid Point determines WHERE the stretch is applied - to the dark parts of an image, the mid-gray parts, the light parts, or anything in between.
+If you want to lighten parts of your images to bring out details you can "stretch" them. The `Stretch Amount` setting determines how much of a stretch is applied, and the `Stretch Mid Point` determines WHERE the stretch is applied - to the dark parts of an image, the mid-gray parts, the light parts, or anything in between.
 This helper tool allows you to specify multiple settings and then look at the results.
 
 
@@ -26,7 +25,7 @@ The following information is needed:
 
 !!! danger  "Warning"
 
-    If you are already stretching images the tool will display a warning. Find a non-stretched image to use - you don't want to stretch and already stretched image. If you don't have any non-stretched images, temporarily turn stretching off and wait until you have an image, then use it.
+    If you are already stretching images the tool will display a warning. Find a non-stretched image to use - you don't want to stretch an already-stretched image. If you don't have any non-stretched images, temporarily turn stretching off and wait until you have an image, then use it.
 
 - **Stretch Amount values to use**
 
@@ -47,6 +46,6 @@ You'll probably want / need to run this tool multiple times. Changes to the Amou
 A typical output is shown below.
 ///
 
-Note that the first images has no stretch. This is so you can see what the different settings do.
+Note that the first image has no stretch. This is so you can see what the different settings do.
 
 The last image has a Stretch Amount of 20, which is way too much.

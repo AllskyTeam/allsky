@@ -1,10 +1,3 @@
----
-tags:
-  - Allsky Guide
-  - Hardware
-  - Camera
----
-
 ## Choosing a Camera { data-toc-label="Choosing a Camera" }
 Your budget will often be the driving factor when picking an allsky camera. The Raspberry Pi HQ (RPi HQ) camera is relatively inexpensive and produces good images but can only be used with a Pi. Many people choose ZWO cameras because they are familiar with them or they have a spare one lying around, and they may use their allsky camera for astrophotography as well.
 

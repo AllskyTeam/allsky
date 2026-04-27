@@ -1,9 +1,3 @@
----
-tags:
-  - Allsky Guide
-  - Installation
----
-
 !!! danger "Before you install Allsky"
 
     Your camera must be connected to the Raspberry Pi before you install Allsky.
@@ -108,8 +102,6 @@ cd
 git clone --depth=1 --recursive https://github.com/AllskyTeam/allsky.git
 ```
 
-This can take a little while depending on the Pi model, storage speed, and network speed. When it finishes, the new `allsky` directory will normally be around 650 MB.
-
 You should see output broadly similar to this:
 
 ```text
@@ -124,6 +116,8 @@ remote: Enumerating objects: 119, done.
 ...  more commands here ...
 Submodule path 'src/sunwait-src': checked out '151d8340a748a4dac7752ebcd38983b2887f5f0c'
 ```
+
+This can take a little while depending on the Pi model, storage speed, and network speed. When it finishes, the new `allsky` directory will normally be around 1.5 GB.
 
 ### Running The Installer { data-toc-label="Running The Installer" }
 

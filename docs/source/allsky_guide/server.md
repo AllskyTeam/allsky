@@ -1,9 +1,3 @@
----
-tags:
-  - Allsky Guide
-  - Server
----
-
 This page describes how to prepare a remote server to accept uploads of the current Allsky image as well as startrails, keograms, and timelapse videos.
 
 !!! danger "Warning"
@@ -28,7 +22,7 @@ The exact commands you use will depend on your server and/or hosting solution, b
   - ==allsky/keograms/thumbnails== 
 
 
-- Go to the Remote Server Settings section of the WebUI's ```Allsky Settings``` page and fill in the settings. See the [Allsky Settings](settings/allsky.md) documentation page for a description of the settings.
+- Go to the Remote Server Settings section of the WebUI's `Allsky Settings` page and fill in the settings. See the [Allsky Settings](settings/allsky.md) documentation page for a description of the settings.
 
 
-After enabling the ```Use Remote Server``` setting in the WebUI, a test file will be uploaded to the server to ensure it works. If there are any problems, visit the [Troubleshooting -> Uploads](troubleshooting/uploads.md) documentation page for details on how to fix the problem.
+After enabling the `Use Remote Server` setting in the WebUI, a test file will be uploaded to the server to ensure it works. If there are any problems, visit the [Troubleshooting -> Uploads](troubleshooting/uploads.md) documentation page for details on how to fix the problem.

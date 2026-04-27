@@ -1,12 +1,11 @@
 ---
 tags:
   - Allsky Guide
-  - How To
   - Helper Tools
   - Timelapse
 ---
 
-The Timelapse helper tool aids you in determining the best settings to use when creating timelapse videos.
+The Timelapse Helper Tool aids you in determining the best settings to use when creating timelapse videos.
 
 ![](/assets/howtos_images/timelapse_helper.png){ width="75%" }
 
@@ -26,15 +25,11 @@ The following information is needed:
 
 - **Bitrate values to use**
 
-    This determines the quality of a timelapse. Higher bitrates include more information in each frame, but also make the video larger.
-
-    Enter a space-separated list of bitrates.
+    This determines the quality of a timelapse. Higher bitrates include more information in each frame, but also make the video larger.  Enter a space-separated list of bitrates.
 
 - **FPS values to use**
 
-    This determines how many frames per second are displayed, and hence how long the video is. Larger numbers produce smoother, but larger videos.
-
-    Enter a space-separated list of bitrates.
+    This determines how many frames per second are displayed, and hence how long the video is. Larger numbers produce smoother, but larger videos.  Enter a space-separated list of bitrates.
 
 !!! info  "Info"
 

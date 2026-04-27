@@ -1449,150 +1449,6 @@
 
               
             
-              
-                
-  
-  
-  
-  
-    
-    
-    
-    
-      
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_4_11">
-        
-          
-          <label class="md-nav__link" for="__nav_2_4_11" id="__nav_2_4_11_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Helper Tools
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_4_11_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_4_11">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    Helper Tools
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix="">
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../howtos/helper_tools/startrails.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Startrails
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../howtos/helper_tools/image_stretch.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Image Stretch
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../howtos/helper_tools/timelapse.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Timelapse
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
           </ul>
         </nav>
       
@@ -2098,7 +1954,7 @@
   <span class="md-ellipsis">
     
   
-    Startrails
+    Startrails Helper Tool
   
 
     
@@ -2126,7 +1982,7 @@
   <span class="md-ellipsis">
     
   
-    Image Stretch
+    Image Stretch Helper Tool
   
 
     
@@ -2154,7 +2010,7 @@
   <span class="md-ellipsis">
     
   
-    Timelapse
+    Timelapse Helper Tool
   
 
     
@@ -6263,40 +6119,6 @@
                 
                   
 
-  <nav class="md-tags">
-    
-      
-      
-      
-        
-        
-      
-      
-        <a href="../../tags.html#tag:allsky-guide" class="md-tag md-tag-icon">Allsky Guide</a>
-      
-    
-      
-      
-      
-        
-        
-      
-      
-        <a href="../../tags.html#tag:backup--restore" class="md-tag md-tag-icon">Backup &amp; Restore</a>
-      
-    
-      
-      
-      
-        
-        
-      
-      
-        <a href="../../tags.html#tag:restore" class="md-tag md-tag-icon">Restore</a>
-      
-    
-  </nav>
-
 
   
   
@@ -6308,20 +6130,21 @@
 <ul>
 <li>the checks that happen before restore,</li>
 <li>the difference between normal and advanced restore modes,</li>
-<li>config-specific and image-specific behaviour,</li>
+<li>Config-specific and Images-specific backup behaviour,</li>
 <li>what the progress and completion screens mean,</li>
 <li>and what to verify afterwards.</li>
 </ul>
 <h2 id="start-a-restore">Start a restore<a class="headerlink" href="#start-a-restore" title="Permanent link">¶</a></h2>
 <ol>
-<li>Go to <strong>System &gt; Backups</strong>.</li>
+<li>Go to the WebUI's <strong>System -&gt; System</strong> page.</li>
+<li>Click on the <strong>Backups</strong> tab.</li>
 <li>Find the backup you want in the table.</li>
 <li>Click the <strong>Restore</strong> icon on that row.</li>
 </ol>
 <figure>
 <p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../../assets/guide_images/backup-restore-row-button.png" data-desc-position="bottom"><img alt="Restore action button" src="../../assets/guide_images/backup-restore-row-button.png"></a></p>
 <figcaption>
-<p>Screenshot: Restore icon in a backup row.</p>
+<p>Restore icon in a backup row.</p>
 </figcaption>
 </figure>
 <p>The restore dialog opens and begins loading the backup metadata and running the initial checks.</p>
@@ -6343,7 +6166,7 @@
 <figure>
 <p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../../assets/guide_images/backup-restore-dialog-overview.png" data-desc-position="bottom"><img alt="Restore dialog overview" src="../../assets/guide_images/backup-restore-dialog-overview.png"></a></p>
 <figcaption>
-<p>Screenshot: Restore dialog with checks, metadata, and mode tabs.</p>
+<p>Restore dialog with checks, metadata, and mode tabs.</p>
 </figcaption>
 </figure>
 <hr>
@@ -6364,9 +6187,9 @@
 </ul>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>If a blocking check fails, the restore confirmation button stays disabled until the problem is resolved.</p>
+<p>If a blocking check fails, the restore confirmation button stays disabled until the problem is resolved.
+This is intentional. The goal is to prevent partial or invalid restores, not just warn about them afterwards.</p>
 </div>
-<p>That is intentional. The goal is to prevent partial or invalid restores, not just warn about them afterwards.</p>
 <h2 id="normal-mode-and-advanced-mode">Normal mode and Advanced mode<a class="headerlink" href="#normal-mode-and-advanced-mode" title="Permanent link">¶</a></h2>
 <p>Allsky offers two restore modes because not every recovery task is the same.</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio"><input id="__tabbed_1_2" name="__tabbed_1" type="radio"><div class="tabbed-labels"><label for="__tabbed_1_1">Normal mode</label><label for="__tabbed_1_2">Advanced mode</label></div>
@@ -6396,7 +6219,7 @@
 <figure>
 <p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../../assets/guide_images/backup-restore-advanced-tree.png" data-desc-position="bottom"><img alt="Advanced restore tree" src="../../assets/guide_images/backup-restore-advanced-tree.png"></a></p>
 <figcaption>
-<p>Screenshot: Advanced mode file tree with search and hierarchical selection.</p>
+<p>Advanced mode file tree with search and hierarchical selection.</p>
 </figcaption>
 </figure>
 <div class="admonition tip">
@@ -6409,17 +6232,16 @@ Use <strong>Advanced mode</strong> when you want a narrower, more surgical resto
 <p>Config restores are handled carefully because they can replace active files that Allsky is currently using.</p>
 <p>For config restores, Allsky performs a controlled sequence:</p>
 <ol>
-<li>Stop the <code>allsky</code> service.</li>
+<li>Stop Allsky.</li>
 <li>Extract the selected restore targets.</li>
 <li>Restore camera-aware links such as <code>settings.json</code> and <code>cc.json</code>, where required.</li>
 <li>Reapply owner, group, and mode information from the stored metadata.</li>
-<li>Start the <code>allsky</code> service again.</li>
+<li>Start Allsky.</li>
 </ol>
 <p>This is deliberate. It helps keep the restored configuration consistent instead of mixing live state with partially replaced files.</p>
 <h3 id="camera-compatibility-rule">Camera compatibility rule<a class="headerlink" href="#camera-compatibility-rule" title="Permanent link">¶</a></h3>
 <p>Config restores are camera-safe.</p>
-<p>If the camera type or camera model stored in the backup does not match the current system, the restore is blocked.</p>
-<p>That prevents a configuration intended for one camera from being applied to a different one.</p>
+<p>If the camera type or camera model stored in the backup does not match the current system, the restore is blocked.  This prevents a configuration intended for one camera from being applied to a different one.</p>
 <h3 id="module-availability-rule">Module availability rule<a class="headerlink" href="#module-availability-rule" title="Permanent link">¶</a></h3>
 <p>Module validation depends on what you chose to restore:</p>
 <ul>
@@ -6428,14 +6250,12 @@ Use <strong>Advanced mode</strong> when you want a narrower, more surgical resto
 </ul>
 <p>This helps avoid ending up with a restored configuration that points to modules the current system does not have.</p>
 <h2 id="images-restore-behaviour">Images restore behaviour<a class="headerlink" href="#images-restore-behaviour" title="Permanent link">¶</a></h2>
-<p>Images restores are more flexible because you may want either a broad recovery or a very specific one.</p>
-<p>You can restore:</p>
+<p>Images restores are more flexible because you may want either a broad recovery or a very specific one.  You can restore:</p>
 <ul>
 <li>complete image folders,</li>
 <li>or individual files in <strong>Advanced mode</strong>.</li>
 </ul>
-<p>Where metadata is available, ownership and permission information is reapplied after extraction.</p>
-<p>That helps keep restored content consistent with the rest of the image storage layout.</p>
+<p>Where metadata is available, ownership and permission information is reapplied after extraction to help keep restored content consistent with the rest of the image storage layout.</p>
 <h2 id="confirming-the-restore">Confirming the restore<a class="headerlink" href="#confirming-the-restore" title="Permanent link">¶</a></h2>
 <p>When the checks pass and your selection is valid, click <strong>Confirm Restore</strong>.</p>
 <p>At that point, the restore begins and a progress modal opens.</p>
@@ -6451,18 +6271,17 @@ Use <strong>Advanced mode</strong> when you want a narrower, more surgical resto
 <figure>
 <p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../../assets/guide_images/backup-restore-progress.png" data-desc-position="bottom"><img alt="Restore progress modal" src="../../assets/guide_images/backup-restore-progress.png"></a></p>
 <figcaption>
-<p>Screenshot: Restore progress modal while restore is running.</p>
+<p>Restore progress modal while restore is running.</p>
 </figcaption>
 </figure>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Large restores, especially image restores, can take time.
+<p>Large restores, especially Images restores, can take time.
 The interface may appear to pause between stages while extraction is still in progress.</p>
 </div>
 <hr>
 <h2 id="restore-completion-modal">Restore completion modal<a class="headerlink" href="#restore-completion-modal" title="Permanent link">¶</a></h2>
-<p>When the restore finishes successfully, Allsky displays a completion summary so you can see exactly what happened.</p>
-<p>The summary can include:</p>
+<p>When the restore finishes successfully, Allsky displays a completion summary so you can see exactly what happened.  The summary can include:</p>
 <ul>
 <li>the backup file, type, and restore mode,</li>
 <li>the source and target Allsky versions,</li>
@@ -6472,7 +6291,7 @@ The interface may appear to pause between stages while extraction is still in pr
 <li>the restore log path,</li>
 <li>and any warnings that were generated.</li>
 </ul>
-<p>For image restores:</p>
+<p>For Images restores:</p>
 <ul>
 <li>if you restored whole folders, the folder names are shown,</li>
 <li>if you restored individual files, the restored file list is shown.</li>
@@ -6480,11 +6299,11 @@ The interface may appear to pause between stages while extraction is still in pr
 <figure>
 <p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../../assets/guide_images/backup-restore-completion.png" data-desc-position="bottom"><img alt="Restore completion modal" src="../../assets/guide_images/backup-restore-completion.png"></a></p>
 <figcaption>
-<p>Screenshot: Restore complete summary modal.</p>
+<p>Restore complete summary modal.</p>
 </figcaption>
 </figure>
 <h2 id="restore-logs-and-traceability">Restore logs and traceability<a class="headerlink" href="#restore-logs-and-traceability" title="Permanent link">¶</a></h2>
-<p>Every restore writes a log file to <code>config/logs</code> using a name like:</p>
+<p>Every restore writes a log file to <code>~/allsky/config/logs</code> using a name like:</p>
 <ul>
 <li><code>backup-restore-YYYYMMDD-HHMMSS.log</code></li>
 </ul>
@@ -6502,8 +6321,7 @@ The interface may appear to pause between stages while extraction is still in pr
 It provides a reliable record of exactly what changed.</p>
 </div>
 <h2 id="what-to-check-after-a-restore">What to check after a restore<a class="headerlink" href="#what-to-check-after-a-restore" title="Permanent link">¶</a></h2>
-<p>After restoring, verify that the system is behaving the way you expected.</p>
-<p>Use this checklist:</p>
+<p>After restoring, verify that the system is behaving the way you expected.  Use this checklist:</p>
 <ol>
 <li>The WebUI loads normally.</li>
 <li>Service status looks healthy.</li>
@@ -6525,9 +6343,6 @@ It provides a reliable record of exactly what changed.</p>
 
 
 
-
-  
-  
 
 
 

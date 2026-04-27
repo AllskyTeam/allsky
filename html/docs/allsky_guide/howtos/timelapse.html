@@ -1449,150 +1449,6 @@
 
               
             
-              
-                
-  
-  
-  
-  
-    
-    
-    
-    
-      
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_4_11">
-        
-          
-          <label class="md-nav__link" for="__nav_2_4_11" id="__nav_2_4_11_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Helper Tools
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_4_11_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_4_11">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    Helper Tools
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix="">
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="helper_tools/startrails.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Startrails
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="helper_tools/image_stretch.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Image Stretch
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="helper_tools/timelapse.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Timelapse
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
           </ul>
         </nav>
       
@@ -1891,7 +1747,7 @@
   <span class="md-ellipsis">
     
   
-    Startrails
+    Startrails Helper Tool
   
 
     
@@ -1919,7 +1775,7 @@
   <span class="md-ellipsis">
     
   
-    Image Stretch
+    Image Stretch Helper Tool
   
 
     
@@ -1947,7 +1803,7 @@
   <span class="md-ellipsis">
     
   
-    Timelapse
+    Timelapse Helper Tool
   
 
     
@@ -2199,8 +2055,30 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#bitrate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bitrate
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#create-test-timelapses" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Create test timelapses
+      
+    </span>
+  </a>
   
 </li>
       
@@ -6171,40 +6049,6 @@
                 
                   
 
-  <nav class="md-tags">
-    
-      
-      
-      
-        
-        
-      
-      
-        <a href="../../tags.html#tag:allsky-guide" class="md-tag md-tag-icon">Allsky Guide</a>
-      
-    
-      
-      
-      
-        
-        
-      
-      
-        <a href="../../tags.html#tag:how-to" class="md-tag md-tag-icon">How To</a>
-      
-    
-      
-      
-      
-        
-        
-      
-      
-        <a href="../../tags.html#tag:timelapse" class="md-tag md-tag-icon">Timelapse</a>
-      
-    
-  </nav>
-
 
   
   
@@ -6213,57 +6057,44 @@
   <h1>Timelapse</h1>
 
 <p>A timelapse is a video created by combining a sequence of images taken at regular intervals and playing them back at a much higher speed than they were captured. This compression of time allows slow or gradual changes to be observed in a short, continuous video.</p>
-<p>In an all-sky imaging context, timelapses are commonly used to show:</p>
+<p>Timelapses are commonly used to show:</p>
 <ul>
-<li>
-<p>The movement of stars, the Moon, and planets across the sky</p>
-</li>
-<li>
-<p>The progression of clouds and weather systems</p>
-</li>
-<li>
-<p>The transition from daylight to twilight and night, and back again</p>
-</li>
-<li>
-<p>Events such as aurora, airglow, or passing satellites</p>
-</li>
+<li>The movement of stars, the Moon, and planets across the sky</li>
+<li>The progression of clouds and weather systems</li>
+<li>The transition from daylight to twilight and night, and back again</li>
+<li>Events such as aurora, airglow, or passing satellites</li>
 </ul>
 <p>Each frame in the timelapse corresponds to a single captured image, and the final playback speed is determined by the capture interval and the frames-per-second (FPS) setting used when generating the video. Timelapses provide an intuitive and engaging way to review long periods of sky activity that would otherwise require examining many individual images.</p>
 <p>Allsky supports two types of timelapse:</p>
 <div class="highlight"><pre><span></span><code>1. Daily Timelapse
 2. Mini Timelapse
 </code></pre></div>
-<p>Settings for both types of timelapses are in the Timelapse Settings section of the WebUI's Allsky Settings page. Each type of timelapse has its own sub-section in the WebUI, and there is a sub-section that applies to both timelapse types.</p>
+<p>Settings for both types of timelapses are in the <strong>Timelapse Settings</strong> section of the WebUI's <code>Settings -&gt; Allsky Settings</code> page. Each type of timelapse has its own sub-section in the WebUI, and there is a sub-section that applies to both timelapse types.</p>
 <h2 id="daily-timelapse">Daily Timelapse<a class="headerlink" href="#daily-timelapse" title="Permanent link">¶</a></h2>
-<p>The "Daily" timelapse is the one that's created once a day, at the end of nighttime. It includes all the images saved in the last 24 hours.</p>
-<p>You specify whether or not you want a daily timelapse automatically created via the Generate   setting. When enabled, a daily timelapse will be created (and optionally uploaded) at the end of night.</p>
-<p>The easiest way to manually create and optionally upload a daily timelapse is via the <code>generateForDay.sh</code> command. For example, to create and then upload a daily timelapse to any Allsky Website and/or remote server you have for July 10, 2025:</p>
-<div class="highlight"><pre><span></span><code>generateForDay.sh --timelapse 20250710
-generateForDay.sh --upload --timelapse 20250710
+<p>The "Daily" timelapse is the one that's automatically created once a day, at the end of nighttime. It includes all the images saved in the last 24 hours.</p>
+<p>Enable the <code>Generate</code> setting to have a daily timelapse created. You can have the timelapse automatically uploaded to a Allsky Website and/or remote server via the <code>Upload</code> setting.  If you are uploading timelapses to a remote Website we suggest also uploading its thumbnail - to do so, enable the <code>Upload Thumbnail</code> setting.</p>
+<p>The easiest way to <strong>manually</strong> create and optionally upload a daily timelapse is via the <code>generateForDay.sh</code> command. For example, to create and then upload a daily timelapse to any Allsky Website and/or remote server you have for July 10, 2026:</p>
+<div class="highlight"><pre><span></span><code>generateForDay.sh --timelapse 20260710
+generateForDay.sh --upload --timelapse 20260710
 </code></pre></div>
-<p>This will use the settings specified in the Daily Timelapse sub-section of the WebUI.</p>
-<p>If you have a remote Website you'll most likely need to enable the Upload Thumbnail setting so the timelapse's thumbnail is created on the Pi and uploaded to the Website.</p>
-<p>If your camera has a lot of pixels you may need to resize the timelapse in order to decrease the processing power needed to create it and to reduce the file size. If so, update the Width and Height settings. Cutting each size in half is a good starting point.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>You may wish to manually create a timelapse if you changed the settings (e.g., FPS), or if a timelapse wasn't automatically created, possibly due to Allsky not running at the night-to-day transition time.</p>
+</div>
+<p>If your camera has a lot of pixels you may need to resize the timelapse in order to decrease the processing power needed to create it and to reduce the file size. If so, update the timelapse <strong>Width</strong> and <strong>Height</strong> settings. Cutting each size in half is a good starting point.</p>
 <h2 id="mini-timelapse">Mini Timelapse<a class="headerlink" href="#mini-timelapse" title="Permanent link">¶</a></h2>
-<p>A mini timelapse contains a limited number of images and is constantly recreated throughout the day. For example, you can have a mini timelapse that shows the last 50 of images, and is recreated every 5 images. Note that every new mini timelapse replaces the prior one, so there is ever only one mini timelapse.</p>
-<p>You specify whether or not you want a mini timelapse created via the Number Of Images   setting. If greater than 0, mini timelapses will be created (and optionally uploaded) containing that number of images. You can enter any number you want, but beware:</p>
+<p>A mini timelapse contains a limited number of images and is constantly recreated throughout the day. For example, you can have a mini timelapse that shows the last 50 images, and is recreated every 5 images. Note that every new mini timelapse <strong>replaces</strong> the prior one, so there is ever only one mini timelapse.</p>
+<p>You specify whether or not you want a mini timelapse created via the <code>Number Of Images</code> setting. If greater than 0, mini timelapses will be created containing that number of images. You can enter any number you want, but beware:</p>
 <ul>
-<li>
-<p>A small number of images will produce a very short video. For example, a video with 5 images will usually last less than a second.</p>
-</li>
-<li>
-<p>A large number of images will take longer to create and depending on the speed of your Pi, could cause other things to run slowly.</p>
-</li>
-<li>
-<p>On a Pi 4, try starting with 50 images and adjust as needed.</p>
-</li>
+<li>A small number of images will produce a very short video. For example, a video with 5 images will usually last less than a second.</li>
+<li>A large number of images will take longer to create and depending on the speed of your Pi, could cause other things to run slowly.</li>
+<li>On a Pi 4 or older, try starting with 50 images and adjust as needed.
+A new mini timelapse will be created after the number of images you specify in <code>Frequency</code>. The smaller the number the more often a mini timelapse will be created, and the more processing power needed. Try starting off at the default and adjust as needed.</li>
 </ul>
-<p>If Number Of Images is greater than 0, a new mini timelapse will be created after the number of images you specify in Frequency. The smaller the number the more often a mini timelapse will be created, and the more processing power needed. Try starting off at 5 and adjust as needed.</p>
 <p>Mini timelapses are not designed to be created manually because some configuration files need to be updated after creation.</p>
 <h2 id="change-the-timelapse-length">Change the timelapse length<a class="headerlink" href="#change-the-timelapse-length" title="Permanent link">¶</a></h2>
 <p>Two things determine how long a timelapse video is:</p>
 <div class="highlight"><pre><span></span><code>1. The number of images (called "frames") in a video.
-
 2. How many frames are displayed per second (called "Frames Per Second" or "FPS").
 </code></pre></div>
 <p>These are described in more details below.</p>
@@ -6271,36 +6102,26 @@ generateForDay.sh --upload --timelapse 20250710
 <p>Everything else being equal, the more frames in a video, the longer it plays. Doubling the number of frames will double the video's length.</p>
 <p>To increase a video's length, do options A and/or B below.</p>
 <p>To decrease a video's length, do the opposite of the options below.</p>
-<ul>
-<li>
-<p>Decrease the interval between images.</p>
-<p>Depending on the speed of your Pi, the size of each image, and how much image processing you do (e.g., how complex your overlay is, if you crop or stretch the image, etc.), you may be able to get by with a delay of a second or two (1000 - 2000 ms). Make sure you DISABLE the Consistent Delays Between Images setting.</p>
+<p><strong>A. Decrease the interval between images.</strong></p>
+<p>Decreasing the interval between images is done via the <code>Delay</code> setting for Daytime and Nighttime.  Doing so increases the number of images taken, thereby increasing a video's length.</p>
+<p>Depending on the speed of your Pi, the size of each image, and how much image processing you do (e.g., how complex your overlay is, if you crop or stretch the image, etc.), you may be able to get by with a delay of a second or two (1000 - 2000 ms). Make sure you DISABLE the <code>Consistent Delays Between Images</code> setting.</p>
 <p>Try a Delay of 2000 ms and let it run for a day. If Allsky can't keep up you'll get messages in the WebUI. You may be able to live with an occassional error, although you may get tired seeing the error messages.</p>
 <p>Advantages:</p>
 <ul>
-<li>
-<p>Easy to do.</p>
-</li>
-<li>
-<p>Videos will look smoother; stars and clouds won't "jump" as much from one image to the next.</p>
-</li>
-<li>
-<p>If you like capturing meteors and other items that appear for only a few seconds, a smaller delay means more time is spent capturing images versus waiting, so it can significantly increase your chances of catching items.</p>
-</li>
+<li>Easy to do.</li>
+<li>Videos will look smoother; stars and clouds won't "jump" as much from one image to the next.</li>
+<li>If you like capturing meteors and other items that appear for only a few seconds, a smaller delay means more time is spent capturing images versus waiting, so it can significantly increase your chances of catching items.</li>
 </ul>
 <p>Disadvantages:</p>
 <ul>
 <li>More images take up more disk space.</li>
-</ul>
-</li>
+<li>It takes longer to create a timelapse with more images. For daily timelapses this may not be an issues since they are created while Allsky continues taking pictures.</li>
 </ul>
 <div class="admonition info">
 <p class="admonition-title">Tip</p>
 <p>Most people start off adjusting the delay between images to change the length of a video.</p>
 </div>
-<ul>
-<li>Take shorter exposures.</li>
-</ul>
+<p><strong>B. Take shorter exposures.</strong></p>
 <p>In order to keep the image brightness the same, you must also increase the gain.</p>
 <p>Advantages:</p>
 <ul>
@@ -6310,19 +6131,12 @@ generateForDay.sh --upload --timelapse 20250710
 </ul>
 <p>Disadvantages:</p>
 <ul>
-<li>
-<p>More images take up more disk space.</p>
-</li>
-<li>
-<p>It takes longer to create a timelapse with more images. For daily timelapses this may not be an issues since they are created while Allsky continues taking pictures.</p>
-</li>
-<li>
-<p>Image quality decreases as gain increases. There's probably a gain level where you'll say "this is too grainy".</p>
-</li>
+<li>More images take up more disk space.</li>
+<li>It takes longer to create a timelapse with more images.</li>
+<li>Image quality decreases as gain increases. There's probably a gain level where you'll say "this is too grainy".</li>
 <li>
 <p>If you like capturing meteors, shorter exposures increase the time when no image is being taken, which increases the chance of missing a meteor.</p>
-<p>For example, assume your exposure length is 60 seconds and you have a 2 second delay between images. In an hour about 58 images will be taken and will be spent processing images and not taking them.</p>
-<p>Decreasing the exposure to 30 seconds produces 112 images but increases the total delay to about 3 minutes 45 seconds.</p>
+<p>For example, assume your exposure length is 60 seconds and you have a 2 second delay between images. In an hour about 58 images will be taken and about 2 minutes will be spent <strong>processing</strong> images and not <strong>taking</strong> them.  Decreasing the exposure to 30 seconds produces 112 images but increases the total delay to around 4 minutes.</p>
 </li>
 <li>
 <p>Taking shorter exposures only helps at night - typical daytime exposures are less than a second.</p>
@@ -6336,31 +6150,15 @@ generateForDay.sh --upload --timelapse 20250710
 </ul>
 <p>Disadvantages:</p>
 <ul>
-<li>
-<p>The lower the FPS is, the "jerkier" the video is.</p>
-</li>
-<li>
-<p>Who wants to watch a 3 minute, 20 second video of the sky moving? A minute or two is the limit for many people.</p>
-</li>
+<li>The lower the FPS is, the "jerkier" the video is.</li>
+<li>Who wants to watch a 3 minute, 20 second video of the sky moving? A minute or two is the limit for many people.</li>
 </ul>
-<p>Do the following to see how low the FPS can go before you think the video is too jerky or too long:</p>
-<div class="highlight"><pre><span></span><code>cd ~/allsky/images
-mkdir test
-# Copy about 100 images from another directory to the "test" directory.
-
-# Do the following 3 steps a few times, changing your 'Delay' each time.
-# Change the "20" in the steps to whatever you set the delay to.
-
-# Set your 'Delay' in the WebUI to something like 20.
-generateForDay.sh --timelapse test
-mv test/allsky-test.mp4  test/allsky-test-20.mp4
-
-# After you've created some test videos, watch them and pick whichever one
-you think is best.
-
-# When done delete the test images:
-rm -fr test
-</code></pre></div>
+<h3 id="bitrate">Bitrate<a class="headerlink" href="#bitrate" title="Permanent link">¶</a></h3>
+<p>Jpeg images are normally compressed to reduce their file size.  That compression also decreases their quality.  You change the <code>Quality</code> setting for images to impact the amount of compression.</p>
+<p>Timelapse videos have a <code>Bitrate</code> setting that determines their compression and quality. A higher <code>Bitrate</code> means more information from each frame is included, improving the quality.  It also means the video file is larger.</p>
+<h2 id="create-test-timelapses">Create test timelapses<a class="headerlink" href="#create-test-timelapses" title="Permanent link">¶</a></h2>
+<p>You'll want to pick <code>FPS</code> and <code>Bitrate</code> settings that provide a compromise you can live with based on your equipment, who will see your timelapses, and other factors.</p>
+<p>See the <a href="helper_tools/timelapse.html">Timelapse Helper Tool</a> documentation page to help determine what <code>FPS</code> and <code>Bitrate</code> settings to use.</p>
 <h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">¶</a></h2>
 <p>See the <a href="/allsky_guide/troubleshooting/timelapse.html">Troubleshooting -&gt; Timelapse</a> for troubleshooting information.</p>
 
@@ -6369,9 +6167,6 @@ rm -fr test
 
 
 
-
-  
-  
 
 
 

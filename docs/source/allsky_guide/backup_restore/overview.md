@@ -1,10 +1,3 @@
----
-tags:
-  - Allsky Guide
-  - Backup & Restore
-  - Overview
----
-
 # Backup and Restore Overview
 
 The **Backup and Restore** area exists for a simple reason: at some point, almost every Allsky installation needs a safe way to recover.
@@ -24,16 +17,11 @@ Instead of manually copying files around and hoping nothing important gets misse
     If used incorrectly, they can replace working settings with older data.
     Read this overview and the detailed backup and restore guides before using these tools on a live system.
 
-## Where to find it { data-toc-label="Where to find it" }
-
-Open:
-
-1. **System**
-2. **Backups**
+Go to the WebUI's **System -> System** page and click on the **Backups** tab.
 
 ![Backups tab location](/assets/guide_images/backup-overview-tab-location.png)
 /// caption
-Screenshot: The System page with the **Backups** tab selected.
+The System page with the **Backups** tab selected.
 ///
 
 ## What you can do from this page { data-toc-label="What page" }
@@ -48,8 +36,8 @@ From here, you can:
 - download backups to another device,
 - restore a backup,
 - and delete backups you no longer need.
-
-In other words, this page is both your backup creation screen and your recovery inventory.
+<!--
+In other words, this page is both your backup creation screen and your recovery inventory.-->
 
 ## Backup types { data-toc-label="Backup types" }
 
@@ -66,14 +54,14 @@ Use a config backup when you want to preserve things like:
 - system behaviour,
 - module settings,
 - overlay data,
-- camera-related configuration,
+- camera-related settings,
 - and environment or config files used by Allsky.
 
 ### Images backups { data-toc-label="Images backups" }
 
 An **Images backup** is used when you want to preserve captured image data.
 
-This can include every image folder or only selected date folders, depending on what you need.
+This can include every image folder or only selected folders.
 
 Use an images backup when you want to preserve:
 
@@ -105,10 +93,10 @@ Common columns are:
 
 ![Backups table](/assets/guide_images/backup-overview-layout.png)
 /// caption
-Screenshot: Backups table grouped by backup type with action icons.
+Backups table grouped by backup type with action icons.
 ///
 
-## What the row actions do { data-toc-label="What the row actions do" }
+## What the row action buttons do { data-toc-label="What the row actions do" }
 
 Each backup row includes several action icons. These are meant to help you inspect first and restore second.
 
@@ -133,8 +121,8 @@ The sidecar file is used first because it is much faster to read. If it is missi
 This design is especially useful for larger backups, where repeatedly opening the archive would be slower.
 
 ## How restore safety works { data-toc-label="How restore safety works" }
-
-Restore is intentionally not a blind one-click action.
+<!--
+Restore is intentionally not a blind one-click action.-->
 
 Before anything is written back to the system, Allsky performs checks and shows you what will happen. Depending on the backup type and the restore mode you choose, those checks can include:
 
@@ -153,7 +141,7 @@ After the restore:
 
 - a progress modal shows stage-by-stage updates,
 - a completion modal summarizes exactly what was restored,
-- and a restore log is written to `config/logs`.
+- and a restore log is written to `~/allsky/config/logs`.
 
 That gives you both immediate confirmation and a written record for troubleshooting later.
 
@@ -161,15 +149,15 @@ That gives you both immediate confirmation and a written record for troubleshoot
 
 If you use Allsky regularly, this is a sensible pattern:
 
-1. Create a config backup before making significant changes.
-2. Create image backups for important nights or before cleanup.
+1. Create a **config** backup before making significant changes.
+2. Create **image** backups for important nights or before cleanup.
 3. Keep more than one restore point.
-4. Download critical backups off the device.
+4. Download critical backups off the Pi (e.g., to a USB thumb drive).
 5. Use **Info** and review the restore checks before every restore.
 
 !!! info "Why this matters"
     A backup only helps if it contains the right data and is still available when you need it.
-    Keeping more than one backup, and keeping important ones off-device, gives you much better recovery options.
+    Keeping more than one backup, and keeping important ones off the Pi, gives you much better recovery options.
 
 ## Read next { data-toc-label="Read next" }
 

@@ -2780,12 +2780,52 @@ label.el-checkbox {
 /** Checkbox css **/
 
 /** Live View page **/
+body.liveview-page .content {
+	overflow: hidden;
+}
+
+#liveview-root {
+	display: flex;
+	flex-direction: column;
+	height: calc(100vh - 85px);
+	margin-bottom: 0;
+	overflow: hidden;
+}
+
+#liveview-root > .panel-heading {
+	flex: 0 0 auto;
+}
+
+#liveview-root > .panel-body {
+	display: flex;
+	flex: 1 1 auto;
+	flex-direction: column;
+	min-height: 0;
+	overflow: hidden;
+}
+
+#liveview-root > .panel-body > p {
+	flex: 0 0 auto;
+}
+
 .live_container {
+	align-items: flex-start;
 	background-color: black;
+	display: flex;
+	flex: 1 1 auto;
+	justify-content: center;
+	min-height: 0;
+	overflow: hidden;
+	width: 100%;
 }
 
 .current {
-	width: 100%;
+	display: block;
+	height: auto;
+	max-height: 100%;
+	max-width: 100%;
+	object-fit: contain;
+	width: auto;
 }
 /** End Live View page **/
 

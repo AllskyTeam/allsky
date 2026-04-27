@@ -41,6 +41,7 @@ function DisplayLiveView($image_name, $delay, $daydelay, $daydelay_postMsg, $nig
 <script src="/js/lightgallery/plugins/zoom/lg-zoom.min.js"></script>
 <script src="/js/lightgallery/plugins/thumbnail/lg-thumbnail.min.js"></script>
 <script src="/js/liveview.js"></script>
+<script>document.body.classList.add('liveview-page');</script>
 
 	<div
 		class="panel panel-allsky"

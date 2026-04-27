@@ -27,6 +27,8 @@ fi
 sudo chown "${USER_NAME}:${WEBSERVER_OWNER}" "${ALLSKY_SUPPORT_DIR}"
 sudo chmod 775 "${ALLSKY_SUPPORT_DIR}"
 
+DISPLAY_MSG_LOG="${ALLSKY_LOGS}/support.log}"	# send log entries here
+
 ############################################## functions
 
 function set_dialog_info()
@@ -340,15 +342,16 @@ function generate_support_info()
 	# GitHub supports uploads up to ${GIT_HUB_LIMIT} MB.
 	# It's not unusual for the allsky logs to be bigger than that; if so,
 	# first drop the ".1" log.  If it's STILL to large, do a "tail" on the files.
-	# Assume the log files zip to 1/10 their size.
 	# Also assume everything else in the support log except the Allsky log files is up to 5 MB.
 
-	function get_total_size()
+	function get_expected_total_size()
 	{
+		# Assume the log files zip to 1/${COMPRESSION_PERCENT} their size.
+		local COMPRESSION_PERCENT=10
 		# shellcheck disable=SC2012
-		ls -l "${@}" | gawk 'BEGIN { TOTAL=0 }
+		ls -l "${@}" | gawk -v COMPRESSION="${COMPRESSION_PERCENT}" 'BEGIN { TOTAL=0 }
 			{ TOTAL += $5; }
-			END { printf("%d", TOTAL / 10 / 1024 / 1024); }'
+			END { printf("%d", TOTAL / COMPRESSION / 1024 / 1024); }'
 	}
 
 	local GIT_HUB_LIMIT_MB=25
@@ -357,7 +360,7 @@ function generate_support_info()
 	local INDEX=-1
 	local LOG1=""		# If the ".1" log file exist this will be it's index in the array.
 
-	# First get list of logs that exist, and note the ".1" log file.
+	# First create a list of logs that exist, and note the ".1" log file.
  	for L in "${ALLSKY_LOG}" "${ALLSKY_LOG}.1" "${ALLSKY_PERIODIC_LOG}" ; do
 		if [[ -f ${L} ]]; then
 			INDEX=$(( INDEX + 1 ))
@@ -365,33 +368,36 @@ function generate_support_info()
 			ALL_LOGS[${INDEX}]="${L}"
 		fi
 	done
-	# Get the total size.
-	local TOTAL_SIZE_MB="$( get_total_size "${ALL_LOGS[@]}" )"
+	# Get the expected total size.
+	local EXPECTED_TOTAL_SIZE_MB="$( get_expected_total_size "${ALL_LOGS[@]}" )"
+
+	display_msg --logonly debug "Expected size of zipped log file: ${EXPECTED_TOTAL_SIZE_MB} MB, limit: ${LOG_LIMIT_MB} MB."
 
 	local LOG_LINES_TEMP="${LOG_LINES}"
-	if [[ ${TOTAL_SIZE_MB} -gt ${LOG_LIMIT_MB} ]]; then
+	if [[ ${EXPECTED_TOTAL_SIZE_MB} -gt ${LOG_LIMIT_MB} ]]; then
 		if [[ ${DEBUG} == "true" ]]; then
-			echo "DEBUG: Total size of zipped log files is ${TOTAL_SIZE_MB} MB."
-			echo "DEBUG: This is bigger than the GitHub limit of ${LOG_LIMIT_MB} MB."
+			display_msg --log debug "Expected size of zipped log file is ${EXPECTED_TOTAL_SIZE_MB} MB."
+			display_msg --log debug "This is bigger than the GitHub limit of ${LOG_LIMIT_MB} MB."
 		fi
 		# If the ".1" log file is in the list, delete it, then recalculate the size.
 		if [[ -n ${LOG1} ]]; then
 			unset "ALL_LOGS[${LOG1}]"
-			TOTAL_SIZE_MB="$( get_total_size "${ALL_LOGS[@]}" )"
+			EXPECTED_TOTAL_SIZE_MB="$( get_expected_total_size "${ALL_LOGS[@]}" )"
 			if [[ ${DEBUG} == "true" ]]; then
-				echo "DEBUG: Not including ${ALLSKY_LOG}.1 gives a new size of ${TOTAL_SIZE_MB} MB."
+				display_msg --log debug "Not including ${ALLSKY_LOG}.1 gives a new size of ${EXPECTED_TOTAL_SIZE_MB} MB."
+			fi
+		fi
+
+		# If the new total size is STILL too big,
+		# only get the last ${LOG_LINES_TEMP} lines of the remaining logs.
+		if [[ ${EXPECTED_TOTAL_SIZE_MB} -gt ${LOG_LIMIT_MB} ]]; then
+			LOG_LINES_TEMP=2000		# Seems reasonable
+			if [[ ${DEBUG} == "true" ]]; then
+				display_msg --log debug "Still too large, only getting last ${LOG_LINES_TEMP} lines of the log files."
 			fi
 		fi
 	fi
 
-	# If the new total size is STILL to big,
-	# only get the last ${LOG_LINES_TEMP} lines of the remaining logs.
-	if [[ ${TOTAL_SIZE_MB} -gt ${LOG_LIMIT_MB} ]]; then
-		LOG_LINES_TEMP=2000		# Seems reasonable
-		if [[ ${DEBUG} == "true" ]]; then
-			echo "DEBUG: Still too large, only getting last ${LOG_LINES_TEMP} lines of the log files."
-		fi
-	fi
 	local LOG_FILE
  	for L in "${ALL_LOGS[@]}" ; do
   		LOG_FILE="${TEMP_DIR}/$( basename "${L}" ).txt"
@@ -645,6 +651,8 @@ done
 [[ ${DO_HELP} == "true" ]] && usage_and_exit 0
 [[ ${OK} == "false" ]] && usage_and_exit 1
 
+display_msg --logonly info "Starting support log."
+
 set_dialog_info
 set_messages
 display_start_dialog
@@ -657,7 +665,9 @@ RET=$?
 kill_running_dialog
 if [[ ${RET} -eq 0 ]]; then
 	display_complete_dialog
+	display_msg --logonly info "Ending support log."
 else
 	display_complete_dialog "Failure"
+	display_msg --logonly info "Support log creation failed"
 fi
 exit "${RET}"

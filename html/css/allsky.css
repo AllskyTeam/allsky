@@ -2788,46 +2788,37 @@ body.liveview-page .content {
 	overflow: hidden;
 }
 
-#liveview-root {
+body.liveview-page #liveview-root {
 	box-sizing: border-box;
-	display: flex;
-	flex-direction: column;
-	height: 100%;
+	height: auto !important;
 	margin-bottom: 0;
+	max-height: none !important;
+	min-height: 0 !important;
 	overflow: hidden;
 }
 
-#liveview-root > .panel-heading {
-	flex: 0 0 auto;
+body.liveview-page #liveview-root > .panel-body {
+	height: auto !important;
+	max-height: none !important;
+	min-height: 0 !important;
+	overflow: hidden !important;
 }
 
-#liveview-root > .panel-body {
-	display: flex;
-	flex: 1 1 auto;
-	flex-direction: column;
-	min-height: 0;
-	overflow: hidden;
-}
-
-#liveview-root > .panel-body > p {
-	flex: 0 0 auto;
-}
-
-.live_container {
-	align-items: flex-start;
+body.liveview-page .live_container {
 	background-color: var(--bs3-panel-bg);
-	display: flex;
-	flex: 1 1 auto;
-	justify-content: center;
-	min-height: 0;
+	height: auto !important;
+	line-height: 0;
+	max-height: none !important;
+	min-height: 0 !important;
 	overflow: hidden;
+	text-align: center;
 	width: 100%;
 }
 
-.current {
-	display: block;
+body.liveview-page .current {
+	display: inline-block;
 	height: auto;
-	max-height: 100%;
+	max-height: var(--liveview-image-max-height, calc(100vh - 150px));
 	max-width: 100%;
 	object-fit: contain;
 	width: auto;

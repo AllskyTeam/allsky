@@ -6,9 +6,13 @@ class AllskyLiveView {
 		this.imageName = this.$rootElement.data('image-name') || '';
 		this.refreshDelay = parseInt(this.$rootElement.data('refresh-delay') || '0', 10);
 		this.miniPlayerUrl = this.$rootElement.data('mini-player-url') || '';
+		this.updateImageMaxHeight = this.updateImageMaxHeight.bind(this);
 	}
 
 	start() {
+		this.updateImageMaxHeight();
+		$(window).on('resize', this.updateImageMaxHeight);
+		this.$liveContainerElement.find('img.current').on('load', this.updateImageMaxHeight);
 		this.startImageLoop();
 		this.initialiseMiniTimelapseLightbox();
 	}
@@ -46,6 +50,46 @@ class AllskyLiveView {
 		}
 
 		this.$liveContainerElement.empty().append(nextImage);
+		this.updateImageMaxHeight();
+	}
+
+	updateImageMaxHeight() {
+		if (!this.$rootElement.length || !this.$liveContainerElement.length) {
+			return;
+		}
+
+		const liveContainerElement = this.$liveContainerElement.get(0);
+		const currentImageElement = this.$liveContainerElement.find('img.current').get(0);
+		const panelBodyElement = this.$rootElement.find('> .panel-body').get(0);
+		const liveContainerTop = liveContainerElement.getBoundingClientRect().top;
+		const panelBodyStyles = panelBodyElement ? window.getComputedStyle(panelBodyElement) : null;
+		const rootStyles = window.getComputedStyle(this.$rootElement.get(0));
+		const bottomSpace = (
+			(panelBodyStyles ? parseFloat(panelBodyStyles.paddingBottom) : 0) +
+			parseFloat(rootStyles.borderBottomWidth || 0) +
+			1
+		);
+		const maxHeight = Math.max(0, Math.floor(window.innerHeight - liveContainerTop - bottomSpace));
+
+		this.$rootElement.get(0).style.setProperty('--liveview-image-max-height', `${maxHeight}px`);
+
+		if (!currentImageElement || !currentImageElement.naturalWidth || !currentImageElement.naturalHeight) {
+			return;
+		}
+
+		const maxWidth = liveContainerElement.clientWidth;
+		const scale = Math.min(
+			maxWidth / currentImageElement.naturalWidth,
+			maxHeight / currentImageElement.naturalHeight,
+			1
+		);
+		const imageWidth = Math.floor(currentImageElement.naturalWidth * scale);
+		const imageHeight = Math.floor(currentImageElement.naturalHeight * scale);
+
+		$(currentImageElement).css({
+			width: `${imageWidth}px`,
+			height: `${imageHeight}px`
+		});
 	}
 
 	initialiseMiniTimelapseLightbox() {

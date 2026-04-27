@@ -438,13 +438,14 @@ if [[ ${DO_STARTRAILS} == "true" ]]; then
 		fi
 
 		if [[ ${RET} -eq ${EXIT_PARTIAL_OK} ]]; then
-			MSG="The startrails file was created but has no trailed stars."
-			MSG+="\nGo to the 'Helper Tools -&gt; Startrails Settings' page to determine"
-			MSG+=" what 'Brightness Threshold' to use."
+			MSG1="The startrails file was created but has no trailed stars."
+			MSG2="\nGo to the 'Helper Tools -&gt; Startrails Settings'"
+			MSG3=" page to determine what 'Brightness Threshold' to use."
 			if [[ ${ON_TTY} == "true" ]]; then
-				echo -e "${MSG}" | sed 's/&gt;/>/' >&2
+				echo -e "${MSG1}${MSG2}${MSG3}" | sed 's/&gt;/>/' >&2
 			else
-				"${ALLSKY_SCRIPTS}/addMessage.sh" --type "warning" --msg "${MSG}"
+				MSG2="\nGo to the <a external='true' href='/?page=startrails_settings'>Helper Tools -&gt; Startrails Settings</a> page"
+				"${ALLSKY_SCRIPTS}/addMessage.sh" --type "warning" --msg "${MSG1}${MSG2}${MSG3}"
 			fi
 		elif [[ ${RET} -gt 90 && ${DO_TIMELAPSE} == "true" ]]; then
 			DO_TIMELAPSE="false"

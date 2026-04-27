@@ -1449,150 +1449,6 @@
 
               
             
-              
-                
-  
-  
-  
-  
-    
-    
-    
-    
-      
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_4_11">
-        
-          
-          <label class="md-nav__link" for="__nav_2_4_11" id="__nav_2_4_11_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Helper Tools
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_4_11_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_4_11">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    Helper Tools
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix="">
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="helper_tools/startrails.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Startrails
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="helper_tools/image_stretch.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Image Stretch
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="helper_tools/timelapse.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Timelapse
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
           </ul>
         </nav>
       
@@ -1891,7 +1747,7 @@
   <span class="md-ellipsis">
     
   
-    Startrails
+    Startrails Helper Tool
   
 
     
@@ -1919,7 +1775,7 @@
   <span class="md-ellipsis">
     
   
-    Image Stretch
+    Image Stretch Helper Tool
   
 
     
@@ -1947,7 +1803,7 @@
   <span class="md-ellipsis">
     
   
-    Timelapse
+    Timelapse Helper Tool
   
 
     
@@ -6182,50 +6038,6 @@
                 
                   
 
-  <nav class="md-tags">
-    
-      
-      
-      
-        
-        
-      
-      
-        <a href="../../tags.html#tag:allsky-guide" class="md-tag md-tag-icon">Allsky Guide</a>
-      
-    
-      
-      
-      
-        
-        
-      
-      
-        <a href="../../tags.html#tag:how-to" class="md-tag md-tag-icon">How To</a>
-      
-    
-      
-      
-      
-        
-        
-      
-      
-        <a href="../../tags.html#tag:system" class="md-tag md-tag-icon">System</a>
-      
-    
-      
-      
-      
-        
-        
-      
-      
-        <a href="../../tags.html#tag:webui" class="md-tag md-tag-icon">WebUI</a>
-      
-    
-  </nav>
-
 
   
   
@@ -6233,10 +6045,11 @@
 
   <h1>System Page Additions</h1>
 
-<p>You can add information and buttons to the WebUI's System page without having to change any Allsky files. The data can be anything you want, but often contains weather, dew heater, and/or fan data.</p>
+<p>You can add information and buttons to the WebUI's <strong>System</strong> page without having to change any Allsky files. The data can be anything you want, but often contains weather, dew heater, and/or fan data.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>You'll normally use the <a href="http://allsky-test3:8000/allsky_guide/using/system/status.html#additionsEditor">System Page Additions Editor</a> to make the additions, but for finer control you can manually edit the configuration file as described on this page.</p>
+<p>You'll normally use the <a href="http://allsky-test3:8000/allsky_guide/using/system/status.html#additionsEditor">System Page Additions Editor</a> (the right-most icon at the top of the page) to make the additions, but for finer control or if you have a script that produces the configuration file, you can manually edit it as described on this page.</p>
+<p>If you DO use the Editor you can skip this page.</p>
 </div>
 <p>This documentation page assumes you are familiar with writing scripts; if so, adding the information is straightforward if you follow the instructions on this page.
 The image below shows the three types of items that can be added:</p>
@@ -6252,21 +6065,26 @@ The image below shows the three types of items that can be added:</p>
 </figcaption>
 </figure>
 <h2 id="details">Details<a class="headerlink" href="#details" title="Permanent link">¶</a></h2>
-<p>The information to display on the System page is described in one or more "data files" which are listed in the <code>System Page Additions</code> setting. This section describes the format of those data files.</p>
-<p>Each data file contains one or more lines. Blank lines and lines that begin with <code>#</code> are ignored. Each remaining line will display something on the System page and must contain the fields listed in the tables below, separated by <strong>tabs</strong>.</p>
-<p>Data files should be stored in the <code>~/allsky/config/myFiles</code> directory so they are propogated to new releases of Allsky.  The <a href="http://allsky-test3:8000/allsky_guide/using/system/status.html#additionsEditor">System Page Additions Editor</a> stores files there automatically.</p>
+<p>The additional information to display on the System page is described in a "data file" which is listed in the <code>System Page Additions</code> setting. This section describes the format of that file.</p>
+<p>The data file contains one or more lines. Blank lines and lines that begin with <code>#</code> are ignored. Each remaining line will display something on the System page and must contain the fields listed in the tables below, separated by <strong>tabs</strong>.</p>
+<p>The data file should be stored in the <code>~/allsky/config/myFiles</code> directory so it is propogated to new releases of Allsky.  The <a href="http://allsky-test3:8000/allsky_guide/using/system/status.html#additionsEditor">System Page Additions Editor</a> stores files there automatically.</p>
 <p>As a very simple example, if you want to add the 2 buttons in the image above to turn your dew heater on and off you'd have a file called, for example, <code>~/allsky/config/myFiles/my_buttons.txt</code>. That file needs 2 lines describing the attributes for each button such as color and what it should say (e.g., "Heater ON"). The exact contents of those lines are described below. The buttons appear on the System page when you set the <code>System Page Additions</code> setting to <code>~/allsky/config/myFiles/my_buttons.txt</code>.</p>
 <p>There are three types of lines in a data file. The first word of a line determines what type of line it is:</p>
 <ol>
 <li>
-<p><strong>data</strong> lines specify basic, two-column information that goes before the first progress bar. These lines are good when the data has a single value like:</p>
-<p><code>Ambient temperature     20 C</code></p>
+<p><strong>progress</strong> lines display as progress bars like the CPU Temperature bar in the image above. Your bars go after the last system-supplied progress bar and are good when the data has an associated status, for example, when the CPU is too hot its bar turns red.</p>
+<p>The <code>DEW HEATER STATUS</code> example above could be a <strong>data</strong> line, but a <strong>progress</strong> bar shows the status much more clearly.</p>
 </li>
 <li>
-<p><strong>progress</strong> lines display as progress bars like the CPU Temperature bar in the image above. Your bars go after the last system-supplied progress bar and are good when the data has an associated status, for example, when the CPU is too hot its bar turns red.</p>
+<p><strong>data</strong> lines specify basic, two-column information and are good when the data has a single value like:</p>
+<p><code>Ambient temperature 20 C</code></p>
+<p>The <code>ASKY IS THE  BEST!!</code> data line above is a silly example.</p>
 </li>
-<li><strong>button</strong> lines add a button to the page under the last system-supplied button, and are used to initiate an action like turning a dew heater on.</li>
+<li>
+<p><strong>button</strong> lines add a button to the bottom of the page, and are used to initiate an action like turning a dew heater on.</p>
+</li>
 </ol>
+<p>The fields for each data line type are shown below.</p>
 <h3 id="data-lines">Data Lines<a class="headerlink" href="#data-lines" title="Permanent link">¶</a></h3>
 <table>
 <thead>
@@ -6567,9 +6385,6 @@ button  -   /home/pi/dewheater/toggleDewHeater.py   black   random  black
 
 
 
-
-  
-  
 
 
 

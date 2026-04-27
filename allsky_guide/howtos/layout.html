@@ -1449,150 +1449,6 @@
 
               
             
-              
-                
-  
-  
-  
-  
-    
-    
-    
-    
-      
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_4_11">
-        
-          
-          <label class="md-nav__link" for="__nav_2_4_11" id="__nav_2_4_11_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Helper Tools
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_4_11_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_4_11">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    Helper Tools
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix="">
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="helper_tools/startrails.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Startrails
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="helper_tools/image_stretch.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Image Stretch
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="helper_tools/timelapse.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Timelapse
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
           </ul>
         </nav>
       
@@ -1999,17 +1855,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#resized" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        resized
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#scripts" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2271,7 +2116,7 @@
   <span class="md-ellipsis">
     
   
-    Startrails
+    Startrails Helper Tool
   
 
     
@@ -2299,7 +2144,7 @@
   <span class="md-ellipsis">
     
   
-    Image Stretch
+    Image Stretch Helper Tool
   
 
     
@@ -2327,7 +2172,7 @@
   <span class="md-ellipsis">
     
   
-    Timelapse
+    Timelapse Helper Tool
   
 
     
@@ -6436,50 +6281,6 @@
                 
                   
 
-  <nav class="md-tags">
-    
-      
-      
-      
-        
-        
-      
-      
-        <a href="../../tags.html#tag:allsky-guide" class="md-tag md-tag-icon">Allsky Guide</a>
-      
-    
-      
-      
-      
-        
-        
-      
-      
-        <a href="../../tags.html#tag:how-to" class="md-tag md-tag-icon">How To</a>
-      
-    
-      
-      
-      
-        
-        
-      
-      
-        <a href="../../tags.html#tag:layout" class="md-tag md-tag-icon">Layout</a>
-      
-    
-      
-      
-      
-        
-        
-      
-      
-        <a href="../../tags.html#tag:website" class="md-tag md-tag-icon">Website</a>
-      
-    
-  </nav>
-
 
   
   
@@ -6506,7 +6307,6 @@
 │       ├── startrails
 │       └── thumbnails
 ├── notification_images
-├── resized
 ├── scripts
 ├── src
 └── tmp
@@ -6518,7 +6318,7 @@
 </code></pre></div>
 <p>Your installation may not match this exactly. Some directories only appear when a feature is enabled or has been used, and others may vary slightly between versions. The point of the tree above is to show the general structure, not to define an exact list that every system must have.</p>
 <h2 id="directories-you-will-most-likely-use">Directories you will most likely use<a class="headerlink" href="#directories-you-will-most-likely-use" title="Permanent link">¶</a></h2>
-<p>The most important directories for normal users are <code>config</code>, <code>html</code>, <code>images</code>, <code>darks</code>, and <code>tmp</code>. If you understand those, you already understand most of what matters in everyday use.</p>
+<p>The most important directories for normal users are <code>config</code>, <code>html</code>, <code>images</code>, <code>darks</code>, and <code>tmp</code>. <!--If you understand those, you already understand most of what matters in everyday use.--></p>
 <h3 id="config"><code>config</code><a class="headerlink" href="#config" title="Permanent link">¶</a></h3>
 <p>This directory contains Allsky's configuration files.</p>
 <p>Some of the most important items here are:</p>
@@ -6526,18 +6326,17 @@
 <li><code>settings.json</code>, which holds most of the settings you change on the <strong>Allsky Settings</strong> page in the WebUI.</li>
 <li>The <code>modules</code> directory, which contains configuration for the <strong>Module Manager</strong>.</li>
 <li>The <code>overlay</code> directory, which contains configuration for the <strong>Overlay Editor</strong>.</li>
-<li><code>cc.json</code> and <code>options.json</code>, which are created based on your camera and control which settings appear in the WebUI, along with their valid ranges and defaults.</li>
+<li><code>cc.json</code> and <code>options.json</code>, which are automatically created based on your camera and control which settings appear in the WebUI, along with their valid ranges and defaults.</li>
 </ul>
 <p>If you change camera type or model through the WebUI, some of these files are regenerated automatically.</p>
-<p>If you use a remote Allsky Website, you may also see <code>remote_configuration.json</code> here. That file is uploaded to the remote server when you update it through the WebUI's <strong>Editor</strong> page.</p>
+<p>If you use a remote Allsky Website, you may also see <code>remote_configuration.json</code> here. That file is uploaded to the remote Website when you update it through the WebUI's <strong>Editor</strong> page.</p>
 <p>For most users, the important point is simple: this is where Allsky's main configuration lives. If you are backing up the system, moving to a new SD card, or troubleshooting settings, this directory matters a great deal.</p>
 <h3 id="html"><code>html</code><a class="headerlink" href="#html" title="Permanent link">¶</a></h3>
 <p>This directory contains the WebUI and the files for the local Allsky Website.</p>
-<p>It also includes the documentation that can be viewed through the WebUI. If you are told to look for WebUI files, PHP pages, or local website configuration, this is the area you will usually end up in.</p>
-<p>The WebUI itself does not have one single user-editable configuration file in the same way that <code>settings.json</code> controls Allsky. However, the local website does have configuration files that can be changed through the WebUI editor.</p>
+<p>It also includes the documentation that can be viewed through the WebUI. If you are told to look for WebUI files, PHP pages, or local Website configuration, this is the area you will usually end up in.</p>
+<p>The WebUI itself does not have one single user-editable configuration file in the same way that <code>settings.json</code> controls Allsky. However, the local and remote Websites do have configuration files that can be changed through the WebUI editor.</p>
 <h3 id="images"><code>images</code><a class="headerlink" href="#images" title="Permanent link">¶</a></h3>
-<p>This is where Allsky stores captured output.</p>
-<p>That includes:</p>
+<p>This is where Allsky stores captured output, including:</p>
 <ul>
 <li>saved images</li>
 <li>timelapse videos</li>
@@ -6545,78 +6344,77 @@
 <li>startrails</li>
 <li>thumbnails related to those outputs</li>
 </ul>
-<p>Allsky stores these by date, with each day's output in a directory named <code>YYYYMMDD</code>, for example <code>20240710</code>.</p>
+<p>Allsky stores these by date, with each day's output in a directory named <code>YYYYMMDD</code>, for example <code>20260710</code>.</p>
 <p>If you are looking for a specific image, checking disk usage, copying output off the Pi, or removing old captures manually, this is the directory you will work with.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you moved the "images" folder to a different location, e.g., a USB thumb drive, you won't see the directory in <code>~/allsky</code>.</p>
+</div>
 <h3 id="darks"><code>darks</code><a class="headerlink" href="#darks" title="Permanent link">¶</a></h3>
-<p>This directory stores optional dark frames. Dark frames are used to reduce visible sensor noise in images. If you are not using dark frames, this directory may be empty or unimportant to you. If you are using them, this is where they are kept.</p>
+<p>This directory stores optional dark frames. Dark frames are used to reduce visible sensor noise in images. If you are not using dark frames, this directory may be empty or unimportant to you. If you are using them, this is where they are kept.  You normally won't do anything with this directory.</p>
 <h3 id="tmp"><code>tmp</code><a class="headerlink" href="#tmp" title="Permanent link">¶</a></h3>
-<p>This directory holds temporary files used while Allsky is running.</p>
-<p>It often contains:</p>
+<p>This directory holds temporary files used while Allsky is running and often contains:</p>
 <ul>
 <li>log files</li>
 <li>temporary working files</li>
 <li>intermediate output used during processing</li>
 <li>other short-lived files created by scripts and helper tools</li>
 </ul>
-<p>The contents of <code>tmp</code> are not usually meant to be permanent, and much of this area is often cleared after a reboot. When you are debugging a problem, however, this directory becomes much more important because many logs and temporary traces appear here.</p>
+<p>The contents of <code>tmp</code> are not meant to be permanent, and this directory is cleared after a reboot. When you are debugging a problem, however, this directory becomes much more important because many logs and temporary traces appear here.</p>
 <h2 id="other-directories-you-may-notice">Other directories you may notice<a class="headerlink" href="#other-directories-you-may-notice" title="Permanent link">¶</a></h2>
-<p>The rest of the installation tree is still useful to understand, even if you rarely touch it directly.</p>
+<p>The rest of the installation tree is still useful to understand. You should not modify these directories unless told so by the Allsk Team.</p>
 <h3 id="assets"><code>assets</code><a class="headerlink" href="#assets" title="Permanent link">¶</a></h3>
-<p>This mainly contains files used in building or presenting Allsky, including assets used in documentation and development. Most users can ignore it.</p>
+<p>This mainly contains files used in building or presenting Allsky, including assets used in documentation and development.</p>
 <h3 id="bin"><code>bin</code><a class="headerlink" href="#bin" title="Permanent link">¶</a></h3>
 <p>This contains compiled binary programs used by Allsky.</p>
-<p>For example, this is where the camera capture programs such as <code>capture_RPi</code> and <code>capture_ZWO</code> live after they have been built. These are not usually files you run directly in normal day-to-day use, but they are central to how Allsky actually captures images.</p>
+<p>For example, this is where the camera capture programs such as <code>capture_RPi</code> and <code>capture_ZWO</code> live after they have been built. These are central to how Allsky actually captures images.</p>
 <h3 id="config_repo"><code>config_repo</code><a class="headerlink" href="#config_repo" title="Permanent link">¶</a></h3>
 <p>This holds template versions of configuration files. During installation, and sometimes during upgrades, Allsky uses these templates to create or refresh files in the <code>config</code> directory.</p>
-<p>Most users should treat this as an internal support directory rather than a place to make routine edits.</p>
 <h3 id="notification_images"><code>notification_images</code><a class="headerlink" href="#notification_images" title="Permanent link">¶</a></h3>
 <p>This contains the images Allsky can display for status or notification purposes, such as startup or placeholder images.</p>
 <p>Depending on your image format, you may see both <code>.jpg</code> and <code>.png</code> files here.</p>
-<h3 id="resized"><code>resized</code><a class="headerlink" href="#resized" title="Permanent link">¶</a></h3>
-<p>This directory is used for resized images created as part of Allsky processing or website-related workflows. Not every user will need to interact with it directly, but it is normal for it to exist.</p>
 <h3 id="scripts"><code>scripts</code><a class="headerlink" href="#scripts" title="Permanent link">¶</a></h3>
 <p>This contains the shell scripts and helper programs Allsky uses while it is running.</p>
-<p>Some of these scripts are also useful for advanced troubleshooting. For example, certain upload or generation scripts can be run manually when you are debugging a specific part of the system. For normal users, though, this is mostly part of Allsky's internal machinery.</p>
+<p>Some of these scripts are also useful for advanced troubleshooting. For example, certain upload or generation scripts (like <code>generateForDay.sh</code>) can be run manually when you are debugging a specific part of the system.</p>
 <h3 id="src"><code>src</code><a class="headerlink" href="#src" title="Permanent link">¶</a></h3>
 <p>This contains the source code for compiled parts of Allsky, including capture programs and utilities such as the keogram and startrails generators.</p>
-<p>Most users will never need to change anything here, but if you ever compile Allsky from source or follow advanced developer-oriented instructions, this is where that work happens.</p>
 <h3 id="venv"><code>venv</code><a class="headerlink" href="#venv" title="Permanent link">¶</a></h3>
-<p>This directory contains Python virtual environment data used by Allsky. In normal use, you can ignore it.</p>
+<p>This directory contains Python virtual environment data used by Allsky.</p>
 <h2 id="important-files-in-the-top-level">Important files in the top level<a class="headerlink" href="#important-files-in-the-top-level" title="Permanent link">¶</a></h2>
-<p>Alongside the directories, there are several top-level files worth knowing about.</p>
+<p>Alongside the directories, there are several top-level files worth knowing about, although you should not change them unless directed to by the Allsky Team.</p>
 <h3 id="allskysh"><code>allsky.sh</code><a class="headerlink" href="#allskysh" title="Permanent link">¶</a></h3>
 <p>This is the main script used when Allsky starts. It launches the appropriate capture program and coordinates the normal runtime flow.</p>
 <h3 id="envjson"><code>env.json</code><a class="headerlink" href="#envjson" title="Permanent link">¶</a></h3>
 <p>This file stores private or sensitive values such as usernames, passwords, and similar credentials used by uploads or integrations.</p>
-<p>It is kept separate from <code>settings.json</code> so that the main settings file can be shared more safely without exposing secrets. If you ever send configuration files to someone for help, this is one of the files you should treat with care.</p>
-<p>The values in <code>env.json</code> are normally managed through the WebUI rather than edited by hand.</p>
+<p>It is kept separate from <code>settings.json</code> so that the main settings file can be shared more safely without exposing secrets. If you ever send configuration files to someone for help, this is one of the files you should <strong>treat with care</strong>.</p>
+<p>The values in <code>env.json</code> are managed through the WebUI.</p>
 <h3 id="installsh"><code>install.sh</code><a class="headerlink" href="#installsh" title="Permanent link">¶</a></h3>
 <p>This is the installation and upgrade script for Allsky.</p>
 <h3 id="license"><code>LICENSE</code><a class="headerlink" href="#license" title="Permanent link">¶</a></h3>
 <p>This contains the Allsky software license.</p>
 <h3 id="makefile"><code>Makefile</code><a class="headerlink" href="#makefile" title="Permanent link">¶</a></h3>
-<p>This is used during build and installation steps to create binaries, prepare directories, and perform other setup tasks. Most users do not need to interact with it directly.</p>
+<p>This is used during build and installation steps to create binaries, prepare directories, and perform other setup tasks.</p>
 <h3 id="readmemd"><code>README.md</code><a class="headerlink" href="#readmemd" title="Permanent link">¶</a></h3>
 <p>This is the repository readme file. Most users will read the documentation through the WebUI or the documentation site instead, but this file still provides useful overview information.</p>
 <h3 id="remotewebsiteinstallsh"><code>remoteWebsiteInstall.sh</code><a class="headerlink" href="#remotewebsiteinstallsh" title="Permanent link">¶</a></h3>
-<p>This script is used to prepare a remote Allsky Website. It should only be used when you are following the remote website installation instructions.</p>
+<p>This script is used to prepare a remote Allsky Website. It should only be used when you are following the remote Website installation instructions.</p>
 <h3 id="upgradesh"><code>upgrade.sh</code><a class="headerlink" href="#upgradesh" title="Permanent link">¶</a></h3>
 <p>Do not use this unless documentation specifically tells you to. It is incomplete and intended for developer testing rather than normal upgrades.</p>
 <h3 id="uninstallsh"><code>uninstall.sh</code><a class="headerlink" href="#uninstallsh" title="Permanent link">¶</a></h3>
 <p>This is a very basic uninstall script. It exists, but it should not be thought of as a polished full removal tool.</p>
 <h3 id="variablessh"><code>variables.sh</code><a class="headerlink" href="#variablessh" title="Permanent link">¶</a></h3>
 <p>This file defines many of the variables used by Allsky scripts, including the locations of files and directories.</p>
-<p>Advanced users who want to override locations can create <code>config/uservariables.sh</code>. For most users, though, <code>variables.sh</code> is reference material rather than something to edit.</p>
+<p>Advanced users who want to override locations can create <code>~/allsky/config/uservariables.sh</code>.</p>
 <p>One useful detail is that although it ends in <code>.sh</code>, it is not meant to be executed directly. It is sourced by other scripts.</p>
 <h3 id="version"><code>version</code><a class="headerlink" href="#version" title="Permanent link">¶</a></h3>
 <p>This file contains the Allsky version currently installed.</p>
 <h2 id="a-practical-way-to-think-about-the-layout">A practical way to think about the layout<a class="headerlink" href="#a-practical-way-to-think-about-the-layout" title="Permanent link">¶</a></h2>
-<p>If you want a simple mental model, think of the installation like this:</p>
+<p>If you want a simple mental model, think of the directory structure like this:</p>
 <ul>
 <li><code>config</code> is where Allsky remembers what to do.</li>
 <li><code>images</code> is where Allsky stores what it produced.</li>
 <li><code>tmp</code> is where Allsky keeps short-lived working files and logs.</li>
-<li><code>html</code> is where the WebUI and local website live.</li>
+<li><code>html</code> is where the WebUI and local Website live.</li>
 <li><code>scripts</code>, <code>bin</code>, and <code>src</code> are mostly the software itself.</li>
 </ul>
 <p>That is enough to get you through most backup, troubleshooting, and file-management tasks without needing to memorise the entire tree.</p>
@@ -6626,9 +6424,6 @@
 
 
 
-
-  
-  
 
 
 
@@ -6669,13 +6464,13 @@
         
         
           
-          <a href="helper_tools/startrails.html" class="md-footer__link md-footer__link--next" aria-label="Next: Startrails">
+          <a href="helper_tools/startrails.html" class="md-footer__link md-footer__link--next" aria-label="Next: Startrails Helper Tool">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Startrails
+                Startrails Helper Tool
               </div>
             </div>
             <div class="md-footer__button md-icon">

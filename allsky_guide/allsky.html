@@ -1645,150 +1645,6 @@
 
               
             
-              
-                
-  
-  
-  
-  
-    
-    
-    
-    
-      
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_4_11">
-        
-          
-          <label class="md-nav__link" for="__nav_2_4_11" id="__nav_2_4_11_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Helper Tools
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_4_11_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_4_11">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    Helper Tools
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix="">
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="howtos/helper_tools/startrails.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Startrails
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="howtos/helper_tools/image_stretch.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Image Stretch
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="howtos/helper_tools/timelapse.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Timelapse
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
           </ul>
         </nav>
       
@@ -2087,7 +1943,7 @@
   <span class="md-ellipsis">
     
   
-    Startrails
+    Startrails Helper Tool
   
 
     
@@ -2115,7 +1971,7 @@
   <span class="md-ellipsis">
     
   
-    Image Stretch
+    Image Stretch Helper Tool
   
 
     
@@ -2143,7 +1999,7 @@
   <span class="md-ellipsis">
     
   
-    Timelapse
+    Timelapse Helper Tool
   
 
     
@@ -6252,30 +6108,6 @@
                 
                   
 
-  <nav class="md-tags">
-    
-      
-      
-      
-        
-        
-      
-      
-        <a href="../tags.html#tag:allsky-guide" class="md-tag md-tag-icon">Allsky Guide</a>
-      
-    
-      
-      
-      
-        
-        
-      
-      
-        <a href="../tags.html#tag:installation" class="md-tag md-tag-icon">Installation</a>
-      
-    
-  </nav>
-
 
   
   
@@ -6347,7 +6179,6 @@
 <div class="highlight"><pre><span></span><code><span class="nb">cd</span>
 git<span class="w"> </span>clone<span class="w"> </span>--depth<span class="o">=</span><span class="m">1</span><span class="w"> </span>--recursive<span class="w"> </span>https://github.com/AllskyTeam/allsky.git
 </code></pre></div>
-<p>This can take a little while depending on the Pi model, storage speed, and network speed. When it finishes, the new <code>allsky</code> directory will normally be around 650 MB.</p>
 <p>You should see output broadly similar to this:</p>
 <div class="highlight"><pre><span></span><code>Cloning into 'allsky'...
 remote: Enumerating objects: 891, done.
@@ -6360,6 +6191,7 @@ remote: Enumerating objects: 119, done.
 ...  more commands here ...
 Submodule path 'src/sunwait-src': checked out '151d8340a748a4dac7752ebcd38983b2887f5f0c'
 </code></pre></div>
+<p>This can take a little while depending on the Pi model, storage speed, and network speed. When it finishes, the new <code>allsky</code> directory will normally be around 1.5 GB.</p>
 <h3 id="running-the-installer">Running The Installer<a class="headerlink" href="#running-the-installer" title="Permanent link">¶</a></h3>
 <p>Once the source has been downloaded, start the installer:</p>
 <div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>~/allsky
@@ -6458,9 +6290,6 @@ sudo<span class="w"> </span>systemctl<span class="w"> </span>status<span class="
 
 
 
-
-  
-  
 
 
 

@@ -2780,14 +2780,19 @@ label.el-checkbox {
 /** Checkbox css **/
 
 /** Live View page **/
+body.liveview-page {
+	overflow: hidden;
+}
+
 body.liveview-page .content {
 	overflow: hidden;
 }
 
 #liveview-root {
+	box-sizing: border-box;
 	display: flex;
 	flex-direction: column;
-	height: calc(100vh - 85px);
+	height: 100%;
 	margin-bottom: 0;
 	overflow: hidden;
 }

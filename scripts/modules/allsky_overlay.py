@@ -1315,7 +1315,7 @@ class ALLSKYOVERLAY:
             fileAge = 9999
 
         if fileAge > 2:
-            r = requests.get(f'https://www.celestrak.com/NORAD/elements/gp.php?CATNR={noradCatId}', verify=verify, timeout=5)
+            r = requests.get(f'https://celestrak.org/NORAD/elements/gp.php?CATNR={noradCatId}', verify=verify, timeout=5)
             r.raise_for_status()
 
             if r.text == 'No GP data found':

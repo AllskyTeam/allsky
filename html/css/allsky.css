@@ -2810,7 +2810,7 @@ body.liveview-page .content {
 
 .live_container {
 	align-items: flex-start;
-	background-color: black;
+	background-color: var(--bs3-panel-bg);
 	display: flex;
 	flex: 1 1 auto;
 	justify-content: center;

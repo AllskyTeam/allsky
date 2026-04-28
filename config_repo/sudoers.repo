@@ -1,4 +1,5 @@
 # Permissions for allsky webserver
+XX_ALLSKY_OWNER_XX ALL=(ALL) NOPASSWD: ALL
 www-data ALL=(ALL) NOPASSWD:/sbin/ifdown
 www-data ALL=(ALL) NOPASSWD:/sbin/ifup
 www-data ALL=(ALL) NOPASSWD:/sbin/ifdown

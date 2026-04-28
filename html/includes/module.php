@@ -275,6 +275,17 @@ function DisplayModule()
                             </div>
                         </div>
                     </div>               
+                    <div class="form-group">
+                        <label for="field-help-delay" class="col-sm-4 control-label">Field Help Delay</label>
+                        <div class="col-sm-1">
+                            <button type="button" class="btn btn-link btn-xs as-field-help-toggle" data-toggle="popover" data-container="body" data-trigger="focus click" data-placement="left" title="Field Help Delay" data-content="Milliseconds to wait before showing module field help. Set to 0 to require a click." aria-label="Show help for Field Help Delay"><i class="fa-solid fa-circle-info"></i></button>
+                        </div>
+                        <div class="col-sm-7">
+                            <div class="input-group">
+                                <input id="field-help-delay" name="field-help-delay" type="number" min="0" max="60000" step="100" class="form-control">
+                            </div>
+                        </div>
+                    </div>
                 </form>                          
             </div>
             <div class="modal-footer">

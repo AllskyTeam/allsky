@@ -750,6 +750,38 @@ class MODULESEDITOR {
 		});
 	}
 
+	#getFieldHelpDelay() {
+		let delay = 500;
+		if (this.#settings?.settings?.fieldhelpdelay !== undefined) {
+			delay = this.#settings.settings.fieldhelpdelay;
+		} else if (this.#moduleSettings?.fieldhelpdelay !== undefined) {
+			delay = this.#moduleSettings.fieldhelpdelay;
+		} else if ($.moduleeditor?.settings?.fieldhelpdelay !== undefined) {
+			delay = $.moduleeditor.settings.fieldhelpdelay;
+		}
+
+		delay = parseInt(delay, 10);
+		if (Number.isNaN(delay) || delay < 0) {
+			delay = 500;
+		}
+
+		return delay;
+	}
+
+	#initModuleSettingsFieldHelpPopovers() {
+		const delay = this.#getFieldHelpDelay();
+		const trigger = delay === 0 ? 'focus click' : 'hover focus click';
+
+		$('#module-settings-dialog .as-field-help-toggle')
+			.popover('destroy')
+			.attr('data-trigger', trigger)
+			.attr('data-delay', JSON.stringify({ show: delay, hide: 200 }))
+			.popover({
+				trigger: trigger,
+				delay: { show: delay, hide: 200 }
+			});
+	}
+
 	#createSettingsDialog(target) {
 		var events = []
 		this.#events = []
@@ -1980,6 +2012,7 @@ class MODULESEDITOR {
 
 		$('[data-toggle="popover"]').popover('destroy')
 		$('[data-toggle="popover"]').popover()
+		this.#initModuleSettingsFieldHelpPopovers();
 
 		if (moduleData.metadata.testable !== undefined) {
 			if (moduleData.metadata.testable === 'true') {
@@ -3945,11 +3978,15 @@ class MODULESEDITOR {
 				if (result.expiryage == undefined) {
 					result.expiryage = 600;
 				}
+				if (result.fieldhelpdelay == undefined) {
+					result.fieldhelpdelay = 500;
+				}
 				this.#moduleSettings = result
 				$('#autoenable').prop('checked', result.autoenable);
 				$('#debugmode').prop('checked', result.debugmode);
 				$('#periodic-timer').val(result.periodictimer);
 				$('#expiry-age').val(result.expiryage);
+				$('#field-help-delay').val(result.fieldhelpdelay);
 
 				$('#module-editor-settings-dialog').modal('show');
 			}).always(() => {
@@ -4158,6 +4195,7 @@ class MODULESEDITOR {
 
 			this.#moduleSettings.periodictimer = $('#periodic-timer').val() | 0;
 			this.#moduleSettings.expiryage = $('#expiry-age').val() | 0;
+			this.#moduleSettings.fieldhelpdelay = $('#field-help-delay').val() | 0;
 
 			this.#settings.settings = this.#moduleSettings;
 			$.moduleeditor.settings = this.#settings.settings;

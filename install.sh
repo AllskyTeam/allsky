@@ -53,6 +53,7 @@ SPACE="    "
 NOT_RESTORED="NO PRIOR VERSION"
 PI_MODEL=""								# The numeric model of Raspberry Pi
 THIS_PI_MODEL=""						# The model of this Raspberry Pi
+ALLSKY_LIGHTTPD_STRING="# Allsky changes"
 
 declare -r TMP_FILE="/tmp/allsky-x"		# temporary file used by many functions
 declare -r TAB="$( echo -e '\t' )"
@@ -787,6 +788,7 @@ do_sudoers()
 
 	display_msg --logonly info "Creating/updating sudoers file."
 	sed \
+		-e "s;XX_ALLSKY_OWNER_XX;${ALLSKY_OWNER};" \
 		-e "s;XX_ALLSKY_SCRIPTS_XX;${ALLSKY_SCRIPTS};" \
 		-e "s;XX_ALLSKY_UTILITIES_XX;${ALLSKY_UTILITIES};" \
 		"${REPO_SUDOERS_FILE}"  >  "${TMP_FILE}"
@@ -946,21 +948,29 @@ install_webserver_et_al()
 
 	sudo systemctl stop lighttpd 2>/dev/null
 
-	if [[ ${v} == "true" ]] && grep --silent "Allsky " "${LIGHTTPD_CONFIG_FILE}" ; then
+	if [[ ${v} == "true" ]] && grep --silent "${ALLSKY_LIGHTTPD_STRING}" "${LIGHTTPD_CONFIG_FILE}" 2>/dev/null ; then
 		# Already installed it; just configure it.
 		display_msg --log progress "Preparing the web server."
 	else
 		display_msg --log progress "Installing the web server."
 		TMP="${ALLSKY_LOGS}/lighttpd.install.log"
-		run_aptGet \
-			lighttpd php-fpm php-gd php-sqlite3 php-curl avahi-daemon hwinfo tree python3-picamera2 i2c-tools \
-			> "${TMP}" 2>&1
-# TODO: Remove in next major release: Used to install: dnsmasq
+		run_aptGet lighttpd > "${TMP}" 2>&1
 		check_success $? "lighttpd installation failed" "${TMP}" "${DEBUG}" \
 			|| exit_with_image 1 "${STATUS_ERROR}" "lighttpd installation failed"
+
+		TMP="${ALLSKY_LOGS}/web.install.log"
+		run_aptGet \
+			php-fpm php-gd php-sqlite3 php-curl avahi-daemon hwinfo tree python3-picamera2 i2c-tools \
+			> "${TMP}" 2>&1
+		check_success $? "web-related package installation failed" "${TMP}" "${DEBUG}" \
+			|| exit_with_image 1 "${STATUS_ERROR}" "web-related package installation failed"
 	fi
 
 	create_lighttpd_config_file
+
+	# Add this string so we know all the webserver-related packages were installed.
+	echo "${ALLSKY_LIGHTTPD_STRING}" | sudo tee --append "${LIGHTTPD_CONFIG_FILE}" > /dev/null
+
 	create_lighttpd_log_file
 
 	# Disable old php module.
@@ -1237,9 +1247,11 @@ get_desired_locale()
 
 	# If the prior version of Allsky had a locale set but it's no longer installed,
 	# let the user know.
-	# This can happen if they use the settings file from a different Pi or different OS.
+	# This can happen if they use the settings file from a different Pi or different OS,
+	# or if this is the first install on a new operating system.
 	MSG2=""
-	if [[ -z ${DESIRED_LOCALE} && ${USE_PRIOR_ALLSKY} == "true" && -n ${PRIOR_SETTINGS_FILE} ]]; then
+#XXX	if [[ -z ${DESIRED_LOCALE} && ${USE_PRIOR_ALLSKY} == "true" && -n ${PRIOR_SETTINGS_FILE} ]]; then
+	if [[ ${USE_PRIOR_ALLSKY} == "true" && -n ${PRIOR_SETTINGS_FILE} ]]; then
 		# People rarely change locale once set, so assume they still want the prior one.
 		DESIRED_LOCALE="$( settings ".locale" "${PRIOR_SETTINGS_FILE}" )"
 		if [[ -n ${DESIRED_LOCALE} ]]; then
@@ -1261,22 +1273,27 @@ get_desired_locale()
 		echo "${LC_ALL}"
 	)"
 
-	MSG="CURRENT_LOCALE=${CURRENT_LOCALE}, TEMP_LOCALE=[[$( echo "${TEMP_LOCALE}" | tr '\n' ' ' )]]"
+	MSG="CURRENT_LOCALE=${CURRENT_LOCALE}, DESIRED_LOCAL=${DESIRED_LOCALE}, TEMP_LOCALE=[[$( echo "${TEMP_LOCALE}" | tr '\n' ' ' )]]"
 	display_msg --logonly info "${MSG}"
 
-	D=""
-	if [[ -n ${CURRENT_LOCALE} ]]; then
-		D="--default-item ${CURRENT_LOCALE}"
-	else
-		CURRENT_LOCALE=""
-	fi
 	STATUS_VARIABLES+=("CURRENT_LOCALE='${CURRENT_LOCALE}'\n")
 
 	# If they had a locale from the prior Allsky and it's still here, use it; no need to prompt.
-	if [[ -n ${DESIRED_LOCALE} && ${DESIRED_LOCALE} == "${CURRENT_LOCALE}" ]]; then
-		STATUS_VARIABLES+=("DESIRED_LOCALE='${DESIRED_LOCALE}'\n")
-		STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
-		return
+	# Ditto if the prior locale == current locale.
+	if [[ -n ${DESIRED_LOCALE} ]]; then
+		echo "${INSTALLED_LOCALS}" | grep --silent "${DESIRED_LOCALES}"
+		local STILL_HERE=$?
+		if [[ ( ${DESIRED_LOCALE} == "${CURRENT_LOCALE}" ) || ${STILL_HERE} -eq 0 ]]; then
+			STATUS_VARIABLES+=("DESIRED_LOCALE='${DESIRED_LOCALE}'\n")
+			STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
+			display_msg --logonly info "Using prior locale of ${DESIRED_LOCALE}."
+			return
+		fi
+	fi
+
+	local D=""
+	if [[ -n ${CURRENT_LOCALE} ]]; then
+		D="--default-item ${CURRENT_LOCALE}"
 	fi
 
 	MSG="\nSelect your locale; the default is highlighted in red."
@@ -1379,30 +1396,31 @@ set_what_can_be_skipped()
 
 	local OLD_VERSION="${1}"
 	local NEW_VERSION="${2}"
-	[[ ${NEW_VERSION} != "${OLD_VERSION}" ]] && grep --silent "Allsky " "${LIGHTTPD_CONFIG_FILE}" && return
+	[[ ${NEW_VERSION} != "${OLD_VERSION}" ]] && return
 
-## TODO: FIX: on a clean install using allsky-OLD,
-# if something goes wrong and installation fails, some of the packages below may
-# be installed and others not.
-#### return
+	local SKIPPING="false"
+	local MSG="Skipping installation of: "
+	if grep --silent "${ALLSKY_LIGHTTPD_STRING}" "${LIGHTTPD_CONFIG_FILE}" 2>/dev/null ; then
+		# If the word "Allsky" is in the file, we know it's ours.
+		MSG+="webserver et.al."
+		SKIPPING="true"
+		# shellcheck disable=SC2034
+		install_webserver_et_al="true"
+	fi
 
-	local MSG
+if false; then
+# FIX: install_PHP_modules() checks if it's already been run, so we don't need to here.
+	if [[ ${install_PHP_modules} == "true" ]]; then
+		if [[ ${SKIPPING} == "true" ]]; then
+			MSG+=", "
+		else
+			SKIPPING="true"
+		fi
+		MSG+="PHP modules"
+	fi
+fi
 
-	# No changes to these packages so no need to reinstall.
-	MSG="Skipping installation of: webserver et.al."
-	MSG+=", PHP modules"
-	MSG+=", Truetype fonts"
-	MSG+=", Python"
-	display_msg --logonly info "${MSG}"
-
-	# shellcheck disable=SC2034
-	install_webserver_et_al="true"
-	# shellcheck disable=SC2034
-	install_fonts="true"
-	# shellcheck disable=SC2034
-	install_PHP_modules="true"
-
-	# need to always run install_Python() so it can set up venv
+	[[ ${SKIPPING} == "true" ]] && display_msg --logonly info "${MSG}"
 }
 
 
@@ -4052,6 +4070,10 @@ else
 
 	MSG="STARTING ${IorR} OF ${V}.\n"
 	display_msg --logonly info "${MSG}"
+
+	# "sudo" started prompting for password all the time in Trixie starting April, 2026,
+	# so update the sudoers file as one of the first things done.
+	do_sudoers
 fi
 
 [[ ${FIX} == "true" ]] && do_fix				# does not return
@@ -4196,9 +4218,6 @@ restore_prior_website_files
 ##### Set permissions.  Want this at the end so we make sure we get all files.
 # Re-run every time in case permissions changed.
 set_permissions
-
-##### Update the sudoers file
-do_sudoers
 
 ##### Convert the legacy password format if required
 do_legacy_password_conversion

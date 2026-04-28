@@ -1,20 +1,22 @@
 class AllskyLiveView {
 	constructor(rootElement) {
-		this.$rootElement = $(rootElement);
-		this.$liveContainerElement = $('#live_container');
-		this.$miniTimelapseLinkElement = $('#mini_timelapse_lightbox');
-		this.imageName = this.$rootElement.data('image-name') || '';
-		this.refreshDelay = parseInt(this.$rootElement.data('refresh-delay') || '0', 10);
-		this.miniPlayerUrl = this.$rootElement.data('mini-player-url') || '';
+		this.rootElement = $(rootElement);
+		this.liveContainerElement = $('#live_container');
+		this.currentLightboxElement = $('#current_lightbox');
+		this.miniTimelapseLinkElement = $('#mini_timelapse_lightbox');
+		this.imageName = this.rootElement.data('image-name') || '';
+		this.refreshDelay = parseInt(this.rootElement.data('refresh-delay') || '0', 10);
+		this.currentImageGallery = null;
+		this.miniTimelapseGallery = null;
 	}
 
 	start() {
+		this.initialiseLightGallery();
 		this.startImageLoop();
-		this.initialiseMiniTimelapseLightbox();
 	}
 
 	startImageLoop() {
-		if (!this.$liveContainerElement.length || !this.imageName || !Number.isFinite(this.refreshDelay) || this.refreshDelay <= 0) {
+		if (!this.liveContainerElement.length || !this.imageName || !Number.isFinite(this.refreshDelay) || this.refreshDelay <= 0) {
 			return;
 		}
 
@@ -41,50 +43,56 @@ class AllskyLiveView {
 	}
 
 	replaceLiveImage(nextImage) {
-		if (!this.$liveContainerElement.length) {
+		if (!this.liveContainerElement.length) {
 			return;
 		}
 
-		this.$liveContainerElement.empty().append(nextImage);
+		this.currentLightboxElement
+			.attr('href', nextImage.src)
+			.empty()
+			.append(nextImage);
+
+		if (this.currentImageGallery) {
+			this.currentImageGallery.refresh();
+		}
 	}
 
-	initialiseMiniTimelapseLightbox() {
-		if (!this.$miniTimelapseLinkElement.length || !this.miniPlayerUrl || typeof lightGallery !== 'function') {
+	initialiseLightGallery() {
+		if (typeof lightGallery !== 'function') {
 			return;
 		}
 
-		this.$miniTimelapseLinkElement.on('click', (event) => {
-			event.preventDefault();
+		const commonOptions = {
+			cssEasing: 'cubic-bezier(0.680, -0.550, 0.265, 1.550)',
+			plugins: [lgZoom, lgThumbnail],
+			mode: 'lg-slide-circular',
+			speed: 400,
+			download: false,
+			thumbnail: true,
+			iframeMaxWidth: '90%',
+			iframeMaxHeight: '90%'
+		};
 
-			const gallery = lightGallery(this.$miniTimelapseLinkElement.get(0), {
-				dynamic: true,
-				dynamicEl: [{
-					src: this.miniPlayerUrl,
-					iframe: true,
-					thumb: '',
-					subHtml: 'Mini-Timelapse'
-				}],
-				plugins: [lgZoom, lgThumbnail],
-				download: false,
-				iframeMaxWidth: '90%',
-				iframeMaxHeight: '90%',
-				speed: 400
-			});
+		if (this.liveContainerElement.length) {
+			this.currentImageGallery = lightGallery(this.liveContainerElement.get(0), $.extend({}, commonOptions, {
+				selector: 'a.liveview-lightgallery-item'
+			}));
+		}
 
-			gallery.openGallery(0);
-			this.$miniTimelapseLinkElement.one('lgAfterClose', function handleAfterClose() {
-				gallery.destroy();
-			});
-		});
+		if (this.miniTimelapseLinkElement.length) {
+			this.miniTimelapseGallery = lightGallery(this.miniTimelapseLinkElement.get(0), $.extend({}, commonOptions, {
+				selector: 'this'
+			}));
+		}
 	}
 
 	static run() {
-		const $rootElement = $('#liveview-root');
-		if (!$rootElement.length) {
+		const rootElement = $('#liveview-root');
+		if (!rootElement.length) {
 			return;
 		}
 
-		const liveView = new AllskyLiveView($rootElement.get(0));
+		const liveView = new AllskyLiveView(rootElement.get(0));
 		liveView.start();
 	}
 }

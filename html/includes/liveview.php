@@ -33,6 +33,8 @@ function DisplayLiveView($image_name, $delay, $daydelay, $daydelay_postMsg, $nig
 			getListFileTypeVideoMimeType(basename(ALLSKY_MINITIMELAPSE_URL))
 		);
 	}
+	$currentImageFile = ALLSKY_CURRENT_DIR . '/' . basename((string) parse_url($image_name, PHP_URL_PATH));
+	$currentImageLightboxSize = getLightboxSizeAttribute($currentImageFile);
 ?>
 
 <link type="text/css" rel="stylesheet" href="/js/lightgallery/css/lightgallery-bundle.min.css" />
@@ -40,6 +42,7 @@ function DisplayLiveView($image_name, $delay, $daydelay, $daydelay_postMsg, $nig
 <script src="/js/lightgallery/lightgallery.min.js"></script>
 <script src="/js/lightgallery/plugins/zoom/lg-zoom.min.js"></script>
 <script src="/js/lightgallery/plugins/thumbnail/lg-thumbnail.min.js"></script>
+<script src="/js/lightgallery/plugins/video/lg-video.min.js"></script>
 <script src="/js/liveview.js"></script>
 
 	<div
@@ -56,7 +59,7 @@ function DisplayLiveView($image_name, $delay, $daydelay, $daydelay_postMsg, $nig
 ?>
 
 			<span class='nowrap'>&nbsp; &nbsp;&nbsp; &nbsp;
-			<a id="mini_timelapse_lightbox" href="<?php echo htmlspecialchars($miniTimelapsePlayerUrl ?? ALLSKY_MINITIMELAPSE_URL, ENT_QUOTES); ?>" title="View Mini-Timelapse">
+			<a id="mini_timelapse_lightbox" class="liveview-lightgallery-item" href="<?php echo htmlspecialchars($miniTimelapsePlayerUrl ?? ALLSKY_MINITIMELAPSE_URL, ENT_QUOTES); ?>" data-iframe="true" data-download-url="<?php echo htmlspecialchars(ALLSKY_MINITIMELAPSE_URL, ENT_QUOTES); ?>" title="View Mini-Timelapse">
 				<i class="fa fa-file-video fa-fw"></i> View Mini-Timelapse
 			</a></span>
 <?php
@@ -68,7 +71,9 @@ function DisplayLiveView($image_name, $delay, $daydelay, $daydelay_postMsg, $nig
 		<div class="panel-body">
 			<?php if ($myStatus->isMessage()) echo "<p>" . $myStatus->showMessages() . "</p>"; ?>
 			<div id="live_container" class="cursorPointer live_container" title="Click to make full-screen">
-				<img id="current" class="current" src="<?php echo $image_name ?>">
+				<a id="current_lightbox" class="liveview-lightgallery-item" href="<?php echo htmlspecialchars($image_name, ENT_QUOTES); ?>" data-lg-size="<?php echo htmlspecialchars($currentImageLightboxSize, ENT_QUOTES); ?>">
+					<img id="current" class="current" src="<?php echo htmlspecialchars($image_name, ENT_QUOTES); ?>">
+				</a>
 			</div>
 		</div>
 	</div>

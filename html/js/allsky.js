@@ -130,24 +130,6 @@ class ALLSKY {
 
 	};
 
-	#setupBigScreen() {
-		$('#live_container').on('click', function () {
-			if (!document.fullscreenEnabled) {
-				console.log('Not Supported');
-				return;
-			}
-
-			if (document.fullscreenElement === this) {
-				document.exitFullscreen();
-			} else {
-				this.requestFullscreen().catch(function (error) {
-					console.log('Fullscreen failed:', error);
-				});
-			}
-		});
-
-	}
-
 	#addTimestamp(id) {
 		const x = document.getElementById(id);
 		if (!x) {
@@ -545,7 +527,6 @@ class ALLSKY {
 
 	init() {
 		this.#setupTheme();
-		this.#setupBigScreen();
 		this.#setupExternalLinks();
 		this.#setupTimestamps();
 		// initialize timers that apply to all pages

@@ -2784,6 +2784,10 @@ label.el-checkbox {
 	background-color: black;
 }
 
+.live_container .liveview-lightgallery-item {
+	display: block;
+}
+
 .current {
 	width: 100%;
 }

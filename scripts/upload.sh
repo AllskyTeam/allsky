@@ -2,7 +2,7 @@
 
 # Script to upload files.
 # This is a separate script so it can also be used manually to test uploads.
-#
+# 
 # Allow this script to be executed manually, which requires ALLSKY_HOME to be set.
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )/.." )"
 ME="$( basename "${BASH_ARGV0}" )"

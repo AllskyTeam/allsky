@@ -5,14 +5,15 @@
 ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck source-path=.
-source "${ALLSKY_HOME}/variables.sh" || exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh" || exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh" || exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/functions.sh" || exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh" || exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh" || exit "${ALLSKY_EXIT_ERROR_STOP}"
 
-function usage() {
-	echo "Usage: ${ME} -t <startrails|keogram|timelapse|all> -d <YYYYMMDD|all|test*> [--force]"
+function usage_and_exit() {
+	exec >&2
+	echo "Usage: ${ME} -t startrails|keogram|timelapse|all -d YYYYMMDD|all|test* [--force] [-S source] [-D dest]"
 	exit 1
 }
 
@@ -21,10 +22,7 @@ function error_exit() {
 	exit 1
 }
 
-TYPE=""
-DATE=""
 FORCE=0
-
 POSITIONAL=()
 while [[ $# -gt 0 ]]; do
 	case "$1" in
@@ -40,15 +38,21 @@ while [[ $# -gt 0 ]]; do
 done
 set -- "${POSITIONAL[@]}"
 
-while getopts ":t:d:" opt; do
+TYPE=""
+DATE=""
+SOURCE_FILE_NAME=""
+DEST_FILE_NAME=""
+while getopts ":t:d:S:D:" opt; do
 	case "${opt}" in
 		t) TYPE="${OPTARG}" ;;
 		d) DATE="${OPTARG}" ;;
-		*) usage ;;
+		S) SOURCE_FILE_NAME="${OPTARG}" ;;
+		D) DEST_FILE_NAME="${OPTARG}" ;;
+		*) usage_and_exit ;;
 	esac
 done
 
-[[ -z "${TYPE}" || -z "${DATE}" ]] && usage
+[[ -z "${TYPE}" || -z "${DATE}" ]] && usage_and_exit
 
 case "${TYPE}" in
 	keogram|startrails|timelapse|all) ;;
@@ -62,38 +66,36 @@ esac
 
 THUMBX="$(settings ".thumbnailsizex")" || error_exit "Failed to get thumbnailsizex"
 THUMBY="$(settings ".thumbnailsizey")" || error_exit "Failed to get thumbnailsizey"
-
 THUMBX=$((THUMBX * 2))
 THUMBY=$((THUMBY * 2))
 
 MISSING_IMAGE="${ALLSKY_HOME}/html/images/missing-image.png"
 
 function process_thumbnail() {
-	local TYPE="$1"
-	local DATE="$2"
-	local SOURCE=""
-	local DEST=""
+	local TYPE="${1}"
+	local DATE="${2}"
+	local SOURCE="${3}"
+	local DEST="${4}"
 	local DEST_DIR=""
 	local RC=0
 
 	case "${TYPE}" in
 		keogram)
-			SOURCE="${ALLSKY_IMAGES}/${DATE}/keogram/keogram-${DATE}.jpg"
-			DEST="${ALLSKY_IMAGES}/${DATE}/keogramthumbnail/keogram-${DATE}.jpg"
+			SOURCE="${ALLSKY_IMAGES}/${DATE}/keogram/${SOURCE_FILE_NAME:=keogram-${DATE}.jpg}"
+			DEST="${ALLSKY_IMAGES}/${DATE}/keogramthumbnail/${DEST_FILE_NAME:=keogram-${DATE}.jpg}"
 			;;
 		startrails)
-			SOURCE="${ALLSKY_IMAGES}/${DATE}/startrails/startrails-${DATE}.jpg"
-			DEST="${ALLSKY_IMAGES}/${DATE}/startrailsthumbnail/startrails-${DATE}.jpg"
+			SOURCE="${ALLSKY_IMAGES}/${DATE}/startrails/${SOURCE_FILE_NAME:=startrails-${DATE}.jpg}"
+			DEST="${ALLSKY_IMAGES}/${DATE}/startrailsthumbnail/${DEST_FILE_NAME:=startrails-${DATE}.jpg}"
 			;;
 		timelapse)
-			SOURCE="${ALLSKY_IMAGES}/${DATE}/allsky-${DATE}.mp4"
-			DEST="${ALLSKY_IMAGES}/${DATE}/videothumbnail/allsky-${DATE}.jpg"
+			SOURCE="${ALLSKY_IMAGES}/${DATE}/${SOURCE_FILE_NAME:=allsky-${DATE}.mp4}"
+			DEST="${ALLSKY_IMAGES}/${DATE}/videothumbnail/${DEST_FILE_NAME:=allsky-${DATE}.jpg}"
 			;;
 		*)
 			error_exit "Invalid type '${TYPE}'"
 			;;
 	esac
-
 	DEST_DIR="$(dirname "${DEST}")"
 
 	if [[ ! -d "${DEST_DIR}" ]]; then
@@ -150,11 +152,11 @@ function process_date() {
 	local CUR_DATE="$1"
 
 	if [[ "${TYPE}" == "all" ]]; then
-		process_thumbnail "keogram" "${CUR_DATE}"
-		process_thumbnail "startrails" "${CUR_DATE}"
-		process_thumbnail "timelapse" "${CUR_DATE}"
+		process_thumbnail "keogram" "${CUR_DATE}" "" ""
+		process_thumbnail "startrails" "${CUR_DATE}" "" ""
+		process_thumbnail "timelapse" "${CUR_DATE}" "" ""
 	else
-		process_thumbnail "${TYPE}" "${CUR_DATE}"
+		process_thumbnail "${TYPE}" "${CUR_DATE}" "${SOURCE_FILE_NAME}" "${DEST_FILE_NAME}"
 	fi
 }
 

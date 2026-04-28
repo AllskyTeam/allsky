@@ -1,4 +1,3 @@
-# Allsky changes
 server.modules = ( "mod_expire", "mod_setenv", "mod_indexfile", "mod_access", "mod_alias", "mod_redirect", "mod_cgi", )
 
 server.document-root           = "XX_ALLSKY_WEBUI_XX"

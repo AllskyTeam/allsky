@@ -1,4 +1,4 @@
-// Functions used by the "capture" and other programs.
+// Functions used by the "capture" and other programs. 
 // When outputting messages containing settings, use the names as they appear in the WebUI.
 
 #include <opencv2/core.hpp>

@@ -2780,48 +2780,12 @@ label.el-checkbox {
 /** Checkbox css **/
 
 /** Live View page **/
-body.liveview-page {
-	overflow: hidden;
+.live_container {
+	background-color: black;
 }
 
-body.liveview-page .content {
-	overflow: hidden;
-}
-
-body.liveview-page #liveview-root {
-	box-sizing: border-box;
-	height: auto !important;
-	margin-bottom: 0;
-	max-height: none !important;
-	min-height: 0 !important;
-	overflow: hidden;
-}
-
-body.liveview-page #liveview-root > .panel-body {
-	height: auto !important;
-	max-height: none !important;
-	min-height: 0 !important;
-	overflow: hidden !important;
-}
-
-body.liveview-page .live_container {
-	background-color: var(--bs3-panel-bg);
-	height: auto !important;
-	line-height: 0;
-	max-height: none !important;
-	min-height: 0 !important;
-	overflow: hidden;
-	text-align: center;
+.current {
 	width: 100%;
-}
-
-body.liveview-page .current {
-	display: inline-block;
-	height: auto;
-	max-height: var(--liveview-image-max-height, calc(100vh - 150px));
-	max-width: 100%;
-	object-fit: contain;
-	width: auto;
 }
 /** End Live View page **/
 

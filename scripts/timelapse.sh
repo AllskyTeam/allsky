@@ -371,7 +371,10 @@ DATE=${OUTPUT%/*}
 DATE=${DATE##*/}
 # Mini timelapses are not saved in ${ALLSKY_IMAGES}, so don't create a thumbnail for them.
 if [[ ${DO_THUMBNAIL} == "true" &&  ${DATE} != "$( basename "${ALLSKY_CURRENT_DIR}" )" ]]; then
-	RES="$( "${ALLSKY_UTILITIES}/thumbnail.sh" -t timelapse -d "${DATE}" --force )"
+	RES="$( "${ALLSKY_UTILITIES}/thumbnail.sh" -t timelapse -d "${DATE}" --force 2>&1 )"
+	if [[ $? -ne 0 ]]; then
+		W_ "WARNING: unable to create startrails thumbnail: ${RES}."
+	fi
 fi
 
 # if the user wants output, give it to them

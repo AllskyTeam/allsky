@@ -1281,7 +1281,7 @@ get_desired_locale()
 	# If they had a locale from the prior Allsky and it's still here, use it; no need to prompt.
 	# Ditto if the prior locale == current locale.
 	if [[ -n ${DESIRED_LOCALE} ]]; then
-		echo "${INSTALLED_LOCALES}" | grep --silent "${DESIRED_LOCALES}"
+		echo "${INSTALLED_LOCALES}" | grep --silent "${DESIRED_LOCALE}"
 		local STILL_HERE=$?
 		if [[ ( ${DESIRED_LOCALE} == "${CURRENT_LOCALE}" ) || ${STILL_HERE} -eq 0 ]]; then
 			STATUS_VARIABLES+=("DESIRED_LOCALE='${DESIRED_LOCALE}'\n")

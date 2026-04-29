@@ -691,6 +691,7 @@ function insertEditorCode($p) {
 			<script src="/js/jquery-loading-overlay/dist/loadingoverlay.min.js?c=' . ALLSKY_VERSION . '"></script>
 			<script src="/js/bootbox/bootbox.all.js?c=' . ALLSKY_VERSION . '"></script>
 			<script src="/js/bootbox/bootbox.locales.min.js?c=' . ALLSKY_VERSION . '"></script>
+			<script src="/js/editor.js?c=' . ALLSKY_VERSION . '"></script>
 		';
 	}
 }

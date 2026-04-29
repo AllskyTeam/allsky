@@ -2459,6 +2459,12 @@ div.sticky {
     margin-bottom: 5px;
 }
 
+.CodeMirror .as-editor-highlight,
+#need-to-update .as-editor-highlight {
+    background-color: #facc15;
+    color: #1f2937 !important;
+}
+
 /** End Editor Page **/
 
 /** Checkbox css **/

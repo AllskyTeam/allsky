@@ -27,7 +27,7 @@ fi
 sudo chown "${USER_NAME}:${WEBSERVER_OWNER}" "${ALLSKY_SUPPORT_DIR}"
 sudo chmod 775 "${ALLSKY_SUPPORT_DIR}"
 
-DISPLAY_MSG_LOG="${ALLSKY_LOGS}/support.log}"	# send log entries here
+DISPLAY_MSG_LOG="${ALLSKY_LOGS}/support.log"	# send log entries here
 
 ############################################## functions
 

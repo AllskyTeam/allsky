@@ -348,7 +348,10 @@ if [[ ${DO_KEOGRAM} == "true" ]]; then
 
 		if [[ ${RET} -eq 0 ]]; then
 			# Create thumbnail of keogram
-			RES="$( "${ALLSKY_UTILITIES}/thumbnail.sh" -t keogram -d "${DATE}" --force )"
+			RES="$( "${ALLSKY_UTILITIES}/thumbnail.sh" -t keogram -d "${DATE}" --force 2>&1 )"
+			if [[ $? -ne 0 ]]; then
+				W_ "WARNING: unable to create keogram thumbnail: ${RES}."
+			fi
 		fi
 
 	else
@@ -456,7 +459,10 @@ if [[ ${DO_STARTRAILS} == "true" ]]; then
 
 		if [[ ${RET} -eq 0 || ${RET} -eq ${EXIT_PARTIAL_OK} ]]; then
 			# Create thumbnail of startrail
-			RES="$( "${ALLSKY_UTILITIES}/thumbnail.sh" -t startrails -d "${DATE}" --force )"
+			RES="$( "${ALLSKY_UTILITIES}/thumbnail.sh" -t startrails -d "${DATE}" --force 2>&1 )"
+			if [[ $? -ne 0 ]]; then
+				W_ "WARNING: unable to create startrails thumbnail: ${RES}."
+			fi
 		fi
 
 	else

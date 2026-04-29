@@ -347,11 +347,11 @@ function generate_support_info()
 	function get_expected_total_size()
 	{
 		# Assume the log files zip to 1/${COMPRESSION_PERCENT} their size.
-		local COMPRESSION_PERCENT=10
+		local COMPRESSION_PERCENT="0.5"
 		# shellcheck disable=SC2012
 		ls -l "${@}" | gawk -v COMPRESSION="${COMPRESSION_PERCENT}" 'BEGIN { TOTAL=0 }
 			{ TOTAL += $5; }
-			END { printf("%d", TOTAL / COMPRESSION / 1024 / 1024); }'
+			END { printf("%d", TOTAL / 1024 / 1024 * COMPRESSION); }'
 	}
 
 	local GIT_HUB_LIMIT_MB=25

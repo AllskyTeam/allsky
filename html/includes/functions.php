@@ -174,7 +174,7 @@ function verifyNumber($num) {
 // Globals
 define('DATE_TIME_FORMAT', 'Y-m-d H:i:s');
 $image_name = null;
-$showUpdatedMessage = true; $delay=null; $daydelay=null; $daydelay_postMsg=""; $nightdelay=null; $nightdelay_postMsg="";
+$showUpdatedMessage = true; $liveViewMode = "fullwidth"; $delay=null; $daydelay=null; $daydelay_postMsg=""; $nightdelay=null; $nightdelay_postMsg="";
 $imagesSortOrder = null;
 $darkframe = null;
 $useLogin = null;
@@ -341,7 +341,7 @@ function output_allsky_status($versionHtml = "", $websiteHtml = "") {
 function initialize_variables($website_only=false) {
 	global $status;
 	global $image_name;
-	global $showUpdatedMessage, $delay, $daydelay, $daydelay_postMsg, $nightdelay, $nightdelay_postMsg;
+	global $showUpdatedMessage, $liveViewMode, $delay, $daydelay, $daydelay_postMsg, $nightdelay, $nightdelay_postMsg;
 	global $imagesSortOrder;
 	global $darkframe, $useLogin, $temptype, $lastChanged, $lastChangedName, $inlineMessages;
 	global $remoteWebsiteURL;
@@ -385,6 +385,10 @@ function initialize_variables($website_only=false) {
 	$daydelay = getVariableOrDefault($settings_array, 'daydelay', 30 * $ms_per_sec);
 	$nightdelay = getVariableOrDefault($settings_array, 'nightdelay', 30 * $ms_per_sec);
 	$showUpdatedMessage = toBool(getVariableOrDefault($settings_array, 'showupdatedmessage', "true"));
+	$liveViewMode = getVariableOrDefault($settings_array, 'liveviewmode', "fullwidth");
+	if (! in_array($liveViewMode, ["fullwidth", "scaled"], true)) {
+		$liveViewMode = "fullwidth";
+	}
 
 	$dayexposure = getVariableOrDefault($settings_array, 'dayexposure', 500);
 	$daymaxautoexposure = getVariableOrDefault($settings_array, 'daymaxautoexposure', 100);
@@ -2019,8 +2023,8 @@ function useLogin() {
 
 function doHelpLink($helpLink)
 {
-	echo "<a class='pull-right' href='$helpLink' external='true' rel='noopener noreferrer' data-toggle='tooltip' data-container='body' data-placement='left' title='Help'>";
-	echo "<i class='fa-solid fa-circle-question'></i> Help</a>";
+	echo "<a class='pull-right' href='$helpLink' external='true' rel='noopener noreferrer' data-toggle='tooltip' data-container='body' data-placement='left' title='Help'>Help</a>";
+	//echo "<i class='fa-solid fa-circle-question'></i> Help</a>";
 }
 
 ?>

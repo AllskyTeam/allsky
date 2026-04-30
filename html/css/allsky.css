@@ -1671,17 +1671,8 @@ div.dt-container div.dt-scroll-body {
         padding-right: 5px;
     }
 
-    /* Totally hide sidebar on really narrow screens to give more room to "content". */
-    .sidebar.collapsed {
-        display: none;
-    }
-
     .sidebar.collapsed~.content {
-        left: 0px;
-    }
-
-    .sidebar-collapse-handle {
-        display: none;
+        left: 72px;
     }
 }
 

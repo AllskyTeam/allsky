@@ -211,6 +211,7 @@ class MODULEUTIL extends UTILBASE {
         $result['lat'] = $lat;
         $result['lon'] = $lon;
         $result['filename'] = ALLSKY_IMG_DIR . '/' . $settings_array['filename'];
+        $result['fieldhelpdelay'] = getVariableOrDefault($settings_array, 'fieldhelpdelay', 500);
 
         exec("sunwait poll exit set angle $angle $lat $lon", $return, $retval);
         if ($retval == 2) {

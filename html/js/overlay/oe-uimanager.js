@@ -56,6 +56,30 @@ class OEUIMANAGER {
     #lastDragEndContext = null
     #lastTransformEndContext = null
 
+    #getFieldHelpDelay() {
+        let delay = this.#configManager.settings?.fieldhelpdelay ?? 500;
+        delay = parseInt(delay, 10);
+        if (Number.isNaN(delay) || delay < 0) {
+            delay = 500;
+        }
+
+        return delay;
+    }
+
+    #setupFieldHelpPopovers() {
+        const delay = this.#getFieldHelpDelay();
+        const trigger = delay === 0 ? 'focus click' : 'hover focus click';
+
+        $('[data-toggle="popover"]')
+            .popover('destroy')
+            .attr('data-trigger', trigger)
+            .attr('data-delay', JSON.stringify({ show: delay, hide: 200 }))
+            .popover({
+                trigger: trigger,
+                delay: { show: delay, hide: 200 }
+            });
+    }
+
     constructor(imageObj) {
 
         this.#configManager = window.oedi.get('config');
@@ -454,7 +478,7 @@ class OEUIMANAGER {
         this.checkFieldstimer()
 
         $('[data-toggle="tooltip"]').tooltip()
-        $('[data-toggle="popover"]').popover()
+        this.#setupFieldHelpPopovers()
         $(document).off('click.oe-popover-toggle', '.as-field-help-toggle')
         $(document).on('click.oe-popover-toggle', '.as-field-help-toggle', (event) => {
             event.preventDefault();

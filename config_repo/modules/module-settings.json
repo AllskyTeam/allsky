@@ -11,6 +11,5 @@
         "nightday": "Night to Day Transition",
         "periodic": "Periodic jobs"
     },
-    "periodictimer": 60,
-    "fieldhelpdelay": 500
+    "periodictimer": 60
 }

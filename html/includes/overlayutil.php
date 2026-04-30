@@ -892,6 +892,9 @@ class OVERLAYUTIL extends UTILBASE {
         $result['data']        = $this->getData(true);
         $result['overlaydata'] = $this->getOverlayData(true);
         $result['appconfig']   = $this->getAppConfig(true);
+        $result['settings']    = [
+            'fieldhelpdelay' => $this->getSetting('fieldhelpdelay', '', 500),
+        ];
 
         $this->sendResponse(json_encode($result, JSON_UNESCAPED_SLASHES));
     }
@@ -936,11 +939,11 @@ class OVERLAYUTIL extends UTILBASE {
      * Read a value from the global settings array prepared by initialize_variables().
      * Optionally swap spaces with a given character for filename-ish values.
      */
-    private function getSetting(string $name, string $swapSpaces = '')
+    private function getSetting(string $name, string $swapSpaces = '', $default = 'overlay.json')
     {
         /** @var array $settings_array */
         global $settings_array;
-        $val = getVariableOrDefault($settings_array, $name, 'overlay.json');
+        $val = getVariableOrDefault($settings_array, $name, $default);
         if ($swapSpaces !== '') $val = str_replace(' ', $swapSpaces, (string)$val);
         return $val;
     }
@@ -1362,6 +1365,7 @@ class OVERLAYUTIL extends UTILBASE {
     public function postPythonDate(): void
     {
         $fmt = (string)($_POST['format'] ?? '');
+        $fmt = str_replace(["&nbsp;", "\xc2\xa0"], ' ', $fmt);
         if ($fmt === '') $this->sendHTTPResponse('Missing format.', 400);
 
         if (!preg_match('/^[%A-Za-z0-9_\-\s:.,\/]+$/', $fmt)) {

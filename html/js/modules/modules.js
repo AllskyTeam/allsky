@@ -752,12 +752,8 @@ class MODULESEDITOR {
 
 	#getFieldHelpDelay() {
 		let delay = 500;
-		if (this.#settings?.settings?.fieldhelpdelay !== undefined) {
-			delay = this.#settings.settings.fieldhelpdelay;
-		} else if (this.#moduleSettings?.fieldhelpdelay !== undefined) {
-			delay = this.#moduleSettings.fieldhelpdelay;
-		} else if ($.moduleeditor?.settings?.fieldhelpdelay !== undefined) {
-			delay = $.moduleeditor.settings.fieldhelpdelay;
+		if (this.#settings?.fieldhelpdelay !== undefined) {
+			delay = this.#settings.fieldhelpdelay;
 		}
 
 		delay = parseInt(delay, 10);
@@ -781,6 +777,21 @@ class MODULESEDITOR {
 				delay: { show: delay, hide: 200 }
 			});
 	}
+
+	#initEditorSettingsFieldHelpPopovers() {
+		const delay = this.#getFieldHelpDelay();
+		const trigger = delay === 0 ? 'focus click' : 'hover focus click';
+
+		$('#module-editor-settings-dialog .as-field-help-toggle')
+			.popover('destroy')
+			.attr('data-trigger', trigger)
+			.attr('data-delay', JSON.stringify({ show: delay, hide: 200 }))
+			.popover({
+				trigger: trigger,
+				delay: { show: delay, hide: 200 }
+			});
+	}
+
 
 	#createSettingsDialog(target) {
 		var events = []
@@ -3978,16 +3989,13 @@ class MODULESEDITOR {
 				if (result.expiryage == undefined) {
 					result.expiryage = 600;
 				}
-				if (result.fieldhelpdelay == undefined) {
-					result.fieldhelpdelay = 500;
-				}
 				this.#moduleSettings = result
 				$('#autoenable').prop('checked', result.autoenable);
 				$('#debugmode').prop('checked', result.debugmode);
 				$('#periodic-timer').val(result.periodictimer);
 				$('#expiry-age').val(result.expiryage);
-				$('#field-help-delay').val(result.fieldhelpdelay);
 
+				this.#initEditorSettingsFieldHelpPopovers();
 				$('#module-editor-settings-dialog').modal('show');
 			}).always(() => {
 				clearTimeout(loadingTimer);
@@ -4195,7 +4203,7 @@ class MODULESEDITOR {
 
 			this.#moduleSettings.periodictimer = $('#periodic-timer').val() | 0;
 			this.#moduleSettings.expiryage = $('#expiry-age').val() | 0;
-			this.#moduleSettings.fieldhelpdelay = $('#field-help-delay').val() | 0;
+			delete this.#moduleSettings.fieldhelpdelay;
 
 			this.#settings.settings = this.#moduleSettings;
 			$.moduleeditor.settings = this.#settings.settings;

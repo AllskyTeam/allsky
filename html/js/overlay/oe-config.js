@@ -5,6 +5,7 @@ class OECONFIG {
     #appConfig = {};
     #dataFields = {};
     #overlayDataFields = {};
+    #settings = {};
     #selectedOverlay = {
         type: null,
         name: null
@@ -48,6 +49,10 @@ class OECONFIG {
         return this.#appConfig;
     }
 
+    get settings() {
+        return this.#settings;
+    }
+
     loadOverlays() {
         $.ajax({
             url: 'includes/overlayutil.php?request=Overlays',
@@ -76,6 +81,7 @@ class OECONFIG {
                     this.#dataFields = result.data;
                     this.#overlayDataFields = result.overlaydata;
                     this.#appConfig = result.appconfig;
+                    this.#settings = result.settings || {};
                 }                
             });
         } catch (error) {

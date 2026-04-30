@@ -2174,6 +2174,16 @@
 "carryforward" : true
 },
 {
+"name" : "fieldhelpdelay",
+"minimum" : 0,
+"maximum" : 60000,
+"default" : 500,
+"description" : "Milliseconds to wait before showing field help. Set to 0 to require a click.",
+"label" : "Field Help Delay",
+"type" : "integer",
+"carryforward" : true
+},
+{
 "name" : "webuidatafiles",
 "default" : "",
 "description" : "See the documentation for a <a external='true' href='/docs/allsky_guide/settings/allsky.html#WebUI-settings'>description of this setting</a>.",

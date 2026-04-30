@@ -88,9 +88,9 @@ function DisplayModule()
     </div>
     <div class="panel-body">
         <nav class="navbar navbar-default">
-            <div class="container-fluid-na">
+            <div class="container-fluid">
                 <div class="navbar-header">
-                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#oe-module-editor-navbar">
+                    <button type="button" class="navbar-toggle collapsed pull-left" style="margin-left: 15px;" data-toggle="collapse" data-target="#oe-module-editor-navbar">
                         <span class="sr-only">Toggle navigation</span>
                         <span class="icon-bar"></span>
                         <span class="icon-bar"></span>
@@ -98,51 +98,55 @@ function DisplayModule()
                     </button>
                 </div>                        
                 <div class="collapse navbar-collapse" id="oe-module-editor-navbar">
-                    <ul class="nav navbar-nav">
-                        <li>
-                            <div class="tooltip-wrapper disabled" data-toggle="tooltip" data-container="body" data-placement="top" title="Save The Module Configuration">
-                                <div class="btn btn-lg navbar-btn" id="module-editor-save"><i class="fa-solid fa-floppy-disk"></i></div>
+                    <div class="tooltip-wrapper disabled navbar-left hidden-xs" data-toggle="tooltip" data-container="body" data-placement="top" title="Save The Module Configuration">
+                        <div class="btn btn-lg navbar-btn" id="module-editor-save"><i class="fa-solid fa-floppy-disk"></i></div>
+                    </div>
+                    <form id="oe-item-list-edit-dialog-form" class="navbar-form navbar-left hidden-xs">
+                        <div class="form-group">
+                            <div class="tooltip-wrapper disabled" data-toggle="tooltip" data-container="body" data-placement="top" title="Select the Flow to manage">
+                                <select class="form-control input-lg" id="module-editor-config" name="module-editor-config" style="width: 200px;">
+                                    <option value="day">Daytime Configuration</option>
+                                    <option value="night">Nighttime Configuration</option>
+                                    <!-- <option value="endofnight">End Of Day Configuration</option> -->
+                                </select>
                             </div>
-                        </li>
-                        <li class="btn">
-                            <form id="oe-item-list-edit-dialog-form" class="form-horizontal">
-                                <div class="form-group">
-                                    <div class="tooltip-wrapper disabled" data-toggle="tooltip" data-container="body" data-placement="top" title="Select the Flow to manage">
-                                        <select class="form-control navbar-form" id="module-editor-config" name="module-editor-config" width="200px">
-                                            <option value="day">Daytime Configuration</option>
-                                            <option value="night">Nighttime Configuration</option>
-                                            <!-- <option value="endofnight">End Of Day Configuration</option> -->
-                                        </select>
-                                    </div>
-                                </div>
-                            </form>
-                        </li>
-                        <li class="ml-4">
-                            <div class="btn btn-lg navbar-btn" id="module-editor-periodic" data-toggle="tooltip" data-container="body" data-placement="top" title="Periodic Flow"><i class="fa-solid fa-clock"></i></div>
-                        </li>
-                        <li class="btn ml-4">
-                            <form id="oe-item-filter-dialog-form" class="form-horizontal">
-                                <div class="form-group">                            
-                                    <select class="form-control navbar-form" name="module-filters" id="module-filters">
-                                    </select>
-                                </div>
-                            </form>
-                        </li>
-                    </ul>
-                    <ul class="nav navbar-nav navbar-right">
-                        <li>
-                            <div class="btn btn-lg navbar-btn" id="module-installer-manager" data-toggle="tooltip" data-container="body" data-placement="top" title="Module package Manager"><i class="fa-solid fa-box-open"></i></div>
-                        </li>
-                        <li>
-                            <div class="btn btn-lg navbar-btn" id="device-manager" data-toggle="tooltip" data-container="body" data-placement="top" title="Device Manager"><i class="fa-solid fa-wrench"></i></div>
-                        </li>
-                        <li>
-                            <div class="btn btn-lg navbar-btn" id="module-options" data-toggle="tooltip" data-container="body" data-placement="top" title="Module Options"><i class="fa-solid fa-gear"></i></div>
-                        </li>
-                        <li id="oe-toolbar-debug" class="hidden">
+                        </div>
+                    </form>
+                    <div class="btn btn-lg navbar-btn navbar-left hidden-xs" id="module-editor-periodic" data-toggle="tooltip" data-container="body" data-placement="top" title="Periodic Flow"><i class="fa-solid fa-clock"></i></div>
+                    <form id="oe-item-filter-dialog-form" class="navbar-form navbar-left hidden-xs hidden-sm hidden-md">
+                        <div class="form-group">
+                            <select class="form-control input-lg" name="module-filters" id="module-filters">
+                            </select>
+                        </div>
+                    </form>
+                    <div class="navbar-right hidden-xs">
+                        <div class="btn btn-lg navbar-btn" id="module-installer-manager" data-toggle="tooltip" data-container="body" data-placement="top" title="Module package Manager"><i class="fa-solid fa-box-open"></i></div>
+                        <div class="btn btn-lg navbar-btn hidden-xs hidden-sm hidden-md" id="device-manager" data-toggle="tooltip" data-container="body" data-placement="top" title="Device Manager"><i class="fa-solid fa-wrench"></i></div>
+                        <div class="btn btn-lg navbar-btn hidden-xs hidden-sm hidden-md" id="module-options" data-toggle="tooltip" data-container="body" data-placement="top" title="Module Options"><i class="fa-solid fa-gear"></i></div>
+                        <span id="oe-toolbar-debug" class="hidden hidden-xs hidden-sm hidden-md">
                             <div id="module-toobar-debug-button" class="btn btn-lg navbar-btn" data-toggle="tooltip" data-container="body" data-placement="top" title="Debug Info"><i class="fa-solid fa-bug"></i></div>
-                        </li>
-                    </ul>                            
+                        </span>
+                    </div>
+                    <form id="oe-item-list-edit-dialog-form-mobile" class="navbar-form visible-xs-block">
+                        <div class="form-group">
+                            <label for="module-editor-config-mobile">Pipeline</label>
+                            <select class="form-control input-lg" id="module-editor-config-mobile" name="module-editor-config-mobile">
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="module-filters-mobile">Filter</label>
+                            <select class="form-control input-lg" id="module-filters-mobile" name="module-filters-mobile">
+                            </select>
+                        </div>
+                    </form>
+                    <ul class="nav navbar-nav visible-xs-block">
+                        <li><a href="#" class="module-editor-mobile-action" data-target="#module-editor-save"><i class="fa-solid fa-floppy-disk"></i> Save Configuration</a></li>
+                        <li><a href="#" class="module-editor-mobile-action" data-target="#module-editor-periodic"><i class="fa-solid fa-clock"></i> Periodic Flow</a></li>
+                        <li><a href="#" class="module-editor-mobile-action" data-target="#module-installer-manager"><i class="fa-solid fa-box-open"></i> Module Package Manager</a></li>
+                        <li><a href="#" class="module-editor-mobile-action" data-target="#device-manager"><i class="fa-solid fa-wrench"></i> Device Manager</a></li>
+                        <li><a href="#" class="module-editor-mobile-action" data-target="#module-options"><i class="fa-solid fa-gear"></i> Module Options</a></li>
+                        <li id="oe-toolbar-debug-mobile" class="hidden"><a href="#" class="module-editor-mobile-action" data-target="#module-toobar-debug-button"><i class="fa-solid fa-bug"></i> Debug Info</a></li>
+                    </ul>
                 </div>
             </div>
         </nav>
@@ -312,7 +316,7 @@ function DisplayModule()
             <div class="modal-body">
                 <nav class="navbar navbar-default" style="margin-bottom: 15px;">
                     <div class="container-fluid">
-                        <div class="nav navbar-nav" style="margin-left: 0;">
+                        <div class="navbar-left">
                             <button type="button" class="btn btn-primary navbar-btn" id="module-installer-verify-all" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Verify Installed Modules">
                                 <i class="fa-solid fa-shield-check fa-fw"></i>
                             </button>

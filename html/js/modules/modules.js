@@ -71,13 +71,16 @@ class MODULESEDITOR {
 			};
 			if (this.#first) {
 				$('#module-editor-config').empty();
+				$('#module-editor-config-mobile').empty();
 				for (let event in this.#settings.settings.events) {
 					$('#module-editor-config').append(new Option(this.#settings.settings.events[event], event));
+					$('#module-editor-config-mobile').append(new Option(this.#settings.settings.events[event], event));
 				}
 
 				if (this.#settings.tod !== undefined) {
 					this.#eventName = this.#settings.tod;
 					$('#module-editor-config option[value="' + this.#eventName + '"]').attr("selected", "selected");
+					$('#module-editor-config-mobile option[value="' + this.#eventName + '"]').attr("selected", "selected");
 					$('#module-editor-config').data("current", this.#eventName);
 				}
 				this.#first = false;
@@ -117,18 +120,23 @@ class MODULESEDITOR {
 				groups.sort();
 
 				const filterSelect = $('#module-filters');
+				const mobileFilterSelect = $('#module-filters-mobile');
 				filterSelect.empty();
+				mobileFilterSelect.empty();
 
 				groups.forEach(function (group) {
-					filterSelect.append($('<option>', {
+					const option = {
 						value: group,
 						text: group
-					}));
+					};
+					filterSelect.append($('<option>', option));
+					mobileFilterSelect.append($('<option>', option));
 				});
 
-				$('#module-filters').off('change');
-				$('#module-filters').on('change', function () {
+				$('#module-filters, #module-filters-mobile').off('change');
+				$('#module-filters, #module-filters-mobile').on('change', function () {
 					const selectedValue = $(this).val();
+					$('#module-filters, #module-filters-mobile').val(selectedValue);
 					if (selectedValue === 'All Modules') {
 						$('#modules-available .allskymodule').show();
 					} else {
@@ -492,8 +500,10 @@ class MODULESEDITOR {
 
 		if (this.#settings.settings.debugmode) {
 			$('#oe-toolbar-debug').removeClass('hidden');
+			$('#oe-toolbar-debug-mobile').removeClass('hidden');
 		} else {
 			$('#oe-toolbar-debug').addClass('hidden');
+			$('#oe-toolbar-debug-mobile').addClass('hidden');
 		}
 	}
 
@@ -4240,6 +4250,16 @@ class MODULESEDITOR {
 			$('#module-editor-config').val('periodic').trigger('change');
 		});
 
+		$(document).on('change', '#module-editor-config-mobile', (e) => {
+			$('#module-editor-config').val($(e.target).val()).trigger('change');
+		});
+
+		$(document).on('click', '.module-editor-mobile-action', (e) => {
+			e.preventDefault();
+			$($(e.currentTarget).data('target')).trigger('click');
+			$('#oe-module-editor-navbar').collapse('hide');
+		});
+
 		$(document).on('change', '#module-editor-config', (e) => {
 			let val = $("#module-editor-config option").filter(":selected").val();
 			let oldVal = $("#module-editor-config").data("current");
@@ -4251,9 +4271,11 @@ class MODULESEDITOR {
 			}
 			if (doIt) {
 				$('#module-editor-config').data("current", val);
+				$('#module-editor-config-mobile').val(val);
 				this.#buildUI();
 			} else {
 				$(e.target).val(oldVal);
+				$('#module-editor-config-mobile').val(oldVal);
 				return false;
 			}
 		});

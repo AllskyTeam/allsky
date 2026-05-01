@@ -267,9 +267,7 @@
                             <button type="button" class="btn btn-primary pull-right ' + plugin.mmTrigger + '">Close</button>\
                         </div>\
                     </div>\
-                </div>\
-                <button class="oe-mm-trigger fa fa-xmark ' + plugin.mmTrigger + '">\
-                </button>';
+                </div>';
             
             plugin.mmNewDialog = pluginPrefix + "-new-dialog";
             plugin.mmNewDialogSave = pluginPrefix + "-new-dialog-save";

@@ -262,8 +262,7 @@
     /* Settings Page */
     --main-body-padding: 12px;
     --Layout-sidebar-width: 250px;
-    --WebUI-setting-color: #00009b;
-    --WebUI-setting-color-dark: #68a0ff;
+    --WebUI-setting-color: #3b82f6;
     --WebUI-subSetting-background-color: #bbb;
     --WebUI-value-color: #555;
     --WebUI-value-background-color: #e4e4e4;
@@ -561,8 +560,7 @@ body.dark {
     /* Settings Page */
     --main-body-padding: 12px;
     --Layout-sidebar-width: 250px;
-    --WebUI-setting-color: #5454e9;
-    --WebUI-setting-color-dark: #68a0ff;
+    --WebUI-setting-color: #3b82f6;
     --WebUI-value-color: #555;
     --WebUI-value-background-color: #e4e4e4;
     --WebUI-link-color: #4b4a4b;

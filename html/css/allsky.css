@@ -294,6 +294,9 @@
     --switch-colour: rgba(0, 0, 0, 0.6);
     --switch-bg-checked: #3a9e55;
     --switch-colour-checked: #fff;
+
+    /* Module manager */
+    --mm-experimental-color: #f62a2a;
 }
 
 body.dark {
@@ -594,6 +597,8 @@ body.dark {
     --color-danger-muted: rgba(255,129,130,0.4);
     --color-danger-subtle: #FFEBE9;
 
+    /* Module manager */
+    --mm-experimental-color: #f62a2a;    
 }
 
 /* Core */
@@ -3870,7 +3875,7 @@ body.dark .as-system-entries-browser-list .list-group-item .badge {
 }
 
 .module-experimental {
-  color: #aa0000;
+  color: var(--mm-experimental-color);
 }
 
 .module-experimental-warning {

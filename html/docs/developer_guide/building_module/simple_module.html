@@ -6019,40 +6019,6 @@
                 
                   
 
-  <nav class="md-tags">
-    
-      
-      
-      
-        
-        
-      
-      
-        <a href="../../tags.html#tag:building-modules" class="md-tag md-tag-icon">Building Modules</a>
-      
-    
-      
-      
-      
-        
-        
-      
-      
-        <a href="../../tags.html#tag:developer-guide" class="md-tag md-tag-icon">Developer Guide</a>
-      
-    
-      
-      
-      
-        
-        
-      
-      
-        <a href="../../tags.html#tag:tutorial" class="md-tag md-tag-icon">Tutorial</a>
-      
-    
-  </nav>
-
 
   
   
@@ -6060,10 +6026,10 @@
 
   <h1>Simple Module</h1>
 
-<p>Lets build a simple module. The module will</p>
+<p>Lets build a simple module. The module will:</p>
 <ul>
-<li>Read data from a json file somewhere in the filesystem</li>
-<li>Extract a value from the json file and create an allsky variable</li>
+<li>Read data from a json file somewhere in the filesystem.</li>
+<li>Extract a value from the json file and create an allsky variable.</li>
 </ul>
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
@@ -6140,8 +6106,8 @@
 </code></pre></div>
 <p>This will allow the module to be displayed in the module manager for the relevant pipelines but it wont actually do anything just yet.</p>
 <h3 id="add-arguments">Add Arguments<a class="headerlink" href="#add-arguments" title="Permanent link">¶</a></h3>
-<p>Next we need to add some fields that specify where the file is that contains the json data. This is accomplished by adding values to the <code>arguments</code> and <code>argumentsdetails</code> sections of the <code>meta_data</code></p>
-<p>Change the <code>arguments</code> and <code>argumentdetails</code> section of the <code>meta_data</code> variable to the following</p>
+<p>Next we need to add some fields that specify where the file is that contains the json data. This is accomplished by adding values to the <code>arguments</code> and <code>argumentsdetails</code> sections of the <code>meta_data</code>.</p>
+<p>Change the <code>arguments</code> and <code>argumentdetails</code> section of the <code>meta_data</code> variable to the following:</p>
 <div class="highlight"><pre><span></span><code>    <span class="s2">"arguments"</span><span class="p">:{</span>
       <span class="s2">"filename"</span><span class="p">:</span> <span class="s2">""</span>
     <span class="p">},</span>
@@ -6172,15 +6138,15 @@
 
     <span class="k">return</span> <span class="n">result</span>
 </code></pre></div>
-<p>A couple of important points here</p>
+<p>Some important points here:</p>
 <ul>
 <li><code>self.get_param</code> has been used to get the value entered in the module manager. This method must be used to access all values from the module manager. Refer to the <a class="external" href="../../allsky_base.html" rel="noopener" target="_blank">Base Class</a> documentation for details of this method.</li>
 <li>The <code>load_json_file</code> helper function from the <code>allsky_shared</code> module is used to read the json file. This makes reading json files a lot easier. Refer to the <a class="external" href="../../allsky_shared.html" rel="noopener" target="_blank">Shared Module</a> documentation for details of this method.</li>
 <li>Note how the result variable is set in any error condition to ensure we have more than an empty string returned.</li>
 </ul>
 <h3 id="create-the-allsky-variable">Create The Allsky Variable<a class="headerlink" href="#create-the-allsky-variable" title="Permanent link">¶</a></h3>
-<p>Next we need to use the data from the json file to create the allsky variable, which will be available in the overlay manager</p>
-<p>Change the <code>run</code> module method to the following</p>
+<p>Next we need to use the data from the json file to create the allsky variable, which will be available in the overlay manager.</p>
+<p>Change the <code>run</code> module method to the following:</p>
 <div class="highlight"><pre><span></span><code>  <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
     <span class="n">result</span> <span class="o">=</span> <span class="s2">""</span>
 
@@ -6205,11 +6171,11 @@
 
     <span class="k">return</span> <span class="n">result</span>
 </code></pre></div>
-<p>This creates the extra_data dict and then calls the <code>allsky_shared.save_extra_data</code> method to actually save the data. This will create a file in <code>~/allsky/tmp/extra</code> called <code>allsky_example.json</code> containing the variable and value, this can then be used in the overlay editor</p>
+<p>This creates the extra_data dict and then calls the <code>allsky_shared.save_extra_data</code> method to actually save the data. This will create a file in <code>~/allsky/tmp/extra</code> called <code>allsky_example.json</code> containing the variable and value, this can then be used in the overlay editor.</p>
 <h3 id="define-the-allsky-variable">Define the Allsky Variable<a class="headerlink" href="#define-the-allsky-variable" title="Permanent link">¶</a></h3>
 <p>In the example above Allsky knows nothing about what the variable you have created is, this will cause limitations in the overlay editor.</p>
-<p>To get the best out of the overlay editor it needs to understand what the variable you have created actually is. The <code>meta_data</code> structure can be used to define the variable in more detail</p>
-<p>Change the <code>meta_data</code> structure to the following</p>
+<p>To get the best out of the overlay editor it needs to understand what the variable you have created actually is. The <code>meta_data</code> structure can be used to define the variable in more detail.</p>
+<p>Change the <code>meta_data</code> structure to the following:</p>
 <div class="highlight"><pre><span></span><code>  <span class="n">meta_data</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"Allsky Example Module"</span><span class="p">,</span>
     <span class="s2">"description"</span><span class="p">:</span> <span class="s2">"A simple example module for Allsky."</span><span class="p">,</span>
@@ -6353,16 +6319,13 @@
 
     <span class="k">return</span> <span class="n">result</span>
 </code></pre></div>
-<p>Now when you test the module two variables are created. Note that the second variable differs from the first in that its formatted to 2 decimal places</p>
+<p>Now when you test the module two variables are created. Note that the second variable differs from the first in that its formatted to 2 decimal places.</p>
 
 
 
 
 
 
-
-  
-  
 
 
 

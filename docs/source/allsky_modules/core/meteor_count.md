@@ -1,9 +1,3 @@
----
-tags:
-  - Core Module
-  - Pipeline Night 
----
-
 ## Description { data-toc-label="Description" }
 
 This module counts meteors in an image. It utilises a couple of algorithms to acheive this.

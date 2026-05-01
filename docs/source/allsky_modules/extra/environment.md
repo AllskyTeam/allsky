@@ -1,14 +1,3 @@
----
-tags:
-  - Extra Module
-  - Overlay Data
-  - Pipeline Day
-  - Pipeline Night
-  - Pipeline Periodic
-  - Hardware Required
-  - API Required
----
-
 This module reads a variety of external sensors to provide temperature, humidity and dewpoint information for the overlays and other modules.
 
 The module can read upto 4 sensors

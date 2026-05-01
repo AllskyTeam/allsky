@@ -1,9 +1,3 @@
----
-tags:
-  - Developer Guide
-  - Glossary
----
-
 # Glossary
 
 | Item      | Description                          |

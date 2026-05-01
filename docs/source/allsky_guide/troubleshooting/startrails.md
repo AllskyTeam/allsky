@@ -1,10 +1,3 @@
----
-tags:
-  - Allsky Guide
-  - Troubleshooting
-  - Startrails
----
-
 A startrails is an image that contains all the images from a night on top of each other in order to show star movement.
 
 !!! info  "Info"
@@ -22,11 +15,11 @@ An Example Startrail Image
 
 To have a startrails image automatically created at the end of each night, enable the Generate setting in the Startrails sub-section of the WebUI.
 
-To manually create a startrails image run the generateForDay.sh command. For example, to create and then upload a startrails to any Allsky Website and/or remote server you have for July 10, 2025:
+To manually create a startrails image run the generateForDay.sh command. For example, to create and then upload a startrails to any Allsky Website and/or remote server you have for July 10, 2026:
 
 ```
-generateForDay.sh --startrails 20250710
-generateForDay.sh --upload --startrails 20250710
+generateForDay.sh --startrails 20260710
+generateForDay.sh --upload --startrails 20260710
 ```
 
 This will use the settings specified in the Startrails sub-section of the WebUI.
@@ -43,9 +36,9 @@ See the Advanced section below for the possible parameters you can specify.
 
 !!! info  "Advanced users: running the startrails program manually"
 
-    ```generateForDay.sh``` calls the ```startrails``` program to actually create the startrails, passing it several required arguments (the underlined ones below), plus any others you add to the Startrails Extra Parameters setting.
+    `generateForDay.sh` calls the `startrails` program to actually create the startrails, passing it several required arguments (the underlined ones below), plus any others you add to the Startrails Extra Parameters setting.
 
-    Executing the ```startrails``` manually is possible, but not very useful.
+    Executing the `startrails` manually is possible, but not very useful.
 
     ```
     Usage: startrails [-v] -i <images-file> | -d <imagedir> -e <ext> \
@@ -75,7 +68,7 @@ See the Advanced section below for the possible parameters you can specify.
 
     ```
     cd ~/allsky/bin
-    ./startrails -d images/20250710 -e jpg -b 0.15 -o images/20250710/startrails/startrails.jpg
+    ./startrails -d images/20260710 -e jpg -b 0.15 -o images/20260710/startrails/startrails.jpg
     ```
 
 ## Startrails settings { data-toc-label="Startrails settings" }
@@ -86,14 +79,14 @@ Any image with an average brightness greater than the Brightness Threshold is sk
 
 If you aren't seeing trailed stars in your images and you get a message like "No images below threshold 0.100, writing the minimum image only", your images are too bright and Brightness Threshold needs to be reduced. To determine what number to use you need to know the typical nighttime sky brightness value. Do the following:
 
-- Run ```allsky-config``` ```get_startrails_info``` to see what your brightness values are.
+- Run `allsky-config  get_startrails_info` to see what your brightness values are.
 
 - If there is no data yet a message will appear with a possible reason, otherwise the output will look like:
   ```
   Startrails date        Minimum   Maximum   Mean      Median    Images used   Not used  Threshold
   ------------------------------------------------------------------------------------------------
-  2025-01-17  06:20:45   0.084     0.146     0.103     0.105     250           3         0.15
-  2025-01-18  06:16:18   0.045     0.135     0.102     0.106     247           6         0.15
+  2026-01-17  06:20:45   0.084     0.146     0.103     0.105     250           3         0.15
+  2026-01-18  06:16:18   0.045     0.135     0.102     0.106     247           6         0.15
   ------------------------------------------------------------------------------------------------
   Averages               0.065     0.140     0.103     0.106     497           9         -
 
@@ -110,19 +103,19 @@ If you aren't seeing trailed stars in your images and you get a message like "No
 Set the Brightness Threshold to the Maximum, or slightly below it. If you have an Averages line, use its Maximum.
 
 - To make startrails generation MUCH faster, do it using a small number of images.
-- Create a temporary directory to hold some nighttime images: ```mkdir ~/allsky/images/test```.
-- ```cd ~/allsky/images/DATE```, replacing DATE with the date of a non-working startrails.
+- Create a temporary directory to hold some nighttime images: `mkdir ~/allsky/images/test`.
+- `cd ~/allsky/images/DATE`, replacing DATE with the date of a non-working startrails.
 - Using the timestamp of each image, move a few hours of nighttime images to the ~/allsky/images/test directory:
-    - If you are running SAMBA (```allsky-config samba```) you can view the files from your PC or Mac and then select some files with the mouse and drag to the test directory.
+    - If you are running SAMBA (`allsky-config samba`) you can view the files from your PC or Mac and then select some files with the mouse and drag to the test directory.
     - If you are not running SAMBA and you are logged into the Pi desktop, open a "File Manager" window on the Pi and drag/drop the files.
     - If neither of the above work for you, you'll need to use the mv command to move the files. Using the * wildcard in the file names will allow you to move multiple files at a time.
-      For example: ```mv 2025071001* ../test``` to move all the images taken from 1:00 AM to 1:59 AM.
+      For example: `mv 2026071001* ../test` to move all the images taken from 1:00 AM to 1:59 AM.
 - Run generateForDay.sh --startrails test to create a startrails file in the test directory. Look at the image using the Images page in the WebUI. Also look at the Images used and Not used columns of the output.
 - As needed, adjust Brightness Threshold and re-run generateForDay.sh.
 - When done, move all the images from the allsky/images/test directory back to allsky/images/DATE.
-- Remove the temporary directory: ```rmdir ~/allsky/images/test```.
+- Remove the temporary directory: `rmdir ~/allsky/images/test`.
 - Now, create the final startrails:
-    - ```generateForDay.sh --startrails DATE```
+    - `generateForDay.sh --startrails DATE`
     - If you want to upload the file you just created, see the note generated by generateForDay.sh
 
 ## Troubleshooting { data-toc-label="Troubleshooting" }
@@ -138,11 +131,11 @@ Set the Brightness Threshold to the Maximum, or slightly below it. If you have a
     This can happen if the daytime and nighttime Binning settings are not the same, or any day you change the Image Resize and/or Image Crop settings.
 
 - If a startrails image isn't being created, make sure the Startrails Generate setting is enabled. If it IS enabled, run:
-  ```generateForDay.sh  --startrails  DATE```
+  `generateForDay.sh  --startrails  DATE`
   
-    replacing DATE with a valid date like 20250710 and check for errors.
+    replacing DATE with a valid date like 20260710 and check for errors.
 
 - If a startrails image is created but not uploaded, make sure the Startrails Upload setting is enabled. If that IS enabled, run:
-  ```generateForDay.sh  --upload  --debug  --startrails  DATE```
+  `generateForDay.sh  --upload  --debug  --startrails  DATE`
   
     and check for errors. If needed, run testUpload.sh to see why the upload fails.

@@ -1,10 +1,3 @@
----
-tags:
-  - Developer Guide
-  - Reference
-  - Module Structure
----
-
 # Module Structure
 
 ## Anatomy of a module { data-toc-label="Anatomy of a module" }
@@ -54,13 +47,13 @@ Breaking this down we have
 ### Two imports that { data-toc-label="Two imports that" }
 
 -	Import the allsky_shared module, this is a library of functions that a module can use.
--	Import of the base module. The is a base class providing helper functions for a module
+-	Import of the base module. The is a base class providing helper functions for a module.
 
 ### A class definition (ALLSKYTUTORIAL) { data-toc-label="A class definition" }
 
-that extends the base module (ALLSKYBASE) we imported. Note that the class can be called anything but as a convention its ALLSKY plus the module name all in upper case
+that extends the base module (ALLSKYBASE) we imported. Note that the class can be called anything but as a convention its ALLSKY plus the module name all in UPPER CASE.
 
-A meta_data variable. This is described later and contains all of the definitions required for the module
+A meta_data variable. This is described later and contains all of the definitions required for the module.
 
 A run function, this is the convention we use to run a module. This function must return the result of the module as a string, this is displayed in the module debug dialog.
 
@@ -68,15 +61,14 @@ A run function, this is the convention we use to run a module. This function mus
 
 Every module requires this function. This is the function called by core Allsky to start the module.
 
-There are two parameters provided to this function
+There are two parameters provided to this function:
 
-**params** – These are the values the user has set for the module in the module manager
+1. **params** – These are the values the user has set for the module in the module manager.
+2. **event** – This is the pipeline(flow) the module was called from.
 
-**event** – This is the pipeline(flow) the module was called from
+In this function we would create a new instance of the module class passing the params and event variables then call the run method.
 
-In this function we would create a new instance of the module class passing the params and event variables then call the run method
-
-Your class does not need a constructor, that’s handled by the base class. If for some reason you do need a constructor then you must ensure that base class constructor is also called
+Your class does not need a constructor, that’s handled by the base class. If for some reason you do need a constructor then you must ensure that base class constructor is also called.
 
 ### The module cleanup entry point (tutorial_cleanup) { data-toc-label="The module cleanup entry" }
 

@@ -1,10 +1,3 @@
----
-tags:
-  - Developer Guide
-  - Meta Data
-  - Reference
----
-
 # The meta_data Structure
 
 The meta_data variable contains a complete definition of all of the features this module will provide. The structure is complex so we have broken it down into the main components. 

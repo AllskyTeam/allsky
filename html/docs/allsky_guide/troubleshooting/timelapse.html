@@ -5999,40 +5999,6 @@
                 
                   
 
-  <nav class="md-tags">
-    
-      
-      
-      
-        
-        
-      
-      
-        <a href="../../tags.html#tag:allsky-guide" class="md-tag md-tag-icon">Allsky Guide</a>
-      
-    
-      
-      
-      
-        
-        
-      
-      
-        <a href="../../tags.html#tag:timelapse" class="md-tag md-tag-icon">Timelapse</a>
-      
-    
-      
-      
-      
-        
-        
-      
-      
-        <a href="../../tags.html#tag:troubleshooting" class="md-tag md-tag-icon">Troubleshooting</a>
-      
-    
-  </nav>
-
 
   
   
@@ -6060,8 +6026,8 @@
 <p>If you saw the <code>Killed ffmpeg ...</code> error increase swap space (or buy a Pi with more memory). The Linux kernel will kill any process that is taking "too much" memory to avoid system issues. Click here for details on how to increase swap.</p>
 </li>
 <li>
-<p>Install htop via ``sudo apt install htop<code>. It's great for checking</code>ffmpeg<code>'s memory use. Run htop in one terminal while running</code>generateForDay.sh --timelapse DATE<code>in another terminal to check on</code>ffmpeg<code>'s memory use.
-If the number in the "VIRT" (virtual memory) column of</code>htop``` hits a maximum of around 2900M and the timelapse fails, adding swap space will unlikely fix the issue so you'll need to try one of the other workarounds.</p>
+<p>Install htop via <code>`sudo apt install htop</code>. It's great for checking <code>ffmpeg</code>'s memory use. Run htop in one terminal while running <code>generateForDay.sh --timelapse DATE</code> in another terminal to check on <code>ffmpeg</code>'s memory use.
+If the number in the "VIRT" (virtual memory) column of <code>htop</code> hits a maximum of around 2900M and the timelapse fails, adding swap space will unlikely fix the issue so you'll need to try one of the other workarounds.</p>
 </li>
 <li>
 <p>The <code>malloc of size ...</code> error is often caused by using a high resolution camera. The default video codec (VCODEC) setting is <code>libx264</code> which has a stated maximum resolution of 4096 x 2304. However, the RPi HQ, ZWO ASI183, and other cameras have resolutions higher than that. If you saw the malloc error do one of the following:</p>
@@ -6107,16 +6073,13 @@ Decreasing resolution also decreases timelapse creation failures, speeds up proc
 <p>It will take a while to run. When it's done you can re-create the timelapse by executing:</p>
 <p><code>generateForDay.sh --timelapse DATE</code></p>
 <h2 id="deprecated-pixel-format">Deprecated pixel format<a class="headerlink" href="#deprecated-pixel-format" title="Permanent link">¶</a></h2>
-<p>If you see an error message like "deprecated pixel format used, make sure you did set range correctly" you can safely ignore it</p>
+<p>If you see an error message like "deprecated pixel format used, make sure you did set range correctly" you can safely ignore it.</p>
 
 
 
 
 
 
-
-  
-  
 
 
 

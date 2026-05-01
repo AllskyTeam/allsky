@@ -1,10 +1,3 @@
----
-tags:
-  - Allsky Guide
-  - WebUI
-  - Support
----
-
 # Support
 
 The **Support** page exists for a very specific purpose: helping you collect the right diagnostic information when something in Allsky is genuinely not working as it should.

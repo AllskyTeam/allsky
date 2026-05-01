@@ -1,10 +1,3 @@
----
-tags:
-  - Module Reference
-  - Module Interface
-  - OneWire
----
-
 # 1-Wire Interface (One-Wire Bus)
 
 **1-Wire** is a simple communication protocol developed by Maxim Integrated (Dallas Semiconductor) that allows data and power to be delivered over a **single data wire plus ground**. It is commonly used for low-speed sensors such as temperature probes.

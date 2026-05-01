@@ -1,10 +1,3 @@
----
-tags:
-  - Module Reference
-  - Module Interface
-  - I2C
----
-
 # I²C Interface (Inter-Integrated Circuit)
 
 **I²C (Inter-Integrated Circuit)** is a simple, low-speed communication bus used to connect sensors, displays, and other peripherals to a controller such as a Raspberry Pi using only two signal wires.
@@ -82,7 +75,7 @@ You can scan the bus on Linux with:
 i2cdetect -y 1
 ```
 
-If the ```i2cdetect``` command cannot be found the install it as follows
+If the `i2cdetect` command cannot be found the install it as follows
 
 ```
 sudo apt update

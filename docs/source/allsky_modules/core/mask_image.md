@@ -1,10 +1,3 @@
----
-tags:
-  - Core Module
-  - Pipeline Night
-  - Pipeline Day  
----
-
 ## Description { data-toc-label="Description" }
 
 This module applied a mask to an image. This is mainly uised to ensure the areas outside of the image circle are black, serving two purposes

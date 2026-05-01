@@ -1,11 +1,3 @@
----
-tags:
-  - Allsky Guide
-  - Things
-  - Display
-  - Hardware
----
-
 # [ESP32-P4 AllSky Display](https://github.com/chvvkumar/ESP32-P4-Allsky-Display){ target="_blank" rel="noopener" .external }
 
 The **ESP32-P4 AllSky Display** project turns an ESP32-P4 round display into a dedicated viewer for your all-sky camera images. For Allsky users, that makes it a very appealing companion project: instead of checking the WebUI or a website every time, you can have a small standalone display showing current images and cycling through multiple views.

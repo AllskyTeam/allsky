@@ -1,10 +1,3 @@
----
-tags:
-  - Core Module
-  - Pipeline Night
-  - Pipeline Day  
----
-
 ## Description { data-toc-label="Description" }
 
 This module draws the exposure rectangle definied in the main settings on the image

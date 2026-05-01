@@ -1,11 +1,3 @@
----
-tags:
-  - Allsky Guide
-  - WebUI
-  - System
-  - Watchdogs
----
-
 # Watchdogs
 
 The **Watchdogs** tab in the **System** WebUI page helps you keep an eye on background services. While the **System** tab gives you a broad view of the Raspberry Pi and the Allsky installation as a whole, the **Watchdogs** tab is more focused. It is concerned with specific services that Allsky expects to be present and with whether those services appear to be healthy right now.

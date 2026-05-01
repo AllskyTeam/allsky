@@ -1,10 +1,3 @@
----
-tags:
-  - Allsky Guide
-  - Overlays
-  - Variables
----
-
 # Fields and Variables
 Fields are the heart of the Overlay Editor. They are distinct items that are added to an overlay and each field has its own properties like color, size, rotation, etc. Most people have several fields on their overlays - date and time the image was taken, the exposure length, etc.
 
@@ -29,10 +22,10 @@ There are two types of fields:
 !!! warning  ""
 
     If you see a variable displayed on the overlay as ??? it usually means the variable is undefined - either it's not in the Variable Manager at all (could be a typo), or is only in the All Variables tab. The variable needs to be defined and copied to the Allsky Variables tab.
-    Undefined variables will have a line in ```/var/log/allsky.log``` like: ```ERROR: ${T2} has no variable type.```
+    Undefined variables will have a line in `/var/log/allsky.log` like: `ERROR: ${T2} has no variable type.`
 
     If a variable is displayed as ?? it usually means the variable's formatting is incorrect, for example, you tried to display a number as a date. Make sure the formatting is valid for the type of variable - click on the [?] icon to see valid formats for each type of variable.
-    Incorrectly formatted variables will have a line in ```/var/log/allsky.log``` like: ERROR: Cannot use format '%a' on Number variables like ${GAIN}.
+    Incorrectly formatted variables will have a line in `/var/log/allsky.log` like: ERROR: Cannot use format '%a' on Number variables like ${GAIN}.
 
 ### Example text fields { data-toc-label="Example text fields" }
 

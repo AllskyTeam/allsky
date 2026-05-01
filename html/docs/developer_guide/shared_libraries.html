@@ -6003,30 +6003,6 @@
                 
                   
 
-  <nav class="md-tags">
-    
-      
-      
-      
-        
-        
-      
-      
-        <a href="../tags.html#tag:developer-guide" class="md-tag md-tag-icon">Developer Guide</a>
-      
-    
-      
-      
-      
-        
-        
-      
-      
-        <a href="../tags.html#tag:shared-library" class="md-tag md-tag-icon">Shared Library</a>
-      
-    
-  </nav>
-
 
   
   
@@ -6035,16 +6011,15 @@
   <h1>Shared Libraries</h1>
 
 <h3 id="the-allsky-base-module">The Allsky Base Module<a class="headerlink" href="#the-allsky-base-module" title="Permanent link">¶</a></h3>
-<p>Every module class must extend this base class. The base class does the following
-In the constructor;</p>
+<p>Every module class must extend this base class. The base class does the following in the constructor:</p>
 <ul>
-<li>saves the params and event into class variables  </li>
-<li>Determines if the module is running in debug mode (i.e. from the test button in the module manager)  </li>
-<li>Converts any legacy meta data structures to the new meta data structure</li>
+<li>Saves the params and event into class variables.</li>
+<li>Determines if the module is running in debug mode (i.e. from the test button in the module manager).</li>
+<li>Converts any legacy meta data structures to the new meta data structure.</li>
 </ul>
-<p>It also provides the following functions that the module class should use;</p>
+<p>It also provides the following functions that the module class should use.</p>
 <h4 id="get_parm">get_parm<a class="headerlink" href="#get_parm" title="Permanent link">¶</a></h4>
-<p>This function is used to get a parameter from the module settings. Whilst this can be accessed in the params variable this is not encouraged. The function  accepts the following parameters</p>
+<p>This function is used to get a parameter from the module settings. Whilst this can be accessed in the params variable this is not encouraged. The function  accepts the following parameters:</p>
 <table>
 <thead>
 <tr>
@@ -6072,7 +6047,7 @@ In the constructor;</p>
 </tbody>
 </table>
 <h4 id="log">log<a class="headerlink" href="#log" title="Permanent link">¶</a></h4>
-<p>This function logs data to either the console or Allsky debug logs. The function  accepts the following parameters</p>
+<p>This function logs data to either the console or the Allsky debug logs, and accepts the following parameters:</p>
 <table>
 <thead>
 <tr>
@@ -6103,15 +6078,11 @@ In the constructor;</p>
 </tr>
 </tbody>
 </table>
-<div class="admonition info">
-<p class="admonition-title">Detailed SDK</p>
-<p>For more details on these functions see the SDK Reference</p>
-</div>
 <h3 id="the-allsky-shared-module">The Allsky Shared Module<a class="headerlink" href="#the-allsky-shared-module" title="Permanent link">¶</a></h3>
 <p>The shared module provides a huge library of functions that can assist module developers.</p>
 <div class="admonition info">
 <p class="admonition-title">Detailed SDK</p>
-<p>For more details on these functions see the SDK Reference</p>
+<p>For more details on these functions see the SDK Reference.</p>
 </div>
 
 
@@ -6119,9 +6090,6 @@ In the constructor;</p>
 
 
 
-
-  
-  
 
 
 

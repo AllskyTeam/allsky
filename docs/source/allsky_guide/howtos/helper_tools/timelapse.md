@@ -1,10 +1,3 @@
----
-tags:
-  - Allsky Guide
-  - Helper Tools
-  - Timelapse
----
-
 The Timelapse Helper Tool aids you in determining the best settings to use when creating timelapse videos.
 
 ![](/assets/howtos_images/timelapse_helper.png){ width="75%" }

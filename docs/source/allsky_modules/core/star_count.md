@@ -1,9 +1,3 @@
----
-tags:
-  - Core Module
-  - Pipeline Night 
----
-
 ## Description { data-toc-label="Description" }
 
 This module counts stars in an image. It utilises a couple of algorithms to acheive this.
@@ -11,20 +5,20 @@ This module counts stars in an image. It utilises a couple of algorithms to ache
 
 !!! warning  "Create a mask"
  
-    It is essential that you create a mask before attempting to use this module. Failure to mask the image properly will result in a considerable number of false positives
+    It is essential that you create a mask before attempting to use this module. Failure to mask the image properly will result in a considerable number of false positives.
 
-    For details on howto create masks please refer to the [Creating Masks](../../allsky_guide/overlays/interface.md#the-mask-editor) documentation
+    For details on howto create masks please refer to the [Creating Masks](../../allsky_guide/overlays/interface.md#the-mask-editor) documentation.
 
 !!! warning  "The Moon"
 
-    The Moon can play havoc with star detection due to reflections in the dome. During intense moonlit nights the star count will be inaccurate
+    The Moon can play havoc with star detection due to reflections in the dome. During intense moonlit nights the star count will be inaccurate.
 
 !!! info  "Tip"
  
     When creating a mask ensure that it removes ALL areas of the image that could trigger false positives. Ideally the masked area should be smaller then the image circle, probably quite a bit smaller to prevent false positives around the horizon.
 
 ## Settings { data-toc-label="Settings" }
-The following settings are available in the module
+The following settings are available in the module:
 
 | Setting | Description |
 |--------|-------------|
@@ -48,7 +42,7 @@ The debug options allow you to fine tune the settings and annotate the main imag
 
 !!! info  "Tip"
  
-    When using debug images set the 'Debug Image Name' to a file inside the Allsky web root. This will allow you to browse to the image
+    When using debug images set the 'Debug Image Name' to a file inside the Allsky web root. This will allow you to browse to the image.
 
 ## Available in { data-toc-label="Available in" }
 

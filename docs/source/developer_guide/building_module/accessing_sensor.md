@@ -1,19 +1,12 @@
----
-tags:
-  - Developer Guide
-  - Building Modules
-  - Sensors
----
-
 In this tutorial we will write a module that accesses an I²C sensor to get temperature data. We will use the [Adafruit sht40](https://learn.adafruit.com/adafruit-sht40-temperature-humidity-sensor/overview){ target="_blank" rel="noopener" .external } sensor.
 
 !!! important  "Important"
  
-    - Please ensure you have read the simple tutorial before this one as the basics covered in the simple tutorial will not be covered 
-    - This tutorial requires additional hardware and basic understanding of the Pi's GPIO pins
-    - Please ensure the Allsky Environment module is installed as this will install the dependencies for this example module
+    - Please ensure you have read the simple tutorial before this one as the basics covered in the simple tutorial will not be covered.
+    - This tutorial requires additional hardware and basic understanding of the Pi's GPIO pins.
+    - Please ensure the Allsky Environment module is installed as this will install the dependencies for this example module.
 
-Connect the SHT40 to the PI as shown in the following diagram, the pin connections are the same for the pi3, 4 and 5
+Connect the SHT40 to the PI as shown in the following diagram, the pin connections are the same for the pi3, 4 and 5.
 
 ![SHT40 Wiring](/assets/developer_images/sht40.png) 
 /// caption 
@@ -21,7 +14,7 @@ The SHT40 wiring
 ///
 
 
-Lets start with the basic framework for the module, this does nothing other than allow you to add the module to the periodic pipeline
+Let's start with the basic framework for the module, this does nothing other than allow you to add the module to the periodic pipeline.
 
 ```python
 import allsky_shared as allsky_shared
@@ -282,4 +275,4 @@ And finally add the extra data config to the meta_data
   }
 ```
 
-And thats it a fully functioning module to read the temperature and pressure from an SHT40
+And thats it a fully functioning module to read the temperature and pressure from an SHT40.

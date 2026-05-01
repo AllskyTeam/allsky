@@ -6133,40 +6133,6 @@
                 
                   
 
-  <nav class="md-tags">
-    
-      
-      
-      
-        
-        
-      
-      
-        <a href="../tags.html#tag:developer-guide" class="md-tag md-tag-icon">Developer Guide</a>
-      
-    
-      
-      
-      
-        
-        
-      
-      
-        <a href="../tags.html#tag:fields" class="md-tag md-tag-icon">Fields</a>
-      
-    
-      
-      
-      
-        
-        
-      
-      
-        <a href="../tags.html#tag:reference" class="md-tag md-tag-icon">Reference</a>
-      
-    
-  </nav>
-
 
   
   
@@ -6174,7 +6140,7 @@
 
 <h1 id="available-fields">Available fields<a class="headerlink" href="#available-fields" title="Permanent link">¶</a></h1>
 <h2 id="text-field">Text field<a class="headerlink" href="#text-field" title="Permanent link">¶</a></h2>
-<p>This is the default field type and requires no extra values. This will display a text box allowing the user to enter detail</p>
+<p>This is the default field type and requires no extra values. This will display a text box allowing the user to enter detail:</p>
 <div class="highlight"><pre><span></span><code>"textfield": {
     "required": "false",
     "description": "Text Field",
@@ -6183,7 +6149,7 @@
 }
 </code></pre></div>
 <h2 id="select-field">Select field<a class="headerlink" href="#select-field" title="Permanent link">¶</a></h2>
-<p>This displays a drop down list allowing the user to select a value. The only additional value required is the ‘values’ option which is a comma separated list of the values to display in the dropdown</p>
+<p>This displays a drop down list allowing the user to select a value. The only additional value required is the ‘values’ option which is a comma separated list of the values to display in the dropdown:</p>
 <div class="highlight"><pre><span></span><code>"select" : {
     "required": "false",
     "description": "Select Field",
@@ -6196,7 +6162,7 @@
 }
 </code></pre></div>
 <h2 id="ajax-select-field">Ajax select field<a class="headerlink" href="#ajax-select-field" title="Permanent link">¶</a></h2>
-<p>This field type is main intended for use by the core Allsky development team. It displays a dopdown list of values obtained from an ajax request.</p>
+<p>This field type is main intended for use by the core Allsky development team. It displays a dopdown list of values obtained from an ajax request:</p>
 <div class="highlight"><pre><span></span><code>"ajaxselect": {
     "required": "false",
     "description": "Ajax Select",
@@ -6210,7 +6176,7 @@
 }
 </code></pre></div>
 <h2 id="checkbox-field">Checkbox field<a class="headerlink" href="#checkbox-field" title="Permanent link">¶</a></h2>
-<p>This displays a ‘switch’ that can be used to turn a value on or off. This will be presented in the params data as a boolean</p>
+<p>This displays a ‘switch’ that can be used to turn a value on or off. This will be presented in the params data as a boolean:</p>
 <div class="highlight"><pre><span></span><code>"checkbox" : {
     "required": "false",
     "description": "Checkbox Field",
@@ -6222,7 +6188,7 @@
 }
 </code></pre></div>
 <h2 id="number-field">Number field<a class="headerlink" href="#number-field" title="Permanent link">¶</a></h2>
-<p>This uses the HTML5 spinner control to allow a number to be entered. You can set the min, max and step values</p>
+<p>This uses the HTML5 spinner control to allow a number to be entered. You can set the min, max and step values:</p>
 <div class="highlight"><pre><span></span><code>"number" : {
     "required": "true",
     "description": "Number Field",
@@ -6274,7 +6240,7 @@
 </figcaption>
 </figure>
 <h2 id="image-field">Image Field<a class="headerlink" href="#image-field" title="Permanent link">¶</a></h2>
-<p>This allows the user to select or upload an image. Typically this would be used where a module requires a mask. This will allow the user to select the mask from the image library</p>
+<p>This allows the user to select or upload an image. Typically this would be used where a module requires a mask. This will allow the user to select the mask from the image library.</p>
 <div class="highlight"><pre><span></span><code>"image" : {
     "required": "false",
     "description": "Image Field",
@@ -6292,7 +6258,7 @@
 </figcaption>
 </figure>
 <h2 id="region-of-interest-roi-field">Region of Interest (ROI) Field<a class="headerlink" href="#region-of-interest-roi-field" title="Permanent link">¶</a></h2>
-<p>This allows the user to select a region Of Interest (ROI) in the image. This will then be available to the module. Typically, this would be used for things like sky brightness detection where you only want to run the calculation on a portion of the image</p>
+<p>This allows the user to select a region Of Interest (ROI) in the image. This will then be available to the module. Typically, this would be used for things like sky brightness detection where you only want to run the calculation on a portion of the image.</p>
 <div class="highlight"><pre><span></span><code>"roi": {
     "required": "false",
     "description": "Region of Interest field",
@@ -6330,7 +6296,7 @@ The ‘selectmode’ option has to options ‘single’ or ‘multi’. This con
 </figcaption>
 </figure>
 <h2 id="position-field">Position Field<a class="headerlink" href="#position-field" title="Permanent link">¶</a></h2>
-<p>This field allows the user to select a position from a map. There are three additional parameters required for this field, all refer to the name of the value in the arguments section</p>
+<p>This field allows the user to select a position from a map. There are three additional parameters required for this field, all refer to the name of the value in the arguments section.</p>
 <p><strong>lat</strong> – The name of the argument to store the latitude in<br>
 <strong>lon</strong> – The name of the argument to store the longitue in<br>
 <strong>height</strong> – The name of the argument to store the height in, note height may not always be available when selecting on the map.</p>
@@ -6383,9 +6349,9 @@ The ‘selectmode’ option has to options ‘single’ or ‘multi’. This con
 </figcaption>
 </figure>
 <h2 id="host-field">Host field<a class="headerlink" href="#host-field" title="Permanent link">¶</a></h2>
-<p>This field allows a host and port number to ben entered. There are two additional parameters required for this field, all refer to the name of the value in the arguments section</p>
-<p><strong>url</strong> – The url or ip address of the host<br>
-<strong>port</strong> – The port number of the host</p>
+<p>This field allows a host and port number to ben entered. There are two additional parameters required for this field, all refer to the name of the value in the arguments section.</p>
+<p><strong>url</strong> – The url or ip address of the host.
+<strong>port</strong> – The port number of the host.</p>
 <div class="highlight"><pre><span></span><code>"host": {
     "description": "Host",
     "help": "Allows a host and port to be entered.",
@@ -6409,10 +6375,10 @@ The ‘selectmode’ option has to options ‘single’ or ‘multi’. This con
 </figure>
 <h2 id="graph-field">Graph field<a class="headerlink" href="#graph-field" title="Permanent link">¶</a></h2>
 <p>This is a special field type that rather than display a field adds a new tab to the modules settings to display the history for this module.</p>
-<p>For this field to work there are a few criteria that have to be met</p>
+<p>For this field to work there are a few criteria that have to be met:</p>
 <ul>
-<li>The module must be saving data to the database  </li>
-<li>The module must have a ‘main’ chart, see the charts section for more details</li>
+<li>The module must be saving data to the database.</li>
+<li>The module must have a ‘main’ chart, see the charts section for more details.</li>
 </ul>
 <p><code>"graph": {
     "required": "false",
@@ -6451,7 +6417,7 @@ The ‘selectmode’ option has to options ‘single’ or ‘multi’. This con
 </figure>
 <h2 id="html-field">HTML Field<a class="headerlink" href="#html-field" title="Permanent link">¶</a></h2>
 <p>This field is used to display HTML in a modules dialog. There are a few additional settings available.</p>
-<p><strong>Source</strong> – Either local, where the html is read from the ‘html’ value or ‘file’ where the html is read from a file on the server using the ‘file’ value to define the source</p>
+<p><strong>Source</strong> – Either local, where the html is read from the ‘html’ value or ‘file’ where the html is read from a file on the server using the ‘file’ value to define the source.</p>
 <div class="highlight"><pre><span></span><code>"html": {
     "tab": "Help",
         "source": "local",
@@ -6481,9 +6447,6 @@ The ‘selectmode’ option has to options ‘single’ or ‘multi’. This con
 
 
 
-
-  
-  
 
 
 

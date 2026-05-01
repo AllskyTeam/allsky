@@ -1,11 +1,3 @@
----
-tags:
-  - Core Module
-  - Pipeline Day  
-  - Pipeline Night
-  - Pipeline Periodic  
----
-
 ## Description { data-toc-label="Description" }
 This module reads data from the Pi's hardware. Teh following is read
 

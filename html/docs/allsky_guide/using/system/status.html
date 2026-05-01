@@ -6296,40 +6296,6 @@
                 
                   
 
-  <nav class="md-tags">
-    
-      
-      
-      
-        
-        
-      
-      
-        <a href="../../../tags.html#tag:allsky-guide" class="md-tag md-tag-icon">Allsky Guide</a>
-      
-    
-      
-      
-      
-        
-        
-      
-      
-        <a href="../../../tags.html#tag:system" class="md-tag md-tag-icon">System</a>
-      
-    
-      
-      
-      
-        
-        
-      
-      
-        <a href="../../../tags.html#tag:webui" class="md-tag md-tag-icon">WebUI</a>
-      
-    
-  </nav>
-
 
   
   
@@ -6458,7 +6424,7 @@ Each of these tells you something different about the health of the system. -->
 </div>
 <p>During installation of Allsky, the amount of temporary storage is determined based on the amount of RAM your Pi has.  If the Allsky temporary storage is filling up, contact the Allsky team via GitHub.</p>
 <h2 id="custom-items-on-the-system-tab">Custom Items On The System Tab<a class="headerlink" href="#custom-items-on-the-system-tab" title="Permanent link">¶</a></h2>
-<p>Your <strong>System</strong> tab may contain more than the built-in Allsky indicators shown in the examples above. Allsky allows custom additions to this tab, so some installations include extra lines, progress bars, or buttons created by the user.</p>
+<p>Your <strong>System</strong> tab can contain more than the built-in Allsky indicators shown in the examples above. Allsky allows custom additions to this tab such as extra lines, progress bars, or buttons created by you.</p>
 <p>These custom items can be used to display site-specific information such as:</p>
 <ul>
 <li>a temperature sensor reading,</li>
@@ -6520,8 +6486,8 @@ That relationship is important to understand. The **System** tab tells you wheth
 
 <h2 id="additionsEditor">System Page Additions Editor<a class="headerlink" href="#additionsEditor" title="Permanent link">¶</a></h2>
 <p>The <strong>System</strong> tab also includes a built-in editor for <strong>System Page Additions</strong>. This is the part of the tab that lets you create and manage your own extra rows, progress bars, and action buttons without manually editing the additions files in a text editor.</p>
-<p>At a high-level, details on the additions are stored in a configuration file.  The editor is a front end to the file that allows you to modify it without actually opening it.</p>
-<p>For many users, this editor is the easiest way to customise the System tab. Instead of remembering the exact file format used by additions files, you work with a form-based interface in the WebUI. You choose the kind of item you want to add, fill in the fields you care about, and save the file. The editor then writes the additions file for you in the correct format.</p>
+<p>At a high-level, details on the additions are stored in one or more configuration files.  The editor is a front end to the files that allows you to modify them without actually opening them.</p>
+<p>For many users, this editor is the easiest way to customise the <strong>System</strong> tab. Instead of remembering the exact file format used by additions files, you work with a form-based interface in the WebUI. You choose the kind of item you want to add, fill in the fields you care about, and save the file. The editor then writes the additions files for you in the correct format.</p>
 <!--
 This makes the feature much more approachable, especially if your goal is practical rather than technical. You may simply want the System tab to show a weather reading, a dew heater status line, a fan speed indicator, or a button that runs a maintenance script. In those cases, the editor is often a much more comfortable starting point than hand-building the file structure yourself. -->
 
@@ -6580,9 +6546,6 @@ This is an important detail for everyday use. You are not expected to hunt throu
 <p>This is the simplest type of custom addition. It is suitable for information such as:</p>
 <ul>
 <li>ambient temperature, for example: <code>Ambient temperature 20 C</code></li>
-</ul>
-<!-- - weather condition text, -->
-<ul>
 <li>the current operating mode of an attached device,</li>
 <li>a plain status line produced by a script.</li>
 </ul>
@@ -6652,8 +6615,8 @@ This means the **System** tab can gradually become tailored to your installation
 
 <h3 id="when-the-editor-is-enough-and-when-you-need-more">When The Editor Is Enough And When You Need More<a class="headerlink" href="#when-the-editor-is-enough-and-when-you-need-more" title="Permanent link">¶</a></h3>
 <p>For many users, the editor is enough on its own. If your needs are straightforward and the scripts you want to call already exist, the editor may be all you need to create and maintain your additions.</p>
-<p>However, the editor is not a replacement for the underlying concept of additions files and data-producing scripts. The editor can help you build and maintain the file, but something still needs to generate the data that appears in custom rows and progress bars. In other words, the editor is the user-friendly front end for the feature, not the source of the data itself.</p>
-<p>If you need to build more advanced additions, create new scripts, or understand the exact file structure in detail, refer to the <a href="../../howtos/system_page.html">System Page Additions</a> documentation page. That page goes deeper into how the data files work behind the scenes. <!-- The editor section here is intended to help you use the feature confidently from the WebUI, not to replace the more detailed setup guide. --></p>
+<p>However, the editor is not a replacement for the underlying concept of additions files and data-producing scripts. The editor can help you build and maintain the data files, but something still needs to generate the data that appears in your custom rows. The editor is the user-friendly front end for the feature, not the source of the data itself.</p>
+<p>If you need to create new scripts or understand the exact data file structure in detail, refer to the <a href="../../howtos/system_page.html">System Page Additions</a> documentation page. That page goes deeper into how the data files work behind the scenes.</p>
 <h3 id="practical-advice-for-end-users">Practical Advice For End Users<a class="headerlink" href="#practical-advice-for-end-users" title="Permanent link">¶</a></h3>
 <p>If you are new to the additions editor, a sensible approach is:</p>
 <ol>
@@ -6663,9 +6626,9 @@ This means the **System** tab can gradually become tailored to your installation
 <li>Add a progress bar only after you are comfortable with the basic workflow.</li>
 <li>Test button entries carefully before relying on them.</li>
 </ol>
-<p>Starting small is usually the best approach. It gives you confidence in how the editor behaves and makes it easier to spot mistakes. Once you understand the flow of open, add, test, and save, the editor becomes a very practical part of day-to-day administration.</p>
+<p>Starting small gives you confidence in how the editor behaves and makes it easier to spot mistakes.</p>
 <h2 id="summary">Summary<a class="headerlink" href="#summary" title="Permanent link">¶</a></h2>
-<p>For most users, the <strong>System</strong> tab is the first and most important operational page in the Allsky WebUI. It combines status, control, and health information in one place and makes it easy to answer the practical questions that come up during normal use.</p>
+<p>For most users, the <strong>System</strong> tab is the first and most important diagnostic page in the WebUI. It combines status, control, and health information in one place and makes it easy to answer the practical questions that come up during normal use.</p>
 <p>If you only remember one thing about this tab, remember this: when Allsky seems wrong, start here. Very often the tab will either show the problem directly or point you toward the next place to investigate.</p>
 
 
@@ -6673,9 +6636,6 @@ This means the **System** tab can gradually become tailored to your installation
 
 
 
-
-  
-  
 
 
 

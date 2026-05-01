@@ -1,11 +1,3 @@
----
-tags:
-  - Core Module
-  - Pipeline Day  
-  - Pipeline Night 
----
-
-
 ## Description { data-toc-label="Description" }
 
 This allows Allsky data to be exported to a json file.

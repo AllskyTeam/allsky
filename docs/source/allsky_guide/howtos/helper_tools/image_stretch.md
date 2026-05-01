@@ -1,10 +1,3 @@
----
-tags:
-  - Allsky Guide
-  - Helper Tools
-  - Image Stretch
----
-
 The Image Stretch helper tool aids you in determining the best settings to stretch an image.
 
 If you want to lighten parts of your images to bring out details you can "stretch" them. The `Stretch Amount` setting determines how much of a stretch is applied, and the `Stretch Mid Point` determines WHERE the stretch is applied - to the dark parts of an image, the mid-gray parts, the light parts, or anything in between.

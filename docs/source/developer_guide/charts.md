@@ -1,10 +1,4 @@
----
-tags:
-  - Developer Guide
-  - Charts
----
-
-Charts allows you to display data from Allsky and modules within the WebUI
+Charts allows you to display data from Allsky and modules within the WebUI.
 
 ![WebUI Charts](/assets/developer_images/webuicharts.png)
 
@@ -12,19 +6,19 @@ Charts allows you to display data from Allsky and modules within the WebUI
 The Web UI Charts Page
 ///
 
-You can provide custom charts for use with your module. There are a few prerequisites to doing this
+You can provide custom charts for use with your module. There are a few prerequisites to doing this:
 
--	You must be saving data in the database  
--	You should have a good understanding of [Highcharts](https://www.highcharts.com){target="_blank"} although it is entirley possible to copy and modify existing charts of all you need are basic ones
+-	You must be saving data in the database.
+-	You should have a good understanding of [Highcharts](https://www.highcharts.com){target="_blank"} although it is entirley possible to copy and modify existing charts of all you need are basic ones.
 
-There are several charts types available
+There are several charts types available:
 
-- Line - A line graph  
-- Spline - A smoothed line chart  
-- Gauge - A guage  
-- Yes/No - A chart that displays Yes or No
+- Line - A line graph.
+- Spline - A smoothed line chart.
+- Gauge - A guage.
+- Yes/No - A chart that displays "Yes" or "No".
 
-There other charts types supported all of which are standard Highcharts so please refer to the [Highcharts](https://www.highcharts.com){target="_blank"} documentation for details
+There other charts types supported all of which are standard Highcharts so please refer to the [Highcharts](https://www.highcharts.com){target="_blank"} documentation for details.
 
 ## Chart Types { data-toc-label="Chart Types" }
 
@@ -45,7 +39,7 @@ Multi axis line chart
 
 
 #### Single axis { data-toc-label="Single axis" }
-The following defines a line chart showing the total number of aircraft seen by the adsb module.
+The following defines a line chart showing the total number of aircraft seen by the adsb module:
 
 | field | Description |
 |-----|------|
@@ -61,7 +55,7 @@ The following defines a line chart showing the total number of aircraft seen by 
 
 !!! info  "The 'main' chart"
 
-    When creating charts for your module it is strongly suggested that you create a chart with main set to true. There must only be one chart within your module with main set to true
+    When creating charts for your module it is strongly suggested that you create a chart with main set to true. There must only be one chart within your module with main set to true.
 
 
 ```
@@ -91,7 +85,7 @@ The following defines a line chart showing the total number of aircraft seen by 
 #### Multiple axis { data-toc-label="Multiple axis" }
 It is possible to create a chart with multiple Y axis.
 
-When using multiple axis there are a few things to bear in mind. The **opposite** setting in the yAxis forces the axis to the other axis. The **yAxis** value in the series defines which axis the data will appear against
+When using multiple axis there are a few things to bear in mind. The **opposite** setting in the yAxis forces the axis to the other axis. The **yAxis** value in the series defines which axis the data will appear against.
 
 ```
 {
@@ -139,7 +133,7 @@ The configuration for a spline chart is identical to a line chart except the **t
 An example Gauge 
 ///
 
-Gauges can be built using a very simple config as below.
+Gauges can be built using a very simple config as below:
 
 ```
 {
@@ -157,14 +151,14 @@ Gauges can be built using a very simple config as below.
 }
 ```
 
-Gauges can also be overriden using Highcharts to customise the view
+Gauges can also be overriden using Highcharts to customise the view.
 
 ![Custom Gauge](/assets/developer_images/gauge-custom.png) 
 /// caption 
 An example custom Gauge 
 ///
 
-The full extent of customisation is beyon the scope o this document. Please refer to the [Highcharts](https://www.highcharts.com){target="_blank"} documentation for details
+The full extent of customisation is beyond the scope of this document. Please refer to the [Highcharts](https://www.highcharts.com){target="_blank"} documentation for details.
 ```
 {
     "title": "Total Aircraft",
@@ -240,7 +234,7 @@ These simply display text based upon a thruthy value.
 An example Yes / No Chart 
 ///
 
-The important values here are the **truetext**, **falsetext** and the associated colour fields
+The important values here are the **truetext**, **falsetext** and the associated colour fields.
 
 ```
 {

@@ -1,10 +1,3 @@
----
-tags:
-  - Allsky Guide
-  - Troubleshooting
-  - Support
----
-
 Regardless of what you want to ask or report, first look at the existing GitHub [Discussions](https://github.com/AllskyTeam/allsky-modules/discussions){ target="_blank" rel="noopener" } and [Issues](https://github.com/AllskyTeam/allsky-modules/issues){ target="_blank" rel="noopener" }.
 
 If someone else has reported it, add to their post; do not create a new one.
@@ -22,7 +15,7 @@ A bug is something that isn't working correctly and you are pretty sure it's cau
 
     This is the preferred method to report problems and should be used if your WebUI is working.
 
-Follow the instructions on the WebUI's [Getting Support](/?page=support){ target="_blank" rel="noopener" }  page.
+Follow the instructions on the WebUI's [Getting Support](/?page=support){ external="true" rel="noopener" }  page.
 
 ### The Manual Method { data-toc-label="The Manual Method" }
 
@@ -33,7 +26,7 @@ Follow the instructions on the WebUI's [Getting Support](/?page=support){ target
 If you can easily reproduce the problem, even if it means waiting until tomorrow for it to occur again, do the following:
 
   - Run the following command to make sure Allsky will produce the necessary information to help the Allsky Team troubleshoot your problem:  
-    ```allsky-config   prepare_logs```. 
+    `allsky-config   prepare_logs`. 
 
     If the command changed the Debug Level you are told what its prior value was so you can restore it when troubleshooting is over.
 
@@ -44,7 +37,7 @@ Either way:
 
   - Run the following to create a support log file in ~/allsky/html/support:
 
-    ```cd ~/allsky; ./support.sh```
+    `cd ~/allsky; ./support.sh`
 
   - Create a new Problem [Discussions](https://github.com/AllskyTeam/allsky-modules/discussions){ target="_blank" rel="noopener" } in GitHub and attach the support log file to it.
 

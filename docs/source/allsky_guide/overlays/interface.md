@@ -1,10 +1,3 @@
----
-tags:
-  - Allsky Guide
-  - Overlays
-  - WebUI
----
-
 # Editor Interface
 
 The Overlay Editor web page consists of two key areas:
@@ -221,7 +214,7 @@ The Font Manager Dialog
 
 !!! warning "IMPORTANT"
 
-    - By default the maximum file that can be uploaded is 2M. If your fonts are larger you must change this setting. To change the setting edit, as root, ``/etc/php/8.2/cli/php.ini``` . Find the line ```upload_max_filesize = 2M``` and change it to ```upload_max_filesize = 20M``` . The find the line ```post_max_size = 8M``` and change it to ```post_max_size = 20M```
+    - By default the maximum file that can be uploaded is 2M. If your fonts are larger you must change this setting. To change the setting edit, as root, `/etc/php/8.2/cli/php.ini` . Find the line `upload_max_filesize = 2M` and change it to `upload_max_filesize = 20M` . The find the line `post_max_size = 8M` and change it to `post_max_size = 20M`
 
 #### Font Preview { data-toc-label="Font Preview" }
 The Font Preview dialog allows you to preview any installed font, including system fonts.

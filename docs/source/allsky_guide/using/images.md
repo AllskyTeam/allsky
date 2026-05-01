@@ -1,10 +1,3 @@
----
-tags:
-  - Allsky Guide
-  - WebUI
-  - Images
----
-
 The **Images** page of the WebUI is where you browse the files Allsky has saved. Although the page title is **Images**, this page is really a general viewing area for the output Allsky creates. It gives you one place where you can move between the original saved frames and the processed products that were generated from them.
 
 For most users, this becomes the normal starting point when checking how a night went. If you want to review cloud conditions, confirm that the system captured a particular event, compare one night with another, or simply enjoy the results, this is the page you will probably use most often.

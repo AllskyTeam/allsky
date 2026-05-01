@@ -6053,30 +6053,6 @@
                 
                   
 
-  <nav class="md-tags">
-    
-      
-      
-      
-        
-        
-      
-      
-        <a href="../tags.html#tag:charts" class="md-tag md-tag-icon">Charts</a>
-      
-    
-      
-      
-      
-        
-        
-      
-      
-        <a href="../tags.html#tag:developer-guide" class="md-tag md-tag-icon">Developer Guide</a>
-      
-    
-  </nav>
-
 
   
   
@@ -6084,26 +6060,26 @@
 
   <h1>Charts</h1>
 
-<p>Charts allows you to display data from Allsky and modules within the WebUI</p>
+<p>Charts allows you to display data from Allsky and modules within the WebUI.</p>
 <figure>
 <p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../assets/developer_images/webuicharts.png" data-desc-position="bottom"><img alt="WebUI Charts" src="../assets/developer_images/webuicharts.png"></a></p>
 <figcaption>
 <p>The Web UI Charts Page</p>
 </figcaption>
 </figure>
-<p>You can provide custom charts for use with your module. There are a few prerequisites to doing this</p>
+<p>You can provide custom charts for use with your module. There are a few prerequisites to doing this:</p>
 <ul>
-<li>You must be saving data in the database  </li>
-<li>You should have a good understanding of <a href="https://www.highcharts.com" target="_blank">Highcharts</a> although it is entirley possible to copy and modify existing charts of all you need are basic ones</li>
+<li>You must be saving data in the database.</li>
+<li>You should have a good understanding of <a href="https://www.highcharts.com" target="_blank">Highcharts</a> although it is entirley possible to copy and modify existing charts of all you need are basic ones.</li>
 </ul>
-<p>There are several charts types available</p>
+<p>There are several charts types available:</p>
 <ul>
-<li>Line - A line graph  </li>
-<li>Spline - A smoothed line chart  </li>
-<li>Gauge - A guage  </li>
-<li>Yes/No - A chart that displays Yes or No</li>
+<li>Line - A line graph.</li>
+<li>Spline - A smoothed line chart.</li>
+<li>Gauge - A guage.</li>
+<li>Yes/No - A chart that displays "Yes" or "No".</li>
 </ul>
-<p>There other charts types supported all of which are standard Highcharts so please refer to the <a href="https://www.highcharts.com" target="_blank">Highcharts</a> documentation for details</p>
+<p>There other charts types supported all of which are standard Highcharts so please refer to the <a href="https://www.highcharts.com" target="_blank">Highcharts</a> documentation for details.</p>
 <h2 id="chart-types">Chart Types<a class="headerlink" href="#chart-types" title="Permanent link">¶</a></h2>
 <h3 id="line-charts">Line Charts<a class="headerlink" href="#line-charts" title="Permanent link">¶</a></h3>
 <div class="grid cards">
@@ -6121,7 +6097,7 @@
 </figure>
 </div>
 <h4 id="single-axis">Single axis<a class="headerlink" href="#single-axis" title="Permanent link">¶</a></h4>
-<p>The following defines a line chart showing the total number of aircraft seen by the adsb module.</p>
+<p>The following defines a line chart showing the total number of aircraft seen by the adsb module:</p>
 <table>
 <thead>
 <tr>
@@ -6166,7 +6142,7 @@
 </table>
 <div class="admonition info">
 <p class="admonition-title">The 'main' chart</p>
-<p>When creating charts for your module it is strongly suggested that you create a chart with main set to true. There must only be one chart within your module with main set to true</p>
+<p>When creating charts for your module it is strongly suggested that you create a chart with main set to true. There must only be one chart within your module with main set to true.</p>
 </div>
 <div class="highlight"><pre><span></span><code>{
     "icon": "fas fa-chart-line",
@@ -6192,7 +6168,7 @@
 </code></pre></div>
 <h4 id="multiple-axis">Multiple axis<a class="headerlink" href="#multiple-axis" title="Permanent link">¶</a></h4>
 <p>It is possible to create a chart with multiple Y axis.</p>
-<p>When using multiple axis there are a few things to bear in mind. The <strong>opposite</strong> setting in the yAxis forces the axis to the other axis. The <strong>yAxis</strong> value in the series defines which axis the data will appear against</p>
+<p>When using multiple axis there are a few things to bear in mind. The <strong>opposite</strong> setting in the yAxis forces the axis to the other axis. The <strong>yAxis</strong> value in the series defines which axis the data will appear against.</p>
 <div class="highlight"><pre><span></span><code>{
     "icon": "fas fa-chart-line",
     "group": "Environment",
@@ -6236,7 +6212,7 @@
 <p>An example Gauge </p>
 </figcaption>
 </figure>
-<p>Gauges can be built using a very simple config as below.</p>
+<p>Gauges can be built using a very simple config as below:</p>
 <div class="highlight"><pre><span></span><code>{
     "title": "Dew Heater PWM %",
     "icon": "fa-solid fa-gauge",
@@ -6251,14 +6227,14 @@
     ]
 }
 </code></pre></div>
-<p>Gauges can also be overriden using Highcharts to customise the view</p>
+<p>Gauges can also be overriden using Highcharts to customise the view.</p>
 <figure>
 <p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../assets/developer_images/gauge-custom.png" data-desc-position="bottom"><img alt="Custom Gauge" src="../assets/developer_images/gauge-custom.png"></a> </p>
 <figcaption>
 <p>An example custom Gauge </p>
 </figcaption>
 </figure>
-<p>The full extent of customisation is beyon the scope o this document. Please refer to the <a href="https://www.highcharts.com" target="_blank">Highcharts</a> documentation for details
+<p>The full extent of customisation is beyond the scope of this document. Please refer to the <a href="https://www.highcharts.com" target="_blank">Highcharts</a> documentation for details.
 </p><div class="highlight"><pre><span></span><code>{
     "title": "Total Aircraft",
     "icon": "fa-solid fa-gauge",
@@ -6333,7 +6309,7 @@
 <p>An example Yes / No Chart </p>
 </figcaption>
 </figure>
-<p>The important values here are the <strong>truetext</strong>, <strong>falsetext</strong> and the associated colour fields</p>
+<p>The important values here are the <strong>truetext</strong>, <strong>falsetext</strong> and the associated colour fields.</p>
 <div class="highlight"><pre><span></span><code>{
     "icon": "fas fa-lightbulb",
     "group": "Environment",
@@ -6366,9 +6342,6 @@
 
 
 
-
-  
-  
 
 
 

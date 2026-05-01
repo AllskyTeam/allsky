@@ -1,10 +1,3 @@
----
-tags:
-  - Allsky Guide
-  - Helper Tools
-  - Startrails Helper Tool
----
-
 The WebUI **Helper Tools** pages do what the name suggests - they "help" you do something, often helping determine what settings to use.
 
 The Startrails Helper Tool page aids you in determining what Startrails `Brightness Threshold` setting to use.

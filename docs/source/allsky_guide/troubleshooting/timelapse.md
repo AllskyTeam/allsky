@@ -1,10 +1,3 @@
----
-tags:
-  - Allsky Guide
-  - Troubleshooting
-  - Timelapse
----
-
 Timelapse video creation can fail or result in poor quality videos for a number of reasons. The steps below, which apply to both the daily- and mini-timelapse, will almost always fix it.
 
 ## Timelapse video is not created { data-toc-label="Timelapse video created" }
@@ -14,14 +7,14 @@ First make sure the timelapse is enabled. In the Timelapse Settings section of t
 
 If the timelapse is enabled you should see a message in /var/log/allsky.log like this:
 
-```*** timelapse.sh: ERROR: ffmpeg failed.```
-```(ffmpeg is the command that actually creates the video.)```
+`*** timelapse.sh: ERROR: ffmpeg failed.`
+`(ffmpeg is the command that actually creates the video.)`
 
 See if one of the first lines in the error message is either:
 
-```/home/pi/allsky/scripts/timelapse.sh: line 294: 6546 Killed ffmpeg -y -f image2 -loglevel ...```  
+`/home/pi/allsky/scripts/timelapse.sh: line 294: 6546 Killed ffmpeg -y -f image2 -loglevel ...`  
   OR  
-```x264 [error]: malloc of size 38600544 failed```
+`x264 [error]: malloc of size 38600544 failed`
 
 These errors are almost always caused by not enough RAM memory and swap space, or by having a large camera sensor (e.g., the RPi HQ).
 
@@ -29,14 +22,14 @@ To fix, do the following:
 
 - Decide if you need a full-resolution video. Most monitors only display High Definition (HD) which is 1920 x 1080 pixels. If your sensor size is larger than that you can decrease the timelapse Width and Height settings to 1920 by 1080, adjusted for the aspect ratio of your sensor. Decreasing these values will also make the video file smaller. Even if your monitor can display higher resolution than HD, do other people who will view your video have monitors that can? If this doesn't solve your problem, do the steps below.
 
-- If you saw the ```Killed ffmpeg ...``` error increase swap space (or buy a Pi with more memory). The Linux kernel will kill any process that is taking "too much" memory to avoid system issues. Click here for details on how to increase swap.
+- If you saw the `Killed ffmpeg ...` error increase swap space (or buy a Pi with more memory). The Linux kernel will kill any process that is taking "too much" memory to avoid system issues. Click here for details on how to increase swap.
 
-- Install htop via ``sudo apt install htop```. It's great for checking ```ffmpeg```'s memory use. Run htop in one terminal while running ```generateForDay.sh --timelapse DATE``` in another terminal to check on ```ffmpeg```'s memory use.
-If the number in the "VIRT" (virtual memory) column of ```htop``` hits a maximum of around 2900M and the timelapse fails, adding swap space will unlikely fix the issue so you'll need to try one of the other workarounds.
+- Install htop via ``sudo apt install htop`. It's great for checking `ffmpeg`'s memory use. Run htop in one terminal while running `generateForDay.sh --timelapse DATE` in another terminal to check on `ffmpeg`'s memory use.
+If the number in the "VIRT" (virtual memory) column of `htop` hits a maximum of around 2900M and the timelapse fails, adding swap space will unlikely fix the issue so you'll need to try one of the other workarounds.
 
-- The ```malloc of size ...``` error is often caused by using a high resolution camera. The default video codec (VCODEC) setting is ```libx264``` which has a stated maximum resolution of 4096 x 2304. However, the RPi HQ, ZWO ASI183, and other cameras have resolutions higher than that. If you saw the malloc error do one of the following:
+- The `malloc of size ...` error is often caused by using a high resolution camera. The default video codec (VCODEC) setting is `libx264` which has a stated maximum resolution of 4096 x 2304. However, the RPi HQ, ZWO ASI183, and other cameras have resolutions higher than that. If you saw the malloc error do one of the following:
     - Decrease the timelapse Width and Height settings.
-    - Set the VCODEC setting to ```libx265``` and set timelapse Extra Parameters to ```-x265-params crf=30```. This video codec takes a long time to create a video (over 3 hours on a PI 4b with 1500 RPi HQ images versus about 15 minutes with ```libx264```). Lower crf numbers (a measure of file compression) mean larger, higher-quality videos. Note that small changes to the number can result in huge difference in file size, for example, going from ```crf=30``` to ```crf=25``` can increase the video size by over five times.
+    - Set the VCODEC setting to `libx265` and set timelapse Extra Parameters to `-x265-params crf=30`. This video codec takes a long time to create a video (over 3 hours on a PI 4b with 1500 RPi HQ images versus about 15 minutes with `libx264`). Lower crf numbers (a measure of file compression) mean larger, higher-quality videos. Note that small changes to the number can result in huge difference in file size, for example, going from `crf=30` to `crf=25` can increase the video size by over five times.
 
 
 ## Poor Quality Timelapse { data-toc-label="Poor Quality Timelapse" }
@@ -72,16 +65,16 @@ There are two ways to reduce the resolution.
 
 The number of images (also called "frames") in a timelapse video is the number of seconds long it is (including fractions of a second) times the Frames Per Second (FPS) you set. Execute the following to determine how many frames are in a video file as well as the length in seconds. Ignore the fps number, and replace YOUR_FILE with the name of your video:
 
-```ffmpeg -i YOUR_FILE -vcodec copy -f rawvideo -y /dev/null 2>&1 | tail -2```
+`ffmpeg -i YOUR_FILE -vcodec copy -f rawvideo -y /dev/null 2>&1 | tail -2`
 
 One cause for videos that are too short is zero-length files. Apparently when ffmpeg encounters a zero-length file it quits. To remove zero-length files for a specified day, do the following, replacing "DATE" with the name of a directory in ~/allsky/images:
 
-```removeBadImages.sh DATE```
+`removeBadImages.sh DATE`
 
 It will take a while to run. When it's done you can re-create the timelapse by executing:
 
-```generateForDay.sh --timelapse DATE```
+`generateForDay.sh --timelapse DATE`
 
 ## Deprecated pixel format 
 
-If you see an error message like "deprecated pixel format used, make sure you did set range correctly" you can safely ignore it
+If you see an error message like "deprecated pixel format used, make sure you did set range correctly" you can safely ignore it.

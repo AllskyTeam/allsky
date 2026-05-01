@@ -5964,40 +5964,6 @@
                 
                   
 
-  <nav class="md-tags">
-    
-      
-      
-      
-        
-        
-      
-      
-        <a href="../../tags.html#tag:building-modules" class="md-tag md-tag-icon">Building Modules</a>
-      
-    
-      
-      
-      
-        
-        
-      
-      
-        <a href="../../tags.html#tag:database" class="md-tag md-tag-icon">Database</a>
-      
-    
-      
-      
-      
-        
-        
-      
-      
-        <a href="../../tags.html#tag:developer-guide" class="md-tag md-tag-icon">Developer Guide</a>
-      
-    
-  </nav>
-
 
   
   
@@ -6005,13 +5971,13 @@
 
   <h1>The database</h1>
 
-<p>In this tutorial we will modify the API module to save values to the Allsky database</p>
+<p>In this tutorial we will modify the API module to save values to the Allsky database.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>Please ensure you have read the simple tutorial before this one as the basics covered in the simple tutorial will not be covered</p>
+<p>Please ensure you have read the simple tutorial before this one as the basics covered in the simple tutorial will not be covered.</p>
 </div>
-<p>Saving values to the database, for example to using in charts, is accomplished by modifying the <code>extradata</code> section in the <code>meta_data</code></p>
-<p>Start by taking the API example and renaming everything to example3 and add the humidity variable</p>
+<p>Saving values to the database, for example to using in charts, is accomplished by modifying the <code>extradata</code> section in the <code>meta_data</code>.</p>
+<p>Start by taking the API example and renaming everything to example3 and add the humidity variable:</p>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">requests</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">allsky_shared</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">allsky_shared</span>
@@ -6183,8 +6149,8 @@
       <span class="p">}</span>
       <span class="n">allsky_shared</span><span class="o">.</span><span class="n">cleanupModule</span><span class="p">(</span><span class="n">moduleData</span><span class="p">)</span>
 </code></pre></div>
-<p>Next we modify the <code>extradata</code> section of the <code>meta_data</code> to tell Allsky how to manage the extra data in the database</p>
-<p>Change the <code>extradata</code> section to the following</p>
+<p>Next we modify the <code>extradata</code> section of the <code>meta_data</code> to tell Allsky how to manage the extra data in the database.</p>
+<p>Change the <code>extradata</code> section to the following:</p>
 <div class="highlight"><pre><span></span><code>    <span class="s2">"extradata"</span><span class="p">:</span> <span class="p">{</span>    
             <span class="s2">"database"</span><span class="p">:</span> <span class="p">{</span>
                 <span class="s2">"enabled"</span><span class="p">:</span> <span class="s2">"True"</span><span class="p">,</span>
@@ -6220,12 +6186,12 @@
       <span class="p">}</span>
     <span class="p">}</span>
 </code></pre></div>
-<p>This adds the database section that will</p>
+<p>This adds the database section that will:</p>
 <ul>
-<li>Create a table called <code>allsky_example3</code></li>
-<li>Include ALL of the data from the <code>values</code> section i.e. all of the extra data</li>
-<li>use a sequential primary key</li>
-<li>Allways save data for each pipeline</li>
+<li>Create a table called <code>allsky_example3</code>.</li>
+<li>Include ALL of the data from the <code>values</code> section i.e. all of the extra data.</li>
+<li>Use a sequential primary key.</li>
+<li>Always save data for each pipeline.</li>
 </ul>
 <figure>
 <p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../../assets/developer_images/dbexample3.png" data-desc-position="bottom"><img alt="Example3 db" src="../../assets/developer_images/dbexample3.png"></a> </p>
@@ -6239,7 +6205,7 @@
 <p>The fields available when creating a custom chart</p>
 </figcaption>
 </figure>
-<p>There may be instances where you do not want to save all of the data to the database. If we only wanted to save the temperature and not the humidity we would change the <code>`metadata</code> section as follows</p>
+<p>There may be instances where you do not want to save all of the data to the database. If we only wanted to save the temperature and not the humidity we would change the <code>metadata</code> section as follows.</p>
 <div class="highlight"><pre><span></span><code>    <span class="s2">"extradata"</span><span class="p">:</span> <span class="p">{</span>    
       <span class="s2">"database"</span><span class="p">:</span> <span class="p">{</span>
         <span class="s2">"enabled"</span><span class="p">:</span> <span class="s2">"True"</span><span class="p">,</span>
@@ -6304,9 +6270,6 @@
 
 
 
-
-  
-  
 
 
 

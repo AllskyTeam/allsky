@@ -1,13 +1,6 @@
----
-tags:
-  - Extra Module
-  - Overlay Data
-  - Pipeline Periodic
----
+This module calculates data for Solar System objects, the Sun, planets satellites etc. These are called ephemeris, or ephemeris the plural.
 
-This module calculates data for Solar System objects, the Sun, planets satellites etc. These are called ephemeris, or ephemeris the plural
-
-Data used in this modules calculations is obtained from a variety of sources
+Data used in this modules calculations is obtained from a variety of sources:
 
 - [**The Jet Propulsion Labratory** ](https://www.jpl.nasa.gov){ target="_blank" rel="noopener" } Provides the binary SPICE ephemeris file that contains highly accurate positions and motions of:
     - The Sun

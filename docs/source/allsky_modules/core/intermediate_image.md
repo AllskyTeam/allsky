@@ -1,10 +1,3 @@
----
-tags:
-  - Core Module
-  - Pipeline Day  
-  - Pipeline Night 
----
-
 ## Description { data-toc-label="Description" }
 
 This module allows you to save a copy of the image to a specific location
@@ -31,7 +24,7 @@ You can use any Allsky variables when constructing the path, for example
 ${ALLSKY_IMAGES}/${DATE}-clean
 ```
 
-This will save the images in a folder within the main images directory ```${ALLSKY_IMAGES}``` by date ```${DATE}``` with ```-clean``` appended
+This will save the images in a folder within the main images directory `${ALLSKY_IMAGES}` by date `${DATE}` with `-clean` appended
 
 ## Available in { data-toc-label="Available in" }
 

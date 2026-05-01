@@ -5975,40 +5975,6 @@
                 
                   
 
-  <nav class="md-tags">
-    
-      
-      
-      
-        
-        
-      
-      
-        <a href="../tags.html#tag:blocks" class="md-tag md-tag-icon">Blocks</a>
-      
-    
-      
-      
-      
-        
-        
-      
-      
-        <a href="../tags.html#tag:developer-guide" class="md-tag md-tag-icon">Developer Guide</a>
-      
-    
-      
-      
-      
-        
-        
-      
-      
-        <a href="../tags.html#tag:reference" class="md-tag md-tag-icon">Reference</a>
-      
-    
-  </nav>
-
 
   
   
@@ -6018,7 +5984,7 @@
 
 <p>Blocks are designed to simplify the adding of fields to the overlay. Some modules, the solar system moduloe for example, produce a lot of variables that can be added to the overlay. Manually adding each one can be tedious.</p>
 <p>Blocks are predefined groups of variables defined in a column/row layout that can be added to the overlay together.</p>
-<p>Blocks are accessed from the variable managier when editing an overlay</p>
+<p>Blocks are accessed from the variable managier when editing an overlay.</p>
 <figure>
 <p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../assets/developer_images/blocks.png" data-desc-position="bottom"><img alt="Blocks" src="../assets/developer_images/blocks.png"></a></p>
 <figcaption>
@@ -6026,10 +5992,10 @@
 </figcaption>
 </figure>
 <h2 id="blocks-structure">Blocks structure<a class="headerlink" href="#blocks-structure" title="Permanent link">¶</a></h2>
-<p>Blocks are json files that define one or more blocks that are made available in the variable manager. The following example is taken from the allsk_solarsystem module and defines two blocks related ot the sun</p>
+<p>Blocks are json files that define one or more blocks that are made available in the variable manager. The following example is taken from the allsk_solarsystem module and defines two blocks related ot the sun.</p>
 <ul>
-<li>The first block defines the variables to display for the Sun's timings  </li>
-<li>The second block defines the variables to display the position of the Sun</li>
+<li>The first block defines the variables to display for the Sun's timings.</li>
+<li>The second block defines the variables to display the position of the Sun.</li>
 </ul>
 <p>There is no limit on the number of columns or rows that can be created in a block.</p>
 <div class="admonition warning">
@@ -6037,12 +6003,12 @@
 <p>If you define multiple columns when the fields are added to the overlay the width will be set to the widest variable name. This is not ideal as the data may be muc narrower than the variable name. To get around this after the block has been added the user should select the variables in each column and line them up as required.</p>
 </div>
 <ul>
-<li>The key name for each block can be anything, given the file is json it must be unique within the file  </li>
-<li>The <strong>name</strong> is displayed within the variable manager  </li>
-<li>The <strong>description</strong> is displayed within the variable manager</li>
-<li>The <strong>fields</strong> section contains each row and column. The keys to the rows are abritrary and the convention for the columns is <strong>colXX</strong>  </li>
-<li>You do not have to use multiple columns you could just create a single column in each row that contains the field labale and data. Generally its better</li>
-<li>Each row does not have to have the same number of columns, see the top 5 adsb aircraft below</li>
+<li>The key name for each block can be anything, given the file is json it must be unique within the file.</li>
+<li>The <strong>name</strong> is displayed within the variable manager.</li>
+<li>The <strong>description</strong> is displayed within the variable manager.</li>
+<li>The <strong>fields</strong> section contains each row and column. The keys to the rows are abritrary and the convention for the columns is <strong>colXX</strong>.</li>
+<li>You do not have to use multiple columns you could just create a single column in each row that contains the field labale and data. Generally it's better.</li>
+<li>Each row does not have to have the same number of columns, see the top 5 adsb aircraft below.</li>
 </ul>
 <div class="highlight"><pre><span></span><code>{
     "suntimesblock": {
@@ -6115,7 +6081,7 @@
     }    
 }
 </code></pre></div>
-<p>The block defining the Sun position and timings</p>
+<p>The block defining the Sun position and timings:</p>
 <div class="highlight"><pre><span></span><code>{
     "closest": {
         "name": "Top 5 Aircraft",
@@ -6179,7 +6145,7 @@
     }
 }
 </code></pre></div>
-<p>The block defining the top 5 ADSB aircraft, note the differeing columns per row</p>
+<p>The block defining the top 5 ADSB aircraft, note the differing columns per row.</p>
 <h2 id="distributing">Distributing<a class="headerlink" href="#distributing" title="Permanent link">¶</a></h2>
 <p>To include blocks with your module simply create the config and add them to the blocks folder withing the module repository. The installer will then copy the charts to the correct location within Allsky.</p>
 
@@ -6188,9 +6154,6 @@
 
 
 
-
-  
-  
 
 
 

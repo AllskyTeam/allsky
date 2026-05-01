@@ -1,11 +1,3 @@
----
-tags:
-  - Allsky Guide
-  - Things
-  - 3D Printing
-  - Hardware
----
-
 # The [AllSkyKamera case](https://allskykamera.space/kamerabau_gehaeuse.php?lang=en)
 
 The **AllSkyKamera** project is more than just a printable camera housing. It is a broader community and network built around Raspberry Pi based all-sky cameras, shared observations, and practical citizen-science use. For Allsky users, one of the most immediately useful parts of that project is Stefan’s modular 3D-printable case design.

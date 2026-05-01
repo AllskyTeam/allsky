@@ -1,18 +1,10 @@
----
-tags:
-  - Allsky Guide
-  - Troubleshooting
-  - Raspberry Pi Camera
-  - Camera
----
-
 This page describes known issues with RPi and RPi-compatible cameras.
 
 !!! warning  "Warning"
 
     The first step in diagnosing problems with RPi cameras is to run
 
-    ```rpicam-still --timeout 1 --nopreview```
+    `rpicam-still --timeout 1 --nopreview`
 
     If it gives an error (usually one of the errors described below), then the problem is with the camera and NOT with Allsky.  
 
@@ -24,15 +16,15 @@ A "camera not found" message can be due many different things. Here are some ste
 - If you have access to another Pi, try plugging the camera in it to see if it works.
 - If you are running the Bullseye operating system, check for the correct camera driver.
 
-    ```rpicam-still --timeout 1 --nopreview```
+    `rpicam-still --timeout 1 --nopreview`
 
     Ignoring all the INFO and WARN messages, if you get an error like this:
 
-    ```terminate called after throwing an instance of 'std::runtime_error'```  
-    ```what():  failed to import fd 22```
+    `terminate called after throwing an instance of 'std::runtime_error'`  
+    `what():  failed to import fd 22`
 
     run:
-        - ```sudo raspi-config```  
+        - `sudo raspi-config`  
         - Navigate to Advanced Options  
         - Enable Glamor graphic acceleration  
         - Reboot your Pi  
@@ -46,7 +38,7 @@ A "camera not found" message can be due many different things. Here are some ste
 
     Ignoring all the INFO and WARN messages, if you get an error that contains  
     
-    ```Unable to request 0 buffers: Device or resource busy```
+    `Unable to request 0 buffers: Device or resource busy`
 
     your Pi may be under voltaged  
         - If you have another power supply try it  
@@ -95,7 +87,7 @@ sudo shutdown -r now
 
 When a Linux command (for example, date) completes, it has an exit code, also called a "return code" or "RETCODE". By convention, a code of 0 means the command was successful and a non-zero code means there was some problem. The developer of the command specifies what each non-zero code means. When Allsky commands detect an issue, like a required file is not found, they print an error message then exit with a non-zero code.
 
-An exit code of 137 usually means the command was forcefully killed by an outside source, often the Linux operating system. When this happens to an Allsky command, the log file will usually contain a message with Killed in it, and often with ```RETCODE=137``` in it.
+An exit code of 137 usually means the command was forcefully killed by an outside source, often the Linux operating system. When this happens to an Allsky command, the log file will usually contain a message with Killed in it, and often with `RETCODE=137` in it.
 
 If you are using a RPi camera and get a notification message saying ERROR See /var/log/allsky.log for details and the log file contains entries similar to these:
 

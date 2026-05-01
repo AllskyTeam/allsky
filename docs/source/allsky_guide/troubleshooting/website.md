@@ -1,10 +1,3 @@
----
-tags:
-  - Allsky Guide
-  - Troubleshooting
-  - Website
----
-
 This page lists various issues you may have with the Allsky Website and how to solve them.
 
 ## WARNING: Sunset ... { data-toc-label="WARNING: Sunset" }
@@ -14,7 +7,7 @@ If you have a local or remote Allsky Website, at the end of every night Allsky c
 
 If you are seeing the message above when you go to the Allsky Website, run:
 
-```allsky-config  check_post_data```
+`allsky-config  check_post_data`
 
 It will run the postData.sh command and if there is a problem it will suggest a fix.
 
@@ -58,6 +51,6 @@ To overcome this problem enable the Upload Thumbnail setting(s) for the Daily an
 
     Making this change will only create thumbnails for all future videos. To create the currently missing thumbnails, do the following for each missing thumbnail, replacing YYYYMMDD with the date in ~/allsky/images
     
-    ```generateForDay.sh --thumbnail-only --upload --timelapse YYYYMMDD```
+    `generateForDay.sh --thumbnail-only --upload --timelapse YYYYMMDD`
     
     This will upload the thumbnail for the specified date.

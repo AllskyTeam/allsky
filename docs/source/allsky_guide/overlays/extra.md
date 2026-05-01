@@ -1,10 +1,3 @@
----
-tags:
-  - Allsky Guide
-  - Overlays
-  - Extra Data
----
-
 # Extra Data
 This section explains how you can wite data that is available for use in the overlay from your own scripts outside of Allsky.
 
@@ -12,7 +5,7 @@ This section explains how you can wite data that is available for use in the ove
 
     This is an advanced topic that requires an understanding of the Linux file system and how to manage files within it. The Linux Basics page should provide the understanding you need.
 
-As an example, assume you want to add weather data to your images. You first need to create or obtain a program that gathers that data and writes it to a file. How you obtain that file is outside the scope of this documentation, but the program needs to write the data in a specific format in a file called ``~/allsky/tmp/extra/xxxxx``` (replace the xxxxx with an appropriate name).
+As an example, assume you want to add weather data to your images. You first need to create or obtain a program that gathers that data and writes it to a file. How you obtain that file is outside the scope of this documentation, but the program needs to write the data in a specific format in a file called `~/allsky/tmp/extra/xxxxx` (replace the xxxxx with an appropriate name).
 
 The "extra" file can be either a simple ==.txt== file or preferably a ==.json== file since it provides much more flexibility. You can have multiple "extra" files with different names; this can be useful if you want to add different types of data to the overlay, and each type has its own program to gather the data. A typical example is weather data and dew heater status.
 
@@ -112,8 +105,8 @@ This .json file, which has been truncated for brevity, includes all of the attri
 
 The "extra" files must be created by an application you provide and there are a few things to consider when creating these files:
 
-  - **Variable names** must be prefixed with a string that's unique to you, e.g., your initials, to avoid conflicting with the names of Allsky variables. The variables in the examples above are prefixed with ```AG_```. You can use anything except ```AS_``` and ```ALLSKY_```.
+  - **Variable names** must be prefixed with a string that's unique to you, e.g., your initials, to avoid conflicting with the names of Allsky variables. The variables in the examples above are prefixed with `AG_`. You can use anything except `AS_` and `ALLSKY_`.
 
-  - **Variable values** should generally not include units of measure. For example ```${DOME_TEMPERATURE}``` should be ```20.72```, not ```20.72° C``` because ```20.72``` is a "Numeric" variable that can be formated (e.g., to ```20.7```) whereas ```20.72° C``` is a "Text" string that can't be formatted. If you want ```° C``` to appear on the overlay, add it in the field itself: ```Dome temperature: ${DOME_TEMPERATURE}&deg; C```. Note that &deg; adds the degree symbol °. Or use the formatting system within the overlay editor to set the format
+  - **Variable values** should generally not include units of measure. For example `${DOME_TEMPERATURE}` should be `20.72`, not `20.72° C` because `20.72` is a "Numeric" variable that can be formated (e.g., to `20.7`) whereas `20.72° C` is a "Text" string that can't be formatted. If you want `° C` to appear on the overlay, add it in the field itself: `Dome temperature: ${DOME_TEMPERATURE}&deg; C`. Note that &deg; adds the degree symbol °. Or use the formatting system within the overlay editor to set the format
 
-  - **Permissions** You must ensure that the "extra" files can be read by the web server. Adding ```chmod 644 file``` ... to the programs that create the files should suffice. The Overlay Module will silently ignore any files it cannot read.
+  - **Permissions** You must ensure that the "extra" files can be read by the web server. Adding `chmod 644 file` ... to the programs that create the files should suffice. The Overlay Module will silently ignore any files it cannot read.

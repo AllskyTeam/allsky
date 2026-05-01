@@ -1,15 +1,8 @@
----
-tags:
-  - Developer Guide
-  - Building Modules
-  - API
----
-
-In this tutorial we will write a module that accesses the Openweathermap api to retrieve weather data
+In this tutorial we will write a module that accesses the Openweathermap api to retrieve weather data.
 
 !!! warning  "Warning"
  
-    Please ensure you have read the simple tutorial before this one as the basics covered in the simple tutorial will not be covered
+    Please ensure you have read the simple tutorial before this one as the basics covered in the simple tutorial will not be covered.
 
 !!! warning  "API Limits"
  
@@ -17,7 +10,7 @@ In this tutorial we will write a module that accesses the Openweathermap api to 
 
 Before using this tutorial you will require an API key to access the API. To get an API key create an account on [Open Weather Map](https://openweathermap.org){ target="_blank" rel="noopener" .external } and create an API key in your account area.
 
-Lets start with the basic framework for the module, after creating this code run add the module to the periodic flow and add your API key then save the module and pipeline
+Lets start with the basic framework for the module, after creating this code run add the module to the periodic flow and add your API key then save the module and pipeline.
 
 ```python
 import allsky_shared as allsky_shared
@@ -110,7 +103,7 @@ def example1_cleanup():
       allsky_shared.cleanupModule(moduleData)
 ```
 
-A new concept in this code is the addition of the ```"secret": "true",``` in the api key defintion. This ensures that the valeu in this field is saved int the ```~/allsky/env.json``` file rather than in the pipeline. This is important in that when submitting support info sensitive data will not be included since we never include the env.json file
+A new concept in this code is the addition of the `"secret": "true",` in the api key defintion. This ensures that the valeu in this field is saved int the `~/allsky/env.json` file rather than in the pipeline. This is important in that when submitting support info sensitive data will not be included since we never include the env.json file
 
 Next we need to get the weather data for our location from the API. The API uses the follwoing url
 

@@ -1,11 +1,4 @@
----
-tags:
-  - Allsky Guide
-  - Troubleshooting
-  - Uploads
----
-
-Uploading a file means copying it to a different computer. Allsky supports several ways to upload files including ```ftp```, ```scp```, and others.
+Uploading a file means copying it to a different computer. Allsky supports several ways to upload files including `ftp`, `scp`, and others.
 
 ### Testing an upload { data-toc-label="Testing an upload" }
 
@@ -57,13 +50,13 @@ There are three main certificate-related error messages you'll see.
     
       - Create a file called ~/.lftprc and add set ssl:check-hostname false to it:
 
-          ``echo "set ssl:check-hostname" > ~/.lftprc``
+          `echo "set ssl:check-hostname" > ~/.lftprc`
 
       - Set the FTP Commands setting to set ssl:check-hostname false. If you expect to execute lftp manually the first method is better, otherwise use the second method so all your configuration changes are in one place.
 
   - Certificate verification: Not trusted
     
-    Add ```set ssl:verify-certificate no`` to FTP Commands or the ~/.lftprc file as above.
+    Add `set ssl:verify-certificate no` to FTP Commands or the ~/.lftprc file as above.
 
 If your Pi's IP address changed, or the IP address remained but the machine using the addressed changed, you probably need to remove the previous key from your ~/.ssh/known_hosts file. If the file has only one entry, simply remove it. If the file has multiple entries, make a backup of the file, then delete one entry at a time until you find the "bad" one.
 

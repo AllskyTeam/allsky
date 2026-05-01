@@ -1,11 +1,3 @@
----
-tags:
-  - Allsky Guide
-  - Troubleshooting
-  - ZWO
-  - Camera
----
-
 ## ZWO camera not found { data-toc-label="ZWO camera not found" }
 If you have a new ZWO camera model that Allsky doesn't support you'll get an appropriate message in the WebUI when you start Allsky. The message will also tell you how to request support.
 
@@ -43,7 +35,7 @@ If you are seeing lots of errors (an occasional one can be ignored) try the foll
 
 The steps listed below haven't been fully tested and we suggest entering a new [Discussions](https://github.com/AllskyTeam/allsky-modules/discussions){ target="_blank" rel="noopener" }    item before trying them.
 
-Try adding ```swiotlb=131072``` to end of the line in /boot/cmdline.txt, then reboot. This increases the number of USB buffers from 32 to 128 and might be needed for cameras with very large sensors like the ASI294MM (8288 x 5644) @ 16 bits.
+Try adding `swiotlb=131072` to end of the line in /boot/cmdline.txt, then reboot. This increases the number of USB buffers from 32 to 128 and might be needed for cameras with very large sensors like the ASI294MM (8288 x 5644) @ 16 bits.
 
 ```
 32  buffers * 1024 bytes/buffer =  32768 bytes.
@@ -52,7 +44,7 @@ Try adding ```swiotlb=131072``` to end of the line in /boot/cmdline.txt, then re
 
 Prior to this change the contents of /sys/kernel/debug/swiotlb/io_tlb_used was hitting the maximum of 32768 bytes. After the change it was hitting a maximum of about 46000.
 
-Enable ```DebugPrint``` in ~/.ZWO/ASIconfig.xml by changing the 00 to 01, then restart Allsky. A LOT of lines will be added to /var/log/allsky.log, so be sure to set it back to 00 when done testing. The extra log entries may offer some insight into causes of the exposure failures.
+Enable `DebugPrint` in ~/.ZWO/ASIconfig.xml by changing the 00 to 01, then restart Allsky. A LOT of lines will be added to /var/log/allsky.log, so be sure to set it back to 00 when done testing. The extra log entries may offer some insight into causes of the exposure failures.
 
 ## ASI120 etc { data-toc-label="ASI120 etc" }
 
@@ -90,4 +82,4 @@ While we cannot help with the buyer's remorse, the USB errors can be remedied us
 
 If you do not have Windows, you can get a legitimate developer VM image from Microsoft which may work well enough to re-flash the camera. Use your favorite search engine to find a "Microsoft windows developer vm image". Then look for instructions on enabling "USB pass-through" for your virtualization platform. Note that USB pass-through to VMs has been the source of issues in many different projects, e.g., anything that does DSP, timing-critical operations, or device reprogramming.
 
-It may be necessary to append ```program_usb_boot_mode=0``` to /boot/config.txt to make this camera work. As this changes some one-time-programmable EPROM - permanently altering your Raspberry Pi - do not set this unless absolutely necessary (and we don't know why it would be necessary).
+It may be necessary to append `program_usb_boot_mode=0` to /boot/config.txt to make this camera work. As this changes some one-time-programmable EPROM - permanently altering your Raspberry Pi - do not set this unless absolutely necessary (and we don't know why it would be necessary).

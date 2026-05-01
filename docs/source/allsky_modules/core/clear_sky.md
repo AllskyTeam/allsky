@@ -1,9 +1,3 @@
----
-tags:
-  - Core Module
-  - Pipeline Night 
----
-
 ## Description { data-toc-label="Description" }
 
 This module attempts to determine if the sky is clear. It does this by counting the number of stars in a specific region of the image. If the count is above a threshold then the sky is considered clear.

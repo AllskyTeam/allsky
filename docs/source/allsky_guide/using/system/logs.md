@@ -1,11 +1,3 @@
----
-tags:
-  - Allsky Guide
-  - WebUI
-  - System
-  - Logs
----
-
 # Logs
 
 The **Logs** tab on the WebUI's **System** page is where we move from symptoms to evidence. Other tabs can tell you that something looks wrong. The Logs tab helps you see what the system actually reported when it happened.

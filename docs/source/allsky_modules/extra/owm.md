@@ -1,23 +1,14 @@
----
-tags:
-  - Extra Module
-  - Pipeline Day
-  - Pipeline Night
-  - Pipeline Periodic
-  - API Required 
----
-
-This module obtains weather data from the Open Weather Map service
+This module obtains weather data from the Open Weather Map service.
 
 [OpenWeatherMap](https://openweathermap.org){ target="_blank" rel="noopener" .external  } is a widely used weather data service that provides real-time and historical meteorological information through a simple web-based API. It aggregates data from thousands of weather stations, radars, satellites, and global models, then makes it available to developers for use in applications, dashboards, and IoT devices. The platform offers current conditions, forecasts, air-quality information, severe-weather alerts, and detailed hourly data. Access is provided through RESTful API endpoints, typically returning JSON, and supports both free and paid tiers depending on the level of precision, frequency, and features required.
 
 !!! info  "API Key"
 
-    This module requires an API key. To get a key register on the [OpenWeatherMap](https://openweathermap.org){ target="_blank" rel="noopener" .external  } website then visit the API keys section
+    This module requires an API key. To get a key register on the [OpenWeatherMap](https://openweathermap.org){ target="_blank" rel="noopener" .external  } website then visit the API keys section.
 
 !!! warning  "API limits"
 
-    The free API limits you to 1000 requests per day. Please ensure you set the 'Read Every' setting to the correct value so as not to exceed this limit
+    The free API limits you to 1000 requests per day. Please ensure you set the 'Read Every' setting to the correct value so as not to exceed this limit.
 
 ## Settings { data-toc-label="Settings" }
 

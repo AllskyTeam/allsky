@@ -1,10 +1,3 @@
----
-tags:
-  - Allsky Guide
-  - Troubleshooting
-  - Flicker
----
-
 If your videos to change in brightness every image or "strobe", see below.
 
 ## During daytime AND nighttime { data-toc-label="During daytime nighttime" }

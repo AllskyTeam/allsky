@@ -1,10 +1,3 @@
----
-tags:
-  - Allsky Guide
-  - Troubleshooting
-  - Hardware
----
-
 Problems with your Raspberry Pi are not an issue with the AllSky software, but we're providing this page as a service to Allsky users.
 
 ## My Pi isn't using all its disk space { data-toc-label="My Pi isn't using all" }
@@ -39,4 +32,3 @@ Lenses need to be matched to your camera and your environment. If you're in an u
 If you are getting moisture on the inside of your allsky dome, consider adding a [Dew Heater](/allsky_modules/extra/dew_heater.html)
 
 You can also add a fan to the enclosure that sends air warmed by the Pi into the dome via one hole, and out via another.
-

@@ -1,14 +1,7 @@
----
-tags:
-  - Developer Guide
-  - Building Modules
-  - Tutorial
----
+Lets build a simple module. The module will:
 
-Lets build a simple module. The module will
-
-- Read data from a json file somewhere in the filesystem
-- Extract a value from the json file and create an allsky variable
+- Read data from a json file somewhere in the filesystem.
+- Extract a value from the json file and create an allsky variable.
 
 !!! tip  "Tip"
  
@@ -92,9 +85,9 @@ def example_cleanup():
 This will allow the module to be displayed in the module manager for the relevant pipelines but it wont actually do anything just yet.
 
 ### Add Arguments { data-toc-label="Add Arguments" }
-Next we need to add some fields that specify where the file is that contains the json data. This is accomplished by adding values to the ```arguments``` and ```argumentsdetails``` sections of the ```meta_data```
+Next we need to add some fields that specify where the file is that contains the json data. This is accomplished by adding values to the `arguments` and `argumentsdetails` sections of the `meta_data`.
 
-Change the ```arguments``` and ```argumentdetails``` section of the ```meta_data``` variable to the following
+Change the `arguments` and `argumentdetails` section of the `meta_data` variable to the following:
 
 ```python
     "arguments":{
@@ -109,12 +102,12 @@ Change the ```arguments``` and ```argumentdetails``` section of the ```meta_data
     },
 ```
 
-This adds a field called ```Filename``` to the module options
+This adds a field called `Filename` to the module options
 
 ### Use the arguments { data-toc-label="Use the arguments" }
 Next we need to make use of the arguments to read the json file.
 
-Change the ```run``` module method to the following
+Change the `run` module method to the following
 
 ```python
   def run(self):
@@ -133,16 +126,16 @@ Change the ```run``` module method to the following
     return result
 ```
 
-A couple of important points here
+Some important points here:
 
-  - ```self.get_param``` has been used to get the value entered in the module manager. This method must be used to access all values from the module manager. Refer to the [Base Class](../../allsky_base.md){ target="_blank" rel="noopener" .external } documentation for details of this method.
-  - The ```load_json_file``` helper function from the ```allsky_shared``` module is used to read the json file. This makes reading json files a lot easier. Refer to the [Shared Module](../../allsky_shared.md){ target="_blank" rel="noopener" .external } documentation for details of this method.
+  - `self.get_param` has been used to get the value entered in the module manager. This method must be used to access all values from the module manager. Refer to the [Base Class](../../allsky_base.md){ target="_blank" rel="noopener" .external } documentation for details of this method.
+  - The `load_json_file` helper function from the `allsky_shared` module is used to read the json file. This makes reading json files a lot easier. Refer to the [Shared Module](../../allsky_shared.md){ target="_blank" rel="noopener" .external } documentation for details of this method.
   - Note how the result variable is set in any error condition to ensure we have more than an empty string returned.
 
 ### Create The Allsky Variable { data-toc-label="Create Allsky Variable" }
-Next we need to use the data from the json file to create the allsky variable, which will be available in the overlay manager
+Next we need to use the data from the json file to create the allsky variable, which will be available in the overlay manager.
 
-Change the ```run``` module method to the following
+Change the `run` module method to the following:
 
 ```python
   def run(self):
@@ -170,15 +163,15 @@ Change the ```run``` module method to the following
     return result
 ```
 
-This creates the extra_data dict and then calls the ```allsky_shared.save_extra_data``` method to actually save the data. This will create a file in ```~/allsky/tmp/extra``` called ```allsky_example.json``` containing the variable and value, this can then be used in the overlay editor
+This creates the extra_data dict and then calls the `allsky_shared.save_extra_data` method to actually save the data. This will create a file in `~/allsky/tmp/extra` called `allsky_example.json` containing the variable and value, this can then be used in the overlay editor.
 
 ### Define the Allsky Variable { data-toc-label="Define Allsky Variable" }
 
 In the example above Allsky knows nothing about what the variable you have created is, this will cause limitations in the overlay editor.
 
-To get the best out of the overlay editor it needs to understand what the variable you have created actually is. The ```meta_data``` structure can be used to define the variable in more detail
+To get the best out of the overlay editor it needs to understand what the variable you have created actually is. The `meta_data` structure can be used to define the variable in more detail.
 
-Change the ```meta_data``` structure to the following
+Change the `meta_data` structure to the following:
 
 ```python
   meta_data = {
@@ -234,7 +227,7 @@ Change the ```meta_data``` structure to the following
 ```
 
 
-This adds the ```extradata``` section that defines the variable(s) the module is going to create. The structure of this ection is detailed in [Meta Data](../meta_data_structure.md){ target="_blank" rel="noopener" .external } Documentation.
+This adds the `extradata` section that defines the variable(s) the module is going to create. The structure of this ection is detailed in [Meta Data](../meta_data_structure.md){ target="_blank" rel="noopener" .external } Documentation.
 
 In the definition we added we are telling Allsky that 
 
@@ -243,7 +236,7 @@ In the definition we added we are telling Allsky that
 
 ### Adding more variables { data-toc-label="Adding more variables" }
 
-Our json file contains a second value so lets add that as well by adding the new variable to the ```meta_data``` and setting it in the ```run``` method
+Our json file contains a second value so lets add that as well by adding the new variable to the `meta_data` and setting it in the `run` method
 
 Make the following changes
 
@@ -334,4 +327,4 @@ Make the following changes
     return result
 ```
 
-Now when you test the module two variables are created. Note that the second variable differs from the first in that its formatted to 2 decimal places
+Now when you test the module two variables are created. Note that the second variable differs from the first in that its formatted to 2 decimal places.

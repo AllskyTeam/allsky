@@ -1,9 +1,3 @@
----
-tags:
-  - Developer Guide
-  - Overview
----
-
 # Overview
 ## What Are Modules { data-toc-label="What Are Modules" }
 

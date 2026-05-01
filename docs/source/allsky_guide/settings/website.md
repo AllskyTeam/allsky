@@ -1,10 +1,3 @@
----
-tags:
-  - Allsky Guide
-  - Settings
-  - Website
----
-
 The Allsky Website allows you to display your most recent captured image on a Website on your Pi, on another machine, or on both. Saved timelapse videos, keograms, and startrails can also be viewed. Constellations and other objects can be overlayed on the image, and aurora activity can be listed.
 
 For a local Allsky Website you only need to configure and enable it as described below; no installation is needed.
@@ -18,8 +11,8 @@ Steps to configure an Allsky Website are below.
 - In the WebUI, click on the "Settings - Editor" link.
 - In the drop-down at the bottom of the page, select one of the following, depending on which Website you want to configure:
 
-    - ```configuration.json (local Allsky Website)``` or
-    - ```remote_configuration.json (remote Allsky Website)``` (only if you installed a remote Website)
+    - `configuration.json (local Allsky Website)` or
+    - `remote_configuration.json (remote Allsky Website)` (only if you installed a remote Website)
     - You will then see something like this:
 
 

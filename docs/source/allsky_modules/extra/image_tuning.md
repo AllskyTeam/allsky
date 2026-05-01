@@ -1,10 +1,3 @@
----
-tags:
-  - Extra Module
-  - Pipeline Day
-  - Pipeline Night
----
-
 This module allows for manipulating various aspects of the captured image;
 
   - Saturation

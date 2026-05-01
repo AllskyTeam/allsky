@@ -5988,40 +5988,6 @@
                 
                   
 
-  <nav class="md-tags">
-    
-      
-      
-      
-        
-        
-      
-      
-        <a href="../../tags.html#tag:allsky-guide" class="md-tag md-tag-icon">Allsky Guide</a>
-      
-    
-      
-      
-      
-        
-        
-      
-      
-        <a href="../../tags.html#tag:startrails" class="md-tag md-tag-icon">Startrails</a>
-      
-    
-      
-      
-      
-        
-        
-      
-      
-        <a href="../../tags.html#tag:troubleshooting" class="md-tag md-tag-icon">Troubleshooting</a>
-      
-    
-  </nav>
-
 
   
   
@@ -6042,9 +6008,9 @@
 </figure>
 <h2 id="creating-a-startrails-image">Creating a startrails image<a class="headerlink" href="#creating-a-startrails-image" title="Permanent link">¶</a></h2>
 <p>To have a startrails image automatically created at the end of each night, enable the Generate setting in the Startrails sub-section of the WebUI.</p>
-<p>To manually create a startrails image run the generateForDay.sh command. For example, to create and then upload a startrails to any Allsky Website and/or remote server you have for July 10, 2025:</p>
-<div class="highlight"><pre><span></span><code>generateForDay.sh --startrails 20250710
-generateForDay.sh --upload --startrails 20250710
+<p>To manually create a startrails image run the generateForDay.sh command. For example, to create and then upload a startrails to any Allsky Website and/or remote server you have for July 10, 2026:</p>
+<div class="highlight"><pre><span></span><code>generateForDay.sh --startrails 20260710
+generateForDay.sh --upload --startrails 20260710
 </code></pre></div>
 <p>This will use the settings specified in the Startrails sub-section of the WebUI.</p>
 <p>If you want to experiment using other settings you can specify those settings as such:</p>
@@ -6080,7 +6046,7 @@ Arguments:
 </code></pre></div>
 <p>Example of running the startrails program manually:</p>
 <div class="highlight"><pre><span></span><code>cd ~/allsky/bin
-./startrails -d images/20250710 -e jpg -b 0.15 -o images/20250710/startrails/startrails.jpg
+./startrails -d images/20260710 -e jpg -b 0.15 -o images/20260710/startrails/startrails.jpg
 </code></pre></div>
 </div>
 <h2 id="startrails-settings">Startrails settings<a class="headerlink" href="#startrails-settings" title="Permanent link">¶</a></h2>
@@ -6089,14 +6055,14 @@ Arguments:
 <p>If you aren't seeing trailed stars in your images and you get a message like "No images below threshold 0.100, writing the minimum image only", your images are too bright and Brightness Threshold needs to be reduced. To determine what number to use you need to know the typical nighttime sky brightness value. Do the following:</p>
 <ul>
 <li>
-<p>Run <code>allsky-config</code> <code>get_startrails_info</code> to see what your brightness values are.</p>
+<p>Run <code>allsky-config  get_startrails_info</code> to see what your brightness values are.</p>
 </li>
 <li>
 <p>If there is no data yet a message will appear with a possible reason, otherwise the output will look like:
   </p><div class="highlight"><pre><span></span><code>Startrails date        Minimum   Maximum   Mean      Median    Images used   Not used  Threshold
 ------------------------------------------------------------------------------------------------
-2025-01-17  06:20:45   0.084     0.146     0.103     0.105     250           3         0.15
-2025-01-18  06:16:18   0.045     0.135     0.102     0.106     247           6         0.15
+2026-01-17  06:20:45   0.084     0.146     0.103     0.105     250           3         0.15
+2026-01-18  06:16:18   0.045     0.135     0.102     0.106     247           6         0.15
 ------------------------------------------------------------------------------------------------
 Averages               0.065     0.140     0.103     0.106     497           9         -
 
@@ -6121,7 +6087,7 @@ If you crop your image, add a mask to it, or change cameras you'll most likely n
 <li>If you are running SAMBA (<code>allsky-config samba</code>) you can view the files from your PC or Mac and then select some files with the mouse and drag to the test directory.</li>
 <li>If you are not running SAMBA and you are logged into the Pi desktop, open a "File Manager" window on the Pi and drag/drop the files.</li>
 <li>If neither of the above work for you, you'll need to use the mv command to move the files. Using the * wildcard in the file names will allow you to move multiple files at a time.
-  For example: <code>mv 2025071001* ../test</code> to move all the images taken from 1:00 AM to 1:59 AM.</li>
+  For example: <code>mv 2026071001* ../test</code> to move all the images taken from 1:00 AM to 1:59 AM.</li>
 </ul>
 </li>
 <li>Run generateForDay.sh --startrails test to create a startrails file in the test directory. Look at the image using the Images page in the WebUI. Also look at the Images used and Not used columns of the output.</li>
@@ -6148,7 +6114,7 @@ If you crop your image, add a mask to it, or change cameras you'll most likely n
 <li>
 <p>If a startrails image isn't being created, make sure the Startrails Generate setting is enabled. If it IS enabled, run:
   <code>generateForDay.sh  --startrails  DATE</code></p>
-<p>replacing DATE with a valid date like 20250710 and check for errors.</p>
+<p>replacing DATE with a valid date like 20260710 and check for errors.</p>
 </li>
 <li>
 <p>If a startrails image is created but not uploaded, make sure the Startrails Upload setting is enabled. If that IS enabled, run:
@@ -6162,9 +6128,6 @@ If you crop your image, add a mask to it, or change cameras you'll most likely n
 
 
 
-
-  
-  
 
 
 

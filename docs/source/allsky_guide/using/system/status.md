@@ -1,10 +1,3 @@
----
-tags:
-  - Allsky Guide
-  - WebUI
-  - System
----
-
 # System Status
 
 The WebUI's **System** page is the main health dashboard for your Allsky installation. If you are not sure where to begin, this is usually the right page to open first. It is designed to answer the everyday questions most users have when checking on their system, such as:
@@ -156,7 +149,7 @@ When storage gets low, the symptoms can appear in many different ways. Captures 
 
 One especially useful detail is that the tab shows more than just a percentage. It also shows the total size and the remaining free space. A value such as 80 percent used may or may not be urgent depending on the total capacity and the rate at which your system is generating data.
 
-The ```~/allsky/images``` folder is normally the one in Allsky that uses the most disk space.  If you connect a USB thumbdrive to the Pi, you can move this directory to the USB device.  Run ```allsky-config``` and pick the option to move the images directory.
+The `~/allsky/images` folder is normally the one in Allsky that uses the most disk space.  If you connect a USB thumbdrive to the Pi, you can move this directory to the USB device.  Run `allsky-config` and pick the option to move the images directory.
 
 ### Temporary Storage Usage { data-toc-label="Temp Storage" }
 
@@ -167,7 +160,7 @@ During installation of Allsky, the amount of temporary storage is determined bas
 
 ## Custom Items On The System Tab { data-toc-label="Custom Items" }
 
-Your **System** tab may contain more than the built-in Allsky indicators shown in the examples above. Allsky allows custom additions to this tab, so some installations include extra lines, progress bars, or buttons created by the user.
+Your **System** tab can contain more than the built-in Allsky indicators shown in the examples above. Allsky allows custom additions to this tab such as extra lines, progress bars, or buttons created by you.
 
 These custom items can be used to display site-specific information such as:
 
@@ -233,9 +226,9 @@ That relationship is important to understand. The **System** tab tells you wheth
 
 The **System** tab also includes a built-in editor for **System Page Additions**. This is the part of the tab that lets you create and manage your own extra rows, progress bars, and action buttons without manually editing the additions files in a text editor.
 
-At a high-level, details on the additions are stored in a configuration file.  The editor is a front end to the file that allows you to modify it without actually opening it.
+At a high-level, details on the additions are stored in one or more configuration files.  The editor is a front end to the files that allows you to modify them without actually opening them.
 
-For many users, this editor is the easiest way to customise the System tab. Instead of remembering the exact file format used by additions files, you work with a form-based interface in the WebUI. You choose the kind of item you want to add, fill in the fields you care about, and save the file. The editor then writes the additions file for you in the correct format.
+For many users, this editor is the easiest way to customise the **System** tab. Instead of remembering the exact file format used by additions files, you work with a form-based interface in the WebUI. You choose the kind of item you want to add, fill in the fields you care about, and save the file. The editor then writes the additions files for you in the correct format.
 <!--
 This makes the feature much more approachable, especially if your goal is practical rather than technical. You may simply want the System tab to show a weather reading, a dew heater status line, a fan speed indicator, or a button that runs a maintenance script. In those cases, the editor is often a much more comfortable starting point than hand-building the file structure yourself. -->
 
@@ -303,8 +296,7 @@ Use a **data** entry when you want to show a straightforward label and value.
 
 This is the simplest type of custom addition. It is suitable for information such as:
 
-- ambient temperature, for example: ```Ambient temperature 20 C```
-<!-- - weather condition text, -->
+- ambient temperature, for example: `Ambient temperature 20 C`
 - the current operating mode of an attached device,
 - a plain status line produced by a script.
 
@@ -396,9 +388,9 @@ This means the **System** tab can gradually become tailored to your installation
 
 For many users, the editor is enough on its own. If your needs are straightforward and the scripts you want to call already exist, the editor may be all you need to create and maintain your additions.
 
-However, the editor is not a replacement for the underlying concept of additions files and data-producing scripts. The editor can help you build and maintain the file, but something still needs to generate the data that appears in custom rows and progress bars. In other words, the editor is the user-friendly front end for the feature, not the source of the data itself.
+However, the editor is not a replacement for the underlying concept of additions files and data-producing scripts. The editor can help you build and maintain the data files, but something still needs to generate the data that appears in your custom rows. The editor is the user-friendly front end for the feature, not the source of the data itself.
 
-If you need to build more advanced additions, create new scripts, or understand the exact file structure in detail, refer to the [System Page Additions](../../howtos/system_page.md) documentation page. That page goes deeper into how the data files work behind the scenes. <!-- The editor section here is intended to help you use the feature confidently from the WebUI, not to replace the more detailed setup guide. -->
+If you need to create new scripts or understand the exact data file structure in detail, refer to the [System Page Additions](../../howtos/system_page.md) documentation page. That page goes deeper into how the data files work behind the scenes.
 
 ### Practical Advice For End Users { data-toc-label="Practical Advice" }
 
@@ -410,11 +402,11 @@ If you are new to the additions editor, a sensible approach is:
 4. Add a progress bar only after you are comfortable with the basic workflow.
 5. Test button entries carefully before relying on them.
 
-Starting small is usually the best approach. It gives you confidence in how the editor behaves and makes it easier to spot mistakes. Once you understand the flow of open, add, test, and save, the editor becomes a very practical part of day-to-day administration.
+Starting small gives you confidence in how the editor behaves and makes it easier to spot mistakes.
 
 ## Summary
 
-For most users, the **System** tab is the first and most important operational page in the Allsky WebUI. It combines status, control, and health information in one place and makes it easy to answer the practical questions that come up during normal use.
+For most users, the **System** tab is the first and most important diagnostic page in the WebUI. It combines status, control, and health information in one place and makes it easy to answer the practical questions that come up during normal use.
 
 If you only remember one thing about this tab, remember this: when Allsky seems wrong, start here. Very often the tab will either show the problem directly or point you toward the next place to investigate.
 

@@ -6018,40 +6018,6 @@
                 
                   
 
-  <nav class="md-tags">
-    
-      
-      
-      
-        
-        
-      
-      
-        <a href="../tags.html#tag:developer-guide" class="md-tag md-tag-icon">Developer Guide</a>
-      
-    
-      
-      
-      
-        
-        
-      
-      
-        <a href="../tags.html#tag:module-structure" class="md-tag md-tag-icon">Module Structure</a>
-      
-    
-      
-      
-      
-        
-        
-      
-      
-        <a href="../tags.html#tag:reference" class="md-tag md-tag-icon">Reference</a>
-      
-    
-  </nav>
-
 
   
   
@@ -6097,19 +6063,21 @@ def tutorial_cleanup():
 <h3 id="two-imports-that">Two imports that<a class="headerlink" href="#two-imports-that" title="Permanent link">¶</a></h3>
 <ul>
 <li>Import the allsky_shared module, this is a library of functions that a module can use.</li>
-<li>Import of the base module. The is a base class providing helper functions for a module</li>
+<li>Import of the base module. The is a base class providing helper functions for a module.</li>
 </ul>
 <h3 id="a-class-definition-allskytutorial">A class definition (ALLSKYTUTORIAL)<a class="headerlink" href="#a-class-definition-allskytutorial" title="Permanent link">¶</a></h3>
-<p>that extends the base module (ALLSKYBASE) we imported. Note that the class can be called anything but as a convention its ALLSKY plus the module name all in upper case</p>
-<p>A meta_data variable. This is described later and contains all of the definitions required for the module</p>
+<p>that extends the base module (ALLSKYBASE) we imported. Note that the class can be called anything but as a convention its ALLSKY plus the module name all in UPPER CASE.</p>
+<p>A meta_data variable. This is described later and contains all of the definitions required for the module.</p>
 <p>A run function, this is the convention we use to run a module. This function must return the result of the module as a string, this is displayed in the module debug dialog.</p>
 <h3 id="the-module-entry-point-tutorial">The module entry point (tutorial)<a class="headerlink" href="#the-module-entry-point-tutorial" title="Permanent link">¶</a></h3>
 <p>Every module requires this function. This is the function called by core Allsky to start the module.</p>
-<p>There are two parameters provided to this function</p>
-<p><strong>params</strong> – These are the values the user has set for the module in the module manager</p>
-<p><strong>event</strong> – This is the pipeline(flow) the module was called from</p>
-<p>In this function we would create a new instance of the module class passing the params and event variables then call the run method</p>
-<p>Your class does not need a constructor, that’s handled by the base class. If for some reason you do need a constructor then you must ensure that base class constructor is also called</p>
+<p>There are two parameters provided to this function:</p>
+<ol>
+<li><strong>params</strong> – These are the values the user has set for the module in the module manager.</li>
+<li><strong>event</strong> – This is the pipeline(flow) the module was called from.</li>
+</ol>
+<p>In this function we would create a new instance of the module class passing the params and event variables then call the run method.</p>
+<p>Your class does not need a constructor, that’s handled by the base class. If for some reason you do need a constructor then you must ensure that base class constructor is also called.</p>
 <h3 id="the-module-cleanup-entry-point-tutorial_cleanup">The module cleanup entry point (tutorial_cleanup)<a class="headerlink" href="#the-module-cleanup-entry-point-tutorial_cleanup" title="Permanent link">¶</a></h3>
 <p>This function is called by core Allsky when a module is remove from a pipeline. This is to allow the module to cleanup any data required. A core function is provided that you can call that will handle all of the cleanup.</p>
 <p>This entry point is optional. If the module does not create any extra data for the overlays then there is no need to provide this function.</p>
@@ -6119,9 +6087,6 @@ def tutorial_cleanup():
 
 
 
-
-  
-  
 
 
 

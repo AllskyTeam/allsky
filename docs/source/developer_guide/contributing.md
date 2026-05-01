@@ -1,9 +1,3 @@
----
-tags:
-  - Developer Guide
-  - Contributing
----
-
 # Contributing
 
 Contributions to Allsky are welcome, whether they are fixes, new features, documentation improvements, UI work, module development, refactoring, or test coverage. This page is aimed at developers and assumes you are comfortable working with Git, branches, and pull requests.
@@ -64,7 +58,7 @@ This workflow keeps your `main` branch clean, makes it easy to sync with the ups
 
 ### Fork And Clone { data-toc-label="Fork And Clone" }
 
-Start by forking the relevant repository on GitHub. Once that is done, clone your fork locally.
+Start by forking the relevant repository on GitHub. Once that is done, clone your fork locally:
 
 === "Clone `allsky`"
 
@@ -188,7 +182,7 @@ Allsky spans shell, Python, PHP, JavaScript, HTML, CSS, and documentation. The e
 
 ### Test Before You Push { data-toc-label="Test Before You Push" }
 
-You do not need a perfect enterprise test matrix for every contribution, but you do need to verify your work sensibly. The right checks depend on the type of change.
+You do not need a perfect enterprise test matrix for every contribution, but you do need to verify your work sensibly. The right checks depend on the type of change:
 
 === "`allsky` contributions"
 

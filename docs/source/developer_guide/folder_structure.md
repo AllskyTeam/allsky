@@ -1,10 +1,3 @@
----
-tags:
-  - Developer Guide
-  - Reference
-  - Folder Structure
----
-
 # Module folder structure
 
 There are two relevant folder structures, that used when developing a module and that used after a module has been installed.
@@ -82,9 +75,9 @@ modules                                       The modules folder containing all 
 # How Allsky finds modules
 Allsky ships with core modules which can then be extended by installing the extra modules. Once installed Allsky will search for modules in the following order
 
-1. The legacy custom modules folder ```/opt/allsky/modules```
-2. The new custom modules folder ```~/allsky/config/myfiles/modules```
-3. Core Allsky ```~/allsky/scripts/modules```
+1. The legacy custom modules folder `/opt/allsky/modules`
+2. The new custom modules folder `~/allsky/config/myfiles/modules`
+3. Core Allsky `~/allsky/scripts/modules`
 
 This mechanism allows you to implement custom versions of the core Allsky modules should you wish to do so.
 
@@ -95,5 +88,4 @@ This mechanism allows you to implement custom versions of the core Allsky module
 
 !!! danger  "Legacy Module Locations"
 
-    version v2024.12.06_01 and prior of Allsky stored all modules and module data in the ``/opt/allsky/modules``` folder. This has now been deprecated and all modules and associated data are stored with the ```~/allsky``` folder.
-
+    version v2024.12.06_01 and prior of Allsky stored all modules and module data in the `/opt/allsky/modules` folder. All modules and associated data are now stored within the `~/allsky` folder.

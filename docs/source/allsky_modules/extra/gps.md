@@ -1,11 +1,3 @@
----
-tags:
-  - Extra Module
-  - Pipeline Periodic
-  - Hardware Required 
----
-
-
 This module allows you to read latitude, longitude and time from a GPS attached to the pi. This module requires gpsd to be installed, the module installer will install this if its not present.
 
 !!! warning  "Pi Noise"
@@ -44,7 +36,7 @@ If you are concerned about your exact location being set then the module contain
 
   Even if you set the time sync options in the GPS module the time will only be synchronised if the Pi is NOT having its time updated from the Internet. To test if the time is currently being synchronised from the Internet enter the following command:
 
-  ```timedatectl status```
+  `timedatectl status`
 
   Output similar to the following will be produced:
 

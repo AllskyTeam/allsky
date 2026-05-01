@@ -6129,53 +6129,29 @@
                 
                   
 
-  <nav class="md-tags">
-    
-      
-      
-      
-        
-        
-      
-      
-        <a href="tags.html#tag:api" class="md-tag md-tag-icon">API</a>
-      
-    
-      
-      
-      
-        
-        
-      
-      
-        <a href="tags.html#tag:reference" class="md-tag md-tag-icon">Reference</a>
-      
-    
-  </nav>
-
 
   
   
 
 
 <h1 id="allsky-server-api">Allsky Server API<a class="headerlink" href="#allsky-server-api" title="Permanent link">¶</a></h1>
-<p>The Allsky Server is a separate process that runs alongside Allsky its primary job is to handle longer running processes and to manage GPIO Coontrol. Its core functions are</p>
+<p>The Allsky Server is a separate process that runs alongside Allsky its primary job is to handle longer running processes and to manage GPIO Coontrol. Its core functions are:</p>
 <ul>
-<li>The Allsky dashboard whcich displays information about Allsky - currently under development</li>
-<li>The Allsky focuser which allows a camera with a focus motor to be focused - currently under development</li>
-<li>The Pi's GPIO pins, both digital and PWM</li>
+<li>The Allsky dashboard whcich displays information about Allsky - currently under development.</li>
+<li>The Allsky focuser which allows a camera with a focus motor to be focused - currently under development.</li>
+<li>The Pi's GPIO pins, both digital and PWM.</li>
 </ul>
 <h3 id="authentication">Authentication<a class="headerlink" href="#authentication" title="Permanent link">¶</a></h3>
-<p>The API requires authentication under the following circumstances</p>
+<p>The API requires authentication under the following circumstances.</p>
 <ul>
-<li>You are unsing the inbuilt Dashboard, in this case the authentication will be via a login screen using the same login and password as Allaky</li>
-<li>You are using the api from an external machine. In this case you will need to request a JWT token from the API</li>
+<li>You are unsing the inbuilt Dashboard, in this case the authentication will be via a login screen using the same login and password as Allaky.</li>
+<li>You are using the api from an external machine. In this case you will need to request a JWT token from the API.</li>
 </ul>
-<p>If you are using the API from the local machine then no authentication is required for any API</p>
+<p>If you are using the API from the local machine then no authentication is required for any API.</p>
 <h3 id="requesting-a-jwt-token">Requesting a JWT token<a class="headerlink" href="#requesting-a-jwt-token" title="Permanent link">¶</a></h3>
-<p>To get a JWT token use the following API endpoint</p>
+<p>To get a JWT token use the following API endpoint.</p>
 <p>POST /login</p>
-<p>This expects a username and password and returns a JWT token</p>
+<p>This expects a username and password and returns a JWT token.</p>
 <p>TODO: Add Hoppscotch examples
 TODO: Creating users</p>
 <h2 id="the-available-apis">The Available API's<a class="headerlink" href="#the-available-apis" title="Permanent link">¶</a></h2>
@@ -7002,9 +6978,6 @@ component needs to be restarted but the web interface should remain active.</p>
 
 
 
-
-  
-  
 
 
 

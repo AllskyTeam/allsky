@@ -1,10 +1,3 @@
----
-tags:
-  - Module Manager
-  - Package Manager
-  - User Modules
----
-
 # Module Package Manager
 
 The module package manager is the part of Allsky that installs, updates, and removes optional modules from your system. It is the place where modules are brought into Allsky. The regular Module Manager then takes over and lets you decide where those modules should run, in what order they should run, and how they should be configured.

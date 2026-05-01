@@ -1,15 +1,8 @@
----
-tags:
-  - Developer Guide
-  - Reference
-  - Fields
----
-
 # Available fields
 
 ## Text field { data-toc-label="Text field" }
 
-This is the default field type and requires no extra values. This will display a text box allowing the user to enter detail
+This is the default field type and requires no extra values. This will display a text box allowing the user to enter detail:
 
 ```
 "textfield": {
@@ -21,7 +14,7 @@ This is the default field type and requires no extra values. This will display a
 ```
 
 ## Select field { data-toc-label="Select field" }
-This displays a drop down list allowing the user to select a value. The only additional value required is the ‘values’ option which is a comma separated list of the values to display in the dropdown
+This displays a drop down list allowing the user to select a value. The only additional value required is the ‘values’ option which is a comma separated list of the values to display in the dropdown:
 
 ```
 "select" : {
@@ -37,7 +30,7 @@ This displays a drop down list allowing the user to select a value. The only add
 ```
 
 ## Ajax select field { data-toc-label="Ajax select field" }
-This field type is main intended for use by the core Allsky development team. It displays a dopdown list of values obtained from an ajax request.
+This field type is main intended for use by the core Allsky development team. It displays a dopdown list of values obtained from an ajax request:
 
 ```
 "ajaxselect": {
@@ -54,7 +47,7 @@ This field type is main intended for use by the core Allsky development team. It
 ```
 
 ## Checkbox field { data-toc-label="Checkbox field" }
-This displays a ‘switch’ that can be used to turn a value on or off. This will be presented in the params data as a boolean
+This displays a ‘switch’ that can be used to turn a value on or off. This will be presented in the params data as a boolean:
 
 ```
 "checkbox" : {
@@ -69,7 +62,7 @@ This displays a ‘switch’ that can be used to turn a value on or off. This wi
 ```
 
 ## Number field { data-toc-label="Number field" }
-This uses the HTML5 spinner control to allow a number to be entered. You can set the min, max and step values
+This uses the HTML5 spinner control to allow a number to be entered. You can set the min, max and step values:
 
 ```
 "number" : {
@@ -132,7 +125,7 @@ The GPIO pin selection dialog
 ///
 
 ## Image Field { data-toc-label="Image Field" }
-This allows the user to select or upload an image. Typically this would be used where a module requires a mask. This will allow the user to select the mask from the image library
+This allows the user to select or upload an image. Typically this would be used where a module requires a mask. This will allow the user to select the mask from the image library.
 
 ```
 "image" : {
@@ -154,7 +147,7 @@ The image selection dialog
 
 
 ## Region of Interest (ROI) Field { data-toc-label="Region Interest (ROI)" }
-This allows the user to select a region Of Interest (ROI) in the image. This will then be available to the module. Typically, this would be used for things like sky brightness detection where you only want to run the calculation on a portion of the image
+This allows the user to select a region Of Interest (ROI) in the image. This will then be available to the module. Typically, this would be used for things like sky brightness detection where you only want to run the calculation on a portion of the image.
 
 ```
 "roi": {
@@ -198,7 +191,7 @@ The Variable selection dialog
 ///
 
 ## Position Field { data-toc-label="Position Field" }
-This field allows the user to select a position from a map. There are three additional parameters required for this field, all refer to the name of the value in the arguments section
+This field allows the user to select a position from a map. There are three additional parameters required for this field, all refer to the name of the value in the arguments section.
 
 **lat** – The name of the argument to store the latitude in  
 **lon** – The name of the argument to store the longitue in  
@@ -258,10 +251,10 @@ The URL entry fields
 ///
 
 ## Host field { data-toc-label="Host field" }
-This field allows a host and port number to ben entered. There are two additional parameters required for this field, all refer to the name of the value in the arguments section
+This field allows a host and port number to ben entered. There are two additional parameters required for this field, all refer to the name of the value in the arguments section.
 
-**url** – The url or ip address of the host  
-**port** – The port number of the host
+**url** – The url or ip address of the host.
+**port** – The port number of the host.
 
 ```
 "host": {
@@ -290,10 +283,10 @@ The Host entry fields
 ## Graph field { data-toc-label="Graph field" }
 This is a special field type that rather than display a field adds a new tab to the modules settings to display the history for this module.
 
-For this field to work there are a few criteria that have to be met
+For this field to work there are a few criteria that have to be met:
 
--	The module must be saving data to the database  
--	The module must have a ‘main’ chart, see the charts section for more details
+-	The module must be saving data to the database.
+-	The module must have a ‘main’ chart, see the charts section for more details.
 
 ``
 "graph": {
@@ -339,7 +332,7 @@ The Notice field
 ## HTML Field { data-toc-label="HTML Field" }
 This field is used to display HTML in a modules dialog. There are a few additional settings available.
 
-**Source** – Either local, where the html is read from the ‘html’ value or ‘file’ where the html is read from a file on the server using the ‘file’ value to define the source
+**Source** – Either local, where the html is read from the ‘html’ value or ‘file’ where the html is read from a file on the server using the ‘file’ value to define the source.
 
 ```
 "html": {

@@ -1,14 +1,6 @@
----
-tags:
-  - Experimental
-  - Extra Module
-  - Overlay Data
-  - Pipeline Night
----
+Estimate sky quality from captured images.
 
-Estimate sky quality from captured images
-
-The estimated is calculated as follows
+The estimated is calculated as follows:
 
 ```python
 weighted_sqm_avg = (((night_max_auto_exposure - exposure_us) / 10) + 1) * (sqm_avg * (((night_max_auto_gain - gain) / 10) + 1))

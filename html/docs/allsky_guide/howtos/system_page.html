@@ -6054,9 +6054,9 @@
 <p>This documentation page assumes you are familiar with writing scripts; if so, adding the information is straightforward if you follow the instructions on this page.
 The image below shows the three types of items that can be added:</p>
 <ol>
-<li>Progress bar: "DEW HEATER STATUS"</li>
-<li>Simple data: "ALLSKY IS THE     BEST!!!"</li>
-<li>Buttons: "Heater ON" and "Heater OFF". Clicking a button performs an action that you define.</li>
+<li><strong>Progress bar</strong>: "Fan speed <span style="background-color: #a7742d; color: white">55 %</span>"</li>
+<li><strong>Simple data</strong>: "Dewheater status  <span style="color: green">*** On ***</span>"</li>
+<li><strong>Buttons</strong>: "Heater ON" and "Heater OFF".</li>
 </ol>
 <figure>
 <p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../../assets/guide_images/system-additions.png" data-desc-position="bottom"><img alt="" src="../../assets/guide_images/system-additions.png" width="100%"></a></p>
@@ -6072,13 +6072,11 @@ The image below shows the three types of items that can be added:</p>
 <p>There are three types of lines in a data file. The first word of a line determines what type of line it is:</p>
 <ol>
 <li>
-<p><strong>progress</strong> lines display as progress bars like the CPU Temperature bar in the image above. Your bars go after the last system-supplied progress bar and are good when the data has an associated status, for example, when the CPU is too hot its bar turns red.</p>
-<p>The <code>DEW HEATER STATUS</code> example above could be a <strong>data</strong> line, but a <strong>progress</strong> bar shows the status much more clearly.</p>
+<p><strong>progress</strong> lines display as progress bars like the Fan speed bar in the image above. Your bars go after the last system-supplied progress bar and are good when the data has an associated status, for example, when the fan is running slightly too fast its bar turns yellow.</p>
 </li>
 <li>
 <p><strong>data</strong> lines specify basic, two-column information and are good when the data has a single value like:</p>
-<p><code>Ambient temperature 20 C</code></p>
-<p>The <code>ASKY IS THE  BEST!!</code> data line above is a silly example.</p>
+<p><code>Dew heater status</code> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  <code>*** On ***</code></p>
 </li>
 <li>
 <p><strong>button</strong> lines add a button to the bottom of the page, and are used to initiate an action like turning a dew heater on.</p>
@@ -6164,12 +6162,12 @@ The image below shows the three types of items that can be added:</p>
 </tr>
 <tr>
 <td>danger</td>
-<td>A current value greater than or equal to the danger value causes the progress bar to turn red. Must be a number.</td>
+<td>A current value greater than or equal to the "danger" value causes the progress bar to turn red. Must be a number.</td>
 <td>No.</td>
 </tr>
 <tr>
 <td>warning</td>
-<td>A current value greater than or equal to the warning value and less than the danger value causes the progress bar to turn amber. The progress bar will be green. for any value less than warning. Must be a number.</td>
+<td>A current value greater than or equal to the "warning" value and less than the "danger" value causes the progress bar to turn amber. The progress bar will be green. for any value less than "warning". Must be a number.</td>
 <td>No.</td>
 </tr>
 </tbody>
@@ -6191,7 +6189,7 @@ The image below shows the three types of items that can be added:</p>
 </tr>
 <tr>
 <td>message</td>
-<td>An optional message that should appear at the top of the page after the button is pressed, if the button command was successful. For example, Dew heater turned on. If the command was not successful an error message is displayed containing any output from the command. Use - (minus sign) to indicate no message should be displayed on success (error messages will still be displayed).</td>
+<td>An optional message that should appear at the top of the page after the button is pressed, if the button command was successful. For example, "Dew heater turned on". If the command was not successful an error message is displayed containing any output from the command. Use - (minus sign) to indicate NO message should be displayed on success (error messages will still be displayed).</td>
 <td>No.</td>
 </tr>
 <tr>
@@ -6217,7 +6215,7 @@ The image below shows the three types of items that can be added:</p>
 </tbody>
 </table>
 <h2 id="example">Example<a class="headerlink" href="#example" title="Permanent link">¶</a></h2>
-<p>This section gives an example of adding items to the WebUI's System page. The example assumes you have a weather station that provides the ambient temperature, humidity, and dew point. Further, your allsky camera has a dew heater that you want to automatically turn on and off depending on the weather.</p>
+<p>This section gives an example of adding items to the WebUI's System page. It assumes you have a weather station that provides the ambient temperature, humidity, and dew point. Further, your allsky camera has a dew heater that you want to automatically turn on and off depending on the weather.</p>
 <p>You wrote a script called <code>/home/pi/weather/getWeatherData.sh</code> that polls the weather station and writes the ambient temperature, humidity, and dew point to a data file called <code>/home/pi/weather/weatherdata.txt</code> every minute. You must manually turn the dew heater on and off via a Python script called <code>/home/pi/dewheater/toggleDewHeater.py</code>. This command toggles the status of the dew heater and writes the new status (either "on" or "off") to the data file <code>/home/pi/dewheater/status.txt</code> whenever you call the script.</p>
 <p>To get this working, consider the following:</p>
 <p><strong><em>Determine what data you want to display</em></strong></p>
@@ -6240,106 +6238,107 @@ The image below shows the three types of items that can be added:</p>
 <li>button: <strong>Toggle dew heater</strong></li>
 </ul>
 <p><strong>Determine how you want the data displayed</strong></p>
-<p>The temperature is just a number with no "good" or "bad" value so it will be of type data.
-Although the dew point is also just a number, you want to highlight it when it's getting close to the ambient temperature so you'll know it's possible for dew to form. Hence, it will be of type progress.</p>
-<p>If the humidity gets too high you want to call attention to it, so it will be of type progress.</p>
-<p>The dew heater toggle switch will be of type button.</p>
+<p>The temperature is just a number with no "good" or "bad" value so it will be of type <strong>data</strong>.
+Although the dew point is also just a number, you want to highlight it when it's getting close to the ambient temperature so you'll know it's possible for dew to form. Hence, it will be of type <strong>progress</strong>.</p>
+<p>If the humidity gets too high you want to call attention to it, so it will be of type <strong>progress</strong>.</p>
+<p>The dew heater toggle switch will be of type <strong>button</strong>.</p>
 <p><strong>Determine expiration timeout</strong></p>
 <p>If the weather data gets too old it may fool you into turning the dew heater off when it should remain on, so you want its data to expire. Your weather station provides new data every minute. If it misses a minute or two you don't want the data on the System page to turn red, so you'll set the temperature and dew point timeout fields to 300 seconds (5 minutes). Just for fun you'll set the humidity timeout value to 600 seconds (10 minutes).
 The dew heater status information doesn't change unless you manually turn it on or off, so you don't want it's status to expire, hence will use 0 for its timeout value.</p>
 <p>Timeout values don't apply to buttons.</p>
 <p><strong>Determine progress bar cutoff values</strong></p>
-<p>You've noticed that when the humidity gets above 90% you get dew on the inside of the dome, so you'll set the dew heater danger value to 85 so it's bar turns red. You aren't sure what to use for the warning value so you'll initially set it to 75, and will adjust it later if needed. By definition humidity ranges from 0% to 100% so use 0 and 100 for its minimum value and maximum value respectively.</p>
-<p>The cutoffs for the dew point will vary based on the temperature so require some logic in getWeatherData.sh. Let's say you decide to set the dew point danger cutoff to be 90% of the ambient temperature, and the warning cutoff to be 80%. This means if the ambient temperature is 20 C, the dew point danger cutoff would be 18 C (20 * 0.9) and the warning cutoff would be 16 C (20 * 0.8). You aren't interested in dew point values significantly less than the ambient temperature since the chance of dew in those cases is almost zero, so you'll set the dew point minimum value to the ambient temperature minus 5 degrees. Likewise, you aren't interested in dew point values significantly greater than the ambient temperature since it's almost certain there will be dew, so you'll set the maximum value to the dew point danger value plus 3 degrees. This in effect sets the left side of the progress bar to be (ambient - 5) and the right side of the bar to be (danger + 3).</p>
+<p>You've noticed that when the humidity gets above 90% you get dew on the inside of the dome, so you'll set the dew heater "danger" value to 85 so it's bar turns red. You aren't sure what to use for the "warning" value so you'll initially set it to 75, and will adjust it later if needed. By definition humidity ranges from 0% to 100% so use 0 and 100 for its minimum value and maximum value respectively.</p>
+<p>The cutoffs for the dew point will vary based on the temperature so require some logic in getWeatherData.sh. Let's say you decide to set the dew point "danger" cutoff to be 90% of the ambient temperature, and the "warning" cutoff to be 80%. This means if the ambient temperature is 20 C, the dew point "danger" cutoff would be 18 C (20 * 0.9) and the "warning" cutoff would be 16 C (20 * 0.8). You aren't interested in dew point values significantly less than the ambient temperature since the chance of dew in those cases is almost zero, so you'll set the dew point minimum value to the ambient temperature minus 5 degrees. Likewise, you aren't interested in dew point values significantly greater than the ambient temperature since it's almost certain there will be dew, so you'll set the maximum value to the dew point "danger" value plus 3 degrees. This in effect sets the left side of the progress bar to be (ambient - 5) and the right side of the bar to be (danger + 3).</p>
 <p>[This may be confusing now, but will clear up when you see what it looks like and play around with different values.]</p>
-<p>The other items are of type data and button so this step doesn't apply to them.</p>
-<p>Determine what the buttons should look like</p>
-<p>You like green so will make the dew heater toggle button green by specifying its button color as green.
-You want an icon on the button since the other buttons have icons, so you go to Font Awesome   to look for an icon (Allsky uses Font Awesome version 6). You pick the "random" icon so set the button's FA icon field to random.</p>
+<p>The other items are of type <strong>data</strong> and <strong>button</strong> so this step doesn't apply to them.</p>
+<p><strong>Determine what the buttons should look like</strong></p>
+<p>You like green so will make the dew heater toggle button green by specifying its button color as "green".
+You want an icon on the button since the other buttons have icons, so you go to Font Awesome to look for an icon (Allsky uses Font Awesome version 6). You pick the "random" icon so set the button's FA icon field to random.</p>
 <p><strong>Specify the data files</strong></p>
-<p>You need to enter the names of your data files (i.e., the files created by your scripts) in the System Page Additions setting. But how many data files should you have? You could put everything in one file but you have two scripts that create data files and would need to coordinate between them so they don't overwrite each other. You decide on three data files containing:</p>
+<p>You need to enter the names of your data files (i.e., the files created by your scripts) in the <code>System Page Additions</code> setting in the WebUI. But how many data files should you have? You could put everything in one file but you have two scripts that create data files and would need to coordinate between them so they don't overwrite each other. You decide on three data files containing:</p>
 <ul>
 <li>weather data</li>
 <li>dew heater status</li>
 <li>button information</li>
 </ul>
 <p>You could have put the button information in the first or second file, but to simplify the <code>toggleDewHeater.py</code> script you put it in a 3rd file that will never change. You call the 3rd file <code>/home/pi/dewheater/button.txt</code>.</p>
-<p>This is what you enter into the System Page Additions setting.</p>
+<p>This is what you enter into the <code>System Page Additions</code> setting.</p>
 <div class="highlight"><pre><span></span><code>/home/pi/weather/weatherdata.txt:/home/pi/dewheater/status.txt:/home/pi/dewheater/button.txt
 </code></pre></div>
 <div class="admonition info">
 <p class="admonition-title">Info</p>
 <p>The file names must be full path names and must be separated by colons (":").</p>
 </div>
-<p>The data, progress, and button lines in the first data file will appear first on the System page; those in the second file will appear second, etc. You can change the order items appear by changing the order of data file names in the System Page Additions setting.</p>
+<p>The data, progress, and button lines in the first data file will appear first on the System page; those in the second file will appear second, etc. You can change the order items appear by changing the order of data file names in the <code>System Page Additions</code> setting.</p>
 <p><strong>Create/modify scripts to update the data file(s)</strong></p>
 <p>The <code>getWeatherData.sh</code> script needs to write the three weather data lines to <code>/home/pi/weather/weatherdata.txt</code>. It helps if you have the script create header lines in the output file so you remember what field is what. The script's logic would be:</p>
 <ol>
 <li>Get the data from the hardware.</li>
-<li>Optionally write a data header comment to /home/pi/weather/weatherdata.txt. See line 1 below.</li>
-<li>Append the Ambient temperature data line to the file (line 2).</li>
+<li>Optionally write a data header comment to <code>/home/pi/weather/weatherdata.txt</code>. See line 1 below.</li>
+<li>Add the Ambient temperature data line to the file (line 2).</li>
 <li>Optionally append a blank line for readability (line 3).</li>
 <li>Optionally append a progress header comment to the file (line 4).</li>
 <li>Calculate new danger, warning, minimum value, and maximum value numbers for the Dew point based on the ambient temperature (line 5).</li>
-<li>Append the Dew point progress line (line 6).</li>
-<li>Append the Humidity progress line (line 7).</li>
+<li>Add the Dew point progress line (line 6).</li>
+<li>Add the Humidity progress line (line 7).</li>
 <li>Wait for some period of time, then go back to step 1.</li>
 </ol>
 <p>Using the decisions you made above, the <code>/home/pi/weather/weatherdata.txt</code> would look like the following, assuming the temperature was 20 C, the dew point was 17 C, and the humidity was 87%.</p>
 <div class="admonition info">
 <p class="admonition-title">Info</p>
-<p>The initial line numbers below are only for illustration purposes and should NOT appear in your file.</p>
+<p>The line numbers below are only for illustration purposes and should NOT appear in your file.</p>
 </div>
-<div class="highlight"><pre><span></span><code>1   # Type  Timeout Label           Data
-2   data    300 Ambient temperature 20 C
+<div class="highlight"><pre><span></span><code>1   # Type  Timeout Label               Data
+2   data    300     Ambient temperature 20 C
 3   
-4   # Type  Timeout Label           Data    Min Current Max Danger  Warning
-5   progress    300 Dew point       17 C    12  17  21  18  16
-6   progress    600 Humidity        87% 0   87  100 85  75
+4   # Type      Timeout Label           Data    Min Current Max     Danger  Warning
+5   progress    300     Dew point       17 C    12  17      21      18      16
+6   progress    600     Humidity        87%     0   87      100     85      75
 </code></pre></div>
-<p>Note all fields are separated by one or more tabs (multiple tabs in a row are counted as a single tab). The header lines (which are ignored since they begin with #) can be in any format, so to ensure you have the correct fields you lined the header fields up with the data fields below.</p>
-<p>The toggleDewHeater.py script needs to write the data line for the dew heater status to /home/pi/dewheater/status.txt every time it is executed. Its logic is:</p>
+<p>Note all fields are separated by one or more tabs (multiple tabs in a row are counted as a single tab). The header lines (which are ignored since they begin with <code>#</code>) can be in any format, so to ensure you have the correct fields you lined the header fields up with the data fields below.</p>
+<p>The <code>toggleDewHeater.py</code> script needs to write the data line for the dew heater status to <code>/home/pi/dewheater/status.txt</code> every time it is executed. Its logic is:</p>
 <ol>
 <li>Get the dew heater status from the hardware.</li>
 <li>Toggle the status.</li>
-<li>Optionally write a data header comment line to <code>/home/pi/dewheater/status.txt</code>.</li>
-<li>Append the new dew heater status data line to the file.</li>
-<li>Output "Dew heater turned on" or "Dew heater turned off".</li>
+<li>Optionally add a data header comment line to <code>/home/pi/dewheater/status.txt</code>.</li>
+<li>Add the new dew heater status data line to the file.</li>
+<li>Output "Dew heater turned on" or "Dew heater turned off".  This string displays near the top of the WebUI page.</li>
 <li>Exit.</li>
 </ol>
 <p>The <code>/home/pi/dewheater/status.txt</code> file will look like the following after clicking the button, assuming the dew heater is currently off.</p>
-<div class="highlight"><pre><span></span><code># Type    Timeout  Label                 Data
+<p></p><div class="highlight"><pre><span></span><code># Type    Timeout  Label                 Data
 data      0        Dew heater status     on
 </code></pre></div>
-<p>Since the toggle button won't change, create the <code>/home/pi/dewheater/button.txt</code> file manually:</p>
+<br>
+Since the toggle button won't change, create the <code>/home/pi/dewheater/button.txt</code> file manually:<p></p>
 <div class="highlight"><pre><span></span><code># Type    Message  Command                                 Color   FA icon  Button  Label
 button    -        /home/pi/dewheater/toggleDewHeater.py   green   random   Toggle  dew heater
 </code></pre></div>
-<p>Notice the Message field is - which means there's no message to display on success. This is because the <code>toggleDewHeater.py</code> command outputs "Dew heater turned on" or "Dew heater turned off", and that output is displayed as a message. Remember that if <code>toggleDewHeater.py</code> exits with a failure (i.e., a non-0 exit code) any error message it outputs will be displayed as an error message on the web page so you should make sure those error messages are useful.</p>
+<p>Notice the Message field is <strong><code>-</code></strong> which means there's no message to display on success. This is because the <code>toggleDewHeater.py</code> command outputs "Dew heater turned on" or "Dew heater turned off", and that output is displayed as a message. Remember that if <code>toggleDewHeater.py</code> exits with a failure (i.e., a non-0 exit code) any error message it outputs will be displayed as an error message on the web page so you should make sure those error messages are useful.</p>
 <p>When you press the "Toggle dew heater" button it will update the <code>/home/pi/dewheater/status.txt</code> data file by changing the "off" to "on" or vice versa. The rest of the data file remains the same.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>Commands listed in a button's Command field must be executable by the web server running as group www-data, and must be in a directory that the web server has permissions to get to.</p>
 <p><code>chmod g+x /home/pi/dewheater/toggleDewHeater.py</code> will fix permissions on the Command.</p>
-<p>Files written from a button's Command must be writable by www-data.</p>
+<p>Files written from a button's Command must be writable by <code>www-data</code>.</p>
 <p><code>chgrp www-data /home/pi/dewheater/status.txt; chmod g+w /home/pi/dewheater/status.txt</code> will fix permissions on the file.</p>
 </div>
 <p><strong>Test, test, test. Then test some more.</strong></p>
 <p>To get a feel for what things look like and how the above actually works, copy/paste the above file examples to <code>/home/pi/weather/weatherdata.txt</code>, <code>/home/pi/dewheater/status.txt</code>, and <code>/home/pi/dewheater/button.txt</code> files on your Pi. Then add</p>
 <p></p><div class="highlight"><pre><span></span><code>/home/pi/weather/weatherdata.txt:/home/pi/dewheater/status.txt
 </code></pre></div>
-to the System Page Additions setting.<p></p>
-<p>Now, go to the <code>System</code> page in the WebUI and in addition to the normal information you should see the items you added. Refreshing the screen won't change those items since the data files are not being updated yet.</p>
+to the <code>System Page Additions</code> setting in the WebUI.<p></p>
+<p>Now, go to the <code>System -&gt; System</code> page in the WebUI and in addition to the normal information you should see the items you added. Refreshing the screen won't change those items since the data files are not being updated yet.</p>
 <p>Clicking the "Toggle dew heater" button should display a red message at the top of the web page that says <code>'/home/pi/dewheater/toggleDewHeater.py' failed: sh: 1: /home/pi/dewheater/toggleDewHeater.py</code>: not found" That's the output when the web page tried to execute <code>/home/pi/dewheater/toggleDewHeater.py</code> which doesn't exist.</p>
 <p>Try making changes to the three files you created. For example, change the command for the button to <code>echo 'Hello, world!'</code>. When you next click on the button you should see a green message at the top saying "Hello, world!". Now change it to <code>echo 'Hello, world!' ; exit 1</code>. What happens now?</p>
 <p>After you understand what's happening and why, start modifying your script(s) to put your own data into the required format.</p>
 <h2 id="tips">Tips<a class="headerlink" href="#tips" title="Permanent link">¶</a></h2>
 <ul>
 <li>
-<p>Do not store your data files in the allsky directory since they won't be saved when upgrading Allsky. Instead, create a directory one level above allsky and put all your files there. The System Page Additions setting WILL be saved when upgrading Allsky.</p>
+<p>Do not store your data files in the <code>~/allsky</code> directory since they won't be saved when upgrading Allsky. Instead, create a directory one level above <code>~/allsky</code> and put all your files there. The System Page Additions setting WILL be saved when upgrading Allsky.</p>
 </li>
 <li>
-<p>HTML and CSS code can be applied to message, label, and data fields to add color, bolding, etc. That's how "Allsky is the     BEST!!!" was formatted in the image at the top of this page.</p>
+<p>HTML and CSS code can be applied to message, label, and data fields to add color, bolding, etc. That's how "Dew heater status &nbsp; &nbsp; <span style="color: green">*** On ***</span> " was formatted in the image at the top of this page.</p>
 </li>
 <li>
 <p>To see what the button colors look like, add the following lines to <code>/home/pi/dewheater/button.txt</code>:</p>

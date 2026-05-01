@@ -1,10 +1,3 @@
----
-tags:
-  - Allsky Guide
-  - WebUI
-  - Access Control
----
-
 # Access Control
 
 The Allsky WebUI is both a viewer and an administration interface. It does not just show images. It can also change camera settings, adjust modules, edit overlays, control uploads, and affect how the whole system behaves. Because of that, access control matters.

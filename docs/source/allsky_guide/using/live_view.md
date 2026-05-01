@@ -1,10 +1,3 @@
----
-tags:
-  - Allsky Guide
-  - WebUI
-  - Live View
----
-
 The **Live View** page is the quickest way to see what your Allsky camera is doing right now. Instead of browsing saved images after the fact, Live View continuously reloads the current image so you can watch the camera output as it changes. That makes it useful both for everyday monitoring and for those moments when you are actively adjusting something and want immediate feedback, such as camera aim, focus, exposure behaviour, lens cleanliness, or the effect of weather moving across the sky.
 
 ![](/assets/guide_images/liveview.png){ width="100%" }

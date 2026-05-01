@@ -1,19 +1,12 @@
----
-tags:
-  - Developer Guide
-  - Building Modules
-  - Database
----
-
-In this tutorial we will modify the API module to save values to the Allsky database
+In this tutorial we will modify the API module to save values to the Allsky database.
 
 !!! warning  "Warning"
  
-    Please ensure you have read the simple tutorial before this one as the basics covered in the simple tutorial will not be covered
+    Please ensure you have read the simple tutorial before this one as the basics covered in the simple tutorial will not be covered.
 
-Saving values to the database, for example to using in charts, is accomplished by modifying the ```extradata``` section in the ```meta_data```
+Saving values to the database, for example to using in charts, is accomplished by modifying the `extradata` section in the `meta_data`.
 
-Start by taking the API example and renaming everything to example3 and add the humidity variable
+Start by taking the API example and renaming everything to example3 and add the humidity variable:
 
 ```python
 import requests
@@ -188,9 +181,9 @@ def example3_cleanup():
       allsky_shared.cleanupModule(moduleData)
 ```
 
-Next we modify the ```extradata``` section of the ```meta_data``` to tell Allsky how to manage the extra data in the database
+Next we modify the `extradata` section of the `meta_data` to tell Allsky how to manage the extra data in the database.
 
-Change the ```extradata``` section to the following
+Change the `extradata` section to the following:
 
 ```python
     "extradata": {    
@@ -229,12 +222,12 @@ Change the ```extradata``` section to the following
     }
 ```
 
-This adds the database section that will
+This adds the database section that will:
 
-  - Create a table called ```allsky_example3```
-  - Include ALL of the data from the ```values``` section i.e. all of the extra data
-  - use a sequential primary key
-  - Allways save data for each pipeline
+  - Create a table called `allsky_example3`.
+  - Include ALL of the data from the `values` section i.e. all of the extra data.
+  - Use a sequential primary key.
+  - Always save data for each pipeline.
 
 
 ![Example3 db](/assets/developer_images/dbexample3.png) 
@@ -248,7 +241,7 @@ The fields available when creating a custom chart
 ///
 
 
-There may be instances where you do not want to save all of the data to the database. If we only wanted to save the temperature and not the humidity we would change the ```metadata`` section as follows
+There may be instances where you do not want to save all of the data to the database. If we only wanted to save the temperature and not the humidity we would change the `metadata` section as follows.
 
 ```python
     "extradata": {    

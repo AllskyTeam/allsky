@@ -1,13 +1,3 @@
----
-tags:
-  - Extra Module
-  - Overlay Data
-  - Pipeline Day
-  - Pipeline Night
-  - Pipeline Periodic
-  - Hardware Required 
----
-
 This module detects rain using a digital sensor.
 
 ## Rain Sensors { data-toc-label="Rain Sensors" }

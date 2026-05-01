@@ -1,10 +1,3 @@
----
-tags:
-  - Module Reference
-  - Module Interface
-  - PWM
----
-
 # Pulse Width Modulation (PWM)
 
 PWM (Pulse Width Modulation) is a method of controlling the power delivered to a device—such as a fan or a dew heater—by rapidly switching the power on and off instead of reducing the voltage.
@@ -32,7 +25,7 @@ In short, PWM lets you precisely and efficiently control output power without sa
 
 # Which pins should you use
 
-The best are pins 18 and 19
+The best are pins 18 and 19.
 
 # Setting up PWM on Raspberry Pi 4 and Raspberry Pi 5
 

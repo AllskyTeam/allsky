@@ -6175,40 +6175,6 @@
                 
                   
 
-  <nav class="md-tags">
-    
-      
-      
-      
-        
-        
-      
-      
-        <a href="../../tags.html#tag:allsky-guide" class="md-tag md-tag-icon">Allsky Guide</a>
-      
-    
-      
-      
-      
-        
-        
-      
-      
-        <a href="../../tags.html#tag:allsky-settings" class="md-tag md-tag-icon">Allsky Settings</a>
-      
-    
-      
-      
-      
-        
-        
-      
-      
-        <a href="../../tags.html#tag:settings" class="md-tag md-tag-icon">Settings</a>
-      
-    
-  </nav>
-
 
   
   
@@ -7242,12 +7208,12 @@
 <tr>
 <td><mark>SSH Public Key File</mark></td>
 <td style="text-align: right;"></td>
-<td>(scp and rsync protocols only) Path to the SSH public key file.  <br><br>You need to set up SSH key authentication on your server. First generate a key on your Pi:  <br><br><code>bash&lt;br&gt;ssh-keygen -t rsa&lt;br&gt;</code><br><br>Leave the default filename and use an empty passphrase. Then copy the key to your server:  <br><br><code>bash&lt;br&gt;ssh-copy-id remote_username@remote_server&lt;br&gt;</code><br><br>Replace <code>remote_username</code> and <code>remote_server</code> appropriately. If prompted to continue connecting, enter <code>yes</code>.  <br><br>The private key will be stored in <code>~/.ssh/id_rsa</code>.  <br><br>If you are using SSH Key with Amazon Lightsail, copy <code>ssh-key.pem</code> to your Pi (e.g., in <code>~</code>), run:  <br><br><code>bash&lt;br&gt;chmod 400 ~/ssh-key.pem&lt;br&gt;</code><br><br>and set:  <br><br>- Protocol: <code>sftp</code>  <br>- Server Name: <code>remote host name</code>  <br>- User Name: <code>remote user name</code>  <br>- Password: <code>n/a</code>  <br>- FTP Commands: <code>set sftp:connect-program 'ssh -a -x -i /home/pi/ssh-key.pem'</code></td>
+<td>(scp and rsync protocols only) Path to the SSH public key file.  <br><br>You need to set up SSH key authentication on your server. First generate a key on your Pi:  <br><br><code>ssh-keygen -t rsa</code><br><br>Leave the default filename and use an empty passphrase. Then copy the key to your server:  <br><br><code>ssh-copy-id remote_username@remote_server</code><br><br>Replace <code>remote_username</code> and <code>remote_server</code> appropriately. If prompted to continue connecting, enter <code>yes</code>.  <br><br>The private key will be stored in <code>~/.ssh/id_rsa</code>.  <br><br>If you are using SSH Key with Amazon Lightsail, copy <code>ssh-key.pem</code> to your Pi (e.g., in <code>~</code>), run:  <br><br><code>chmod 400 ~/ssh-key.pem</code><br><br>and set:  <br><br>- Protocol: <code>sftp</code>  <br>- Server Name: <code>remote host name</code>  <br>- User Name: <code>remote user name</code>  <br>- Password: <code>n/a</code>  <br>- FTP Commands: <code>set sftp:connect-program 'ssh -a -x -i /home/pi/ssh-key.pem'</code></td>
 </tr>
 <tr>
 <td><mark>AWS CLI Directory</mark></td>
 <td style="text-align: right;"></td>
-<td>(s3 protocol only) Directory on the Pi where the AWS CLI tools are installed, typically <code>${HOME}/.local/bin</code>. Install and configure:  <br><br><code>bash&lt;br&gt;pip3 install awscli --upgrade --user&lt;br&gt;export PATH=\"${HOME}/.local/bin:${PATH}\"&lt;br&gt;aws configure&lt;br&gt;</code><br><br>Enter a valid access key ID, Secret Access Key, Default region name (e.g., <code>us-west-2</code>), and set Default output format to <code>json</code>.</td>
+<td>(s3 protocol only) Directory on the Pi where the AWS CLI tools are installed, typically <code>${HOME}/.local/bin</code>. Install and configure:  <br><br><code>pip3 install awscli --upgrade --user</code><br><code>export PATH=\"${HOME}/.local/bin:${PATH}\"aws configure</code><br><br>Enter a valid access key ID, Secret Access Key, Default region name (e.g., <code>us-west-2</code>), and set Default output format to <code>json</code>.</td>
 </tr>
 <tr>
 <td><mark>S3 Bucket</mark></td>
@@ -7554,9 +7520,6 @@
 
 
 
-
-  
-  
 
 
 

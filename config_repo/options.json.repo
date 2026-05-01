@@ -2156,13 +2156,13 @@
 {
 "name" : "liveviewmode",
 "default" : "fullwidth",
-"description" : "Controls how the image is displayed on the <span class='WebUIWebPage'>Live View</span> page.<br><strong>Full Width</strong> always fills the panel width and may require vertical scrolling.<br><strong>Scaled</strong> keeps the whole image visible in the panel without a vertical scrollbar.",
+"description" : "Controls how the image is displayed on the <span class='WebUIWebPage'>Live View</span> page.<br><strong>Full Width</strong> always fills the panel width and may require vertical scrolling.<br><strong>Fit Image</strong> keeps the whole image visible in the panel without a vertical scrollbar.",
 "label" : "Live View Mode",
 "type" : "select_text",
 "carryforward" : true,
 "options" : [
 	{"value" : "fullwidth", "label" : "Full Width"},
-	{"value" : "scaled", "label" : "Scaled"}
+	{"value" : "scaled", "label" : "Fit Image"}
 ]
 },
 {

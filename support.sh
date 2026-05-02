@@ -339,75 +339,6 @@ function generate_support_info()
 		print "${RPI_CAMERAS}"
 	} > "${LIBCAMERA_FILE}"
 
-	# GitHub supports uploads up to ${GIT_HUB_LIMIT} MB.
-	# It's not unusual for the allsky logs to be bigger than that; if so,
-	# first drop the ".1" log.  If it's STILL to large, do a "tail" on the files.
-	# Also assume everything else in the support log except the Allsky log files is up to 5 MB.
-
-	function get_expected_total_size()
-	{
-		# Assume the log files zip to 1/${COMPRESSION_PERCENT} their size.
-		local COMPRESSION_PERCENT="0.5"
-		# shellcheck disable=SC2012
-		ls -l "${@}" | gawk -v COMPRESSION="${COMPRESSION_PERCENT}" 'BEGIN { TOTAL=0 }
-			{ TOTAL += $5; }
-			END { printf("%d", TOTAL / 1024 / 1024 * COMPRESSION); }'
-	}
-
-	local GIT_HUB_LIMIT_MB=25
-	local LOG_LIMIT_MB=$(( GIT_HUB_LIMIT_MB - 5 ))		# MB limit of log files
-	declare -a ALL_LOGS=()
-	local INDEX=-1
-	local LOG1=""		# If the ".1" log file exist this will be it's index in the array.
-
-	# First create a list of logs that exist, and note the ".1" log file.
- 	for L in "${ALLSKY_LOG}" "${ALLSKY_LOG}.1" "${ALLSKY_PERIODIC_LOG}" ; do
-		if [[ -f ${L} ]]; then
-			INDEX=$(( INDEX + 1 ))
-			[[ ${L} == "${ALLSKY_LOG}.1" ]] && LOG1="${INDEX}"
-			ALL_LOGS[${INDEX}]="${L}"
-		fi
-	done
-	# Get the expected total size.
-	local EXPECTED_TOTAL_SIZE_MB="$( get_expected_total_size "${ALL_LOGS[@]}" )"
-
-	display_msg --logonly debug "Expected size of zipped log file: ${EXPECTED_TOTAL_SIZE_MB} MB, limit: ${LOG_LIMIT_MB} MB."
-
-	local LOG_LINES_TEMP="${LOG_LINES}"
-	if [[ ${EXPECTED_TOTAL_SIZE_MB} -gt ${LOG_LIMIT_MB} ]]; then
-		if [[ ${DEBUG} == "true" ]]; then
-			display_msg --log debug "Expected size of zipped log file is ${EXPECTED_TOTAL_SIZE_MB} MB."
-			display_msg --log debug "This is bigger than the GitHub limit of ${LOG_LIMIT_MB} MB."
-		fi
-		# If the ".1" log file is in the list, delete it, then recalculate the size.
-		if [[ -n ${LOG1} ]]; then
-			unset "ALL_LOGS[${LOG1}]"
-			EXPECTED_TOTAL_SIZE_MB="$( get_expected_total_size "${ALL_LOGS[@]}" )"
-			if [[ ${DEBUG} == "true" ]]; then
-				display_msg --log debug "Not including ${ALLSKY_LOG}.1 gives a new size of ${EXPECTED_TOTAL_SIZE_MB} MB."
-			fi
-		fi
-
-		# If the new total size is STILL too big,
-		# only get the last ${LOG_LINES_TEMP} lines of the remaining logs.
-		if [[ ${EXPECTED_TOTAL_SIZE_MB} -gt ${LOG_LIMIT_MB} ]]; then
-			LOG_LINES_TEMP=2000		# Seems reasonable
-			if [[ ${DEBUG} == "true" ]]; then
-				display_msg --log debug "Still too large, only getting last ${LOG_LINES_TEMP} lines of the log files."
-			fi
-		fi
-	fi
-
-	local LOG_FILE
- 	for L in "${ALL_LOGS[@]}" ; do
-  		LOG_FILE="${TEMP_DIR}/$( basename "${L}" ).txt"
-		if [[ ${LOG_LINES_TEMP} == "all" ]]; then
-			cp "${L}" "${LOG_FILE}"
-		else
-			tail -n "${LOG_LINES_TEMP}" "${L}" > "${LOG_FILE}"
-		fi
-  	done
-
 	local CONF_FILE="/etc/lighttpd/lighttpd.conf"
 	if [[ -f ${CONF_FILE} ]]; then
 		cp "${CONF_FILE}" "${TEMP_DIR}/etc-$( basename "${CONF_FILE}" ).txt"
@@ -425,7 +356,7 @@ function generate_support_info()
 	# The mini-timelapse can be several MB and we don't need it.
 	rm -f "${TEMP_DIR}/tmp/current_images/mini-timelapse.mp4"
 
-	# Copy ${ALLSKY_CONFIG} directory, then truncate files we don't want.
+	# Copy ${ALLSKY_CONFIG} directory, then truncate and delete files we don't want.
 	# The directory should exists unless installation failed.
 	[[ -d ${ALLSKY_CONFIG} ]] && cp -ar "${ALLSKY_CONFIG}" "${TEMP_DIR}"
 
@@ -436,7 +367,13 @@ function generate_support_info()
 	local X="${TEMP_DIR_OVERLAY}/config/tmp/overlay/de421.bsp"
 	[[ -s ${X} ]] && truncate -s 0 "${X}"
 	X="${TEMP_DIR_OVERLAY}/system_fonts"
-	[[ -d ${X} ]] && find "${X}" -type f -exec truncate -s 0 {} +
+	rm -fr "${X}"
+
+	# We don't need these files so delete them.
+	X="${TEMP_DIR}/config/myFiles/modules/moduledata/data/allsky_adsb/adsb_data"
+	rm -fr "${X}"
+	X="${TEMP_DIR}/config/myFiles/modules/__pycache__"
+	rm -fr "${X}"
 
 	# If we have any sensitive data in the flows then truncate them.
 	# If the variables.json file exists then there will be no sensitive data in the flows since
@@ -447,6 +384,134 @@ function generate_support_info()
 		[[ -d ${X} ]] && find "${X}" -type f -exec truncate -s 0 {} +
 	fi
 
+	cd "${TEMP_DIR}" || exit 1
+
+	# Handle the Allsky log files last, since they are usually the largest files and we need
+	# to make sure they don't make the support log too large to upload to GitHub.
+
+	function get_mb()
+	{
+		local C
+		if [[ ${1} == "--compression-ratio" ]]; then
+			C="${2}"
+			shift 2
+		else
+			C=1
+		fi
+
+		# Round up.
+		# shellcheck disable=SC2012
+		ls -l "${@}" 2>/dev/null | gawk -v C="${C}" 'BEGIN { TOTAL=0 }
+			{ TOTAL += $5; }
+			END { printf("%d", 0.5 + ((TOTAL / 1024 / 1024) * C)); }'
+	}
+	function get_size()
+	{
+		local ZIP_FILE="${1}"
+		local SOURCE="${2}"
+		zip -r "${ZIP_FILE}" ${SOURCE} > /dev/null 2>&1
+		get_mb "${ZIP_FILE}"
+		rm -f "${ZIP_FILE}"
+	}
+
+	# GitHub supports uploads up to ${GIT_HUB_LIMIT} MB.
+	# It's not unusual for the allsky logs to be bigger than that; if so,
+	# first drop the ".1" log.  If it's STILL to large, do a "tail" on the files.
+
+	# We'd really like to know the actual zipped size of each log file, but that's somewhat time
+	# consuming to calculate, so initially just check if a somewhat compressed version of the files
+	# is over the limit.  If so, get the actual compressed size.
+
+	local GIT_HUB_LIMIT_MB=25
+	local COMPRESSION_RATIO=0.3		# Normally the logs compress to around 10%, but be very conservative
+	declare -a ALL_LOGS=()
+	local INDEX=-1
+	local ALLSKY_LOG_SIZE_MB=0
+	local ALLSKY_LOG1_SIZE_MB=0
+	local ALLSKY_PERIODIC_LOG_SIZE_MB=0
+	local ALLSKY_LOG1_INDEX=""		# If the ".1" log file exist this will be it's index in the array.
+	local ALLSKY_LOG1="${ALLSKY_LOG}.1"		# this should probably go in variables.sh...
+
+	# First determine the zipped size of what's currently going into the support log.
+	local TMP_ZIP="${TEMP_DIR}/OTHER_THAN.zip"
+	local REST_OF_LOG_MB="$( get_size "${TMP_ZIP}" "./*" )"
+	display_msg --logonly info "Zipped size of everything EXCEPT log files: ${REST_OF_LOG_MB} MB."
+	local TOTAL_SIZE_MB="${REST_OF_LOG_MB}"
+
+	local LOG_LINES_TEMP="${LOG_LINES}"
+	local ESTIMATED_SIZE_MB="$( get_mb --compression-ratio "${COMPRESSION_RATIO}" \
+			"${ALLSKY_LOG}" "${ALLSKY_LOG1}" "${ALLSKY_PERIODIC_LOG}" )"
+	ESTIMATED_SIZE_MB=$(( ESTIMATED_SIZE_MB + REST_OF_LOG_MB ))
+	if [[ ${ESTIMATED_SIZE_MB} -le "${GIT_HUB_LIMIT_MB}" ]]; then
+		ALL_LOGS=( "${ALLSKY_LOG}" "${ALLSKY_LOG1}" "${ALLSKY_PERIODIC_LOG}" )
+		MSG="WORST CASE support log size: ${ESTIMATED_SIZE_MB} MB is UNDER limit of ${GIT_HUB_LIMIT_MB} MB."
+		display_msg --logonly info "${MSG}"
+
+	else
+		MSG="ESTIMATED support log size: ${ESTIMATED_SIZE_MB} MB is OVER limit of ${GIT_HUB_LIMIT_MB} MB."
+		display_msg --logonly info "${MSG}"
+		display_msg --logonly info "Will check each file."
+
+		# Create a list of logs that exist as well as their size.
+		if [[ -f ${ALLSKY_LOG} ]]; then
+			INDEX=$(( INDEX + 1 ))
+			ALL_LOGS[${INDEX}]="${ALLSKY_LOG}"
+			TMP_ZIP="${TEMP_DIR}/ALLSKY_LOG.zip"
+			ALLSKY_LOG_SIZE_MB="$( get_size "${TMP_ZIP}" "${ALLSKY_LOG}" )"
+			TOTAL_SIZE_MB=$(( TOTAL_SIZE_MB + ALLSKY_LOG_SIZE_MB ))
+			display_msg --logonly info "Zipped size of ${ALLSKY_LOG}: ${ALLSKY_LOG_SIZE_MB} MB."
+		fi
+		if [[ -f ${ALLSKY_LOG1} ]]; then
+			INDEX=$(( INDEX + 1 ))
+			ALL_LOGS[${INDEX}]="${ALLSKY_LOG1}"
+			TMP_ZIP="${TEMP_DIR}/ALLSKY_LOG1.zip"
+			ALLSKY_LOG1_SIZE_MB="$( get_size "${TMP_ZIP}" "${ALLSKY_LOG1}" )"
+			TOTAL_SIZE_MB=$(( TOTAL_SIZE_MB + ALLSKY_LOG1_SIZE_MB ))
+			display_msg --logonly info "Zipped size of ${ALLSKY_LOG1}: ${ALLSKY_LOG1_SIZE_MB} MB."
+		fi
+		if [[ -f ${ALLSKY_PERIODIC_LOG} ]]; then
+			INDEX=$(( INDEX + 1 ))
+			ALLSKY_LOG1_INDEX="${INDEX}"
+			ALL_LOGS[${INDEX}]="${ALLSKY_PERIODIC_LOG}"
+			TMP_ZIP="${TEMP_DIR}/ALLSKY_PERIODIC_LOG.zip"
+			ALLSKY_PERIODIC_LOG_SIZE_MB="$( get_size "${TMP_ZIP}" "${ALLSKY_PERIODIC_LOG}" )"
+			TOTAL_SIZE_MB=$(( TOTAL_SIZE_MB + ALLSKY_PERIODIC_LOG_SIZE_MB ))
+			display_msg --logonly info "Zipped size of ${ALLSKY_PERIODIC_LOG}: ${ALLSKY_PERIODIC_LOG_SIZE_MB} MB."
+		fi
+
+		local MSG="EXPECTED size of zipped support log: ${TOTAL_SIZE_MB} MB, GitHub limit: ${GIT_HUB_LIMIT_MB} MB."
+		display_msg --logonly info "${MSG}"
+
+		if [[ ${TOTAL_SIZE_MB} -gt ${GIT_HUB_LIMIT_MB} ]]; then
+			# If the ".1" log file is in the list, delete it, then recalculate the size.
+			if [[ -n ${ALLSKY_LOG1_INDEX} ]]; then
+				unset "ALL_LOGS[${ALLSKY_LOG1_INDEX}]"
+				TOTAL_SIZE_MB=$(( TOTAL_SIZE_MB - ALLSKY_LOG1_SIZE_MB ))
+				display_msg --logonly info "Not including ${ALLSKY_LOG1} gives a new size of ${TOTAL_SIZE_MB} MB."
+			fi
+
+			# If the new total size is STILL too big,
+			# only get the last ${LOG_LINES_TEMP} lines of the remaining logs.
+			if [[ ${TOTAL_SIZE_MB} -gt ${GIT_HUB_LIMIT_MB} ]]; then
+				LOG_LINES_TEMP=2000		# Seems reasonable
+				display_msg --logonly info "Still too large, only getting last ${LOG_LINES_TEMP} lines of the log files."
+			fi
+		fi
+	fi
+
+	local LOG_FILE
+ 	for L in "${ALL_LOGS[@]}" ; do
+		if [[ -f ${L} ]]; then
+  			LOG_FILE="${TEMP_DIR}/$( basename "${L}" ).txt"
+			if [[ ${LOG_LINES_TEMP} == "all" ]]; then
+				cp "${L}" "${LOG_FILE}"
+			else
+				tail -n "${LOG_LINES_TEMP}" "${L}" > "${LOG_FILE}"
+			fi
+		fi
+  	done
+
+
 	local ZIP_NAME="support"
 	ZIP_NAME+="-${GITHUB_REPO:-repo}"
 	ZIP_NAME+="-${GITHUB_TYPE:-type}"
@@ -456,7 +521,6 @@ function generate_support_info()
 	# We're in a subshell so we need to "echo" this to pass it back to our invoker.
 	echo "${DIALOG_COMPLETE_MESSAGE//XX_ZIPNAME_XX/${ZIP_NAME}}"
 
-	cd "${TEMP_DIR}" || exit 1
 	zip -r "${TEMP_DIR}/${ZIP_NAME}" ./* > /dev/null 2>&1
 	sudo mv "${ZIP_NAME}" "${ALLSKY_SUPPORT_DIR}"
 	sudo chown "${USER_NAME}:${WEBSERVER_OWNER}" "${ALLSKY_SUPPORT_DIR}/${ZIP_NAME}"
@@ -606,6 +670,7 @@ while [[ $# -gt 0 ]]; do
 
 		--debug)
 			DEBUG="true"
+			DEBUG="${DEBUG}"	# Keeps shellcheck quiet since we're not using DEBUG yet.
 			;;
 
 		--text)
@@ -651,7 +716,7 @@ done
 [[ ${DO_HELP} == "true" ]] && usage_and_exit 0
 [[ ${OK} == "false" ]] && usage_and_exit 1
 
-display_msg --logonly info "Starting support log."
+display_msg --logonly info "STARTING SUPPORT LOG."
 
 set_dialog_info
 set_messages
@@ -665,7 +730,7 @@ RET=$?
 kill_running_dialog
 if [[ ${RET} -eq 0 ]]; then
 	display_complete_dialog
-	display_msg --logonly info "Ending support log."
+	display_msg --logonly info "ENDING SUPPORT LOG."
 else
 	display_complete_dialog "Failure"
 	display_msg --logonly info "Support log creation failed"

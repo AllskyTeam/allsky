@@ -79,6 +79,7 @@ function usage_and_exit()
 	echo "      check_allsky [see --help for arguments]"
 	echo "      move_images"
 	echo "      prepare_logs [debug_level]"
+	echo "      recreate_files"
 
 	if [[ ${COMMANDS_ONLY} == "false" ]]; then
 		echo "  If no 'command' is specified you are prompted for one."
@@ -311,6 +312,38 @@ function compare_paths()
 		"check the remote Allsky Website specified in its 'Website URL' setting" \
 		"check the remote server specified in its 'Website URL' setting" \
 		"${@}"
+}
+
+
+#####
+# Recreate files after a "git pull" or whenever any "parent" file changes.
+# It's very possible some of the files don't need updating, but it's quick to
+# update them and not always quick to check if they need updating.
+function recreate_files()
+{
+	if [[ ${1} == "--help" ]]; then
+		echo
+		W_ "Usage: ${ME}  ${ME_F}"
+		echo
+		echo "Recreates files when their 'parent' files change, e.g., a '.repo' file."
+		return
+	fi
+
+	echo "* Updating variables.json file"
+	create_variables_json ""		# Should come first so other steps get the newest file.
+
+	echo "* Updating sudoers file"
+	create_sudoers
+
+	echo "* Updating options file"
+	create_options_file --no-settings-file
+
+	echo "* Updating lighttpd config file and restarting the service"
+	create_lighttpd_config_file
+	local X="$( sudo systemctl restart lighttpd 2>&1 )"
+	if [[ $? -ne 0 ]]; then
+		W_ "WARNING: unable to restart lighttpd service in ${ME_F}: ${X}" >&2
+	fi
 }
 
 
@@ -753,6 +786,9 @@ if [[ -z ${FUNCTION_TO_EXECUTE} ]]; then
 
 	((N++));	C="prepare_logs"
 	CMDS+=("${C}"	"$( L "Prepare log files for troubleshooting                    (${C})" )")
+
+	((N++));	C="recreate_files"
+	CMDS+=("${C}"	"$( L "Recreate various files after a 'git pull'                (${C})" )")
 
 	##### Prompt
 	# If the user selects "Cancel" prompt() returns 1 and we exit the loop.

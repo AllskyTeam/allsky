@@ -80,105 +80,105 @@ function DisplayOverlay($image_name)
                         <div class="collapse navbar-collapse" id="oe-main-navbar">
                             <ul class="nav navbar-nav" id="oe-editor-toolbar">
                                 <li class="oe-toolbar-handle-wrapper">
-                                    <div class="btn btn-lg navbar-btn oe-toolbar-handle" data-toggle="tooltip" data-container="body" data-placement="top" title="Drag Toolbar">
+                                    <div class="btn navbar-btn oe-toolbar-handle" data-toggle="tooltip" data-container="body" data-placement="top" title="Drag Toolbar">
                                         <i class="fa-solid fa-grip-vertical"></i>
                                     </div>
                                 </li>
                                 <li>
                                     <div class="tooltip-wrapper disabled" data-toggle="tooltip" data-container="body" data-placement="top" title="Save The Current Configuration">
-                                        <div class="btn btn-lg navbar-btn oe-button disabled" id="oe-save"><i class="fa-solid fa-floppy-disk"></i></div>
+                                        <div class="btn navbar-btn oe-button disabled" id="oe-save"><i class="fa-solid fa-floppy-disk"></i></div>
                                     </div>
                                 </li>
                                 <li>
-                                    <div class="btn btn-lg navbar-btn oe-button" id="oe-add-text" data-toggle="tooltip" data-container="body" data-placement="top" title="Add New Text Field"><i class="fa-solid fa-font"></i></div>
+                                    <div class="btn navbar-btn oe-button" id="oe-add-text" data-toggle="tooltip" data-container="body" data-placement="top" title="Add New Text Field"><i class="fa-solid fa-font"></i></div>
                                 </li>
                                 <li>
-                                    <div class="btn btn-lg navbar-btn oe-button" id="oe-add-image" data-toggle="tooltip" data-container="body" data-placement="top" title="Add Existing Image Field"><i class="fa-regular fa-image"></i></div>
+                                    <div class="btn navbar-btn oe-button" id="oe-add-image" data-toggle="tooltip" data-container="body" data-placement="top" title="Add Existing Image Field"><i class="fa-regular fa-image"></i></div>
                                 </li>
                                 <li>
                                     <div class="tooltip-wrapper disabled" data-toggle="tooltip" data-container="body" data-placement="top" title="Delete The Selected Field">
-                                        <div class="btn btn-lg navbar-btn oe-button disabled" id="oe-delete"><i class="fa-solid fa-xmark"></i></div>
+                                        <div class="btn navbar-btn oe-button disabled" id="oe-delete"><i class="fa-solid fa-xmark"></i></div>
                                     </div>
                                 </li>
 
 <!--
                                 <li>
-                                    <div class="btn btn-lg navbar-btn oe-zoom oe-button border-left" id="oe-undo" data-toggle="tooltip" data-container="body" data-placement="top" title="Undo"><i class="fa-solid fa-rotate-left"></i></div>
+                                    <div class="btn navbar-btn oe-zoom oe-button border-left" id="oe-undo" data-toggle="tooltip" data-container="body" data-placement="top" title="Undo"><i class="fa-solid fa-rotate-left"></i></div>
                                 </li>
                                 <li>
-                                    <div class="btn btn-lg navbar-btn oe-zoom oe-button" id="oe-redo" data-toggle="tooltip" data-container="body" data-placement="top" title="Undo"><i class="fa-solid fa-rotate-right"></i></div>
+                                    <div class="btn navbar-btn oe-zoom oe-button" id="oe-redo" data-toggle="tooltip" data-container="body" data-placement="top" title="Undo"><i class="fa-solid fa-rotate-right"></i></div>
                                 </li>
 -->
 
 
 
                                 <li>
-                                    <div class="btn btn-lg navbar-btn oe-button border-left" id="oe-item-list" data-toggle="tooltip" data-container="body" data-placement="top" title="Variable Manager"><i class="fa-regular fa-rectangle-list"></i></div>
+                                    <div class="btn navbar-btn oe-button border-left" id="oe-item-list" data-toggle="tooltip" data-container="body" data-placement="top" title="Variable Manager"><i class="fa-regular fa-rectangle-list"></i></div>
                                 </li>
 
                                 <li>
-                                    <div class="btn btn-lg navbar-btn oe-button" id="oe-test-mode" data-toggle="tooltip" data-container="body" data-placement="top" title="Display Sample Data"><i class="fa-regular fa-square-check"></i></div>
+                                    <div class="btn navbar-btn oe-button" id="oe-test-mode" data-toggle="tooltip" data-container="body" data-placement="top" title="Display Sample Data"><i class="fa-regular fa-square-check"></i></div>
                                 </li>
 
 
                                 <li>
-                                    <div class="btn btn-lg navbar-btn oe-button border-left" id="oe-split-field" data-toggle="tooltip" data-container="body" data-placement="top" title="Split Field"><i class="fa-solid fa-arrows-left-right-to-line"></i></div>
+                                    <div class="btn navbar-btn oe-button border-left" id="oe-split-field" data-toggle="tooltip" data-container="body" data-placement="top" title="Split Field"><i class="fa-solid fa-arrows-left-right-to-line"></i></div>
                                 </li>
                                 <li>
-                                    <div class="btn btn-lg navbar-btn oe-button border-left" id="oe-snap-fields" data-toggle="tooltip" data-container="body" data-placement="top" title="Snap fields to grid"><i class="fa-solid fa-grip"></i></div>
+                                    <div class="btn navbar-btn oe-button border-left" id="oe-snap-fields" data-toggle="tooltip" data-container="body" data-placement="top" title="Snap fields to grid"><i class="fa-solid fa-grip"></i></div>
                                 </li>
 
                                 <li>
-                                    <div class="btn btn-lg navbar-btn oe-zoom oe-button border-left" id="oe-group" data-toggle="tooltip" data-container="body" data-placement="top" title="Group Fields"><i class="fa-solid fa-object-group"></i></div>
+                                    <div class="btn navbar-btn oe-zoom oe-button border-left" id="oe-group" data-toggle="tooltip" data-container="body" data-placement="top" title="Group Fields"><i class="fa-solid fa-object-group"></i></div>
                                 </li>
                                 <li>
-                                    <div class="btn btn-lg navbar-btn oe-zoom oe-button" id="oe-ungroup" data-toggle="tooltip" data-container="body" data-placement="top" title="Un Group Fields"><i class="fa-solid fa-object-ungroup"></i></div>
+                                    <div class="btn navbar-btn oe-zoom oe-button" id="oe-ungroup" data-toggle="tooltip" data-container="body" data-placement="top" title="Un Group Fields"><i class="fa-solid fa-object-ungroup"></i></div>
                                 </li>
 
                                 
                                 <li>
-                                    <div class="btn btn-lg navbar-btn oe-zoom oe-button border-left" id="oe-left-align" data-toggle="tooltip" data-container="body" data-placement="top" title="Left Align"><i class="fa-solid fa-align-left"></i></div>
+                                    <div class="btn navbar-btn oe-zoom oe-button border-left" id="oe-left-align" data-toggle="tooltip" data-container="body" data-placement="top" title="Left Align"><i class="fa-solid fa-align-left"></i></div>
                                 </li>
                                 <li>
-                                    <div class="btn btn-lg navbar-btn oe-zoom oe-button" id="oe-vertical-equal" data-toggle="tooltip" data-container="body" data-placement="top" title="Equal Spacing"><i class="fa-solid fa-arrows-up-down"></i></div>
+                                    <div class="btn navbar-btn oe-zoom oe-button" id="oe-vertical-equal" data-toggle="tooltip" data-container="body" data-placement="top" title="Equal Spacing"><i class="fa-solid fa-arrows-up-down"></i></div>
                                 </li>
                                 <li>
-                                    <div class="btn btn-lg navbar-btn oe-zoom oe-button" id="oe-equal-width" data-toggle="tooltip" data-container="body" data-placement="top" title="Equal Width"><i class="fa-solid fa-rotate-90 fa-arrows-up-down"></i></div>
+                                    <div class="btn navbar-btn oe-zoom oe-button" id="oe-equal-width" data-toggle="tooltip" data-container="body" data-placement="top" title="Equal Width"><i class="fa-solid fa-rotate-90 fa-arrows-up-down"></i></div>
                                 </li>                                    
 
                                 <li>
-                                    <div class="btn btn-lg navbar-btn oe-zoom oe-button border-left" id="oe-zoom-in" data-toggle="tooltip" data-container="body" data-placement="top" title="Zoom In"><i class="fa-solid fa-magnifying-glass-plus"></i></div>
+                                    <div class="btn navbar-btn oe-zoom oe-button border-left" id="oe-zoom-in" data-toggle="tooltip" data-container="body" data-placement="top" title="Zoom In"><i class="fa-solid fa-magnifying-glass-plus"></i></div>
                                 </li>
                                 <li>
-                                    <div class="btn btn-lg navbar-btn oe-zoom oe-button" id="oe-zoom-out" data-toggle="tooltip" data-container="body" data-placement="top" title="Zoom Out"><i class="fa-solid fa-magnifying-glass-minus"></i></div>
+                                    <div class="btn navbar-btn oe-zoom oe-button" id="oe-zoom-out" data-toggle="tooltip" data-container="body" data-placement="top" title="Zoom Out"><i class="fa-solid fa-magnifying-glass-minus"></i></div>
                                 </li>
                                 <li>
-                                    <div class="btn btn-lg navbar-btn oe-zoom oe-button" id="oe-zoom-full" data-toggle="tooltip" data-container="body" data-placement="top" title="View Full Size"><i class="fa-solid fa-up-right-and-down-left-from-center"></i></div>
+                                    <div class="btn navbar-btn oe-zoom oe-button" id="oe-zoom-full" data-toggle="tooltip" data-container="body" data-placement="top" title="View Full Size"><i class="fa-solid fa-up-right-and-down-left-from-center"></i></div>
                                 </li>
                                 <li>
-                                    <div class="btn btn-lg navbar-btn oe-zoom oe-button" id="oe-zoom-fit" data-toggle="tooltip" data-container="body" data-placement="top" title="Fit to Window"><i class="fa-solid fa-down-left-and-up-right-to-center"></i></div>
+                                    <div class="btn navbar-btn oe-zoom oe-button" id="oe-zoom-fit" data-toggle="tooltip" data-container="body" data-placement="top" title="Fit to Window"><i class="fa-solid fa-down-left-and-up-right-to-center"></i></div>
                                 </li>
                                 <li>
-                                    <div class="btn btn-lg navbar-btn border-left" id="oe-show-overlay-manager" data-toggle="tooltip" data-container="body" data-placement="top" title="Overlay Manager"><i class="fa-solid fa-gears"></i></div>
+                                    <div class="btn navbar-btn border-left" id="oe-show-overlay-manager" data-toggle="tooltip" data-container="body" data-placement="top" title="Overlay Manager"><i class="fa-solid fa-gears"></i></div>
                                 </li>
                                 <li>
-                                    <div class="btn btn-lg navbar-btn oe-field-errors hidden" id="oe-field-errors" data-toggle="tooltip" data-container="body" data-placement="top" title="Display Field Errors"><i class="fa-solid fa-circle-exclamation"></i></div>
+                                    <div class="btn navbar-btn oe-field-errors hidden" id="oe-field-errors" data-toggle="tooltip" data-container="body" data-placement="top" title="Display Field Errors"><i class="fa-solid fa-circle-exclamation"></i></div>
                                 </li>
                             </ul>
                             <ul class="nav navbar-nav navbar-right">
                                 <li id="oe-toolbar-debug" class="hidden">
-                                    <div id="oe-toobar-debug-button" class="btn btn-lg navbar-btn oe-button" data-toggle="tooltip" data-container="body" data-placement="top" title="Debug Info"><i class="fa-solid fa-bug"></i></div>
+                                    <div id="oe-toobar-debug-button" class="btn navbar-btn oe-button" data-toggle="tooltip" data-container="body" data-placement="top" title="Debug Info"><i class="fa-solid fa-bug"></i></div>
                                 </li>
                                 <li>
-                                    <div id="oe-upload-font" class="btn btn-lg navbar-btn oe-button" data-toggle="tooltip" data-container="body" data-placement="top" title="Font Manager">
+                                    <div id="oe-upload-font" class="btn navbar-btn oe-button" data-toggle="tooltip" data-container="body" data-placement="top" title="Font Manager">
                                         <i class="fa-solid fa-font"></i>
                                     </div>
                                 </li>
                                 <li>
-                                    <div id="oe-show-image-manager" class="btn btn-lg navbar-btn oe-button" data-toggle="tooltip" data-container="body" data-placement="top" title="Image Manager"><i class="fa-regular fa-images"></i></div>
+                                    <div id="oe-show-image-manager" class="btn navbar-btn oe-button" data-toggle="tooltip" data-container="body" data-placement="top" title="Image Manager"><i class="fa-regular fa-images"></i></div>
                                 </li>
                                 <li>
-                                    <div class="btn btn-lg navbar-btn oe-button" id="oe-options" data-toggle="tooltip" data-container="body" data-placement="top" title="Layout and App Options"><i class="fa-solid fa-gear"></i>
+                                    <div class="btn navbar-btn oe-button" id="oe-options" data-toggle="tooltip" data-container="body" data-placement="top" title="Layout and App Options"><i class="fa-solid fa-gear"></i>
                                     </div>
                                 </li>
                             </ul>

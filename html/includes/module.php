@@ -79,12 +79,12 @@ function DisplayModule()
                 </div>                        
                 <div class="collapse navbar-collapse" id="oe-module-editor-navbar">
                     <div class="tooltip-wrapper disabled navbar-left hidden-xs" data-toggle="tooltip" data-container="body" data-placement="top" title="Save The Module Configuration">
-                        <div class="btn btn-lg navbar-btn" id="module-editor-save"><i class="fa-solid fa-floppy-disk"></i></div>
+                        <div class="btn navbar-btn" id="module-editor-save"><i class="fa-solid fa-floppy-disk"></i></div>
                     </div>
                     <form id="oe-item-list-edit-dialog-form" class="navbar-form navbar-left hidden-xs">
                         <div class="form-group">
                             <div class="tooltip-wrapper disabled" data-toggle="tooltip" data-container="body" data-placement="top" title="Select the Flow to manage">
-                                <select class="form-control input-lg" id="module-editor-config" name="module-editor-config" style="width: 200px;">
+                                <select class="form-control" id="module-editor-config" name="module-editor-config" style="width: 200px;">
                                     <option value="day">Daytime Configuration</option>
                                     <option value="night">Nighttime Configuration</option>
                                     <!-- <option value="endofnight">End Of Day Configuration</option> -->
@@ -92,19 +92,19 @@ function DisplayModule()
                             </div>
                         </div>
                     </form>
-                    <div class="btn btn-lg navbar-btn navbar-left hidden-xs" id="module-editor-periodic" data-toggle="tooltip" data-container="body" data-placement="top" title="Periodic Flow"><i class="fa-solid fa-clock"></i></div>
+                    <div class="btn navbar-btn navbar-left hidden-xs" id="module-editor-periodic" data-toggle="tooltip" data-container="body" data-placement="top" title="Periodic Flow"><i class="fa-solid fa-clock"></i></div>
                     <form id="oe-item-filter-dialog-form" class="navbar-form navbar-left hidden-xs hidden-sm hidden-md">
                         <div class="form-group">
-                            <select class="form-control input-lg" name="module-filters" id="module-filters">
+                            <select class="form-control" name="module-filters" id="module-filters">
                             </select>
                         </div>
                     </form>
                     <div class="navbar-right hidden-xs">
-                        <div class="btn btn-lg navbar-btn" id="module-installer-manager" data-toggle="tooltip" data-container="body" data-placement="top" title="Module package Manager"><i class="fa-solid fa-box-open"></i></div>
-                        <div class="btn btn-lg navbar-btn hidden-xs hidden-sm hidden-md" id="device-manager" data-toggle="tooltip" data-container="body" data-placement="top" title="Device Manager"><i class="fa-solid fa-wrench"></i></div>
-                        <div class="btn btn-lg navbar-btn hidden-xs hidden-sm hidden-md" id="module-options" data-toggle="tooltip" data-container="body" data-placement="top" title="Module Options"><i class="fa-solid fa-gear"></i></div>
+                        <div class="btn navbar-btn" id="module-installer-manager" data-toggle="tooltip" data-container="body" data-placement="top" title="Module package Manager"><i class="fa-solid fa-box-open"></i></div>
+                        <div class="btn navbar-btn hidden-xs hidden-sm hidden-md" id="device-manager" data-toggle="tooltip" data-container="body" data-placement="top" title="Device Manager"><i class="fa-solid fa-wrench"></i></div>
+                        <div class="btn navbar-btn hidden-xs hidden-sm hidden-md" id="module-options" data-toggle="tooltip" data-container="body" data-placement="top" title="Module Options"><i class="fa-solid fa-gear"></i></div>
                         <span id="oe-toolbar-debug" class="hidden hidden-xs hidden-sm hidden-md">
-                            <div id="module-toobar-debug-button" class="btn btn-lg navbar-btn" data-toggle="tooltip" data-container="body" data-placement="top" title="Debug Info"><i class="fa-solid fa-bug"></i></div>
+                            <div id="module-toobar-debug-button" class="btn navbar-btn" data-toggle="tooltip" data-container="body" data-placement="top" title="Debug Info"><i class="fa-solid fa-bug"></i></div>
                         </span>
                     </div>
                     <form id="oe-item-list-edit-dialog-form-mobile" class="navbar-form visible-xs-block">
@@ -132,19 +132,18 @@ function DisplayModule()
         </nav>
         <div class="row module-lists">
             <div class="col-sm-6 col-md-6 col-lg-6 module-column">
-                <h4 class="text-center">Available Modules
-                    <form class="form-horizontal mt-3">
-                        <div class="form-group">
-                            <label for="module-module-filter" class="col-sm-3 col-xs-3 control-label hidden-xs">Search</label>
-                            <div class="col-sm-5 col-xs-4">
-                                <input type="text" class="form-control" id="module-available-filter">
-                            </div>
-                            <div class="col-sm-4 col-xs-2">
-                                <button type="button" class="btn btn-primary btn-sm pull-left" id="module-available-filter-clear" title="Clear filter"><i class="fa-solid fa-xmark"></i></button>
-                            </div>                                    
+                <div class="module-column-header">
+                    <h4>Available Modules</h4>
+                    <form class="module-column-filter" role="search">
+                        <label for="module-available-filter" class="sr-only">Search available modules</label>
+                        <div class="input-group input-group-sm">
+                            <input type="text" class="form-control" id="module-available-filter" placeholder="Search">
+                            <span class="input-group-btn">
+                                <button type="button" class="btn btn-default" id="module-available-filter-clear" title="Clear filter"><i class="fa-solid fa-xmark"></i></button>
+                            </span>
                         </div>
                     </form>
-                </h4>
+                </div>
 
 
                 <div class="module-container">
@@ -153,19 +152,18 @@ function DisplayModule()
                 </div>
             </div>
             <div class="col-sm-6 col-md-6 col-lg-6 module-column">
-                <h4 class="text-center">Selected Modules
-                    <form class="form-horizontal mt-3">
-                        <div class="form-group">
-                            <label for="module-module-filter" class="col-sm-3 control-label hidden-xs">Search</label>
-                            <div class="col-sm-5 col-xs-4">
-                                <input type="text" class="form-control" id="module-selected-filter">
-                            </div>
-                            <div class="col-sm-4 col-xs-2">
-                                <button type="button" class="btn btn-primary btn-sm pull-left" id="module-selected-filter-clear" title="Clear filter"><i class="fa-solid fa-xmark"></i></button>
-                            </div>
+                <div class="module-column-header">
+                    <h4>Selected Modules</h4>
+                    <form class="module-column-filter" role="search">
+                        <label for="module-selected-filter" class="sr-only">Search selected modules</label>
+                        <div class="input-group input-group-sm">
+                            <input type="text" class="form-control" id="module-selected-filter" placeholder="Search">
+                            <span class="input-group-btn">
+                                <button type="button" class="btn btn-default" id="module-selected-filter-clear" title="Clear filter"><i class="fa-solid fa-xmark"></i></button>
+                            </span>
                         </div>
                     </form>
-                </h4>
+                </div>
 
                 <div class="module-container">
                     <div id="modules-selected" class="list-group"></div>
@@ -297,13 +295,13 @@ function DisplayModule()
                 <nav class="navbar-collapse module-installer-main-navbar">
                     <div class="container-fluid">
                         <div class="btn-toolbar" role="toolbar">
-                            <button type="button" class="btn btn-lg navbar-btn module-block-button" id="module-installer-verify-all" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Verify Installed Modules">
+                            <button type="button" class="btn navbar-btn module-block-button" id="module-installer-verify-all" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Verify Installed Modules">
                                 <i class="fa-solid fa-check-double"></i>
                             </button>
-                            <button type="button" class="btn btn-lg navbar-btn module-block-button" id="module-installer-update-all" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Update All Installed Modules">
+                            <button type="button" class="btn navbar-btn module-block-button" id="module-installer-update-all" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Update All Installed Modules">
                                 <i class="fa-solid fa-download fa-fw"></i>
                             </button>
-                            <button type="button" class="btn btn-lg navbar-btn module-block-button" id="module-installer-install-all" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Install All Modules">
+                            <button type="button" class="btn navbar-btn module-block-button" id="module-installer-install-all" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Install All Modules">
                                 <i class="fa-solid fa-layer-group fa-fw"></i>
                             </button>
                         </div>

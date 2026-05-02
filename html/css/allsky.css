@@ -3925,12 +3925,22 @@ body.dark .as-system-entries-browser-list .list-group-item .badge {
   margin-right: 0;
 }
 
+.module-block-navbar .btn-toolbar {
+  align-items: center;
+  display: flex;
+  width: 100%;
+}
+
 .module-block-navbar .btn-group {
   margin-left: 5px;
 }
 
 .module-block-navbar .btn-group:first-child {
   margin-left: 0;
+}
+
+.module-block-navbar .module-block-help-group {
+  margin-left: auto;
 }
 
 .module-block-navbar .module-block-button,
@@ -3959,6 +3969,10 @@ body.dark .as-system-entries-browser-list .list-group-item .badge {
   box-shadow: none;
   cursor: not-allowed;
   opacity: 0.45;
+  pointer-events: auto;
+}
+
+.module-block-navbar .module-block-help-button.disabled {
   pointer-events: auto;
 }
 
@@ -4066,13 +4080,72 @@ body.dark .loadingoverlay svg {
   padding: 5px;
 }
 
-.module-lists h4 {
-  padding: 10px 0px;
-  background-color: #f0f0f0;
+.module-column-header {
+  align-items: center;
+  background: var(--bs3-navbar-bg);
+  border: 1px solid var(--bs3-navbar-border);
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  margin: 0 0 10px;
+  padding: 8px 10px;
 }
 
-.dark .module-lists h4 {
-  background-color: var(--dark-body-bg);
+.module-column-header h4 {
+  color: var(--bs3-navbar-text);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.2;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.module-column-filter {
+  flex: 0 1 260px;
+  margin: 0;
+}
+
+.module-column-filter .input-group {
+  width: 100%;
+}
+
+.module-column-filter .form-control {
+  background-color: var(--bs3-input-bg);
+  border-color: var(--bs3-input-border);
+  color: var(--bs3-input-text);
+}
+
+.module-column-filter .btn {
+  background: transparent;
+  border-color: var(--bs3-input-border);
+  color: var(--bs3-navbar-text);
+}
+
+.module-column-filter .btn:hover,
+.module-column-filter .btn:focus {
+  background-color: rgba(0, 0, 0, 0.06);
+  border-color: rgba(0, 0, 0, 0.12);
+  color: var(--bs3-navbar-hover-text);
+}
+
+body.dark .module-column-filter .btn:hover,
+body.dark .module-column-filter .btn:focus {
+  background-color: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: var(--bs3-navbar-hover-text);
+}
+
+@media (max-width: 767px) {
+  .module-column-header {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .module-column-filter {
+    flex-basis: auto;
+    width: 100%;
+  }
 }
 
 .module-error-dialog>.modal-dialog {

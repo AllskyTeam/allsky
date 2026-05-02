@@ -57,6 +57,9 @@ export PRIOR_FTP_FILE="${PRIOR_CONFIG_DIR}/ftp-settings.sh"
 export LIGHTTPD_LOG_DIR="/var/log/lighttpd"
 export LIGHTTPD_LOG_FILE="${LIGHTTPD_LOG_DIR}/error.log"
 export LIGHTTPD_CONFIG_FILE="/etc/lighttpd/lighttpd.conf"
+export ALLSKY_LIGHTTPD_STRING="# Allsky changes"	# String that's added to the config file
+
+export FINAL_SUDOERS_FILE="/etc/sudoers.d/allsky"
 
 ######################################### functions
 
@@ -806,6 +809,9 @@ function update_old_website_config_file()
 # Create the lighttpd configuration file.
 function create_lighttpd_config_file()
 {
+	local ADD_STRING="true"
+	[[ ${1} == "--no-string" ]] && ADD_STRING="false"
+
 	local TMP="/tmp/x.${RANDOM}"
 
 	sed \
@@ -821,6 +827,12 @@ function create_lighttpd_config_file()
 		-e "s;XX_ALLSKY_MY_OVERLAY_TEMPLATES_XX;${ALLSKY_MY_OVERLAY_TEMPLATES};g" \
 			"${REPO_LIGHTTPD_FILE}"  >  "${TMP}"
 	sudo install -m 0644 "${TMP}" "${LIGHTTPD_CONFIG_FILE}" && rm -f "${TMP}"
+
+	if [[ ${ADD_STRING} == "true" ]]; then
+		# Add the string that indicates the web server and its dependencies have been installed.
+		echo "${LIGHTTPD_ALLSKY_STRING}" |
+			sudo tee --append "${LIGHTTPD_CONFIG_FILE}" > /dev/null
+	fi
 }
 
 ####
@@ -1951,4 +1963,18 @@ function create_options_file()
 		--cc-file "${CC_FILE}" \
 		--options-file "${OPTIONS_FILE}" \
 		--settings-file "${SETTINGS_FILE}"
+}
+
+
+# Create or update the sudoers file.
+function create_sudoers()
+{
+	local TMP_FILE="/tmp/sudoers.${RANDOM}"
+
+	sed \
+		-e "s;XX_ALLSKY_OWNER_XX;${ALLSKY_OWNER};" \
+		-e "s;XX_ALLSKY_SCRIPTS_XX;${ALLSKY_SCRIPTS};" \
+		-e "s;XX_ALLSKY_UTILITIES_XX;${ALLSKY_UTILITIES};" \
+		"${REPO_SUDOERS_FILE}"  >  "${TMP_FILE}"
+	sudo install -m 0644 "${TMP_FILE}" "${FINAL_SUDOERS_FILE}" && rm -f "${TMP_FILE}"
 }

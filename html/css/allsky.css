@@ -3,6 +3,7 @@
     --bs3-body-bg: #f5f9fc;
     --bs3-body-color: #2e3c4d;
     --bs3-text-muted: #6b7b8c;
+    --bs3-help-block-text: #44566a;
     --bs3-heading-color: #1f3447;
     --bs3-link: #2232e4;
     --bs3-link-hover: #414ee0;
@@ -234,7 +235,7 @@
     --bs3-label-danger-bg: #d9534f;
     --bs3-label-text: #ffffff;
 
-    --bs3-badge-bg: #6b7b8c;
+    --bs3-badge-bg: #5f8fa8;
     --bs3-badge-text: #ffffff;
 
     /* Progress */
@@ -304,9 +305,10 @@ body.dark {
     --bs3-body-bg: #111827;
     --bs3-body-color: #e5eef8;
     --bs3-text-muted: #94a3b8;
+    --bs3-help-block-text: #cbd5e1;
     --bs3-heading-color: #e5eef8;
-    --bs3-link: #7cc4ee;
-    --bs3-link-hover: #a4d9f3;
+    --bs3-link: #8ecae6;
+    --bs3-link-hover: #c7e9f7;
     --bs3-header-card-value: #f3f7fc;
 
     /* Generic surfaces */
@@ -535,8 +537,8 @@ body.dark {
     --bs3-label-danger-bg: #8d3431;
     --bs3-label-text: #ffffff;
 
-    --bs3-badge-bg: #475569;
-    --bs3-badge-text: #ffffff;
+    --bs3-badge-bg: #5fa8d3;
+    --bs3-badge-text: #0f172a;
 
     /* Progress */
     --bs3-progress-bg: #171717;
@@ -609,6 +611,10 @@ body {
 
 .text-muted {
     color: var(--bs3-text-muted);
+}
+
+.help-block {
+    color: var(--bs3-help-block-text);
 }
 
 h1,
@@ -3983,6 +3989,15 @@ body.dark .module-installer-main-navbar .module-block-button:not(:disabled):focu
   background-color: rgba(255, 255, 255, 0.08);
   border-color: rgba(255, 255, 255, 0.18);
   color: var(--bs3-navbar-hover-text);
+}
+
+body > .loadingoverlay .loadingoverlay_text,
+.loadingoverlay .loadingoverlay_text {
+  box-sizing: border-box;
+  max-width: min(90vw, 36rem);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 body.dark > .loadingoverlay,

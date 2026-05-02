@@ -2962,20 +2962,46 @@ class MODULESEDITOR {
 		`;
 	}
 
+	#installerToolbarLinkButton(iconClass, title, content, url) {
+		const enabled = url !== null && url !== undefined && String(url).trim() !== '';
+		const safeUrl = this.#escapeHtml(url || '#');
+		const disabledClass = enabled ? '' : ' disabled';
+		const href = enabled ? ` href="${safeUrl}" target="_blank" rel="noopener noreferrer"` : '';
+
+		return `
+			<div class="btn-group module-block-help-group" role="group">
+				<a class="btn btn-sm navbar-btn module-block-button module-block-help-button${disabledClass}" role="button" aria-disabled="${enabled ? 'false' : 'true'}"${href} data-toggle="popover" data-container="body" data-delay='{"show": 1000, "hide": 200}' data-placement="top" data-trigger="hover" title="${this.#escapeHtml(title)}" data-content="${this.#escapeHtml(content)}">
+					<i class="${iconClass}"></i>
+				</a>
+			</div>
+		`;
+	}
+
 	#moduleInstallerToolbar(module, context = 'installer') {
 		const moduleName = module?.module || '';
 		const moduleLabel = module?.displayName || module?.module || 'this module';
 		const packageActions = context !== 'core' && module !== null && module !== undefined;
-		const canAdd = packageActions && !module.installed && !module.deprecated && module.valid;
+		const replacedBy = String(module?.replacedBy || '').trim();
+		const canAdd = packageActions && !module.installed && !module.deprecated && replacedBy === '' && module.valid;
 		const canDelete = packageActions && module.installed;
 		const canReinstall = packageActions && module.installed;
-		const canShowInfo = packageActions && moduleName !== '';
+		const canShowInfo = module !== null && module !== undefined && moduleName !== '';
 		const canShowChangelog = module !== null && module !== undefined && this.#moduleHasChangelog(module);
+		let addModulePopover = canAdd ? `Install ${moduleLabel}.` : `${moduleLabel} cannot currently be installed.`;
+		if (!canAdd && replacedBy !== '') {
+			addModulePopover = `${moduleLabel} has been replaced by ${replacedBy}. Install ${replacedBy} instead.`;
+		} else if (!canAdd && module?.deprecated) {
+			addModulePopover = `${moduleLabel} has been deprecated and cannot be installed.`;
+		} else if (!canAdd && module && !module.valid) {
+			addModulePopover = `${moduleLabel} cannot be installed because the module metadata is invalid.`;
+		} else if (!canAdd && module?.installed) {
+			addModulePopover = `${moduleLabel} is already installed.`;
+		}
 		const buttons = [];
 
 		if (context === 'installer') {
 			buttons.push(
-				this.#installerToolbarButton('fa-solid fa-plus fa-fw', 'Add Module', canAdd ? `Install ${moduleLabel}.` : `${moduleLabel} cannot currently be installed.`, {
+				this.#installerToolbarButton('fa-solid fa-plus fa-fw', 'Add Module', addModulePopover, {
 					moduleName,
 					action: 'install',
 					enabled: canAdd
@@ -2994,7 +3020,7 @@ class MODULESEDITOR {
 		}
 
 		buttons.push(
-			this.#installerToolbarButton('fa-solid fa-circle-info fa-fw', 'Module Info', canShowInfo ? `Show package manager information for ${moduleLabel}.` : `Module information is not available for ${moduleLabel}.`, {
+			this.#installerToolbarButton('fa-solid fa-circle-info fa-fw', 'Module Info', canShowInfo ? `Show module information for ${moduleLabel}.` : `Module information is not available for ${moduleLabel}.`, {
 				moduleName,
 				action: 'status',
 				enabled: canShowInfo
@@ -3004,6 +3030,10 @@ class MODULESEDITOR {
 				changelog: true,
 				enabled: canShowChangelog
 			})
+		);
+
+		buttons.push(
+			this.#installerToolbarLinkButton('fa-solid fa-circle-question fa-fw', 'Help', module?.docs ? `Open documentation for ${moduleLabel}.` : `No documentation link is available for ${moduleLabel}.`, module?.docs || '')
 		);
 
 		return buttons.join('');
@@ -3832,7 +3862,7 @@ class MODULESEDITOR {
 							${description}
 							<div class="row">
 								<div class="col-xs-12">
-									<h4 class="text-muted">Required Modules</h4>
+									<h4>Required Modules</h4>
 								</div>
 							</div>
 							<div class="list-group">
@@ -3995,9 +4025,9 @@ class MODULESEDITOR {
 		const overlayModuleName = this.#shortInstallerModuleName(moduleName);
 		const actionLabels = {
 			status: `Loading info for ${overlayModuleName}...`,
-			install: `Installing ${overlayModuleName}. This may take a while if dependencies are needed...`,
-			update: `Updating ${overlayModuleName}. This may take a while if dependencies are needed...`,
-			reinstall: `Reinstalling ${overlayModuleName}. This may take a while if dependencies are needed...`,
+			install: `Installing ${overlayModuleName}...`,
+			update: `Updating ${overlayModuleName}...`,
+			reinstall: `Reinstalling ${overlayModuleName}...`,
 			migrate: `Loading migration info for ${overlayModuleName}...`,
 			uninstall: `Uninstalling ${overlayModuleName}...`
 		};
@@ -4226,6 +4256,11 @@ class MODULESEDITOR {
 			}
 			event.preventDefault();
 			$(event.currentTarget).trigger('click');
+		});
+
+		$(document).off('click', '.module-block-help-button.disabled');
+		$(document).on('click', '.module-block-help-button.disabled', (event) => {
+			event.preventDefault();
 		});
 
 		$(document).off('click', '.module-installer-changelog-toggle-all');

@@ -68,7 +68,7 @@ function DisplayModule()
     </div>
     <div class="panel-body">
         <nav class="navbar navbar-default">
-            <div class="container-fluid">
+            <div class="container-fluid-old">
                 <div class="navbar-header">
                     <button type="button" class="navbar-toggle collapsed pull-left" style="margin-left: 15px;" data-toggle="collapse" data-target="#oe-module-editor-navbar">
                         <span class="sr-only">Toggle navigation</span>
@@ -294,16 +294,16 @@ function DisplayModule()
                 <h4 class="modal-title">Module package Manager</h4>
             </div>
             <div class="modal-body">
-                <nav class="navbar navbar-default" style="margin-bottom: 15px;">
+                <nav class="navbar-collapse module-installer-main-navbar">
                     <div class="container-fluid">
-                        <div class="navbar-left">
-                            <button type="button" class="btn btn-primary navbar-btn" id="module-installer-verify-all" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Verify Installed Modules">
-                                <i class="fa-solid fa-shield-check fa-fw"></i>
+                        <div class="btn-toolbar" role="toolbar">
+                            <button type="button" class="btn btn-lg navbar-btn module-block-button" id="module-installer-verify-all" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Verify Installed Modules">
+                                <i class="fa-solid fa-check-double"></i>
                             </button>
-                            <button type="button" class="btn btn-info navbar-btn" id="module-installer-update-all" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Update All Installed Modules">
+                            <button type="button" class="btn btn-lg navbar-btn module-block-button" id="module-installer-update-all" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Update All Installed Modules">
                                 <i class="fa-solid fa-download fa-fw"></i>
                             </button>
-                            <button type="button" class="btn btn-success navbar-btn" id="module-installer-install-all" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Install All Modules">
+                            <button type="button" class="btn btn-lg navbar-btn module-block-button" id="module-installer-install-all" data-toggle="tooltip" data-container="body" data-placement="bottom" title="Install All Modules">
                                 <i class="fa-solid fa-layer-group fa-fw"></i>
                             </button>
                         </div>
@@ -336,6 +336,7 @@ function DisplayModule()
                                         <label for="module-installer-filter" class="control-label">Show</label>
                                         <select class="form-control" id="module-installer-filter">
                                             <option value="all">All Modules</option>
+                                            <option value="installed">Installed Modules</option>
                                             <option value="updateable">Updateable Modules</option>
                                             <option value="migrateable">Migrateable Modules</option>
                                             <option value="not-installed">Not Installed</option>
@@ -375,7 +376,6 @@ function DisplayModule()
                 <pre id="module-installer-progress-log" style="height: 320px; overflow-y: auto; margin-bottom: 0;"></pre>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-warning" id="module-installer-progress-cancel">Cancel</button>
                 <button type="button" class="btn btn-default" id="module-installer-progress-close" data-dismiss="modal">Close</button>
             </div>
         </div>

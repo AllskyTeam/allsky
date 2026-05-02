@@ -2942,6 +2942,93 @@ class MODULESEDITOR {
 		return branch === 'master' || branch === 'legacy' || branch.startsWith('v');
 	}
 
+	#installerToolbarButton(iconClass, title, content, options = {}) {
+		const enabled = options.enabled !== false;
+		const moduleName = this.#escapeHtml(options.moduleName || '');
+		const action = options.action ? this.#escapeHtml(options.action) : '';
+		const actionClass = enabled && action ? ' module-installer-action' : '';
+		const changelogClass = enabled && options.changelog ? ' module-installer-changelog' : '';
+		const disabledClass = enabled ? '' : ' disabled';
+		const tabindex = enabled ? ' tabindex="0"' : '';
+		const dataAction = action ? ` data-action="${action}"` : '';
+		const dataModule = moduleName ? ` data-module="${moduleName}"` : '';
+
+		return `
+			<div class="btn-group" role="group">
+				<div class="btn btn-sm navbar-btn module-block-button${actionClass}${changelogClass}${disabledClass}" role="button"${tabindex} aria-disabled="${enabled ? 'false' : 'true'}"${dataAction}${dataModule} data-toggle="popover" data-container="body" data-delay='{"show": 1000, "hide": 200}' data-placement="top" data-trigger="hover" title="${this.#escapeHtml(title)}" data-content="${this.#escapeHtml(content)}">
+					<i class="${iconClass}"></i>
+				</div>
+			</div>
+		`;
+	}
+
+	#moduleInstallerToolbar(module, context = 'installer') {
+		const moduleName = module?.module || '';
+		const moduleLabel = module?.displayName || module?.module || 'this module';
+		const packageActions = context !== 'core' && module !== null && module !== undefined;
+		const canAdd = packageActions && !module.installed && !module.deprecated && module.valid;
+		const canDelete = packageActions && module.installed;
+		const canReinstall = packageActions && module.installed;
+		const canShowInfo = packageActions && moduleName !== '';
+		const canShowChangelog = module !== null && module !== undefined && this.#moduleHasChangelog(module);
+		const buttons = [];
+
+		if (context === 'installer') {
+			buttons.push(
+				this.#installerToolbarButton('fa-solid fa-plus fa-fw', 'Add Module', canAdd ? `Install ${moduleLabel}.` : `${moduleLabel} cannot currently be installed.`, {
+					moduleName,
+					action: 'install',
+					enabled: canAdd
+				}),
+				this.#installerToolbarButton('fa-solid fa-trash fa-fw', 'Delete Module', canDelete ? `Remove ${moduleLabel} from this Allsky installation.` : `${moduleLabel} is not currently installed and cannot be deleted.`, {
+					moduleName,
+					action: 'uninstall',
+					enabled: canDelete
+				}),
+				this.#installerToolbarButton('fa-solid fa-rotate-right fa-fw', 'Reinstall Module', canReinstall ? `Reinstall ${moduleLabel} from the selected repository branch.` : `${moduleLabel} must be installed before it can be reinstalled.`, {
+					moduleName,
+					action: 'reinstall',
+					enabled: canReinstall
+				})
+			);
+		}
+
+		buttons.push(
+			this.#installerToolbarButton('fa-solid fa-circle-info fa-fw', 'Module Info', canShowInfo ? `Show package manager information for ${moduleLabel}.` : `Module information is not available for ${moduleLabel}.`, {
+				moduleName,
+				action: 'status',
+				enabled: canShowInfo
+			}),
+			this.#installerToolbarButton('fa-solid fa-clock-rotate-left fa-fw', 'Change Log', canShowChangelog ? `Show the change log for ${moduleLabel}.` : `No change log is available for ${moduleLabel}.`, {
+				moduleName,
+				changelog: true,
+				enabled: canShowChangelog
+			})
+		);
+
+		return buttons.join('');
+	}
+
+	#refreshInstallerToolbarPopovers() {
+		$('#module-installer-dialog .module-block-button[data-toggle="popover"]')
+			.popover('destroy')
+			.popover();
+	}
+
+	#shortInstallerModuleName(moduleName, maxLength = 36) {
+		const name = String(moduleName || '');
+		if (name.length <= maxLength) {
+			return name;
+		}
+
+		const ellipsis = '...';
+		const keepLength = maxLength - ellipsis.length;
+		const prefixLength = Math.ceil(keepLength * 0.6);
+		const suffixLength = keepLength - prefixLength;
+
+		return `${name.slice(0, prefixLength)}${ellipsis}${name.slice(-suffixLength)}`;
+	}
+
 	#adjustInstallerModalHeight() {
 		const modal = $('#module-installer-dialog');
 		if (!modal.length || !modal.is(':visible')) {
@@ -3036,6 +3123,9 @@ class MODULESEDITOR {
 		const searchText = ($('#module-installer-search').val() || '').trim().toLowerCase();
 		const filterMode = $('#module-installer-filter').val() || 'all';
 		return (this.#installerData.modules || []).filter((module) => {
+			if (filterMode === 'installed' && !module.installed) {
+				return false;
+			}
 			if (filterMode === 'updateable' && !module.updateAvailable) {
 				return false;
 			}
@@ -3066,6 +3156,9 @@ class MODULESEDITOR {
 		const searchText = ($('#module-installer-search').val() || '').trim().toLowerCase();
 		const filterMode = $('#module-installer-filter').val() || 'all';
 		return (this.#installerData.modules || []).filter((module) => {
+			if (filterMode === 'installed' && !module.installed) {
+				return false;
+			}
 			if (filterMode === 'migrateable' && !module.migrationRequired) {
 				return false;
 			}
@@ -3115,7 +3208,10 @@ class MODULESEDITOR {
 		$('#module-installer-install-all').prop('disabled', running);
 		$('#module-installer-update-all').prop('disabled', running);
 		$('#module-installer-verify-all').prop('disabled', running);
-		$('.module-installer-action').prop('disabled', running);
+		$('.module-installer-action')
+			.prop('disabled', running)
+			.toggleClass('disabled', running)
+			.attr('aria-disabled', running ? 'true' : 'false');
 		$('.module-suggested-install').prop('disabled', running);
 		if (!running) {
 			this.#installerCurrentRequest = null;
@@ -3377,6 +3473,9 @@ class MODULESEDITOR {
 		const autoExpandGroups = searchText !== '';
 		const filterMode = $('#module-installer-filter').val() || 'all';
 		const modules = (result.modules || []).filter((module) => {
+			if (filterMode === 'installed' && !module.installed) {
+				return false;
+			}
 			if (filterMode === 'updateable' && !module.updateAvailable) {
 				return false;
 			}
@@ -3408,22 +3507,22 @@ class MODULESEDITOR {
 
 		summaryContainer.append(`
 			<div class="row">
-				<div class="col-sm-6 col-md-2">
+				<div class="hidden-xs col-sm-6 col-md-2">
 					<div class="panel panel-default"><div class="panel-body text-center"><small>Total Modules</small><div><strong>${modules.length}</strong></div></div></div>
 				</div>
-				<div class="col-sm-6 col-md-2">
+				<div class="hidden-xs col-sm-6 col-md-2">
 					<div class="panel panel-default"><div class="panel-body text-center"><small>Installed</small><div><strong>${installedCount}</strong></div></div></div>
 				</div>
-				<div class="col-sm-6 col-md-2">
+				<div class="hidden-xs col-sm-6 col-md-2">
 					<div class="panel panel-default"><div class="panel-body text-center"><small>Updates</small><div><strong>${updateCount}</strong></div></div></div>
 				</div>
-				<div class="col-sm-6 col-md-2">
+				<div class="hidden-xs col-sm-6 col-md-2">
 					<div class="panel panel-default"><div class="panel-body text-center"><small>Migration</small><div><strong>${migrationCount}</strong></div></div></div>
 				</div>
-				<div class="col-sm-6 col-md-2">
+				<div class="hidden-xs col-sm-6 col-md-2">
 					<div class="panel panel-default"><div class="panel-body text-center"><small>Deprecated</small><div><strong>${deprecatedCount}</strong></div></div></div>
 				</div>
-				<div class="col-sm-6 col-md-2">
+				<div class="hidden-xs col-sm-6 col-md-2">
 					<div class="panel panel-default"><div class="panel-body text-center"><small>Branch</small><div><strong>${this.#escapeHtml(result.branch || '')}</strong></div></div></div>
 				</div>
 			</div>
@@ -3458,31 +3557,7 @@ class MODULESEDITOR {
 			`;
 
 			groupedModules[groupName].forEach((module) => {
-			let actions = `
-				<div class="btn-group" role="group">
-					<button type="button" class="btn btn-primary module-installer-action" data-action="status" data-module="${this.#escapeHtml(module.module)}" title="Status"><i class="fa-solid fa-circle-info fa-fw"></i></button>
-				</div>
-			`;
-			if (this.#moduleHasChangelog(module)) {
-				actions += ` <div class="btn-group" role="group"><button type="button" class="btn btn-default module-installer-changelog" data-module="${this.#escapeHtml(module.module)}" title="Change Log"><i class="fa-solid fa-clock-rotate-left fa-fw"></i></button></div>`;
-			} else {
-				actions += ` <div class="btn-group" role="group"><button type="button" class="btn btn-default" title="No changelog available" disabled="disabled"><i class="fa-solid fa-clock-rotate-left fa-fw"></i></button></div>`;
-			}
-			if (module.docs) {
-				actions += ` <div class="btn-group" role="group"><a class="btn btn-info" href="${this.#escapeHtml(module.docs)}" target="_blank" rel="noopener noreferrer" title="Docs"><i class="fa-solid fa-circle-question fa-fw"></i></a></div>`;
-			}
-			if (module.installed) {
-				if (module.updateAvailable) {
-					actions += ` <div class="btn-group" role="group"><button type="button" class="btn btn-primary module-installer-action" data-action="update" data-module="${this.#escapeHtml(module.module)}" title="Update"><i class="fa-solid fa-download fa-fw"></i></button></div>`;
-				}
-				actions += ` <div class="btn-group" role="group"><button type="button" class="btn btn-warning module-installer-action" data-action="reinstall" data-module="${this.#escapeHtml(module.module)}" title="Reinstall"><i class="fa-solid fa-rotate-right fa-fw"></i></button></div>`;
-				if (module.migrationRequired) {
-					actions += ` <div class="btn-group" role="group"><button type="button" class="btn btn-info module-installer-action" data-action="migrate" data-module="${this.#escapeHtml(module.module)}" title="Migrate"><i class="fa-solid fa-right-left fa-fw"></i></button></div>`;
-				}
-				actions += ` <div class="btn-group" role="group"><button type="button" class="btn btn-danger module-installer-action" data-action="uninstall" data-module="${this.#escapeHtml(module.module)}" title="Uninstall"><i class="fa-solid fa-trash fa-fw"></i></button></div>`;
-			} else if (!module.deprecated && module.valid) {
-				actions += ` <div class="btn-group" role="group"><button type="button" class="btn btn-success module-installer-action" data-action="install" data-module="${this.#escapeHtml(module.module)}" title="Install"><i class="fa-solid fa-plus fa-fw"></i></button></div>`;
-			}
+			const actions = this.#moduleInstallerToolbar(module, 'installer');
 
 			const errors = []
 				.concat(module.sourceErrors || [])
@@ -3500,10 +3575,8 @@ class MODULESEDITOR {
 				? `<div><strong>Flows:</strong> ${this.#escapeHtml(module.differingFlows.join(', '))}</div>`
 				: '';
 			const shortDescription = this.#escapeHtml(module.description || '');
-			let statusIcon = '<i class="fa-regular fa-circle text-muted" title="Available"></i>';
-			if (module.installed) {
-				statusIcon = '<i class="fa-solid fa-circle-check text-success" title="Installed"></i>';
-			} else if (module.deprecated) {
+			let statusIcon = '';
+			if (module.deprecated) {
 				statusIcon = '<i class="fa-solid fa-triangle-exclamation text-warning" title="Deprecated"></i>';
 			}
 			const versionLine = `
@@ -3513,35 +3586,37 @@ class MODULESEDITOR {
 
 			groupHtml += `
 				<div class="list-group-item" data-module="${this.#escapeHtml(module.module)}">
-						<div class="row">
-							<div class="col-sm-8">
-								<div class="row">
-									<div class="col-xs-12">
-										<h4>
-											${statusIcon} ${this.#escapeHtml(module.displayName)}
-										</h4>
-									</div>
-								</div>
-								<div class="row">
-									<div class="col-xs-12">
-										<p class="text-muted">${shortDescription}</p>
-									</div>
-								</div>
-								<div class="row">
-									<div class="col-xs-12">
-										<p class="help-block"><span class="badge">${this.#escapeHtml(module.module)}</span> ${versionLine} ${migrationBadge}</p>
-									</div>
-								</div>
-								${replacedBy ? `<div class="row"><div class="col-xs-12">${replacedBy}</div></div>` : ''}
-								${errorText ? `<div class="row"><div class="col-xs-12"><div class="text-danger"><small>${errorText}</small></div></div></div>` : ''}
-								${flowsBlock ? `<div class="row"><div class="col-xs-12">${flowsBlock}</div></div>` : ''}
-							</div>
-							<div class="col-sm-4 text-right">
-								<div class="btn-toolbar pull-right" role="toolbar">
-									${actions}
-								</div>
+					<nav class="navbar-collapse module-block-navbar">
+						<div class="container-fluid">
+							<div class="btn-toolbar" role="toolbar">
+								${actions}
 							</div>
 						</div>
+					</nav>
+					<div class="row">
+						<div class="col-xs-12">
+							<div class="row">
+								<div class="col-xs-12">
+									<h4>
+										${statusIcon}${statusIcon ? ' ' : ''}${this.#escapeHtml(module.displayName)}
+									</h4>
+								</div>
+							</div>
+							<div class="row">
+								<div class="col-xs-12">
+									<p class="text-muted">${shortDescription}</p>
+								</div>
+							</div>
+							<div class="row">
+								<div class="col-xs-12">
+									<p class="help-block"><span class="badge">${this.#escapeHtml(module.module)}</span> ${versionLine} ${migrationBadge}</p>
+								</div>
+							</div>
+							${replacedBy ? `<div class="row"><div class="col-xs-12">${replacedBy}</div></div>` : ''}
+							${errorText ? `<div class="row"><div class="col-xs-12"><div class="text-danger"><small>${errorText}</small></div></div></div>` : ''}
+							${flowsBlock ? `<div class="row"><div class="col-xs-12">${flowsBlock}</div></div>` : ''}
+						</div>
+					</div>
 				</div>
 			`;
 			});
@@ -3570,6 +3645,8 @@ class MODULESEDITOR {
 				</div>
 			`);
 		}
+
+		this.#refreshInstallerToolbarPopovers();
 	}
 
 	#renderCoreModules(coreModules) {
@@ -3624,15 +3701,7 @@ class MODULESEDITOR {
 			`;
 
 			groupedModules[groupName].forEach((module) => {
-				let actions = '';
-				if (this.#moduleHasChangelog(module)) {
-					actions += `<div class="btn-group" role="group"><button type="button" class="btn btn-default module-installer-changelog" data-module="${this.#escapeHtml(module.module)}" title="Change Log"><i class="fa-solid fa-clock-rotate-left fa-fw"></i></button></div>`;
-				} else {
-					actions += `<div class="btn-group" role="group"><button type="button" class="btn btn-default" title="No changelog available" disabled="disabled"><i class="fa-solid fa-clock-rotate-left fa-fw"></i></button></div>`;
-				}
-				if (module.docs) {
-					actions += ` <div class="btn-group" role="group"><a class="btn btn-info" href="${this.#escapeHtml(module.docs)}" target="_blank" rel="noopener noreferrer" title="Docs"><i class="fa-solid fa-circle-question fa-fw"></i></a></div>`;
-				}
+				const actions = this.#moduleInstallerToolbar(module, 'core');
 
 				const errors = [].concat(module.sourceErrors || []);
 				const errorText = errors.length > 0
@@ -3642,7 +3711,7 @@ class MODULESEDITOR {
 					? `<div class="text-warning"><small>Replaced by ${this.#escapeHtml(module.replacedBy)}</small></div>`
 					: '';
 				const shortDescription = this.#escapeHtml(module.description || '');
-				let statusIcon = '<i class="fa-solid fa-circle-check text-success" title="Core Module"></i>';
+				let statusIcon = '';
 				if (module.deprecated) {
 					statusIcon = '<i class="fa-solid fa-triangle-exclamation text-warning" title="Deprecated"></i>';
 				} else if (!module.valid) {
@@ -3655,12 +3724,13 @@ class MODULESEDITOR {
 
 				groupHtml += `
 					<div class="list-group-item" data-module="${this.#escapeHtml(module.module)}">
+						${actions ? `<nav class="navbar-collapse module-block-navbar"><div class="container-fluid"><div class="btn-toolbar" role="toolbar">${actions}</div></div></nav>` : ''}
 						<div class="row">
-							<div class="col-sm-8">
+							<div class="col-xs-12">
 								<div class="row">
 									<div class="col-xs-12">
 										<h4>
-											${statusIcon} ${this.#escapeHtml(module.displayName)}
+											${statusIcon}${statusIcon ? ' ' : ''}${this.#escapeHtml(module.displayName)}
 										</h4>
 									</div>
 								</div>
@@ -3677,9 +3747,6 @@ class MODULESEDITOR {
 								${replacedBy ? `<div class="row"><div class="col-xs-12">${replacedBy}</div></div>` : ''}
 								${errorText ? `<div class="row"><div class="col-xs-12"><div class="text-danger"><small>${errorText}</small></div></div></div>` : ''}
 							</div>
-							<div class="col-sm-4 text-right">
-								${actions ? `<div class="btn-toolbar pull-right" role="toolbar">${actions}</div>` : ''}
-							</div>
 						</div>
 					</div>
 				`;
@@ -3688,6 +3755,8 @@ class MODULESEDITOR {
 			groupHtml += '</div></div></div></div>';
 			container.append(groupHtml);
 		});
+
+		this.#refreshInstallerToolbarPopovers();
 	}
 
 	#renderSuggestedModules(suggestedData, installerData = null) {
@@ -3771,41 +3840,67 @@ class MODULESEDITOR {
 
 			modules.forEach((moduleName) => {
 				const module = moduleIndex[moduleName] || null;
-				const safeModuleName = this.#escapeHtml(moduleName);
-				const displayName = this.#escapeHtml(module ? (module.displayName || module.module) : moduleName);
+				const moduleRecord = module || {
+					module: moduleName,
+					displayName: moduleName,
+					description: 'This suggested module is not available in the selected repository branch.',
+					installed: false,
+					deprecated: true,
+					valid: false
+				};
+				const displayName = this.#escapeHtml(moduleRecord.displayName || moduleRecord.module);
 				const statusText = module
 					? (module.installed ? 'Installed' : 'Not Installed')
 					: 'Not Available In Repository';
 				const statusClass = module
 					? (module.installed ? 'label-success' : 'label-default')
 					: 'label-warning';
-				let actions = '';
-
-				if (module) {
-					if (this.#moduleHasChangelog(module)) {
-						actions += `<div class="btn-group" role="group"><button type="button" class="btn btn-default module-installer-changelog" data-module="${safeModuleName}" title="Change Log"><i class="fa-solid fa-clock-rotate-left fa-fw"></i></button></div>`;
-					} else {
-						actions += `<div class="btn-group" role="group"><button type="button" class="btn btn-default" title="No changelog available" disabled="disabled"><i class="fa-solid fa-clock-rotate-left fa-fw"></i></button></div>`;
-					}
+				const actions = this.#moduleInstallerToolbar(moduleRecord, 'suggested');
+				const errors = module ? [].concat(module.sourceErrors || []) : [];
+				const errorText = errors.length > 0
+					? this.#escapeHtml(errors.join(' | '))
+					: '';
+				const replacedBy = moduleRecord.replacedBy
+					? `<div class="text-warning"><small>Replaced by ${this.#escapeHtml(moduleRecord.replacedBy)}</small></div>`
+					: '';
+				const shortDescription = this.#escapeHtml(moduleRecord.description || '');
+				let statusIcon = '';
+				if (moduleRecord.deprecated) {
+					statusIcon = '<i class="fa-solid fa-triangle-exclamation text-warning" title="Deprecated"></i>';
+				} else if (!moduleRecord.valid) {
+					statusIcon = '<i class="fa-solid fa-circle-xmark text-danger" title="Invalid"></i>';
 				}
-				if (module && module.docs) {
-					actions += ` <div class="btn-group" role="group"><a class="btn btn-info" href="${this.#escapeHtml(module.docs)}" target="_blank" rel="noopener noreferrer" title="Docs"><i class="fa-solid fa-circle-question fa-fw"></i></a></div>`;
-				}
-				if (module && !module.installed && !module.deprecated && module.valid) {
-					actions += ` <div class="btn-group" role="group"><button type="button" class="btn btn-success module-installer-action" data-action="install" data-module="${safeModuleName}" title="Install"><i class="fa-solid fa-plus fa-fw"></i></button></div>`;
-				} else if (module && module.installed && module.updateAvailable) {
-					actions += ` <div class="btn-group" role="group"><button type="button" class="btn btn-primary module-installer-action" data-action="update" data-module="${safeModuleName}" title="Update"><i class="fa-solid fa-download fa-fw"></i></button></div>`;
-				}
+				const versionLine = module
+					? `
+						<span class="badge">Installed: ${this.#escapeHtml(module.installedVersion || 'No')}</span>
+						<span class="badge">Available: ${this.#escapeHtml(module.sourceVersion || 'Unknown')}</span>
+					`
+					: '<span class="badge">Repository: Not Available</span>';
 
 				panelHtml += `
-					<div class="list-group-item">
+					<div class="list-group-item" data-module="${this.#escapeHtml(moduleRecord.module)}">
+						${actions ? `<nav class="navbar-collapse module-block-navbar"><div class="container-fluid"><div class="btn-toolbar" role="toolbar">${actions}</div></div></nav>` : ''}
 						<div class="row">
-							<div class="col-sm-8">
-								<div><strong>${displayName}</strong></div>
-							</div>
-							<div class="col-sm-4 text-right">
-								<p class="help-block"><span class="label ${statusClass}">${statusText}</span></p>
-								${actions ? `<div class="btn-toolbar pull-right" role="toolbar">${actions}</div>` : ''}
+							<div class="col-xs-12">
+								<div class="row">
+									<div class="col-xs-12">
+										<h4>
+											${statusIcon}${statusIcon ? ' ' : ''}${displayName}
+										</h4>
+									</div>
+								</div>
+								<div class="row">
+									<div class="col-xs-12">
+										<p class="text-muted">${shortDescription}</p>
+									</div>
+								</div>
+								<div class="row">
+									<div class="col-xs-12">
+										<p class="help-block"><span class="badge">${this.#escapeHtml(moduleRecord.module)}</span> ${versionLine} <span class="label ${statusClass}">${statusText}</span></p>
+									</div>
+								</div>
+								${replacedBy ? `<div class="row"><div class="col-xs-12">${replacedBy}</div></div>` : ''}
+								${errorText ? `<div class="row"><div class="col-xs-12"><div class="text-danger"><small>${errorText}</small></div></div></div>` : ''}
 							</div>
 						</div>
 					</div>
@@ -3820,6 +3915,8 @@ class MODULESEDITOR {
 			`;
 			container.append(panelHtml);
 		});
+
+		this.#refreshInstallerToolbarPopovers();
 	}
 
 	#runSuggestedInstall(modules) {
@@ -3828,7 +3925,7 @@ class MODULESEDITOR {
 
 	#loadSuggestedModules() {
 		return $.ajax({
-			url: 'config/suggested_modules.json?_=' + new Date().getTime(),
+			url: 'includes/moduleutil.php?request=SuggestedModules&_=' + new Date().getTime(),
 			type: 'GET',
 			dataType: 'json',
 			cache: false,
@@ -3841,7 +3938,7 @@ class MODULESEDITOR {
 					<div class="panel-body">
 						<div class="alert alert-warning text-center" style="margin-bottom: 0;">
 							<h4>Unable To Load Suggestions</h4>
-							<p>The suggested module list could not be loaded from config/suggested_modules.json.</p>
+							<p>The suggested module list could not be loaded.</p>
 						</div>
 					</div>
 				</div>
@@ -3895,17 +3992,18 @@ class MODULESEDITOR {
 			return;
 		}
 
+		const overlayModuleName = this.#shortInstallerModuleName(moduleName);
 		const actionLabels = {
-			status: `Loading module information for ${moduleName}...`,
-			install: `Installing ${moduleName}. This may take a while if dependencies are needed...`,
-			update: `Updating ${moduleName}. This may take a while if dependencies are needed...`,
-			reinstall: `Reinstalling ${moduleName}. This may take a while if dependencies are needed...`,
-			migrate: `Loading migration information for ${moduleName}...`,
-			uninstall: `Uninstalling ${moduleName}...`
+			status: `Loading info for ${overlayModuleName}...`,
+			install: `Installing ${overlayModuleName}. This may take a while if dependencies are needed...`,
+			update: `Updating ${overlayModuleName}. This may take a while if dependencies are needed...`,
+			reinstall: `Reinstalling ${overlayModuleName}. This may take a while if dependencies are needed...`,
+			migrate: `Loading migration info for ${overlayModuleName}...`,
+			uninstall: `Uninstalling ${overlayModuleName}...`
 		};
 
 		$.LoadingOverlay('show', {
-			text: actionLabels[action] || `Processing ${moduleName}...`
+			text: actionLabels[action] || `Processing ${overlayModuleName}...`
 		});
 		$.ajax({
 			url: 'includes/moduleinstallerutil.php?request=Action&_=' + new Date().getTime(),
@@ -4106,13 +4204,28 @@ class MODULESEDITOR {
 		$(document).off('click', '.module-installer-action');
 		$(document).on('click', '.module-installer-action', (event) => {
 			const button = $(event.currentTarget);
+			if (button.is(':disabled') || button.hasClass('disabled') || button.attr('aria-disabled') === 'true') {
+				return;
+			}
 			this.#runInstallerAction(button.data('module'), button.data('action'));
 		});
 
 		$(document).off('click', '.module-installer-changelog');
 		$(document).on('click', '.module-installer-changelog', (event) => {
 			const button = $(event.currentTarget);
+			if (button.hasClass('disabled') || button.attr('aria-disabled') === 'true') {
+				return;
+			}
 			this.#showModuleChangelog(button.data('module'));
+		});
+
+		$(document).off('keydown', '.module-installer-action, .module-installer-changelog');
+		$(document).on('keydown', '.module-installer-action, .module-installer-changelog', (event) => {
+			if (event.key !== 'Enter' && event.key !== ' ') {
+				return;
+			}
+			event.preventDefault();
+			$(event.currentTarget).trigger('click');
 		});
 
 		$(document).off('click', '.module-installer-changelog-toggle-all');

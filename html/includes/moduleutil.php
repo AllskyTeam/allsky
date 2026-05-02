@@ -22,6 +22,7 @@ class MODULEUTIL extends UTILBASE {
             'Reset' => ['get'],
             'Restore' => ['get'],
             'SerialPorts' => ['get'],
+            'SuggestedModules' => ['get'],
             'SunData' => ['get'],
             'Template' => ['get'],
             'TemplateList' => ['get'],
@@ -325,6 +326,26 @@ class MODULEUTIL extends UTILBASE {
         $result = $this->readModules();
         $result = json_encode($result);
         $this->sendResponse($result);
+    }
+
+    public function getSuggestedModules(): void
+    {
+        $fileName = rtrim($this->allsky_config, '/') . '/suggested_modules.json';
+        if (!is_file($fileName) || !is_readable($fileName)) {
+            $this->send404('The suggested module list could not be loaded.');
+        }
+
+        $contents = file_get_contents($fileName);
+        if ($contents === false || trim($contents) === '') {
+            $this->send500('The suggested module list is empty or unreadable.');
+        }
+
+        json_decode($contents);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            $this->send500('The suggested module list does not contain valid JSON.');
+        }
+
+        $this->sendResponse($contents);
     }
 
     private function readModules() {

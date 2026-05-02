@@ -19,7 +19,7 @@
     --bs3-shadow-focus: 0 0 0 2px rgba(95, 168, 211, 0.15);
 
     /* Navbar */
-    --bs3-navbar-bg: #d9edf7;
+    --bs3-navbar-bg: linear-gradient(135deg, #c8dce8 0%, #eef7fb 100%);
     --bs3-navbar-border: #92b5bd;
     --bs3-navbar-text: #1a6184;
     --bs3-navbar-brand: #1a6184;
@@ -3485,6 +3485,38 @@ div.dtsp-searchPane div.dtsp-topRow {
   overflow-x: hidden;
 }
 
+#module-installer-groups .list-group,
+#module-core-groups .list-group,
+#module-suggested-groups .list-group {
+  margin: 0;
+}
+
+#module-installer-summary .panel {
+  background: #ffffff;
+  border: 1px solid #8fb6c8 !important;
+  border-radius: 0;
+  box-shadow: 0 1px 4px rgba(31, 52, 71, 0.14);
+}
+
+#module-installer-summary .panel-body {
+  background: linear-gradient(180deg, #ffffff 0%, #eef7fb 100%);
+  border-radius: 0;
+}
+
+body.dark #module-installer-summary .panel,
+body.dark #module-installer-summary .panel {
+  background: var(--bs3-panel-bg);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 6px 16px rgba(0, 0, 0, 0.75);
+}
+
+body.dark #module-installer-summary .panel-body {
+  background: linear-gradient(180deg, #1f2937 0%, #151b23 100%);
+}
+
+body.dark #module-installer-summary .panel {
+  border-color: var(--bs3-panel-default-border) !important;
+}
+
 .system-summary-card {
     margin-bottom: 15px;
     border-radius: 8px;
@@ -3864,10 +3896,117 @@ body.dark .as-system-entries-browser-list .list-group-item .badge {
   border: 1px solid var(--bs3-panel-default-border) !important;
 }
 
+.module-block-navbar,
+.module-installer-main-navbar {
+  box-sizing: border-box;
+  display: block !important;
+  min-height: 0;
+  padding-left: 0;
+  padding-right: 0;
+  visibility: visible !important;
+}
+
+.module-block-navbar {
+  margin: -10px -15px 10px;
+}
+
+.module-installer-main-navbar {
+  margin: 0 0 15px;
+}
+
+.module-block-navbar .container-fluid,
+.module-installer-main-navbar .container-fluid {
+  padding: 6px 8px;
+}
+
+.module-block-navbar .btn-toolbar,
+.module-installer-main-navbar .btn-toolbar {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.module-block-navbar .btn-group {
+  margin-left: 5px;
+}
+
+.module-block-navbar .btn-group:first-child {
+  margin-left: 0;
+}
+
+.module-block-navbar .module-block-button,
+.module-installer-main-navbar .module-block-button {
+  background: transparent;
+  border-color: transparent;
+  color: var(--bs3-navbar-text);
+  margin-bottom: 0;
+  margin-top: 0;
+}
+
+.module-block-navbar .module-block-button:not(.disabled):hover,
+.module-block-navbar .module-block-button:not(.disabled):focus,
+.module-installer-main-navbar .module-block-button:not(:disabled):hover,
+.module-installer-main-navbar .module-block-button:not(:disabled):focus {
+  background-color: rgba(0, 0, 0, 0.06);
+  border-color: rgba(0, 0, 0, 0.12);
+  color: var(--bs3-navbar-hover-text);
+}
+
+.module-block-navbar .module-block-button.disabled,
+.module-block-navbar .module-block-button[aria-disabled="true"],
+.module-installer-main-navbar .module-block-button:disabled {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  cursor: not-allowed;
+  opacity: 0.45;
+  pointer-events: auto;
+}
+
+body.dark .module-block-navbar .module-block-button:not(.disabled):hover,
+body.dark .module-block-navbar .module-block-button:not(.disabled):focus,
+body.dark .module-installer-main-navbar .module-block-button:not(:disabled):hover,
+body.dark .module-installer-main-navbar .module-block-button:not(:disabled):focus {
+  background-color: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: var(--bs3-navbar-hover-text);
+}
+
+body.dark > .loadingoverlay,
+body.dark .loadingoverlay {
+  background: rgba(17, 24, 39, 0.88) !important;
+}
+
+body.dark .loadingoverlay_text,
+body.dark .loadingoverlay_fa {
+  color: var(--bs3-body-color) !important;
+}
+
+body.dark .loadingoverlay svg *,
+body.dark .loadingoverlay svg {
+  fill: var(--bs3-body-color) !important;
+  stroke: var(--bs3-body-color) !important;
+}
+
+@media (max-width: 767px) {
+  .module-block-navbar .btn-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+
+  .module-block-navbar .btn-group {
+    margin-left: 0;
+  }
+}
+
 
 .list-group-item {
-  border-radius: 10px !important;
+  border-radius: 0 !important;
   margin-bottom: 10px !important;
+}
+
+.list-group-item[data-module] {
+  overflow: hidden;
 }
 
 #module-file-manager-dialog {

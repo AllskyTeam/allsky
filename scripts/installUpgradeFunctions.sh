@@ -1896,3 +1896,59 @@ function create_variables_json()
 	fi
 }
 
+# (re)create the options file.
+function create_options_file()
+{
+	local DEBUG_ARG=""
+	local FORCE=""
+	local CC_FILE="${ALLSKY_CC_FILE}"
+	local OPTIONS_FILE="${ALLSKY_OPTIONS_FILE}"
+	local SETTINGS_FILE="${ALLSKY_SETTINGS_FILE}"
+	local NO_SETTINGS="false"
+
+	while [ $# -gt 0 ]; do
+		local ARG="${1}"
+		case "${ARG,,}" in
+			--debug)
+				DEBUG_ARG="${ARG}"
+				;;
+			--force)
+				FORCE="${ARG}"
+				;;
+			--cc-file)
+				CC_FILE="${2}"
+				shift
+				;;
+			--options-file)
+				OPTIONS_FILE="${2}"
+				shift
+				;;
+			--settings-file)
+				SETTINGS_FILE="${2}"
+				shift
+				;;
+			--no-settings-file)
+				NO_SETTINGS="true"
+				;;
+			*)
+				display_msg --log error "create_options_file(): Unknown argument: '${ARG}'." >&2
+				return "${ALLSKY_EXIT_STOP}"
+				;;
+		esac
+		shift
+	done
+
+	local SETTINGS_ARG
+	if [[ ${NO_SETTINGS} == "true" ]]; then
+		# Don't do anything with the settings file.
+		# Useful when we only want to recreate the options file, e.g., the repo file changed.
+		SETTINGS_FILE=""
+	fi
+
+	# shellcheck disable=SC2086
+	"${ALLSKY_SCRIPTS}/createAllskyOptions.php" \
+		${FORCE} ${DEBUG_ARG} \
+		--cc-file "${CC_FILE}" \
+		--options-file "${OPTIONS_FILE}" \
+		--settings-file "${SETTINGS_FILE}"
+}

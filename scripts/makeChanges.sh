@@ -493,10 +493,10 @@ do
 				rm -f "${CC_FILE_OLD}"
 			fi
 
-			# createAllskyOptions.php will use the cc file and the options template file
+			# create_options_file() will use the cc file and the options template file
 			# to create an ALLSKY_OPTIONS_FILE and ALLSKY_SETTINGS_FILE for this camera type/model.
 			# If there is an existing camera-specific settings file for the new
-			# camera type/model then createAllskyOptions.php will use it and link it
+			# camera type/model then create_options_file() will use it and link it
 			# to ALLSKY_SETTINGS_FILE.
 			# If there is no existing camera-specific file, i.e., this camera is new
 			# to Allsky, it will create a default settings file using the generic
@@ -511,15 +511,14 @@ do
 			fi
 
 			if debug ; then
-				MSG="Calling: ${ALLSKY_SCRIPTS}/createAllskyOptions.php ${FORCE} ${DEBUG_ARG}"
+				MSG="Calling: create_options_file ${FORCE} ${DEBUG_ARG}"
 				MSG+="\n\t--cc-file ${ALLSKY_CC_FILE}"
 				MSG+="\n\t--options-file ${ALLSKY_OPTIONS_FILE}"
 				MSG+="\n\t--settings-file ${ALLSKY_SETTINGS_FILE}"
 				wD_ "${MSG}"
 			fi
 			# shellcheck disable=SC2086
-			R="$( "${ALLSKY_SCRIPTS}/createAllskyOptions.php" \
-				${FORCE} ${DEBUG_ARG} \
+			R="$( create_options_file ${FORCE} ${DEBUG_ARG} \
 				--cc-file "${ALLSKY_CC_FILE}" \
 				--options-file "${ALLSKY_OPTIONS_FILE}" \
 				--settings-file "${ALLSKY_SETTINGS_FILE}" \

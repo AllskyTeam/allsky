@@ -1314,7 +1314,6 @@ if ($debug) { echo ": &nbsp; value=$value"; }
 
 <?php
 	if (! $formReadonly)
-		echo '<script src="js/settings.js"></script>';
-
+		echo addAsset('js/settings.js');
 }
 ?>

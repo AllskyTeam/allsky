@@ -111,12 +111,15 @@ function ListImages() {
 
 	$imageItemsJson = json_encode($imageItems, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
 
+	echo addAsset([
+		'/js/lightgallery/css/lightgallery-bundle.min.css',
+		'/js/lightgallery/css/lg-transitions.css',
+		'/js/lightgallery/lightgallery.min.js',
+		'/js/lightgallery/plugins/zoom/lg-zoom.min.js',
+		'/js/lightgallery/plugins/thumbnail/lg-thumbnail.min.js'
+	]);
+
 ?>
-<link type="text/css" rel="stylesheet" href="js/lightgallery/css/lightgallery-bundle.min.css" />
-<link type="text/css" rel="stylesheet" href="js/lightgallery/css/lg-transitions.css" />
-<script src="js/lightgallery/lightgallery.min.js"></script>
-<script src="js/lightgallery/plugins/zoom/lg-zoom.min.js"></script>
-<script src="js/lightgallery/plugins/thumbnail/lg-thumbnail.min.js"></script>
 <script>
 $(document).ready(function () {
   const imageItems = <?php echo $imageItemsJson !== false ? $imageItemsJson : '[]'; ?>;

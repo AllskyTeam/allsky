@@ -8,78 +8,58 @@ if (basename(__FILE__) === basename($_SERVER['SCRIPT_FILENAME'])) {
 function DisplayModule()
 {
 	global $pageHeaderTitle, $pageIcon, $pageHelp;
+
+    echo addAsset([
+        '/js/sortable/sortable.js',
+        '/js/sortable/jquery-sortable.js',
+        '/js/modules/modules.js',
+        '/js/jquery-loading-overlay/dist/loadingoverlay.min.js',
+        '/js/bootbox/bootbox.all.js',
+        '/js/bootbox/bootbox.locales.min.js',
+        '/js/overlay/imagemanager/oe-imagemanager.css',
+        '/js/overlay/imagemanager/oe-imagemanager.js',
+        '/js/jquery-mask/jquery-mask.css',
+        '/js/jquery-mask/jquery-mask.js',
+        '/js/bootstrap-slider/dist/css/bootstrap-slider.css',
+        '/js/bootstrap-slider/dist/bootstrap-slider.js',
+        '/js/dropzone/dropzone.css',
+        '/js/dropzone/dropzone-min.js',
+        '/js/jquery-gpio/jquery-gpio.js',
+        '/js/jquery-roi/jquery-roi.js',
+        '/js/konva/konva.min.js',
+        '/js/jquery-i2c/jquery-i2c.css',
+        '/js/jquery-i2c/jquery-i2c.js',
+        '/js/jquery-variable/jquery-variable.js',
+        '/js/datatables/datatables.min.css',
+        '/js/datatables/datatables.js',
+        '/js/spectrum/dist/spectrum.css',
+        '/js/jquery-select2/dist/css/select2.min.css',
+        '/js/jquery-select2-bootstrap-theme/dist/select2-bootstrap.min.css',
+        '/js/jquery-select2/dist/js/select2.full.min.js',
+        '/js/jvc/jvc.min.js',
+        '/js/jvc/jvc.min.css',
+        '/js/leaflet/leaflet.css',
+        '/js/leaflet/leaflet.js',
+        '/js/jquery-position/jquery-position.js',
+        '/js/jquery-urlcheck/jquery-urlcheck.css',
+        '/js/jquery-devicemanager/jquery-devicemanager.js',
+        '/js/highcharts/code/highcharts.js',
+        '/js/highcharts/code/highcharts-more.js',
+        '/js/highcharts/code/highcharts-3d.js',
+        '/js/highcharts/code/modules/series-label.js',
+        '/js/highcharts/code/modules/solid-gauge.js',
+        '/js/highcharts/code/modules/no-data-to-display.js',
+        '/js/jquery-chart/jquery-chart.js',
+        '/js/jquery-satpicker/jquery-satpicker.js',
+        '/js/jquery-allskykamera/jquery-allskykamera.js',
+        '/js/jquery-allskysensor/jquery-allskysensor.js'
+    ]);     
 ?>
 
-<script src="/js/sortable/sortable.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-<script src="/js/sortable/jquery-sortable.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-
-<!-- <link rel='stylesheet' href='/css/modules.css?c=<?php echo ALLSKY_VERSION; ?>' /> -->
-<script src="/js/modules/modules.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-
-<script src="/js/jquery-loading-overlay/dist/loadingoverlay.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-
-<script src="/js/bootbox/bootbox.all.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-<script src="/js/bootbox/bootbox.locales.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-
+<!--
 <link rel='stylesheet' href='/js/jquery-ui-1.14.1.custom/jquery-ui.min.css?c=<?php echo ALLSKY_VERSION; ?>' />
 <script src="/js/jquery-ui-1.14.1.custom/jquery-ui.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-
-<link rel="stylesheet" type="text/css" href="/js/overlay/imagemanager/oe-imagemanager.css?c=<?php echo ALLSKY_VERSION; ?>" />
-<script type="text/javascript" src="/js/overlay/imagemanager/oe-imagemanager.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-
-<link rel="stylesheet" href="/js/jquery-mask/jquery-mask.css?c=<?php echo ALLSKY_VERSION; ?>">
-<script src="/js/jquery-mask/jquery-mask.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-
-<link rel="stylesheet" href="/js/bootstrap-slider/dist/css/bootstrap-slider.css?c=<?php echo ALLSKY_VERSION; ?>">
-<script src="/js/bootstrap-slider/dist/bootstrap-slider.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-
-<link href="/js/dropzone/dropzone.css?c=<?php echo ALLSKY_VERSION; ?>" type="text/css" rel="stylesheet" />
-<script src="/js/dropzone/dropzone-min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-
-<script src="/js/jquery-gpio/jquery-gpio.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-<script src="/js/jquery-roi/jquery-roi.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-<script src="/js/konva/konva.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-
-<link rel="stylesheet" href="/js/jquery-i2c/jquery-i2c.css?c=<?php echo ALLSKY_VERSION; ?>">
-<script src="/js/jquery-i2c/jquery-i2c.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-
-<script src="/js/jquery-variable/jquery-variable.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-
-<link rel="stylesheet" type="text/css" href="/js/datatables/datatables.min.css?c=<?php echo ALLSKY_VERSION; ?>" />
-<script type="text/javascript" src="/js/datatables/datatables.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-
-<link rel='stylesheet' href='/js/spectrum/dist/spectrum.css?c=<?php echo ALLSKY_VERSION; ?>' />
-<script src="/js/spectrum/dist/spectrum.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-
-<link rel='stylesheet' href='/js/jquery-select2/dist/css/select2.min.css?c=<?php echo ALLSKY_VERSION; ?>' />
-<link rel='stylesheet' href='/js/jquery-select2-bootstrap-theme/dist/select2-bootstrap.min.css?c=<?php echo ALLSKY_VERSION; ?>' />
-<script src="js/jquery-select2/dist/js/select2.full.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-
-<script src="/js/jvc/jvc.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-<link rel='stylesheet' href='/js/jvc/jvc.min.css?c=<?php echo ALLSKY_VERSION; ?>' />
-
-<link rel="stylesheet" href="/js/leaflet/leaflet.css?c=<?php echo ALLSKY_VERSION; ?>">
-<script src="/js/leaflet/leaflet.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-<script src="/js/jquery-position/jquery-position.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-
-<link rel="stylesheet" href="/js/jquery-urlcheck/jquery-urlcheck.css?c=<?php echo ALLSKY_VERSION; ?>">
-<script src="/js/jquery-urlcheck/jquery-urlcheck.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-
-<script src="/js/jquery-devicemanager/jquery-devicemanager.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-
-<script src="/js/highcharts/code/highcharts.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-<script src="/js/highcharts/code/highcharts-more.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-<script src="/js/highcharts/code/highcharts-3d.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-<script src="/js/highcharts/code/modules/series-label.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-<script src="/js/highcharts/code/modules/solid-gauge.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-<script src="/js/highcharts/code/modules/no-data-to-display.js"></script>
-
-<script src="/js/jquery-chart/jquery-chart.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-
-<script src="/js/jquery-satpicker/jquery-satpicker.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-
-<script src="js/jquery-allskykamera/jquery-allskykamera.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-<script src="js/jquery-allskysensor/jquery-allskysensor.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+-->
 
 <div class="panel panel-allsky">
 	<div class="panel-heading clearfix">

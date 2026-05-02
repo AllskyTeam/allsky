@@ -747,12 +747,14 @@ function DisplaySystem()
 			</div><!-- /.panel-body -->
 		</div><!-- /.panel-primary -->
 
-	    	<script src="/js/jquery-loading-overlay/dist/loadingoverlay.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>		
-		<script src="js/watchdog.js"></script>
-		<script src="js/system-logs.js"></script>
-		<script src="js/system-backups.js"></script>
-		<script src="js/jquery-systempagebuttons/jquery-systempagebuttons.js"></script>
-		<script src="js/system.js"></script>
-	<?php
+<?php
+    echo addAsset([
+			'/js/jquery-loading-overlay/dist/loadingoverlay.min.js',
+			'js/watchdog.js',
+			'js/system-logs.js',
+			'js/system-backups.js',
+			'js/jquery-systempagebuttons/jquery-systempagebuttons.js',
+			'js/system.js'
+		]);
 }
 ?>

@@ -55,11 +55,15 @@ function DisplayLoginPage()
             <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
             <link rel="shortcut icon" href="/favicon.ico" />
             <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-            <link rel="manifest" href="/site.webmanifest" />            
-            <link href="js/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
-		    <link rel="stylesheet" href="allsky/font-awesome/css/all.min.css" type="text/css">            
-            <link rel="stylesheet" href="/css/allsky.css">
-            <link rel="stylesheet" href="/css/login.css">
+            <link rel="manifest" href="/site.webmanifest" />
+            <?php
+                echo addAsset([
+                    '/js/bootstrap/dist/css/bootstrap.min.css',
+                    '/allsky/font-awesome/css/all.min.css',
+                    '/css/allsky.css',
+                    '/css/login.css'
+                ]);            
+            ?>
         </head>
         <body class="light">
             <script>
@@ -96,8 +100,12 @@ function DisplayLoginPage()
                     </div>
                 </div>
             </div>
-            <script src="/js/jquery/dist/jquery.min.js"></script>
-            <script src="/js/login.js"></script>
+            <?php
+                echo addAsset([
+                    '/js/jquery/dist/jquery.min.js',
+                    '/js/login.js'
+                ]);            
+            ?>            
         </body>
     </html>
 <?php

@@ -285,9 +285,9 @@ function DisplayDashboard_WLAN()
         echo "    </div>\n";
         echo "</div>\n";
         echo "</div>\n";
-?>
-    <script src="js/dashboard-wlan.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-<?php
+
+        echo addAsset('/js/dashboard-wlan.js');        
+
         return;
     }
 
@@ -334,8 +334,8 @@ function DisplayDashboard_WLAN()
             </div>
         </div>
     </div>
-    <script src="js/dashboard-wlan.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 <?php
+echo addAsset('/js/dashboard-wlan.js');   
 }
 
 function process_WLAN_data($interface)

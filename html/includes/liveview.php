@@ -38,15 +38,18 @@ function DisplayLiveView($image_name, $delay, $daydelay, $daydelay_postMsg, $nig
 	}
 	$currentImageFile = ALLSKY_CURRENT_DIR . '/' . basename((string) parse_url($image_name, PHP_URL_PATH));
 	$currentImageLightboxSize = getLightboxSizeAttribute($currentImageFile);
-?>
 
-<link type="text/css" rel="stylesheet" href="/js/lightgallery/css/lightgallery-bundle.min.css" />
-<link type="text/css" rel="stylesheet" href="/js/lightgallery/css/lg-transitions.css" />
-<script src="/js/lightgallery/lightgallery.min.js"></script>
-<script src="/js/lightgallery/plugins/zoom/lg-zoom.min.js"></script>
-<script src="/js/lightgallery/plugins/thumbnail/lg-thumbnail.min.js"></script>
-<script src="/js/lightgallery/plugins/video/lg-video.min.js"></script>
-<script src="/js/liveview.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+	echo addAsset([
+		'/js/lightgallery/css/lightgallery-bundle.min.css',
+		'/js/lightgallery/css/lg-transitions.css',
+		'/js/lightgallery/lightgallery.min.js',
+		'/js/lightgallery/plugins/zoom/lg-zoom.min.js',
+		'/js/lightgallery/plugins/thumbnail/lg-thumbnail.min.js',
+		'/js/lightgallery/plugins/video/lg-video.min.js',
+		'/js/liveview.js'
+	]);
+
+?>
 
 	<div
 		class="panel panel-allsky liveview-mode-<?php echo htmlspecialchars($liveViewMode, ENT_QUOTES); ?>"

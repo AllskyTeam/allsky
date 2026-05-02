@@ -7,18 +7,20 @@ if (basename(__FILE__) === basename($_SERVER['SCRIPT_FILENAME'])) {
 function DisplayCharts()
 {
   global $pageHeaderTitle, $pageIcon, $pageHelp;
-?>
-  <script src="/js/highcharts/code/highcharts.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-  <script src="/js/highcharts/code/highcharts-more.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-  <script src="/js/highcharts/code/highcharts-3d.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-  <script src="/js/highcharts/code/modules/series-label.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-  <script src="/js/highcharts/code/modules/solid-gauge.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-  <script src="/js/highcharts/code/modules/no-data-to-display.js"></script>
 
-  <script src="/js/jquery-chart/jquery-chart.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-  <script src="/js/jquery-chart/jquery-chart-designer.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-  <script src="/js/jquery-chart/jquery-timerange-picker.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-  <script src="/js/charts.js?c=<?php echo ALLSKY_VERSION; ?>"></script>  
+		echo addAsset([
+      '/js/highcharts/code/highcharts.js',
+      '/js/highcharts/code/highcharts-more.js',
+      '/js/highcharts/code/highcharts-3d.js',
+      '/js/highcharts/code/modules/series-label.js',
+      '/js/highcharts/code/modules/solid-gauge.js',
+      '/js/highcharts/code/modules/no-data-to-display.js',
+      '/js/jquery-chart/jquery-chart.js',
+      '/js/jquery-chart/jquery-chart-designer.js',
+      '/js/jquery-chart/jquery-timerange-picker.js',
+      '/js/charts.js'
+    ]);  
+?>
 
   <div class="panel panel-allsky noselect">
     <div class="panel-heading clearfix">

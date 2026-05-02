@@ -255,7 +255,7 @@ function DisplayWPAConfig()
         </div>
     </div>
 
-    <script src="js/configurewifi.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 <?php
+    echo addAsset('/js/configurewifi.js');
 }
 ?>

@@ -2027,4 +2027,73 @@ function doHelpLink($helpLink)
 	//echo "<i class='fa-solid fa-circle-question'></i> Help</a>";
 }
 
+// Add a cache-busting query string to a local asset URL.
+// The cache key is the file's modification time, so browsers fetch a new copy
+// after the file changes even if the Allsky version has not changed.
+// External URLs are returned unchanged.
+function getCacheBustedAssetUrl($url) {
+	$parts = parse_url($url);
+	if ($parts === false || isset($parts['scheme']) || str_starts_with($url, '//')) {
+		return $url;
+	}
+
+	$path = getVariableOrDefault($parts, 'path', $url);
+	$webRoot = rtrim(getVariableOrDefault($_SERVER, 'DOCUMENT_ROOT', dirname(__DIR__)), DIRECTORY_SEPARATOR);
+	if ($webRoot === '') {
+		$webRoot = dirname(__DIR__);
+	}
+
+	if (str_starts_with($path, '/')) {
+		$file = $webRoot . $path;
+	} else {
+		$file = $webRoot . DIRECTORY_SEPARATOR . $path;
+	}
+
+	$cacheKey = file_exists($file) ? filemtime($file) : ALLSKY_VERSION;
+	$queryParams = [];
+	parse_str(getVariableOrDefault($parts, 'query', ''), $queryParams);
+	$queryParams['c'] = $cacheKey;
+	$query = http_build_query($queryParams);
+
+	$fragment = isset($parts['fragment']) ? '#' . $parts['fragment'] : '';
+	return $path . '?' . $query . $fragment;
+}
+
+/**
+ * Return an HTML tag for one or more CSS/JS assets.
+ *
+ * The tag type is determined from the file extension:
+ * - ".css" files become <link rel="stylesheet" ...>
+ * - all other files become <script src="..."></script>
+ *
+ * Examples:
+ *   echo addAsset('/js/editor.js');
+ *   echo addAsset('/css/allsky.css');
+ *   echo addAsset(['/css/allsky.css', '/js/allsky.js']);
+ *   echo addAsset('/js/editor.js', 'defer');
+ *   echo addAsset('/js/editor.js', '', false);  // no trailing newline
+ */
+function addAsset($url, $attributes = '', $addNewline = true) {
+	if (is_array($url)) {
+		$html = '';
+		foreach ($url as $assetUrl) {
+			$html .= addAsset($assetUrl, $attributes, $addNewline);
+		}
+		return $html;
+	}
+
+	$path = getVariableOrDefault(parse_url($url), 'path', $url);
+	$extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+	$url = htmlspecialchars(getCacheBustedAssetUrl($url), ENT_QUOTES);
+	$attributes = $attributes === '' ? '' : ' ' . trim($attributes);
+
+	if ($extension === 'css') {
+		$tag = "<link rel=\"stylesheet\" href=\"$url\"$attributes>";
+	} else {
+		$tag = "<script src=\"$url\"$attributes></script>";
+	}
+
+	return $addNewline ? $tag . "\n" : $tag;
+}
+
 ?>

@@ -319,8 +319,8 @@ function DisplayDashboard_LAN()
             </div>
         </div>
     </div>
-    <script src="js/dashboard-lan.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 <?php
+echo addAsset('/js/dashboard-lan.js');
 }
 
 function process_LAN_data($interface)

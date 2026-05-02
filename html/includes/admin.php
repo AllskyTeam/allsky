@@ -12,12 +12,6 @@ $privateVars   = get_decoded_json_file(ALLSKY_ENV, true, "");
 $adminUser     = (string)$privateVars["WEBUI_USERNAME"];
 ?>
 
-<style>
-	.as-admin-error {
-		font-size: 2rem;
-	}
-</style>
-
 <div class="container">
 	<div class="col-md-6 col-md-offset-2 panel-style">
 		<div class="panel panel-allsky">
@@ -103,7 +97,11 @@ $adminUser     = (string)$privateVars["WEBUI_USERNAME"];
 		});
 	</script>
 
-	<script src="/js/allsky-admin/allsky-admin.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-	<script src="/js/jquery-loading-overlay/dist/loadingoverlay.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-	<script src="/js/bootbox/bootbox.all.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
-	<script src="/js/bootbox/bootbox.locales.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+	<?php
+		echo addAsset([
+			'/js/allsky-admin/allsky-admin.js',
+			'/js/jquery-loading-overlay/dist/loadingoverlay.min.js',
+			'/js/bootbox/bootbox.all.js',
+			'/js/bootbox/bootbox.locales.min.js'
+		]);
+	?>

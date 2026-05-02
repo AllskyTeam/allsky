@@ -157,11 +157,16 @@ if (! is_dir(ALLSKY_SUPPORT_DIR)) {
 	let ALLSKY_MODULES_REPO_URL = '<?php echo ALLSKY_GITHUB_ROOT . "/" . ALLSKY_GITHUB_ALLSKY_MODULES_REPO; ?>';
 </script>
 
-<script src="/js/allsky-support/allsky-support.js?c=<?php echo $V; ?>"></script>
-<link rel="stylesheet" type="text/css" href="/js/datatables/datatables.min.css?c=<?php echo $V; ?>" />
-<script type="text/javascript" src="/js/datatables/datatables.js?c=<?php echo $V; ?>"></script>
-<script src="/js/jquery-loading-overlay/dist/loadingoverlay.min.js?c=<?php echo $V; ?>"></script>
-<script src="/js/bootbox/bootbox.all.js?c=<?php echo $V; ?>"></script>
-<script src="/js/bootbox/bootbox.locales.min.js?c=<?php echo $V; ?>"></script>
+<?php
 
-<link rel="stylesheet" type="text/css" href="css/allsky.css?c=<?php echo $V; ?>" />
+    echo addAsset([
+			'/js/allsky-support/allsky-support.js',
+			'/js/datatables/datatables.min.css',
+			'/js/datatables/datatables.js',
+			'/js/jquery-loading-overlay/dist/loadingoverlay.min.js',
+			'/js/bootbox/bootbox.all.js',
+			'/js/bootbox/bootbox.locales.min.js',
+			'css/allsky.css'
+		]);
+
+?>

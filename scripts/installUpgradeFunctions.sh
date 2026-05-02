@@ -806,9 +806,8 @@ function update_old_website_config_file()
 # Create the lighttpd configuration file.
 function create_lighttpd_config_file()
 {
-	local TMP="/tmp/x"
+	local TMP="/tmp/x.${RANDOM}"
 
-	sudo rm -f "${TMP}"
 	sed \
 		-e "s;XX_ALLSKY_WEBUI_XX;${ALLSKY_WEBUI};g" \
 		-e "s;XX_ALLSKY_WEBSERVER_OWNER_XX;${ALLSKY_WEBSERVER_OWNER};g" \
@@ -816,7 +815,6 @@ function create_lighttpd_config_file()
 		-e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};g" \
 		-e "s;XX_ALLSKY_CURRENT_DIR_XX;${ALLSKY_CURRENT_DIR};g" \
 		-e "s;XX_ALLSKY_IMAGES_XX;${ALLSKY_IMAGES};g" \
-		-e "s;XX_ALLSKY_CONFIG_XX;${ALLSKY_CONFIG};g" \
 		-e "s;XX_ALLSKY_WEBSITE_XX;${ALLSKY_WEBSITE};g" \
 		-e "s;XX_ALLSKY_DOCUMENTATION_XX;${ALLSKY_DOCUMENTATION};g" \
 		-e "s;XX_ALLSKY_OVERLAY_XX;${ALLSKY_OVERLAY};g" \

@@ -1863,7 +1863,7 @@ function display_file()
 # Create the variables.json file based on variables.sh.
 # Source in the two files where variables we care about are defined.
 # Look for variables that begin with "ALLSKY_" and "EXIT_" (exit codes).
-create_variables_json()
+function create_variables_json()
 {
 	local CALLED_FROM="${1}"
 

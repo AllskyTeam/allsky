@@ -2,16 +2,16 @@
 
 # Get the newest Allsky version from GitHub.
 # If same as what's installed, exit 0.
-# If newer than what's installed, exit ${EXIT_PARTIAL_OK}.
+# If newer than what's installed, exit ${ALLSKY_EXIT_PARTIAL_OK}.
 
 # Allow this script to be executed manually, which requires several variables to be set.
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )/../.." )"
 ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck source-path=.
-source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 BRANCH="${ALLSKY_GITHUB_MAIN_BRANCH}"
 VERSION_ONLY="false"
@@ -52,7 +52,7 @@ if [[ ${CURRENT_VERSION} == "${NEWEST_VERSION}" ]]; then
 elif [[ ${CURRENT_VERSION} < "${NEWEST_VERSION}" ]]; then
 #XXX	NOTE="$( get_version --note )"		# Gets the note for the current version on the Pi
 	NOTE="${NEWEST_NOTE}"
-	RET="${EXIT_PARTIAL_OK}"
+	RET="${ALLSKY_EXIT_PARTIAL_OK}"
 else
 	# Current newer than newest - this can happen if testing a newer release.
 	RET=0

@@ -837,14 +837,14 @@ class MODULESEDITOR {
 			bootbox.alert('The metadata for module ' + module + ' is corrupt, so settings cannot be opened.');
 			return false;
 		}
-		if (moduleData.metadata === undefined || moduleData.metadata.argumentdetails === undefined) {
+		if (moduleData.metadata === undefined || (moduleData.metadata.argumentdetails === undefined && moduleData.metadata.tools === undefined)) {
 			bootbox.alert('Module ' + module + ' does not define any settings.');
 			return false;
 		}
 		let dependenciesset = {};
 
 		let fieldsHTML = ''
-		let args = moduleData.metadata.argumentdetails
+		let args = moduleData.metadata.argumentdetails || {}
 		for (let key in args) {
 			let fieldData = args[key]
 			let fieldHTML = ''
@@ -1779,6 +1779,7 @@ class MODULESEDITOR {
 			}
 		}
 		let moduleSettingsHtml = '';
+		const hasTools = moduleData.metadata.tools !== undefined && Object.keys(moduleData.metadata.tools || {}).length > 0;
 		let numberOfTabs = Object.keys(tabs).length;
 		if ('extradata' in moduleData.metadata) {
 			numberOfTabs += 1
@@ -1789,8 +1790,11 @@ class MODULESEDITOR {
 		if ('deprecation' in moduleData.metadata) {
 			numberOfTabs += 1
 		}
+		if (hasTools) {
+			numberOfTabs += 1
+		}
 
-		if (numberOfTabs === 1 && moduleData.metadata.extradata === undefined) {
+		if (numberOfTabs === 1 && Object.keys(tabs).length === 1 && moduleData.metadata.extradata === undefined && !hasTools) {
 			for (let tabName in tabs) {
 				moduleSettingsHtml += this.#renderTabFields(tabs[tabName]);
 			}
@@ -1819,6 +1823,11 @@ class MODULESEDITOR {
 				}
 				moduleSettingsHtml += '<li role="presentation"><a href="#as-module-var-deprecation" role="tab" data-toggle="tab" class="text-' + type + '">IMPORTANT</a></li>';
 
+			}
+
+			if (hasTools) {
+				moduleSettingsHtml += '<li role="presentation" class="' + active + '"><a href="#as-module-tools" role="tab" data-toggle="tab">Tools</a></li>';
+				active = '';
 			}
 
 			moduleSettingsHtml += ' </ul>'
@@ -1942,6 +1951,10 @@ class MODULESEDITOR {
 				</div>'
 			}
 
+			if (hasTools) {
+				moduleSettingsHtml += '<div role="tabpanel" style="margin-top:10px" class="tab-pane ' + active + '" id="as-module-tools">' + this.#renderModuleTools(moduleData.metadata.tools) + '</div>';
+				active = '';
+			}
 
 			moduleSettingsHtml += '</div>';
 			moduleSettingsHtml += '</div>';
@@ -2268,6 +2281,13 @@ class MODULESEDITOR {
 				eyeEl.addClass('hidden')
 				eyeSlashEl.removeClass('hidden')
 			}
+		})
+
+		$(document).off('click', '.module-settings-tool')
+		$(document).on('click', '.module-settings-tool', (e) => {
+			e.preventDefault();
+			const button = $(e.currentTarget);
+			this.#runModuleTool($('#module-settings-dialog').data('module'), button.data('tool'), button.text().trim());
 		})
 
 		$(document).off('click', '#module-settings-dialog-save')
@@ -2812,6 +2832,122 @@ class MODULESEDITOR {
 
 	#escapeHtml(value) {
 		return $('<div>').text(value ?? '').html();
+	}
+
+	#renderModuleTools(tools) {
+		let html = '<div class="text-center" style="padding:20px 0;">';
+		Object.entries(tools || {}).forEach(([toolKey, toolData]) => {
+			const title = this.#escapeHtml(toolData.title || toolKey);
+			const description = this.#escapeHtml(toolData.description || '');
+			html += `
+				<div style="display:inline-block; margin:6px; min-width:180px;">
+					<button type="button" class="btn btn-primary module-settings-tool" style="width:100%;" data-tool="${this.#escapeHtml(toolKey)}" data-toggle="popover" data-container="body" data-delay='{"show": 500, "hide": 200}' data-placement="top" data-trigger="hover" title="${title}" data-content="${description}">
+						<i class="fa-solid fa-screwdriver-wrench"></i> ${title}
+					</button>
+				</div>
+			`;
+		});
+		html += '</div>';
+		return html;
+	}
+
+	#moduleToolOutputModal(title) {
+		$('#module-tool-output-dialog').remove();
+		const safeTitle = this.#escapeHtml(title || 'Module Tool');
+		const dialog = `
+			<div class="modal" role="dialog" id="module-tool-output-dialog">
+				<div class="modal-dialog modal-lg" role="document">
+					<div class="modal-content">
+						<div class="modal-header">
+							<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+							<h4 class="modal-title"><strong>${safeTitle}</strong></h4>
+						</div>
+						<div class="modal-body">
+							<pre id="module-tool-output" style="height:55vh; overflow:auto; white-space:pre-wrap; word-break:break-word;"></pre>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		`;
+		$(document.body).append(dialog);
+		$('#module-tool-output-dialog').modal('show');
+		$('#module-tool-output-dialog').on('hidden.bs.modal', () => {
+			$('#module-tool-output-dialog').remove();
+		});
+		return $('#module-tool-output');
+	}
+
+	#appendModuleToolOutput(output, text) {
+		const node = output[0];
+		node.textContent += text;
+		output.scrollTop(node.scrollHeight);
+	}
+
+	async #runModuleTool(module, tool, title) {
+		const output = this.#moduleToolOutputModal(title);
+		const formData = new FormData();
+		formData.append('module', module);
+		formData.append('tool', tool);
+
+		const csrfToken = $('meta[name="csrf-token"]').attr('content') || $('#csrf_token').val() || '';
+		try {
+			const startResponse = await fetch('includes/moduleutil.php?request=ModuleToolStart', {
+				method: 'POST',
+				headers: {
+					'X-Requested-With': 'XMLHttpRequest',
+					'X-CSRF-TOKEN': csrfToken
+				},
+				body: formData
+			});
+
+			if (!startResponse.ok) {
+				const message = await startResponse.text();
+				this.#appendModuleToolOutput(output, `\nTool request failed: ${message || startResponse.statusText}\n`);
+				return;
+			}
+
+			const startData = await startResponse.json();
+			if (!startData.runId) {
+				this.#appendModuleToolOutput(output, '\nTool request failed: no run id returned.\n');
+				return;
+			}
+
+			let offset = startData.offset || 0;
+			const pollOutput = async () => {
+				if (!$('#module-tool-output-dialog').length) {
+					return;
+				}
+				try {
+					const response = await fetch(`includes/moduleutil.php?request=ModuleToolOutput&runId=${encodeURIComponent(startData.runId)}&offset=${offset}&_=${new Date().getTime()}`, {
+						method: 'GET',
+						headers: {
+							'X-Requested-With': 'XMLHttpRequest'
+						}
+					});
+					if (!response.ok) {
+						const message = await response.text();
+						this.#appendModuleToolOutput(output, `\nTool output failed: ${message || response.statusText}\n`);
+						return;
+					}
+					const data = await response.json();
+					if (data.output) {
+						this.#appendModuleToolOutput(output, data.output);
+					}
+					offset = data.offset || offset;
+					if (!data.done) {
+						setTimeout(pollOutput, 500);
+					}
+				} catch (error) {
+					this.#appendModuleToolOutput(output, `\nTool output failed: ${error.message}\n`);
+				}
+			};
+			pollOutput();
+		} catch (error) {
+			this.#appendModuleToolOutput(output, `\nTool request failed: ${error.message}\n`);
+		}
 	}
 
 	#moduleHasChangelog(module) {
@@ -3976,9 +4112,9 @@ class MODULESEDITOR {
 		});
 	}
 
-	#loadInstallerModules(refresh = false, overlayText = null) {
+	#loadInstallerModules(refresh = false, overlayText = 'Loading module package manager...') {
 		const branch = this.#selectedInstallerBranch();
-		$.LoadingOverlay('show', overlayText ? { text: overlayText } : {});
+		$.LoadingOverlay('show', { text: overlayText });
 
 		return $.ajax({
 			url: 'includes/moduleinstallerutil.php',

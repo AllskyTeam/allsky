@@ -16,6 +16,9 @@ class MODULEUTIL extends UTILBASE {
             'GetExtraDataFile' => ['post'],
             'HassSensors' => ['post'],
             'ModuleBaseData' => ['get'],
+            'ModuleTool' => ['post'],
+            'ModuleToolOutput' => ['get'],
+            'ModuleToolStart' => ['post'],
             'Modules' => ['delete', 'get', 'post'],
             'ModulesSettings' => ['get', 'post'],
             'Onewire' => ['get'],
@@ -728,6 +731,279 @@ class MODULEUTIL extends UTILBASE {
         @unlink($debugFileName);
 
         $this->sendResponse(json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
+    }
+
+    public function postModuleTool(): void
+    {
+        $command = $this->resolveModuleToolCommand();
+        $this->streamModuleTool($command['argv'], $command['cwd']);
+    }
+
+    public function postModuleToolStart(): void
+    {
+        $command = $this->resolveModuleToolCommand();
+        $runId = bin2hex(random_bytes(16));
+        $runDir = $this->moduleToolRunDirectory();
+        $logFile = $runDir . '/' . $runId . '.log';
+        $statusFile = $runDir . '/' . $runId . '.status';
+        file_put_contents($logFile, "Starting tool...\n");
+
+        $escapedArgv = array_map('escapeshellarg', $command['argv']);
+        $toolCommand = 'cd ' . escapeshellarg($command['cwd']) . ' && ' . implode(' ', $escapedArgv);
+        $backgroundCommand = '(' . $toolCommand . ' >> ' . escapeshellarg($logFile) . ' 2>&1; code=$?; printf "%s" "$code" > ' . escapeshellarg($statusFile) . ') >/dev/null 2>&1 & echo $!';
+
+        $descriptors = [
+            1 => ['pipe', 'w'],
+            2 => ['pipe', 'w'],
+        ];
+        $process = @proc_open(['/bin/sh', '-c', $backgroundCommand], $descriptors, $pipes, null, []);
+        if (!is_resource($process)) {
+            $this->sendHTTPResponse('Unable to start tool.', 500);
+        }
+
+        $pid = trim((string)stream_get_contents($pipes[1]));
+        $error = trim((string)stream_get_contents($pipes[2]));
+        fclose($pipes[1]);
+        fclose($pipes[2]);
+        $exitCode = proc_close($process);
+
+        if ($exitCode !== 0 || $pid === '') {
+            $this->sendHTTPResponse($error !== '' ? $error : 'Unable to start tool.', 500);
+        }
+
+        $this->sendResponse([
+            'runId' => $runId,
+            'offset' => 0,
+        ]);
+    }
+
+    public function getModuleToolOutput(): void
+    {
+        $runId = trim((string)filter_input(INPUT_GET, 'runId', FILTER_UNSAFE_RAW));
+        $offset = max(0, (int)($_GET['offset'] ?? 0));
+
+        if (!preg_match('/^[a-f0-9]{32}$/', $runId)) {
+            $this->sendHTTPResponse('Invalid tool run.', 400);
+        }
+
+        $runDir = $this->moduleToolRunDirectory();
+        $logFile = $runDir . '/' . $runId . '.log';
+        $statusFile = $runDir . '/' . $runId . '.status';
+
+        if (!is_file($logFile)) {
+            $this->sendResponse([
+                'output' => '',
+                'offset' => 0,
+                'done' => false,
+                'exitCode' => null,
+            ]);
+        }
+
+        $size = filesize($logFile);
+        if ($size === false) {
+            $size = 0;
+        }
+        if ($offset > $size) {
+            $offset = 0;
+        }
+
+        $output = '';
+        if ($size > $offset) {
+            $handle = fopen($logFile, 'rb');
+            if ($handle !== false) {
+                fseek($handle, $offset);
+                $output = (string)stream_get_contents($handle);
+                fclose($handle);
+            }
+        }
+
+        $done = is_file($statusFile);
+        $exitCode = null;
+        if ($done) {
+            $exitCode = (int)trim((string)file_get_contents($statusFile));
+            if ($output === '') {
+                $output = "\nTool finished with exit code {$exitCode}.\n";
+            } elseif (!str_ends_with($output, "\n")) {
+                $output .= "\n";
+            }
+            if (!str_contains($output, 'Tool finished with exit code')) {
+                $output .= "\nTool finished with exit code {$exitCode}.\n";
+            }
+        }
+
+        $this->sendResponse([
+            'output' => $output,
+            'offset' => $size,
+            'done' => $done,
+            'exitCode' => $exitCode,
+        ]);
+    }
+
+    private function resolveModuleToolCommand(): array
+    {
+        $module = trim((string)filter_input(INPUT_POST, 'module', FILTER_UNSAFE_RAW));
+        $toolKey = trim((string)filter_input(INPUT_POST, 'tool', FILTER_UNSAFE_RAW));
+
+        if ($module === '' || $toolKey === '') {
+            $this->sendHTTPResponse('Missing module or tool.', 400);
+        }
+
+        $module = basename($module);
+        $moduleName = preg_replace('/\.py$/', '', $module);
+        if (!preg_match('/^[A-Za-z0-9_.-]+$/', $moduleName) || !preg_match('/^[A-Za-z0-9_.-]+$/', $toolKey)) {
+            $this->sendHTTPResponse('Invalid module or tool.', 400);
+        }
+
+        $metaRaw = $this->getModuleMetaData($module);
+        $metaData = json_decode($metaRaw ?: '{}', false);
+        if (!$metaData || !isset($metaData->tools) || !isset($metaData->tools->$toolKey)) {
+            $this->sendHTTPResponse('Tool is not defined for this module.', 404);
+        }
+
+        $toolData = $metaData->tools->$toolKey;
+        $toolFile = isset($toolData->tool) ? basename((string)$toolData->tool) : '';
+        if ($toolFile === '' || !preg_match('/^[A-Za-z0-9_.-]+$/', $toolFile)) {
+            $this->sendHTTPResponse('Invalid tool definition.', 400);
+        }
+
+        $moduleDataDir = realpath($this->myFilesData . '/data/' . $moduleName);
+        if ($moduleDataDir === false) {
+            $this->sendHTTPResponse('Module data directory not found.', 404);
+        }
+
+        $this->prepareModuleToolDataDirectory($moduleDataDir);
+
+        $toolsDir = realpath($moduleDataDir . '/tools');
+        if ($toolsDir === false) {
+            $this->sendHTTPResponse('Tool directory not found.', 404);
+        }
+
+        $toolPath = realpath($toolsDir . '/' . $toolFile);
+        if ($toolPath === false || !is_file($toolPath) || !is_readable($toolPath) || strpos($toolPath, $toolsDir . DIRECTORY_SEPARATOR) !== 0) {
+            $this->sendHTTPResponse('Tool file not found.', 404);
+        }
+
+        $extension = strtolower(pathinfo($toolPath, PATHINFO_EXTENSION));
+        $venvPython = $this->allsky_home . '/venv/bin/python3';
+        if ($extension === 'py') {
+            $argv = [is_file($venvPython) ? $venvPython : '/usr/bin/python3', '-u', $toolPath];
+        } elseif ($extension === 'sh') {
+            $argv = ['/bin/bash', $toolPath];
+        } elseif (is_executable($toolPath)) {
+            $argv = [$toolPath];
+        } else {
+            $this->sendHTTPResponse('Tool file is not executable.', 400);
+        }
+
+        return [
+            'argv' => $argv,
+            'cwd' => dirname($toolPath),
+        ];
+    }
+
+    private function moduleToolRunDirectory(): string
+    {
+        $runDir = sys_get_temp_dir() . '/allsky-module-tools';
+        if (!is_dir($runDir)) {
+            mkdir($runDir, 0775, true);
+        }
+        return $runDir;
+    }
+
+    private function prepareModuleToolDataDirectory(string $moduleDataDir): void
+    {
+        $baseDir = realpath($this->myFilesData . '/data');
+        if ($baseDir === false || strpos($moduleDataDir, $baseDir . DIRECTORY_SEPARATOR) !== 0) {
+            $this->sendHTTPResponse('Invalid module data directory.', 400);
+        }
+
+        $this->runQuietProcess(['/usr/bin/sudo', '/bin/chgrp', '-R', 'www-data', $moduleDataDir]);
+        $this->runQuietProcess(['/usr/bin/sudo', '/bin/chmod', '-R', 'g+rwX', $moduleDataDir]);
+    }
+
+    private function runQuietProcess(array $argv): void
+    {
+        $descriptors = [
+            1 => ['pipe', 'w'],
+            2 => ['pipe', 'w'],
+        ];
+
+        $process = @proc_open($argv, $descriptors, $pipes, null, []);
+        if (!is_resource($process)) {
+            return;
+        }
+
+        stream_get_contents($pipes[1]);
+        stream_get_contents($pipes[2]);
+        fclose($pipes[1]);
+        fclose($pipes[2]);
+        proc_close($process);
+    }
+
+    private function streamModuleTool(array $argv, string $cwd): void
+    {
+        @set_time_limit(0);
+        while (ob_get_level() > 0) {
+            @ob_end_flush();
+        }
+
+        http_response_code(200);
+        header('Content-Type: text/plain; charset=utf-8');
+        header('Cache-Control: no-cache, no-transform');
+        header('X-Accel-Buffering: no');
+
+        $descriptors = [
+            1 => ['pipe', 'w'],
+            2 => ['pipe', 'w'],
+        ];
+
+        $process = @proc_open($argv, $descriptors, $pipes, $cwd, []);
+        if (!is_resource($process)) {
+            echo "Unable to start tool.\n";
+            flush();
+            exit;
+        }
+
+        stream_set_blocking($pipes[1], false);
+        stream_set_blocking($pipes[2], false);
+
+        $running = true;
+        $exitCode = null;
+        while ($running) {
+            foreach ([1, 2] as $index) {
+                $chunk = stream_get_contents($pipes[$index]);
+                if ($chunk !== false && $chunk !== '') {
+                    echo $chunk;
+                    flush();
+                }
+            }
+
+            $status = proc_get_status($process);
+            $running = $status['running'];
+            if (!$running && isset($status['exitcode'])) {
+                $exitCode = $status['exitcode'];
+            }
+            if ($running) {
+                usleep(100000);
+            }
+        }
+
+        foreach ([1, 2] as $index) {
+            $chunk = stream_get_contents($pipes[$index]);
+            if ($chunk !== false && $chunk !== '') {
+                echo $chunk;
+                flush();
+            }
+            fclose($pipes[$index]);
+        }
+
+        $closeCode = proc_close($process);
+        if ($exitCode === null || $exitCode < 0) {
+            $exitCode = $closeCode;
+        }
+        echo "\nTool finished with exit code {$exitCode}.\n";
+        flush();
+        exit;
     }
 
     public function getAllskyVariables($return=false) {

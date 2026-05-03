@@ -339,7 +339,7 @@ function recreate_files()
 	create_options_file --no-settings-file
 
 	echo "* Updating lighttpd config file and restarting the service"
-	create_lighttpd_config_file
+	create_lighttpd_config_file ""
 	local X="$( sudo systemctl restart lighttpd 2>&1 )"
 	if [[ $? -ne 0 ]]; then
 		W_ "WARNING: unable to restart lighttpd service in ${ME_F}: ${X}" >&2

@@ -577,8 +577,8 @@ if ($debug) {
 					$ok = runCommand($CMD, "", "success", false, "", $return_val);
 
 					$msg = "";
-					// EXIT_PARTIAL_OK means there were problem(s) and nothing changed.
-					if ($return_val === EXIT_PARTIAL_OK) {
+					// ALLSKY_EXIT_PARTIAL_OK means there were problem(s) and nothing changed.
+					if ($return_val === ALLSKY_EXIT_PARTIAL_OK) {
 						$ok = false;
 					} else {
 						// If Allsky needs to be configured again, e.g., a new camera type/model,

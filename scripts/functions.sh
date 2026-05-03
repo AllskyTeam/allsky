@@ -120,7 +120,7 @@ function doExit()
 		OUTPUT_A_MSG="true"
 	fi
 
-	if [[ ${EXITCODE} -ge ${EXIT_ERROR_STOP} ]]; then
+	if [[ ${EXITCODE} -ge ${ALLSKY_EXIT_ERROR_STOP} ]]; then
 		# With fatal EXIT_ERROR_STOP errors, we can't continue so display a notification image
 		# even if the user has them turned off.
 		if [[ -n ${CUSTOM_MESSAGE} ]]; then
@@ -143,7 +143,7 @@ function doExit()
 
 	# Don't let the service restart us because we'll likely get the same error again.
 	# Stop here so the message above is output first.
-	[[ ${EXITCODE} -ge ${EXIT_ERROR_STOP} ]] && stop_Allsky
+	[[ ${EXITCODE} -ge ${ALLSKY_EXIT_ERROR_STOP} ]] && stop_Allsky
 
 	exit "${EXITCODE}"
 }
@@ -183,7 +183,7 @@ function verify_CAMERA_TYPE()
 		E_ "${FATAL_MSG} ${MSG}" >&2
 
 		if [[ ${IGNORE_ERRORS} != "true" ]]; then
-			doExit "${EXIT_NO_CAMERA}" "Error" "${IMAGE_MSG}" "${MSG}"
+			doExit "${ALLSKY_EXIT_NO_CAMERA}" "Error" "${IMAGE_MSG}" "${MSG}"
 		fi
 
 		return 1
@@ -232,7 +232,7 @@ function determineCommandToUse()
 				echo "${NO_CMD_FOUND} ${MSG}" >&2
 				if [[ ${USE_doExit} == "true" ]]; then
 					EXIT_MSG="${PREFIX}\nRPi camera command\nnot found!."
-					doExit "${EXIT_ERROR_STOP}" "Error" "${EXIT_MSG}" "${MSG}"
+					doExit "${ALLSKY_EXIT_ERROR_STOP}" "Error" "${EXIT_MSG}" "${MSG}"
 				fi
 			# else don't echo anything
 			fi
@@ -260,7 +260,7 @@ function determineCommandToUse()
 		# Time out.
 		# This usually means a camera exists but there's a problem connecting to it.
 		echo "'${CMD_TO_USE_}' timed out." >&2
-		return "${EXIT_ERROR_STOP}"
+		return "${ALLSKY_EXIT_ERROR_STOP}"
 
 	else
 		if [[ ${IGNORE_ERRORS} == "false" ]]; then
@@ -268,7 +268,7 @@ function determineCommandToUse()
 			[[ -n ${ERR} ]] && indent "${ERR}" >&2
 			if [[ ${USE_doExit} == "true" ]]; then
 				EXIT_MSG="${PREFIX}\n${CMD_TO_USE_} failed!"
-				doExit "${EXIT_ERROR_STOP}" "Error" "${EXIT_MSG}" "${MSG}"
+				doExit "${ALLSKY_EXIT_ERROR_STOP}" "Error" "${EXIT_MSG}" "${MSG}"
 			fi
 		fi
 		return 1
@@ -917,7 +917,7 @@ function check_settings_link()
 	FULL_FILE="${1}"
 	if [[ -z ${FULL_FILE} ]]; then
 		echo "${FUNCNAME[0]}(): Settings file not specified."
-		return "${EXIT_ERROR_STOP}"
+		return "${ALLSKY_EXIT_ERROR_STOP}"
 	fi
 	if [[ ! -f ${FULL_FILE} ]]; then
 		echo "${FUNCNAME[0]}(): File '${FULL_FILE}' not found."
@@ -925,11 +925,11 @@ function check_settings_link()
 	fi
 	if [[ -z ${CAMERA_TYPE} ]]; then
 		CAMERA_TYPE="$( settings ".${CT}"  "${FULL_FILE}" )"
-		[[ $? -ne 0 || -z ${CAMERA_TYPE} ]] && return "${EXIT_ERROR_STOP}"
+		[[ $? -ne 0 || -z ${CAMERA_TYPE} ]] && return "${ALLSKY_EXIT_ERROR_STOP}"
 	fi
 	if [[ -z ${CAMERA_MODEL} ]]; then
 		CAMERA_MODEL="$( settings ".${CM}"  "${FULL_FILE}" )"
-		[[ $? -ne 0 || -z ${CAMERA_TYPE} ]] && return "${EXIT_ERROR_STOP}"
+		[[ $? -ne 0 || -z ${CAMERA_TYPE} ]] && return "${ALLSKY_EXIT_ERROR_STOP}"
 	fi
 
 	DIRNAME="$( dirname "${FULL_FILE}" )"

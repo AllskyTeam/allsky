@@ -28,7 +28,6 @@ rm -f "${ALLSKY_REBOOT_NEEDED}"				# In case it's left over from a prior install
 
 SHORT_TITLE="Allsky Installer"
 TITLE="${SHORT_TITLE} - ${ALLSKY_VERSION}"
-FINAL_SUDOERS_FILE="/etc/sudoers.d/allsky"
 ZWO_FILE="${ALLSKY_HOME}/src/lib/armv7/libASICamera2.a"
 OLD_RASPAP_DIR="/etc/raspap"			# used to contain WebUI configuration files
 SETTINGS_FILE_NAME="$( basename "${ALLSKY_SETTINGS_FILE}" )"
@@ -53,7 +52,6 @@ SPACE="    "
 NOT_RESTORED="NO PRIOR VERSION"
 PI_MODEL=""								# The numeric model of Raspberry Pi
 THIS_PI_MODEL=""						# The model of this Raspberry Pi
-ALLSKY_LIGHTTPD_STRING="# Allsky changes"
 
 declare -r TMP_FILE="/tmp/allsky-x"		# temporary file used by many functions
 declare -r TAB="$( echo -e '\t' )"
@@ -128,7 +126,7 @@ STATUS_VARIABLES=()								# Holds the variables and values to save
 # PRIOR_PYTHON_VENV
 # WEBSITE_CONFIG_VERSION, WEBSITE_ALLSKY_VERSION
 # REPO_SUDOERS_FILE, REPO_LIGHTTPD_FILE, REPO_AVI_FILE, REPO_OPTIONS_FILE
-# LIGHTTPD_LOG_DIR, LIGHTTPD_LOG_FILE
+# LIGHTTPD_LOG_DIR, LIGHTTPD_LOG_FILE, LIGHTTPD_ALLSKY_STRING
 # INSTALLED_LOCALES
 # Plus others I probably forgot about...
 
@@ -787,12 +785,7 @@ do_sudoers()
 	[[ ${SKIP} == "true" || ${SKIP2} == "true" ]] && return
 
 	display_msg --logonly info "Creating/updating sudoers file."
-	sed \
-		-e "s;XX_ALLSKY_OWNER_XX;${ALLSKY_OWNER};" \
-		-e "s;XX_ALLSKY_SCRIPTS_XX;${ALLSKY_SCRIPTS};" \
-		-e "s;XX_ALLSKY_UTILITIES_XX;${ALLSKY_UTILITIES};" \
-		"${REPO_SUDOERS_FILE}"  >  "${TMP_FILE}"
-	sudo install -m 0644 "${TMP_FILE}" "${FINAL_SUDOERS_FILE}" && rm -f "${TMP_FILE}"
+	create_sudoers
 
 	STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 }
@@ -948,7 +941,7 @@ install_webserver_et_al()
 
 	sudo systemctl stop lighttpd 2>/dev/null
 
-	if [[ ${v} == "true" ]] && grep --silent "${ALLSKY_LIGHTTPD_STRING}" "${LIGHTTPD_CONFIG_FILE}" 2>/dev/null ; then
+	if [[ ${v} == "true" ]] && grep --silent "${LIGHTTPD_ALLSKY_STRING}" "${LIGHTTPD_CONFIG_FILE}" 2>/dev/null ; then
 		# Already installed it; just configure it.
 		display_msg --log progress "Preparing the web server."
 	else
@@ -966,12 +959,8 @@ install_webserver_et_al()
 			|| exit_with_image 1 "${STATUS_ERROR}" "web-related package installation failed"
 	fi
 
-	create_lighttpd_config_file
-
-	# Add this string so we know all the webserver-related packages were installed.
-	echo "${ALLSKY_LIGHTTPD_STRING}" | sudo tee --append "${LIGHTTPD_CONFIG_FILE}" > /dev/null
-
-	create_lighttpd_log_file
+	create_lighttpd_config_file ""
+	create_lighttpd_log_file ""
 
 	# Disable old php module.
 	sudo lighty-disable-mod fastcgi-php > /dev/null 2>&1
@@ -1400,7 +1389,7 @@ set_what_can_be_skipped()
 
 	local SKIPPING="false"
 	local MSG="Skipping installation of: "
-	if grep --silent "${ALLSKY_LIGHTTPD_STRING}" "${LIGHTTPD_CONFIG_FILE}" 2>/dev/null ; then
+	if grep --silent "${LIGHTTPD_ALLSKY_STRING}" "${LIGHTTPD_CONFIG_FILE}" 2>/dev/null ; then
 		# If the word "Allsky" is in the file, we know it's ours.
 		MSG+="webserver et.al."
 		SKIPPING="true"

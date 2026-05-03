@@ -57,7 +57,7 @@ export PRIOR_FTP_FILE="${PRIOR_CONFIG_DIR}/ftp-settings.sh"
 export LIGHTTPD_LOG_DIR="/var/log/lighttpd"
 export LIGHTTPD_LOG_FILE="${LIGHTTPD_LOG_DIR}/error.log"
 export LIGHTTPD_CONFIG_FILE="/etc/lighttpd/lighttpd.conf"
-export ALLSKY_LIGHTTPD_STRING="# Allsky changes"	# String that's added to the config file
+export LIGHTTPD_ALLSKY_STRING="# Allsky changes"	# String that's added to the config file
 
 export FINAL_SUDOERS_FILE="/etc/sudoers.d/allsky"
 
@@ -826,13 +826,13 @@ function create_lighttpd_config_file()
 		-e "s;XX_ALLSKY_OVERLAY_XX;${ALLSKY_OVERLAY};g" \
 		-e "s;XX_ALLSKY_MY_OVERLAY_TEMPLATES_XX;${ALLSKY_MY_OVERLAY_TEMPLATES};g" \
 			"${REPO_LIGHTTPD_FILE}"  >  "${TMP}"
-	sudo install -m 0644 "${TMP}" "${LIGHTTPD_CONFIG_FILE}" && rm -f "${TMP}"
 
 	if [[ ${ADD_STRING} == "true" ]]; then
 		# Add the string that indicates the web server and its dependencies have been installed.
-		echo "${LIGHTTPD_ALLSKY_STRING}" |
-			sudo tee --append "${LIGHTTPD_CONFIG_FILE}" > /dev/null
+		echo "${LIGHTTPD_ALLSKY_STRING}" >> "${TMP}"
 	fi
+
+	sudo install -m 0644 "${TMP}" "${LIGHTTPD_CONFIG_FILE}" && rm -f "${TMP}"
 }
 
 ####
@@ -1950,7 +1950,6 @@ function create_options_file()
 		shift
 	done
 
-	local SETTINGS_ARG
 	if [[ ${NO_SETTINGS} == "true" ]]; then
 		# Don't do anything with the settings file.
 		# Useful when we only want to recreate the options file, e.g., the repo file changed.

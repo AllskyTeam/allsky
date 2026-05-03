@@ -8,11 +8,11 @@
 ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck source-path=.
-source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 # allow user to select additional commands after 1st one?
 ALLOW_MORE_COMMANDS="true"
@@ -339,7 +339,7 @@ function recreate_files()
 	create_options_file --no-settings-file
 
 	echo "* Updating lighttpd config file and restarting the service"
-	create_lighttpd_config_file
+	create_lighttpd_config_file ""
 	local X="$( sudo systemctl restart lighttpd 2>&1 )"
 	if [[ $? -ne 0 ]]; then
 		W_ "WARNING: unable to restart lighttpd service in ${ME_F}: ${X}" >&2

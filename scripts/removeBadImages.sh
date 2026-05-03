@@ -12,9 +12,9 @@
 ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck source-path=.
-source "${ALLSKY_HOME}/variables.sh" 		|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh" 		|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 usage_and_exit()
 {
@@ -122,7 +122,7 @@ BAD_LIMIT="${S_imageremovebadcount}"
 
 set +a		# turn off auto-export since ${IMAGE_FILES} might be huge and produce errors
 
-cd "${DIRECTORY}" || exit "${EXIT_ERROR_STOP}"
+cd "${DIRECTORY}" || exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 # If the LOW threshold is 0 or < 0 it's disabled.
 # If the HIGH threshold is 0 or 1.0 (nothing can be brighter than 1.0) it's disabled.
@@ -284,4 +284,4 @@ else	# only 1 file so show it
 	fi
 fi
 
-exit "${EXIT_PARTIAL_OK}"		# partially ok because we deleted at least one file.
+exit "${ALLSKY_EXIT_PARTIAL_OK}"		# partially ok because we deleted at least one file.

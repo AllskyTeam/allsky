@@ -44,7 +44,7 @@ if [[ ${NEWEST_VERSION:0:1} != "v" ||
 	exit 1
 fi
 
-CURRENT_VERSION="$( get_version )"
+CURRENT_VERSION="$( get_version "" )"
 
 NOTE=""
 if [[ ${CURRENT_VERSION} == "${NEWEST_VERSION}" ]]; then

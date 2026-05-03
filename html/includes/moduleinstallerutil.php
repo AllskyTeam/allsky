@@ -128,6 +128,18 @@ class MODULEINSTALLERUTIL extends UTILBASE
             $this->checkoutBranch($branch);
             $modulePath = $this->repoPath . '/' . $moduleName;
 
+            if ($action === 'status' && !is_dir($modulePath)) {
+                $coreModules = $this->getCoreModuleFiles();
+                if (isset($coreModules[$moduleName])) {
+                    $this->sendResponse([
+                        'message' => $this->getCoreModuleStatusText($moduleName, $coreModules[$moduleName]),
+                        'module' => $moduleName,
+                        'action' => $action,
+                    ]);
+                    return;
+                }
+            }
+
             if ($action !== 'uninstall' && !is_dir($modulePath)) {
                 $this->send404('Module not found in the repository.');
             }
@@ -539,6 +551,8 @@ class MODULEINSTALLERUTIL extends UTILBASE
 
         $paths = $this->buildModulePaths($moduleName, $modulePath);
         $log = [];
+        $this->applyOwnership($this->myModulesDir);
+        $this->applyOwnership($this->moduleDataDir);
         $rollback = $this->createInstallRollbackSnapshot($moduleName, $paths, $installedInfo);
 
         try {
@@ -705,6 +719,30 @@ class MODULEINSTALLERUTIL extends UTILBASE
         }
         if ($record['installedErrors'] !== []) {
             $lines[] = 'Installed errors: ' . implode('; ', $record['installedErrors']);
+        }
+
+        return implode("\n", $lines);
+    }
+
+    private function getCoreModuleStatusText(string $moduleName, string $moduleFile): string
+    {
+        $record = $this->buildCoreModuleRecord($moduleName, $moduleFile);
+        $lines = [];
+        $lines[] = 'Module: ' . $record['displayName'] . " ({$record['module']})";
+        $lines[] = 'Type: Allsky core module';
+        $lines[] = 'Installed: yes';
+        $lines[] = 'Installed version: ' . ($record['installedVersion'] ?? 'Built-in');
+        $lines[] = 'Available version: ' . ($record['sourceVersion'] ?? 'Built-in');
+        $lines[] = 'Update available: no';
+        $lines[] = 'Deprecated: ' . ($record['deprecated'] ? 'yes' : 'no');
+        if ($record['replacedBy'] !== '') {
+            $lines[] = 'Replaced by: ' . $record['replacedBy'];
+        }
+        if ($record['docs'] !== '') {
+            $lines[] = 'Documentation: ' . $record['docs'];
+        }
+        if ($record['sourceErrors'] !== []) {
+            $lines[] = 'Source errors: ' . implode('; ', $record['sourceErrors']);
         }
 
         return implode("\n", $lines);
@@ -1433,6 +1471,7 @@ class MODULEINSTALLERUTIL extends UTILBASE
             return;
         }
         $this->runProcessWithOptions(['/usr/bin/sudo', 'chown', '-R', $this->owner . ':' . $this->webGroup, $path]);
+        $this->runProcessWithOptions(['/usr/bin/sudo', 'chmod', '-R', 'g+rwX', $path]);
     }
 
     private function loadSecretsFile(): array

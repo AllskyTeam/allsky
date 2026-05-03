@@ -323,12 +323,17 @@ function DisplayModule()
                                             <select class="form-control" id="module-installer-branch"></select>
                                         </div>
                                     </div>
-                                <div class="col-sm-5">
-                                    <div class="form-group">
-                                        <label for="module-installer-search">Filter Modules</label>
-                                        <input type="text" class="form-control" id="module-installer-search" placeholder="Search by name, code, description, group">
-                                    </div>
-                                </div>
+	                                <div class="col-sm-5">
+	                                    <div class="form-group">
+	                                        <label for="module-installer-search">Filter Modules</label>
+	                                        <div class="input-group module-installer-search-group">
+	                                            <input type="text" class="form-control" id="module-installer-search" placeholder="Search by name, code, description, group">
+	                                            <span class="input-group-btn">
+	                                                <button type="button" class="btn btn-default" id="module-installer-search-clear" title="Clear filter"><i class="fa-solid fa-xmark"></i></button>
+	                                            </span>
+	                                        </div>
+	                                    </div>
+	                                </div>
                                 <div class="col-sm-4">
                                     <div class="form-group">
                                         <label for="module-installer-filter" class="control-label">Show</label>

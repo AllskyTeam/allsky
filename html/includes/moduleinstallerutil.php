@@ -1423,8 +1423,9 @@ class MODULEINSTALLERUTIL extends UTILBASE
             return;
         }
 
-        if (file_exists($path) && !is_dir($path)) {
-            throw new RuntimeException("Unable to create directory {$path}: path exists and is not a directory");
+        if ((file_exists($path) || is_link($path)) && !is_dir($path)) {
+            $this->removePath($path);
+            clearstatcache(true, $path);
         }
 
         @mkdir($path, 0775, true);

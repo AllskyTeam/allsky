@@ -1950,7 +1950,6 @@ function create_options_file()
 		shift
 	done
 
-	local SETTINGS_ARG
 	if [[ ${NO_SETTINGS} == "true" ]]; then
 		# Don't do anything with the settings file.
 		# Useful when we only want to recreate the options file, e.g., the repo file changed.

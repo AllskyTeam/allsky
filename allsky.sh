@@ -5,20 +5,20 @@
 ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck source-path=.
-source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 # If Allsky is already running, exit.  Let prior copy continue runnning.
 if [[ $( pgrep --count "${ME}" ) -gt 1 ]]; then
 	echo "     ***** Allsky already running; see below. Exiting new copy. *****" >&2
 	# Show other processes.  Don't show any newer than 5 seconds so we don't show ourself.
 	ps -f -p "$( pgrep --older 5 "${ME}" )"
-	exit "${EXIT_ERROR_STOP}"
+	exit "${ALLSKY_EXIT_ERROR_STOP}"
 fi
 
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 # NOT_STARTED_MSG, STOPPED_MSG, ERROR_MSG_PREFIX, and ZWO_VENDOR are globals
 
@@ -34,7 +34,7 @@ if [[ ! -d ${ALLSKY_CONFIG} ]]; then
 	# Can't call addMessage.sh or copyNotificationImage.sh or almost anything
 	# since they use ${ALLSKY_CONIG} and/or ${ALLSKY_TMP} which don't exist yet.
 	set_allsky_status "${ALLSKY_STATUS_NEVER_RUN}"
-	doExit "${EXIT_ERROR_STOP}" "no-image" "" ""
+	doExit "${ALLSKY_EXIT_ERROR_STOP}" "no-image" "" ""
 fi
 
 ####
@@ -115,7 +115,7 @@ fi
 
 if [[ ${NEEDS_REBOOT} == "true" ]]; then
 	set_allsky_status "${ALLSKY_STATUS_REBOOT_NEEDED}"
-	doExit "${EXIT_ERROR_STOP}" "RebootNeeded" "" "The Pi needs to be rebooted."
+	doExit "${ALLSKY_EXIT_ERROR_STOP}" "RebootNeeded" "" "The Pi needs to be rebooted."
 fi
 
 # Get all settings we're going to use.
@@ -151,10 +151,10 @@ if [[ -z ${S_lastchanged} ]]; then
 	fi
 	if [[ ${NEEDS_REBOOT} == "true" ]]; then
 		MSG+=" The Pi also needs to be rebooted." >&2
-		doExit "${EXIT_ERROR_STOP}" "${IMAGE_NAME}" \
+		doExit "${ALLSKY_EXIT_ERROR_STOP}" "${IMAGE_NAME}" \
 			"" "${WEBUI_MSG} and then the Pi rebooted."
 	else
-		doExit "${EXIT_ERROR_STOP}" "${IMAGE_NAME}" "" "${WEBUI_MSG}."
+		doExit "${ALLSKY_EXIT_ERROR_STOP}" "${IMAGE_NAME}" "" "${WEBUI_MSG}."
 	fi
 	[[ -n ${MSG} ]] && echo "*** ===== ${MSG}" >&2		# to the log
 fi
@@ -214,7 +214,7 @@ if [[ -f ${ALLSKY_POST_INSTALL_ACTIONS} ]]; then
 		# shellcheck disable=SC2154
 		rm -f "${F}"		# so next time we'll remind them.
 		set_allsky_status "${ALLSKY_STATUS_ACTIONS_NEEDED}"
-		doExit "${EXIT_ERROR_STOP}" "no-image" "" ""
+		doExit "${ALLSKY_EXIT_ERROR_STOP}" "no-image" "" ""
 	else
 		# First delete the initial message if there since we're posting a reminder.
 		"${ALLSKY_SCRIPTS}/addMessage.sh" --id AM_POST --delete
@@ -246,7 +246,7 @@ if [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 				E_ "*** ${FATAL_MSG} ${MSG} Stopping Allsky." >&2
 				IMAGE_MSG="${ERROR_MSG_PREFIX}"
 				IMAGE_MSG+="\nToo many consecutive\nUSB bus resets done!\n${SEE_LOG_MSG}"
-				doExit "${EXIT_ERROR_STOP}" "Error" 
+				doExit "${ALLSKY_EXIT_ERROR_STOP}" "Error" 
 					"${IMAGE_MSG}" "${NOT_STARTED_MSG}: ${MSG}"
 			fi
 		else
@@ -270,7 +270,7 @@ if [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 			"" "5" "yellow" "${ALLSKY_EXTENSION}" "" \
 			"WARNING:\n\nResetting USB bus\n${REASON}.\nAttempt ${NUM_USB_RESETS}."
 
-		SEARCH="${ZWO_VENDOR}:${ZWO_CAMERA_ID}"
+		SEARCH="${ZWO_VENDOR}:"
 		# Get the hub number the camera is on.
 		local HUB="$( sudo "${ALLSKY_BIN}/uhubctl" --exact --search "${SEARCH}" |
 			gawk -v Z="${SEARCH}" '
@@ -286,6 +286,8 @@ if [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 					}
 				}'
 		)"
+		### From what I can tell, uhubctl doesn't work on the Pi; at least
+		### it never seems to fix any USB problems.
 		sudo "${ALLSKY_BIN}/uhubctl" --action off --exact --search "${SEARCH}" --location "${HUB}"
 		sleep 3		# give it a few seconds, plus, allow the notification images to be seen
 		sudo "${ALLSKY_BIN}/uhubctl" --action on --exact --search "${SEARCH}" --location "${HUB}"
@@ -316,7 +318,7 @@ if [[ ${CAMERA_TYPE_FOUND} == "false" ]]; then
 	IMAGE_MSG="${ERROR_MSG_PREFIX}"
 	IMAGE_MSG+="${NOT_STARTED_MSG}\n"
 	IMAGE_MSG+="\nNo connected ${CAMERA_TYPE}\ncameras found!"
-	doExit "${EXIT_ERROR_STOP}" "Error" \
+	doExit "${ALLSKY_EXIT_ERROR_STOP}" "Error" \
 		"${IMAGE_MSG}" "${MSG}"
 fi
 
@@ -335,7 +337,7 @@ if [[ ! ${CCM} =~ "${CAM}" ]]; then
 		IMAGE_MSG+="The camera changed."
 		IMAGE_MSG+="\nCheck Camera Type\n& Model in the WebUI."
 		reset_usb "Camera changed"
-		doExit "${EXIT_ERROR_STOP}" "Error" "${IMAGE_MSG}"
+		doExit "${ALLSKY_EXIT_ERROR_STOP}" "Error" "${IMAGE_MSG}"
 	fi
 fi
 
@@ -377,7 +379,7 @@ rm -f "${ALLSKY_NOTIFICATION_LOG}"	# clear out any notificatons from prior runs.
 if ! ARGS="$( "${ALLSKY_SCRIPTS}/convertJSON.php" --capture-only )" ; then
 	E_ "${ME}: ERROR: convertJSON.php returned: ${ARGS}"
 	set_allsky_status "${ALLSKY_STATUS_ERROR}"
-	exit "${EXIT_ERROR_STOP}"
+	exit "${ALLSKY_EXIT_ERROR_STOP}"
 fi
 
 # We must pass "-config ${ARGS_FILE}" on the command line and
@@ -430,17 +432,17 @@ CAMERA_NUMBER="${S_cameranumber:-0}"		# default
 	-config "${ARGS_FILE}"
 RETCODE=$?
 
-if [[ ${RETCODE} -eq ${EXIT_OK} ]]; then
+if [[ ${RETCODE} -eq ${ALLSKY_EXIT_OK} ]]; then
 	[[ ${CAMERA_TYPE} == "ZWO" ]] && rm -f "${RESETTING_USB_LOG}"
 	set_allsky_status "${ALLSKY_STATUS_STOPPED}"
 	# The user probably stopped Allsky, and the WebUI's status will show "Stopped".
 	# In case the user wants to see the last image, do NOT call copyNotificationImage.sh.
-	doExit "${EXIT_OK}" ""
+	doExit "${ALLSKY_EXIT_OK}" ""
 fi
 
-if [[ ${RETCODE} -eq ${EXIT_RESTARTING} ]]; then
+if [[ ${RETCODE} -eq ${ALLSKY_EXIT_RESTARTING} ]]; then
 	if [[ ${ON_TTY} == "true" ]]; then
-		echo "*** Can restart allsky now. ***"
+		echo "*** Can restart Allsky now. ***"
 		NOTIFICATION_TYPE="NotRunning"
 	else
 		NOTIFICATION_TYPE="Restarting"
@@ -450,11 +452,11 @@ if [[ ${RETCODE} -eq ${EXIT_RESTARTING} ]]; then
 	doExit 0 "${NOTIFICATION_TYPE}"		# use 0 so the service is restarted
 fi
 
-if [[ ${RETCODE} -eq ${EXIT_RESET_USB} ]]; then
+if [[ ${RETCODE} -eq ${ALLSKY_EXIT_RESET_USB} ]]; then
 	# Reset the USB bus
-	reset_usb " (too many capture errors)"
+	reset_usb "(too many capture errors)"
 	if [[ ${ON_TTY} == "true" ]]; then
-		echo "*** USB bus was reset; You can restart allsky now. ***"
+		echo "*** USB bus was reset; You can restart Allsky now. ***"
 		NOTIFICATION_TYPE="NotRunning"
 	else
 		NOTIFICATION_TYPE="Restarting"
@@ -464,8 +466,8 @@ if [[ ${RETCODE} -eq ${EXIT_RESET_USB} ]]; then
 	doExit 0 ""		# use 0 so the service is restarted
 fi
 
-# RETCODE -ge ${EXIT_ERROR_STOP} means we should not restart until the user fixes the error.
-if [[ ${RETCODE} -ge ${EXIT_ERROR_STOP} ]]; then
+# RETCODE -ge ${ALLSKY_EXIT_ERROR_STOP} means we should not restart until the user fixes the error.
+if [[ ${RETCODE} -ge ${ALLSKY_EXIT_ERROR_STOP} ]]; then
 	echo "***"
 	if [[ ${ON_TTY} == "true" ]]; then
 		echo "*** After fixing, restart ${ME}. ***"

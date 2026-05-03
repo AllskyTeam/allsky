@@ -8,9 +8,9 @@
 ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck source-path=.
-source "${ALLSKY_HOME}/variables.sh"		|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"		|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 
 usage_and_exit() {
@@ -367,7 +367,7 @@ else # sftp/ftp/ftps
 		# lftp doesn't open the connection until the first command is executed,
 		# and if it fails the error message isn't always clear.
 		# So, do a simple command first so we get a better error message.
-		echo "cd . || exit ${EXIT_ERROR_STOP}"
+		echo "cd . || exit ${ALLSKY_EXIT_ERROR_STOP}"
 
 		if [[ ${DEBUG} == "true" ]]; then
 			echo "debug 0"
@@ -434,7 +434,7 @@ else # sftp/ftp/ftps
 	fi
 	if [[ ${RET} -ne 0 ]]; then
 		HEADER="*** ${ME}: ERROR,"
-		if [[ ${RET} -eq ${EXIT_ERROR_STOP} ]]; then
+		if [[ ${RET} -eq ${ALLSKY_EXIT_ERROR_STOP} ]]; then
 			# shellcheck disable=SC2153
 			OUTPUT="$(
 				echo "${HEADER} unable to log in to ${REMOTE_USER} @ ${REMOTE_HOST}."

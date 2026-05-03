@@ -74,7 +74,7 @@ function _check_web_connectivity()
 
 		MSG="Got HTTP_STATUS ${HTTP_STATUS} from ${URL}; connectivity worked."
 		[[ ${FROM} == "install" ]] && display_msg --logonly info "${MSG}"
-		return "${EXIT_PARTIAL_OK}"		# partial because it has basic connectivity only
+		return "${ALLSKY_EXIT_PARTIAL_OK}"		# partial because it has basic connectivity only
 
 	else
 		case "${HTTP_STATUS}" in

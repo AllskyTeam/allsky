@@ -19,6 +19,8 @@ ALLOW_MORE_COMMANDS="true"
 
 TITLE="*** Allsky Configuration ***"
 
+# TODO: FIX: get rid of old whiptail code when we know this new code works
+USE_DIALOG="true"		# Use the "dialog" command or older whiptail code
 
 ####################################### Functions - one per command
 
@@ -30,7 +32,7 @@ function usage_and_exit()
 	[[ ${1} == "--commands-only" ]] && COMMANDS_ONLY="true" && shift
 
 	local RET=${1}
-	
+
 	exec 2>&1
 	echo
 
@@ -579,11 +581,10 @@ function prompt()
 	local OPTIONS=("${@}")
 	local NUM_OPTIONS=$(( ${#OPTIONS[@]} / 2 ))
 
-if true; then
-	D_TITLE="*** Allsky Configuration ***"
+if [[ ${USE_DIALOG} == "true" ]]; then
 	D_WIDTH="85"
 	D_MENU_HEIGHT="${NUM_OPTIONS}"
-	local OPT="$( dialog --no-tags --title "${D_TITLE}" \
+	local OPT="$( dialog --no-tags --title "${TITLE}" \
 		--default-item "${DEFAULT_MENU_ITEM}" \
 		"--menu" "${PROMPT}" \
 		"${T_LINES}" "${D_WIDTH}" "${D_MENU_HEIGHT}" "${OPTIONS[@]}" 3>&1 1>&2 2>&3 )"
@@ -826,7 +827,6 @@ if [[ -z ${FUNCTION_TO_EXECUTE} ]]; then
 			continue
 		fi
 		P="${PROMPT}"	# restore prompt
-		
 
 		[[ ${ON_TTY} == "true" ]] && clear
 		run_command "${COMMAND}"

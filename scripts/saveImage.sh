@@ -8,9 +8,9 @@ ME="$( basename "${BASH_ARGV0}" )"
 [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]] && echo "${ME} $*"
 
 #shellcheck disable=SC1091 source-path=.
-source "${ALLSKY_HOME}/variables.sh"		|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"		|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 usage_and_exit()
 {
@@ -159,7 +159,7 @@ function display_error_and_exit()	# error message, notification string
 	# Don't let the service restart us because we will get the same error again.
 	stop_Allsky
 	set_allsky_status "${ALLSKY_STATUS_ERROR}"
-	exit "${EXIT_ERROR_STOP}"
+	exit "${ALLSKY_EXIT_ERROR_STOP}"
 }
 
 # Resize the image if required

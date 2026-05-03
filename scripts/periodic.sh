@@ -3,13 +3,13 @@
 [[ -z "${ALLSKY_HOME}" ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )/.." )"
 
 #shellcheck source-path=.
-source "${ALLSKY_HOME}/variables.sh"		|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"		|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 trap "exit 0" SIGTERM SIGINT
 
-cd "${ALLSKY_SCRIPTS}"						|| exit "${EXIT_ERROR_STOP}"
+cd "${ALLSKY_SCRIPTS}"						|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 while :
 do

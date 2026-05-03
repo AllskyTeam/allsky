@@ -1183,7 +1183,7 @@ function runCommand($cmd, $onSuccessMessage, $messageColor, $addMsg=true, $onFai
 	if ($script !== "") {
 		echo "\n<!-- from $cmd -->$script\n";
 	}
-	if ($return_val > 0 && $return_val !== EXIT_PARTIAL_OK) {
+	if ($return_val > 0 && $return_val !== ALLSKY_EXIT_PARTIAL_OK) {
 		$r = "";
 		if ($modifiedResult !== null) {
 			$r = implode("<br>", $modifiedResult);

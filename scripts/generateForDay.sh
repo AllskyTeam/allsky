@@ -8,9 +8,9 @@
 ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck source-path=.
-source "${ALLSKY_HOME}/variables.sh"		|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"		|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 OK="true"
 DO_HELP="false"
@@ -123,8 +123,8 @@ usage_and_exit()
 	else
 		echo -e "${USAGE}"
 	fi
-	echo "Where:"
-	echo "   --help                          Displays this message and exits."
+	echo "Arguments:"
+	echo "   --help                          Display this message and exit."
 	echo "   --debug                         Runs upload.sh in debug mode."
 	echo "   --nice n                        Runs with the specified nice level."
 	echo "   --upload                        Uploads previously-created files instead of creating them."
@@ -243,7 +243,7 @@ if [[ ${TYPE} == "GENERATE" ]]; then
 		# shellcheck disable=SC2086
 		GENERATE_OUTPUT="$( eval ${CMD} 2>&1 )"
 		local RET=$?
-		if [[ ${RET} -ne 0 && ${RET} -ne ${EXIT_PARTIAL_OK}  ]]; then
+		if [[ ${RET} -ne 0 && ${RET} -ne ${ALLSKY_EXIT_PARTIAL_OK}  ]]; then
 			E_ "${ME}: Command Failed: ${GENERATE_OUTPUT}" >&2
 		elif [[ ${SILENT} == "false" ]]; then
 			echo -e "\tDone"
@@ -410,7 +410,7 @@ if [[ ${DO_STARTRAILS} == "true" ]]; then
 		[[ -n ${STARTRAILS_PARAMS} ]] && CMD+=" ${STARTRAILS_PARAMS}"
 		generate "Startrails, threshold=${BRIGHTNESS_THRESHOLD}" "startrails" "${CMD}"
 		RET=$?
-		[[ ${RET} -eq 0 || ${RET} -eq ${EXIT_PARTIAL_OK} ]] && ((NUM_SUCCESS++))
+		[[ ${RET} -eq 0 || ${RET} -eq ${ALLSKY_EXIT_PARTIAL_OK} ]] && ((NUM_SUCCESS++))
 
 		# ${GENERATE_OUTPUT} contains the output of the startrails command.
 		# startrails: Minimum: .05 maximum: 0.584629 mean: 0.494671 median: 0.526751 \
@@ -440,7 +440,7 @@ if [[ ${DO_STARTRAILS} == "true" ]]; then
 				--values ${VALUES}
 		fi
 
-		if [[ ${RET} -eq ${EXIT_PARTIAL_OK} ]]; then
+		if [[ ${RET} -eq ${ALLSKY_EXIT_PARTIAL_OK} ]]; then
 			MSG1="The startrails file was created but has no trailed stars."
 			MSG2="\nGo to the 'Helper Tools -&gt; Startrails Settings'"
 			MSG3=" page to determine what 'Brightness Threshold' to use."
@@ -457,7 +457,7 @@ if [[ ${DO_STARTRAILS} == "true" ]]; then
 			echo "Startrails creation unable to read files; will not run timelapse." >&2
 		fi
 
-		if [[ ${RET} -eq 0 || ${RET} -eq ${EXIT_PARTIAL_OK} ]]; then
+		if [[ ${RET} -eq 0 || ${RET} -eq ${ALLSKY_EXIT_PARTIAL_OK} ]]; then
 			# Create thumbnail of startrail
 			RES="$( "${ALLSKY_UTILITIES}/thumbnail.sh" -t startrails -d "${DATE}" --force 2>&1 )"
 			if [[ $? -ne 0 ]]; then

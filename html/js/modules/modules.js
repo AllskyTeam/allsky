@@ -4354,18 +4354,22 @@ class MODULESEDITOR {
 			this.#loadInstallerModules(false);
 		});
 
-		$(document).on('input', '#module-installer-search', () => {
-			if (this.#installerData !== null) {
-				this.#renderInstallerModules(this.#installerData);
-			}
-		});
+			$(document).on('input', '#module-installer-search', () => {
+				if (this.#installerData !== null) {
+					this.#renderInstallerModules(this.#installerData);
+				}
+			});
 
-		$(document).on('change', '#module-installer-filter', () => {
-			if (this.#installerData !== null) {
-				this.#renderInstallerModules(this.#installerData);
-				this.#adjustInstallerModalHeight();
-			}
-		});
+			$(document).on('click', '#module-installer-search-clear', () => {
+				$('#module-installer-search').val('').trigger('input').focus();
+			});
+
+			$(document).on('change', '#module-installer-filter', () => {
+				if (this.#installerData !== null) {
+					this.#renderInstallerModules(this.#installerData);
+					this.#adjustInstallerModalHeight();
+				}
+			});
 
 		$(document).off('click', '.module-installer-action');
 		$(document).on('click', '.module-installer-action', (event) => {

@@ -42,7 +42,7 @@ function usage_and_exit()
 			W_ "${MSG}"
 		fi
 		echo
-		echo "Where:"
+		echo "Arguments:"
 		echo "   --help           Displays this message and exits."
 		echo "   --help command   Displays a help message for the specified command, then exits."
 		echo "   --debug          Displays debugging information."
@@ -568,9 +568,9 @@ function run_command()
 #####
 # Prompt for a command or argument from a list.
 if [[ ${ON_TTY} == "true" ]]; then
-	WT_LINES=$( tput lines 2>/dev/null )
+	T_LINES=$( tput lines 2>/dev/null )
 fi
-WT_LINES="${WT_LINES:-24}"
+T_LINES="${T_LINES:-24}"
 
 function prompt()
 {
@@ -579,17 +579,37 @@ function prompt()
 	local OPTIONS=("${@}")
 	local NUM_OPTIONS=$(( ${#OPTIONS[@]} / 2 ))
 
-# whiptail's menubox has:
-# 4 lines at top
-# then the menu (NUM_OPTIONS lines)
-# 2 blank lines
-# 1 "<Ok> / <Cancel>" line
-# 2 blank lines
-# If all that doesn't fit in the terminal windows, whiptail does NOT scroll.
+if true; then
+	D_TITLE="*** Allsky Configuration ***"
+	D_HEIGHT=$(( 5 + NUM_OPTIONS ))
+	D_WIDTH="85"
+	D_MENU_HEIGHT="${NUM_OPTIONS}"
+	local OPT="$( dialog --no-tags --title "${D_TITLE}" \
+		--default-item "${DEFAULT_MENU_ITEM}" \
+		"--menu" "${PROMPT}" \
+		"${T_LINES}" "${D_WIDTH}" "${D_MENU_HEIGHT}" "${OPTIONS[@]}" 3>&1 1>&2 2>&3 )"
+	local RET=$?
+	if [[ ${RET} -ne 0 ]]; then
+		E_ "\n${ME}: 'dialog' failed." >&2
+		exit 2
+	else
+		echo "${OPT}"
+		return "${RET}"
+	fi
+
+else
+	# whiptail's menubox has:
+	# 4 lines at top
+	# then the menu (NUM_OPTIONS lines)
+	# 2 blank lines
+	# 1 "<Ok> / <Cancel>" line
+	# 2 blank lines
+	# If all that doesn't fit in the terminal windows, whiptail does NOT scroll.
 	local LINES=$(( 4 + NUM_OPTIONS + 2 + 1 + 2 ))
-	if [[ ${LINES} -ge ${WT_LINES} ]]; then
+
+	if [[ ${LINES} -ge ${T_LINES} ]]; then
 		echo "Please resize your window to at least $(( LINES + 1 )) lines."
-		echo "It is only ${WT_LINES} lines now."
+		echo "It is only ${T_LINES} lines now."
 		return 1
 	fi >&2
 
@@ -604,6 +624,7 @@ function prompt()
 		echo "${OPT}"
 		return "${RET}"
 	fi
+fi
 }
 
 
@@ -633,7 +654,7 @@ function L()
 	local NAME="${1}"
 
 	local NUM="$( printf "%2d" "${N}" )"
-	echo -e "     ${NUM}.  ${NAME}"
+	echo -e "  ${NUM}. ${NAME}"
 }
 
 
@@ -699,75 +720,75 @@ if [[ -z ${FUNCTION_TO_EXECUTE} ]]; then
 	CMDS+=("header"	      "Commands to Display Information" )
 
 	((N++));	C="get_startrails_info"
-	CMDS+=("${C}"	"$( L "Get information on startrails image brightness           (${C})" )")
+	CMDS+=("${C}"	"$( L "Get information on startrails image brightness (${C})" )")
 
 	DEFAULT_MENU_ITEM="${C}"		# Must be 1st item
 
 	((N++));	C="show_start_times"
-	CMDS+=("${C}"	"$( L "Show daytime and nighttime start times                   (${C})" )")
+	CMDS+=("${C}"	"$( L "Show daytime and nighttime start times         (${C})" )")
 
 	((N++));	C="show_supported_cameras"
-	CMDS+=("${C}"	"$( L "Show supported cameras                                   (${C})" )")
+	CMDS+=("${C}"	"$( L "Show supported cameras                         (${C})" )")
 
 	((N++));	C="show_connected_cameras"
-	CMDS+=("${C}"	"$( L "Show connected cameras                                   (${C})" )")
+	CMDS+=("${C}"	"$( L "Show connected cameras                         (${C})" )")
 
 	((N++));	C="new_rpi_camera_info"
-	CMDS+=("${C}"	"$( L "Collect information for new RPi camera                   (${C})" )")
+	CMDS+=("${C}"	"$( L "Collect information for new RPi camera         (${C})" )")
 
 	((N++));	C="show_installed_locales"
-	CMDS+=("${C}"	"$( L "Show the locales installed on the Pi                     (${C})" )")
+	CMDS+=("${C}"	"$( L "Show the locales installed on the Pi           (${C})" )")
 
 	((N++));	C="get_filesystems"
-	CMDS+=("${C}"	"$( L "Determine where a secodary storage device is             (${C})" )")
+	CMDS+=("${C}"	"$( L "Determine where a secodary storage device is   (${C})" )")
 
 	((N++));	C="encoders"
-	CMDS+=("${C}"	"$( L "Show list of timelapse encoders available                (${C})" )")
+	CMDS+=("${C}"	"$( L "Show available timelapse encoders              (${C})" )")
 
 	((N++));	C="pix_fmts"
-	CMDS+=("${C}"	"$( L "Show list of timelapse pixel formats available           (${C})" )")
+	CMDS+=("${C}"	"$( L "Show available of timelapse pixel formats      (${C})" )")
 
 
 #####
 	CMDS+=("header"	      "Commands to Create Test Images or Videos" )
 
 	((N++));	C="compare_timelapse"
-	CMDS+=("${C}"	"$( L "Create multiple timelapse videos                         (${C})" )")
+	CMDS+=("${C}"	"$( L "Create multiple timelapse videos               (${C})" )")
 
 	((N++));	C="compare_startrails"
-	CMDS+=("${C}"	"$( L "Create multiple startrails                               (${C})" )")
+	CMDS+=("${C}"	"$( L "Create multiple startrails                     (${C})" )")
 
 	((N++));	C="compare_stretches"
-	CMDS+=("${C}"	"$( L "Create multiple stretched images                         (${C})" )")
+	CMDS+=("${C}"	"$( L "Create multiple stretched images               (${C})" )")
 
 
 #####
 	CMDS+=("header"	      "Commands to Change Pi Settings" )
 
 	((N++));	C="change_swap"
-	CMDS+=("${C}"	"$( L "Add swap space or change size                            (${C})" )")
+	CMDS+=("${C}"	"$( L "Add swap space or change size                  (${C})" )")
 
 	((N++));	C="change_tmp"
-	CMDS+=("${C}" 	"$( L "Move ~/allsky/tmp to memory or change size               (${C})") ")
+	CMDS+=("${C}" 	"$( L "Move ~/allsky/tmp to memory or change size     (${C})") ")
 
 	((N++));	C="samba"
-	CMDS+=("${C}" 	"$( L "Simplify copying files to/from the Pi                    (${C})" )")
+	CMDS+=("${C}" 	"$( L "Simplify copying files to/from the Pi          (${C})" )")
 
 
 #####
 	CMDS+=("header"	      "Troubleshooting Commands" )
 
 	((N++));	C="bad_images_info"
-	CMDS+=("${C}"	"$( L "Display information on 'bad' images                      (${C})" )")
+	CMDS+=("${C}"	"$( L "Display information on 'bad' images            (${C})" )")
 
 	((N++));	C="check_post_data"
-	CMDS+=("${C}"	"$( L "Troubleshoot the 'data.json is X days old' message       (${C})" )")
+	CMDS+=("${C}"	"$( L "Troubleshoot 'data.json' messages              (${C})" )")
 
 	((N++));	C="compare_paths"
-	CMDS+=("${C}"	"$( L "Compare upload and Website paths                         (${C})" )")
+	CMDS+=("${C}"	"$( L "Compare upload and Website paths               (${C})" )")
 
 	((N++));	C="test_upload"
-	CMDS+=("${C}"	"$( L "Test uploading a file                                    (${C})" )")
+	CMDS+=("${C}"	"$( L "Test uploading a file                          (${C})" )")
 
 
 
@@ -775,27 +796,30 @@ if [[ -z ${FUNCTION_TO_EXECUTE} ]]; then
 	CMDS+=("header"	      "Misc. Commands" )
 
 	((N++));	C="manage_modules"
-	CMDS+=("${C}"	"$( L "Install or uninstall modules.                            (${C})" )")
+	CMDS+=("${C}"	"$( L "Install or uninstall modules.                  (${C})" )")
 
 	((N++));	C="move_images"
 	((N++));	C="check_allsky"
-	CMDS+=("${C}"	"$( L "Check Allsky for setting errors and warnings             (${C})" )")
+	CMDS+=("${C}"	"$( L "Check Allsky for setting errors and warnings   (${C})" )")
 
 	((N++));	C="move_images"
-	CMDS+=("${C}"	"$( L "Move ~/allsky/images to a different location             (${C})" )")
+	CMDS+=("${C}"	"$( L "Move ~/allsky/images to a different location   (${C})" )")
 
 	((N++));	C="prepare_logs"
-	CMDS+=("${C}"	"$( L "Prepare log files for troubleshooting                    (${C})" )")
+	CMDS+=("${C}"	"$( L "Prepare log files for troubleshooting          (${C})" )")
 
 	((N++));	C="recreate_files"
-	CMDS+=("${C}"	"$( L "Recreate various files after a 'git pull'                (${C})" )")
+	CMDS+=("${C}"	"$( L "Recreate various files after a 'git pull'      (${C})" )")
 
 	##### Prompt
 	# If the user selects "Cancel" prompt() returns 1 and we exit the loop.
 	P="${PROMPT}"
 	while COMMAND="$( prompt "${P}" "${CMDS[@]}" )"
 	do
-		[[ -z ${COMMAND} ]] && exit 0
+		if [[ -z ${COMMAND} ]]; then
+			[[ ${ON_TTY} == "true" ]] && clear
+			exit 0
+		fi
 
 		if [[ ${COMMAND} == "header" ]]; then
 			# There isn't a way in whiptail to group items so we fake it.
@@ -805,6 +829,7 @@ if [[ -z ${FUNCTION_TO_EXECUTE} ]]; then
 		P="${PROMPT}"	# restore prompt
 		
 
+		[[ ${ON_TTY} == "true" ]] && clear
 		run_command "${COMMAND}"
 		RET=$?
 

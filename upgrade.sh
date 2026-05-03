@@ -242,7 +242,12 @@ IN_PLACE="true"		# TODO: XXXXXXXXXXXXXXXX prompt for it
 		display_msg --log progress "Getting new files from GitHub"
 		X="$( git pull 2>&1 )"
 		if [[ $? -ne 0 ]]; then
-			MSG="Unable to get new files: ${X}"
+			if echo "${X}" | grep -i --silent -n "would be overwritten" ; then
+				FILES="$( echo -e "${X}" | grep "^	" )"	# TAB
+				MSG="You have un-checked out files, cannot continue:\n${FILES}"
+			else
+				MSG="Unable to get new files: ${X}"
+			fi
 			display_msg --log error "${MSG}" "Contact the Allsky Team"
 			exit "${ALLSKY_EXIT_ERROR_STOP}"
 		fi

@@ -57,7 +57,7 @@ export PRIOR_FTP_FILE="${PRIOR_CONFIG_DIR}/ftp-settings.sh"
 export LIGHTTPD_LOG_DIR="/var/log/lighttpd"
 export LIGHTTPD_LOG_FILE="${LIGHTTPD_LOG_DIR}/error.log"
 export LIGHTTPD_CONFIG_FILE="/etc/lighttpd/lighttpd.conf"
-export ALLSKY_LIGHTTPD_STRING="# Allsky changes"	# String that's added to the config file
+export LIGHTTPD_ALLSKY_STRING="# Allsky changes"	# String that's added to the config file
 
 export FINAL_SUDOERS_FILE="/etc/sudoers.d/allsky"
 

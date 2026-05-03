@@ -237,7 +237,7 @@ IN_PLACE="true"		# TODO: XXXXXXXXXXXXXXXX prompt for it
 		display_msg --log progress "Stopping Allsky"
 		sudo systemctl stop allsky
 
-		cd ${ALLSKY_HOME}	|| exit "${ALLSKY_EXIT_STOP}"
+		cd "${ALLSKY_HOME}"	|| exit "${ALLSKY_EXIT_STOP}"
 
 		display_msg --log progress "Getting new files from GitHub"
 		X="$( git pull 2>&1 )"
@@ -248,6 +248,7 @@ IN_PLACE="true"		# TODO: XXXXXXXXXXXXXXXX prompt for it
 		fi
 
 		# This script may have been updated so re-run it.
+		# shellcheck disable=SC2093
 		exec "${ALLSKY_HOME}/${ME}" --doUpgrade --in-place		# should not return
 
 		display_msg --log error "Unable to continue the upgrade."

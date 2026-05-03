@@ -529,7 +529,7 @@ class SYSTEMBUTTONSUTIL extends UTILBASE
         $message = trim(implode("\n", $output));
 
         return [
-            'ok' => ($returnCode === 0 || (defined('EXIT_PARTIAL_OK') && $returnCode === EXIT_PARTIAL_OK)),
+            'ok' => ($returnCode === 0 || (defined('ALLSKY_EXIT_PARTIAL_OK') && $returnCode === ALLSKY_EXIT_PARTIAL_OK)),
             'code' => $returnCode,
             'output' => $message,
             'suggestions' => [],

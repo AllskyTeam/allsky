@@ -826,13 +826,13 @@ function create_lighttpd_config_file()
 		-e "s;XX_ALLSKY_OVERLAY_XX;${ALLSKY_OVERLAY};g" \
 		-e "s;XX_ALLSKY_MY_OVERLAY_TEMPLATES_XX;${ALLSKY_MY_OVERLAY_TEMPLATES};g" \
 			"${REPO_LIGHTTPD_FILE}"  >  "${TMP}"
-	sudo install -m 0644 "${TMP}" "${LIGHTTPD_CONFIG_FILE}" && rm -f "${TMP}"
 
 	if [[ ${ADD_STRING} == "true" ]]; then
 		# Add the string that indicates the web server and its dependencies have been installed.
-		echo "${LIGHTTPD_ALLSKY_STRING}" |
-			sudo tee --append "${LIGHTTPD_CONFIG_FILE}" > /dev/null
+		echo "${LIGHTTPD_ALLSKY_STRING}" >> "${TMP}"
 	fi
+
+	sudo install -m 0644 "${TMP}" "${LIGHTTPD_CONFIG_FILE}" && rm -f "${TMP}"
 }
 
 ####

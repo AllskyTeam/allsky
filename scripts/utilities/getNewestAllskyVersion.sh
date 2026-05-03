@@ -14,7 +14,7 @@ source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
 source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"
 
 BRANCH="${ALLSKY_GITHUB_MAIN_BRANCH}"
-NO_NOTE="false"
+VERSION_ONLY="false"
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
 	case "${ARG,,}" in
@@ -22,8 +22,8 @@ while [[ $# -gt 0 ]]; do
 			BRANCH="${2}"
 			shift
 			;;
-		--no-note)
-			NO_NOTE="true"
+		--version-only)
+			VERSION_ONLY="true"
 			;;
 	esac
 	shift
@@ -59,6 +59,6 @@ else
 fi
 
 echo "${NEWEST_VERSION}"
-[[ -n ${NOTE} && ${NO_NOTE} == "false" ]] && echo "${NOTE}"
+[[ ${VERSION_ONLY} == "false" && -n ${NOTE} ]] && echo "${NOTE}"
 
 exit "${RET}"

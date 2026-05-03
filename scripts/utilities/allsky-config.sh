@@ -581,7 +581,6 @@ function prompt()
 
 if true; then
 	D_TITLE="*** Allsky Configuration ***"
-	D_HEIGHT=$(( 5 + NUM_OPTIONS ))
 	D_WIDTH="85"
 	D_MENU_HEIGHT="${NUM_OPTIONS}"
 	local OPT="$( dialog --no-tags --title "${D_TITLE}" \

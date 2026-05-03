@@ -1352,9 +1352,7 @@ class MODULEINSTALLERUTIL extends UTILBASE
             $this->removePath($destination);
         }
         $this->ensureDirectory(dirname($destination));
-        if (!mkdir($destination, 0775, true) && !is_dir($destination)) {
-            throw new RuntimeException("Unable to create directory {$destination}");
-        }
+        $this->createDirectory($destination);
 
         $iterator = new RecursiveIteratorIterator(
             new RecursiveDirectoryIterator($source, FilesystemIterator::SKIP_DOTS),
@@ -1364,9 +1362,7 @@ class MODULEINSTALLERUTIL extends UTILBASE
         foreach ($iterator as $item) {
             $target = $destination . '/' . $iterator->getSubPathName();
             if ($item->isDir()) {
-                if (!is_dir($target) && !mkdir($target, 0775, true) && !is_dir($target)) {
-                    throw new RuntimeException("Unable to create directory {$target}");
-                }
+                $this->createDirectory($target);
             } else {
                 $this->copyFile($item->getPathname(), $target);
             }
@@ -1405,17 +1401,7 @@ class MODULEINSTALLERUTIL extends UTILBASE
             return;
         }
 
-        if (!is_dir($path)) {
-            if (!@mkdir($path, 0775, true) && !is_dir($path)) {
-                $result = $this->runProcessWithOptions(['/usr/bin/sudo', 'mkdir', '-p', '-m', '0775', $path]);
-                if ($result['error'] && !is_dir($path)) {
-                    throw new RuntimeException(
-                        "Unable to create directory {$path}" .
-                        (trim($result['message']) !== '' ? ': ' . trim($result['message']) : '')
-                    );
-                }
-            }
-        }
+        $this->createDirectory($path);
 
         if (!is_writable($path)) {
             $this->repairDirectoryPermissions($path);
@@ -1424,6 +1410,39 @@ class MODULEINSTALLERUTIL extends UTILBASE
         if (!is_writable($path)) {
             throw new RuntimeException("Directory {$path} is not writable by the WebUI user");
         }
+    }
+
+    private function createDirectory(string $path): void
+    {
+        if ($path === '') {
+            return;
+        }
+
+        clearstatcache(true, $path);
+        if (is_dir($path)) {
+            return;
+        }
+
+        if (file_exists($path) && !is_dir($path)) {
+            throw new RuntimeException("Unable to create directory {$path}: path exists and is not a directory");
+        }
+
+        @mkdir($path, 0775, true);
+        clearstatcache(true, $path);
+        if (is_dir($path)) {
+            return;
+        }
+
+        $result = $this->runProcessWithOptions(['/usr/bin/sudo', 'mkdir', '-p', '-m', '0775', $path]);
+        clearstatcache(true, $path);
+        if (is_dir($path)) {
+            return;
+        }
+
+        throw new RuntimeException(
+            "Unable to create directory {$path}" .
+            (trim($result['message'] ?? '') !== '' ? ': ' . trim($result['message']) : '')
+        );
     }
 
     private function repairDirectoryPermissions(string $path): void

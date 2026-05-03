@@ -11,13 +11,13 @@
 ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck source-path=.
-source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/checkFunctions.sh"			|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/checkFunctions.sh"			|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 # display_msg() sends log entries to this file.
 # shellcheck disable=SC2034
@@ -233,7 +233,7 @@ function pre_install_checks()
 		DIALOG_TEXT+="$( dE_ "NOT WORKING." )"
 		display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 
-		if [[ ${VALID_RET} -eq ${EXIT_ERROR_STOP} ]]; then
+		if [[ ${VALID_RET} -eq ${ALLSKY_EXIT_ERROR_STOP} ]]; then
 			if [[ -n ${GLOBAL_ERROR_MSG} ]]; then
 				MSG="${GLOBAL_ERROR_MSG}"
 			else
@@ -771,7 +771,7 @@ function check_if_website_is_valid()
 	GLOBAL_ERROR_MSG="$( _check_web_connectivity --url "${REMOTE_WEBSITE_URL}" --from "install" )"
 	RET=$?
 	if [[ ${RET} -ne 0 ]]; then
-		if [[ ${RET} -eq "${EXIT_PARTIAL_OK}" ]]; then
+		if [[ ${RET} -eq "${ALLSKY_EXIT_PARTIAL_OK}" ]]; then
 			# We only have basic connectivity so the site is probably empty
 			# so the checks for files below will fail.  Return now.
 			MSG="Skipping remaining validity checks due to Basic Connectivity."
@@ -779,7 +779,7 @@ function check_if_website_is_valid()
 			return 0
 		else
 			display_msg --logonly info "${GLOBAL_ERROR_MSG}"
-			return "${EXIT_ERROR_STOP}"
+			return "${ALLSKY_EXIT_ERROR_STOP}"
 		fi
 	fi
 
@@ -969,7 +969,7 @@ function usage_and_exit()
 
 	MSG="Usage: ${ME} [--help] [--debug] [--skipupload] [-auto] [--text]"
 	echo -e "\n${C}${MSG}${cNC}"
-	echo "where:"
+	echo "Arguments:"
 	echo "   --help         Displays this message and exits."
 	echo "   --debug        Adds addtional debugging information to the installation log."
 	echo "   --skipupload   Skips uploading of the remote Website code."

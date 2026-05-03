@@ -1944,7 +1944,7 @@ function create_options_file()
 				;;
 			*)
 				display_msg --log error "create_options_file(): Unknown argument: '${ARG}'." >&2
-				return "${ALLSKY_EXIT_STOP}"
+				return "${ALLSKY_EXIT_ERROR_STOP}"
 				;;
 		esac
 		shift

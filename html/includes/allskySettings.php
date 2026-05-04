@@ -776,7 +776,7 @@ if ($debug) {
 		echo "<form method='POST' action='{$ME}?_ts={$t}' name='conf_form'>";
 ?>
 		<div class="sticky settings-nav">
-			<div class="settings-buttons container-fluid">
+			<div class="settings-buttons container-fluid" style="padding-left: 0; padding-right: 0;">
 				<div class="row">
 					<div class="col-md-11 col-sm-11 col-xs-11 nowrap buttons">
 						<button type="submit" class="btn btn-primary"
@@ -787,7 +787,7 @@ if ($debug) {
 						<button type="submit" class="btn ml-3 btn-warning"
 								id="settings-reset" name="reset_settings"
 								title="Reset to default values">
-							<i class="fa-solid fa-rotate-left"></i> Reset to default values
+							<i class="fa-solid fa-rotate-left"></i> Reset to defaults
 						</button>
 					</div>
 					

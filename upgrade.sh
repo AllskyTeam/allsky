@@ -228,10 +228,26 @@ OLDEST_DIR="${PRIOR_ALLSKY_DIR}-OLDEST"
 if [[ ${ACTION} == "upgrade" ]]; then
 	# First part of upgrade, executed by user in ${ALLSKY_HOME}.
 
-IN_PLACE="true"		# TODO: XXXXXXXXXXXXXXXX prompt for it
 
 	# Ask user if they want to move ${ALLSKY_HOME} to ${ALLSKY_PRIOR_DIR},
 	# or upgrade in place (i.e., overwrite code).
+if false; then
+	RESPONSE="$( dialog --clear \
+		--colors \
+		--title "Pick Upgrade Method" \
+		--menu "\nChoose a Respository:" 15 40 2 \
+			1 "In Place     - Overwrites existing Allsky files that have been updated." \
+			2 "Replace All  - Moves current '~/allsky' to '~/allsky-OLD'." \
+		3>&1 1>&2 2>&3)"
+else
+	RESPONSE=1
+fi
+
+	if [[ ${RESPONSE} == "1" ]]; then
+		IN_PLACE="true"
+	else
+		IN_PLACE="false"
+	fi
 
 	if [[ ${IN_PLACE} == "true" ]]; then
 		display_msg --log progress "Stopping Allsky"
@@ -320,8 +336,9 @@ IN_PLACE="true"		# TODO: XXXXXXXXXXXXXXXX prompt for it
 
 		# --doUpgrade tells it to use prior version without asking and to not display header,
 		# change messages to say "upgrade", not "install", etc.
+# TODO: used "exec" ?
 		# shellcheck disable=SC2086,SC2291
-		echo xxx	./install.sh ${DEBUG_ARG} --branch "${BRANCH}" --doUpgrade
+		./install.sh ${DEBUG_ARG} --branch "${BRANCH}" --doUpgrade
 	fi
 
 elif [[ ${ACTION} == "doUpgrade" ]]; then

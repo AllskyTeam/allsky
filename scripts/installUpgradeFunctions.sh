@@ -1977,3 +1977,86 @@ function create_sudoers()
 		"${REPO_SUDOERS_FILE}"  >  "${TMP_FILE}"
 	sudo install -m 0644 "${TMP_FILE}" "${FINAL_SUDOERS_FILE}" && rm -f "${TMP_FILE}"
 }
+
+
+# Copy repo files while updating them.
+function update_repo_files()
+{
+	sed \
+		-e "s;XX_ALLSKY_STARTRAILS_TABLE_XX;${ALLSKY_STARTRAILS_TABLE};" \
+		"${ALLSKY_REPO}/db_data.json.repo" \
+	> "${ALLSKY_CONFIG}/db_data.json"
+}
+
+
+# Set some default locations needed by the capture programs so we
+# don't need to pass them in on the command line - if they are passed in,
+# those values overwrite the defaults.
+function update_allsky_common()
+{
+	local MAKE_IF_NEEDED="${1:-false}"
+	local TMP="/tmp/x.${RANDOM}"
+	local DOT_H="${ALLSKY_HOME}/src/include/allsky_common.h"
+
+	sed \
+		-e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" \
+		-e "s;XX_ALLSKY_SCRIPTS_XX;${ALLSKY_SCRIPTS};" \
+		-e "s;XX_CONNECTED_CAMERAS_FILE_XX;${ALLSKY_CONNECTED_CAMERAS_INFO};" \
+		-e "s;XX_RPI_CAMERA_INFO_FILE_XX;${ALLSKY_RPi_SUPPORTED_CAMERAS};" \
+		-e "s;XX_EXIT_OK_XX;${ALLSKY_EXIT_OK};" \
+		-e "s;XX_EXIT_RESTARTING_XX;${ALLSKY_EXIT_RESTARTING};" \
+		-e "s;XX_EXIT_RESET_USB_XX;${ALLSKY_EXIT_RESET_USB};" \
+		-e "s;XX_EXIT_ERROR_STOP_XX;${ALLSKY_EXIT_ERROR_STOP};" \
+		-e "s;XX_EXIT_NO_CAMERA_XX;${ALLSKY_EXIT_NO_CAMERA};" \
+		"${ALLSKY_HOME}/src/include/allsky_common.h.repo" \
+	> "${TMP}"
+
+# TODO: FIX: need to run "make" if any .cpp file changed.
+
+	# If the new file is the same as the old, don't do anything.
+	if ! cmp --silent "${TMP}" "${DOT_H}" ; then
+		cp "${TMP}" "${DOT_H}"
+		if [[ ${MAKE_IF_NEEDED} == "true" ]]; then
+			local X="$(
+				cd "${ALLSKY_HOME}" &&
+				sudo make -C src deps &&
+				make -C src all &&
+				sudo make install
+			)"
+			if [[ $? -ne 0 ]]; then
+				echo "'make' failed: ${X}" >&2
+				return 1
+			fi
+		fi
+	fi
+
+	rm -f "${TMP}"
+	return 0
+}
+
+
+# Create symbolic links
+function create_links()
+{
+	local FROM="${1}"
+	if [[ ${FROM} != "install" ]]; then
+		function display_msg()
+		{
+			echo "* ${3}"
+		}
+	fi
+
+	local T="${ALLSKY_SCRIPTS}/functions.php"
+	if [[ ! -f "${T}" ]]; then
+		local F="${ALLSKY_WEBUI}/includes/functions.php"
+		display_msg --logonly info "Creating link to ${F}"
+		ln -s "${F}" "${T}"		|| echo "Unable to ln -s '${F}' '${T}'" >&2
+	fi
+
+	T="${ALLSKY_SCRIPTS}/allsky-config"
+	if [[ ! -f "${T}" ]]; then
+		local F="${ALLSKY_UTILITIES}/allsky-config.sh"
+		display_msg --logonly info "Creating link to ${F}"
+		ln -s "${F}" "${T}"		|| echo "Unable to ln -s '${F}' '${T}'" >&2
+	fi
+}

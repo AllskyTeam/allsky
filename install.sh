@@ -1753,57 +1753,14 @@ prompt_for_prior_Allsky()
 
 
 ####
-# Make separate function so it can be called from command line for testing.
-update_allsky_common()
-{
-	# Set some default locations needed by the capture programs so we
-	# don't need to pass them in on the command line - if they are passed in,
-	# those values overwrite the defaults.
-	sed \
-		-e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" \
-		-e "s;XX_ALLSKY_SCRIPTS_XX;${ALLSKY_SCRIPTS};" \
-		-e "s;XX_CONNECTED_CAMERAS_FILE_XX;${ALLSKY_CONNECTED_CAMERAS_INFO};" \
-		-e "s;XX_RPI_CAMERA_INFO_FILE_XX;${ALLSKY_RPi_SUPPORTED_CAMERAS};" \
-		-e "s;XX_EXIT_OK_XX;${ALLSKY_EXIT_OK};" \
-		-e "s;XX_EXIT_RESTARTING_XX;${ALLSKY_EXIT_RESTARTING};" \
-		-e "s;XX_EXIT_RESET_USB_XX;${ALLSKY_EXIT_RESET_USB};" \
-		-e "s;XX_EXIT_ERROR_STOP_XX;${ALLSKY_EXIT_ERROR_STOP};" \
-		-e "s;XX_EXIT_NO_CAMERA_XX;${ALLSKY_EXIT_NO_CAMERA};" \
-		"${ALLSKY_HOME}/src/include/allsky_common.h.repo" \
-	> "${ALLSKY_HOME}/src/include/allsky_common.h"
-}
-
-####
-# Copy repo files while updating them.
-update_repo_files()
-{
-	sed \
-		-e "s;XX_ALLSKY_STARTRAILS_TABLE_XX;${ALLSKY_STARTRAILS_TABLE};" \
-		"${ALLSKY_REPO}/db_data.json.repo" \
-	> "${ALLSKY_CONFIG}/db_data.json"
-}
-
-####
 install_dependencies_etc()
 {
 	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
 
 	display_msg --log progress "Installing dependencies."
 
-	# These need to be done even if SKIP is true.
-	local T="${ALLSKY_SCRIPTS}/functions.php"
-	if [[ ! -f "${T}" ]]; then
-		local F="${ALLSKY_WEBUI}/includes/functions.php"
-		display_msg --logonly info "Creating link to ${F}"
-		ln -s "${F}" "${T}"		|| echo "Unable to ln -s '${F}' '${T}'" >&2
-	fi
-
-	local T="${ALLSKY_SCRIPTS}/allsky-config"
-	if [[ ! -f "${T}" ]]; then
-		local F="${ALLSKY_UTILITIES}/allsky-config.sh"
-		display_msg --logonly info "Creating link to ${F}"
-		ln -s "${F}" "${T}"		|| echo "Unable to ln -s '${F}' '${T}'" >&2
-	fi
+	# This needs to be done even if SKIP is true.
+	create_links "install"
 
 	[[ ${SKIP2} == "true" ]] && return
 
@@ -1817,11 +1774,13 @@ install_dependencies_etc()
 			exit_with_image 1 "${STATUS_ERROR}" "dependency installation failed"
 	fi
 
-	update_allsky_common
+	update_allsky_common ""
 	update_repo_files
 
 	# "make -C src deps" may need to install some packages, so needs "sudo".
 	display_msg --log progress "Creating Allsky commands."
+
+	display_msg --logonly info "   Running 'make deps'."
 	TMP="${ALLSKY_LOGS}/make_all.log"
 	{
 		echo "===== make deps"
@@ -1830,6 +1789,7 @@ install_dependencies_etc()
 	check_success $? "Compile failed" "${TMP}" "${DEBUG}" ||
 		exit_with_image 1 "${STATUS_ERROR}" "compile failed"
 
+	display_msg --logonly info "   Running 'make install'."
 	TMP="${ALLSKY_LOGS}/make_install.log"
 	sudo make install > "${TMP}" 2>&1
 	check_success $? "make install failed" "${TMP}" "${DEBUG}" ||

@@ -228,25 +228,82 @@ OLDEST_DIR="${PRIOR_ALLSKY_DIR}-OLDEST"
 if [[ ${ACTION} == "upgrade" ]]; then
 	# First part of upgrade, executed by user in ${ALLSKY_HOME}.
 
-
-	# Ask user if they want to move ${ALLSKY_HOME} to ${ALLSKY_PRIOR_DIR},
-	# or upgrade in place (i.e., overwrite code).
+	# Ask user how they want to upgrade.
 if false; then
-	RESPONSE="$( dialog --clear \
-		--colors \
-		--title "Pick Upgrade Method" \
-		--menu "\nChoose a Respository:" 15 40 2 \
-			1 "In Place     - Overwrites existing Allsky files that have been updated." \
-			2 "Replace All  - Moves current '~/allsky' to '~/allsky-OLD'." \
+	MSG="\n"
+	MSG+="There are two ways to upgrade Allsky:"
+	MSG+="\n"
+	MSG+="\n1. In Place"
+	MSG+="\n   This overwrites existing Allsky files on your Pi that have been"
+	MSG+="\n   updated in GitHub, and is the preferred method for POINT RELEASES or"
+	MSG+="\n   unless the Allsky Team suggests the method below."
+	if [[ -d ${ALLSKY_PRIOR_DIR} ]]; then
+		MSG+="\n   It does not use or update ${ALLSKY_PRIOR_DIR}."
+	fi
+	MSG+="\n   NOTE: If you have changed any Allsky source files this method"
+	MSG+="\n   will not work."
+	MSG+="\n"
+	MSG+="\n2. Replace All"
+	MSG+="\n   This moves '${ALLSKY_HOME}' to '${ALLSKY_PRIOR_DIR}' then"
+	MSG+="\n   recreates '${ALLSKY_HOME}' with the newest release from GitHub."
+	MSG+="\n   It is safer than the method above but takes longer, and"
+	MSG+="\n   is the preferred method for MAJOR updates or when you don't want"
+	MSG+="\n   to overwrite the current release."
+
+	MSG+="\n\n\nYou will be prompted for which method to use in the next screen."
+
+	HEIGHT="$( echo -e "${MSG}" | wc -l )"
+	(( HEIGHT += 5 ))
+
+	dialog \
+		--title "${SHORT_TITLE}" --msgbox "${MSG}" \
+		"${HEIGHT}" 80   3>&1 1>&2 2>&3
+	if [[ $? -ne 0 ]]; then
+		clear
+		display_msg --log progress "\nNo changes made.\n"
+		exit 0
+	fi
+
+	RESPONSE="$( dialog \
+		--title "${SHORT_TITLE}" \
+		--menu "\nPick The Upgrade Method:\n \n" 15 40 2 \
+			1 "In Place" \
+			2 "Replace All" \
 		3>&1 1>&2 2>&3)"
+	clear
 else
-	RESPONSE=1
+	RESPONSE=1		# TODO: FIX: remove "else" when "Replace All" is implemented.
+
+	MSG="\n"
+	MSG+="\nThis upgrade will download the newest files from GitHub and"
+	MSG+="\ninstall them in '${ALLSKY_HOME}', overwriting the existing files."
+	MSG+="\n"
+	MSG+="\nNOTE: If you have changed any Allsky source files you must do a 'normal'"
+	MSG+="\nupgrade using 'git clone' - see the documentation for instructions."
+	MSG+="\n"
+	MSG+="\n\nContinue?"
+	HEIGHT="$( echo -e "${MSG}" | wc -l )"
+	(( HEIGHT += 5 ))
+	dialog \
+		--title "${SHORT_TITLE}" --yesno "${MSG}" \
+		"${HEIGHT}" 80   3>&1 1>&2 2>&3
+	RET=$?
+	clear
+	if [[ ${RET} -ne 0 ]]; then
+		display_msg --log progress "\nNo changes made.\n"
+		exit 0
+	fi
 fi
 
 	if [[ ${RESPONSE} == "1" ]]; then
 		IN_PLACE="true"
-	else
+	elif [[ ${RESPONSE} == "2" ]]; then
 		IN_PLACE="false"
+	else
+		MSG="User elected to not continue while picking an upgrade method."
+		display_msg --logonly info "${MSG}"
+		display_msg --log progress "\nNo changes made.\n"
+		exit 0
 	fi
 
 	if [[ ${IN_PLACE} == "true" ]]; then
@@ -343,13 +400,13 @@ fi
 
 elif [[ ${ACTION} == "doUpgrade" ]]; then
 	if [[ ${IN_PLACE} == "true" ]]; then
-		X="$( "${ALLSKY_SCRIPTS}/allsky-config" recreate_files 2>&1 )"
+		X="$( "${ALLSKY_UTILITIES}/allsky-config.sh" recreate_files 2>&1 )"
 		if [[ $? -ne 0 ]]; then
 			MSG="Unable to update files: ${X}"
 			display_msg --log error "${MSG}" "Contact the Allsky Team"
 			exit 1
 		fi
-		display_msg --log progress "Files updated."  "Go to the WebUI to restart Allsky.\n"
+		display_msg --log progress "Files updated."  "  Go to the WebUI to restart Allsky.\n"
 		display_msg --logonly info "Updated files:\n${X}"
 		display_msg --logonly info "ENDING UPGRADE."
 		exit 0

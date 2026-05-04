@@ -351,6 +351,7 @@ exit
 		#	cd
 		#	mv "${ALLSKY_HOME}" "${ALLSKY_PRIOR_DIR}"
 		GIT_URL="https://github.com/AllskyTeam/allsky.git"
+GIT_URL="${GIT_URL}"	# XXXXXXXXXXXXX keeps shellcheck quiet
 		#	git clone --branch "${BRANCH}" --depth=1 --recursive "${GIT_URL}"
 #[[ -z ${BRANCH} ]] && BRANCH="${ALLSKY_GITHUB_MAIN_BRANCH}"
 		#	cd ${ALLSKY_HOME}

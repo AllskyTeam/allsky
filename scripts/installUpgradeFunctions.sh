@@ -1998,6 +1998,7 @@ function update_allsky_common()
 	local TMP="/tmp/x.${RANDOM}"
 	local DOT_H="${ALLSKY_HOME}/src/include/allsky_common.h"
 
+	# shellcheck disable=SC2154
 	sed \
 		-e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" \
 		-e "s;XX_ALLSKY_SCRIPTS_XX;${ALLSKY_SCRIPTS};" \

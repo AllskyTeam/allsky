@@ -12,16 +12,6 @@ source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
-# High-level view of tasks for upgrade:
-#	Check if ${ALLSKY_PRIOR_DIR} exists.
-#		If so, warn user they won't be able to save current release.
-#	Prompt if user wants to carry current settings to new release.
-#		If so:
-#			If ${ALLSKY_PRIOR_DIR} exists, error out
-#		Rename ${ALLSKY_HOME} to ${ALLSKY_PRIOR_DIR}
-#	Download new release (with optional branch) from GitHub.
-#	Execute new release's installation script telling it it's an upgrade.
-
 #############  TODO: Changes to install.sh needed:
 #	* Accept "--upgrade" argument which means we're doing an upgrade.
 #		- Don't display "**** Welcome to the installer ****"
@@ -333,18 +323,36 @@ fi
 		exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 	else		# move ${ALLSKY_HOME}
+
+		OLDEST="${ALLSKY_PRIOR_DIR/OLD/OLDEST}"
+		if [[ -d ${ALLSKY_PRIOR_DIR} ]]; then
+			if [[ -d ${OLDEST} ]]; then
+				MSG="Both '${ALLSKY_PRIOR_DIR}' and '${OLDEST}' exist; connot continue."
+				display_msg --log warning "${MSG}" "If you are not using '${OLDEST}' delete it then rerun the upgrade."
+
+#xxx				MSG="If you are not using '${OLDEST}' delete it then rerun the upgrade."
+#xxx				display_msg --log note "${MSG}"
+			fi
+exit
+
+			display_msg --log progress "Renaming '${ALLSKY_PRIOR_DIR}' to '${OLDEST}'."
+			mv "${ALLSKY_PRIOR_DIR}" "${OLDEST}"
+			display_msg --log progress "Renaming '${ALLSKY_HOME}' to '${ALLSKY_PRIOR_DIR}'."
+		fi
 		#	Check for prior Allsky versions:
 		#		If ${ALLSKY_PRIOR_DIR} exist:
 		#			If ${ALLSKY_PRIOR_DIR}-OLDEST exists
-		#				Let user know both old versions exist
+		#				Let user know both old versions exist.
 		#				Exit
 		#			Let the user know ${ALLSKY_PRIOR_DIR} exists as FYI:
-		#				echo "Saving prior version in ${ALLSKY_PRIOR_DIR}-OLDEST"
+		#				echo "Renaming ${ALLSKY_PRIOR_DIR} to ${ALLSKY_PRIOR_DIR}-OLDEST"
 		#			Move ${ALLSKY_PRIOR_DIR} to ${ALLSKY_PRIOR_DIR}-OLDEST
 		#	Stop allsky
-		#	Move ${ALLSKY_HOME} to ${ALLSKY_PRIOR_DIR}
 		#	cd
-		#	Git new code into ${ALLSKY_HOME}
+		#	mv "${ALLSKY_HOME}" "${ALLSKY_PRIOR_DIR}"
+		GIT_URL="https://github.com/AllskyTeam/allsky.git"
+		#	git clone --branch "${BRANCH}" --depth=1 --recursive "${GIT_URL}"
+#[[ -z ${BRANCH} ]] && BRANCH="${ALLSKY_GITHUB_MAIN_BRANCH}"
 		#	cd ${ALLSKY_HOME}
 		#	Run: ./install.sh ${DEBUG_ARG} .... --doUpgrade
 		#		--doUpgrade tells it to use prior version without asking and to

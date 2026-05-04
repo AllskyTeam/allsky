@@ -1968,14 +1968,14 @@ function create_options_file()
 # Create or update the sudoers file.
 function create_sudoers()
 {
-	local TMP_FILE="/tmp/sudoers.${RANDOM}"
+	local TMP="/tmp/sudoers.${RANDOM}"
 
 	sed \
 		-e "s;XX_ALLSKY_OWNER_XX;${ALLSKY_OWNER};" \
 		-e "s;XX_ALLSKY_SCRIPTS_XX;${ALLSKY_SCRIPTS};" \
 		-e "s;XX_ALLSKY_UTILITIES_XX;${ALLSKY_UTILITIES};" \
-		"${REPO_SUDOERS_FILE}"  >  "${TMP_FILE}"
-	sudo install -m 0644 "${TMP_FILE}" "${FINAL_SUDOERS_FILE}" && rm -f "${TMP_FILE}"
+		"${REPO_SUDOERS_FILE}"  >  "${TMP}"
+	sudo install -m 0644 "${TMP}" "${FINAL_SUDOERS_FILE}" && rm -f "${TMP}"
 }
 
 

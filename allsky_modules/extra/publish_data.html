@@ -6068,7 +6068,7 @@
 <li>
 <p><strong><a class="external" href="https://mqtt.org" rel="noopener" target="_blank">MQTT</a></strong> - (Message Queuing Telemetry Transport) is a lightweight, publish–subscribe messaging protocol designed for reliable communication over constrained networks, making it ideal for IoT devices, sensors, and low-bandwidth or high-latency environments. Instead of devices talking directly to each other, all messages flow through a central broker, which routes published messages to subscribers based on topic filters. The protocol is extremely efficient, using small packet sizes and persistent TCP connections, and it supports quality-of-service levels to ensure messages are delivered as reliably as the application requires. With built-in features like retained messages, last-will notifications, and secure transport via TLS, MQTT provides a flexible and scalable foundation for real-time, event-driven systems across everything from home automation to industrial telemetry.</p>
 </li>
-<li><strong><a class="external" href="https://en.wikipedia.org/wiki/REST" rel="noopener" target="_blank">REST</a></strong> - (Representational State Transfer) is an architectural style for building web services that communicate over HTTP using simple, stateless operations. In REST, resources—such as users, orders, or images—are identified by URLs, and clients interact with them using standard HTTP methods like GET, POST, PUT, and DELETE. Because each request contains all the information needed to process it, the server does not maintain client session state, making REST systems highly scalable and easy to distribute. Responses typically use lightweight formats such as JSON, and REST’s uniform interface simplifies integration across diverse platforms. Its simplicity, predictability, and compatibility with existing web infrastructure make REST one of the most widely used approaches for modern APIs.</li>
+<li><strong><a class="external" href="https://en.wikipedia.org/wiki/REST" rel="noopener" target="_blank">REST</a></strong> - (Representational State Transfer) is an architectural style for building web services that communicate over HTTP using simple, stateless operations. In REST, resources—such as users, orders, or images—are identified by URLs, and clients interact with them using standard HTTP methods like GET, POST, PUT, and DELETE. Because each request contains all the information needed to process it, the server does not maintain client session state, making REST systems highly scalable and easy to distribute. Responyses typically use lightweight formats such as JSON, and REST’s uniform interface simplifies integration across diverse platforms. Its simplicity, predictability, and compatibility with existing web infrastructure make REST one of the most widely used approaches for modern APIs.</li>
 <li><strong><a class="external" href="https://www.influxdata.com" rel="noopener" target="_blank">InfluxDB</a></strong> - is a high-performance, open-source time series database designed specifically for storing and querying timestamped data such as metrics, events, and IoT sensor readings. It organizes data into measurements, tags, fields, and timestamps, enabling efficient indexing and fast retrieval even at very high ingest rates. InfluxDB supports powerful time-based queries, downsampling, and data retention policies that automatically manage storage over time. With its SQL-like query language (InfluxQL) or the more advanced Flux language, it provides flexible analytics capabilities. Optimized for real-time monitoring, observability, and IoT workloads, InfluxDB delivers a scalable and performant foundation for applications that must handle large volumes of chronological data.</li>
 </ul>
 <h2 id="settings">Settings<a class="headerlink" href="#settings" title="Permanent link">¶</a></h2>
@@ -6162,6 +6162,10 @@
 <p>InfluxDB only accepts numerical values so please ensure the Data Types contains only numerical data types. If in doubt don't change it</p>
 </div>
 <h3 id="mqtt">MQTT<a class="headerlink" href="#mqtt" title="Permanent link">¶</a></h3>
+<div class="admonition info">
+<p class="admonition-title">Home Assistant</p>
+<p>If publishing to HomeAssistant then please ensure that the HA discovery option is enabled</p>
+</div>
 <table>
 <thead>
 <tr>
@@ -6175,16 +6179,24 @@
 <td>Enable to publish data to the MQTT server</td>
 </tr>
 <tr>
-<td>USe Secure Connection</td>
-<td>If enabled TLS will be used to connect to the MQTT server</td>
+<td>Enable HA Discovery</td>
+<td>If publishing to Home Assistant then enable this</td>
+</tr>
+<tr>
+<td>Use SSL</td>
+<td>If enabled SSL will be used to connect to the MQTT server</td>
+</tr>
+<tr>
+<td>Self Signed Certs</td>
+<td>If enabled SSL will use self signed Certificates</td>
+</tr>
+<tr>
+<td>Path to PEM</td>
+<td>Only visible if self signed certs are being used. This is the path to your PEM file</td>
 </tr>
 <tr>
 <td>MQTT Host</td>
 <td>The MQTT host and port number</td>
-</tr>
-<tr>
-<td>Loop Delay</td>
-<td>The loop delay, only increase this if you experience issues with messages missing in the broker</td>
 </tr>
 <tr>
 <td>MQTT Topic</td>

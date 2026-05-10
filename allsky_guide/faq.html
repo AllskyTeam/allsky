@@ -2759,6 +2759,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#hardware" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hardware
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -6394,6 +6405,44 @@
 <li>use <code>public.php</code> to share a simple current-image view</li>
 <li>use an <strong>Allsky Website</strong> to present the richer viewing side of what Allsky produces</li>
 </ul>
+</details>
+<h2 id="hardware">Hardware<a class="headerlink" href="#hardware" title="Permanent link">¶</a></h2>
+<details class="question">
+<summary>How do I disable the LED's on the Pi</summary>
+<div class="admonition warning">
+<p class="admonition-title">Hardware</p>
+<p>The instructions here have been noted to work on a lot of hardware but not on some. Give them a try as they will not do any harm.</p>
+</div>
+<p>To disable the power and ethernet LED's on the pi use the following </p>
+<p>Debian Bookworm or Trixie, edit:</p>
+<div class="highlight"><pre><span></span><code>sudo nano /boot/firmware/config.txt
+</code></pre></div>
+<p>Debian Bullseye or older and/or RPi 3 or older:</p>
+<div class="highlight"><pre><span></span><code>sudo nano /boot/config.txt
+</code></pre></div>
+<p>Then paste the following on the last line of the file and reboot.
+For Bookworm or newer OS:</p>
+<div class="highlight"><pre><span></span><code># Disable the Power LED (Red) - Try 'on' if 'off' fails
+dtparam=pwr_led_trigger=none
+dtparam=pwr_led_activelow=on
+
+# Disable the Activity LED (Green)
+dtparam=act_led_trigger=none
+dtparam=act_led_activelow=off
+
+# Disable Ethernet Port LEDs
+dtparam=eth_led0=4
+dtparam=eth_led1=4
+</code></pre></div>
+<p>Exceptions:
+For RPi 3 or older, change ethernet value to:
+</p><div class="highlight"><pre><span></span><code>dtparam=eth_led1=14
+</code></pre></div><p></p>
+<p>For RPi 5:
+Check that your bootloader is up to date:</p>
+<p></p><div class="highlight"><pre><span></span><code>sudo rpi-eeprom-update
+</code></pre></div>
+and try omitting: <code>dtparam=pwr_led_activelow=on</code> or switching to off if you are unsuccessful.<p></p>
 </details>
 
 

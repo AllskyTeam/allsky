@@ -5015,6 +5015,89 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#how-to-use-the-module" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How to use the module
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="How to use the module">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#general-tab" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        General tab
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#moon-tab" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Moon tab
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sun-tab" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sun tab
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#planets-tab" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Planets tab
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#iss-tab" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ISS tab
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#satellites-tab" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Satellites tab
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#available-in" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5068,6 +5151,90 @@
   
   
   
+    <li class="md-nav__item">
+      <a href="space_weather.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Space Weather
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="telescope_marker.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Telescope Marker
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="weather_underground.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Weather Underground
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
     
     
     
@@ -5082,10 +5249,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_5_24">
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_5_27">
         
           
-          <label class="md-nav__link" for="__nav_4_5_24" id="__nav_4_5_24_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_4_5_27" id="__nav_4_5_27_label" tabindex="0">
             
   
   
@@ -5103,8 +5270,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_5_24_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4_5_24">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_5_27_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5_27">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -6586,6 +6753,41 @@ Enter norad ID's as a comma separated list of the numeric Id's.</p>
 <p>Several blocks are provide to make adding data to the overlays easier. These can be access from the variable manager in the overlay editor</p>
 <h2 id="charts">Charts<a class="headerlink" href="#charts" title="Permanent link">¶</a></h2>
 <p>Several charts are available that display Moon related information. These can be found in the Chart Manager</p>
+<h2 id="how-to-use-the-module">How to use the module<a class="headerlink" href="#how-to-use-the-module" title="Permanent link">¶</a></h2>
+<p>Add the Solar System module to the Periodic pipeline, then open the module settings and configure the tabs you need. Only enable the objects you want to use; calculating unnecessary satellite or pass data can slow the module down.</p>
+<p>After changing the settings, save the module configuration. Use the module test button to check that the expected values are being generated before adding them to overlays, blocks, or charts.</p>
+<h3 id="general-tab">General tab<a class="headerlink" href="#general-tab" title="Permanent link">¶</a></h3>
+<p>Use the <strong>General</strong> tab to set the observer elevation in metres above sea level. The module uses the latitude, longitude and timezone from the main Allsky settings, and this elevation value completes the observer location used for the calculations.</p>
+<p>Set this as accurately as practical for your site. A rough value is normally enough for overlay information, but a better value improves rise, set, elevation and satellite pass calculations.</p>
+<h3 id="moon-tab">Moon tab<a class="headerlink" href="#moon-tab" title="Permanent link">¶</a></h3>
+<p>Use the <strong>Moon</strong> tab to enable Moon calculations.</p>
+<p>Enable <strong>Enable the Moon</strong> if you want Moon position, illumination, phase symbol, rise time, set time, next new Moon, next full Moon, or Moon visibility variables. Set <strong>Minimum elevation</strong> to the elevation above the horizon where the Moon should be treated as visible.</p>
+<p>For example, use a higher minimum elevation if trees, buildings or your camera housing block the low horizon.</p>
+<h3 id="sun-tab">Sun tab<a class="headerlink" href="#sun-tab" title="Permanent link">¶</a></h3>
+<p>Use the <strong>Sun</strong> tab to enable Sun calculations.</p>
+<p>Enable <strong>Enable the Sun</strong> if you want dawn, sunrise, noon, sunset, dusk, Sun azimuth, or Sun elevation variables. These values are useful for overlays and for checking the current solar position against the image.</p>
+<h3 id="planets-tab">Planets tab<a class="headerlink" href="#planets-tab" title="Permanent link">¶</a></h3>
+<p>Use the <strong>Planets</strong> tab to choose which planets are calculated.</p>
+<p>Enable only the planets you want to display or record. The <strong>Minimum elevation</strong> setting is shared by the enabled planets and controls when each planet is considered visible.</p>
+<p>The generated variable names use the planet name, for example <code>AS_Mercury_VISIBLE</code>, <code>AS_Mercury_AZ</code>, and <code>AS_Mercury_DISTANCE_KM</code>.</p>
+<h3 id="iss-tab">ISS tab<a class="headerlink" href="#iss-tab" title="Permanent link">¶</a></h3>
+<p>Use the <strong>ISS</strong> tab for International Space Station calculations. Do not add the ISS NORAD ID to the Satellites tab.</p>
+<p>Enable <strong>Enable ISS</strong> to calculate ISS position and pass information. Use <strong>Visible Only</strong> if you only want passes that should be visible from your location. Set <strong>Pass Days</strong> to control how far ahead the module searches, and <strong>Number Of Passes</strong> to limit how many passes are returned.</p>
+<p>Use <strong>AOS/LOS Elevation</strong> to set the elevation used for acquisition and loss of signal times, and <strong>Min Elevation</strong> to ignore passes whose maximum elevation is too low to be useful. Keep <strong>Pass Days</strong> modest, typically 5 to 15 days, because pass calculations take time and TLE accuracy decreases further into the future.</p>
+<p>Enable <strong>Debug Passes</strong> only while testing or diagnosing pass calculations. It adds pass details to the test output and is not normally needed.</p>
+<h3 id="satellites-tab">Satellites tab<a class="headerlink" href="#satellites-tab" title="Permanent link">¶</a></h3>
+<div class="admonition danger">
+<p class="admonition-title">ISS Warning</p>
+<p>Do not add ISS using this tab. Instead use the dedicated ISS tab to calculate data for ISS</p>
+</div>
+<div class="admonition info">
+<p class="admonition-title">Initial run</p>
+<p>When the satellite picker is run for the first time it will download all of the required data, this can take upto a minute depending upon your connection</p>
+</div>
+<p>Use the <strong>Satellites</strong> tab for satellites other than ISS.</p>
+<p>Add satellites using their NORAD IDs. You can enter multiple IDs as a comma-separated list, or use the satellite picker if available. Satellite IDs can be found on the Celestrak website.</p>
+<p>Set <strong>Minimum Elevation</strong> to the elevation above which each satellite should be treated as visible. Satellites are only classed as visible if they are above this elevation and sunlit.</p>
+<p>Avoid adding large numbers of satellites unless you need them. Each satellite increases the amount of work the module performs.</p>
 <h2 id="available-in">Available in<a class="headerlink" href="#available-in" title="Permanent link">¶</a></h2>
 <div class="tabbed-set tabbed-alternate" data-tabs="1:1"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio"><div class="tabbed-labels"><label for="__tabbed_1_1">Pipelines available In</label></div>
 <div class="tabbed-content">

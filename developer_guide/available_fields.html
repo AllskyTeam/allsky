@@ -4856,6 +4856,90 @@
   
   
   
+    <li class="md-nav__item">
+      <a href="../allsky_modules/extra/space_weather.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Space Weather
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../allsky_modules/extra/telescope_marker.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Telescope Marker
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../allsky_modules/extra/weather_underground.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Weather Underground
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
     
     
     
@@ -4870,10 +4954,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_5_24">
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_5_27">
         
           
-          <label class="md-nav__link" for="__nav_4_5_24" id="__nav_4_5_24_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_4_5_27" id="__nav_4_5_27_label" tabindex="0">
             
   
   
@@ -4891,8 +4975,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_5_24_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4_5_24">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_5_27_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5_27">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -5488,6 +5572,17 @@
     <span class="md-ellipsis">
       
         Image Field
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#command-file-field" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Command File Field
       
     </span>
   </a>
@@ -6257,6 +6352,23 @@
 <p>The image selection dialog</p>
 </figcaption>
 </figure>
+<h2 id="command-file-field">Command File Field<a class="headerlink" href="#command-file-field" title="Permanent link">¶</a></h2>
+<p>This allows the user to browse the filesystem and select a command or script file. The selected absolute path is stored in the module argument.</p>
+<div class="highlight"><pre><span></span><code>"command": {
+    "required": "false",
+    "description": "Command",
+    "help": "Select the command or script this module should use.",
+    "tab": "Field Types 2",
+    "type": {
+        "fieldtype": "commandfile",
+        "title": "Select Script",
+        "requireExecutable": true
+    }
+}
+</code></pre></div>
+<p>The <code>title</code> option is optional. If omitted, the selector title defaults to <code>Select Script</code>.
+The <code>rootPath</code> option is optional and must be an absolute path. If omitted, browsing is limited to <code>ALLSKY_MYFILES_DIR</code> from <code>variables.json</code>.
+The <code>requireExecutable</code> option is optional. If set to <code>true</code>, all files are still shown, but only files executable by <code>ALLSKY_OWNER</code> from <code>variables.json</code> can be selected.</p>
 <h2 id="region-of-interest-roi-field">Region of Interest (ROI) Field<a class="headerlink" href="#region-of-interest-roi-field" title="Permanent link">¶</a></h2>
 <p>This allows the user to select a region Of Interest (ROI) in the image. This will then be available to the module. Typically, this would be used for things like sky brightness detection where you only want to run the calculation on a portion of the image.</p>
 <div class="highlight"><pre><span></span><code>"roi": {

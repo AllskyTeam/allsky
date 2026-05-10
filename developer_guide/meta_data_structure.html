@@ -4856,6 +4856,90 @@
   
   
   
+    <li class="md-nav__item">
+      <a href="../allsky_modules/extra/space_weather.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Space Weather
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../allsky_modules/extra/telescope_marker.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Telescope Marker
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../allsky_modules/extra/weather_underground.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Weather Underground
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
     
     
     
@@ -4870,10 +4954,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_5_24">
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_5_27">
         
           
-          <label class="md-nav__link" for="__nav_4_5_24" id="__nav_4_5_24_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_4_5_27" id="__nav_4_5_27_label" tabindex="0">
             
   
   
@@ -4891,8 +4975,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_5_24_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4_5_24">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_5_27_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5_27">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -5428,6 +5512,17 @@
     <span class="md-ellipsis">
       
         Common field attributes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#displaying-fields-in-multiple-columns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Displaying fields in multiple columns
       
     </span>
   </a>
@@ -6303,11 +6398,83 @@ The section is a list of values, the table below just shows the available fields
 <td>secret</td>
 <td>This indicates that the value in this field will contain sensitive information. Any details entered into a ‘secret’ field are stored in a separate file away from the pipeline json files. If the field is a text type field then the value will not be visible in the module manager. A button is displayed allowing the field value to be displayed or hidden</td>
 </tr>
+<tr>
+<td>layout</td>
+<td>(Optional) Controls how fields are arranged in the module settings dialog. This can be used to display multiple related fields on the same row</td>
+</tr>
 </tbody>
 </table>
+<h4 id="displaying-fields-in-multiple-columns">Displaying fields in multiple columns<a class="headerlink" href="#displaying-fields-in-multiple-columns" title="Permanent link">¶</a></h4>
+<p>By default each field is displayed on its own row and uses the full width of the module settings dialog.</p>
+<p>To display fields in multiple columns add a <code>layout</code> section to each field that should appear on the same row. Fields are grouped together when they have the same <code>layout.row</code> value and appear next to each other in the order they are defined in <code>argumentdetails</code>.</p>
+<p>The <code>layout.width</code> value uses a 12-column grid:</p>
+<table>
+<thead>
+<tr>
+<th>Width</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>12</td>
+<td>Full width</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Half width, allowing two fields on one row</td>
+</tr>
+<tr>
+<td>4</td>
+<td>One third width, allowing three fields on one row</td>
+</tr>
+<tr>
+<td>3</td>
+<td>One quarter width, allowing four fields on one row</td>
+</tr>
+</tbody>
+</table>
+<p>The total width of fields in a row should normally add up to 12. On small screens the fields will stack vertically.</p>
+<p>In this example <code>latitude</code> and <code>longitude</code> are displayed side by side:</p>
+<div class="highlight"><pre><span></span><code>"argumentdetails": {
+    "latitude": {
+        "required": "true",
+        "description": "Latitude",
+        "help": "Latitude of the observer.",
+        "tab": "Location",
+        "layout": {
+            "row": "observer_location",
+            "width": 6
+        },
+        "type": {
+            "fieldtype": "spinner"
+        }
+    },
+    "longitude": {
+        "required": "true",
+        "description": "Longitude",
+        "help": "Longitude of the observer.",
+        "tab": "Location",
+        "layout": {
+            "row": "observer_location",
+            "width": 6
+        },
+        "type": {
+            "fieldtype": "spinner"
+        }
+    }
+}
+</code></pre></div>
+<p>An optional <code>layout.title</code> can be added to the first field in a row group when the row should have a shared label:</p>
+<div class="highlight"><pre><span></span><code>"layout": {
+    "row": "observer_location",
+    "title": "Observer Location",
+    "width": 6
+}
+</code></pre></div>
 <h4 id="filtering">Filtering<a class="headerlink" href="#filtering" title="Permanent link">¶</a></h4>
 <p>Filtering allows fields to be displayed or hidden based upon the value of another field. A good example of this is when selecting a sensor in the Environment module. Each sensor has different settings so rather than display all of them, which would make the modules dialog large and confusing only those relevant to the sensor are displayed.</p>
-<p>To utilise this feature add the ‘filters’ section to a field. The filters section contains the following values</p>
+<p>To utilise this feature add the ‘filters’ section to a field. For a single condition the filters section contains the following values</p>
 <p><strong>filter</strong> – The field that controls the filter</p>
 <p><strong>filtertype</strong> – Either ‘show’ or ‘hide’ This determines if this field will be shown or hidden based upon the value of the ‘filter’ field</p>
 <p><strong>values</strong> – A list of values from the ‘filter’ field that trigger the filtering on this field </p>
@@ -6332,6 +6499,63 @@ The section is a list of values, the table below just shows the available fields
 }
 </code></pre></div>
 <p>This is a very powerful feature and developer are encouraged to use it to keep the user interface easier for the end user.</p>
+<p>Filters can also be applied at multiple levels by defining <code>filters</code> as a list. Each entry in the list uses the same <code>filter</code>, <code>filtertype</code> and <code>values</code> fields shown above. All filters in the list must match before the field is displayed.</p>
+<p>This is useful when a setting depends on more than one earlier choice. In this example <code>serialport</code> is only shown when <code>type</code> is set to <code>Serial</code> and <code>serialenabled</code> is checked:</p>
+<div class="highlight"><pre><span></span><code>"serialport": {
+    "required": "false",
+    "description": "Serial Port",
+    "help": "The serial port used by the sensor.",
+    "tab": "Core",
+    "type": {
+        "fieldtype": "text"
+    },
+    "filters": [
+        {
+            "filter": "type",
+            "filtertype": "show",
+            "values": [
+                "Serial"
+            ]
+        },
+        {
+            "filter": "serialenabled",
+            "filtertype": "show",
+            "values": [
+                "true"
+            ]
+        }
+    ]
+}
+</code></pre></div>
+<p>When creating a chain of dependent fields, include the higher-level filters on lower-level fields as well. A field that depends only on a hidden parent field may still match the hidden parent's stored value, so repeating the parent filter keeps the whole chain hidden correctly.</p>
+<p>For example, if <code>i2caddress</code> depends on <code>sensormodel</code>, and <code>sensormodel</code> depends on <code>type</code>, add both filters to <code>i2caddress</code>:</p>
+<div class="highlight"><pre><span></span><code>"i2caddress": {
+    "required": "false",
+    "description": "I²C Address",
+    "help": "The I²C address used by this sensor.",
+    "tab": "Core",
+    "type": {
+        "fieldtype": "text"
+    },
+    "filters": [
+        {
+            "filter": "type",
+            "filtertype": "show",
+            "values": [
+                "I²C"
+            ]
+        },
+        {
+            "filter": "sensormodel",
+            "filtertype": "show",
+            "values": [
+                "BME280",
+                "BMP280"
+            ]
+        }
+    ]
+}
+</code></pre></div>
 <h2 id="the-businfo-section">The ‘businfo’ section<a class="headerlink" href="#the-businfo-section" title="Permanent link">¶</a></h2>
 <p>This section is optional and defines which buses on the Pi the module uses.</p>
 <div class="highlight"><pre><span></span><code>"businfo": [

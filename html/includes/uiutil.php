@@ -14,12 +14,15 @@ include_once('utilbase.php');
  *   GET  AllskyStatus          -> overall system status (preformatted string/HTML)
  *   POST AllskyControl         -> start, stop, or restart the Allsky service
  *   GET  CPULoad               -> CPU load as a bootstrap progress bar
- *   GET  CPUTemp               -> CPU temperature as a progress bar with status color
+ *   GET  CPUTemp               -> CPU temperature as a progress bar with status colour
  *   GET  DayNightStatus        -> current capture mode and transition times
  *   GET  DirectoryBrowserList  -> one directory level for helper directory browsers
+ *   GET  EditorFiles           -> list WebUI editor files by key
+ *   GET  EditorFile            -> read a WebUI editor file by key
+ *   POST EditorFile            -> save a WebUI editor file by key
  *   GET  ListFileTypeContent   -> reusable image/video listing fragment
  *   GET  MemoryUsed            -> memory usage as a progress bar
- *   GET  ThrottleStatus        -> Raspberry Pi throttle state as a colored bar
+ *   GET  ThrottleStatus        -> Raspberry Pi throttle state as a coloured bar
  *   GET  Uptime                -> human-readable uptime string
  *   POST Multiple              -> batch several GETs in one JSON request
  *
@@ -46,19 +49,21 @@ class UIUTIL extends UTILBASE {
      */
     protected function getRoutes(): array
     {
-        return [
-            'AllskyStatus'   => ['get'],
-            'AllskyControl'  => ['post'],
-            'CPULoad'        => ['get'],
-            'CPUTemp'        => ['get'],
-            'DayNightStatus' => ['get'],
-            'BrowseCommandFiles' => ['get'],
-            'DirectoryBrowserList' => ['get'],
-            'ListFileTypeContent' => ['get'],
-            'MemoryUsed'     => ['get'],
-            'Multiple'       => ['post'],
-            'ThrottleStatus' => ['get'],
-            'Uptime'         => ['get'],
+	        return [
+	            'AllskyStatus'   => ['get'],
+	            'AllskyControl'  => ['post'],
+	            'CPULoad'        => ['get'],
+	            'CPUTemp'        => ['get'],
+	            'DayNightStatus' => ['get'],
+	            'BrowseCommandFiles' => ['get'],
+	            'DirectoryBrowserList' => ['get'],
+	            'EditorFile'     => ['get', 'post'],
+	            'EditorFiles'    => ['get'],
+	            'ListFileTypeContent' => ['get'],
+	            'MemoryUsed'     => ['get'],
+	            'Multiple'       => ['post'],
+	            'ThrottleStatus' => ['get'],
+	            'Uptime'         => ['get'],
         ];
     }
 
@@ -69,40 +74,1118 @@ class UIUTIL extends UTILBASE {
      * response directly into the DOM.  JSON routes call sendResponse()
      * explicitly when they need structured output.
      */
-    public function __construct()
-    {
-        $this->jsonResponse = false;
-    }
+	    public function __construct()
+	    {
+	        $this->jsonResponse = false;
+	    }
 
-    /**
-     * Read a value from the global settings array prepared by initialize_variables().
-     * Optionally swap spaces with a given character for filename-ish values.
-     *
-     * @param string $name Setting key to read from the Allsky settings array.
-     * @param string $swapSpaces Replacement for literal spaces; leave empty to preserve spaces.
-     *
-     * @return mixed The configured value, or the historical fallback used by this UI.
-     */
-    private function getSetting(string $name, string $swapSpaces = '')
-    {
-        /** @var array $settings_array */
-        global $settings_array;
-        $val = getVariableOrDefault($settings_array, $name, 'overlay.json');
-        if ($swapSpaces !== '') $val = str_replace(' ', $swapSpaces, (string)$val);
-        return $val;
-    }
+	    /**
+	     * Get the WebUI editor file registry path.
+	     *
+	     * This is the site-specific JSON file that lists the configuration files
+	     * the editor is allowed to show.
+	     *
+	     * @return string Absolute path to config/editor_files.json.
+	     */
+	    public static function getEditorFilesConfigPath(): string
+	    {
+	        return rtrim((string)ALLSKY_CONFIG, '/\\') . '/editor_files.json';
+	    }
 
-    private function isWithinDirectory(string $path, string $directory): bool
-    {
-        return $path === $directory || strpos($path, rtrim($directory, '/') . '/') === 0;
-    }
+	    /**
+	     * Read and prepare the WebUI editor file registry.
+	     *
+	     * The live file is config/editor_files.json. If that is missing or empty,
+	     * the repo default editor_files.json.repo is used instead. Each entry is
+	     * normalised so the rest of the editor can work with resolved paths,
+	     * permissions, include rules, messages, and schema details.
+	     *
+	     * @param bool $includeUnavailable Include entries that are missing, invalid,
+	     *                                 unreadable, or hidden by includeWhen so
+	     *                                 the page can report why they are not
+	     *                                 available.
+	     *
+	     * @return array<string,array<string,mixed>> Normalised file entries keyed
+	     *                                          by editor file key, sorted by
+	     *                                          their configured order.
+	     *
+	     * @throws RuntimeException If neither registry file can be read, or if the
+	     *                          registry JSON is invalid.
+	     */
+	    public static function readEditorFilesConfig(bool $includeUnavailable = false): array
+	    {
+	        $configFile = self::getEditorFilesConfigPath();
+	        $raw = @file_get_contents($configFile);
+	        if (($raw === false || trim($raw) === '') && defined('ALLSKY_REPO')) {
+	            $repoConfigFile = rtrim((string)ALLSKY_REPO, '/\\') . '/editor_files.json.repo';
+	            $raw = @file_get_contents($repoConfigFile);
+	        }
+	        if ($raw === false || trim($raw) === '') {
+	            throw new RuntimeException("Unable to read editor file list.");
+	        }
 
-    private function normalizeBrowserRoot(string $path, bool $myFilesOnly = false): string
-    {
-        $path = trim($path);
-        if ($path === '') {
-            $path = defined('ALLSKY_MYFILES_DIR') ? ALLSKY_MYFILES_DIR : '/home/pi';
-        }
+	        $config = json_decode($raw, true);
+	        if (!is_array($config)) {
+	            throw new RuntimeException("Invalid editor file list: " . json_last_error_msg());
+	        }
+
+	        $files = [];
+	        foreach ($config as $key => $definition) {
+	            if (!is_array($definition)) {
+	                continue;
+	            }
+
+	            $file = self::normaliseEditorFileDefinition((string)$key, $definition);
+	            if ($includeUnavailable || ($file['ok'] && self::isEditorFileIncluded($file))) {
+	                $files[$file['key']] = $file;
+	            }
+	        }
+
+	        uasort($files, static function ($a, $b) {
+	            return ((int)$a['order']) <=> ((int)$b['order']);
+	        });
+
+	        return $files;
+	    }
+
+	    /**
+	     * Read one editor file and build the payload sent to the browser.
+	     *
+	     * JSON files are decoded to check they are valid and, when possible,
+	     * returned in a stable pretty-printed form for the Advanced editor. The
+	     * schema is chosen from the file content first, then from the registry and
+	     * schema index. It is only used to build the form UI; it is not a save rule.
+	     *
+	     * @param string $key Editor file key from the registry.
+	     *
+	     * @return array<string,mixed> File details, current content, JSON status,
+	     *                             and the resolved schema, if there is one.
+	     *
+	     * @throws RuntimeException If the key is unknown, hidden, invalid, or the
+	     *                          resolved file cannot be read.
+	     */
+	    public static function readEditorFileByKey(string $key): array
+	    {
+	        $file = self::resolveEditorFileDefinition($key);
+	        if (!$file['readable']) {
+	            throw new RuntimeException("The selected file is not readable.");
+	        }
+
+	        $contents = @file_get_contents($file['path']);
+	        if ($contents === false) {
+	            throw new RuntimeException("Unable to read the selected file.");
+	        }
+
+	        $displayContents = $contents;
+	        $validJson = true;
+	        $decoded = null;
+	        if ($file['validateJson']) {
+	            $decoded = json_decode($contents, true);
+	            $validJson = json_last_error() === JSON_ERROR_NONE;
+	            if ($validJson) {
+	                $encoded = json_encode($decoded, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK | JSON_PRESERVE_ZERO_FRACTION);
+	                if ($encoded !== false) {
+	                    $displayContents = $encoded;
+	                }
+	            }
+	        }
+
+	        if ($validJson && is_array($decoded)) {
+	            $contentSchemaToUse = self::getEditorSchemaToUseFromContent($decoded);
+	            if ($contentSchemaToUse !== '') {
+	                $contentSchema = self::findEditorSchemaFile($file['fileName'], $contentSchemaToUse);
+	                if ($contentSchema['hasSchema'] || $contentSchema['schemaError'] !== '' || !$file['hasSchema']) {
+	                    $file['schemaToUse'] = $contentSchemaToUse;
+	                    $file['schemaPath'] = $contentSchema['schemaPath'];
+	                    $file['schemaFileName'] = $contentSchema['schemaFileName'];
+	                    $file['hasSchema'] = $contentSchema['hasSchema'];
+	                    $file['schemaError'] = $contentSchema['schemaError'];
+	                }
+	            }
+	        }
+	        $schema = self::readEditorSchemaForFile($file);
+
+	        return [
+	            'ok' => true,
+	            'key' => $file['key'],
+	            'label' => $file['label'],
+	            'fileName' => $file['fileName'],
+	            'validateJson' => $file['validateJson'],
+	            'hasSchema' => $schema['hasSchema'],
+	            'schemaFileName' => $schema['schemaFileName'],
+	            'schema' => $schema['schema'],
+	            'schemaError' => $schema['schemaError'],
+	            'content' => $displayContents,
+	            'validJson' => $validJson,
+	        ];
+	    }
+
+	    /**
+	     * Save new contents for one editor file.
+	     *
+	     * The file is looked up in the registry and checked before it is written.
+	     * Entries with validateJson enabled must contain valid JSON, but schema
+	     * rules are still only for building the form. Remote website files are
+	     * uploaded after the local save succeeds.
+	     *
+	     * @param string $key Editor file key from the registry.
+	     * @param string $contents Raw file contents submitted by the browser.
+	     *
+	     * @return array<string,mixed> Save result used by the editor modal.
+	     *
+	     * @throws RuntimeException If the key is unknown, unavailable, not writable,
+	     *                          contains invalid JSON, or cannot be written.
+	     */
+	    public static function saveEditorFileByKey(string $key, string $contents): array
+	    {
+	        $file = self::resolveEditorFileDefinition($key);
+	        if (!$file['writable']) {
+	            throw new RuntimeException("The selected file is not writable by the web server.");
+	        }
+
+	        if ($file['validateJson']) {
+	            json_decode($contents, true);
+	            if (json_last_error() !== JSON_ERROR_NONE) {
+	                throw new RuntimeException("The selected file was not saved because the content is invalid JSON: " . json_last_error_msg());
+	            }
+	        }
+
+	        $written = @file_put_contents($file['path'], $contents, LOCK_EX);
+	        if ($written === false) {
+	            $error = error_get_last();
+	            $message = is_array($error) && isset($error['message']) ? $error['message'] : 'unknown error';
+	            throw new RuntimeException("Unable to save the selected file: " . $message);
+	        }
+
+	        if ($file['remote']) {
+	            return self::sendEditorFileToRemoteWebsite($file['path']);
+	        }
+
+	        return [
+	            'ok' => true,
+	            'warning' => false,
+	            'message' => htmlspecialchars($file['fileName'], ENT_QUOTES, 'UTF-8') . ' saved',
+	        ];
+	    }
+
+	    /**
+	     * Decide whether an editor file should be available on this installation.
+	     *
+	     * If the registry entry has an includeWhen rule, it is checked against the
+	     * current globals, settings, constants, and file entry fields.
+	     *
+	     * @param array<string,mixed> $file Normalised editor file entry.
+	     *
+	     * @return bool True when there is no includeWhen rule, or when it matches.
+	     */
+	    public static function isEditorFileIncluded(array $file): bool
+	    {
+	        return self::editorConditionMatches($file['includeWhen'] ?? null, $file);
+	    }
+
+	    /**
+	     * Get the configured status messages for an editor file.
+	     *
+	     * Registry entries can define messages for contexts such as available,
+	     * excluded, and unavailable. Each message can also have its own condition.
+	     * Placeholders are expanded and escaped before the message is displayed.
+	     *
+	     * @param array<string,mixed> $file Normalised editor file entry.
+	     * @param string $context Message group to read from the entry.
+	     *
+	     * @return array<int,array{message:string,severity:string}> Messages ready
+	     *                                                        for display.
+	     */
+	    public static function getEditorFileMessages(array $file, string $context): array
+	    {
+	        $messages = [];
+	        $groups = $file['messages'] ?? [];
+	        if (!is_array($groups)) {
+	            return $messages;
+	        }
+
+	        $definitions = $groups[$context] ?? [];
+	        if (!is_array($definitions)) {
+	            return $messages;
+	        }
+
+	        foreach ($definitions as $definition) {
+	            if (!is_array($definition)) {
+	                continue;
+	            }
+
+	            if (!self::editorConditionMatches($definition['when'] ?? null, $file)) {
+	                continue;
+	            }
+
+	            $message = self::expandEditorMessage((string)($definition['message'] ?? ''), $file);
+	            if ($message === '') {
+	                continue;
+	            }
+
+	            $severity = (string)($definition['severity'] ?? 'info');
+	            if (!in_array($severity, ['success', 'info', 'warning', 'danger', 'message', 'error'], true)) {
+	                $severity = 'info';
+	            }
+
+	            $messages[] = [
+	                'message' => $message,
+	                'severity' => $severity,
+	            ];
+	        }
+
+	        return $messages;
+	    }
+
+	    /**
+	     * Handle GET request=EditorFiles.
+	     *
+	     * Returns the files the editor can currently load. Server paths and write
+	     * permissions are deliberately left out of the browser response.
+	     *
+	     * @return void
+	     */
+	    public function getEditorFiles(): void
+	    {
+	        self::sendEditorNoStoreHeaders();
+	        try {
+	            $files = [];
+	            foreach (self::readEditorFilesConfig(false) as $file) {
+	                $files[] = [
+	                    'key' => $file['key'],
+	                    'label' => $file['label'],
+	                    'fileName' => $file['fileName'],
+	                    'validateJson' => $file['validateJson'],
+	                    'hasSchema' => $file['hasSchema'],
+	                    'schemaFileName' => $file['schemaFileName'],
+	                    'schemaError' => $file['schemaError'],
+	                ];
+	            }
+
+	            $this->sendResponse([
+	                'ok' => true,
+	                'files' => $files,
+	            ]);
+	        } catch (RuntimeException $e) {
+	            $this->send500($e->getMessage());
+	        }
+	    }
+
+	    /**
+	     * Handle GET request=EditorFile.
+	     *
+	     * Reads the selected registry file and returns its content plus schema
+	     * details for the editor UI. Bad keys and unavailable files are returned
+	     * as client errors.
+	     *
+	     * @return void
+	     */
+	    public function getEditorFile(): void
+	    {
+	        self::sendEditorNoStoreHeaders();
+	        $key = (string)($_GET['key'] ?? '');
+	        try {
+	            $this->sendResponse(self::readEditorFileByKey($key));
+	        } catch (RuntimeException $e) {
+	            $this->send400($e->getMessage());
+	        }
+	    }
+
+	    /**
+	     * Handle POST request=EditorFile.
+	     *
+	     * Accepts either form fields or a JSON body containing key and content,
+	     * then saves the matching registry file. The response uses no-store
+	     * headers so the browser does not reuse an old save result.
+	     *
+	     * @return void
+	     */
+	    public function postEditorFile(): void
+	    {
+	        self::sendEditorNoStoreHeaders();
+	        $key = $_POST['key'] ?? null;
+	        $contents = $_POST['content'] ?? null;
+
+	        if ($key === null || $contents === null) {
+	            $input = file_get_contents('php://input');
+	            $data = json_decode($input ?: '{}', true);
+	            if (is_array($data)) {
+	                $key = $data['key'] ?? $key;
+	                $contents = $data['content'] ?? $contents;
+	            }
+	        }
+
+	        if (!is_string($key) || !is_string($contents)) {
+	            $this->send400('Invalid editor save request.');
+	        }
+
+	        try {
+	            $this->sendResponse(self::saveEditorFileByKey($key, $contents));
+	        } catch (RuntimeException $e) {
+	            $this->send400($e->getMessage());
+	        }
+	    }
+
+	    /**
+	     * Send no-store headers for editor data.
+	     *
+	     * Editor responses contain live configuration data and save results, so
+	     * they should not be stored by the browser or by intermediate caches.
+	     *
+	     * @return void
+	     */
+	    private static function sendEditorNoStoreHeaders(): void
+	    {
+	        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+	        header('Pragma: no-cache');
+	        header('Expires: 0');
+	    }
+
+	    /**
+	     * Resolve an editor key to a file that can be used.
+	     *
+	     * The entry must exist in the registry, pass the path checks, be readable,
+	     * and match any includeWhen rule before it can be read or saved.
+	     *
+	     * @param string $key Editor file key from the registry.
+	     *
+	     * @return array<string,mixed> Normalised file entry.
+	     *
+	     * @throws RuntimeException If the key is unknown, invalid, or currently
+	     *                          unavailable.
+	     */
+	    private static function resolveEditorFileDefinition(string $key): array
+	    {
+	        $key = trim($key);
+	        $files = self::readEditorFilesConfig(true);
+	        if (!isset($files[$key])) {
+	            throw new RuntimeException("Unknown editor file key.");
+	        }
+
+	        $file = $files[$key];
+	        if (!$file['ok']) {
+	            throw new RuntimeException($file['error']);
+	        }
+	        if (!self::isEditorFileIncluded($file)) {
+	            throw new RuntimeException("The selected file is not available.");
+	        }
+
+	        return $file;
+	    }
+
+	    /**
+	     * Turn one registry entry into the editor's internal file entry.
+	     *
+	     * This expands configured constants, checks the public key, keeps editor
+	     * files inside ALLSKY_HOME, rejects symlinks and path traversal, and works
+	     * out the schema details. Invalid entries are returned with ok=false and
+	     * an error message, so the page can explain why the file is unavailable.
+	     *
+	     * @param string $key Registry key used by the browser to select the file.
+	     * @param array<string,mixed> $definition Raw registry entry.
+	     *
+	     * @return array<string,mixed> Normalised entry with path, permission,
+	     *                             inclusion, schema, and error fields.
+	     */
+	    private static function normaliseEditorFileDefinition(string $key, array $definition): array
+	    {
+	        $order = filter_var($definition['order'] ?? 1000, FILTER_VALIDATE_INT);
+	        if ($order === false) {
+	            $order = 1000;
+	        }
+
+	        $file = [
+	            'key' => $key,
+	            'label' => '',
+	            'fileName' => '',
+	            'path' => '',
+	            'remote' => filter_var($definition['remote'] ?? false, FILTER_VALIDATE_BOOLEAN),
+	            'validateJson' => !array_key_exists('validateJson', $definition)
+	                || filter_var($definition['validateJson'], FILTER_VALIDATE_BOOLEAN),
+	            'order' => $order,
+	            'schemaPath' => '',
+	            'schemaFileName' => '',
+	            'schemaToUse' => '',
+	            'hasSchema' => false,
+	            'schemaError' => '',
+	            'exists' => false,
+	            'readable' => false,
+	            'writable' => false,
+	            'ok' => false,
+	            'error' => '',
+	            'includeWhen' => is_array($definition['includeWhen'] ?? null) ? $definition['includeWhen'] : null,
+	            'messages' => is_array($definition['messages'] ?? null) ? $definition['messages'] : [],
+	        ];
+
+	        if (!preg_match('/^[A-Za-z0-9_-]+$/', $key)) {
+	            $file['error'] = 'Invalid editor file key.';
+	            return $file;
+	        }
+
+	        $rawPath = (string)($definition['path'] ?? $definition['filename'] ?? '');
+	        $path = self::expandEditorFileString($rawPath);
+	        $label = self::expandEditorFileString((string)($definition['label'] ?? ''));
+	        if ($label === '') {
+	            $label = basename($path);
+	        }
+
+	        $file['label'] = $label;
+	        $file['fileName'] = basename($path);
+	        $file['path'] = $path;
+	        $file['schemaToUse'] = self::expandEditorFileString((string)(
+	            $definition['schemaToUse']
+	                ?? $definition['schematouse']
+	                ?? $definition['schema_to_use']
+	                ?? ''
+	        ));
+
+	        if ($path === '' || $path[0] !== '/') {
+	            $file['error'] = 'Editor file paths must be absolute.';
+	            return $file;
+	        }
+
+	        if (preg_match('/[\x00-\x1F\x7F]/', $path) === 1 || strpos($path, '..') !== false) {
+	            $file['error'] = 'Invalid editor file path.';
+	            return $file;
+	        }
+
+	        if (self::pathContainsSymlink($path)) {
+	            $file['error'] = 'Editor files cannot be symlinks or inside symlinked directories.';
+	            return $file;
+	        }
+
+	        $realPath = realpath($path);
+	        if ($realPath === false || !is_file($realPath)) {
+	            $file['error'] = 'The configured editor file does not exist.';
+	            return $file;
+	        }
+
+	        $home = realpath((string)ALLSKY_HOME);
+	        if ($home === false || !self::isPathWithinDirectory($realPath, $home)) {
+	            $file['error'] = 'The configured editor file is outside the Allsky directory.';
+	            return $file;
+	        }
+
+	        $file['path'] = $realPath;
+	        $file['fileName'] = basename($realPath);
+	        $file['exists'] = true;
+	        $file['readable'] = is_readable($realPath);
+	        $file['writable'] = is_writable($realPath);
+	        $file['ok'] = $file['readable'];
+	        $schema = self::findEditorSchemaFile($file['fileName'], $file['schemaToUse']);
+	        $file['schemaPath'] = $schema['schemaPath'];
+	        $file['schemaFileName'] = $schema['schemaFileName'];
+	        $file['hasSchema'] = $schema['hasSchema'];
+	        $file['schemaError'] = $schema['schemaError'];
+
+	        if (!$file['readable']) {
+	            $file['error'] = 'The configured editor file is not readable.';
+	        }
+
+	        return $file;
+	    }
+
+	    /**
+	     * Read an optional schema selector from decoded file content.
+	     *
+	     * Supported keys are schemaToUse, schematouse, schema_to_use, and schema.
+	     * The value is treated as a schema name or index key, not as a filesystem
+	     * path.
+	     *
+	     * @param mixed $decoded Decoded JSON value from the editor file.
+	     *
+	     * @return string Requested schema selector, or an empty string if the file
+	     *                does not request one.
+	     */
+	    private static function getEditorSchemaToUseFromContent($decoded): string
+	    {
+	        if (!is_array($decoded)) {
+	            return '';
+	        }
+
+	        foreach (['schemaToUse', 'schematouse', 'schema_to_use', 'schema'] as $key) {
+	            if (!array_key_exists($key, $decoded) || !is_string($decoded[$key])) {
+	                continue;
+	            }
+
+	            $schemaToUse = trim($decoded[$key]);
+	            if ($schemaToUse !== '') {
+	                return $schemaToUse;
+	            }
+	        }
+
+	        return '';
+	    }
+
+	    /**
+	     * Find the schema file used to build the Simple editor.
+	     *
+	     * Schemas live under config/schema. The lookup checks config/schema/index.json
+	     * using either the requested schema name or the edited file name. If an
+	     * explicit schema was requested and there is no index mapping, the requested
+	     * value is tried directly, with .json added when no extension was given.
+	     *
+	     * @param string $fileName Name of the edited file.
+	     * @param string $schemaToUse Optional schema selector from the registry or
+	     *                            file content.
+	     *
+	     * @return array{schemaPath:string,schemaFileName:string,hasSchema:bool,schemaError:string}
+	     *         Resolved schema details. A missing schema is hasSchema=false with
+	     *         no error unless a configured mapping points at a bad file.
+	     */
+	    private static function findEditorSchemaFile(string $fileName, string $schemaToUse = ''): array
+	    {
+	        $result = [
+	            'schemaPath' => '',
+	            'schemaFileName' => '',
+	            'hasSchema' => false,
+	            'schemaError' => '',
+	        ];
+
+	        $baseName = pathinfo($fileName, PATHINFO_FILENAME);
+	        if ($baseName === '') {
+	            return $result;
+	        }
+
+	        $configDir = realpath((string)ALLSKY_CONFIG);
+	        if ($configDir === false || !is_dir($configDir)) {
+	            $result['schemaError'] = 'Unable to locate the configuration directory.';
+	            return $result;
+	        }
+
+	        $schemaDir = realpath($configDir . DIRECTORY_SEPARATOR . 'schema');
+	        if ($schemaDir === false || !is_dir($schemaDir)) {
+	            return $result;
+	        }
+
+	        $schemaIndex = [];
+	        $indexPath = $schemaDir . DIRECTORY_SEPARATOR . 'index.json';
+	        if (is_file($indexPath)) {
+	            $rawIndex = @file_get_contents($indexPath);
+	            if ($rawIndex === false) {
+	                $result['schemaError'] = 'Unable to read the editor schema index.';
+	                return $result;
+	            }
+	            if (trim($rawIndex) !== '') {
+	                $schemaIndex = json_decode($rawIndex, true);
+	                if (json_last_error() !== JSON_ERROR_NONE || !is_array($schemaIndex)) {
+	                    $result['schemaError'] = 'Invalid editor schema index: ' . json_last_error_msg();
+	                    return $result;
+	                }
+	            }
+	        }
+
+	        $schemaToUse = trim($schemaToUse);
+	        $schemaKey = $schemaToUse !== '' ? $schemaToUse : $fileName;
+	        $schemaIndexKeys = [$schemaKey];
+	        if (pathinfo($schemaKey, PATHINFO_EXTENSION) === '') {
+	            $schemaIndexKeys[] = $schemaKey . '.json';
+	        }
+	        $schemaIndexKeys = array_values(array_unique($schemaIndexKeys));
+
+	        $mappedSchemaName = null;
+	        foreach ($schemaIndexKeys as $schemaIndexKey) {
+	            if (array_key_exists($schemaIndexKey, $schemaIndex)) {
+	                $mappedSchemaName = $schemaIndex[$schemaIndexKey];
+	                $schemaKey = $schemaIndexKey;
+	                break;
+	            }
+	        }
+
+	        if ($mappedSchemaName === null) {
+	            if ($schemaToUse === '') {
+	                return $result;
+	            }
+
+	            $directSchemaNames = [$schemaToUse];
+	            if (pathinfo($schemaToUse, PATHINFO_EXTENSION) === '') {
+	                $directSchemaNames[] = $schemaToUse . '.json';
+	            }
+	            $directSchemaNames = array_values(array_unique($directSchemaNames));
+	            foreach ($directSchemaNames as $directSchemaName) {
+	                $directSchema = self::resolveEditorSchemaFile(
+	                    $schemaDir,
+	                    $directSchemaName,
+	                    'reference for ' . $schemaToUse,
+	                    false
+	                );
+	                if ($directSchema['hasSchema'] || $directSchema['schemaError'] !== '') {
+	                    return $directSchema;
+	                }
+	            }
+
+	            return $result;
+	        }
+
+	        if (!is_string($mappedSchemaName)) {
+	            $result['schemaError'] = 'Invalid editor schema mapping for ' . $schemaKey . '.';
+	            return $result;
+	        }
+
+	        return self::resolveEditorSchemaFile(
+	            $schemaDir,
+	            $mappedSchemaName,
+	            'mapping for ' . $schemaKey,
+	            true
+	        );
+	    }
+
+	    /**
+	     * Resolve and check one schema file reference.
+	     *
+	     * The schema name must stay under the schema directory. Control characters,
+	     * path traversal, missing mapped files, and files outside config/schema are
+	     * rejected with a schemaError value.
+	     *
+	     * @param string $schemaDir Absolute config/schema directory.
+	     * @param string $schemaName Schema file name or relative schema path.
+	     * @param string $description Plain-English context for error messages.
+	     * @param bool $missingIsError Whether a missing schema should set
+	     *                             schemaError.
+	     *
+	     * @return array{schemaPath:string,schemaFileName:string,hasSchema:bool,schemaError:string}
+	     *         Resolved schema details.
+	     */
+	    private static function resolveEditorSchemaFile(string $schemaDir, string $schemaName, string $description, bool $missingIsError): array
+	    {
+	        $result = [
+	            'schemaPath' => '',
+	            'schemaFileName' => '',
+	            'hasSchema' => false,
+	            'schemaError' => '',
+	        ];
+
+	        $schemaName = trim($schemaName);
+	        if ($schemaName === '' || preg_match('/[\x00-\x1F\x7F]/', $schemaName) === 1 || strpos($schemaName, '..') !== false) {
+	            $result['schemaError'] = 'Invalid editor schema ' . $description . '.';
+	            return $result;
+	        }
+
+	        $candidate = $schemaDir . DIRECTORY_SEPARATOR . $schemaName;
+	        $realPath = realpath($candidate);
+	        if ($realPath === false || !is_file($realPath)) {
+	            if ($missingIsError) {
+	                $result['schemaError'] = 'The mapped editor schema file was not found.';
+	            }
+	            return $result;
+	        }
+
+	        if (!self::isPathWithinDirectory($realPath, $schemaDir)) {
+	            $result['schemaError'] = 'The editor schema file is outside the schema directory.';
+	            return $result;
+	        }
+
+	        $result['schemaPath'] = $realPath;
+	        $result['schemaFileName'] = basename($realPath);
+	        $result['hasSchema'] = is_readable($realPath);
+	        if (!$result['hasSchema']) {
+	            $result['schemaError'] = 'The editor schema file is not readable.';
+	        }
+	        return $result;
+	    }
+
+	    /**
+	     * Read and decode the schema selected for an editor file.
+	     *
+	     * Missing schemas are fine; the browser will fall back to the raw JSON
+	     * editor. Invalid or unreadable schemas return an error message but do not
+	     * stop the edited file itself from loading.
+	     *
+	     * @param array<string,mixed> $file Normalised editor file entry.
+	     *
+	     * @return array{hasSchema:bool,schemaFileName:string,schema:mixed,schemaError:string}
+	     *         Decoded schema and its status.
+	     */
+	    private static function readEditorSchemaForFile(array $file): array
+	    {
+	        $schemaPath = (string)($file['schemaPath'] ?? '');
+	        $schemaFileName = (string)($file['schemaFileName'] ?? '');
+	        $result = [
+	            'hasSchema' => false,
+	            'schemaFileName' => $schemaFileName,
+	            'schema' => null,
+	            'schemaError' => (string)($file['schemaError'] ?? ''),
+	        ];
+
+	        if ($schemaPath === '' || !is_readable($schemaPath)) {
+	            return $result;
+	        }
+
+	        $raw = @file_get_contents($schemaPath);
+	        if ($raw === false || trim($raw) === '') {
+	            $result['schemaError'] = 'Unable to read the editor schema file.';
+	            return $result;
+	        }
+
+	        $schema = json_decode($raw, true);
+	        if (json_last_error() !== JSON_ERROR_NONE || !is_array($schema)) {
+	            $result['schemaError'] = 'Invalid editor schema file: ' . json_last_error_msg();
+	            return $result;
+	        }
+
+	        $result['hasSchema'] = true;
+	        $result['schema'] = $schema;
+	        $result['schemaError'] = '';
+	        return $result;
+	    }
+
+	    /**
+	     * Expand supported Allsky constants in editor registry strings.
+	     *
+	     * Placeholders use the ${CONSTANT_NAME} form. Unknown constants are left
+	     * unchanged so configuration mistakes stay visible.
+	     *
+	     * @param string $value Registry value containing optional placeholders.
+	     *
+	     * @return string Value with known constants replaced.
+	     */
+	    private static function expandEditorFileString(string $value): string
+	    {
+	        return preg_replace_callback('/\$\{([A-Z0-9_]+)\}/', static function ($matches) {
+	            return defined($matches[1]) ? (string)constant($matches[1]) : $matches[0];
+	        }, $value);
+	    }
+
+	    /**
+	     * Expand placeholders in a configured editor status message.
+	     *
+	     * Constants are expanded first. File placeholders such as ${label},
+	     * ${fileName}, and ${error} are then HTML-escaped because the returned
+	     * message is shown in the WebUI status area.
+	     *
+	     * @param string $value Raw configured message text.
+	     * @param array<string,mixed> $file Normalised editor file entry.
+	     *
+	     * @return string Safe HTML message fragment.
+	     */
+	    private static function expandEditorMessage(string $value, array $file): string
+	    {
+	        $value = self::expandEditorFileString($value);
+	        $replacements = [];
+	        foreach (['key', 'label', 'fileName', 'path', 'error'] as $field) {
+	            $replacements['${' . $field . '}'] = htmlspecialchars((string)($file[$field] ?? ''), ENT_QUOTES, 'UTF-8');
+	        }
+
+	        return strtr($value, $replacements);
+	    }
+
+	    /**
+	     * Check an editor registry condition.
+	     *
+	     * Conditions support all, any, and not groups. Leaf conditions can read
+	     * approved globals, settings, constants, or fields on the current file
+	     * entry, then compare using equals, notEquals, in, truthy, or a normal
+	     * truthiness check.
+	     *
+	     * @param mixed $condition Condition definition from the registry.
+	     * @param array<string,mixed> $file Normalised editor file entry.
+	     *
+	     * @return bool True when the condition matches the current environment.
+	     */
+	    private static function editorConditionMatches($condition, array $file): bool
+	    {
+	        if ($condition === null || $condition === '' || $condition === []) {
+	            return true;
+	        }
+	        if (!is_array($condition)) {
+	            return false;
+	        }
+
+	        if (isset($condition['all']) && is_array($condition['all'])) {
+	            foreach ($condition['all'] as $child) {
+	                if (!self::editorConditionMatches($child, $file)) {
+	                    return false;
+	                }
+	            }
+	            return true;
+	        }
+
+	        if (isset($condition['any']) && is_array($condition['any'])) {
+	            foreach ($condition['any'] as $child) {
+	                if (self::editorConditionMatches($child, $file)) {
+	                    return true;
+	                }
+	            }
+	            return false;
+	        }
+
+	        if (isset($condition['not'])) {
+	            return !self::editorConditionMatches($condition['not'], $file);
+	        }
+
+	        $actual = null;
+	        $hasActual = false;
+
+	        if (isset($condition['global'])) {
+	            [$hasActual, $actual] = self::getEditorConditionGlobalValue((string)$condition['global']);
+	        } else if (isset($condition['setting'])) {
+	            global $settings_array;
+	            $name = (string)$condition['setting'];
+	            $hasActual = is_array($settings_array) && array_key_exists($name, $settings_array);
+	            $actual = $hasActual ? $settings_array[$name] : null;
+	        } else if (isset($condition['file'])) {
+	            $name = (string)$condition['file'];
+	            $hasActual = array_key_exists($name, $file);
+	            $actual = $hasActual ? $file[$name] : null;
+	        } else if (isset($condition['constant'])) {
+	            $name = (string)$condition['constant'];
+	            $hasActual = defined($name);
+	            $actual = $hasActual ? constant($name) : null;
+	        }
+
+	        if (!$hasActual) {
+	            return false;
+	        }
+
+	        if (array_key_exists('equals', $condition)) {
+	            return self::editorConditionValuesEqual($actual, $condition['equals']);
+	        }
+	        if (array_key_exists('notEquals', $condition)) {
+	            return !self::editorConditionValuesEqual($actual, $condition['notEquals']);
+	        }
+	        if (array_key_exists('in', $condition) && is_array($condition['in'])) {
+	            foreach ($condition['in'] as $expected) {
+	                if (self::editorConditionValuesEqual($actual, $expected)) {
+	                    return true;
+	                }
+	            }
+	            return false;
+	        }
+	        if (array_key_exists('truthy', $condition)) {
+	            return self::editorConditionValuesEqual($actual, (bool)$condition['truthy']);
+	        }
+
+	        return (bool)$actual;
+	    }
+
+	    /**
+	     * Read one approved global for an editor condition.
+	     *
+	     * Registry conditions can only see a small list of website state globals.
+	     * That keeps the config useful without exposing arbitrary global variables.
+	     *
+	     * @param string $name Requested global name.
+	     *
+	     * @return array{0:bool,1:mixed} Pair of "was found" flag and value.
+	     */
+	    private static function getEditorConditionGlobalValue(string $name): array
+	    {
+	        $allowed = ['hasLocalWebsite', 'hasRemoteWebsite', 'useLocalWebsite', 'useRemoteWebsite'];
+	        if (!in_array($name, $allowed, true)) {
+	            return [false, null];
+	        }
+
+	        global $$name;
+	        return [isset($$name), $$name ?? null];
+	    }
+
+	    /**
+	     * Compare two condition values in the way the registry expects.
+	     *
+	     * Boolean checks accept Allsky string booleans through toBool(). Numeric
+	     * expected values use numeric comparison. Everything else is compared as a
+	     * string.
+	     *
+	     * @param mixed $actual Current value from a condition source.
+	     * @param mixed $expected Expected value from the registry condition.
+	     *
+	     * @return bool True when the values match.
+	     */
+	    private static function editorConditionValuesEqual($actual, $expected): bool
+	    {
+	        if (is_bool($expected)) {
+	            if (is_string($actual)) {
+	                return toBool($actual) === $expected;
+	            }
+	            return (bool)$actual === $expected;
+	        }
+
+	        if (is_int($expected)) {
+	            return (int)$actual === $expected;
+	        }
+
+	        if (is_float($expected)) {
+	            return (float)$actual === $expected;
+	        }
+
+	        return (string)$actual === (string)$expected;
+	    }
+
+	    /**
+	     * Check whether a path sits inside a directory.
+	     *
+	     * Both values should already be absolute, resolved paths. A trailing
+	     * separator is added before comparison so /tmp/foo does not match
+	     * /tmp/foobar.
+	     *
+	     * @param string $path Absolute path to check.
+	     * @param string $directory Absolute directory that must contain the path.
+	     *
+	     * @return bool True when the path is inside the directory.
+	     */
+	    private static function isPathWithinDirectory(string $path, string $directory): bool
+	    {
+	        $path = rtrim($path, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+	        $directory = rtrim($directory, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+	        return strpos($path, $directory) === 0;
+	    }
+
+	    /**
+	     * Check whether a configured path uses a symlink.
+	     *
+	     * The editor does not follow symlinked files or directories. The later
+	     * realpath check proves the final target is safe, but this catches a path
+	     * that used a symlink to get there.
+	     *
+	     * @param string $path Absolute path from the editor registry.
+	     *
+	     * @return bool True when any segment is a symlink or an unsafe relative
+	     *              segment is present.
+	     */
+	    private static function pathContainsSymlink(string $path): bool
+	    {
+	        $parts = explode('/', trim(str_replace('\\', '/', $path), '/'));
+	        $current = '';
+	        foreach ($parts as $part) {
+	            if ($part === '' || $part === '.' || $part === '..') {
+	                return true;
+	            }
+	            $current .= '/' . $part;
+	            if (@is_link($current)) {
+	                return true;
+	            }
+	        }
+
+	        return false;
+	    }
+
+	    /**
+	     * Upload a saved remote editor file to the configured remote website.
+	     *
+	     * The local save has already worked by the time this runs. If the remote
+	     * website is disabled or incomplete, the editor gets a warning rather than
+	     * a failed save. The upload command is built with escaped arguments, and
+	     * command output is only shown when the upload itself fails.
+	     *
+	     * @param string $file Absolute path to the saved local file.
+	     *
+	     * @return array<string,mixed> Save/upload result for the editor modal.
+	     */
+	    private static function sendEditorFileToRemoteWebsite(string $file): array
+	    {
+	        global $settings_array, $useRemoteWebsite;
+
+	        $fileName = basename($file);
+	        if (!$useRemoteWebsite) {
+	            return [
+	                'ok' => true,
+	                'warning' => true,
+	                'message' => htmlspecialchars($fileName, ENT_QUOTES, 'UTF-8') . " saved but NOT sent to remote Website since it's not enabled.",
+	            ];
+	        }
+
+	        $envFile = ALLSKY_ENV;
+	        $envRaw = @file_get_contents($envFile);
+	        $env = is_string($envRaw) ? json_decode($envRaw, true) : null;
+	        if (!is_array($env)) {
+	            return [
+	                'ok' => true,
+	                'warning' => true,
+	                'message' => '<strong>' . htmlspecialchars($fileName, ENT_QUOTES, 'UTF-8') . '</strong> saved but NOT sent to remote Website; unable to read env.json.',
+	            ];
+	        }
+
+	        $remoteHost = getVariableOrDefault($env, 'REMOTEWEBSITE_HOST', null);
+	        if ($remoteHost === null) {
+	            return [
+	                'ok' => true,
+	                'warning' => true,
+	                'message' => '<strong>' . htmlspecialchars($fileName, ENT_QUOTES, 'UTF-8') . "</strong> saved but NOT sent to remote Website since there isn't one defined.",
+	            ];
+	        }
+
+	        $remoteName = str_replace('remote_', '', $fileName);
+	        $imageDir = getVariableOrDefault($settings_array, 'remotewebsiteimagedir', '');
+	        $cmd = 'sudo -u ' . escapeshellarg(ALLSKY_OWNER)
+	            . ' ' . escapeshellarg(ALLSKY_SCRIPTS . '/upload.sh')
+	            . ' --silent --remote-web'
+	            . ' ' . escapeshellarg($file)
+	            . ' ' . escapeshellarg($imageDir)
+	            . ' ' . escapeshellarg($remoteName)
+	            . ' ' . escapeshellarg('remote_file');
+
+	        $output = [];
+	        $returnValue = 0;
+	        exec($cmd . ' 2>&1', $output, $returnValue);
+	        if ($returnValue === 0) {
+	            return [
+	                'ok' => true,
+	                'warning' => false,
+	                'message' => '<strong>' . htmlspecialchars($fileName, ENT_QUOTES, 'UTF-8') . '</strong> saved and sent to remote Website as ' . htmlspecialchars($remoteName, ENT_QUOTES, 'UTF-8') . '.',
+	            ];
+	        }
+
+	        return [
+	            'ok' => false,
+	            'warning' => false,
+	            'message' => '<strong>' . htmlspecialchars($fileName, ENT_QUOTES, 'UTF-8') . '</strong> saved but unable to send to <strong>' . htmlspecialchars((string)$remoteHost, ENT_QUOTES, 'UTF-8') . '</strong><pre>' . htmlspecialchars(implode("\n", $output), ENT_QUOTES, 'UTF-8') . '</pre>',
+	        ];
+	    }
+
+	    /**
+	     * Read a value from the global settings array prepared by initialize_variables().
+	     *
+	     * Some callers use this for filenames, so spaces can be swapped out when
+	     * needed. The fallback value is the existing UI default.
+	     *
+	     * @param string $name Setting key to read from the Allsky settings array.
+	     * @param string $swapSpaces Replacement for spaces; leave empty to keep them.
+	     *
+	     * @return mixed Configured value, or the historical fallback used by this UI.
+	     */
+	    private function getSetting(string $name, string $swapSpaces = '')
+	    {
+	        /** @var array $settings_array */
+	        global $settings_array;
+	        $val = getVariableOrDefault($settings_array, $name, 'overlay.json');
+	        if ($swapSpaces !== '') $val = str_replace(' ', $swapSpaces, (string)$val);
+	        return $val;
+	    }
+
+	    /**
+	     * Check whether a resolved path is at or below a resolved directory.
+	     *
+	     * This is used by the command file browser to keep navigation inside the
+	     * configured root directory.
+	     *
+	     * @param string $path Resolved path to check.
+	     * @param string $directory Resolved directory that must contain the path.
+	     *
+	     * @return bool True when the path is the directory itself or inside it.
+	     */
+	    private function isWithinDirectory(string $path, string $directory): bool
+	    {
+	        return $path === $directory || strpos($path, rtrim($directory, '/') . '/') === 0;
+	    }
+
+	    /**
+	     * Resolve and check the command browser root directory.
+	     *
+	     * Blank roots fall back to ALLSKY_MYFILES_DIR, or /home/pi if that constant
+	     * is not available. When myFilesOnly is true, the root must stay inside the
+	     * configured Allsky myFiles directory.
+	     *
+	     * @param string $path Requested root directory.
+	     * @param bool $myFilesOnly Whether to restrict the root to ALLSKY_MYFILES_DIR.
+	     *
+	     * @return string Resolved root path without a trailing slash.
+	     */
+	    private function normaliseBrowserRoot(string $path, bool $myFilesOnly = false): string
+	    {
+	        $path = trim($path);
+	        if ($path === '') {
+	            $path = defined('ALLSKY_MYFILES_DIR') ? ALLSKY_MYFILES_DIR : '/home/pi';
+	        }
 
         if ($path[0] !== '/') {
             $this->send400('Enter an absolute root directory path.');
@@ -125,15 +1208,26 @@ class UIUTIL extends UTILBASE {
             }
         }
 
-        return rtrim($realPath, '/');
-    }
+	        return rtrim($realPath, '/');
+	    }
 
-    private function normalizeBrowserDirectory(string $path, string $rootPath): string
-    {
-        $path = trim($path);
-        if ($path === '') {
-            $path = $rootPath;
-        }
+	    /**
+	     * Resolve and check the directory currently shown by the command browser.
+	     *
+	     * The selected directory must exist, be readable, and remain inside the
+	     * already-checked root path.
+	     *
+	     * @param string $path Requested directory path. Blank means the root path.
+	     * @param string $rootPath Resolved command browser root directory.
+	     *
+	     * @return string Resolved directory path.
+	     */
+	    private function normaliseBrowserDirectory(string $path, string $rootPath): string
+	    {
+	        $path = trim($path);
+	        if ($path === '') {
+	            $path = $rootPath;
+	        }
 
         if ($path[0] !== '/') {
             $this->send400('Enter an absolute directory path.');
@@ -152,25 +1246,44 @@ class UIUTIL extends UTILBASE {
             $this->send403('You cannot browse above the configured root directory.');
         }
 
-        return $realPath;
-    }
+	        return $realPath;
+	    }
 
-    private function getExecutableCheckOwner(): string
-    {
-        $owner = defined('ALLSKY_OWNER') ? trim((string)ALLSKY_OWNER) : '';
-        if ($owner !== '') {
-            return $owner;
+	    /**
+	     * Get the user account used when checking whether scripts are executable.
+	     *
+	     * ALLSKY_OWNER is preferred. If it is not set, the current PHP process user
+	     * is used as a fallback.
+	     *
+	     * @return string User name to check, or an empty string when it cannot be found.
+	     */
+	    private function getExecutableCheckOwner(): string
+	    {
+	        $owner = defined('ALLSKY_OWNER') ? trim((string)ALLSKY_OWNER) : '';
+	        if ($owner !== '') {
+	            return $owner;
         }
 
         $user = @posix_getpwuid((int)@posix_geteuid());
-        return is_array($user) && !empty($user['name']) ? (string)$user['name'] : '';
-    }
+	        return is_array($user) && !empty($user['name']) ? (string)$user['name'] : '';
+	    }
 
-    private function getUserIdentity(string $userName): ?array
-    {
-        if ($userName === '' || !function_exists('posix_getpwnam')) {
-            return null;
-        }
+	    /**
+	     * Look up a local user's UID and group IDs.
+	     *
+	     * Supplementary groups are read from /etc/group so the executable check
+	     * matches the permissions the Allsky owner has on disk.
+	     *
+	     * @param string $userName Local user name.
+	     *
+	     * @return array{uid:int,gids:array<int,int>}|null User identity, or null if
+	     *                                                 it cannot be resolved.
+	     */
+	    private function getUserIdentity(string $userName): ?array
+	    {
+	        if ($userName === '' || !function_exists('posix_getpwnam')) {
+	            return null;
+	        }
 
         $user = @posix_getpwnam($userName);
         if (!is_array($user) || !isset($user['uid'], $user['gid'])) {
@@ -196,13 +1309,28 @@ class UIUTIL extends UTILBASE {
         return [
             'uid' => (int)$user['uid'],
             'gids' => array_values(array_unique($groupIds)),
-        ];
-    }
+	        ];
+	    }
 
-    private function userHasModeBit(string $path, array $identity, int $ownerBit, int $groupBit, int $otherBit): bool
-    {
-        $stat = @stat($path);
-        if (!is_array($stat) || !isset($stat['mode'], $stat['uid'], $stat['gid'])) {
+	    /**
+	     * Check one Unix permission bit set for a specific user identity.
+	     *
+	     * The caller passes the owner, group, and other bits that matter for the
+	     * check. The method then chooses the correct bit based on the file owner
+	     * and group membership.
+	     *
+	     * @param string $path File or directory to inspect.
+	     * @param array{uid:int,gids:array<int,int>} $identity User identity.
+	     * @param int $ownerBit Permission bit to use when the user owns the path.
+	     * @param int $groupBit Permission bit to use when the group matches.
+	     * @param int $otherBit Permission bit to use otherwise.
+	     *
+	     * @return bool True when the selected permission bit is set.
+	     */
+	    private function userHasModeBit(string $path, array $identity, int $ownerBit, int $groupBit, int $otherBit): bool
+	    {
+	        $stat = @stat($path);
+	        if (!is_array($stat) || !isset($stat['mode'], $stat['uid'], $stat['gid'])) {
             return false;
         }
 
@@ -215,13 +1343,23 @@ class UIUTIL extends UTILBASE {
             return ($mode & $groupBit) !== 0;
         }
 
-        return ($mode & $otherBit) !== 0;
-    }
+	        return ($mode & $otherBit) !== 0;
+	    }
 
-    private function isExecutableByAllskyOwner(string $path): bool
-    {
-        if (!is_file($path)) {
-            return false;
+	    /**
+	     * Check whether a file can be executed by the Allsky owner.
+	     *
+	     * The file itself needs an execute bit for that user, and every parent
+	     * directory also needs to be searchable by that user.
+	     *
+	     * @param string $path File path to check.
+	     *
+	     * @return bool True when the Allsky owner can execute the file.
+	     */
+	    private function isExecutableByAllskyOwner(string $path): bool
+	    {
+	        if (!is_file($path)) {
+	            return false;
         }
 
         $identity = $this->getUserIdentity($this->getExecutableCheckOwner());
@@ -246,31 +1384,51 @@ class UIUTIL extends UTILBASE {
             $currentPath = $parent;
         }
 
-        return true;
-    }
+	        return true;
+	    }
 
-    private function hasAnyExecuteBit(string $path): bool
-    {
-        $stat = @stat($path);
-        if (!is_array($stat) || !isset($stat['mode'])) {
+	    /**
+	     * Check whether any execute bit is set on a file.
+	     *
+	     * This is reported separately from the Allsky-owner check so the UI can
+	     * tell the difference between "not executable at all" and "executable, but
+	     * not by the account Allsky will use".
+	     *
+	     * @param string $path File path to inspect.
+	     *
+	     * @return bool True when owner, group, or other execute permission is set.
+	     */
+	    private function hasAnyExecuteBit(string $path): bool
+	    {
+	        $stat = @stat($path);
+	        if (!is_array($stat) || !isset($stat['mode'])) {
             return false;
         }
 
-        return (((int)$stat['mode']) & 0111) !== 0;
-    }
+	        return (((int)$stat['mode']) & 0111) !== 0;
+	    }
 
-    public function getBrowseCommandFiles(): void
-    {
-        $myFilesOnly = filter_var($_GET['myFilesOnly'] ?? false, FILTER_VALIDATE_BOOLEAN);
-        $rootPath = $this->normalizeBrowserRoot((string)($_GET['root'] ?? ''), $myFilesOnly);
-        $requestedPath = (string)($_GET['path'] ?? '');
-        if ($myFilesOnly && trim($requestedPath) !== '') {
-            $requestedRealPath = realpath($requestedPath);
-            if ($requestedRealPath === false || !$this->isWithinDirectory($requestedRealPath, $rootPath)) {
-                $requestedPath = '';
-            }
-        }
-        $path = $this->normalizeBrowserDirectory($requestedPath, $rootPath);
+	    /**
+	     * Handle GET request=BrowseCommandFiles.
+	     *
+	     * Returns one directory level for the command picker. The browser cannot
+	     * escape the configured root, hidden files are skipped, and each file entry
+	     * includes the executable status needed by the UI.
+	     *
+	     * @return void
+	     */
+	    public function getBrowseCommandFiles(): void
+	    {
+	        $myFilesOnly = filter_var($_GET['myFilesOnly'] ?? false, FILTER_VALIDATE_BOOLEAN);
+	        $rootPath = $this->normaliseBrowserRoot((string)($_GET['root'] ?? ''), $myFilesOnly);
+	        $requestedPath = (string)($_GET['path'] ?? '');
+	        if ($myFilesOnly && trim($requestedPath) !== '') {
+	            $requestedRealPath = realpath($requestedPath);
+	            if ($requestedRealPath === false || !$this->isWithinDirectory($requestedRealPath, $rootPath)) {
+	                $requestedPath = '';
+	            }
+	        }
+	        $path = $this->normaliseBrowserDirectory($requestedPath, $rootPath);
         $entries = [];
 
         $parent = dirname($path);
@@ -502,9 +1660,9 @@ class UIUTIL extends UTILBASE {
     /**
      * Return CPU temperature as a Bootstrap progress-bar fragment.
      *
-     * Temperature status colors are supplied by getCPUTemp() in functions.php,
+     * Temperature status colours are supplied by getCPUTemp() in functions.php,
      * so this method only formats the final HTML and handles direct-vs-batch
-     * response behavior.
+     * response behaviour.
      *
      * @return string|null HTML progress bar when batching; otherwise no return.
      */
@@ -533,7 +1691,7 @@ class UIUTIL extends UTILBASE {
     /**
      * Return memory usage as a Bootstrap progress-bar fragment.
      *
-     * The bar uses the same threshold colors as CPU load and can be either
+     * The bar uses the same threshold colours as CPU load and can be either
      * returned to the Multiple batch endpoint or sent directly to the browser.
      *
      * @return string|null HTML progress bar when batching; otherwise no return.
@@ -551,7 +1709,7 @@ class UIUTIL extends UTILBASE {
     }
 
     /**
-     * Return Raspberry Pi throttle status as a colored progress-bar fragment.
+     * Return Raspberry Pi throttle status as a coloured progress-bar fragment.
      *
      * The status text and severity come from functions.php.  The displayed text
      * is escaped before being placed in the HTML fragment.
@@ -920,7 +2078,7 @@ class UIUTIL extends UTILBASE {
     /**
      * Determine whether a path resolves inside a base directory.
      *
-     * Both paths are normalized with trailing directory separators before the
+     * Both paths are normalised with trailing directory separators before the
      * prefix check, so sibling directories with similar names are not accepted.
      *
      * @param string $basePath Canonical base directory.
@@ -1043,5 +2201,7 @@ class UIUTIL extends UTILBASE {
 }
 
 // Script entrypoint
-$uiUtil = new UIUTIL();
-$uiUtil->run();
+if (basename(__FILE__) === basename($_SERVER['SCRIPT_FILENAME'])) {
+    $uiUtil = new UIUTIL();
+    $uiUtil->run();
+}

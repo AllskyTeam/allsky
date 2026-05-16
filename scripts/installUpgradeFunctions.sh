@@ -2104,6 +2104,12 @@ function copy_repo_files()
 	cp  "${ALLSKY_REPO}/monitorable_logs.json.repo" "${ALLSKY_CONFIG}/monitorable_logs.json"
 	cp  "${ALLSKY_REPO}/helpers.json.repo" "${ALLSKY_CONFIG}/helpers.json"
 	cp  "${ALLSKY_REPO}/helpers.md.repo" "${ALLSKY_CONFIG}/helpers.md"
+
+	cp "${ALLSKY_REPO}/editor_files.json.repo" "${ALLSKY_CONFIG}/editor_files.json"
+	cp "${ALLSKY_REPO}/editor_files.md.repo" "${ALLSKY_CONFIG}/editor_files.md"
+
+	cp -r "${ALLSKY_REPO}/schema" "${ALLSKY_CONFIG}/"
+
 }
 
 

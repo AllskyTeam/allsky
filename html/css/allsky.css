@@ -2803,6 +2803,23 @@ div.subSettingsHeader {
     font-weight: bold;
 }
 
+.WebUISetting input {
+    font-weight: normal !important;
+}
+
+.WebUISetting label {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    color: var(--WebUI-setting-color);
+    font-weight: bold;
+}
+
+
+#jedisonContainer label.jedi-title.jedi-label > input[type="radio"] + span {
+    color: var(--bs3-body-color) !important;
+    font-weight: bold;
+}
+
+
 .WebUIValue {
     padding: 0 3px 0 3px;
     font-size: 14px;
@@ -2992,11 +3009,188 @@ div.sticky {
     margin-top: 15px;
 }
 
+.as-editor-toolbar {
+    margin-bottom: 15px;
+}
+
+.as-editor-toolbar .navbar-btn {
+    color: var(--bs3-navbar-text);
+}
+
+.as-editor-toolbar .navbar-btn:not(.disabled):hover,
+.as-editor-toolbar .navbar-btn:not(.disabled):focus {
+    background-color: var(--bs3-navbar-hover-bg);
+    color: var(--bs3-navbar-hover-text);
+}
+
+.as-editor-toolbar .navbar-btn.disabled,
+.as-editor-toolbar .navbar-btn[aria-disabled="true"] {
+    cursor: not-allowed;
+    opacity: 0.45;
+}
+
+.as-editor-toolbar .navbar-form {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.as-editor-toolbar .as-editor-file-select {
+    max-width: 100%;
+    width: 320px;
+}
+
+.as-editor-toolbar .navbar-btn.active,
+.as-editor-toolbar .navbar-btn[aria-pressed="true"] {
+    background-color: var(--bs3-navbar-active-bg);
+    color: var(--bs3-navbar-active-text);
+}
+
+.as-editor-save-modal .modal-title {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+}
+
+.as-editor-save-modal .modal-body {
+    font-size: 15px;
+    line-height: 1.5;
+    word-break: break-word;
+}
+
+.as-editor-save-modal .modal-body pre {
+    margin-top: 10px;
+    white-space: pre-wrap;
+}
+
+.as-editor-save-modal-success #as-editor-save-modal-icon {
+    color: var(--el-success);
+}
+
+.as-editor-save-modal-warning #as-editor-save-modal-icon {
+    color: var(--el-warning);
+}
+
+.as-editor-save-modal-danger #as-editor-save-modal-icon {
+    color: var(--el-danger);
+}
+
+.as-json-error-dialog {
+    line-height: 1.45;
+}
+
+.as-json-error-summary {
+    font-size: 15px;
+    margin: 0 0 14px;
+}
+
+.as-json-error-meta {
+    margin-bottom: 14px;
+}
+
+.as-json-error-meta dt {
+    color: var(--bs3-heading-color);
+    font-weight: 600;
+    margin-top: 8px;
+}
+
+.as-json-error-meta dd {
+    margin-left: 0;
+}
+
+.as-json-error-meta code {
+    white-space: normal;
+}
+
+.as-json-error-snippet-title {
+    color: var(--bs3-heading-color);
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.as-json-error-snippet {
+    background: var(--bs3-pre-bg);
+    border: var(--as-border-width) solid var(--bs3-border);
+    border-radius: var(--as-radius-sm);
+    color: var(--bs3-body-color);
+    margin: 0;
+    max-height: 280px;
+    overflow: auto;
+    padding: 10px 12px;
+    white-space: pre;
+}
+
+.CodeMirror .as-json-error-line {
+    background-color: var(--bs3-alert-danger-bg);
+}
+
+.as-editor-tabs {
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.as-editor-tabs .nav-tabs {
+    margin-bottom: 0;
+}
+
+.as-editor-tabs .tab-content {
+    box-sizing: border-box;
+    min-height: 0;
+    overflow: hidden;
+    position: relative;
+}
+
+.as-editor-tabs .tab-pane {
+    box-sizing: border-box;
+    height: 100%;
+    left: 0;
+    overflow: hidden;
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 100%;
+}
+
+.as-editor-tabs .tab-pane.active {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+#jedisonContainer {
+    box-sizing: border-box;
+    flex: 1 1 auto;
+    height: 100%;
+    max-height: 100%;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: 10px 0 15px;
+}
+
+.jedi-error-message.text-danger.alert.alert-danger {
+    display: none;
+}
+
+.jedi-properties-toggle {
+    display: none;
+}
+
 .editorForm {
     display: inline-block;
     width: auto;
     margin-right: 15px;
     margin-bottom: 5px;
+}
+
+@media (max-width: 767px) {
+    .as-editor-toolbar .navbar-form {
+        margin: 8px 0;
+    }
+
+    .as-editor-toolbar .as-editor-file-select {
+        width: 100%;
+    }
+
 }
 
 .CodeMirror .as-editor-highlight,

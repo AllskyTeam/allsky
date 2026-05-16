@@ -685,6 +685,7 @@ function insertEditorCode($p)
 			'lib/codeMirror/matchesonscrollbar.js',
 			'lib/codeMirror/searchcursor.js',
 			'lib/codeMirror/match-highlighter.js',
+			'/js/jedison/dist/umd/jedison.umd.js',
 			'/js/jquery-loading-overlay/dist/loadingoverlay.min.js',
 			'/js/bootbox/bootbox.all.js',
 			'/js/bootbox/bootbox.locales.min.js',
@@ -744,16 +745,21 @@ if ($page == "login") {
 	DisplayLoginPage();
 	die();
 }
-if ($page == "logout") {
-	if (class_exists('RememberMe')) {
-		$rememberUser = trim((string)($_SESSION['user'] ?? ''));
-		RememberMe::revokeAll($rememberUser !== '' ? $rememberUser : null);
+	if ($page == "logout") {
+		if (class_exists('RememberMe')) {
+			$rememberUser = trim((string)($_SESSION['user'] ?? ''));
+			RememberMe::revokeAll($rememberUser !== '' ? $rememberUser : null);
+		}
+		$_SESSION['auth'] = false;
+		$_SESSION['user'] = "";
+		redirect("index.php?page=login");
 	}
-	$_SESSION['auth'] = false;
-	$_SESSION['user'] = "";
-	redirect("index.php?page=login");
-}
-?>
+	if ($page == "editor") {
+		header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+		header('Pragma: no-cache');
+		header('Expires: 0');
+	}
+	?>
 
 				<!DOCTYPE html>
 				<html lang="en">

@@ -51,7 +51,7 @@ class ADMINUTIL extends UTILBASE
     public function __construct()
     {
         if (session_status() !== PHP_SESSION_ACTIVE) {
-            session_start();
+            startAllskySession();
         }
 
         $privateVars = get_decoded_json_file(ALLSKY_ENV, true, '');

@@ -19,7 +19,7 @@ function DisplayLoginPage()
     } else {
         $throttle = new LoginThrottle();
         $retryAfter = 0;
-        if (!$throttle->check($retryAfter)) {
+        if (!$throttle->check($retryAfter, $rememberedUsername)) {
             $mins = max(1, ceil($retryAfter / 60));
             $alert = '<div class="alert alert-danger" role="alert">' . "Too many failed attempts. Try again in about {$mins} minute(s)." . '</div>';
         }

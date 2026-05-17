@@ -289,7 +289,7 @@ nav:
     - Glossary: developer_guide/glossary.md
     - Overview: developer_guide/overview.md
     - Modules:
-      - Folder Strucuture: developer_guide/folder_structure.md
+      - Folder Structure: developer_guide/folder_structure.md
       - Module Structure: developer_guide/module_structure.md
       - Meta Data Structure: developer_guide/meta_data_structure.md
       - Meta Data Example: developer_guide/meta_data_example.md

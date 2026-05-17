@@ -6,22 +6,74 @@ initialize_variables();
 include_once('authenticate.php');
 include_once('utilbase.php');
 
+/**
+ * Handles the WebUI module manager endpoints.
+ *
+ * The installer works with the Allsky module repository, presents available
+ * modules to the browser, installs first-party module files, applies declared
+ * dependencies, and keeps enough installer metadata to verify or roll back an
+ * installation.  Module code is treated as executable input, so install paths
+ * are guarded by a manifest check before any package manager or post-install
+ * helper is allowed to run.
+ *
+ * @package Allsky
+ */
 class MODULEINSTALLERUTIL extends UTILBASE
 {
+    /**
+     * The per-module manifest file that must be present before installation.
+     *
+     * @var string
+     */
+    private const MODULE_MANIFEST_FILE = 'manifest.json';
+
+    /** @var string Root directory of the local Allsky installation. */
     private string $allskyHome;
+
+    /** @var string config/modules directory containing the configured post-processing flows. */
     private string $allskyModulesDir;
+
+    /** @var string scripts/modules directory containing built-in Python module code. */
+    private string $coreModulesDir;
+
+    /** @var string Legacy user module directory. */
     private string $userModulesDir;
+
+    /** @var string Root of the user-managed Allsky files. */
     private string $myFilesDir;
+
+    /** @var string Destination directory for installed module Python files. */
     private string $myModulesDir;
+
+    /** @var string Destination root for installed module data, charts, and logs. */
     private string $moduleDataDir;
+
+    /** @var string Remote Allsky module repository URL. */
     private string $repoUrl;
+
+    /** @var string Default module repository branch. */
     private string $defaultBranch;
+
+    /** @var string Temporary checkout path for the module repository. */
     private string $repoPath;
+
+    /** @var string Filesystem owner used for installed module files. */
     private string $owner;
+
+    /** @var string Allsky group used for Python environment ownership. */
     private string $allskyGroup;
+
+    /** @var string Web server group used for WebUI-managed files. */
     private string $webGroup;
+
+    /** @var string Python interpreter inside the Allsky virtual environment. */
     private string $venvPython;
 
+    /**
+     * Registers the WebUI endpoints exposed by this utility.
+     *
+     * @return array<string, array<int, string>>
+     */
     protected function getRoutes(): array
     {
         return [
@@ -31,10 +83,15 @@ class MODULEINSTALLERUTIL extends UTILBASE
         ];
     }
 
+    /**
+     * Captures the Allsky filesystem layout and the module repository location
+     * from the global configuration.
+     */
     public function __construct()
     {
         $this->allskyHome = ALLSKY_HOME;
         $this->allskyModulesDir = ALLSKY_MODULES;
+        $this->coreModulesDir = ALLSKY_SCRIPTS . '/modules';
         $this->userModulesDir = ALLSKY_MODULE_LOCATION . '/modules';
         $this->myFilesDir = ALLSKY_MYFILES_DIR;
         $this->myModulesDir = ALLSKY_MYFILES_DIR . '/modules';
@@ -48,6 +105,13 @@ class MODULEINSTALLERUTIL extends UTILBASE
         $this->venvPython = $this->allskyHome . '/venv/bin/python3';
     }
 
+    /**
+     * Returns the list of source modules and built-in core modules for the
+     * module manager.  The requested branch is refreshed first so the browser
+     * sees the same module catalogue that install actions will use.
+     *
+     * @return void
+     */
     public function getModules(): void
     {
         try {
@@ -92,6 +156,12 @@ class MODULEINSTALLERUTIL extends UTILBASE
         }
     }
 
+    /**
+     * Verifies all installed user modules against their saved installer data and
+     * declared dependencies, returning a plain-text report to the browser.
+     *
+     * @return void
+     */
     public function getVerifyInstalled(): void
     {
         try {
@@ -109,6 +179,12 @@ class MODULEINSTALLERUTIL extends UTILBASE
         }
     }
 
+    /**
+     * Dispatches a module manager POST action after validating the requested
+     * module name, action, and repository branch.
+     *
+     * @return void
+     */
     public function postAction(): void
     {
         try {
@@ -177,6 +253,16 @@ class MODULEINSTALLERUTIL extends UTILBASE
         }
     }
 
+    /**
+     * Builds the browser-facing record for a module in the module repository.
+     * The record combines source metadata with any installed copy so the UI can
+     * show version, status, deprecation, and migration information.
+     *
+     * @param string $moduleName Module directory and Python file base name.
+     * @param string $modulePath Absolute path to the source module directory.
+     *
+     * @return array<string, mixed>
+     */
     private function buildModuleRecord(string $moduleName, string $modulePath): array
     {
         $installedInfo = $this->findInstalledModule($moduleName);
@@ -218,6 +304,11 @@ class MODULEINSTALLERUTIL extends UTILBASE
         ];
     }
 
+    /**
+     * Finds module directories in the checked-out module repository.
+     *
+     * @return array<string, string> Map of module name to source directory.
+     */
     private function getSourceModuleDirectories(): array
     {
         $modules = [];
@@ -242,10 +333,17 @@ class MODULEINSTALLERUTIL extends UTILBASE
         return $modules;
     }
 
+    /**
+     * Finds core modules that are shipped with the local Allsky installation in
+     * scripts/modules.  These are shown in the manager for visibility, but are
+     * not installed from the separate module repository.
+     *
+     * @return array<string, string> Map of module name to Python source file.
+     */
     private function getCoreModuleFiles(): array
     {
         $modules = [];
-        $corePath = ALLSKY_SCRIPTS . '/modules';
+        $corePath = $this->coreModulesDir;
         if (!is_dir($corePath)) {
             return $modules;
         }
@@ -269,6 +367,14 @@ class MODULEINSTALLERUTIL extends UTILBASE
         return $modules;
     }
 
+    /**
+     * Builds the browser-facing record for a built-in core module.
+     *
+     * @param string $moduleName Module name without the .py suffix.
+     * @param string $moduleFile Absolute path to the core module file.
+     *
+     * @return array<string, mixed>
+     */
     private function buildCoreModuleRecord(string $moduleName, string $moduleFile): array
     {
         $moduleInfo = $this->readModuleInfo($moduleName, $moduleFile, dirname($moduleFile), 'core');
@@ -299,12 +405,20 @@ class MODULEINSTALLERUTIL extends UTILBASE
         ];
     }
 
+    /**
+     * Locates the installed copy of a module, checking user module locations
+     * before falling back to built-in modules in scripts/modules.
+     *
+     * @param string $moduleName Module name without the .py suffix.
+     *
+     * @return array<string, mixed>|null
+     */
     private function findInstalledModule(string $moduleName): ?array
     {
         $paths = [
             $this->myModulesDir,
             $this->userModulesDir,
-            ALLSKY_SCRIPTS . '/modules',
+            $this->coreModulesDir,
         ];
 
         foreach ($paths as $path) {
@@ -317,6 +431,16 @@ class MODULEINSTALLERUTIL extends UTILBASE
         return null;
     }
 
+    /**
+     * Reads a module file and returns its metadata plus basic validity checks.
+     *
+     * @param string $moduleName Module name without the .py suffix.
+     * @param string $filePath Absolute path to the Python module file.
+     * @param string $basePath Directory that owns the module file.
+     * @param string $type Human-readable source type for the UI.
+     *
+     * @return array<string, mixed>
+     */
     private function readModuleInfo(string $moduleName, string $filePath, string $basePath, string $type): array
     {
         $errors = [];
@@ -339,6 +463,13 @@ class MODULEINSTALLERUTIL extends UTILBASE
         ];
     }
 
+    /**
+     * Extracts the JSON metadata block from a module file.
+     *
+     * @param string $filePath Absolute path to the Python module file.
+     *
+     * @return array<string, mixed>|null
+     */
     private function getMetaDataFromFile(string $filePath): ?array
     {
         $metaData = $this->getMetaDataFromFileByName($filePath, 'meta_data');
@@ -353,6 +484,16 @@ class MODULEINSTALLERUTIL extends UTILBASE
         return is_array($decoded) ? $decoded : null;
     }
 
+    /**
+     * Extracts a named metadata variable from Python source without executing
+     * the module.  The parser is deliberately simple and expects the metadata
+     * block to be a top-level JSON-style dictionary.
+     *
+     * @param string $filePath Absolute path to the Python module file.
+     * @param string $metaVariableName Metadata variable name to search for.
+     *
+     * @return string|null Raw metadata text, or null when it cannot be found.
+     */
     private function getMetaDataFromFileByName(string $filePath, string $metaVariableName): ?string
     {
         if (!is_file($filePath) || !is_readable($filePath)) {
@@ -393,6 +534,15 @@ class MODULEINSTALLERUTIL extends UTILBASE
         return $found ? $metaData : null;
     }
 
+    /**
+     * Checks that a module exposes either the legacy wrapper function or the
+     * newer class-based run method expected by the processing pipeline.
+     *
+     * @param string $moduleName Module name without the .py suffix.
+     * @param string $filePath Absolute path to the Python module file.
+     *
+     * @return bool True when the module exposes a recognised entry point.
+     */
     private function moduleFunctionExists(string $moduleName, string $filePath): bool
     {
         if (!is_file($filePath) || !is_readable($filePath)) {
@@ -412,6 +562,17 @@ class MODULEINSTALLERUTIL extends UTILBASE
         return preg_match($wrapperPattern, $contents) === 1 || preg_match($classRunPattern, $contents) === 1;
     }
 
+    /**
+     * Ensures the temporary module repository exists, is clean, and is checked
+     * out to the requested branch.
+     *
+     * @param string $branch Branch to fetch and check out.
+     * @param bool $reCheckout True to discard and clone a fresh repository.
+     *
+     * @return void
+     *
+     * @throws RuntimeException When the checkout cannot be prepared safely.
+     */
     private function ensureRepo(string $branch, bool $reCheckout): void
     {
         $this->assertRepoOwnership();
@@ -437,6 +598,15 @@ class MODULEINSTALLERUTIL extends UTILBASE
         $this->runGitCommand(['clone', '--branch', $branch, $this->repoUrl, $this->repoPath], null, $parent);
     }
 
+    /**
+     * Refuses to reuse a temporary repository owned by another user.  Git can
+     * treat that as unsafe, and removing it automatically would be too
+     * surprising from the WebUI.
+     *
+     * @return void
+     *
+     * @throws RuntimeException When the existing checkout is owned by another user.
+     */
     private function assertRepoOwnership(): void
     {
         if (!file_exists($this->repoPath)) {
@@ -470,6 +640,11 @@ class MODULEINSTALLERUTIL extends UTILBASE
         );
     }
 
+    /**
+     * Selects the module branch that should match the running Allsky version.
+     *
+     * @return string Preferred module repository branch.
+     */
     private function getPreferredBranch(): string
     {
         $version = $this->getCurrentVersion();
@@ -480,6 +655,11 @@ class MODULEINSTALLERUTIL extends UTILBASE
         return $this->defaultBranch;
     }
 
+    /**
+     * Reads the installed Allsky version from the local version file.
+     *
+     * @return string Installed version, or an empty string when unknown.
+     */
     private function getCurrentVersion(): string
     {
         $candidates = [
@@ -506,6 +686,13 @@ class MODULEINSTALLERUTIL extends UTILBASE
         return '';
     }
 
+    /**
+     * Lists remote branches available in the checked-out module repository.
+     *
+     * @return array<int, string>
+     *
+     * @throws RuntimeException When git cannot list remote branches.
+     */
     private function getRemoteBranches(): array
     {
         $result = $this->runGitCommand(['for-each-ref', '--format=%(refname:short)', 'refs/remotes/origin'], null, $this->repoPath);
@@ -524,6 +711,15 @@ class MODULEINSTALLERUTIL extends UTILBASE
         return $branches;
     }
 
+    /**
+     * Resets the temporary repository and checks out the requested branch.
+     *
+     * @param string $branch Branch to check out.
+     *
+     * @return void
+     *
+     * @throws RuntimeException When git cannot check out or pull the branch.
+     */
     private function checkoutBranch(string $branch): void
     {
         $this->runGitCommand(['reset', '--hard'], null, $this->repoPath);
@@ -532,6 +728,22 @@ class MODULEINSTALLERUTIL extends UTILBASE
         $this->runGitCommand(['pull', 'origin', $branch], null, $this->repoPath);
     }
 
+    /**
+     * Installs, updates, reinstalls, or migrates a source module.
+     *
+     * The manifest is verified before any files are copied, dependencies are
+     * installed, or post-install code is run.  A rollback snapshot is kept for
+     * existing installs so a failed update does not leave a partial module in
+     * place.
+     *
+     * @param string $moduleName Module name without the .py suffix.
+     * @param string $modulePath Absolute path to the source module directory.
+     * @param bool $force True when the module should be reinstalled.
+     *
+     * @return string User-facing install log.
+     *
+     * @throws RuntimeException When validation, installation, migration, or rollback fails.
+     */
     private function installOrUpdateModule(string $moduleName, string $modulePath, bool $force): string
     {
         $installedInfo = $this->findInstalledModule($moduleName);
@@ -551,8 +763,9 @@ class MODULEINSTALLERUTIL extends UTILBASE
             return "Module {$moduleName} is already up to date.";
         }
 
+        $manifestData = $this->verifyModuleManifest($moduleName, $modulePath);
         $paths = $this->buildModulePaths($moduleName, $modulePath);
-        $log = [];
+        $log = ['Verified module manifest'];
         $this->applyOwnership($this->myModulesDir);
         $this->applyOwnership($this->moduleDataDir);
         $rollback = $this->createInstallRollbackSnapshot($moduleName, $paths, $installedInfo);
@@ -567,12 +780,13 @@ class MODULEINSTALLERUTIL extends UTILBASE
             $this->copyDirectoryIfExists($modulePath . '/' . $moduleName, $paths['data'], $log, 'data');
             $this->copyInfoFiles($modulePath, $paths['info'], $log);
             $installerData = $this->writeInstallerInfo($modulePath, $paths['installer']);
+            $this->writeManifestInfo($modulePath, $paths['installer']);
             $log[] = 'Installer metadata updated';
 
             $this->installDatabaseConfig($sourceMeta, $modulePath, $log);
             $this->installPackagesFile($modulePath . '/packages.txt', $paths['logfiles'] . '/dependencies.log', $log);
             $this->installRequirementsFile($modulePath . '/requirements.txt', $paths['logfiles'] . '/dependencies.log', $log, $force);
-            $this->runPostInstall($installerData, $modulePath, $paths['data'], $log);
+            $this->runPostInstall($installerData, $modulePath, $paths['data'], $manifestData, $log);
             $this->cleanupLegacyModule($moduleName, $installedInfo, $paths['module'], $log);
 
             $migrationLog = $this->migrateModule($moduleName, $modulePath, false);
@@ -593,6 +807,14 @@ class MODULEINSTALLERUTIL extends UTILBASE
         }
     }
 
+    /**
+     * Removes a user-installed module and the module data managed by the
+     * installer.  It deliberately does not remove shared apt or Python packages.
+     *
+     * @param string $moduleName Module name without the .py suffix.
+     *
+     * @return string User-facing uninstall result.
+     */
     private function uninstallModule(string $moduleName): string
     {
         $installedInfo = $this->findInstalledModule($moduleName);
@@ -616,6 +838,19 @@ class MODULEINSTALLERUTIL extends UTILBASE
         return "Module {$moduleName} was uninstalled.";
     }
 
+    /**
+     * Migrates flow metadata for a module after its code metadata changes.
+     * Existing user values are preserved where possible, new settings are added,
+     * and secret values are moved into the Allsky environment file.
+     *
+     * @param string $moduleName Module name without the .py suffix.
+     * @param string $modulePath Absolute path to the source module directory.
+     * @param bool $throwOnMissingInstalled Whether a missing installed module is fatal.
+     *
+     * @return string Migration summary, or an empty string when nothing changed.
+     *
+     * @throws RuntimeException When migration is requested for a missing module.
+     */
     private function migrateModule(string $moduleName, string $modulePath, bool $throwOnMissingInstalled = true): string
     {
         $installedInfo = $this->findInstalledModule($moduleName);
@@ -699,6 +934,14 @@ class MODULEINSTALLERUTIL extends UTILBASE
         return implode("\n", $summary);
     }
 
+    /**
+     * Builds a status report for a repository-backed module.
+     *
+     * @param string $moduleName Module name without the .py suffix.
+     * @param string $modulePath Absolute path to the source module directory.
+     *
+     * @return string Plain-text status report.
+     */
     private function getModuleStatusText(string $moduleName, string $modulePath): string
     {
         $record = $this->buildModuleRecord($moduleName, $modulePath);
@@ -726,6 +969,14 @@ class MODULEINSTALLERUTIL extends UTILBASE
         return implode("\n", $lines);
     }
 
+    /**
+     * Builds a status report for a built-in core module.
+     *
+     * @param string $moduleName Module name without the .py suffix.
+     * @param string $moduleFile Absolute path to the core module file.
+     *
+     * @return string Plain-text status report.
+     */
     private function getCoreModuleStatusText(string $moduleName, string $moduleFile): string
     {
         $record = $this->buildCoreModuleRecord($moduleName, $moduleFile);
@@ -750,6 +1001,11 @@ class MODULEINSTALLERUTIL extends UTILBASE
         return implode("\n", $lines);
     }
 
+    /**
+     * Builds an overall verification report for all user-installed modules.
+     *
+     * @return string Plain-text verification report.
+     */
     private function verifyInstalledModulesReport(): string
     {
         $installedModules = $this->getInstalledModuleNames();
@@ -770,6 +1026,11 @@ class MODULEINSTALLERUTIL extends UTILBASE
         return implode("\n\n", $lines);
     }
 
+    /**
+     * Lists installed user module names from the managed module directories.
+     *
+     * @return array<int, string>
+     */
     private function getInstalledModuleNames(): array
     {
         $modules = [];
@@ -790,6 +1051,13 @@ class MODULEINSTALLERUTIL extends UTILBASE
         return $modules;
     }
 
+    /**
+     * Verifies a single installed module and reports missing dependencies.
+     *
+     * @param string $moduleName Module name without the .py suffix.
+     *
+     * @return string Plain-text verification report for the module.
+     */
     private function verifyInstalledModuleText(string $moduleName): string
     {
         $installedInfo = $this->findInstalledModule($moduleName);
@@ -831,6 +1099,15 @@ class MODULEINSTALLERUTIL extends UTILBASE
         return implode("\n", $moduleLines);
     }
 
+    /**
+     * Reads saved installer metadata, falling back to source dependency files
+     * for older installs that pre-date installer metadata storage.
+     *
+     * @param string $installedInstallerDir Installed installer metadata directory.
+     * @param string $sourcePath Source module directory used as the legacy fallback.
+     *
+     * @return array<string, mixed>
+     */
     private function readInstalledInstallerInfo(string $installedInstallerDir, string $sourcePath): array
     {
         $installerFile = $installedInstallerDir . '/installer.json';
@@ -847,6 +1124,13 @@ class MODULEINSTALLERUTIL extends UTILBASE
         ];
     }
 
+    /**
+     * Checks whether declared apt packages appear to be installed.
+     *
+     * @param array<int, string> $packages Declared apt package specs.
+     *
+     * @return array<int, string> Human-readable dependency status lines.
+     */
     private function verifyAptDependencies(array $packages): array
     {
         $lines = [];
@@ -871,6 +1155,14 @@ class MODULEINSTALLERUTIL extends UTILBASE
         return $lines;
     }
 
+    /**
+     * Checks whether declared Python packages appear in the Allsky virtual
+     * environment.
+     *
+     * @param array<int, string> $packages Declared Python package specs.
+     *
+     * @return array<int, string> Human-readable dependency status lines.
+     */
     private function verifyPythonDependencies(array $packages): array
     {
         $lines = [];
@@ -895,6 +1187,13 @@ class MODULEINSTALLERUTIL extends UTILBASE
         return $lines;
     }
 
+    /**
+     * Reduces an apt dependency spec to the package name used by dpkg-query.
+     *
+     * @param string $packageSpec Apt package spec from module metadata.
+     *
+     * @return string Package name, or an empty string for an empty spec.
+     */
     private function normaliseAptPackageName(string $packageSpec): string
     {
         $package = trim($packageSpec);
@@ -907,6 +1206,13 @@ class MODULEINSTALLERUTIL extends UTILBASE
         return trim($package);
     }
 
+    /**
+     * Reduces a Python dependency spec to the package name used by pip show.
+     *
+     * @param string $packageSpec Python package spec from module metadata.
+     *
+     * @return string Package name, or an empty string for an empty spec.
+     */
     private function normalisePythonPackageName(string $packageSpec): string
     {
         $package = trim($packageSpec);
@@ -920,6 +1226,14 @@ class MODULEINSTALLERUTIL extends UTILBASE
         return trim($package);
     }
 
+    /**
+     * Builds the managed destination paths used when installing a module.
+     *
+     * @param string $moduleName Module name without the .py suffix.
+     * @param string $modulePath Absolute path to the source module directory.
+     *
+     * @return array<string, string>
+     */
     private function buildModulePaths(string $moduleName, string $modulePath): array
     {
         return [
@@ -934,6 +1248,16 @@ class MODULEINSTALLERUTIL extends UTILBASE
         ];
     }
 
+    /**
+     * Copies an optional module subdirectory and records the action in the log.
+     *
+     * @param string $source Source directory to copy if it exists.
+     * @param string $destination Managed destination directory.
+     * @param array<int, string> $log Install log lines.
+     * @param string $label Human-readable label for the copied content.
+     *
+     * @return void
+     */
     private function copyDirectoryIfExists(string $source, string $destination, array &$log, string $label): void
     {
         if (!is_dir($source)) {
@@ -944,6 +1268,16 @@ class MODULEINSTALLERUTIL extends UTILBASE
         $log[] = "Copied {$label}";
     }
 
+    /**
+     * Copies recognised readme files into the installed module information
+     * directory.
+     *
+     * @param string $modulePath Source module directory.
+     * @param string $destination Managed destination directory.
+     * @param array<int, string> $log Install log lines.
+     *
+     * @return void
+     */
     private function copyInfoFiles(string $modulePath, string $destination, array &$log): void
     {
         $infoFiles = ['readme.txt', 'README.txt', 'README.md'];
@@ -963,6 +1297,18 @@ class MODULEINSTALLERUTIL extends UTILBASE
         }
     }
 
+    /**
+     * Saves installer metadata for audit and later verification.
+     *
+     * If a module has no installer.json file, dependency metadata is built from
+     * packages.txt and requirements.txt so older module layouts still have a
+     * stored install record.
+     *
+     * @param string $modulePath Source module directory.
+     * @param string $destination Managed installer metadata directory.
+     *
+     * @return array<string, mixed> Installer metadata used for this install.
+     */
     private function writeInstallerInfo(string $modulePath, string $destination): array
     {
         $installerFile = $modulePath . '/installer.json';
@@ -986,6 +1332,339 @@ class MODULEINSTALLERUTIL extends UTILBASE
         return $installerData;
     }
 
+    /**
+     * Copies the verified module manifest into the installed metadata directory.
+     *
+     * @param string $modulePath Source module directory.
+     * @param string $destination Managed installer metadata directory.
+     *
+     * @return void
+     */
+    private function writeManifestInfo(string $modulePath, string $destination): void
+    {
+        $this->copyFile(
+            $modulePath . '/' . self::MODULE_MANIFEST_FILE,
+            $destination . '/' . self::MODULE_MANIFEST_FILE
+        );
+    }
+
+    /**
+     * Verifies the security manifest for a source module before installation.
+     *
+     * The manifest must name the module, use sha256 hashes, cover required
+     * installer inputs, and account for every regular file in the module
+     * directory.  This is the trust boundary before dependency installation or
+     * post-install execution.
+     *
+     * @param string $moduleName Module name without the .py suffix.
+     * @param string $modulePath Source module directory.
+     *
+     * @return array<string, mixed> Normalised manifest data.
+     *
+     * @throws RuntimeException When the manifest is missing, invalid, or does not match the files.
+     */
+    private function verifyModuleManifest(string $moduleName, string $modulePath): array
+    {
+        $manifestPath = $modulePath . '/' . self::MODULE_MANIFEST_FILE;
+        if (!is_file($manifestPath) || !is_readable($manifestPath) || is_link($manifestPath)) {
+            throw new RuntimeException(
+                "Module {$moduleName} cannot be installed because it does not contain the required Allsky security manifest. " .
+                'Please contact the Allsky team.'
+            );
+        }
+
+        $decoded = json_decode((string)file_get_contents($manifestPath), true);
+        if (!is_array($decoded)) {
+            throw new RuntimeException(
+                "Module {$moduleName} cannot be installed because its Allsky security manifest is invalid. " .
+                'Please contact the Allsky team.'
+            );
+        }
+
+        if (($decoded['module'] ?? '') !== $moduleName) {
+            throw new RuntimeException(
+                "Module {$moduleName} cannot be installed because its Allsky security manifest does not match the module. " .
+                'Please contact the Allsky team.'
+            );
+        }
+
+        if (($decoded['hash_algorithm'] ?? '') !== 'sha256') {
+            throw new RuntimeException(
+                "Module {$moduleName} cannot be installed because its Allsky security manifest uses an unsupported format. " .
+                'Please contact the Allsky team.'
+            );
+        }
+
+        $files = $decoded['files'] ?? null;
+        if (!is_array($files) || $files === []) {
+            throw new RuntimeException(
+                "Module {$moduleName} cannot be installed because its Allsky security manifest is incomplete. " .
+                'Please contact the Allsky team.'
+            );
+        }
+
+        $verifiedFiles = [];
+        foreach ($files as $relativePath => $entry) {
+            $relativePath = (string)$relativePath;
+            $filePath = $this->manifestFilePath($modulePath, $relativePath);
+            $fileData = $this->normaliseManifestFileEntry($entry, $relativePath);
+            $this->assertManifestFileMatches($filePath, $fileData, $relativePath, true);
+            $verifiedFiles[$relativePath] = $fileData;
+        }
+
+        $this->assertRequiredManifestFiles($moduleName, $modulePath, $verifiedFiles);
+        $this->assertNoUnexpectedModuleFiles($modulePath, $verifiedFiles);
+
+        $decoded['files'] = $verifiedFiles;
+        return $decoded;
+    }
+
+    /**
+     * Normalises one manifest file entry into the shape used by verification.
+     *
+     * @param mixed $entry Manifest entry for one file.
+     * @param string $relativePath Manifest-relative path being normalised.
+     *
+     * @return array{sha256: string, size: int|null, mode: string|null}
+     *
+     * @throws RuntimeException When the entry is malformed.
+     */
+    private function normaliseManifestFileEntry($entry, string $relativePath): array
+    {
+        $fileData = [
+            'sha256' => '',
+            'size' => null,
+            'mode' => null,
+        ];
+
+        if (is_string($entry)) {
+            $fileData['sha256'] = $entry;
+        } elseif (is_array($entry)) {
+            $fileData['sha256'] = (string)($entry['sha256'] ?? '');
+
+            if (array_key_exists('size', $entry)) {
+                if (!is_int($entry['size']) && !(is_string($entry['size']) && ctype_digit($entry['size']))) {
+                    throw new RuntimeException("Manifest file {$relativePath} has an invalid size");
+                }
+                $fileData['size'] = (int)$entry['size'];
+                if ($fileData['size'] < 0) {
+                    throw new RuntimeException("Manifest file {$relativePath} has an invalid size");
+                }
+            }
+
+            if (array_key_exists('mode', $entry)) {
+                $fileData['mode'] = $this->normaliseManifestMode((string)$entry['mode'], $relativePath);
+            }
+        } else {
+            throw new RuntimeException("Manifest file {$relativePath} has an invalid entry");
+        }
+
+        if (str_starts_with($fileData['sha256'], 'sha256:')) {
+            $fileData['sha256'] = substr($fileData['sha256'], 7);
+        }
+        $fileData['sha256'] = strtolower(trim($fileData['sha256']));
+
+        if (!preg_match('/^[a-f0-9]{64}$/', $fileData['sha256'])) {
+            throw new RuntimeException("Manifest file {$relativePath} has an invalid sha256");
+        }
+
+        return $fileData;
+    }
+
+    /**
+     * Normalises a manifest file mode to the three octal digits compared
+     * against fileperms().
+     *
+     * @param string $mode Mode from the manifest.
+     * @param string $relativePath Manifest-relative path, used in error text.
+     *
+     * @return string Three-digit octal mode.
+     *
+     * @throws RuntimeException When the mode is not octal.
+     */
+    private function normaliseManifestMode(string $mode, string $relativePath): string
+    {
+        $mode = trim($mode);
+        if (!preg_match('/^[0-7]{3,4}$/', $mode)) {
+            throw new RuntimeException("Manifest file {$relativePath} has an invalid mode");
+        }
+
+        return substr(str_pad($mode, 3, '0', STR_PAD_LEFT), -3);
+    }
+
+    /**
+     * Resolves a manifest path and proves it stays inside the module directory.
+     *
+     * @param string $modulePath Source module directory.
+     * @param string $relativePath Manifest-relative file path.
+     *
+     * @return string Absolute path to the source file.
+     *
+     * @throws RuntimeException When the path is unsafe or escapes the module.
+     */
+    private function manifestFilePath(string $modulePath, string $relativePath): string
+    {
+        $this->assertSafeManifestPath($relativePath);
+
+        $moduleRoot = realpath($modulePath);
+        if ($moduleRoot === false) {
+            throw new RuntimeException("Unable to verify module path {$modulePath}");
+        }
+
+        $filePath = realpath($moduleRoot . '/' . $relativePath);
+        if ($filePath === false || !str_starts_with($filePath, $moduleRoot . DIRECTORY_SEPARATOR)) {
+            throw new RuntimeException("Manifest file {$relativePath} escapes the module directory");
+        }
+
+        return $filePath;
+    }
+
+    /**
+     * Rejects manifest paths that could escape the module or behave
+     * differently on another platform.
+     *
+     * @param string $relativePath Manifest-relative file path.
+     *
+     * @return void
+     *
+     * @throws RuntimeException When the path is unsafe.
+     */
+    private function assertSafeManifestPath(string $relativePath): void
+    {
+        if ($relativePath === '' || str_starts_with($relativePath, '/') || str_contains($relativePath, "\0") || str_contains($relativePath, '\\')) {
+            throw new RuntimeException("Unsafe manifest path {$relativePath}");
+        }
+
+        foreach (explode('/', $relativePath) as $segment) {
+            if ($segment === '' || $segment === '.' || $segment === '..') {
+                throw new RuntimeException("Unsafe manifest path {$relativePath}");
+            }
+        }
+    }
+
+    /**
+     * Checks a file against its manifest hash, size, and optionally mode.
+     *
+     * @param string $filePath Absolute file path to check.
+     * @param array{sha256: string, size: int|null, mode: string|null} $fileData Normalised manifest entry.
+     * @param string $relativePath Manifest-relative path, used in error text.
+     * @param bool $checkMode Whether to compare the manifest file mode.
+     *
+     * @return void
+     *
+     * @throws RuntimeException When the file does not match the manifest.
+     */
+    private function assertManifestFileMatches(string $filePath, array $fileData, string $relativePath, bool $checkMode): void
+    {
+        if (!is_file($filePath) || !is_readable($filePath) || is_link($filePath)) {
+            throw new RuntimeException("Manifest file {$relativePath} is not a readable regular file");
+        }
+
+        $actualHash = hash_file('sha256', $filePath);
+        if ($actualHash === false || !hash_equals($fileData['sha256'], strtolower($actualHash))) {
+            throw new RuntimeException("Manifest hash mismatch for {$relativePath}");
+        }
+
+        if ($fileData['size'] !== null) {
+            $actualSize = filesize($filePath);
+            if ($actualSize === false || (int)$actualSize !== $fileData['size']) {
+                throw new RuntimeException("Manifest size mismatch for {$relativePath}");
+            }
+        }
+
+        if ($checkMode && $fileData['mode'] !== null) {
+            $actualMode = fileperms($filePath);
+            if ($actualMode === false || substr(sprintf('%o', $actualMode), -3) !== $fileData['mode']) {
+                throw new RuntimeException("Manifest mode mismatch for {$relativePath}");
+            }
+        }
+    }
+
+    /**
+     * Ensures the manifest covers the files that directly influence install
+     * behaviour.
+     *
+     * @param string $moduleName Module name without the .py suffix.
+     * @param string $modulePath Source module directory.
+     * @param array<string, array{sha256: string, size: int|null, mode: string|null}> $verifiedFiles Verified manifest entries.
+     *
+     * @return void
+     *
+     * @throws RuntimeException When a required file is missing from the manifest.
+     */
+    private function assertRequiredManifestFiles(string $moduleName, string $modulePath, array $verifiedFiles): void
+    {
+        $requiredFiles = [$moduleName . '.py'];
+
+        foreach (['installer.json', 'packages.txt', 'requirements.txt'] as $fileName) {
+            if (is_file($modulePath . '/' . $fileName)) {
+                $requiredFiles[] = $fileName;
+            }
+        }
+
+        foreach ($requiredFiles as $fileName) {
+            if (!isset($verifiedFiles[$fileName])) {
+                throw new RuntimeException("Module manifest is missing required file {$fileName}");
+            }
+        }
+    }
+
+    /**
+     * Ensures every regular file in the module directory is listed in the
+     * verified manifest and rejects symlinks outright.
+     *
+     * @param string $modulePath Source module directory.
+     * @param array<string, array{sha256: string, size: int|null, mode: string|null}> $verifiedFiles Verified manifest entries.
+     *
+     * @return void
+     *
+     * @throws RuntimeException When a file is not covered by the manifest.
+     */
+    private function assertNoUnexpectedModuleFiles(string $modulePath, array $verifiedFiles): void
+    {
+        $moduleRoot = realpath($modulePath);
+        if ($moduleRoot === false) {
+            throw new RuntimeException("Unable to verify module path {$modulePath}");
+        }
+
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($moduleRoot, FilesystemIterator::SKIP_DOTS),
+            RecursiveIteratorIterator::SELF_FIRST
+        );
+
+        foreach ($iterator as $item) {
+            $path = $item->getPathname();
+            $relativePath = str_replace(DIRECTORY_SEPARATOR, '/', substr($path, strlen($moduleRoot) + 1));
+
+            if ($item->isLink()) {
+                throw new RuntimeException("Module contains unsupported symlink {$relativePath}");
+            }
+
+            if (!$item->isFile()) {
+                continue;
+            }
+
+            if ($relativePath === self::MODULE_MANIFEST_FILE) {
+                continue;
+            }
+
+            if (!isset($verifiedFiles[$relativePath])) {
+                throw new RuntimeException("Module contains file missing from manifest: {$relativePath}");
+            }
+        }
+    }
+
+    /**
+     * Captures the currently installed module state before an update starts.
+     *
+     * @param string $moduleName Module name without the .py suffix.
+     * @param array<string, string> $paths Managed install paths for the module.
+     * @param array<string, mixed>|null $installedInfo Existing installed module information.
+     *
+     * @return array<string, mixed> Rollback snapshot descriptor.
+     *
+     * @throws RuntimeException When the snapshot directory cannot be created.
+     */
     private function createInstallRollbackSnapshot(string $moduleName, array $paths, ?array $installedInfo): array
     {
         $snapshotRoot = rtrim(sys_get_temp_dir(), '/') . '/allsky-module-rollback-' . $moduleName . '-' . uniqid('', true);
@@ -1021,6 +1700,15 @@ class MODULEINSTALLERUTIL extends UTILBASE
         return $snapshot;
     }
 
+    /**
+     * Restores the pre-install state after a failed install or update.
+     *
+     * @param string $moduleName Module name without the .py suffix.
+     * @param array<string, string> $paths Managed install paths for the module.
+     * @param array<string, mixed> $snapshot Rollback snapshot descriptor.
+     *
+     * @return void
+     */
     private function rollbackFailedInstall(string $moduleName, array $paths, array $snapshot): void
     {
         $this->removePath($paths['module'] . '/' . $moduleName . '.py');
@@ -1056,6 +1744,13 @@ class MODULEINSTALLERUTIL extends UTILBASE
         $this->cleanupInstallRollbackSnapshot($snapshot);
     }
 
+    /**
+     * Removes a temporary rollback snapshot once it is no longer needed.
+     *
+     * @param array<string, mixed> $snapshot Rollback snapshot descriptor.
+     *
+     * @return void
+     */
     private function cleanupInstallRollbackSnapshot(array $snapshot): void
     {
         $root = (string)($snapshot['root'] ?? '');
@@ -1064,6 +1759,16 @@ class MODULEINSTALLERUTIL extends UTILBASE
         }
     }
 
+    /**
+     * Copies an existing file or directory into a rollback snapshot.
+     *
+     * @param string $source Existing path to snapshot.
+     * @param string $destination Snapshot destination path.
+     *
+     * @return void
+     *
+     * @throws RuntimeException When a snapshot file cannot be written.
+     */
     private function snapshotPath(string $source, string $destination): void
     {
         if (is_file($source)) {
@@ -1082,6 +1787,14 @@ class MODULEINSTALLERUTIL extends UTILBASE
         }
     }
 
+    /**
+     * Restores a previously snapshotted file or directory.
+     *
+     * @param string $source Snapshot source path.
+     * @param string $destination Managed destination path.
+     *
+     * @return void
+     */
     private function restoreSnapshotPath(string $source, string $destination): void
     {
         if (is_file($source)) {
@@ -1094,6 +1807,17 @@ class MODULEINSTALLERUTIL extends UTILBASE
         }
     }
 
+    /**
+     * Restores a file from in-memory contents, falling back to sudo when normal
+     * write permissions are not enough.
+     *
+     * @param string $filePath Destination file path.
+     * @param string $contents Contents to restore.
+     *
+     * @return void
+     *
+     * @throws RuntimeException When the file cannot be restored.
+     */
     private function restoreFileContents(string $filePath, string $contents): void
     {
         $this->ensureDirectory(dirname($filePath));
@@ -1127,6 +1851,16 @@ class MODULEINSTALLERUTIL extends UTILBASE
         }
     }
 
+    /**
+     * Installs a module-provided database table configuration into the user's
+     * Allsky database configuration.
+     *
+     * @param array<string, mixed> $sourceMeta Source module metadata.
+     * @param string $modulePath Source module directory.
+     * @param array<int, string> $log Install log lines.
+     *
+     * @return void
+     */
     private function installDatabaseConfig(array $sourceMeta, string $modulePath, array &$log): void
     {
         $dbConfigPath = $modulePath . '/db/db_data.json';
@@ -1157,6 +1891,17 @@ class MODULEINSTALLERUTIL extends UTILBASE
         $log[] = "Updated database config for table {$table}";
     }
 
+    /**
+     * Installs apt dependencies declared by a verified module packages file.
+     *
+     * @param string $filePath Path to packages.txt.
+     * @param string $logFile Dependency install log file.
+     * @param array<int, string> $log Install log lines.
+     *
+     * @return void
+     *
+     * @throws RuntimeException When a package spec is invalid or apt fails.
+     */
     private function installPackagesFile(string $filePath, string $logFile, array &$log): void
     {
         $packages = $this->readDependencyLines($filePath);
@@ -1166,8 +1911,9 @@ class MODULEINSTALLERUTIL extends UTILBASE
 
         $this->ensureDirectory(dirname($logFile));
         foreach ($packages as $package) {
+            $this->validateAptPackageSpec($package);
             file_put_contents($logFile, "\n--- Installing {$package} ---\n", FILE_APPEND);
-            $result = $this->runProcessWithOptions(['/usr/bin/sudo', 'apt-get', 'install', '-y', $package]);
+            $result = $this->runProcessWithOptions(['/usr/bin/sudo', 'apt-get', 'install', '-y', '--', $package]);
             file_put_contents($logFile, $result['message'] . "\n", FILE_APPEND);
             if ($result['error']) {
                 throw new RuntimeException("Failed to install apt package {$package}: " . trim($result['message']));
@@ -1177,6 +1923,37 @@ class MODULEINSTALLERUTIL extends UTILBASE
         $log[] = 'Installed apt dependencies';
     }
 
+    /**
+     * Validates an apt package spec without relying on a global dependency
+     * allowlist.  Module dependencies can vary, but command options and shell
+     * fragments are not accepted as package names.
+     *
+     * @param string $package Apt package spec from packages.txt.
+     *
+     * @return void
+     *
+     * @throws RuntimeException When the spec is not an apt package name.
+     */
+    private function validateAptPackageSpec(string $package): void
+    {
+        if (!preg_match('/^[a-z0-9][a-z0-9+.-]*(?::[a-z0-9][a-z0-9-]*)?(?:=[A-Za-z0-9.+:~:-]+)?$/', $package)) {
+            throw new RuntimeException("Invalid apt package spec {$package}");
+        }
+    }
+
+    /**
+     * Installs Python dependencies declared by a verified module requirements
+     * file into the Allsky virtual environment.
+     *
+     * @param string $filePath Path to requirements.txt.
+     * @param string $logFile Dependency install log file.
+     * @param array<int, string> $log Install log lines.
+     * @param bool $forceReinstall Whether packages should be force-reinstalled.
+     *
+     * @return void
+     *
+     * @throws RuntimeException When a package spec is invalid or pip fails.
+     */
     private function installRequirementsFile(string $filePath, string $logFile, array &$log, bool $forceReinstall = false): void
     {
         $packages = $this->readDependencyLines($filePath);
@@ -1188,10 +1965,11 @@ class MODULEINSTALLERUTIL extends UTILBASE
         $this->ensureDirectory(dirname($logFile));
         try {
             foreach ($packages as $package) {
+                $this->validatePythonPackageSpec($package);
                 if ($forceReinstall) {
                     file_put_contents($logFile, "\n--- Ensuring dependencies for {$package} ---\n", FILE_APPEND);
                     $result = $this->runProcessWithOptions(
-                        [$this->venvPython, '-m', 'pip', 'install', '--no-cache-dir', $package],
+                        [$this->venvPython, '-m', 'pip', 'install', '--no-cache-dir', '--', $package],
                         $this->allskyHome
                     );
                     file_put_contents($logFile, $result['message'] . "\n", FILE_APPEND);
@@ -1207,6 +1985,7 @@ class MODULEINSTALLERUTIL extends UTILBASE
                     $pipArgs[] = '--force-reinstall';
                     $pipArgs[] = '--no-deps';
                 }
+                $pipArgs[] = '--';
                 $pipArgs[] = $package;
                 $result = $this->runProcessWithOptions($pipArgs, $this->allskyHome);
                 file_put_contents($logFile, $result['message'] . "\n", FILE_APPEND);
@@ -1221,6 +2000,37 @@ class MODULEINSTALLERUTIL extends UTILBASE
         $log[] = $forceReinstall ? 'Reinstalled Python dependencies' : 'Installed Python dependencies';
     }
 
+    /**
+     * Validates a Python package spec while rejecting pip options, URLs, VCS
+     * references, and local paths.
+     *
+     * @param string $package Python package spec from requirements.txt.
+     *
+     * @return void
+     *
+     * @throws RuntimeException When the spec is not a package requirement.
+     */
+    private function validatePythonPackageSpec(string $package): void
+    {
+        if ($package === '' || preg_match('/[\r\n\0]/', $package)) {
+            throw new RuntimeException('Invalid Python dependency spec');
+        }
+
+        if (preg_match('/^\s*-/', $package) || preg_match('/\s-{1,2}[A-Za-z]/', $package)) {
+            throw new RuntimeException("Python dependency {$package} must not contain pip options");
+        }
+
+        if (str_contains($package, '://') || str_contains($package, '@') || str_contains($package, '/') || str_contains($package, '\\')) {
+            throw new RuntimeException("Python dependency {$package} must be a package spec, not a URL or path");
+        }
+    }
+
+    /**
+     * Makes the Allsky virtual environment writable by the WebUI before pip
+     * changes are attempted.
+     *
+     * @return void
+     */
     private function ensurePythonEnvironmentWritable(): void
     {
         foreach ([$this->allskyHome . '/venv', dirname($this->venvPython)] as $path) {
@@ -1233,6 +2043,14 @@ class MODULEINSTALLERUTIL extends UTILBASE
         }
     }
 
+    /**
+     * Restores ownership and group write permissions on the Allsky virtual
+     * environment after pip changes.
+     *
+     * @return void
+     *
+     * @throws RuntimeException When ownership or permission repair fails.
+     */
     private function applyPythonPackageOwnership(): void
     {
         $venvPath = $this->allskyHome . '/venv';
@@ -1251,17 +2069,35 @@ class MODULEINSTALLERUTIL extends UTILBASE
         }
     }
 
-    private function runPostInstall(array $installerData, string $modulePath, string $installDataDir, array &$log): void
+    /**
+     * Runs a module post-install helper after resolving it to a manifest-covered
+     * file and rechecking the installed helper hash.
+     *
+     * @param array<string, mixed> $installerData Installer metadata for the module.
+     * @param string $modulePath Source module directory.
+     * @param string $installDataDir Installed module data directory.
+     * @param array<string, mixed> $manifestData Verified manifest data.
+     * @param array<int, string> $log Install log lines.
+     *
+     * @return void
+     *
+     * @throws RuntimeException When the helper path is unsafe or execution fails.
+     */
+    private function runPostInstall(array $installerData, string $modulePath, string $installDataDir, array $manifestData, array &$log): void
     {
         $postInstall = $installerData['post-install']['run'] ?? '';
         if (!is_string($postInstall) || trim($postInstall) === '') {
             return;
         }
 
-        $postInstall = str_replace('{install_data_dir}', $installDataDir, $postInstall);
-        if (!str_starts_with($postInstall, '/')) {
-            $postInstall = rtrim($modulePath, '/') . '/' . ltrim($postInstall, './');
-        }
+        [$postInstall, $manifestPath] = $this->resolvePostInstallPath(
+            trim($postInstall),
+            $modulePath,
+            $installDataDir,
+            $manifestData
+        );
+
+        $this->assertManifestFileMatches($postInstall, $manifestData['files'][$manifestPath], $manifestPath, false);
 
         $result = str_ends_with($postInstall, '.py')
             ? $this->runProcessWithOptions([$this->venvPython, $postInstall], dirname($postInstall))
@@ -1274,6 +2110,78 @@ class MODULEINSTALLERUTIL extends UTILBASE
         $log[] = 'Ran post-install action';
     }
 
+    /**
+     * Resolves a post-install path into the executable file and matching
+     * manifest path.
+     *
+     * The only accepted forms are a relative source-module path or a path below
+     * {install_data_dir}.  Command arguments are rejected here so the installer
+     * does not become a shell-like execution surface.
+     *
+     * @param string $postInstall Raw post-install value from installer metadata.
+     * @param string $modulePath Source module directory.
+     * @param string $installDataDir Installed module data directory.
+     * @param array<string, mixed> $manifestData Verified manifest data.
+     *
+     * @return array{0: string, 1: string} Executable path and manifest-relative path.
+     *
+     * @throws RuntimeException When the path is unsafe or not covered by the manifest.
+     */
+    private function resolvePostInstallPath(string $postInstall, string $modulePath, string $installDataDir, array $manifestData): array
+    {
+        if (preg_match('/\s/', $postInstall)) {
+            throw new RuntimeException('Post-install path must not contain whitespace or command arguments');
+        }
+
+        $placeholder = '{install_data_dir}';
+        $moduleName = (string)($manifestData['module'] ?? '');
+        if ($moduleName === '') {
+            throw new RuntimeException('Post-install manifest has no module name');
+        }
+
+        if (str_starts_with($postInstall, $placeholder)) {
+            if (!str_starts_with($postInstall, $placeholder . '/')) {
+                throw new RuntimeException('Post-install {install_data_dir} path must reference a file below the install data directory');
+            }
+
+            $dataRelativePath = substr($postInstall, strlen($placeholder) + 1);
+            $this->assertSafeManifestPath($dataRelativePath);
+            $manifestPath = $moduleName . '/' . $dataRelativePath;
+            $executionPath = rtrim($installDataDir, '/') . '/' . $dataRelativePath;
+        } else {
+            if (str_contains($postInstall, $placeholder)) {
+                throw new RuntimeException('Post-install {install_data_dir} placeholder must be at the start of the path');
+            }
+            if (str_starts_with($postInstall, '/')) {
+                throw new RuntimeException('Post-install path must be relative to the module or use {install_data_dir}');
+            }
+
+            $manifestPath = $postInstall;
+            while (str_starts_with($manifestPath, './')) {
+                $manifestPath = substr($manifestPath, 2);
+            }
+            $this->assertSafeManifestPath($manifestPath);
+            $executionPath = rtrim($modulePath, '/') . '/' . $manifestPath;
+        }
+
+        if (!isset($manifestData['files'][$manifestPath])) {
+            throw new RuntimeException("Post-install file {$manifestPath} is not covered by the module manifest");
+        }
+
+        return [$executionPath, $manifestPath];
+    }
+
+    /**
+     * Removes an older copy of a module when the managed install location has
+     * changed.
+     *
+     * @param string $moduleName Module name without the .py suffix.
+     * @param array<string, mixed>|null $installedInfo Existing installed module information.
+     * @param string $newModulePath New managed module directory.
+     * @param array<int, string> $log Install log lines.
+     *
+     * @return void
+     */
     private function cleanupLegacyModule(string $moduleName, ?array $installedInfo, string $newModulePath, array &$log): void
     {
         if ($installedInfo === null) {
@@ -1291,6 +2199,15 @@ class MODULEINSTALLERUTIL extends UTILBASE
         $log[] = 'Removed legacy module copy';
     }
 
+    /**
+     * Finds flows whose stored argument details differ from installed module
+     * metadata and may need migration.
+     *
+     * @param string $moduleName Module name without the .py suffix.
+     * @param array<string, mixed> $installedMeta Installed module metadata.
+     *
+     * @return array<int, string> Flow filenames that need migration.
+     */
     private function getDifferingFlows(string $moduleName, array $installedMeta): array
     {
         $flows = [];
@@ -1299,7 +2216,7 @@ class MODULEINSTALLERUTIL extends UTILBASE
 
         foreach ($this->getFlowsWithModule($moduleName) as $flowFile => $flowData) {
             $flowArgumentDetails = $flowData[$moduleKey]['metadata']['argumentdetails'] ?? [];
-            if ($this->normalizeArgDetails($flowArgumentDetails) !== $this->normalizeArgDetails($codeArgumentDetails)) {
+            if ($this->normaliseArgDetails($flowArgumentDetails) !== $this->normaliseArgDetails($codeArgumentDetails)) {
                 $flows[] = $flowFile;
             }
         }
@@ -1307,6 +2224,14 @@ class MODULEINSTALLERUTIL extends UTILBASE
         return $flows;
     }
 
+    /**
+     * Loads post-processing flow files from config/modules that contain the
+     * requested module.
+     *
+     * @param string $moduleName Module name; the allsky_ prefix is stripped for flow keys.
+     *
+     * @return array<string, array<string, mixed>> Flow filename mapped to decoded flow data.
+     */
     private function getFlowsWithModule(string $moduleName): array
     {
         $moduleKey = $this->nameForFlow($moduleName);
@@ -1325,19 +2250,26 @@ class MODULEINSTALLERUTIL extends UTILBASE
         return $found;
     }
 
-    private function normalizeArgDetails(array $argDetails): array
+    /**
+     * Normalises argument detail metadata so equivalent forms compare cleanly.
+     *
+     * @param array<string, mixed> $argDetails Argument details from metadata or flow JSON.
+     *
+     * @return array<string, mixed>
+     */
+    private function normaliseArgDetails(array $argDetails): array
     {
-        $normalized = [];
+        $normalised = [];
 
         foreach ($argDetails as $key => $details) {
             if (!is_array($details)) {
-                $normalized[$key] = $details;
+                $normalised[$key] = $details;
                 continue;
             }
-            $normalized[$key] = [];
+            $normalised[$key] = [];
             foreach ($details as $detailKey => $value) {
                 if ($detailKey === 'required' || $detailKey === 'secret') {
-                    $normalized[$key][$detailKey] = $this->toBool($value);
+                    $normalised[$key][$detailKey] = $this->toBool($value);
                     continue;
                 }
                 if ($detailKey === 'type' && is_array($value)) {
@@ -1347,16 +2279,26 @@ class MODULEINSTALLERUTIL extends UTILBASE
                             ? array_map('trim', explode(',', $typeValue))
                             : $typeValue;
                     }
-                    $normalized[$key][$detailKey] = $typeData;
+                    $normalised[$key][$detailKey] = $typeData;
                     continue;
                 }
-                $normalized[$key][$detailKey] = $value;
+                $normalised[$key][$detailKey] = $value;
             }
         }
 
-        return $normalized;
+        return $normalised;
     }
 
+    /**
+     * Determines whether a source module version should replace the installed
+     * version.
+     *
+     * @param string|null $installedVersion Version from the installed module metadata.
+     * @param string|null $sourceVersion Version from the source module metadata.
+     * @param bool $installed Whether the module is already installed.
+     *
+     * @return bool True when an update should be offered.
+     */
     private function isUpdateAvailable(?string $installedVersion, ?string $sourceVersion, bool $installed): bool
     {
         if (!$installed) {
@@ -1368,6 +2310,13 @@ class MODULEINSTALLERUTIL extends UTILBASE
         return $installedVersion === null;
     }
 
+    /**
+     * Reads non-empty, non-comment dependency lines from a dependency file.
+     *
+     * @param string $filePath Path to packages.txt or requirements.txt.
+     *
+     * @return array<int, string>
+     */
     private function readDependencyLines(string $filePath): array
     {
         if (!is_file($filePath) || !is_readable($filePath)) {
@@ -1386,6 +2335,14 @@ class MODULEINSTALLERUTIL extends UTILBASE
         return $packages;
     }
 
+    /**
+     * Recursively copies a directory into a managed destination.
+     *
+     * @param string $source Source directory.
+     * @param string $destination Destination directory.
+     *
+     * @return void
+     */
     private function copyDirectory(string $source, string $destination): void
     {
         if (is_dir($destination)) {
@@ -1409,6 +2366,16 @@ class MODULEINSTALLERUTIL extends UTILBASE
         }
     }
 
+    /**
+     * Copies a readable source file into a managed destination.
+     *
+     * @param string $source Source file path.
+     * @param string $destination Destination file path.
+     *
+     * @return void
+     *
+     * @throws RuntimeException When the source file cannot be read.
+     */
     private function copyFile(string $source, string $destination): void
     {
         if (!is_file($source) || !is_readable($source)) {
@@ -1419,6 +2386,17 @@ class MODULEINSTALLERUTIL extends UTILBASE
         $this->writeFileFromSource($source, $destination);
     }
 
+    /**
+     * Writes a source file to a destination, using sudo as a fallback for
+     * WebUI-managed paths that need permission repair.
+     *
+     * @param string $source Source file path.
+     * @param string $destination Destination file path.
+     *
+     * @return void
+     *
+     * @throws RuntimeException When the file cannot be copied.
+     */
     private function writeFileFromSource(string $source, string $destination): void
     {
         if (@copy($source, $destination)) {
@@ -1435,6 +2413,15 @@ class MODULEINSTALLERUTIL extends UTILBASE
         $this->runProcessWithOptions(['/usr/bin/sudo', 'chmod', '0664', $destination]);
     }
 
+    /**
+     * Ensures a directory exists and is writable by the WebUI user.
+     *
+     * @param string $path Directory path to prepare.
+     *
+     * @return void
+     *
+     * @throws RuntimeException When the directory cannot be made writable.
+     */
     private function ensureDirectory(string $path): void
     {
         if ($path === '') {
@@ -1452,6 +2439,16 @@ class MODULEINSTALLERUTIL extends UTILBASE
         }
     }
 
+    /**
+     * Creates a directory, using sudo as a fallback for managed paths that the
+     * WebUI cannot create directly.
+     *
+     * @param string $path Directory path to create.
+     *
+     * @return void
+     *
+     * @throws RuntimeException When the directory cannot be created.
+     */
     private function createDirectory(string $path): void
     {
         if ($path === '') {
@@ -1486,6 +2483,14 @@ class MODULEINSTALLERUTIL extends UTILBASE
         );
     }
 
+    /**
+     * Repairs ownership and permissions for a directory expected to be
+     * WebUI-writable.
+     *
+     * @param string $path Directory path to repair.
+     *
+     * @return void
+     */
     private function repairDirectoryPermissions(string $path): void
     {
         $commands = [
@@ -1498,6 +2503,13 @@ class MODULEINSTALLERUTIL extends UTILBASE
         }
     }
 
+    /**
+     * Removes a file, symlink, or directory tree.
+     *
+     * @param string $path Path to remove.
+     *
+     * @return void
+     */
     private function removePath(string $path): void
     {
         if (!file_exists($path) && !is_link($path)) {
@@ -1525,6 +2537,13 @@ class MODULEINSTALLERUTIL extends UTILBASE
         @rmdir($path);
     }
 
+    /**
+     * Applies WebUI ownership and group write permissions to an installed path.
+     *
+     * @param string $path Path whose ownership should be repaired.
+     *
+     * @return void
+     */
     private function applyOwnership(string $path): void
     {
         if (!file_exists($path)) {
@@ -1534,6 +2553,11 @@ class MODULEINSTALLERUTIL extends UTILBASE
         $this->runProcessWithOptions(['/usr/bin/sudo', 'chmod', '-R', 'g+rwX', $path]);
     }
 
+    /**
+     * Loads the Allsky environment file used for module secrets.
+     *
+     * @return array<string, mixed>
+     */
     private function loadSecretsFile(): array
     {
         if (!is_file(ALLSKY_ENV)) {
@@ -1543,6 +2567,17 @@ class MODULEINSTALLERUTIL extends UTILBASE
         return is_array($decoded) ? $decoded : [];
     }
 
+    /**
+     * Saves JSON in a stable, readable format, using sudo as a fallback when the
+     * WebUI cannot write the destination directly.
+     *
+     * @param string $filePath Destination JSON file.
+     * @param array<string, mixed> $data Data to serialise.
+     *
+     * @return void
+     *
+     * @throws RuntimeException When JSON cannot be encoded or written.
+     */
     private function savePrettyJson(string $filePath, array $data): void
     {
         $json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
@@ -1582,11 +2617,25 @@ class MODULEINSTALLERUTIL extends UTILBASE
         }
     }
 
+    /**
+     * Converts an Allsky module filename-style name to the key used in flow JSON.
+     *
+     * @param string $moduleName Module name with or without the allsky_ prefix.
+     *
+     * @return string Flow key.
+     */
     private function nameForFlow(string $moduleName): string
     {
         return preg_replace('/^allsky_/', '', $moduleName) ?? $moduleName;
     }
 
+    /**
+     * Interprets common metadata truthy values as booleans.
+     *
+     * @param mixed $value Metadata value to interpret.
+     *
+     * @return bool
+     */
     private function toBool($value): bool
     {
         if (is_bool($value)) {
@@ -1595,6 +2644,13 @@ class MODULEINSTALLERUTIL extends UTILBASE
         return in_array(strtolower(trim((string)$value)), ['true', '1', 'yes', 'y', 'on'], true);
     }
 
+    /**
+     * Formats a metadata value for a migration summary.
+     *
+     * @param mixed $value Value to format.
+     *
+     * @return string
+     */
     private function stringifyValue($value): string
     {
         if (is_scalar($value) || $value === null) {
@@ -1604,6 +2660,17 @@ class MODULEINSTALLERUTIL extends UTILBASE
         return $encoded === false ? '[complex]' : $encoded;
     }
 
+    /**
+     * Runs a git command and returns its combined output.
+     *
+     * @param array<int, string> $args Git arguments without the git executable.
+     * @param string|null $cwd Working directory for the command.
+     * @param string|null $fallbackCwd Working directory used when $cwd is not a directory.
+     *
+     * @return string Combined stdout and stderr.
+     *
+     * @throws RuntimeException When git exits with an error.
+     */
     private function runGitCommand(array $args, ?string $cwd = null, ?string $fallbackCwd = null): string
     {
         $argv = array_merge(
@@ -1617,6 +2684,15 @@ class MODULEINSTALLERUTIL extends UTILBASE
         return $result['message'];
     }
 
+    /**
+     * Runs a process using an argv array so arguments are not interpreted by a
+     * shell.
+     *
+     * @param array<int, string> $argv Command and arguments.
+     * @param string|null $cwd Working directory for the process.
+     *
+     * @return array{error: bool, message: string}
+     */
     private function runProcessWithOptions(array $argv, ?string $cwd = null): array
     {
         $descriptors = [

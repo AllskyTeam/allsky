@@ -5618,7 +5618,7 @@
   <span class="md-ellipsis">
     
   
-    Folder Strucuture
+    Folder Structure
   
 
     
@@ -6404,6 +6404,10 @@
 <td>Select this to calculate ISS data</td>
 </tr>
 <tr>
+<td>Legacy TLE Format</td>
+<td>Use the legacy CelesTrak TLE download format for ISS. Leave off to use the new CSV format</td>
+</tr>
+<tr>
 <td>Visible Only</td>
 <td>When calculating passes only show those where ISS is visible</td>
 </tr>
@@ -6439,6 +6443,10 @@
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>Legacy TLE Format</td>
+<td>Use the legacy CelesTrak TLE download format for satellites. Leave off to use the new CSV format</td>
+</tr>
 <tr>
 <td>NORAD Id's</td>
 <td>List of Norad Id's for satellites, see below for more details</td>
@@ -6773,6 +6781,7 @@ Enter norad ID's as a comma separated list of the numeric Id's.</p>
 <h3 id="iss-tab">ISS tab<a class="headerlink" href="#iss-tab" title="Permanent link">¶</a></h3>
 <p>Use the <strong>ISS</strong> tab for International Space Station calculations. Do not add the ISS NORAD ID to the Satellites tab.</p>
 <p>Enable <strong>Enable ISS</strong> to calculate ISS position and pass information. Use <strong>Visible Only</strong> if you only want passes that should be visible from your location. Set <strong>Pass Days</strong> to control how far ahead the module searches, and <strong>Number Of Passes</strong> to limit how many passes are returned.</p>
+<p>Leave <strong>Legacy TLE Format</strong> off to use the new CelesTrak CSV format. Enable it only if you need the legacy TLE request format.</p>
 <p>Use <strong>AOS/LOS Elevation</strong> to set the elevation used for acquisition and loss of signal times, and <strong>Min Elevation</strong> to ignore passes whose maximum elevation is too low to be useful. Keep <strong>Pass Days</strong> modest, typically 5 to 15 days, because pass calculations take time and TLE accuracy decreases further into the future.</p>
 <p>Enable <strong>Debug Passes</strong> only while testing or diagnosing pass calculations. It adds pass details to the test output and is not normally needed.</p>
 <h3 id="satellites-tab">Satellites tab<a class="headerlink" href="#satellites-tab" title="Permanent link">¶</a></h3>
@@ -6786,6 +6795,7 @@ Enter norad ID's as a comma separated list of the numeric Id's.</p>
 </div>
 <p>Use the <strong>Satellites</strong> tab for satellites other than ISS.</p>
 <p>Add satellites using their NORAD IDs. You can enter multiple IDs as a comma-separated list, or use the satellite picker if available. Satellite IDs can be found on the Celestrak website.</p>
+<p>Leave <strong>Legacy TLE Format</strong> off to use the new CelesTrak CSV format. Enable it only if you need the legacy TLE request format.</p>
 <p>Set <strong>Minimum Elevation</strong> to the elevation above which each satellite should be treated as visible. Satellites are only classed as visible if they are above this elevation and sunlit.</p>
 <p>Avoid adding large numbers of satellites unless you need them. Each satellite increases the amount of work the module performs.</p>
 <h2 id="available-in">Available in<a class="headerlink" href="#available-in" title="Permanent link">¶</a></h2>

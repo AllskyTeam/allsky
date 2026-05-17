@@ -799,6 +799,19 @@ function update_old_website_config_file()
 			"fa fa-2x fa-fw icon-mini-timelapse" "fa fa-2x fa-fw fa-file-video"
 	fi
 
+	if [[ ${PRIOR_VERSION} -le 6 ]] ; then
+		# Replace the old XXX_cardinal-only colours with the current full colour set.
+		TEMP="/tmp/$$"
+		jq --indent 4 --slurpfile repo "${REPO_WEBSITE_CONFIGURATION_FILE}" \
+			'.config.colours = $repo[0].config.colours' "${FILE}" > "${TEMP}"
+		if [[ $? -eq 0 ]]; then
+			# cp so it keeps ${FILE}'s attributes
+			cp "${TEMP}" "${FILE}" && rm -f "${TEMP}"
+		else
+			rm -f "${TEMP}"
+		fi
+	fi
+
 	# Set to current config and Allsky versions.
 	update_json_file ".${WEBSITE_CONFIG_VERSION}" "${CURRENT_VERSION}" "${FILE}"
 	update_json_file ".${WEBSITE_ALLSKY_VERSION}" "${ALLSKY_VERSION}" "${FILE}"

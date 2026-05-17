@@ -1,24 +1,59 @@
 <?php
 declare(strict_types=1);
 
+/**
+ * Allsky configuration backup and restore controller.
+ *
+ * This file handles backup archive creation, upload validation, restore preview
+ * data, and restore execution for the WebUI.
+ */
+
 include_once('functions.php');
 initialize_variables();
 include_once('authenticate.php');
 include_once('utilbase.php');
 
+/**
+ * Handles WebUI backup and restore requests for Allsky configuration and image archives.
+ */
 class CONFIGBACKUPUTIL extends UTILBASE
 {
+    /**
+     * Routes that are allowed to return non-AJAX responses.
+     *
+     * @var array<int, string>
+     */
     protected array $nonAjaxRequests = ['Download'];
+
+    /**
+     * Absolute path to the Allsky installation root.
+     */
     private string $allskyHome;
+
+    /**
+     * Absolute path to the Allsky configuration directory.
+     */
     private string $allskyConfig;
+
+    /**
+     * Cached owner name resolved from Allsky variables.
+     */
     private ?string $cachedAllskyOwner = null;
 
+    /**
+     * Initialises path values used by backup and restore operations.
+     */
     public function __construct()
     {
         $this->allskyHome = rtrim(ALLSKY_HOME, '/\\');
         $this->allskyConfig = rtrim(ALLSKY_CONFIG, '/\\');
     }
 
+    /**
+     * Defines the WebUI routes handled by this utility.
+     *
+     * @return array<string, array<int, string>>
+     */
     protected function getRoutes(): array
     {
         return [
@@ -32,31 +67,51 @@ class CONFIGBACKUPUTIL extends UTILBASE
         ];
     }
 
+    /**
+     * Gets the directory where backup archives are stored.
+     */
     private function getBackupDir(): string
     {
         return rtrim(dirname($this->allskyHome), '/\\') . '/allskybackups';
     }
 
+    /**
+     * Gets the metadata file that tracks local backup configuration.
+     */
     private function getBackupMetadataFile(): string
     {
         return $this->allskyConfig . '/backup.json';
     }
 
+    /**
+     * Gets the core archive targets used when no custom metadata exists.
+     *
+     * @return array<int, string>
+     */
     private function getDefaultBackupTargets(): array
     {
         return [
-            '/config/settings.json',
-            '/config/cc.json',
-            '/config/overlay/myTemplates/*',
-            '/config/overlay/images/*',
-            '/config/overlay/imagethumbnails/*',
-            '/config/overlay/fonts/*',
-            '/config/overlay/config/*',
-            '/config/modules/*',
-            './env.json',
+            "/config/settings.json",
+            "/config/cc.json",
+            "/config/overlay/mytemplates/*",
+            "/config/overlay/images/*",
+            "/config/overlay/imagethumbnails/*",
+            "/config/overlay/fonts/*",
+            "/config/overlay/config/*",
+            "/config/modules/*",
+            "/config/myFiles/allsky_server_initial_password.txt",
+            "/config/myFiles/db_data.json",
+            "/config/myFiles/monitorable_logs.json",
+            "/config/myFiles/state.json",
+            "./env.json"
         ];
     }
 
+    /**
+     * Gets optional archive sections available on a default installation.
+     *
+     * @return array<string, array{description: string, shortdescription: string, path: string|array<int, string>}>
+     */
     private function getDefaultOptionalTargets(): array
     {
         return [
@@ -77,13 +132,19 @@ class CONFIGBACKUPUTIL extends UTILBASE
         ];
     }
 
-    private function normalizeOptionalTargets($rawOptionalTargets): array
+    /**
+     * Normalises configured optional backup target definitions.
+     *
+     * @param mixed $rawOptionalTargets Raw optional target configuration from metadata.
+     * @return array<string, array{description: string, shortdescription: string, path: string|array<int, string>}>
+     */
+    private function normaliseOptionalTargets($rawOptionalTargets): array
     {
         if (!is_array($rawOptionalTargets)) {
             return [];
         }
 
-        $normalized = [];
+        $normalised = [];
         foreach ($rawOptionalTargets as $key => $entry) {
             $name = trim((string)$key);
             if ($name === '') {
@@ -115,16 +176,22 @@ class CONFIGBACKUPUTIL extends UTILBASE
             }
 
             $pathValue = (count($paths) === 1) ? $paths[0] : array_values(array_unique($paths));
-            $normalized[$name] = [
+            $normalised[$name] = [
                 'description' => $description,
                 'shortdescription' => $shortDescription,
                 'path' => $pathValue,
             ];
         }
 
-        return $normalized;
+        return $normalised;
     }
 
+    /**
+     * Pulls optional section keys recorded in backup metadata.
+     *
+     * @param array<string, mixed> $backupMeta Metadata read from a backup archive.
+     * @return array<int, string> Unique optional target keys.
+     */
     private function getIncludedOptionalTargetKeysFromMetadata(array $backupMeta): array
     {
         if (!isset($backupMeta['includedOptionalTargets']) || !is_array($backupMeta['includedOptionalTargets'])) {
@@ -144,6 +211,13 @@ class CONFIGBACKUPUTIL extends UTILBASE
         return $keys;
     }
 
+    /**
+     * Builds the restore section list shown to the WebUI.
+     *
+     * @param array<int, string> $includedOptionalKeys Optional target keys present in the backup.
+     * @param string $backupType Backup type, usually `config` or `images`.
+     * @return array<int, array{key: string, description: string, shortdescription: string, required: bool}>
+     */
     private function getIncludedSections(array $includedOptionalKeys, string $backupType = 'config'): array
     {
         $backupType = strtolower(trim($backupType));
@@ -199,11 +273,19 @@ class CONFIGBACKUPUTIL extends UTILBASE
         return $sections;
     }
 
+    /**
+     * Gets the archive root used for image backups.
+     */
     private function getImagesArchiveTarget(): string
     {
         return 'images';
     }
 
+    /**
+     * Lists image day folders available under the Allsky images directory.
+     *
+     * @return array<int, string>
+     */
     private function getImagesFolderList(): array
     {
         $base = $this->allskyHome . '/' . $this->getImagesArchiveTarget();
@@ -231,6 +313,14 @@ class CONFIGBACKUPUTIL extends UTILBASE
         return $folders;
     }
 
+    /**
+     * Calculates the total size of readable files in a directory tree.
+     *
+     * Python cache directories are skipped because they are not useful backup
+     * content and can make size estimates noisy.
+     *
+     * @param string $path Directory to measure.
+     */
     private function getDirectorySizeBytes(string $path): int
     {
         if ($path === '' || !is_dir($path) || !is_readable($path)) {
@@ -245,8 +335,8 @@ class CONFIGBACKUPUTIL extends UTILBASE
             );
             foreach ($iter as $item) {
                 if ($item->isFile()) {
-                    $normalizedPath = str_replace('\\', '/', (string)$item->getPathname());
-                    if (strpos($normalizedPath, '/__pycache__/') !== false) {
+                    $normalisedPath = str_replace('\\', '/', (string)$item->getPathname());
+                    if (strpos($normalisedPath, '/__pycache__/') !== false) {
                         continue;
                     }
                     $size = $item->getSize();
@@ -262,6 +352,11 @@ class CONFIGBACKUPUTIL extends UTILBASE
         return (int)max(0, $bytes);
     }
 
+    /**
+     * Calculates the size of a file or directory inside the Allsky tree.
+     *
+     * @param string $relativePath Path relative to the Allsky installation root.
+     */
     private function getPathSizeBytes(string $relativePath): int
     {
         $path = ltrim(trim($relativePath), '/');
@@ -280,6 +375,11 @@ class CONFIGBACKUPUTIL extends UTILBASE
         return 0;
     }
 
+    /**
+     * Estimates compressed archive size for planning and display.
+     *
+     * @param int $rawBytes Uncompressed byte count.
+     */
     private function estimateCompressedSizeBytes(int $rawBytes): int
     {
         if ($rawBytes <= 0) {
@@ -290,6 +390,12 @@ class CONFIGBACKUPUTIL extends UTILBASE
         return (int)max(0, round($rawBytes * 0.92));
     }
 
+    /**
+     * Starts or stops the Allsky service with sudo.
+     *
+     * @param string $action Service action, `start` or `stop`.
+     * @return array{ok: bool, message?: string}
+     */
     private function controlAllskyService(string $action): array
     {
         $action = strtolower(trim($action));
@@ -313,6 +419,11 @@ class CONFIGBACKUPUTIL extends UTILBASE
         return ['ok' => true];
     }
 
+    /**
+     * Checks whether an optional section needs Allsky stopped for consistency.
+     *
+     * @param string $targetKey Optional target key from backup metadata.
+     */
     private function optionalTargetRequiresAllskyStop(string $targetKey): bool
     {
         $key = trim($targetKey);
@@ -334,8 +445,8 @@ class CONFIGBACKUPUTIL extends UTILBASE
         }
 
         foreach ($paths as $path) {
-            $normalized = $this->normalizeArchiveTarget((string)$path);
-            if ($normalized === 'config/myFiles/allsky.db') {
+            $normalised = $this->normaliseArchiveTarget((string)$path);
+            if ($normalised === 'config/myFiles/allsky.db') {
                 return true;
             }
         }
@@ -343,6 +454,11 @@ class CONFIGBACKUPUTIL extends UTILBASE
         return false;
     }
 
+    /**
+     * Checks whether any selected optional section requires the service to stop.
+     *
+     * @param array<int, string> $selectedOptionalTargetKeys Optional target keys selected by the user.
+     */
     private function selectedOptionalTargetsRequireAllskyStop(array $selectedOptionalTargetKeys): bool
     {
         foreach ($selectedOptionalTargetKeys as $key) {
@@ -353,6 +469,11 @@ class CONFIGBACKUPUTIL extends UTILBASE
         return false;
     }
 
+    /**
+     * Builds size statistics for image folders available for backup.
+     *
+     * @return array<string, mixed>
+     */
     private function getImagesFolderStats(): array
     {
         $folders = $this->getImagesFolderList();
@@ -385,6 +506,11 @@ class CONFIGBACKUPUTIL extends UTILBASE
         ];
     }
 
+    /**
+     * Builds size statistics for core and optional configuration sections.
+     *
+     * @return array<string, mixed>
+     */
     private function getConfigSectionStats(): array
     {
         $coreTargets = $this->getArchiveTargets([]);
@@ -418,30 +544,217 @@ class CONFIGBACKUPUTIL extends UTILBASE
         ];
     }
 
+    /**
+     * Lists safe archive member paths after full tar metadata inspection.
+     *
+     * @param string $backupPath Path to a tar.gz backup archive.
+     * @return array<int, string> Normalised archive member paths.
+     */
     private function listArchiveEntries(string $backupPath): array
     {
-        if (!is_file($backupPath) || !is_readable($backupPath)) {
-            return [];
-        }
-
-        $cmd = 'tar -tzf ' . escapeshellarg($backupPath) . ' 2>/dev/null';
-        $output = [];
-        $ret = 0;
-        exec($cmd, $output, $ret);
-        if ($ret !== 0) {
+        $inspection = $this->inspectArchiveMembers($backupPath);
+        if (empty($inspection['ok']) || !isset($inspection['entries']) || !is_array($inspection['entries'])) {
             return [];
         }
 
         $entries = [];
-        foreach ($output as $entry) {
-            $entry = trim((string)$entry);
-            if ($entry !== '') {
-                $entries[] = $entry;
+        foreach ($inspection['entries'] as $entry) {
+            if (!is_array($entry)) {
+                continue;
+            }
+            $path = trim((string)($entry['path'] ?? ''));
+            if ($path !== '') {
+                $entries[] = $path;
             }
         }
         return $entries;
     }
 
+    /**
+     * Returns the preferred tar executable for archive operations.
+     *
+     * @return string Absolute tar path when available, otherwise the PATH lookup name.
+     */
+    private function getTarBinary(): string
+    {
+        return is_executable('/bin/tar') ? '/bin/tar' : 'tar';
+    }
+
+    /**
+     * Normalises a tar member path for internal comparison.
+     *
+     * @param string $path Raw archive member path.
+     * @return string Trimmed path without a trailing slash.
+     */
+    private function normaliseArchiveMemberPath(string $path): string
+    {
+        return rtrim(trim($path), '/');
+    }
+
+    /**
+     * Returns the path-safety error for an archive member, if any.
+     *
+     * @param string $path Raw archive member path from tar metadata.
+     * @return string Empty when safe; otherwise a user-facing rejection reason.
+     */
+    private function getArchiveMemberPathError(string $path): string
+    {
+        $path = trim($path);
+        if ($path === '') {
+            return 'empty archive member paths are not allowed';
+        }
+        if (preg_match('/[\x00-\x1F\x7F]/', $path)) {
+            return 'control characters are not allowed in archive member paths';
+        }
+        if (strpos($path, '\\') !== false) {
+            return 'backslash path separators are not allowed';
+        }
+        if (str_starts_with($path, '/')) {
+            return 'absolute paths are not allowed';
+        }
+        if (preg_match('/^[A-Za-z]:\//', $path)) {
+            return 'absolute paths are not allowed';
+        }
+
+        $normalised = $this->normaliseArchiveMemberPath($path);
+        if ($normalised === '' || $normalised === '.') {
+            return 'root archive members are not allowed';
+        }
+
+        foreach (explode('/', $normalised) as $segment) {
+            if ($segment === '' || $segment === '.' || $segment === '..') {
+                return "'.' and '..' path segments are not allowed";
+            }
+        }
+
+        return '';
+    }
+
+    /**
+     * Returns the type-safety error for an archive member, if any.
+     *
+     * Only regular files and directories are permitted. Directories are allowed
+     * for metadata/listing checks but are never copied into place during restore.
+     *
+     * @param string $type First character from tar verbose permissions output.
+     * @return string Empty when safe; otherwise a user-facing rejection reason.
+     */
+    private function getArchiveMemberTypeError(string $type): string
+    {
+        if ($type === '-' || $type === 'd') {
+            return '';
+        }
+        if ($type === 'l') {
+            return 'symbolic links are not allowed';
+        }
+        if ($type === 'h') {
+            return 'hard links are not allowed';
+        }
+        if ($type === 'c' || $type === 'b') {
+            return 'device files are not allowed';
+        }
+        if ($type === 'p') {
+            return 'FIFO entries are not allowed';
+        }
+
+        return 'unsupported archive member type';
+    }
+
+    /**
+     * Parses a single tar -tv output line into member metadata.
+     *
+     * @param string $line One non-warning line from tar verbose output.
+     * @return array<string, string>|null Parsed member metadata, or null for unparseable lines.
+     */
+    private function parseTarVerboseMember(string $line): ?array
+    {
+        $line = trim($line);
+        if ($line === '' || preg_match('/^(?:\/\S+\/)?tar: /', $line)) {
+            return null;
+        }
+
+        $type = substr($line, 0, 1);
+        $parts = preg_split('/\s+/', $line, 6);
+        if (!is_array($parts) || count($parts) < 6) {
+            return null;
+        }
+
+        $path = trim((string)$parts[5]);
+        if ($type === 'l') {
+            $path = preg_replace('/\s+->\s+.*$/', '', $path) ?? $path;
+        } else if ($type === 'h') {
+            $path = preg_replace('/\s+link to\s+.*$/', '', $path) ?? $path;
+        }
+
+        $path = trim($path);
+        return [
+            'type' => $type,
+            'path' => $this->normaliseArchiveMemberPath($path),
+            'rawPath' => $path,
+            'listing' => $line,
+        ];
+    }
+
+    /**
+     * Inspects archive members and rejects unsafe paths or member types.
+     *
+     * @param string $archivePath Path to a tar.gz backup archive.
+     * @return array<string, mixed>
+     */
+    private function inspectArchiveMembers(string $archivePath): array
+    {
+        if (!is_file($archivePath) || !is_readable($archivePath)) {
+            return ['ok' => false, 'message' => 'Backup file is not readable.'];
+        }
+
+        $cmd = $this->getTarBinary() . ' -tvzf ' . escapeshellarg($archivePath) . ' 2>&1';
+        $output = [];
+        $ret = 0;
+        exec($cmd, $output, $ret);
+        if ($ret !== 0) {
+            return ['ok' => false, 'message' => 'Backup file is not a valid tar.gz archive.'];
+        }
+
+        $entries = [];
+        foreach ($output as $line) {
+            $line = trim((string)$line);
+            if ($line === '' || preg_match('/^(?:\/\S+\/)?tar: /', $line)) {
+                continue;
+            }
+
+            $entry = $this->parseTarVerboseMember($line);
+            if ($entry === null) {
+                return ['ok' => false, 'message' => 'Backup archive member metadata could not be inspected.'];
+            }
+
+            $typeError = $this->getArchiveMemberTypeError((string)$entry['type']);
+            if ($typeError !== '') {
+                $label = (string)($entry['path'] !== '' ? $entry['path'] : $entry['rawPath']);
+                return ['ok' => false, 'message' => "Backup archive contains unsafe member '$label': $typeError."];
+            }
+
+            $pathError = $this->getArchiveMemberPathError((string)$entry['rawPath']);
+            if ($pathError !== '') {
+                $label = (string)($entry['rawPath'] !== '' ? $entry['rawPath'] : $entry['path']);
+                return ['ok' => false, 'message' => "Backup archive contains unsafe member '$label': $pathError."];
+            }
+
+            $entries[] = $entry;
+        }
+
+        if (empty($entries)) {
+            return ['ok' => false, 'message' => 'Backup archive does not contain any inspectable members.'];
+        }
+
+        return ['ok' => true, 'entries' => $entries];
+    }
+
+    /**
+     * Checks whether a backup includes user module files.
+     *
+     * @param string $backupPath Path to a tar.gz backup archive.
+     * @param array<string, mixed> $backupMeta Metadata read from that backup.
+     */
     private function backupContainsModulesFiles(string $backupPath, array $backupMeta): bool
     {
         $includedOptional = $this->getIncludedOptionalTargetKeysFromMetadata($backupMeta);
@@ -457,6 +770,12 @@ class CONFIGBACKUPUTIL extends UTILBASE
         return false;
     }
 
+    /**
+     * Lists top-level Python module files carried in a backup archive.
+     *
+     * @param string $backupPath Path to a tar.gz backup archive.
+     * @return array<int, string> Module filenames.
+     */
     private function getModulesFromBackupArchive(string $backupPath): array
     {
         $modules = [];
@@ -485,6 +804,11 @@ class CONFIGBACKUPUTIL extends UTILBASE
         return $list;
     }
 
+    /**
+     * Lists locally installed user module files.
+     *
+     * @return array<int, string> Module filenames.
+     */
     private function getModulesFromLocalUserModules(): array
     {
         $dir = $this->allskyHome . '/config/myFiles/modules';
@@ -516,6 +840,9 @@ class CONFIGBACKUPUTIL extends UTILBASE
         return $list;
     }
 
+    /**
+     * Resolves the configured Allsky owner account.
+     */
     private function getConfiguredAllskyOwner(): string
     {
         if ($this->cachedAllskyOwner !== null) {
@@ -542,6 +869,9 @@ class CONFIGBACKUPUTIL extends UTILBASE
         return $this->cachedAllskyOwner;
     }
 
+    /**
+     * Reads the currently installed Allsky version.
+     */
     private function getCurrentVersion(): string
     {
         $versionFile = $this->allskyHome . '/version';
@@ -558,6 +888,11 @@ class CONFIGBACKUPUTIL extends UTILBASE
         return ($version === '') ? 'unknown' : $version;
     }
 
+    /**
+     * Reads current camera type and model from settings.
+     *
+     * @return array{cameratype: string, cameramodel: string}
+     */
     private function getCurrentCameraInfo(): array
     {
         $settingsFile = $this->allskyConfig . '/settings.json';
@@ -584,6 +919,11 @@ class CONFIGBACKUPUTIL extends UTILBASE
         ];
     }
 
+    /**
+     * Converts a camera value into a filename-safe token.
+     *
+     * @param string $value Camera type or model value.
+     */
     private function cameraToken(string $value): string
     {
         $token = str_replace(' ', '_', trim($value));
@@ -594,6 +934,9 @@ class CONFIGBACKUPUTIL extends UTILBASE
         return $token;
     }
 
+    /**
+     * Gets the camera-specific settings file used in backups.
+     */
     private function getResolvedSettingsFile(): string
     {
         $cameraInfo = $this->getCurrentCameraInfo();
@@ -602,6 +945,9 @@ class CONFIGBACKUPUTIL extends UTILBASE
         return 'config/settings_' . $type . '_' . $model . '.json';
     }
 
+    /**
+     * Gets the camera-specific cc file used in backups.
+     */
     private function getResolvedCcFile(): string
     {
         $cameraInfo = $this->getCurrentCameraInfo();
@@ -610,6 +956,11 @@ class CONFIGBACKUPUTIL extends UTILBASE
         return 'config/cc_' . $type . '_' . $model . '.json';
     }
 
+    /**
+     * Gets configured core backup targets, falling back to defaults.
+     *
+     * @return array<int, string>
+     */
     private function getBackupTargets(): array
     {
         $metadata = $this->readBackupMetadata();
@@ -628,19 +979,33 @@ class CONFIGBACKUPUTIL extends UTILBASE
         return $this->getDefaultBackupTargets();
     }
 
+    /**
+     * Gets configured optional backup targets, falling back to defaults.
+     *
+     * @return array<string, array{description: string, shortdescription: string, path: string|array<int, string>}>
+     */
     private function getOptionalTargets(): array
     {
         $metadata = $this->readBackupMetadata();
         if (isset($metadata['optionalTargets'])) {
-            $normalized = $this->normalizeOptionalTargets($metadata['optionalTargets']);
-            if (!empty($normalized)) {
-                return $normalized;
+            $normalised = $this->normaliseOptionalTargets($metadata['optionalTargets']);
+            if (!empty($normalised)) {
+                return $normalised;
             }
         }
         return $this->getDefaultOptionalTargets();
     }
 
-    private function normalizeArchiveTarget(string $target): string
+    /**
+     * Normalises a configured backup target into the archive path used for tar.
+     *
+     * Camera-specific settings and cc files are resolved from their stable
+     * `config/settings.json` and `config/cc.json` aliases.
+     *
+     * @param string $target Configured target path.
+     * @return string Archive target path, or an empty string when unusable.
+     */
+    private function normaliseArchiveTarget(string $target): string
     {
         $clean = trim($target);
         if ($clean === '') {
@@ -663,11 +1028,17 @@ class CONFIGBACKUPUTIL extends UTILBASE
         return trim($clean);
     }
 
+    /**
+     * Builds archive target paths for core plus selected optional sections.
+     *
+     * @param array<int, string> $selectedOptionalTargetKeys Optional section keys chosen for backup.
+     * @return array<int, string> Archive target paths.
+     */
     private function getArchiveTargets(array $selectedOptionalTargetKeys = []): array
     {
         $targets = [];
         foreach ($this->getBackupTargets() as $target) {
-            $clean = $this->normalizeArchiveTarget((string)$target);
+            $clean = $this->normaliseArchiveTarget((string)$target);
             if ($clean !== '') {
                 $targets[] = $clean;
             }
@@ -687,7 +1058,7 @@ class CONFIGBACKUPUTIL extends UTILBASE
                 continue;
             }
             foreach ($paths as $path) {
-                $clean = $this->normalizeArchiveTarget((string)$path);
+                $clean = $this->normaliseArchiveTarget((string)$path);
                 if ($clean !== '') {
                     $targets[] = $clean;
                 }
@@ -699,6 +1070,14 @@ class CONFIGBACKUPUTIL extends UTILBASE
         return $targets;
     }
 
+    /**
+     * Resolves archive targets belonging to one restore section.
+     *
+     * @param string $sectionKey Restore section key.
+     * @param string $backupType Backup type, usually `config` or `images`.
+     * @param array<string, mixed> $backupMeta Metadata read from the selected backup.
+     * @return array<int, string> Archive target paths.
+     */
     private function getArchiveTargetsForSectionKey(string $sectionKey, string $backupType = 'config', array $backupMeta = []): array
     {
         $targets = [];
@@ -713,7 +1092,7 @@ class CONFIGBACKUPUTIL extends UTILBASE
                 $imageTargets = $backupMeta['imageTargets'] ?? [];
                 if (is_array($imageTargets) && !empty($imageTargets)) {
                     foreach ($imageTargets as $target) {
-                        $clean = $this->normalizeArchiveTarget((string)$target);
+                        $clean = $this->normaliseArchiveTarget((string)$target);
                         if ($clean !== '') {
                             $targets[] = $clean;
                         }
@@ -730,7 +1109,7 @@ class CONFIGBACKUPUTIL extends UTILBASE
 
         if ($key === 'core') {
             foreach ($this->getBackupTargets() as $target) {
-                $clean = $this->normalizeArchiveTarget((string)$target);
+                $clean = $this->normaliseArchiveTarget((string)$target);
                 if ($clean !== '') {
                     $targets[] = $clean;
                 }
@@ -749,7 +1128,7 @@ class CONFIGBACKUPUTIL extends UTILBASE
                 return [];
             }
             foreach ($paths as $path) {
-                $clean = $this->normalizeArchiveTarget((string)$path);
+                $clean = $this->normaliseArchiveTarget((string)$path);
                 if ($clean !== '') {
                     $targets[] = $clean;
                 }
@@ -761,6 +1140,13 @@ class CONFIGBACKUPUTIL extends UTILBASE
         return $targets;
     }
 
+    /**
+     * Resolves requested restore sections against sections present in a backup.
+     *
+     * @param array<string, mixed> $backupMeta Metadata read from the selected backup.
+     * @param array<int, string> $selectedSections Section keys requested by the user.
+     * @return array<int, string> Section keys that may be restored.
+     */
     private function resolveSelectedSectionKeys(array $backupMeta, array $selectedSections): array
     {
         $includedSections = $backupMeta['includedSections'] ?? $this->getIncludedSections($this->getIncludedOptionalTargetKeysFromMetadata($backupMeta));
@@ -798,6 +1184,15 @@ class CONFIGBACKUPUTIL extends UTILBASE
         return $keys;
     }
 
+    /**
+     * Infers restore sections from an advanced file selection.
+     *
+     * @param array<string, mixed> $backupMeta Metadata read from the selected backup.
+     * @param string $backupType Backup type, usually `config` or `images`.
+     * @param array<int, string> $selectedTargets Archive paths requested by the user.
+     * @param array<int, string> $fallbackSelectedSections Section keys to use when inference is not possible.
+     * @return array<int, string> Section keys represented by the selected targets.
+     */
     private function resolveSelectedSectionKeysForTargets(array $backupMeta, string $backupType, array $selectedTargets, array $fallbackSelectedSections = []): array
     {
         $targets = [];
@@ -862,6 +1257,13 @@ class CONFIGBACKUPUTIL extends UTILBASE
         return $keys;
     }
 
+    /**
+     * Keeps only restore targets that are present in the inspected archive list.
+     *
+     * @param array<int, string> $targets Requested target paths.
+     * @param array<int, string> $archiveEntries Safe archive member paths.
+     * @return array<int, string> Requested targets that match archive content.
+     */
     private function filterTargetsByArchiveEntries(array $targets, array $archiveEntries): array
     {
         if (empty($targets) || empty($archiveEntries)) {
@@ -887,6 +1289,13 @@ class CONFIGBACKUPUTIL extends UTILBASE
         return $result;
     }
 
+    /**
+     * Keeps permission metadata for restored targets only.
+     *
+     * @param array<string, array<string, mixed>> $permissions Permission metadata from backup metadata.
+     * @param array<int, string> $targets Restore target paths.
+     * @return array<string, array<string, mixed>> Permission metadata to apply after restore.
+     */
     private function filterPermissionsForTargets(array $permissions, array $targets): array
     {
         if (empty($permissions) || empty($targets)) {
@@ -915,6 +1324,256 @@ class CONFIGBACKUPUTIL extends UTILBASE
         return $filtered;
     }
 
+    /**
+     * Reduces inspected archive metadata to regular files under restore targets.
+     *
+     * @param array<int, array<string, string>> $archiveMembers Inspected archive members.
+     * @param array<int, string> $targets Archive paths selected by restore sections or advanced file selection.
+     * @return array<int, array<string, string>> Regular file members allowed for restore.
+     */
+    private function filterRegularArchiveMembersForTargets(array $archiveMembers, array $targets): array
+    {
+        if (empty($archiveMembers) || empty($targets)) {
+            return [];
+        }
+
+        $normalisedTargets = [];
+        foreach ($targets as $target) {
+            $target = $this->normaliseArchiveMemberPath(ltrim(trim((string)$target), '/'));
+            if ($target !== '' && $this->getArchiveMemberPathError($target) === '') {
+                $normalisedTargets[$target] = true;
+            }
+        }
+        if (empty($normalisedTargets)) {
+            return [];
+        }
+
+        $filtered = [];
+        foreach ($archiveMembers as $member) {
+            if (!is_array($member) || (string)($member['type'] ?? '') !== '-') {
+                continue;
+            }
+
+            $path = $this->normaliseArchiveMemberPath((string)($member['path'] ?? ''));
+            if ($path === '' || $path === 'metadata.json') {
+                continue;
+            }
+
+            foreach (array_keys($normalisedTargets) as $target) {
+                if ($path === $target || strpos($path, $target . '/') === 0) {
+                    $filtered[$path] = $member;
+                    break;
+                }
+            }
+        }
+
+        ksort($filtered, SORT_STRING);
+        return array_values($filtered);
+    }
+
+    /**
+     * Creates a private temporary directory for non-root restore extraction.
+     *
+     * @return string Temporary directory path, or an empty string on failure.
+     */
+    private function createRestoreTempDir(): string
+    {
+        $base = rtrim(sys_get_temp_dir(), '/\\');
+        $tmpDir = $base . '/allsky-restore-' . uniqid('', true);
+        if (!@mkdir($tmpDir, 0700, true)) {
+            return '';
+        }
+
+        return $tmpDir;
+    }
+
+    /**
+     * Deletes a temporary directory tree created during restore.
+     *
+     * @param string $path Directory path to delete.
+     */
+    private function deleteDirectoryTree(string $path): void
+    {
+        if ($path === '' || !is_dir($path)) {
+            return;
+        }
+
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($path, FilesystemIterator::SKIP_DOTS),
+            RecursiveIteratorIterator::CHILD_FIRST
+        );
+        foreach ($iterator as $item) {
+            $itemPath = (string)$item->getPathname();
+            if ($item->isDir() && !$item->isLink()) {
+                @rmdir($itemPath);
+            } else {
+                @unlink($itemPath);
+            }
+        }
+        @rmdir($path);
+    }
+
+    /**
+     * Extracts validated archive members into a staging directory as the WebUI user.
+     *
+     * @param string $backupPath Path to the tar.gz backup archive.
+     * @param string $destinationDir Existing writable staging directory.
+     * @param array<int, array<string, string>> $archiveMembers Regular file members selected for restore.
+     * @return array{ok: bool, message?: string}
+     */
+    private function extractArchiveMembersToDirectory(string $backupPath, string $destinationDir, array $archiveMembers): array
+    {
+        if (empty($archiveMembers)) {
+            return ['ok' => false, 'message' => 'No regular files were selected for extraction.'];
+        }
+        if (!is_dir($destinationDir) || !is_writable($destinationDir)) {
+            return ['ok' => false, 'message' => 'Restore staging directory is not writable.'];
+        }
+
+        $rawPaths = [];
+        foreach ($archiveMembers as $member) {
+            if (!is_array($member)) {
+                continue;
+            }
+            $rawPath = trim((string)($member['rawPath'] ?? ''));
+            if ($rawPath !== '') {
+                $rawPaths[$rawPath] = true;
+            }
+        }
+        $rawPaths = array_keys($rawPaths);
+        sort($rawPaths, SORT_STRING);
+        if (empty($rawPaths)) {
+            return ['ok' => false, 'message' => 'No regular files were selected for extraction.'];
+        }
+
+        $listFile = tempnam(sys_get_temp_dir(), 'allsky-restore-list-');
+        if ($listFile === false) {
+            return ['ok' => false, 'message' => 'Unable to create restore extraction allow-list.'];
+        }
+
+        $listContent = implode("\n", $rawPaths) . "\n";
+        if (@file_put_contents($listFile, $listContent) === false) {
+            @unlink($listFile);
+            return ['ok' => false, 'message' => 'Unable to write restore extraction allow-list.'];
+        }
+
+        $tarBinary = $this->getTarBinary();
+        $cmd = $tarBinary . ' -xzf ' . escapeshellarg($backupPath) .
+            ' -C ' . escapeshellarg($destinationDir) .
+            ' --no-same-owner --no-same-permissions --overwrite -m' .
+            ' --verbatim-files-from -T ' . escapeshellarg($listFile) .
+            ' 2>&1';
+
+        $output = [];
+        $ret = 0;
+        exec($cmd, $output, $ret);
+        @unlink($listFile);
+        if ($ret === 0) {
+            return ['ok' => true];
+        }
+
+        $details = trim(implode("\n", $output));
+        $message = 'Restore staging extraction failed.';
+        if ($details !== '') {
+            $message .= ' ' . $details;
+        }
+        return ['ok' => false, 'message' => $message];
+    }
+
+    /**
+     * Copies staged, verified regular files into the Allsky tree with sudo.
+     *
+     * Each staged file is rechecked before copying so symlinks or paths escaping
+     * the staging directory cannot be copied into place.
+     *
+     * @param string $stagingDir Temporary staging directory containing extracted files.
+     * @param array<int, array<string, string>> $archiveMembers Regular file members selected for restore.
+     * @return array{ok: bool, message?: string, files?: array<int, string>}
+     */
+    private function copyStagedRegularFiles(string $stagingDir, array $archiveMembers): array
+    {
+        if (empty($archiveMembers)) {
+            return ['ok' => false, 'message' => 'No regular files were selected for restore.'];
+        }
+
+        $stagingRoot = realpath($stagingDir);
+        if ($stagingRoot === false || !is_dir($stagingRoot)) {
+            return ['ok' => false, 'message' => 'Restore staging directory is unavailable.'];
+        }
+
+        $relativePaths = [];
+        foreach ($archiveMembers as $member) {
+            if (!is_array($member)) {
+                continue;
+            }
+            $path = $this->normaliseArchiveMemberPath((string)($member['path'] ?? ''));
+            if ($path === '') {
+                continue;
+            }
+            $pathError = $this->getArchiveMemberPathError($path);
+            if ($pathError !== '') {
+                return ['ok' => false, 'message' => "Restore staged file '$path' is unsafe: $pathError."];
+            }
+
+            $source = $stagingRoot . '/' . $path;
+            if (is_link($source) || !is_file($source)) {
+                return ['ok' => false, 'message' => "Restore staged file '$path' is not a regular file."];
+            }
+            $realSource = realpath($source);
+            if ($realSource === false || strpos($realSource, $stagingRoot . '/') !== 0) {
+                return ['ok' => false, 'message' => "Restore staged file '$path' resolves outside the staging directory."];
+            }
+
+            $destination = $this->allskyHome . '/' . $path;
+            if (is_dir($destination) && !is_link($destination)) {
+                return ['ok' => false, 'message' => "Restore cannot replace directory '$path' with a file."];
+            }
+
+            $relativePaths[$path] = true;
+        }
+
+        $relativePaths = array_keys($relativePaths);
+        sort($relativePaths, SORT_STRING);
+        if (empty($relativePaths)) {
+            return ['ok' => false, 'message' => 'No regular files were selected for restore.'];
+        }
+
+        $copyBinary = is_executable('/bin/cp') ? '/bin/cp' : 'cp';
+        foreach (array_chunk($relativePaths, 120) as $chunk) {
+            $cmd = 'cd ' . escapeshellarg($stagingRoot) .
+                ' && sudo -n ' . $copyBinary . ' -f --remove-destination --parents --';
+            foreach ($chunk as $path) {
+                $cmd .= ' ' . escapeshellarg((string)$path);
+            }
+            $cmd .= ' ' . escapeshellarg($this->allskyHome) . ' 2>&1';
+
+            $output = [];
+            $ret = 0;
+            exec($cmd, $output, $ret);
+            if ($ret !== 0) {
+                $details = trim(implode("\n", $output));
+                $message = 'Restore failed while copying validated files into place.';
+                if (
+                    stripos($details, 'a password is required') !== false ||
+                    stripos($details, 'terminal is required') !== false
+                ) {
+                    $message .= ' Configure sudoers with NOPASSWD for file copy during restore.';
+                }
+                if ($details !== '') {
+                    $message .= ' ' . $details;
+                }
+                return ['ok' => false, 'message' => $message];
+            }
+        }
+
+        return ['ok' => true, 'files' => $relativePaths];
+    }
+
+    /**
+     * Ensures the local backup directory exists and is writable by the WebUI.
+     *
+     * @return array{ok: bool, message?: string}
+     */
     private function ensureBackupDir(): array
     {
         $backupDir = $this->getBackupDir();
@@ -960,6 +1619,11 @@ class CONFIGBACKUPUTIL extends UTILBASE
         return ['ok' => true];
     }
 
+    /**
+     * Lists locally available backup archives and their display metadata.
+     *
+     * @return array<int, array<string, mixed>>
+     */
     private function getBackupList(): array
     {
         $backupDir = $this->getBackupDir();
@@ -989,6 +1653,11 @@ class CONFIGBACKUPUTIL extends UTILBASE
         return $backups;
     }
 
+    /**
+     * Resolves a user-supplied backup filename to a readable local path.
+     *
+     * @param string $selected Filename from the WebUI request.
+     */
     private function getBackupPathByName(string $selected): string
     {
         $backupName = trim($selected);
@@ -1013,6 +1682,11 @@ class CONFIGBACKUPUTIL extends UTILBASE
         return $backupPath;
     }
 
+    /**
+     * Gets the JSON sidecar path associated with a backup archive.
+     *
+     * @param string $backupPath Backup archive path.
+     */
     private function getBackupSidecarPath(string $backupPath): string
     {
         $path = trim($backupPath);
@@ -1025,6 +1699,12 @@ class CONFIGBACKUPUTIL extends UTILBASE
         return $path . '.json';
     }
 
+    /**
+     * Reads cached metadata stored next to a backup archive.
+     *
+     * @param string $backupPath Backup archive path.
+     * @return array<string, mixed>
+     */
     private function readBackupSidecarMetadata(string $backupPath): array
     {
         $sidecar = $this->getBackupSidecarPath($backupPath);
@@ -1041,6 +1721,12 @@ class CONFIGBACKUPUTIL extends UTILBASE
         return is_array($decoded) ? $decoded : [];
     }
 
+    /**
+     * Writes cached metadata next to a backup archive.
+     *
+     * @param string $backupPath Backup archive path.
+     * @param array<string, mixed> $metadata Metadata to cache.
+     */
     private function writeBackupSidecarMetadata(string $backupPath, array $metadata): bool
     {
         $sidecar = $this->getBackupSidecarPath($backupPath);
@@ -1061,6 +1747,11 @@ class CONFIGBACKUPUTIL extends UTILBASE
         return true;
     }
 
+    /**
+     * Reads the WebUI backup configuration metadata file.
+     *
+     * @return array<string, mixed>
+     */
     private function readBackupMetadata(): array
     {
         $metadataFile = $this->getBackupMetadataFile();
@@ -1081,6 +1772,11 @@ class CONFIGBACKUPUTIL extends UTILBASE
         return $decoded;
     }
 
+    /**
+     * Writes the WebUI backup configuration metadata file.
+     *
+     * @param array<string, mixed> $extra Extra metadata values to merge into the file.
+     */
     private function writeBackupMetadata(array $extra = []): bool
     {
         $existing = $this->readBackupMetadata();
@@ -1113,6 +1809,12 @@ class CONFIGBACKUPUTIL extends UTILBASE
         return true;
     }
 
+    /**
+     * Writes a human-readable log for a completed restore.
+     *
+     * @param array<string, mixed> $details Restore summary and warning details.
+     * @return array{ok: bool, message?: string, path?: string}
+     */
     private function writeRestoreLog(array $details): array
     {
         $logsDir = $this->allskyConfig . '/logs';
@@ -1198,6 +1900,11 @@ class CONFIGBACKUPUTIL extends UTILBASE
         return ['ok' => true, 'path' => $path];
     }
 
+    /**
+     * Gets the display label for a restore section key.
+     *
+     * @param string $sectionKey Restore section key.
+     */
     private function getRestoreSectionLabel(string $sectionKey): string
     {
         $key = trim($sectionKey);
@@ -1224,6 +1931,9 @@ class CONFIGBACKUPUTIL extends UTILBASE
         return ucfirst($key);
     }
 
+    /**
+     * Ensures backup metadata exists and matches the current target definitions.
+     */
     private function ensureBackupMetadataFile(): bool
     {
         $metadataFile = $this->getBackupMetadataFile();
@@ -1252,7 +1962,7 @@ class CONFIGBACKUPUTIL extends UTILBASE
         if (!isset($decoded['optionalTargets'])) {
             return $this->writeBackupMetadata();
         }
-        $storedOptional = $this->normalizeOptionalTargets($decoded['optionalTargets']);
+        $storedOptional = $this->normaliseOptionalTargets($decoded['optionalTargets']);
         $currentOptional = $this->getOptionalTargets();
         if (json_encode($storedOptional) !== json_encode($currentOptional)) {
             return $this->writeBackupMetadata();
@@ -1261,13 +1971,24 @@ class CONFIGBACKUPUTIL extends UTILBASE
         return true;
     }
 
+    /**
+     * Extracts one safe file from an archive to a string.
+     *
+     * @param string $backupPath Path to a tar.gz backup archive.
+     * @param string $archivePath Archive member path to read.
+     */
     private function extractArchiveFile(string $backupPath, string $archivePath): string
     {
         if (!is_file($backupPath) || !is_readable($backupPath)) {
             return '';
         }
 
-        $cmd = 'tar -xOf ' . escapeshellarg($backupPath) . ' ' . escapeshellarg($archivePath) . ' 2>/dev/null';
+        $archivePath = $this->normaliseArchiveMemberPath($archivePath);
+        if ($archivePath === '' || $this->getArchiveMemberPathError($archivePath) !== '') {
+            return '';
+        }
+
+        $cmd = $this->getTarBinary() . ' -xOf ' . escapeshellarg($backupPath) . ' -- ' . escapeshellarg($archivePath) . ' 2>/dev/null';
         $output = [];
         $ret = 0;
         exec($cmd, $output, $ret);
@@ -1278,6 +1999,12 @@ class CONFIGBACKUPUTIL extends UTILBASE
         return implode("\n", $output);
     }
 
+    /**
+     * Captures owner, group, mode, and type metadata for a local path.
+     *
+     * @param string $relativePath Path relative to the Allsky installation root.
+     * @return array{mode: string, owner: string, group: string, ownerId: int, groupId: int, type: string}|null
+     */
     private function getPermissionInfoForPath(string $relativePath): ?array
     {
         $relativePath = ltrim($relativePath, '/');
@@ -1334,6 +2061,12 @@ class CONFIGBACKUPUTIL extends UTILBASE
         ];
     }
 
+    /**
+     * Builds a flat file list for backup metadata from archive targets.
+     *
+     * @param array<int, string> $targets Archive target paths.
+     * @return array<int, string> Relative file paths included by those targets.
+     */
     private function buildBackupFileListFromTargets(array $targets): array
     {
         $files = [];
@@ -1374,8 +2107,8 @@ class CONFIGBACKUPUTIL extends UTILBASE
                     if ($relativePath === false || $relativePath === '') {
                         continue;
                     }
-                    $normalizedRelativePath = str_replace('\\', '/', $relativePath);
-                    if (strpos($normalizedRelativePath, '/__pycache__/') !== false || preg_match('/(^|\/)__pycache__(\/|$)/', $normalizedRelativePath)) {
+                    $normalisedRelativePath = str_replace('\\', '/', $relativePath);
+                    if (strpos($normalisedRelativePath, '/__pycache__/') !== false || preg_match('/(^|\/)__pycache__(\/|$)/', $normalisedRelativePath)) {
                         continue;
                     }
                     $files[$relativePath] = true;
@@ -1388,6 +2121,12 @@ class CONFIGBACKUPUTIL extends UTILBASE
         return $list;
     }
 
+    /**
+     * Builds file ownership and mode metadata for archive targets.
+     *
+     * @param array<int, string> $targets Archive target paths.
+     * @return array<string, array<string, mixed>>
+     */
     private function buildPermissionsMetadata(array $targets): array
     {
         $permissions = [];
@@ -1435,6 +2174,15 @@ class CONFIGBACKUPUTIL extends UTILBASE
         return $permissions;
     }
 
+    /**
+     * Applies restored ownership and mode metadata to copied files.
+     *
+     * Symlinks are deliberately skipped so permission changes cannot follow a
+     * link out of the restored tree.
+     *
+     * @param array<string, array<string, mixed>> $permissions Permission metadata selected for restored targets.
+     * @return array{ok: bool, message?: string}
+     */
     private function applyPermissionsMetadata(array $permissions): array
     {
         $errors = [];
@@ -1451,6 +2199,9 @@ class CONFIGBACKUPUTIL extends UTILBASE
 
             $fullPath = $this->allskyHome . '/' . $relativePath;
             if (!file_exists($fullPath) && !is_link($fullPath)) {
+                continue;
+            }
+            if (is_link($fullPath)) {
                 continue;
             }
 
@@ -1549,6 +2300,11 @@ class CONFIGBACKUPUTIL extends UTILBASE
         return ['ok' => true];
     }
 
+    /**
+     * Reads the version file from a backup archive.
+     *
+     * @param string $backupPath Path to a tar.gz backup archive.
+     */
     private function getBackupVersionFromArchive(string $backupPath): string
     {
         $raw = $this->extractArchiveFile($backupPath, 'version');
@@ -1561,6 +2317,12 @@ class CONFIGBACKUPUTIL extends UTILBASE
         return $line;
     }
 
+    /**
+     * Reads camera type and model from the settings file inside a backup.
+     *
+     * @param string $backupPath Path to a tar.gz backup archive.
+     * @return array{cameratype: string, cameramodel: string}
+     */
     private function getBackupCameraFromArchive(string $backupPath): array
     {
         $settingsFile = $this->getSettingsFileFromArchive($backupPath);
@@ -1586,22 +2348,16 @@ class CONFIGBACKUPUTIL extends UTILBASE
         ];
     }
 
+    /**
+     * Lists settings files found in a backup archive.
+     *
+     * @param string $backupPath Path to a tar.gz backup archive.
+     * @return array<int, string>
+     */
     private function getSettingsFilesFromArchive(string $backupPath): array
     {
-        if (!is_file($backupPath) || !is_readable($backupPath)) {
-            return [];
-        }
-
-        $cmd = 'tar -tzf ' . escapeshellarg($backupPath) . ' 2>/dev/null';
-        $output = [];
-        $ret = 0;
-        exec($cmd, $output, $ret);
-        if ($ret !== 0) {
-            return [];
-        }
-
         $settingsFiles = [];
-        foreach ($output as $entry) {
+        foreach ($this->listArchiveEntries($backupPath) as $entry) {
             $entry = trim((string)$entry);
             if ($entry === 'config/settings.json' || preg_match('/^config\\/settings_.+\\.json$/', $entry)) {
                 $settingsFiles[] = $entry;
@@ -1611,6 +2367,11 @@ class CONFIGBACKUPUTIL extends UTILBASE
         return array_values(array_unique($settingsFiles));
     }
 
+    /**
+     * Chooses the settings file to use from backup metadata or archive content.
+     *
+     * @param string $backupPath Path to a tar.gz backup archive.
+     */
     private function getSettingsFileFromArchive(string $backupPath): string
     {
         $rawMeta = $this->extractArchiveFile($backupPath, 'metadata.json');
@@ -1639,22 +2400,16 @@ class CONFIGBACKUPUTIL extends UTILBASE
         return '';
     }
 
+    /**
+     * Lists cc files found in a backup archive.
+     *
+     * @param string $backupPath Path to a tar.gz backup archive.
+     * @return array<int, string>
+     */
     private function getCcFilesFromArchive(string $backupPath): array
     {
-        if (!is_file($backupPath) || !is_readable($backupPath)) {
-            return [];
-        }
-
-        $cmd = 'tar -tzf ' . escapeshellarg($backupPath) . ' 2>/dev/null';
-        $output = [];
-        $ret = 0;
-        exec($cmd, $output, $ret);
-        if ($ret !== 0) {
-            return [];
-        }
-
         $ccFiles = [];
-        foreach ($output as $entry) {
+        foreach ($this->listArchiveEntries($backupPath) as $entry) {
             $entry = trim((string)$entry);
             if ($entry === 'config/cc.json' || preg_match('/^config\\/cc_.+\\.json$/', $entry)) {
                 $ccFiles[] = $entry;
@@ -1664,6 +2419,11 @@ class CONFIGBACKUPUTIL extends UTILBASE
         return array_values(array_unique($ccFiles));
     }
 
+    /**
+     * Chooses the cc file to use from backup metadata or archive content.
+     *
+     * @param string $backupPath Path to a tar.gz backup archive.
+     */
     private function getCcFileFromArchive(string $backupPath): string
     {
         $rawMeta = $this->extractArchiveFile($backupPath, 'metadata.json');
@@ -1692,6 +2452,14 @@ class CONFIGBACKUPUTIL extends UTILBASE
         return '';
     }
 
+    /**
+     * Reads and completes backup metadata from sidecar files and archive content.
+     *
+     * @param string $backupPath Path to a tar.gz backup archive.
+     * @param array<string, mixed> $backupFileInfo File details from the backup list.
+     * @param bool $writeSidecar Whether archive metadata should be cached next to the archive.
+     * @return array<string, mixed>
+     */
     private function getArchiveMetadata(string $backupPath, array $backupFileInfo = [], bool $writeSidecar = true): array
     {
         $sidecarPath = $this->getBackupSidecarPath($backupPath);
@@ -1784,7 +2552,7 @@ class CONFIGBACKUPUTIL extends UTILBASE
         $imageTargets = [];
         if (isset($decoded['imageTargets']) && is_array($decoded['imageTargets'])) {
             foreach ($decoded['imageTargets'] as $target) {
-                $target = $this->normalizeArchiveTarget((string)$target);
+                $target = $this->normaliseArchiveTarget((string)$target);
                 if ($target !== '') {
                     $imageTargets[] = $target;
                 }
@@ -1892,6 +2660,12 @@ class CONFIGBACKUPUTIL extends UTILBASE
         return $metadata;
     }
 
+    /**
+     * Reads module dependencies from module configuration files in a backup.
+     *
+     * @param string $backupPath Path to a tar.gz backup archive.
+     * @return array<int, string> Required module filenames.
+     */
     private function getRequiredModulesFromArchive(string $backupPath): array
     {
         $configFiles = [
@@ -1926,6 +2700,11 @@ class CONFIGBACKUPUTIL extends UTILBASE
         return array_keys($required);
     }
 
+    /**
+     * Reads module dependencies from the current local configuration.
+     *
+     * @return array<int, string> Required module filenames.
+     */
     private function getRequiredModulesFromLocalConfig(): array
     {
         $configFiles = [
@@ -1966,6 +2745,12 @@ class CONFIGBACKUPUTIL extends UTILBASE
         return $list;
     }
 
+    /**
+     * Finds required modules that are not available locally.
+     *
+     * @param array<int, string> $modules Module filenames to check.
+     * @return array<int, string> Missing module filenames.
+     */
     private function findMissingModuleFiles(array $modules): array
     {
         $coreDir = $this->allskyHome . '/scripts/modules';
@@ -1990,6 +2775,12 @@ class CONFIGBACKUPUTIL extends UTILBASE
         return $missing;
     }
 
+    /**
+     * Splits required modules into core, user, and missing groups.
+     *
+     * @param array<int, string> $modules Module filenames to classify.
+     * @return array<string, array<int, string>>
+     */
     private function classifyRequiredModules(array $modules): array
     {
         $coreDir = $this->allskyHome . '/scripts/modules';
@@ -2029,21 +2820,39 @@ class CONFIGBACKUPUTIL extends UTILBASE
         ];
     }
 
+    /**
+     * Validates an uploaded backup archive before it is accepted by the WebUI.
+     *
+     * The archive must pass member safety inspection and contain the required
+     * Allsky metadata and type-specific restore files.
+     *
+     * @param string $archivePath Path to the uploaded tar.gz archive.
+     * @return array{ok: bool, message?: string}
+     */
     private function validateBackupArchive(string $archivePath): array
     {
         if (!is_file($archivePath) || !is_readable($archivePath)) {
             return ['ok' => false, 'message' => 'Uploaded file is not readable.'];
         }
 
-        $cmd = 'tar -tzf ' . escapeshellarg($archivePath) . ' 2>&1';
-        $output = [];
-        $ret = 0;
-        exec($cmd, $output, $ret);
-        if ($ret !== 0) {
-            return ['ok' => false, 'message' => 'Uploaded file is not a valid tar.gz backup.'];
+        $inspection = $this->inspectArchiveMembers($archivePath);
+        if (empty($inspection['ok'])) {
+            return [
+                'ok' => false,
+                'message' => (string)($inspection['message'] ?? 'Uploaded file is not a valid tar.gz backup.'),
+            ];
         }
 
-        $entries = array_map('trim', $output);
+        $entries = [];
+        foreach (($inspection['entries'] ?? []) as $entry) {
+            if (is_array($entry)) {
+                $path = trim((string)($entry['path'] ?? ''));
+                if ($path !== '') {
+                    $entries[] = $path;
+                }
+            }
+        }
+
         if (!in_array('metadata.json', $entries, true)) {
             return ['ok' => false, 'message' => "Uploaded file is not a valid Allsky backup (missing 'metadata.json')."];
         }
@@ -2087,6 +2896,12 @@ class CONFIGBACKUPUTIL extends UTILBASE
         return ['ok' => true];
     }
 
+    /**
+     * Creates a configuration backup archive.
+     *
+     * @param array<int, string> $selectedOptionalTargetKeys Optional sections selected for inclusion.
+     * @return array<string, mixed>
+     */
     private function createConfigBackupArchive(array $selectedOptionalTargetKeys = []): array
     {
         @set_time_limit(0);
@@ -2253,6 +3068,13 @@ class CONFIGBACKUPUTIL extends UTILBASE
         ];
     }
 
+    /**
+     * Creates an image backup archive.
+     *
+     * @param bool $backupAllImages Whether every image folder should be included.
+     * @param array<int, string> $selectedImageFolders Image folders selected when not backing up everything.
+     * @return array<string, mixed>
+     */
     private function createImagesBackupArchive(bool $backupAllImages = true, array $selectedImageFolders = []): array
     {
         @set_time_limit(0);
@@ -2376,6 +3198,19 @@ class CONFIGBACKUPUTIL extends UTILBASE
         ];
     }
 
+    /**
+     * Restores selected backup sections or files from a validated archive.
+     *
+     * Restore performs full archive member inspection, extracts only allow-listed
+     * regular files into a temporary staging directory as a non-root user, then
+     * copies the staged files into place.
+     *
+     * @param string $selected Backup filename selected in the WebUI.
+     * @param array<int, string> $selectedSections Section keys selected for restore.
+     * @param array<int, string> $selectedImageFolders Image folder names selected for image restores.
+     * @param array<int, string> $selectedFiles Advanced restore file paths.
+     * @return array<string, mixed>
+     */
     private function restoreBackupArchive(string $selected, array $selectedSections = [], array $selectedImageFolders = [], array $selectedFiles = []): array
     {
         @set_time_limit(0);
@@ -2387,6 +3222,28 @@ class CONFIGBACKUPUTIL extends UTILBASE
         }
 
         $backupName = basename($backupPath);
+        $archiveInspection = $this->inspectArchiveMembers($backupPath);
+        if (empty($archiveInspection['ok'])) {
+            return [
+                'ok' => false,
+                'message' => (string)($archiveInspection['message'] ?? "Backup '$backupName' is not a valid tar.gz archive."),
+            ];
+        }
+        $archiveMembers = (isset($archiveInspection['entries']) && is_array($archiveInspection['entries']))
+            ? $archiveInspection['entries']
+            : [];
+        $archiveEntries = [];
+        foreach ($archiveMembers as $entry) {
+            if (is_array($entry)) {
+                $path = trim((string)($entry['path'] ?? ''));
+                if ($path !== '') {
+                    $archiveEntries[] = $path;
+                }
+            }
+        }
+        $archiveEntries = array_values(array_unique($archiveEntries));
+        sort($archiveEntries, SORT_STRING);
+
         $backupMeta = $this->getArchiveMetadata($backupPath, []);
         $backupType = (string)($backupMeta['backupType'] ?? 'config');
         $selectedSectionKeys = $this->resolveSelectedSectionKeys($backupMeta, $selectedSections);
@@ -2394,27 +3251,27 @@ class CONFIGBACKUPUTIL extends UTILBASE
             return ['ok' => false, 'message' => 'No restore sections selected.'];
         }
 
-        $normalizedSelectedImageFolders = [];
+        $normalisedSelectedImageFolders = [];
         foreach ($selectedImageFolders as $folder) {
             $name = trim((string)$folder);
             if ($name === '' || preg_match('/(^|\/)\.\.(\/|$)/', $name) || strpos($name, '/') !== false) {
                 continue;
             }
-            $normalizedSelectedImageFolders[$name] = true;
+            $normalisedSelectedImageFolders[$name] = true;
         }
-        $normalizedSelectedImageFolders = array_keys($normalizedSelectedImageFolders);
-        sort($normalizedSelectedImageFolders, SORT_NATURAL | SORT_FLAG_CASE);
+        $normalisedSelectedImageFolders = array_keys($normalisedSelectedImageFolders);
+        sort($normalisedSelectedImageFolders, SORT_NATURAL | SORT_FLAG_CASE);
 
-        $normalizedSelectedFiles = [];
+        $normalisedSelectedFiles = [];
         foreach ($selectedFiles as $filePath) {
             $path = ltrim(trim((string)$filePath), '/');
             if ($path === '' || preg_match('/(^|\/)\.\.(\/|$)/', $path)) {
                 continue;
             }
-            $normalizedSelectedFiles[$path] = true;
+            $normalisedSelectedFiles[$path] = true;
         }
-        $normalizedSelectedFiles = array_keys($normalizedSelectedFiles);
-        sort($normalizedSelectedFiles, SORT_STRING);
+        $normalisedSelectedFiles = array_keys($normalisedSelectedFiles);
+        sort($normalisedSelectedFiles, SORT_STRING);
 
         $targetsToExtract = [];
         foreach ($selectedSectionKeys as $sectionKey) {
@@ -2425,7 +3282,7 @@ class CONFIGBACKUPUTIL extends UTILBASE
         $targetsToExtract = array_values(array_unique(array_keys($targetsToExtract)));
         sort($targetsToExtract, SORT_STRING);
 
-        if (!empty($normalizedSelectedFiles)) {
+        if (!empty($normalisedSelectedFiles)) {
             $allowedFiles = (isset($backupMeta['files']) && is_array($backupMeta['files'])) ? $backupMeta['files'] : [];
             $allowedSet = [];
             foreach ($allowedFiles as $allowedFile) {
@@ -2437,31 +3294,30 @@ class CONFIGBACKUPUTIL extends UTILBASE
 
             if (!empty($allowedSet)) {
                 $validFiles = [];
-                foreach ($normalizedSelectedFiles as $path) {
+                foreach ($normalisedSelectedFiles as $path) {
                     if (isset($allowedSet[$path])) {
                         $validFiles[] = $path;
                     }
                 }
-                $normalizedSelectedFiles = $validFiles;
+                $normalisedSelectedFiles = $validFiles;
             } else {
-                $archiveEntries = $this->listArchiveEntries($backupPath);
-                $normalizedSelectedFiles = $this->filterTargetsByArchiveEntries($normalizedSelectedFiles, $archiveEntries);
+                $normalisedSelectedFiles = $this->filterTargetsByArchiveEntries($normalisedSelectedFiles, $archiveEntries);
             }
 
-            if (empty($normalizedSelectedFiles)) {
+            if (empty($normalisedSelectedFiles)) {
                 return ['ok' => false, 'message' => 'None of the selected files were found in this backup.'];
             }
-            $selectedSectionKeys = $this->resolveSelectedSectionKeysForTargets($backupMeta, $backupType, $normalizedSelectedFiles, $selectedSections);
-            $targetsToExtract = $normalizedSelectedFiles;
+            $selectedSectionKeys = $this->resolveSelectedSectionKeysForTargets($backupMeta, $backupType, $normalisedSelectedFiles, $selectedSections);
+            $targetsToExtract = $normalisedSelectedFiles;
         }
 
         $coreSelected = in_array('core', $selectedSectionKeys, true);
         $modulesSelected = in_array('modules', $selectedSectionKeys, true);
         $imagesSelected = in_array('images', $selectedSectionKeys, true);
 
-        if ($backupType === 'images' && $imagesSelected && !empty($normalizedSelectedImageFolders)) {
+        if ($backupType === 'images' && $imagesSelected && !empty($normalisedSelectedImageFolders)) {
             $folderTargets = [];
-            foreach ($normalizedSelectedImageFolders as $folder) {
+            foreach ($normalisedSelectedImageFolders as $folder) {
                 $folderTargets[] = $this->getImagesArchiveTarget() . '/' . $folder;
             }
             // For images restores we rely on metadata targets first for speed.
@@ -2478,7 +3334,6 @@ class CONFIGBACKUPUTIL extends UTILBASE
                 }
                 $folderTargets = array_keys($valid);
             } else {
-                $archiveEntries = $this->listArchiveEntries($backupPath);
                 $folderTargets = $this->filterTargetsByArchiveEntries($folderTargets, $archiveEntries);
             }
             if (empty($folderTargets)) {
@@ -2488,7 +3343,6 @@ class CONFIGBACKUPUTIL extends UTILBASE
         }
 
         if (empty($targetsToExtract) || $backupType !== 'images') {
-            $archiveEntries = $this->listArchiveEntries($backupPath);
             $targetsToExtract = $this->filterTargetsByArchiveEntries($targetsToExtract, $archiveEntries);
         }
 
@@ -2514,23 +3368,27 @@ class CONFIGBACKUPUTIL extends UTILBASE
             $backupHasModules = $this->backupContainsModulesFiles($backupPath, $backupMeta);
             $mustRunModuleCheck = (!$backupHasModules) || (!$modulesSelected);
             if ($mustRunModuleCheck) {
-            $requiredModules = $this->getRequiredModulesFromArchive($backupPath);
-            $missingModules = $this->findMissingModuleFiles($requiredModules);
-            if (!empty($missingModules)) {
-                return [
-                    'ok' => false,
-                    'message' => 'Restore blocked. Missing required module files: ' . implode(', ', $missingModules),
-                ];
-            }
+                $requiredModules = $this->getRequiredModulesFromArchive($backupPath);
+                $missingModules = $this->findMissingModuleFiles($requiredModules);
+                if (!empty($missingModules)) {
+                    return [
+                        'ok' => false,
+                        'message' => 'Restore blocked. Missing required module files: ' . implode(', ', $missingModules),
+                    ];
+                }
             }
         } else if ($backupType === 'images' && !$imagesSelected) {
             return ['ok' => false, 'message' => 'No image restore section selected.'];
         }
 
-        $tarBinary = is_executable('/bin/tar') ? '/bin/tar' : 'tar';
-        $useSudoTar = true;
+        $regularMembersToRestore = $this->filterRegularArchiveMembersForTargets($archiveMembers, $targetsToExtract);
+        if (empty($regularMembersToRestore)) {
+            return ['ok' => false, 'message' => 'Selected restore sections do not contain any regular files in this backup.'];
+        }
+
         $allskyStopped = false;
         $restartWarning = '';
+        $restoreTmpDir = '';
         $ensureAllskyStarted = function () use (&$allskyStopped, &$steps, &$restartWarning): void {
             if (!$allskyStopped) {
                 return;
@@ -2542,58 +3400,45 @@ class CONFIGBACKUPUTIL extends UTILBASE
             }
             $allskyStopped = false;
         };
-        $failRestore = function (string $message) use (&$ensureAllskyStarted, &$restartWarning): array {
+        $failRestore = function (string $message) use (&$ensureAllskyStarted, &$restartWarning, &$restoreTmpDir): array {
+            if ($restoreTmpDir !== '') {
+                $this->deleteDirectoryTree($restoreTmpDir);
+                $restoreTmpDir = '';
+            }
             $ensureAllskyStarted();
             if ($restartWarning !== '') {
                 $message .= ' ' . $restartWarning;
             }
             return ['ok' => false, 'message' => $message];
         };
-        $tarCmd = $useSudoTar ? ('sudo -n ' . $tarBinary) : $tarBinary;
+
+        $restoreTmpDir = $this->createRestoreTempDir();
+        if ($restoreTmpDir === '') {
+            return $failRestore('Unable to create restore staging directory.');
+        }
+
+        $steps[] = 'Extracting selected files to staging area';
+        $extractResult = $this->extractArchiveMembersToDirectory($backupPath, $restoreTmpDir, $regularMembersToRestore);
+        if (empty($extractResult['ok'])) {
+            return $failRestore((string)($extractResult['message'] ?? 'Restore staging extraction failed.'));
+        }
+
         if ($backupType === 'config') {
             $steps[] = 'Stopping Allsky service';
             $stopResult = $this->controlAllskyService('stop');
             if (empty($stopResult['ok'])) {
-                return ['ok' => false, 'message' => (string)($stopResult['message'] ?? 'Unable to stop allsky service before restore.')];
+                return $failRestore((string)($stopResult['message'] ?? 'Unable to stop allsky service before restore.'));
             }
             $allskyStopped = true;
         }
-        $cmd = $tarCmd . ' -xzf ' . escapeshellarg($backupPath) .
-            ' -C ' . escapeshellarg($this->allskyHome) .
-            ' --no-same-owner --no-same-permissions --overwrite -m' .
-            ' --exclude=' . escapeshellarg('metadata.json') .
-            ' ';
-        $steps[] = 'Extracting selected files';
-        foreach ($targetsToExtract as $target) {
-            $cmd .= escapeshellarg($target) . ' ';
-        }
-        $cmd .= '2>&1';
-
-        $output = [];
-        $ret = 0;
-        exec($cmd, $output, $ret);
 
         $permissionWarnings = '';
-        if ($ret !== 0) {
-            if ($this->isIgnorableTarPermissionError($output)) {
-                $permissionWarnings = 'Restore completed with permission warnings while applying file modes/timestamps.';
-            } else {
-                $details = trim(implode("\n", $output));
-                $message = 'Restore failed.';
-                if (
-                    $useSudoTar &&
-                    (
-                        stripos($details, 'a password is required') !== false ||
-                        stripos($details, 'terminal is required') !== false
-                    )
-                ) {
-                    $message .= " Configure sudoers with NOPASSWD for tar extraction during restore.";
-                }
-                if ($details !== '') {
-                    $message .= ' ' . $details;
-                }
-                return $failRestore($message);
-            }
+        $steps[] = 'Copying validated files into place';
+        $copyResult = $this->copyStagedRegularFiles($restoreTmpDir, $regularMembersToRestore);
+        $this->deleteDirectoryTree($restoreTmpDir);
+        $restoreTmpDir = '';
+        if (empty($copyResult['ok'])) {
+            return $failRestore((string)($copyResult['message'] ?? 'Restore failed while copying validated files into place.'));
         }
 
         if ($backupType === 'config' && $coreSelected) {
@@ -2672,7 +3517,7 @@ class CONFIGBACKUPUTIL extends UTILBASE
         }
         $steps[] = 'Finalising restore';
 
-        $restoreMode = empty($normalizedSelectedFiles) ? 'normal' : 'advanced';
+        $restoreMode = empty($normalisedSelectedFiles) ? 'normal' : 'advanced';
         $restoredToVersion = $this->getCurrentVersion();
         $cameraToInfo = $this->getCurrentCameraInfo();
         $cameraFrom = trim((string)($backupMeta['cameratype'] ?? 'unknown')) . ' / ' . trim((string)($backupMeta['cameramodel'] ?? 'unknown'));
@@ -2687,8 +3532,8 @@ class CONFIGBACKUPUTIL extends UTILBASE
             'cameraTo' => $cameraTo,
             'mode' => $restoreMode,
             'selectedSections' => $selectedSectionKeys,
-            'selectedImageFolders' => $normalizedSelectedImageFolders,
-            'selectedFiles' => $normalizedSelectedFiles,
+            'selectedImageFolders' => $normalisedSelectedImageFolders,
+            'selectedFiles' => $normalisedSelectedFiles,
             'targetsRestored' => $targetsToExtract,
             'warning' => $warning,
             'steps' => $steps,
@@ -2712,33 +3557,19 @@ class CONFIGBACKUPUTIL extends UTILBASE
             'cameraFrom' => $cameraFrom,
             'cameraTo' => $cameraTo,
             'selectedSections' => $selectedSectionKeys,
-            'selectedImageFolders' => $normalizedSelectedImageFolders,
-            'selectedFiles' => $normalizedSelectedFiles,
+            'selectedImageFolders' => $normalisedSelectedImageFolders,
+            'selectedFiles' => $normalisedSelectedFiles,
             'targetsRestored' => $targetsToExtract,
             'logPath' => (string)($logResult['path'] ?? ''),
         ];
     }
 
-    private function isIgnorableTarPermissionError(array $output): bool
-    {
-        $lines = array_values(array_filter(array_map(static fn($l) => trim((string)$l), $output), static fn($l) => $l !== ''));
-        if (empty($lines)) {
-            return false;
-        }
-
-        foreach ($lines as $line) {
-            if (
-                strpos($line, 'Cannot change mode') === false &&
-                strpos($line, 'Cannot utime') === false &&
-                strpos($line, 'Exiting with failure status due to previous errors') === false
-            ) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
+    /**
+     * Builds restore preview data and pre-flight checks for a backup archive.
+     *
+     * @param string $selected Backup filename selected in the WebUI.
+     * @return array<string, mixed>
+     */
     private function getRestoreInfo(string $selected): array
     {
         $backupPath = $this->getBackupPathByName($selected);
@@ -2747,6 +3578,14 @@ class CONFIGBACKUPUTIL extends UTILBASE
         }
 
         $backupName = basename($backupPath);
+        $archiveInspection = $this->inspectArchiveMembers($backupPath);
+        if (empty($archiveInspection['ok'])) {
+            return [
+                'ok' => false,
+                'message' => (string)($archiveInspection['message'] ?? "Backup '$backupName' is not a valid tar.gz archive."),
+            ];
+        }
+
         $backupMeta = $this->getArchiveMetadata($backupPath, []);
         $backupType = (string)($backupMeta['backupType'] ?? 'config');
         $currentCamera = $this->getCurrentCameraInfo();
@@ -2963,6 +3802,12 @@ class CONFIGBACKUPUTIL extends UTILBASE
         ];
     }
 
+    /**
+     * Deletes a local backup archive and any metadata sidecar.
+     *
+     * @param string $selected Backup filename selected in the WebUI.
+     * @return array{ok: bool, message?: string, file?: string, warning?: string}
+     */
     private function deleteBackupArchive(string $selected): array
     {
         $backupPath = $this->getBackupPathByName($selected);
@@ -3003,6 +3848,11 @@ class CONFIGBACKUPUTIL extends UTILBASE
         ];
     }
 
+    /**
+     * Accepts, validates, and stores an uploaded backup archive.
+     *
+     * @return array<string, mixed>
+     */
     private function uploadBackupArchive(): array
     {
         $backupDirResult = $this->ensureBackupDir();
@@ -3095,6 +3945,11 @@ class CONFIGBACKUPUTIL extends UTILBASE
         ];
     }
 
+    /**
+     * Builds the status payload used by backup and restore screens.
+     *
+     * @return array<string, mixed>
+     */
     private function getStatusData(): array
     {
         $imagesStats = $this->getImagesFolderStats();
@@ -3130,6 +3985,9 @@ class CONFIGBACKUPUTIL extends UTILBASE
         ];
     }
 
+    /**
+     * Handles a status request from the WebUI.
+     */
     public function getStatus(): void
     {
         if (!$this->ensureBackupMetadataFile()) {
@@ -3139,6 +3997,9 @@ class CONFIGBACKUPUTIL extends UTILBASE
         $this->sendResponse($this->getStatusData());
     }
 
+    /**
+     * Handles a request to create a configuration or image backup.
+     */
     public function postCreate(): void
     {
         $backupType = strtolower(trim((string)($_POST['backupType'] ?? 'config')));
@@ -3216,6 +4077,9 @@ class CONFIGBACKUPUTIL extends UTILBASE
         $this->sendResponse($response);
     }
 
+    /**
+     * Handles a request for restore preview and compatibility checks.
+     */
     public function postRestoreInfo(): void
     {
         $selected = (string)($_POST['file'] ?? '');
@@ -3226,6 +4090,9 @@ class CONFIGBACKUPUTIL extends UTILBASE
         $this->sendResponse($result);
     }
 
+    /**
+     * Handles a request to restore selected backup sections or files.
+     */
     public function postRestore(): void
     {
         $selected = (string)($_POST['file'] ?? '');
@@ -3308,6 +4175,9 @@ class CONFIGBACKUPUTIL extends UTILBASE
         $this->sendResponse($response);
     }
 
+    /**
+     * Handles a request to delete a stored backup.
+     */
     public function postDelete(): void
     {
         $selected = (string)($_POST['file'] ?? '');
@@ -3329,18 +4199,29 @@ class CONFIGBACKUPUTIL extends UTILBASE
         $this->sendResponse($response);
     }
 
+    /**
+     * Streams a backup selected with query parameters.
+     */
     public function getDownload(): void
     {
         $selected = (string)($_GET['file'] ?? '');
         $this->streamBackupDownload($selected);
     }
 
+    /**
+     * Streams a backup selected with posted form data.
+     */
     public function postDownload(): void
     {
         $selected = (string)($_POST['file'] ?? '');
         $this->streamBackupDownload($selected);
     }
 
+    /**
+     * Sends a backup archive as a file download and exits.
+     *
+     * @param string $selected Backup filename selected in the WebUI.
+     */
     private function streamBackupDownload(string $selected): void
     {
         $backupPath = $this->getBackupPathByName($selected);
@@ -3363,6 +4244,9 @@ class CONFIGBACKUPUTIL extends UTILBASE
         exit;
     }
 
+    /**
+     * Handles a request to upload and store a backup archive.
+     */
     public function postUpload(): void
     {
         $result = $this->uploadBackupArchive();
@@ -3384,6 +4268,11 @@ class CONFIGBACKUPUTIL extends UTILBASE
     }
 }
 
+/**
+ * Path to the current script, used to run the controller only when invoked directly.
+ *
+ * @var string|false $entry
+ */
 $entry = PHP_SAPI === 'cli'
     ? realpath($_SERVER['argv'][0] ?? '')
     : realpath($_SERVER['SCRIPT_FILENAME'] ?? '');

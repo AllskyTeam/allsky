@@ -17,6 +17,9 @@ Instead of manually copying files around and hoping nothing important gets misse
     If used incorrectly, they can replace working settings with older data.
     Read this overview and the detailed backup and restore guides before using these tools on a live system.
 
+!!! danger "Backup File Security"
+    ## DO NOT upload backup files to the internet, this includes posting them in GitHub issues and discussions. The backup files contain highly sensitive data.
+
 Go to the WebUI's **System -> System** page and click on the **Backups** tab.
 
 ![Backups tab location](/assets/guide_images/backup-overview-tab-location.png)

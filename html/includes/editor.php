@@ -41,25 +41,25 @@ class AllskyEditorPage
                         <?php if ($numFiles > 0) { $this->renderEditorToolbar(); } ?>
                         <p id="editor-messages"><?php $this->status->showMessages(); ?></p>
                         <p id="need-to-update"></p> <p id="file-corruption"></p>
-                        <div id="editor-source-only">
-                            <div id="editorContainer"></div>
-                        </div>
-                        <div id="editor-tabs" class="as-editor-tabs" style="display:none;">
-                            <ul class="nav nav-tabs" role="tablist">
-                                <li role="presentation" class="active">
-                                    <a href="#editor-form-pane" id="editor-form-tab" role="tab" aria-controls="editor-form-pane">Simple</a>
-                                </li>
-                                <li role="presentation">
-                                    <a href="#editor-source-pane" id="editor-source-tab" role="tab" aria-controls="editor-source-pane">Advanced</a>
-                                </li>
-                            </ul>
-                            <div class="tab-content">
-                                <div role="tabpanel" class="tab-pane active" id="editor-form-pane">
-                                    <div id="jedisonContainer"></div>
-                                </div>
-                                <div role="tabpanel" class="tab-pane" id="editor-source-pane"></div>
-                            </div>
-                        </div>
+	                        <div id="editor-source-only">
+	                            <div id="editorContainer"></div>
+	                        </div>
+	                        <div id="editor-tabs" class="as-editor-tabs" style="display:none;">
+	                            <ul class="nav nav-tabs" role="tablist">
+	                                <li role="presentation" class="active">
+	                                    <a href="#editor-source-pane" id="editor-source-tab" role="tab" aria-controls="editor-source-pane">Advanced</a>
+	                                </li>
+	                                <li role="presentation">
+	                                    <a href="#editor-form-pane" id="editor-form-tab" role="tab" aria-controls="editor-form-pane">Simple</a>
+	                                </li>
+	                            </ul>
+	                            <div class="tab-content">
+	                                <div role="tabpanel" class="tab-pane active" id="editor-source-pane"></div>
+	                                <div role="tabpanel" class="tab-pane" id="editor-form-pane">
+	                                    <div id="jedisonContainer"></div>
+	                                </div>
+	                            </div>
+	                        </div>
                         <?php if ($numFiles === 0) { ?>
                             <div class="editorBottomSection">
                                 <?php $this->renderNoFilesMessage(); ?>

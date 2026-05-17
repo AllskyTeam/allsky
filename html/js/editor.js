@@ -350,12 +350,12 @@ class AllskyEditor {
 		});
 
 		this.setupTabs();
-		this.configureEditorViews(
-			this.currentFileKey,
-			this.config.initialContent || "",
-			this.config.initialSchema,
-			true
-		);
+			this.configureEditorViews(
+				this.currentFileKey,
+				this.config.initialContent || "",
+				this.config.initialSchema,
+				false
+			);
 		this.refreshEditorState();
 		$(window).off("resize.allskyEditor").on("resize.allskyEditor", () => this.queueEditorResize());
 		const pageBody = $("body");
@@ -1095,11 +1095,7 @@ class AllskyEditor {
 			return;
 		}
 
-		if (preferForm) {
-			this.activateEditorTab(EDITOR_FORM_VIEW);
-		} else {
-			this.activateEditorTab(this.activeView);
-		}
+			this.activateEditorTab(preferForm ? EDITOR_FORM_VIEW : EDITOR_SOURCE_VIEW);
 	}
 
 	showJedisonTabs(fileKey, content) {
@@ -1296,7 +1292,7 @@ class AllskyEditor {
 		this.setEditorModeForKey(fileKey);
 		const content = data && typeof data.content === "string" ? data.content : "";
 		this.setEditorValue(content);
-		this.configureEditorViews(fileKey, content, data ? data.schema : null, true);
+			this.configureEditorViews(fileKey, content, data ? data.schema : null, false);
 	}
 
 	handleFileReadError(fileKey, response, textStatus, errorThrown) {

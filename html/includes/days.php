@@ -26,11 +26,13 @@ function ListDays()
 	$date = getVariableOrDefault($_POST, 'delete_directory', null);
 	if ($date !== null) {
 		if (CSRFValidate()) {
-			$msg = delete_directory(ALLSKY_IMAGES . "/$date");
+			$msg = delete_directory($date);
+			$displayDate = htmlspecialchars(is_scalar($date) ? (string) $date : "", ENT_QUOTES);
+			$displayMsg = htmlspecialchars((string) $msg, ENT_QUOTES);
 			if ($msg == "") {
-				echo "<div class='alert alert-success'>Deleted directory $date</div>";
+				echo "<div class='alert alert-success'>Deleted directory $displayDate</div>";
 			} else {
-				echo "<div class='alert alert-danger'><b>Unable to delete directory for $date</b>: $msg</div>";
+				echo "<div class='alert alert-danger'><b>Unable to delete directory for $displayDate</b>: $displayMsg</div>";
 			}
 		}
 	}
@@ -214,19 +216,32 @@ foreach ($days as $day) {
 }
 
 // Helper functions
-function delete_directory($directory_name)
+function delete_directory($date)
 {
 	global $page;
 
 	// First make sure this is a valid directory.
-	if (! is_valid_directory($directory_name)) {
+	if (! is_valid_directory($date)) {
 		return "Invalid directory name.";
+	}
+
+	$baseDirectory = realpath(ALLSKY_IMAGES);
+	$directory_name = ALLSKY_IMAGES . "/$date";
+	$targetDirectory = realpath($directory_name);
+
+	if ($baseDirectory === false || $targetDirectory === false) {
+		return "Invalid directory path.";
+	}
+
+	$baseDirectoryPrefix = rtrim($baseDirectory, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+	if (strpos($targetDirectory, $baseDirectoryPrefix) !== 0) {
+		return "Invalid directory path.";
 	}
 
 	// If there is any output it's from an error message.
 	$output = null;
 	$retval = null;
-	exec("sudo rm -r '$directory_name' 2>&1", $output, $retval);
+	exec("sudo rm -r " . escapeshellarg($targetDirectory) . " 2>&1", $output, $retval);
 	if ($output == null) {
 		if ($retval != 0)
 			$output = "Unknown error, retval=$retval.";

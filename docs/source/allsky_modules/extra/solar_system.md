@@ -43,6 +43,7 @@ Data used in this modules calculations is obtained from a variety of sources:
 | Setting | Description |
 |--------|-------------|
 | Enable ISS | Select this to calculate ISS data |
+| Legacy TLE Format | Use the legacy CelesTrak TLE download format for ISS. Leave off to use the new CSV format |
 | Visible Only | When calculating passes only show those where ISS is visible |
 | Debug Passes | Enabling this will display the pass information when testing the module, only useful for diagnosing issues |
 | Pass Days | The number of days to look ahead for passes |
@@ -56,6 +57,7 @@ Calculating passes for ISS can be fairly slow so be careful with the number of d
 ### Satellites { data-toc-label="Satellites" }
 | Setting | Description |
 |--------|-------------|
+| Legacy TLE Format | Use the legacy CelesTrak TLE download format for satellites. Leave off to use the new CSV format |
 | NORAD Id's | List of Norad Id's for satellites, see below for more details |
 | Min Elevation | Above this elevation the satellites will be considered visible |
 
@@ -205,6 +207,8 @@ Use the **ISS** tab for International Space Station calculations. Do not add the
 
 Enable **Enable ISS** to calculate ISS position and pass information. Use **Visible Only** if you only want passes that should be visible from your location. Set **Pass Days** to control how far ahead the module searches, and **Number Of Passes** to limit how many passes are returned.
 
+Leave **Legacy TLE Format** off to use the new CelesTrak CSV format. Enable it only if you need the legacy TLE request format.
+
 Use **AOS/LOS Elevation** to set the elevation used for acquisition and loss of signal times, and **Min Elevation** to ignore passes whose maximum elevation is too low to be useful. Keep **Pass Days** modest, typically 5 to 15 days, because pass calculations take time and TLE accuracy decreases further into the future.
 
 Enable **Debug Passes** only while testing or diagnosing pass calculations. It adds pass details to the test output and is not normally needed.
@@ -222,6 +226,8 @@ Enable **Debug Passes** only while testing or diagnosing pass calculations. It a
 Use the **Satellites** tab for satellites other than ISS.
 
 Add satellites using their NORAD IDs. You can enter multiple IDs as a comma-separated list, or use the satellite picker if available. Satellite IDs can be found on the Celestrak website.
+
+Leave **Legacy TLE Format** off to use the new CelesTrak CSV format. Enable it only if you need the legacy TLE request format.
 
 Set **Minimum Elevation** to the elevation above which each satellite should be treated as visible. Satellites are only classed as visible if they are above this elevation and sunlit.
 

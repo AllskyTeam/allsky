@@ -746,12 +746,47 @@ if ($page == "login") {
 	die();
 }
 	if ($page == "logout") {
-		if (class_exists('RememberMe')) {
-			$rememberUser = trim((string)($_SESSION['user'] ?? ''));
-			RememberMe::revokeAll($rememberUser !== '' ? $rememberUser : null);
+		if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+			header('Allow: POST');
+			http_response_code(405);
+			exit;
 		}
-		$_SESSION['auth'] = false;
-		$_SESSION['user'] = "";
+
+		if (! CSRFValidate()) {
+			http_response_code(403);
+			exit('Invalid CSRF token.');
+		}
+
+		$rememberUser = trim((string)($_SESSION['user'] ?? ''));
+		if (class_exists('RememberMe')) {
+			if ($rememberUser !== '') {
+				RememberMe::revokeAll($rememberUser);
+			} else if ($useLogin) {
+				RememberMe::revokeAll(null);
+			} else {
+				RememberMe::clearCookie();
+			}
+		}
+
+		if (session_status() === PHP_SESSION_ACTIVE) {
+			$_SESSION = [];
+			session_unset();
+
+			if (ini_get('session.use_cookies')) {
+				$params = session_get_cookie_params();
+				setcookie(session_name(), '', [
+					'expires' => time() - 3600,
+					'path' => $params['path'] ?? '/',
+					'domain' => $params['domain'] ?? '',
+					'secure' => (bool)($params['secure'] ?? false),
+					'httponly' => (bool)($params['httponly'] ?? true),
+					'samesite' => $params['samesite'] ?: 'Lax',
+				]);
+			}
+
+			session_destroy();
+		}
+    
 		redirect("index.php?page=login");
 	}
 	if ($page == "editor") {

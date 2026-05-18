@@ -5324,7 +5324,7 @@
   <span class="md-ellipsis">
     
   
-    Folder Strucuture
+    Folder Structure
   
 
     
@@ -6042,10 +6042,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#keep-main-clean" class="md-nav__link">
+  <a href="#keep-your-base-branch-clean" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Keep main Clean
+        Keep Base Clean
       
     </span>
   </a>
@@ -6079,6 +6079,17 @@
     <span class="md-ellipsis">
       
         Code Documentation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#coding-with-ai" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Coding With AI
       
     </span>
   </a>
@@ -6148,6 +6159,23 @@
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Contributing To">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#submitting-a-new-module" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Submitting Module
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -6288,7 +6316,7 @@
 <li>Push the branch to your fork.</li>
 <li>Open a pull request back to the upstream repository.</li>
 </ol>
-<p>This workflow keeps your <code>main</code> branch clean, makes it easy to sync with the upstream project, and helps reviewers understand exactly what your branch is trying to do.</p>
+<p>This workflow keeps your base branch clean, makes it easy to sync with the upstream project, and helps reviewers understand exactly what your branch is trying to do.</p>
 <h3 id="fork-and-clone">Fork And Clone<a class="headerlink" href="#fork-and-clone" title="Permanent link">¶</a></h3>
 <p>Start by forking the relevant repository on GitHub. Once that is done, clone your fork locally:</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="2:2"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio"><input id="__tabbed_2_2" name="__tabbed_2" type="radio"><div class="tabbed-labels"><label for="__tabbed_2_1">Clone <code>allsky</code></label><label for="__tabbed_2_2">Clone <code>allsky-modules</code></label></div>
@@ -6321,15 +6349,25 @@ git<span class="w"> </span>remote<span class="w"> </span>-v
 </div>
 </div>
 <p>The <code>origin</code> remote should point to your fork. The <code>upstream</code> remote should point to the AllskyTeam repository.</p>
-<h3 id="keep-main-clean">Keep <code>main</code> Clean<a class="headerlink" href="#keep-main-clean" title="Permanent link">¶</a></h3>
-<p>Your local <code>main</code> branch should be treated as a clean tracking branch, not as a development branch. That is one of the simplest habits that prevents unnecessary Git pain later.</p>
-<p>Before creating a new feature or fix branch, sync <code>main</code> with upstream:</p>
-<div class="highlight"><pre><span></span><code>git<span class="w"> </span>checkout<span class="w"> </span>main
+<h3 id="keep-your-base-branch-clean">Keep Your Base Branch Clean<a class="headerlink" href="#keep-your-base-branch-clean" title="Permanent link">¶</a></h3>
+<p>Your local base branch should be treated as a clean tracking branch, not as a development branch. That is one of the simplest habits that prevents unnecessary Git pain later.</p>
+<p>For most <code>allsky</code> work, the base branch is <code>master</code>. For new module work in <code>allsky-modules</code>, the base branch is normally <code>dev</code>.</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="4:2"><input checked="checked" id="__tabbed_4_1" name="__tabbed_4" type="radio"><input id="__tabbed_4_2" name="__tabbed_4" type="radio"><div class="tabbed-labels"><label for="__tabbed_4_1"><code>allsky</code></label><label for="__tabbed_4_2"><code>allsky-modules</code> module work</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code>git<span class="w"> </span>checkout<span class="w"> </span>master
 git<span class="w"> </span>fetch<span class="w"> </span>upstream
-git<span class="w"> </span>merge<span class="w"> </span>upstream/main
-git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>main
+git<span class="w"> </span>merge<span class="w"> </span>upstream/master
 </code></pre></div>
-<p>If you prefer rebasing over merging for your personal workflow, that is fine, but the key point is the same: start new work from a current <code>main</code>.</p>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code>git<span class="w"> </span>fetch<span class="w"> </span>upstream
+git<span class="w"> </span>checkout<span class="w"> </span>-B<span class="w"> </span>dev<span class="w"> </span>upstream/dev
+</code></pre></div>
+</div>
+</div>
+</div>
+<p>If you prefer rebasing over merging for your personal workflow, that is fine, but the key point is the same: start new work from the current upstream base branch.</p>
 <div class="admonition warning">
 <p class="admonition-title">Do not stack unrelated work in one branch</p>
 <p>A branch should represent one focused change set. If you fix three unrelated issues in one branch because they happen to touch similar files, review becomes harder, testing becomes less clear, and the chance of the whole branch being delayed goes up.</p>
@@ -6388,9 +6426,27 @@ git<span class="w"> </span>checkout<span class="w"> </span>-b<span class="w"> </
 <li>If a feature, workflow, or page changes, update the relevant guide at the same time.</li>
 </ul>
 <p>///</p>
+<h3 id="coding-with-ai">Coding With AI<a class="headerlink" href="#coding-with-ai" title="Permanent link">¶</a></h3>
+<p>AI-assisted coding and documentation are allowed, but the person submitting the contribution is responsible for the result.</p>
+<p>AI-generated code must be reviewed before it is submitted. Do not paste generated code into a pull request without reading it, understanding it, and checking that it follows the surrounding project style. In particular, review error handling, security-sensitive paths, dependency changes, filesystem access, command execution, and upgrade behaviour.</p>
+<p>AI-generated documentation is also fine, provided it is useful documentation rather than a regurgitation of the code. Good documentation should explain intent, behaviour, configuration, assumptions, limitations, and user impact. It should not simply restate each function or line of code in prose.</p>
+<p>All contributions generated with AI assistance must say so in the relevant README. For a module contribution, add the note to the module README. For a core <code>allsky</code> contribution, add the note to the pull request description if there is no feature-specific README touched by the change.</p>
+<p>A short note is enough:</p>
+<div class="highlight"><pre><span></span><code>AI assistance was used while preparing this contribution. The generated code and documentation were reviewed and tested before submission.
+</code></pre></div>
+<p>Before submitting AI-assisted work, check that:</p>
+<ul>
+<li>the code is understood by the contributor,</li>
+<li>generated tests or examples actually run,</li>
+<li>no invented APIs, files, settings, or dependencies were introduced,</li>
+<li>documentation matches current Allsky behaviour,</li>
+<li>comments explain why something exists, not just what the code already says,</li>
+<li>licences and copied content are not introduced accidentally,</li>
+<li>secrets, tokens, private URLs, and local machine paths are not included.</li>
+</ul>
 <h3 id="test-before-you-push">Test Before You Push<a class="headerlink" href="#test-before-you-push" title="Permanent link">¶</a></h3>
 <p>You do not need a perfect enterprise test matrix for every contribution, but you do need to verify your work sensibly. The right checks depend on the type of change:</p>
-<div class="tabbed-set tabbed-alternate" data-tabs="4:2"><input checked="checked" id="__tabbed_4_1" name="__tabbed_4" type="radio"><input id="__tabbed_4_2" name="__tabbed_4" type="radio"><div class="tabbed-labels"><label for="__tabbed_4_1"><code>allsky</code> contributions</label><label for="__tabbed_4_2"><code>allsky-modules</code> contributions</label></div>
+<div class="tabbed-set tabbed-alternate" data-tabs="5:2"><input checked="checked" id="__tabbed_5_1" name="__tabbed_5" type="radio"><input id="__tabbed_5_2" name="__tabbed_5" type="radio"><div class="tabbed-labels"><label for="__tabbed_5_1"><code>allsky</code> contributions</label><label for="__tabbed_5_2"><code>allsky-modules</code> contributions</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
 <p>Typical checks may include:</p>
@@ -6459,15 +6515,22 @@ git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </sp
 </ul>
 <p>///</p>
 <h3 id="keep-your-branch-up-to-date">Keep Your Branch Up To Date<a class="headerlink" href="#keep-your-branch-up-to-date" title="Permanent link">¶</a></h3>
-<p>If <code>main</code> moves on while your pull request is open, update your branch from upstream rather than letting it drift too far behind.</p>
-<p>A simple merge-based update looks like this:</p>
-<div class="highlight"><pre><span></span><code>git<span class="w"> </span>checkout<span class="w"> </span>main
+<p>If the target branch moves on while your pull request is open, update your branch from upstream rather than letting it drift too far behind.</p>
+<p>For a pull request targeting <code>master</code>, a simple merge-based update looks like this:</p>
+<div class="highlight"><pre><span></span><code>git<span class="w"> </span>checkout<span class="w"> </span>master
 git<span class="w"> </span>fetch<span class="w"> </span>upstream
-git<span class="w"> </span>merge<span class="w"> </span>upstream/main
+git<span class="w"> </span>merge<span class="w"> </span>upstream/master
 git<span class="w"> </span>checkout<span class="w"> </span>your-branch-name
-git<span class="w"> </span>merge<span class="w"> </span>main
+git<span class="w"> </span>merge<span class="w"> </span>master
 </code></pre></div>
 <p>Then push the updated branch again.</p>
+<p>For a module pull request targeting <code>allsky-modules</code> <code>dev</code>, use <code>dev</code> as the base branch instead:</p>
+<div class="highlight"><pre><span></span><code>git<span class="w"> </span>fetch<span class="w"> </span>upstream
+git<span class="w"> </span>checkout<span class="w"> </span>dev
+git<span class="w"> </span>merge<span class="w"> </span>upstream/dev
+git<span class="w"> </span>checkout<span class="w"> </span>your-branch-name
+git<span class="w"> </span>merge<span class="w"> </span>dev
+</code></pre></div>
 <p>If you are comfortable with rebasing and prefer a cleaner history on your own fork, you can rebase instead, but do so carefully once a pull request is already under review. Reviewers generally care more about a stable, understandable branch than about a perfectly minimal commit graph.</p>
 <h3 id="contributing-to-allsky-modules">Contributing To <code>allsky-modules</code><a class="headerlink" href="#contributing-to-allsky-modules" title="Permanent link">¶</a></h3>
 <p>The modules repository deserves a few additional points because modules are often contributed independently of core work.</p>
@@ -6481,6 +6544,48 @@ git<span class="w"> </span>merge<span class="w"> </span>main
 <li>and any assets the module actually depends on.</li>
 </ul>
 <p>Do not rely on undocumented assumptions. If the module expects hardware, a service, credentials, or an external API, make that clear in the code and in the documentation. Optional integrations are fine, but hidden requirements are not.</p>
+<h4 id="submitting-a-new-module">Submitting A New Module<a class="headerlink" href="#submitting-a-new-module" title="Permanent link">¶</a></h4>
+<p>New modules should be submitted to the <code>dev</code> branch of <code>AllskyTeam/allsky-modules</code>.</p>
+<p>Start from an up-to-date copy of the modules repository:</p>
+<div class="highlight"><pre><span></span><code>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/&lt;your-github-user&gt;/allsky-modules.git
+<span class="nb">cd</span><span class="w"> </span>allsky-modules
+git<span class="w"> </span>remote<span class="w"> </span>add<span class="w"> </span>upstream<span class="w"> </span>https://github.com/AllskyTeam/allsky-modules.git
+git<span class="w"> </span>fetch<span class="w"> </span>upstream
+git<span class="w"> </span>checkout<span class="w"> </span>-B<span class="w"> </span>dev<span class="w"> </span>upstream/dev
+git<span class="w"> </span>checkout<span class="w"> </span>-b<span class="w"> </span>module/allsky_your_module
+</code></pre></div>
+<p>Create a top-level folder for the module. The folder and main Python file should use the same <code>allsky_</code> name:</p>
+<div class="highlight"><pre><span></span><code>allsky_your_module/
+├── allsky_your_module.py
+├── installer.json
+├── manifest.json
+└── README.md
+</code></pre></div>
+<p>Build and test the module before generating the manifest. At a minimum, check that:</p>
+<ul>
+<li>the module metadata is complete and uses sensible defaults,</li>
+<li>the module entry point works in an Allsky pipeline,</li>
+<li>dependencies are declared in <code>installer.json</code>,</li>
+<li>post-install helpers are inside the module folder,</li>
+<li>charts, blocks, database configuration, and data files are included only when the module needs them,</li>
+<li>the README explains what the module does and how users should configure it,</li>
+<li>hardware, API, account, credential, or network requirements are documented.</li>
+</ul>
+<p>After the module files are final, generate the security manifest:</p>
+<div class="highlight"><pre><span></span><code>tools/create-module-manifest.sh<span class="w"> </span>allsky_your_module
+</code></pre></div>
+<p>To inspect the manifest without writing it:</p>
+<div class="highlight"><pre><span></span><code>tools/create-module-manifest.sh<span class="w"> </span>--dry-run<span class="w"> </span>allsky_your_module
+</code></pre></div>
+<p>Do not edit <code>manifest.json</code> by hand. If you change any file inside the module folder, regenerate the manifest before committing. For a normal new module pull request, only regenerate the manifest for the module you changed.</p>
+<p>Commit and push the module:</p>
+<div class="highlight"><pre><span></span><code>git<span class="w"> </span>status
+git<span class="w"> </span>diff
+git<span class="w"> </span>add<span class="w"> </span>allsky_your_module
+git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">"Add allsky_your_module module"</span>
+git<span class="w"> </span>push<span class="w"> </span>-u<span class="w"> </span>origin<span class="w"> </span>module/allsky_your_module
+</code></pre></div>
+<p>Open a pull request into the <code>dev</code> branch of <code>AllskyTeam/allsky-modules</code>. In the pull request description, include what the module does, what it depends on, how you tested it, and any known limitations.</p>
 <div class="admonition tip">
 <p class="admonition-title">Think about maintainability</p>
 <p>Extra modules often outlive the original contributor’s immediate interest. A module that is easy to understand, clearly documented, and explicit about its dependencies is much easier for the project to keep healthy over time.</p>
@@ -6501,7 +6606,7 @@ git<span class="w"> </span>merge<span class="w"> </span>main
 <h3 id="security-issues">Security Issues<a class="headerlink" href="#security-issues" title="Permanent link">¶</a></h3>
 <p>Do not open a public issue or public pull request for an undisclosed security vulnerability. Report security-sensitive problems privately to the project maintainers using the project’s preferred security reporting route.</p>
 <h3 id="final-advice">Final Advice<a class="headerlink" href="#final-advice" title="Permanent link">¶</a></h3>
-<p>The easiest contributions to review and merge are usually the ones with the clearest boundaries. Pick the right repository, start from an up-to-date <code>main</code>, create a focused branch, test what you changed, and explain your work clearly in the pull request.</p>
+<p>The easiest contributions to review and merge are usually the ones with the clearest boundaries. Pick the right repository, start from the correct up-to-date base branch, create a focused branch, test what you changed, and explain your work clearly in the pull request.</p>
 <p>That workflow is not bureaucratic overhead. It is what keeps contributions understandable, reviewable, and maintainable across both <code>allsky</code> and <code>allsky-modules</code>.</p>
 
 

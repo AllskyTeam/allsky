@@ -413,20 +413,37 @@ function DisplaySystem()
 				<?php
 				$s = false;		// Update interval for Allsky Status ?
 
-				if (isset($_POST['system_reboot'])) {
-					$status->addMessage("System Rebooting Now!", "warning", true);
-					$result = shell_exec("sudo /sbin/reboot");
-				} else if (isset($_POST['system_shutdown'])) {
-					$status->addMessage("System Shutting Down Now!", "warning", true);
-					$result = shell_exec("sudo /sbin/shutdown -h now");
-				} else if (isset($_POST['service_start'])) {
-					// Sleep to let Allsky status get updated.
-					// Starting Allsky takes longer to update status.
-					runCommand("sudo /bin/systemctl start allsky && sleep 4", "Allsky started", "success");
-					$s = true;
-				} else if (isset($_POST['service_stop'])) {
-					runCommand("sudo /bin/systemctl stop allsky && sleep 3", "Allsky stopped", "success");
-					$s = true;
+				$systemAction = null;
+				foreach ([
+					'system_reboot' => 'reboot',
+					'system_shutdown' => 'shutdown',
+					'service_start' => 'start',
+					'service_stop' => 'stop',
+				] as $postField => $action) {
+					if (isset($_POST[$postField])) {
+						$systemAction = $action;
+						break;
+					}
+				}
+
+				if ($systemAction !== null) {
+					if (! CSRFValidate()) {
+						$status->addMessage("Session expired. Refresh the page and try again.", "danger", true);
+					} else if ($systemAction === 'reboot') {
+						$status->addMessage("System Rebooting Now!", "warning", true);
+						$result = shell_exec("sudo /sbin/reboot");
+					} else if ($systemAction === 'shutdown') {
+						$status->addMessage("System Shutting Down Now!", "warning", true);
+						$result = shell_exec("sudo /sbin/shutdown -h now");
+					} else if ($systemAction === 'start') {
+						// Sleep to let Allsky status get updated.
+						// Starting Allsky takes longer to update status.
+						runCommand("sudo /bin/systemctl start allsky && sleep 4", "Allsky started", "success");
+						$s = true;
+					} else if ($systemAction === 'stop') {
+						runCommand("sudo /bin/systemctl stop allsky && sleep 3", "Allsky stopped", "success");
+						$s = true;
+					}
 				}
 				if ($s) {
 					# Allsky status will change so check often.
@@ -456,6 +473,7 @@ function DisplaySystem()
 				<div class="tab-content" style="margin-top:15px;">
 					<div id="as-system-system" class="tab-pane fade in active">
 						<form action="?page=<?php echo $page ?>" method="POST">
+							<?php CSRFToken(); ?>
 							<nav class="navbar navbar-default system-action-navbar">
 								<div class="container-fluid">
 									<div class="navbar-left system-action-toolbar" role="toolbar">

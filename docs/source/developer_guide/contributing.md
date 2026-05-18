@@ -54,7 +54,7 @@ The recommended workflow is the standard fork-and-branch model used on GitHub. I
 6. Push the branch to your fork.
 7. Open a pull request back to the upstream repository.
 
-This workflow keeps your `main` branch clean, makes it easy to sync with the upstream project, and helps reviewers understand exactly what your branch is trying to do.
+This workflow keeps your base branch clean, makes it easy to sync with the upstream project, and helps reviewers understand exactly what your branch is trying to do.
 
 ### Fork And Clone { data-toc-label="Fork And Clone" }
 
@@ -92,20 +92,28 @@ Then add the upstream remote:
 
 The `origin` remote should point to your fork. The `upstream` remote should point to the AllskyTeam repository.
 
-### Keep `main` Clean { data-toc-label="Keep main Clean" }
+### Keep Your Base Branch Clean { data-toc-label="Keep Base Clean" }
 
-Your local `main` branch should be treated as a clean tracking branch, not as a development branch. That is one of the simplest habits that prevents unnecessary Git pain later.
+Your local base branch should be treated as a clean tracking branch, not as a development branch. That is one of the simplest habits that prevents unnecessary Git pain later.
 
-Before creating a new feature or fix branch, sync `main` with upstream:
+For most `allsky` work, the base branch is `master`. For new module work in `allsky-modules`, the base branch is normally `dev`.
 
-```bash
-git checkout main
-git fetch upstream
-git merge upstream/main
-git push origin main
-```
+=== "`allsky`"
 
-If you prefer rebasing over merging for your personal workflow, that is fine, but the key point is the same: start new work from a current `main`.
+    ```bash
+    git checkout master
+    git fetch upstream
+    git merge upstream/master
+    ```
+
+=== "`allsky-modules` module work"
+
+    ```bash
+    git fetch upstream
+    git checkout -B dev upstream/dev
+    ```
+
+If you prefer rebasing over merging for your personal workflow, that is fine, but the key point is the same: start new work from the current upstream base branch.
 
 !!! warning "Do not stack unrelated work in one branch"
 
@@ -179,6 +187,32 @@ Allsky spans shell, Python, PHP, JavaScript, HTML, CSS, and documentation. The e
 - If a feature, workflow, or page changes, update the relevant guide at the same time.
 
 ///
+
+### Coding With AI { data-toc-label="Coding With AI" }
+
+AI-assisted coding and documentation are allowed, but the person submitting the contribution is responsible for the result.
+
+AI-generated code must be reviewed before it is submitted. Do not paste generated code into a pull request without reading it, understanding it, and checking that it follows the surrounding project style. In particular, review error handling, security-sensitive paths, dependency changes, filesystem access, command execution, and upgrade behaviour.
+
+AI-generated documentation is also fine, provided it is useful documentation rather than a regurgitation of the code. Good documentation should explain intent, behaviour, configuration, assumptions, limitations, and user impact. It should not simply restate each function or line of code in prose.
+
+All contributions generated with AI assistance must say so in the relevant README. For a module contribution, add the note to the module README. For a core `allsky` contribution, add the note to the pull request description if there is no feature-specific README touched by the change.
+
+A short note is enough:
+
+```text
+AI assistance was used while preparing this contribution. The generated code and documentation were reviewed and tested before submission.
+```
+
+Before submitting AI-assisted work, check that:
+
+- the code is understood by the contributor,
+- generated tests or examples actually run,
+- no invented APIs, files, settings, or dependencies were introduced,
+- documentation matches current Allsky behaviour,
+- comments explain why something exists, not just what the code already says,
+- licences and copied content are not introduced accidentally,
+- secrets, tokens, private URLs, and local machine paths are not included.
 
 ### Test Before You Push { data-toc-label="Test Before You Push" }
 
@@ -269,19 +303,29 @@ For UI changes, include screenshots. For behavioural changes, include enough exp
 
 ### Keep Your Branch Up To Date { data-toc-label="Keep Branch Date" }
 
-If `main` moves on while your pull request is open, update your branch from upstream rather than letting it drift too far behind.
+If the target branch moves on while your pull request is open, update your branch from upstream rather than letting it drift too far behind.
 
-A simple merge-based update looks like this:
+For a pull request targeting `master`, a simple merge-based update looks like this:
 
 ```bash
-git checkout main
+git checkout master
 git fetch upstream
-git merge upstream/main
+git merge upstream/master
 git checkout your-branch-name
-git merge main
+git merge master
 ```
 
 Then push the updated branch again.
+
+For a module pull request targeting `allsky-modules` `dev`, use `dev` as the base branch instead:
+
+```bash
+git fetch upstream
+git checkout dev
+git merge upstream/dev
+git checkout your-branch-name
+git merge dev
+```
 
 If you are comfortable with rebasing and prefer a cleaner history on your own fork, you can rebase instead, but do so carefully once a pull request is already under review. Reviewers generally care more about a stable, understandable branch than about a perfectly minimal commit graph.
 
@@ -299,6 +343,67 @@ When contributing to `allsky-modules`, keep the module self-contained. A module 
 - and any assets the module actually depends on.
 
 Do not rely on undocumented assumptions. If the module expects hardware, a service, credentials, or an external API, make that clear in the code and in the documentation. Optional integrations are fine, but hidden requirements are not.
+
+#### Submitting A New Module { data-toc-label="Submitting Module" }
+
+New modules should be submitted to the `dev` branch of `AllskyTeam/allsky-modules`.
+
+Start from an up-to-date copy of the modules repository:
+
+```bash
+git clone https://github.com/<your-github-user>/allsky-modules.git
+cd allsky-modules
+git remote add upstream https://github.com/AllskyTeam/allsky-modules.git
+git fetch upstream
+git checkout -B dev upstream/dev
+git checkout -b module/allsky_your_module
+```
+
+Create a top-level folder for the module. The folder and main Python file should use the same `allsky_` name:
+
+```text
+allsky_your_module/
+├── allsky_your_module.py
+├── installer.json
+├── manifest.json
+└── README.md
+```
+
+Build and test the module before generating the manifest. At a minimum, check that:
+
+- the module metadata is complete and uses sensible defaults,
+- the module entry point works in an Allsky pipeline,
+- dependencies are declared in `installer.json`,
+- post-install helpers are inside the module folder,
+- charts, blocks, database configuration, and data files are included only when the module needs them,
+- the README explains what the module does and how users should configure it,
+- hardware, API, account, credential, or network requirements are documented.
+
+After the module files are final, generate the security manifest:
+
+```bash
+tools/create-module-manifest.sh allsky_your_module
+```
+
+To inspect the manifest without writing it:
+
+```bash
+tools/create-module-manifest.sh --dry-run allsky_your_module
+```
+
+Do not edit `manifest.json` by hand. If you change any file inside the module folder, regenerate the manifest before committing. For a normal new module pull request, only regenerate the manifest for the module you changed.
+
+Commit and push the module:
+
+```bash
+git status
+git diff
+git add allsky_your_module
+git commit -m "Add allsky_your_module module"
+git push -u origin module/allsky_your_module
+```
+
+Open a pull request into the `dev` branch of `AllskyTeam/allsky-modules`. In the pull request description, include what the module does, what it depends on, how you tested it, and any known limitations.
 
 !!! tip "Think about maintainability"
 
@@ -329,6 +434,6 @@ Do not open a public issue or public pull request for an undisclosed security vu
 
 ### Final Advice { data-toc-label="Final Advice" }
 
-The easiest contributions to review and merge are usually the ones with the clearest boundaries. Pick the right repository, start from an up-to-date `main`, create a focused branch, test what you changed, and explain your work clearly in the pull request.
+The easiest contributions to review and merge are usually the ones with the clearest boundaries. Pick the right repository, start from the correct up-to-date base branch, create a focused branch, test what you changed, and explain your work clearly in the pull request.
 
 That workflow is not bureaucratic overhead. It is what keeps contributions understandable, reviewable, and maintainable across both `allsky` and `allsky-modules`.

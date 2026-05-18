@@ -94,6 +94,38 @@ if (!function_exists('str_ends_with')) {
 	}
 }
 
+function is_https_request(): bool {
+	return (
+		isset($_SERVER['HTTPS']) &&
+		$_SERVER['HTTPS'] !== '' &&
+		strtolower((string)$_SERVER['HTTPS']) !== 'off'
+	) || (
+		isset($_SERVER['SERVER_PORT']) &&
+		(string)$_SERVER['SERVER_PORT'] === '443'
+	);
+}
+
+function startAllskySession(): void {
+	if (session_status() === PHP_SESSION_ACTIVE) {
+		return;
+	}
+
+	ini_set('session.use_strict_mode', '1');
+	ini_set('session.use_only_cookies', '1');
+
+	$params = session_get_cookie_params();
+	session_set_cookie_params([
+		'lifetime' => (int)($params['lifetime'] ?? 0),
+		'path' => $params['path'] ?: '/',
+		'domain' => $params['domain'] ?? '',
+		'secure' => is_https_request(),
+		'httponly' => true,
+		'samesite' => 'Lax',
+	]);
+
+	session_start();
+}
+
 // Read and decode a json file, returning the decoded results or null.
 // On error, display the specified error message.
 // If we're being run by the user it's likely on a tty so don't use html.
@@ -517,7 +549,9 @@ function check_if_configured($page, $calledFrom) {
 function is_valid_directory($directory_name) {
 	global $re_image_directory;
 
-	return preg_match($re_image_directory, basename($directory_name));
+	return is_string($directory_name) &&
+		$directory_name === basename($directory_name) &&
+		preg_match($re_image_directory, $directory_name) === 1;
 }
 
 /**
@@ -543,8 +577,8 @@ function CSRFValidate(): bool {
 
   	if (! $useLogin) return true;
 
-    if (session_status() !== PHP_SESSION_ACTIVE) { 
-			@session_start(); 
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+			startAllskySession();
 		}
 
     $session = $_SESSION['csrf_token'] ?? '';
@@ -2017,7 +2051,7 @@ function redirect(string $url, ?string $flashMessage = null, bool $useJsonForAja
     // Stash an optional flash message so the next page can display it.
     if ($flashMessage) {
         if (session_status() !== PHP_SESSION_ACTIVE) {
-            @session_start(); // Suppress notice if headers already started; adjust to your logging policy.
+            startAllskySession();
         }
         $_SESSION['flash'] = $flashMessage;
     }
@@ -2058,7 +2092,7 @@ function useLogin() {
 	$csrf_token = '';
 	if ($useLogin) {
 		if (session_status() === PHP_SESSION_NONE) {
-			session_start();
+			startAllskySession();
 		}
 		if (empty($_SESSION['csrf_token'])) {
 			if (function_exists('mcrypt_create_iv')) {

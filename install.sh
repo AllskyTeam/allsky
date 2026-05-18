@@ -2943,7 +2943,7 @@ install_Python()
 	if [[ ${ALLSKY_PI_OS} == "trixie" && ${SKIP2} != "true" ]]; then
 		display_msg --log progress "Trixie detected, installing python build packages."
 		TMP="${ALLSKY_LOGS}/trixie_build.log"
-		run_aptGet python3.13-dev build-essential > "${TMP}" 2>&1
+		run_aptGet python-dev build-essential > "${TMP}" 2>&1
 	fi
 
 	display_msg --logonly info "Locating Python dependency file"
@@ -2987,7 +2987,7 @@ install_Python()
 		cp -r -a "${OLD_VENV}" "${ALLSKY_HOME}"
 		activate_python_venv
 	else
-		python3 -m venv "${ALLSKY_PYTHON_VENV}"
+		python3 -m venv "${ALLSKY_PYTHON_VENV}" --system-site-packages
 		activate_python_venv
 
 		# force local setup tools

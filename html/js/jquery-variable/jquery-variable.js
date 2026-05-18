@@ -76,7 +76,7 @@
                         plugin.settings.variableSelected.call(this, selectedVariable, selectedVariableType);
                     }
                 }
-                plugin.destroy()
+                closeModal()
             });
 
             $(document).on('click', '#' + plugin.showAllButton, (event) => {
@@ -414,7 +414,7 @@
                         plugin.settings.variable = selectedVariable
                         plugin.settings.variableSelected.call(this, selectedVariable, selectedVariableType);
                     }
-                    plugin.destroy()
+                    closeModal()
                 })
                 .DataTable({
                     ajax: {
@@ -542,16 +542,48 @@
             });
         }
 
+        var closeModal = function () {
+            let modal = $('#' + plugin.mmId);
+            if (modal.length > 0 && modal.data('bs.modal') !== undefined) {
+                modal.modal('hide');
+            } else {
+                plugin.destroy();
+            }
+        }
+
+        var cleanupModalArtifacts = function () {
+            if ($('.modal.in').not('#' + plugin.mmId).length === 0) {
+                $('.modal-backdrop').remove();
+                $('body').removeClass('modal-open').css('padding-right', '');
+            }
+        }
+
+        var isDataTable = function (table) {
+            return table.length > 0 && $.fn.DataTable.isDataTable(table[0]);
+        }
+
         plugin.destroy = function () {
-            $('#' + plugin.mmId).remove()
-            $('#' + plugin.mmId).off('hidden.bs.modal')
-            $('#' + plugin.mmId + '-table').off('preXhr.dt')
-            $('#' + plugin.mmId + '-table').off('xhr.dt')
+            let modal = $('#' + plugin.mmId);
+            let table = $('#' + plugin.mmId + '-table');
+            let templateTable = $('#' + plugin.mmtemplateId + '-table');
+
+            modal.find('.modal-dialog').LoadingOverlay('hide', true)
+            modal.off('hidden.bs.modal')
+            table.off('preXhr.dt')
+            table.off('xhr.dt')
             $(document).off('click', '#' + plugin.mmId + '-save')
             $(document).off('click', 'input[name="' + plugin.showAllButton + '"]')
             $(document).off('click', '#' + plugin.refreshButton)
             $(document).off('click', '#' + plugin.resetButton)
-            $('#' + plugin.mmId + '-table').DataTable().destroy()
+            $(document).off('click', '.oe-add-field-template')
+            if (isDataTable(table)) {
+                table.DataTable().destroy()
+            }
+            if (isDataTable(templateTable)) {
+                templateTable.DataTable().destroy()
+            }
+            modal.remove()
+            cleanupModalArtifacts()
             $(document).removeData('allskyVariable');
         }
 

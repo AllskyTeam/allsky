@@ -247,8 +247,8 @@ class UTILBASE
      * Small wrapper around proc_open to execute external utilities safely.
      * - Accepts an argv array (no shell expansion; avoids injection).
      * - Captures stdout/stderr with short timeouts.
-     * - Returns ['error'=>bool, 'message'=>string] where message is stdout on success,
-     *   or stdout/stderr on failure.
+     * - Returns ['error'=>bool, 'message'=>string, 'code'=>int] where message is
+     *   stdout on success, or stdout/stderr on failure.
      *
      * Caveats:
      *  - Environment is cleared by default; pass through only what you need.
@@ -267,7 +267,7 @@ class UTILBASE
 
         $proc = @proc_open($argv, $descriptors, $pipes, $cwd, $env);
         if (!is_resource($proc)) {
-            return ['error' => true, 'message' => 'Unable to start process'];
+            return ['error' => true, 'message' => 'Unable to start process', 'code' => 1];
         }
 
         // Short read timeouts so we don't hang forever on misbehaving tools
@@ -284,9 +284,9 @@ class UTILBASE
 
         if ($code !== 0) {
             // Prefer stdout if a tool prints errors there; otherwise stderr
-            return ['error' => true, 'message' => ($stdout !== '' ? $stdout : $stderr)];
+            return ['error' => true, 'message' => ($stdout !== '' ? $stdout : $stderr), 'code' => $code];
         }
-        return ['error' => false, 'message' => (string)$stdout];
+        return ['error' => false, 'message' => (string)$stdout, 'code' => $code];
     }
 
     protected function startsWith ($string, $startString) {
@@ -352,6 +352,7 @@ class UTILBASE
         }
 
         $stdout = trim($result['message']);        
+
         if ($return) {
             return $stdout;
         } else {

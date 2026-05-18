@@ -20,6 +20,8 @@ class MODULESEDITOR {
 	#installerCurrentRequest = null
 	#installerPendingRefreshText = null
 	#installerPendingEditorRefreshText = null
+	#moduleTestOverlayTarget = null
+	#moduleTestToken = 0
 
 	constructor() {
 		this.#portalEditorModals();
@@ -758,6 +760,15 @@ class MODULESEDITOR {
 		$('#module-editor-settings-dialog .as-field-help-toggle').each(function() {
 			$(this).popover('hide');
 		});
+	}
+
+	#hideModuleTestOverlay() {
+		const overlayTarget = this.#moduleTestOverlayTarget;
+		this.#moduleTestOverlayTarget = null;
+
+		if (overlayTarget && overlayTarget.length) {
+			overlayTarget.LoadingOverlay('hide', true);
+		}
 	}
 
 	#getFieldHelpDelay() {
@@ -2278,11 +2289,13 @@ class MODULESEDITOR {
 		$('#module-settings-dialog').off('hidden.bs.modal')
 		$('#module-settings-dialog').on('hidden.bs.modal', () => {
 			this.#disposeFieldHelpPopovers();
-			$('#module-settings-dialog [data-toggle="popover"]').popover('dispose');
+			$('#module-settings-dialog [data-toggle="popover"]').popover('destroy');
 			$('#module-settings-dialog').remove();
 		});
 		$('#module-settings-dialog').on('hide.bs.modal', () => {
 			this.#disposeFieldHelpPopovers();
+			this.#moduleTestToken++;
+			this.#hideModuleTestOverlay();
 		});
 
 		$(document).off('shown.bs.tab', '#module-settings-dialog a[data-toggle="tab"]');
@@ -2593,17 +2606,14 @@ class MODULESEDITOR {
 			</div>\
 		'
 
-		var runInfo = bootbox.dialog({
+		bootbox.dialog({
 			title: title,
 			message: dialogHtml,
 			size: 'large',
 			buttons: {
 				ok: {
 					label: 'Close',
-					className: 'btn-success',
-					callback: function () {
-						runInfo.modal('hide').remove();
-					}
+					className: 'btn-success'
 				}
 			}
 		});
@@ -2641,7 +2651,11 @@ class MODULESEDITOR {
 		let jsonData = JSON.stringify(this.#testData, null, 4);
 
 		let overlayText = 'Testing Module - Please Wait'
-		$('#module-settings-dialog .modal-content').LoadingOverlay('show', {
+		const settingsDialog = $('#module-settings-dialog');
+		const overlayTarget = settingsDialog.find('.modal-content');
+		const testToken = ++this.#moduleTestToken;
+		this.#moduleTestOverlayTarget = overlayTarget;
+		overlayTarget.LoadingOverlay('show', {
 			background: 'rgba(0, 0, 0, 0.5)',
 			imageColor: '#a94442',
 			textColor: '#a94442',
@@ -2661,14 +2675,24 @@ class MODULESEDITOR {
 			dataType: 'json'
 		})
 			.then((response) => {
+				if (testToken !== this.#moduleTestToken || !settingsDialog.length || !$.contains(document.body, settingsDialog[0]) || !settingsDialog.is(':visible')) {
+					return;
+				}
+
 				let title = 'Module <b>' + module + '</b> run result'
 				this.#displayTestResultsDialog(response, title, runModule)
 			})
 			.catch((error) => {
+				if (testToken !== this.#moduleTestToken || !settingsDialog.length || !$.contains(document.body, settingsDialog[0]) || !settingsDialog.is(':visible')) {
+					return;
+				}
+
 				let title = 'ERROR Running Module <b>' + module + '</b> run result'
 				this.#displayTestResultsDialog(error.responseText, title, runModule)
 			}).always(() => {
-				$('#module-settings-dialog .modal-content').LoadingOverlay('hide')
+				if (testToken === this.#moduleTestToken) {
+					this.#hideModuleTestOverlay();
+				}
 			})
 	}
 

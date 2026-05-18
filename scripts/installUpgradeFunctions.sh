@@ -799,6 +799,19 @@ function update_old_website_config_file()
 			"fa fa-2x fa-fw icon-mini-timelapse" "fa fa-2x fa-fw fa-file-video"
 	fi
 
+	if [[ ${PRIOR_VERSION} -le 6 ]] ; then
+		# Replace the old XXX_cardinal-only colours with the current full colour set.
+		TEMP="/tmp/$$"
+		jq --indent 4 --slurpfile repo "${REPO_WEBSITE_CONFIGURATION_FILE}" \
+			'.config.colours = $repo[0].config.colours' "${FILE}" > "${TEMP}"
+		if [[ $? -eq 0 ]]; then
+			# cp so it keeps ${FILE}'s attributes
+			cp "${TEMP}" "${FILE}" && rm -f "${TEMP}"
+		else
+			rm -f "${TEMP}"
+		fi
+	fi
+
 	# Set to current config and Allsky versions.
 	update_json_file ".${WEBSITE_CONFIG_VERSION}" "${CURRENT_VERSION}" "${FILE}"
 	update_json_file ".${WEBSITE_ALLSKY_VERSION}" "${ALLSKY_VERSION}" "${FILE}"
@@ -2104,6 +2117,12 @@ function copy_repo_files()
 	cp  "${ALLSKY_REPO}/monitorable_logs.json.repo" "${ALLSKY_CONFIG}/monitorable_logs.json"
 	cp  "${ALLSKY_REPO}/helpers.json.repo" "${ALLSKY_CONFIG}/helpers.json"
 	cp  "${ALLSKY_REPO}/helpers.md.repo" "${ALLSKY_CONFIG}/helpers.md"
+
+	cp "${ALLSKY_REPO}/editor_files.json.repo" "${ALLSKY_CONFIG}/editor_files.json"
+	cp "${ALLSKY_REPO}/editor_files.md.repo" "${ALLSKY_CONFIG}/editor_files.md"
+
+	cp -r "${ALLSKY_REPO}/schema" "${ALLSKY_CONFIG}/"
+
 }
 
 

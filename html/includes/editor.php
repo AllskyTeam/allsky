@@ -5,263 +5,280 @@ if (basename(__FILE__) === basename($_SERVER['SCRIPT_FILENAME'])) {
     redirect("/index.php");
 }
 
+include_once(__DIR__ . '/uiutil.php');
+
+class AllskyEditorPage
+{
+    private $status;
+    private array $files = [];
+    private array $fileStatuses = [];
+    private string $initialContent = "";
+    private string $initialKey = "";
+    private ?array $initialSchema = null;
+    private string $initialSchemaFileName = "";
+
+    public function display(): void
+    {
+        global $pageHeaderTitle, $pageIcon, $pageHelp;
+
+        $this->status = new StatusMessages();
+        $this->loadFiles();
+        $numFiles = count($this->files);
+
+        if ($numFiles > 0) {
+            $this->renderConfigData();
+        }
+        ?>
+
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="panel panel-allsky">
+                    <div class="panel-heading clearfix">
+                        <span><i class="<?php echo $pageIcon ?>"></i> <?php echo $pageHeaderTitle ?></span>
+                        <?php if (!empty($pageHelp)) { doHelpLink($pageHelp); } ?>
+                    </div>
+                    <div class="panel-body">
+                        <?php if ($numFiles > 0) { $this->renderEditorToolbar(); } ?>
+                        <p id="editor-messages"><?php $this->status->showMessages(); ?></p>
+                        <p id="need-to-update"></p> <p id="file-corruption"></p>
+	                        <div id="editor-source-only">
+	                            <div id="editorContainer"></div>
+	                        </div>
+	                        <div id="editor-tabs" class="as-editor-tabs" style="display:none;">
+	                            <ul class="nav nav-tabs" role="tablist">
+	                                <li role="presentation" class="active">
+	                                    <a href="#editor-source-pane" id="editor-source-tab" role="tab" aria-controls="editor-source-pane">Advanced</a>
+	                                </li>
+	                                <li role="presentation">
+	                                    <a href="#editor-form-pane" id="editor-form-tab" role="tab" aria-controls="editor-form-pane">Simple</a>
+	                                </li>
+	                            </ul>
+	                            <div class="tab-content">
+	                                <div role="tabpanel" class="tab-pane active" id="editor-source-pane"></div>
+	                                <div role="tabpanel" class="tab-pane" id="editor-form-pane">
+	                                    <div id="jedisonContainer"></div>
+	                                </div>
+	                            </div>
+	                        </div>
+                        <?php if ($numFiles === 0) { ?>
+                            <div class="editorBottomSection">
+                                <?php $this->renderNoFilesMessage(); ?>
+                            </div>
+                        <?php } ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade as-editor-save-modal" id="as-editor-save-modal" tabindex="-1" role="dialog" aria-labelledby="as-editor-save-modal-title">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title">
+                            <i id="as-editor-save-modal-icon" class="fa-solid fa-circle-check" aria-hidden="true"></i>
+                            <span id="as-editor-save-modal-title">File Saved</span>
+                        </h4>
+                    </div>
+                    <div class="modal-body">
+                        <div id="as-editor-save-modal-message" class="as-editor-save-modal-message" aria-live="polite"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <?php
+    }
+
+    private function loadFiles(): void
+    {
+        try {
+            $configuredFiles = UIUTIL::readEditorFilesConfig(true);
+        } catch (RuntimeException $e) {
+            $this->status->addMessage($e->getMessage(), 'danger');
+            return;
+        }
+
+        foreach ($configuredFiles as $key => $file) {
+            if (!$file['ok']) {
+                $this->addConfiguredMessages($file, 'unavailable');
+                continue;
+            }
+
+            if (!UIUTIL::isEditorFileIncluded($file)) {
+                $this->addConfiguredMessages($file, 'excluded');
+                continue;
+            }
+
+            $this->addConfiguredMessages($file, 'available');
+
+            if (!$file['writable']) {
+                $msg = "<code>" . htmlspecialchars($file['label'], ENT_QUOTES, 'UTF-8') . "</code>";
+                $msg .= " is readable but not writable by the web server.";
+                $this->status->addMessage($msg, 'warning');
+            }
+
+            $this->files[$key] = $file;
+        }
+
+        if (count($this->files) === 0) {
+            return;
+        }
+
+        $firstKey = array_key_first($this->files);
+        if (!is_string($firstKey)) {
+            return;
+        }
+
+        $this->initialKey = $firstKey;
+        $this->loadInitialContent($firstKey);
+    }
+
+    private function addConfiguredMessages(array $file, string $context): void
+    {
+        foreach (UIUTIL::getEditorFileMessages($file, $context) as $message) {
+            $this->status->addMessage($message['message'], $message['severity']);
+        }
+    }
+
+    private function loadInitialContent(string $key): void
+    {
+        try {
+            $file = UIUTIL::readEditorFileByKey($key);
+            $this->initialContent = (string)$file['content'];
+            $this->fileStatuses[$key] = (bool)$file['validJson'];
+            $this->initialSchema = is_array($file['schema'] ?? null) ? $file['schema'] : null;
+            $this->initialSchemaFileName = (string)($file['schemaFileName'] ?? '');
+            if (isset($this->files[$key])) {
+                $this->files[$key]['hasSchema'] = (bool)($file['hasSchema'] ?? false);
+                $this->files[$key]['schemaFileName'] = (string)($file['schemaFileName'] ?? '');
+                $this->files[$key]['schemaError'] = (string)($file['schemaError'] ?? '');
+            }
+        } catch (RuntimeException $e) {
+            $this->initialContent = "";
+            $this->fileStatuses[$key] = false;
+            $this->initialSchema = null;
+            $this->initialSchemaFileName = "";
+            $this->status->addMessage($e->getMessage(), 'warning');
+        }
+
+        foreach ($this->files as $fileKey => $file) {
+            if (!array_key_exists($fileKey, $this->fileStatuses)) {
+                $this->fileStatuses[$fileKey] = true;
+            }
+        }
+    }
+
+    private function renderConfigData(): void
+    {
+        $files = [];
+        foreach ($this->files as $file) {
+            $files[] = [
+                'key' => $file['key'],
+                'label' => $file['label'],
+                'fileName' => $file['fileName'],
+                'validateJson' => $file['validateJson'],
+                'hasSchema' => $file['hasSchema'],
+                'schemaFileName' => $file['schemaFileName'],
+                'schemaError' => $file['schemaError'],
+            ];
+        }
+
+        $config = json_encode(
+            [
+                'files' => $files,
+                'fileStatuses' => $this->fileStatuses,
+                'initialKey' => $this->initialKey,
+                'initialSchema' => $this->initialSchema,
+                'initialSchemaFileName' => $this->initialSchemaFileName,
+                'needToUpdate' => ALLSKY_NEED_TO_UPDATE,
+                'initialContent' => $this->initialContent
+            ],
+            JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_HEX_AMP|JSON_UNESCAPED_SLASHES
+        );
+        if (!is_string($config)) {
+            $config = "{}";
+        }
+        ?>
+        <template id="allsky-editor-config"><?php echo htmlspecialchars($config, ENT_NOQUOTES, 'UTF-8'); ?></template>
+        <?php
+    }
+
+    private function renderNoFilesMessage(): void
+    {
+        ?>
+        <div id="as-editor-overlay" class="as-overlay big">
+            <div class="center-full">
+                <div class="center-paragraph">
+                    <h1>There are no files to edit</h1>
+                    <p>No configuration files could be found to edit.</p>
+                </div>
+            </div>
+        </div>
+        <?php
+    }
+
+    private function renderEditorToolbar(): void
+    {
+        CSRFToken();
+        ?>
+        <nav class="navbar navbar-default as-editor-toolbar">
+            <div class="container-fluid-old">
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle collapsed pull-left" style="margin-left: 15px;" data-toggle="collapse" data-target="#as-file-editor-navbar">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                </div>
+                <div class="collapse navbar-collapse" id="as-file-editor-navbar">
+                    <ul class="nav navbar-nav" id="as-file-editor-toolbar">
+                        <li>
+                            <div class="btn navbar-btn" id="save_file" data-toggle="tooltip" data-container="body" data-placement="top" title="Save Changes" aria-label="Save Changes" aria-disabled="false">
+                                <i class="fa-solid fa-floppy-disk"></i>
+                            </div>
+                        </li>
+                        <li class="as-editor-file-toolbar-item">
+                            <form id="as-editor-file-form" class="navbar-form">
+                                <div class="form-group">
+                                    <div class="tooltip-wrapper" data-toggle="tooltip" data-container="body" data-placement="top" title="Pick a file">
+                                        <label class="sr-only" for="script_path">File</label>
+                                        <select class="form-control as-editor-file-select" id="script_path" name="script_path">
+                                            <?php
+                                            foreach ($this->files as $key => $file) {
+                                                $selected = $key === $this->initialKey ? " selected" : "";
+                                                echo "<option value='" . htmlspecialchars($key, ENT_QUOTES, 'UTF-8') . "'$selected>";
+                                                echo htmlspecialchars($file['label'], ENT_QUOTES, 'UTF-8');
+                                                echo "</option>\n";
+                                            }
+                                            ?>
+                                        </select>
+                                    </div>
+                                </div>
+                            </form>
+                        </li>
+                        <li class="dropdown">
+                            <div class="btn navbar-btn dropdown-toggle" id="as-editor-toggle-fields" data-toggle="dropdown" data-container="body" title="Field display" aria-label="Field display" aria-disabled="true">
+                                <span id="as-editor-toggle-fields-label">Show required</span> <span class="caret"></span>
+                            </div>
+                            <ul class="dropdown-menu" id="as-editor-field-mode-menu">
+                                <li><a href="#" class="as-editor-field-mode" data-show-all="true">Show All</a></li>
+                                <li><a href="#" class="as-editor-field-mode" data-show-all="false">Show required</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+	            </div>
+	        </nav>
+        <?php
+    }
+}
+
 function DisplayEditor()
 {
-	global $useLocalWebsite, $useRemoteWebsite;
-	global $hasLocalWebsite, $hasRemoteWebsite;
-	global $pageHeaderTitle, $pageIcon, $pageHelp;
-
-	$myStatus = new StatusMessages();
-	$mode = JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_NUMERIC_CHECK|JSON_PRESERVE_ZERO_FRACTION;
-
-	$content = "";			// content of the default file to display on error
-	$onFile = null;			// the is the file that's displayed by default
-
-	// Don't allow users to edit - they should use the Allsky Settings page.
-	$useEnv = false;			// Allow editing of the ALLSKY_ENV file?
-
-	$localN = basename(getLocalWebsiteConfigFile());
-	$localN_withComment = "$localN (local Allsky Website)";
-	$fullLocalN = "website/$localN";
-	$localOK = "true";
-
-	$remoteN = basename(getRemoteWebsiteConfigFile());
-	$remoteN_withComment = "$remoteN (remote Allsky Website)";
-	$fullRemoteN = "config/$remoteN";
-	$remoteOK = "true";
-
-	if ($useEnv) {
-		$envN = basename(ALLSKY_ENV);
-		$envN_withComment = $envN;		// not needed, but use for consistency with other files.
-		$fullEnvN = "current/$envN";
-	} else {
-		$fullEnvN = "";
-	}
-	$envOK = "true";
-
-	$logN = "monitorable_logs.json";
-	$monitoredLogs = ALLSKY_MYFILES_DIR . "/" . $logN;
-	$logN_withComment = $logN;
-	$fullLogN = "config/" . ALLSKY_MYFILES_NAME . "/$logN";
-	$logOK = "true";
-
-	// See what files there are to edit.
-	$numFiles = 0;
-
-	if ($hasLocalWebsite) {
-	   	$numFiles++;
-
-	   	if (! $useLocalWebsite) {
-		   	$msg =  "The <span class='WebUISetting'>Use Local Website</span> setting is not enabled.";
-		   	$msg .= "<br>Your changes won't take effect until you enable it.</span>";
-		   	$myStatus->addMessage($msg, 'warning');
-	   	}
-
-		# Check for corruption in the file.
-		$returnedMsg = "";
-		$localContent = get_decoded_json_file(getLocalWebsiteConfigFile(), true, "", $returnedMsg);
-		if ($localContent === null) {
-			$localContent = file_get_contents(getLocalWebsiteConfigFile());
-			$localOK = "false";
-		} else {
-			$localContent = json_encode($localContent, $mode);
-		}
-		$content = $localContent;
-		$onFile = "local";
-	} else {
-		$msg =  "<div class='dropdown'><code>$localN_withComment</code>";
-		$msg .= " will appear in the list below if you enable";
-		$msg .= " <span class='WebUISetting'>Use Local Website</span>.</div>";
-		$myStatus->addMessage($msg, 'info');
-		$localN = null;
-	}
-
-	if ($hasRemoteWebsite) {
-		$numFiles++;
-
-	   	if (! $useRemoteWebsite) {
-		   	$msg = "The <span class='WebUISetting'>Use Remote Website</span> setting is not enabled.";
-		   	$msg .= " Your changes won't take effect until you enable it.</span>";
-		   	$myStatus->addMessage($msg, 'warning');
-	   	}
-
-		$returnedMsg = "";
-		$remoteContent = get_decoded_json_file(getRemoteWebsiteConfigFile(), true, "", $returnedMsg);
-		if ($remoteContent === null) {
-			$remoteOK = "false";
-			$remoteContent = file_get_contents(getRemoteWebsiteConfigFile());
-		} else {
-			$remoteContent = json_encode($remoteContent, $mode);
-		}
-
-		if ($onFile === null) {
-			$onFile = "remote";
-			$content = $remoteContent;
-		}
-	} else {
-		$remoteN = null;
-	}
-
-	if ($useEnv) {
-		if (! file_exists(ALLSKY_ENV)) {
-			$msg =  "<div class='dropdown'><code>$envN_withComment</code>";
-			$msg .= " will appear in the list below when you save";
-			$msg .= " any private data in the WebUI.";
-			$myStatus->addMessage($msg, 'info');
-			$envN = null;
-
-		} else {
-			$numFiles++;
-			$returnedMsg = "";
-			$envContent = get_decoded_json_file(ALLSKY_ENV, true, "", $returnedMsg);
-			if ($envContent === null) {
-				$envOK = "false";
-				$envContent = file_get_contents(ALLSKY_ENV);
-			} else {
-				$envContent = json_encode($envContent, $mode);
-			}
-
-			if ($onFile === null) {
-				$onFile = "env";
-				$content = $envContent;
-			}
-		}
-	} else {
-		$envN = null;
-	}
-
-	if (file_exists($monitoredLogs)) {
-					$ok = true;
-					if (filesize($monitoredLogs) === 0) {
-									# Add placeholder text because code below complains if the file is empty.
-									$f = fopen($monitoredLogs, 'w');
-									if (! $f || ! fwrite($f, "{\n}\n")) {
-													$ok = false;
-									} else {
-													fclose($f);
-									}
-					}
-					if ($ok === true) {
-									$numFiles++;
-									$returnedMsg = "";
-									$logContent = get_decoded_json_file($monitoredLogs, true, "", $returnedMsg);
-									if ($logContent === null) {
-													$logOK = "false";
-													$logContent = file_get_contents($monitoredLogs);
-									} else {
-													$logContent = json_encode($logContent, $mode);
-									}
-
-									if ($onFile === null) {
-													$onFile = "log";
-													$content = $logContent;
-									}
-					} else {
-									$logN = null;
-					}
-	} else {
-					$logN = null;
-	}	
-
-	if ($numFiles > 0) {
-		if ($onFile === null) {
-			if ($hasLocalWebsite) {
-				$onFile = "local";
-				$content = $localContent;
-			} else if ($hasLocalWebsite) {
-				$onFile = "remote";
-				$content = $remoteContent;
-			} else if ($useEnv) {
-				$onFile = "env";
-				$content = $envContent;
-			}
-		}
-		?>
-		<script type="text/javascript">
-			window.allskyEditorConfig = <?php
-				echo json_encode(
-					[
-						'localOK' => $localOK === "true",
-						'remoteOK' => $remoteOK === "true",
-						'envOK' => $envOK === "true",
-						'logOK' => $logOK === "true",
-						'fullEnvName' => $fullEnvN,
-						'needToUpdate' => ALLSKY_NEED_TO_UPDATE,
-						'initialContent' => $content
-					],
-					JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_HEX_AMP|JSON_UNESCAPED_SLASHES
-				);
-			?>;
-		</script>
-	<?php } ?>
-
-	<div class="row">
-		<div class="col-lg-12">
-			<div class="panel panel-allsky">
-				<div class="panel-heading clearfix">
-                    <span><i class="<?php echo $pageIcon ?>"></i> <?php echo $pageHeaderTitle ?></span>
-					<?php if (!empty($pageHelp)) { doHelpLink($pageHelp); } ?>
-                </div>
-				<div class="panel-body">
-					<p id="editor-messages"><?php $myStatus->showMessages(); ?></p>
-					<p id="need-to-update"></p> <p id="file-corruption"></p>
-					<div id="editorContainer"></div>
-					<div class="editorBottomSection">
-						<?php
-						if ($numFiles === 0) {
-							?>
-								<div id="as-editor-overlay" class="as-overlay big">
-									<div class="center-full">
-										<div class="center-paragraph">
-											<h1>There are no files to edit</h1>
-											<p>No configuration files could be found to edit.</p>
-										</div>
-									</div>
-								</div> 
-							<?php
-
-						} else {
-							?>
-							<select class="form-control editorForm" id="script_path" title="Pick a file">
-								<?php
-								if ($localN !== null) {
-									// The website is installed on this Pi.
-									// The physical path is ALLSKY_WEBSITE; virtual path is "website".
-									echo "<option value='$fullLocalN'>";
-									echo $localN_withComment;
-									echo "</option>\n";
-								}
-
-								if ($remoteN !== null) {
-									// A copy of the remote website's config file is on the Pi.
-									echo "<option value='{REMOTE}$fullRemoteN'>";
-									echo $remoteN_withComment;
-									echo "</option>\n";
-								}
-
-								if ($envN !== null) {
-									echo "<option value='$fullEnvN'>";
-									echo "$envN_withComment";
-									echo "</option>\n";
-								}
-
-								if ($logN !== null) {
-									echo "<option value='$fullLogN'>";
-									echo "$logN_withComment";
-									echo "</option>\n";
-								}
-								?>
-							</select>
-							<button type="submit" class="btn btn-primary editorSaveChanges" id="save_file">
-								<i class="fa fa-save"></i> Save Changes</button>
-							<?php
-						}
-						?>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-	<?php
+    $editor = new AllskyEditorPage();
+    $editor->display();
 }
 ?>

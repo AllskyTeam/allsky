@@ -786,7 +786,7 @@ if ($page == "login") {
 
 			session_destroy();
 		}
-
+    
 		redirect("index.php?page=login");
 	}
 	if ($page == "editor") {

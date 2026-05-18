@@ -8,6 +8,13 @@ Steps to configure an Allsky Website are below.
 
 ## Configure Website Settings { data-toc-label="Configure Website" }
 
+!!! info "Simple Editor"
+    The editor contains a new 'Simple' interface for editing files. This is not enabled for all files but where it is a new tab will appear allowing you to edit the file as a form.
+    
+    The simple editor is considered experimental at the moment but please feel free to use it and provide any feedback to the Allsky team.
+
+    When editing values in either the Simple or Advanced editors they are synchronised across. So editing a field in the simple editor its value will be updated in the Advanced editor. This allows you to use both at the same time.
+
 - In the WebUI, click on the "Settings - Editor" link.
 - In the drop-down at the bottom of the page, select one of the following, depending on which Website you want to configure:
 

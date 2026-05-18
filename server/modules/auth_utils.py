@@ -82,6 +82,8 @@ def load_env_credentials():
     """Try to load username/password from env.json.
     Search order:
       - ENV_JSON_PATH env var (full path)
+      - ALLSKY_ENV env var (full path)
+      - $ALLSKY_HOME/env.json
       - $ALLSKY_HOME/config/env.json
     Accept keys: username/password or WEB_USERNAME/WEB_PASSWORD.
     Returns tuple (username, password) or (None, None) if not found.
@@ -90,8 +92,11 @@ def load_env_credentials():
     candidates = []
     if os.environ.get("ENV_JSON_PATH"):
         candidates.append(os.environ["ENV_JSON_PATH"])
+    if os.environ.get("ALLSKY_ENV"):
+        candidates.append(os.environ["ALLSKY_ENV"])
     if os.environ.get("ALLSKY_HOME"):
         candidates.append(os.path.join(os.environ["ALLSKY_HOME"], "env.json"))
+        candidates.append(os.path.join(os.environ["ALLSKY_HOME"], "config", "env.json"))
     for path in candidates:
         try:
             with open(path, "r") as f:
@@ -103,6 +108,33 @@ def load_env_credentials():
         except Exception:
             continue
     return None, None
+
+
+def check_bcrypt_password(password, stored_hash):
+    """Match PHP password_hash(..., PASSWORD_BCRYPT) verification semantics."""
+    if not isinstance(password, str) or not isinstance(stored_hash, str):
+        return False
+
+    if not stored_hash.startswith(("$2a$", "$2b$", "$2y$")):
+        return False
+
+    password_bytes = password.encode()[:72]
+    hash_candidates = [stored_hash]
+    if stored_hash.startswith("$2y$"):
+        hash_candidates.append("$2b$" + stored_hash[4:])
+
+    seen = set()
+    for candidate in hash_candidates:
+        if candidate in seen:
+            continue
+        seen.add(candidate)
+        try:
+            if bcrypt.checkpw(password_bytes, candidate.encode()):
+                return True
+        except ValueError:
+            continue
+    return False
+
 
 def validate_user(user_name, password):
     """
@@ -116,11 +148,9 @@ def validate_user(user_name, password):
     if env_u and env_p:
         if user_name == env_u:
             try:
-                # Check if env_p looks like a bcrypt hash (starts with $2y$ or $2b$)
-                if env_p.startswith("$2y$") or env_p.startswith("$2b$"):
-                    if bcrypt.checkpw(password.encode(), env_p.encode()):
-                        return {"*": ["*"]}  # grant all perms
-                else:
+                if check_bcrypt_password(password, env_p):
+                    return {"*": ["*"]}  # grant all perms
+                if not env_p.startswith("$2"):
                     # fallback if plain text stored
                     if password == env_p:
                         return {"*": ["*"]}
@@ -141,13 +171,13 @@ def validate_user(user_name, password):
 
     stored_hash, perms = row
     try:
-        if bcrypt.checkpw(password.encode(), stored_hash.encode()):
+        if check_bcrypt_password(password, stored_hash):
             return json.loads(perms)
     except Exception as e:
         print(f"DB password validation error: {e}")
 
     return False
-                            
+
 
 def permission_required(module, action):
     def decorator(fn):
@@ -270,7 +300,7 @@ def init_auth_db():
     try:
         conn = sqlite3.connect(db_path)
     finally:
-        os.umask(old_umask)    
+        os.umask(old_umask)
     cur = conn.cursor()
 
     cur.execute(

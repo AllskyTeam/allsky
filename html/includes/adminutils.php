@@ -81,6 +81,24 @@ class ADMINUTIL extends UTILBASE
         ];
     }
 
+    private function writeSecretsFile(string $payload): bool
+    {
+        $bytes = @file_put_contents(ALLSKY_ENV, $payload, LOCK_EX);
+        if ($bytes === strlen($payload)) {
+            return true;
+        }
+
+        $msg = updateFile(ALLSKY_ENV, $payload, 'secrets', false, true);
+        return $msg === '';
+    }
+
+    private function loadSecrets(): ?array
+    {
+        $message = '';
+        $secrets = get_decoded_json_file(ALLSKY_ENV, true, '', $message);
+        return is_array($secrets) ? $secrets : null;
+    }
+
     // Handle POST requests for retrieving the password format or policy description
     public function postPasswordFormat(): void
     {
@@ -132,7 +150,7 @@ class ADMINUTIL extends UTILBASE
         }
 
         // Check that the existing password is correct
-        if (!password_verify($old, $this->adminPassword)) {
+        if (!verifyWebUIPassword($old, $this->adminPassword)) {
             $this->send400('The old password is incorrect.');
         }
 
@@ -147,18 +165,41 @@ class ADMINUTIL extends UTILBASE
             $this->send400($result['message']);
         }
 
+        $newHash = hashWebUIPassword($new1);
+        if ($newHash === null) {
+            $this->send500('Failed to create a usable password hash.');
+        }
+
         // Load current secrets and update username and password hash
-        $privateVars = get_decoded_json_file(ALLSKY_ENV, true, "");
+        $originalSecrets = @file_get_contents(ALLSKY_ENV);
+        $privateVars = $this->loadSecrets();
+        if ($privateVars === null) {
+            $this->send500('Failed to read secrets file.');
+        }
         $privateVars['WEBUI_USERNAME'] = $new_username;
-        $privateVars['WEBUI_PASSWORD'] = password_hash($new1, PASSWORD_BCRYPT);
+        $privateVars['WEBUI_PASSWORD'] = $newHash;
 
         $encoded = json_encode($privateVars, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
         if ($encoded === false) {
             $this->send500('Failed to encode secrets.');
         }
 
-        if (file_put_contents(ALLSKY_ENV, $encoded, LOCK_EX) === false) {
-            $this->send500('Failed to write temp secrets file.');
+        if (!$this->writeSecretsFile($encoded)) {
+            $this->send500('Failed to write secrets file.');
+        }
+
+        $savedSecrets = $this->loadSecrets();
+        $savedUser = is_array($savedSecrets) ? (string)($savedSecrets['WEBUI_USERNAME'] ?? '') : '';
+        $savedPassword = is_array($savedSecrets) ? (string)($savedSecrets['WEBUI_PASSWORD'] ?? '') : '';
+        if (
+            $savedSecrets === null ||
+            !hash_equals($new_username, $savedUser) ||
+            !verifyWebUIPassword($new1, $savedPassword)
+        ) {
+            if (is_string($originalSecrets) && $originalSecrets !== '') {
+                $this->writeSecretsFile($originalSecrets);
+            }
+            $this->send500('Saved credentials could not be verified; the previous credentials were kept.');
         }
 
         // Update the "uselogin" flag in the settings file if required
@@ -184,7 +225,9 @@ class ADMINUTIL extends UTILBASE
         $this->sendResponse(
             $this->createResponse(
                 "$new_username password updated. You have been logged out; log in with the new credentials."
-            )
+            ) + [
+                'redirect' => 'index.php?page=login',
+            ]
         );
     }
 }

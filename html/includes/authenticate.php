@@ -30,8 +30,9 @@ if ($useLogin) {
             }
 
             if (!CSRFValidate()) {
-                $throttle->fail($user);
-                redirect("/index.php?page=login", "Invalid username or password.", true);
+                unset($_SESSION['csrf_token']);
+                useLogin();
+                redirect("/index.php?page=login", "Login session expired. Please try again.", true);
             }
 
             $privateVars   = $privateVars ?? get_decoded_json_file(ALLSKY_ENV, true, "");
@@ -40,7 +41,7 @@ if ($useLogin) {
             $adminPassword = (string)($privateVars["WEBUI_PASSWORD"] ?? "");
 
             $okUser = hash_equals($adminUser, $user);
-            $okPass = password_verify($pass, $adminPassword);
+            $okPass = verifyWebUIPassword($pass, $adminPassword);
 
             if (strlen($user) > 128 || strlen($pass) > 4096) {
                 $throttle->fail($user);

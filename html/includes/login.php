@@ -7,6 +7,10 @@ if (basename(__FILE__) === basename($_SERVER['SCRIPT_FILENAME'])) {
 function DisplayLoginPage()
 {
     global $csrf_token; // YUK
+    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+    header('Pragma: no-cache');
+    header('Expires: 0');
+
     $rememberedUsername = (string)($_COOKIE['allsky_remember_username'] ?? '');
     $rememberedUsername = substr($rememberedUsername, 0, 128);
     $rememberLoginChecked = isset($_COOKIE['allsky_remember']);

@@ -46,7 +46,7 @@ MIN_ALLSKY_VERSION=2024.12.06
 function hash_password()
 {
     local NEW_ADMIN_PASSWORD="${1}"
-    php -r "echo password_hash('${NEW_ADMIN_PASSWORD}', PASSWORD_BCRYPT);"
+    printf "%s" "${NEW_ADMIN_PASSWORD}" | php -r '$password = stream_get_contents(STDIN); echo password_hash($password, PASSWORD_BCRYPT);'
 }
 
 ####
@@ -72,7 +72,7 @@ function check_password_match()
     local BCRYPT_PASSWORD="${2}"
     local RESULT
 
-    RESULT=$(php -r "echo password_verify('${PLAIN_PASSWORD}', '${BCRYPT_PASSWORD}');")
+    RESULT=$(PLAIN_PASSWORD="${PLAIN_PASSWORD}" BCRYPT_PASSWORD="${BCRYPT_PASSWORD}" php -r 'echo password_verify(getenv("PLAIN_PASSWORD"), getenv("BCRYPT_PASSWORD")) ? "1" : "0";')
 
     if [[ ${RESULT} -eq 1 ]]; then
         echo true

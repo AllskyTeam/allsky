@@ -589,6 +589,37 @@ function CSRFValidate(): bool {
     return is_string($session) && is_string($provided) && hash_equals($session, $provided);
 }
 
+function verifyWebUIPassword(string $password, string $storedPassword): bool {
+	if ($storedPassword === '') {
+		return false;
+	}
+
+	if (password_verify($password, $storedPassword)) {
+		return true;
+	}
+
+	$info = password_get_info($storedPassword);
+	if (($info['algo'] ?? 0) !== 0) {
+		return false;
+	}
+
+	return hash_equals($storedPassword, $password);
+}
+
+function hashWebUIPassword(string $password): ?string {
+	try {
+		$hash = password_hash($password, PASSWORD_BCRYPT);
+	} catch (Throwable $e) {
+		return null;
+	}
+
+	if (!is_string($hash) || $hash === '' || !verifyWebUIPassword($password, $hash)) {
+		return null;
+	}
+
+	return $hash;
+}
+
 /**
 *
 * Functions to get the status output of an interface determine if it's up or down and

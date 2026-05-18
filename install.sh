@@ -3900,7 +3900,7 @@ do_legacy_password_conversion
 
 ##### Check if there's an old WebUI and let the user know it's no longer used.
 # Prompt user to remove any prior old-style WebUI.
-check_old_WebUI_files
+#check_old_WebUI_files
 
 ##### Display any necessary messaged about restored / not restored settings
 # Re-run every time to possibly remind them to update their settings.

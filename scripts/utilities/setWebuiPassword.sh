@@ -46,6 +46,8 @@ MIN_ALLSKY_VERSION=2024.12.06
 function hash_password()
 {
     local NEW_ADMIN_PASSWORD="${1}"
+    
+    # shellcheck disable=SC2016
     printf "%s" "${NEW_ADMIN_PASSWORD}" | php -r '$password = stream_get_contents(STDIN); echo password_hash($password, PASSWORD_BCRYPT);'
 }
 

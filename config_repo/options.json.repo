@@ -2146,7 +2146,7 @@
 },
 {
 "name" : "uselogin",
-"default" : true,
+"default" : false,
 "description" : "Determines if you need to login to the WebUI or not.<br><b>If your Pi is accessible on the Internet, do NOT turn this off!!</b>.",
 "label" : "Require WebUI Login",
 "type" : "boolean",

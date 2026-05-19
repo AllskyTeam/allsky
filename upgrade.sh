@@ -16,6 +16,7 @@ source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${ALLSKY_EXIT_ERR
 DISPLAY_MSG_LOG="${ALLSKY_LOGS}/upgrade.log"	# send log entries here
 
 FILES_DOWNLOADED_FILE="${ALLSKY_LOGS}/upgrade-files-downloaded.log"
+GIT_PULL_LOG="${ALLSKY_LOGS}/upgrade-git-pull.log"
 
 ############################## functions
 ####
@@ -301,19 +302,33 @@ if [[ ${ACTION} == "upgrade" ]]; then
 		cd "${ALLSKY_HOME}"	|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 		display_msg --log progress "Getting new files from GitHub"
-		if !  X="$( git pull 2>&1 )" ; then
-			if echo "${X}" | grep -i --silent -n "would be overwritten" ; then
-				FILES="$( echo -e "${X}" | grep "^	" )"	# TAB
+		# Get the current git revision, this is used laer to determine if any files have been updated by coparing
+		# the old and new head revisions
+		if ! OLD_HEAD="$( git rev-parse HEAD 2>&1 )" ; then
+			MSG="Unable to determine the current git revision:\n${OLD_HEAD}"
+			display_msg --log error "${MSG}" "Contact the Allsky Team if needed."
+			exit "${ALLSKY_EXIT_ERROR_STOP}"
+		fi
+		# Do the git pull and check for any issues
+		if ! git pull > "${GIT_PULL_LOG}" 2>&1 ; then
+			if grep -i --silent "would be overwritten" "${GIT_PULL_LOG}" ; then
+				FILES="$( echo -e "${GIT_PULL_LOG}" | grep "^	" )"	# TAB
 				MSG="You have un-checked out files, cannot continue:\n${FILES}"
+				MSG+="\n\nThe full git output is in '${GIT_PULL_LOG}'."
 			else
-				MSG="Unable to get new files:\n${X}"
+				MSG="Unable to get new files.\nThe full git output is in '${GIT_PULL_LOG}'."
 			fi
 			display_msg --log error "${MSG}" "Contact the Allsky Team if needed."
 			exit "${ALLSKY_EXIT_ERROR_STOP}"
 		fi
+		if ! NEW_HEAD="$( git rev-parse HEAD 2>&1 )" ; then
+			MSG="Unable to determine the new git revision:\n${NEW_HEAD}"
+			display_msg --log error "${MSG}" "Contact the Allsky Team if needed."
+			exit "${ALLSKY_EXIT_ERROR_STOP}"
+		fi
 
-		# If no files were retrieved, let the user know and exit.
-		if echo "${X}" | grep -i --silent "already up to date" ; then
+		# Check the old and new git revisions, if they are the same then nothing updated.
+		if [[ ${OLD_HEAD} == "${NEW_HEAD}" ]]; then
 			echo
 			MSG="No new files; existing upgrade.\n"
 			display_msg --log progress "" "${MSG}"
@@ -330,8 +345,13 @@ if [[ ${ACTION} == "upgrade" ]]; then
 			RESTART_ALLSKY="false"
 		fi
 
-		# Get a list of all files downloaded.  They have a " | " in their line.
-		echo "${X}" | sed --silent -e 's/^ //' -e '/ | /s/ *| *.*//p' > "${FILES_DOWNLOADED_FILE}"
+		# Get a list of all files downloaded. Use git diff to determine the difference between the old and new head revisions. This
+		# is 'potentially' more reliable than parsing the output of git pull, which can be in different formats depending on the version of git.
+		if ! git diff --name-only "${OLD_HEAD}" "${NEW_HEAD}" > "${FILES_DOWNLOADED_FILE}" ; then
+			MSG="Unable to get the list of downloaded files."
+			display_msg --log error "${MSG}" "Contact the Allsky Team if needed."
+			exit "${ALLSKY_EXIT_ERROR_STOP}"
+		fi
 		NUM="$( wc -l < "${FILES_DOWNLOADED_FILE}" )"
 		display_msg --log progress "${NUM} file(s) were downloaded."
 		display_msg --log info "Look in '${FILES_DOWNLOADED_FILE}' to see the list."

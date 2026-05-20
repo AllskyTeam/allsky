@@ -1570,6 +1570,85 @@ class CONFIGBACKUPUTIL extends UTILBASE
     }
 
     /**
+     * Creates a restored camera-aware hard link using the privileged copy path.
+     *
+     * Restored files are copied into place via sudo before ownership metadata is
+     * reapplied. On systems with protected hard links enabled, the WebUI user may
+     * not be allowed to link those files directly, so use `cp -l` through the
+     * same sudo permission already required for restore file copy.
+     *
+     * @return array{ok: bool, message?: string}
+     */
+    private function createRestoredHardLink(string $sourcePath, string $linkPath, string $linkLabel, string $sourceLabel): array
+    {
+        if (!is_file($sourcePath)) {
+            return ['ok' => false, 'message' => "Restored file '$sourceLabel' is missing; restore is incomplete."];
+        }
+
+        $homeReal = realpath($this->allskyHome);
+        $sourceReal = realpath($sourcePath);
+        $linkDirReal = realpath(dirname($linkPath));
+        if ($homeReal === false || $sourceReal === false || $linkDirReal === false) {
+            return ['ok' => false, 'message' => "Unable to validate hard link target '$linkLabel'."];
+        }
+        if (strpos($sourceReal, $homeReal . '/') !== 0 || strpos($linkDirReal . '/', $homeReal . '/') !== 0) {
+            return ['ok' => false, 'message' => "Hard link target '$linkLabel' resolves outside the Allsky directory."];
+        }
+
+        if (!is_link($linkPath) && is_file($linkPath)) {
+            $sourceStat = @stat($sourcePath);
+            $linkStat = @stat($linkPath);
+            if (
+                is_array($sourceStat) &&
+                is_array($linkStat) &&
+                (int)$sourceStat['dev'] === (int)$linkStat['dev'] &&
+                (int)$sourceStat['ino'] === (int)$linkStat['ino']
+            ) {
+                return ['ok' => true];
+            }
+        }
+
+        $copyBinary = is_executable('/bin/cp') ? '/bin/cp' : 'cp';
+        $cmd = 'sudo -n ' . $copyBinary .
+            ' -flT --remove-destination -- ' .
+            escapeshellarg($sourcePath) . ' ' .
+            escapeshellarg($linkPath) . ' 2>&1';
+
+        $output = [];
+        $ret = 0;
+        exec($cmd, $output, $ret);
+        if ($ret !== 0) {
+            $details = trim(implode("\n", $output));
+            $message = "Unable to create hard link '$linkLabel' to '$sourceLabel'.";
+            if (
+                stripos($details, 'a password is required') !== false ||
+                stripos($details, 'terminal is required') !== false
+            ) {
+                $message .= ' Configure sudoers with NOPASSWD for /bin/cp during restore hard-link creation.';
+            }
+            if ($details !== '') {
+                $message .= ' ' . $details;
+            }
+            return ['ok' => false, 'message' => $message];
+        }
+
+        clearstatcache(true, $sourcePath);
+        clearstatcache(true, $linkPath);
+        $sourceStat = @stat($sourcePath);
+        $linkStat = @stat($linkPath);
+        if (
+            !is_array($sourceStat) ||
+            !is_array($linkStat) ||
+            (int)$sourceStat['dev'] !== (int)$linkStat['dev'] ||
+            (int)$sourceStat['ino'] !== (int)$linkStat['ino']
+        ) {
+            return ['ok' => false, 'message' => "Unable to verify hard link '$linkLabel' to '$sourceLabel'."];
+        }
+
+        return ['ok' => true];
+    }
+
+    /**
      * Ensures the local backup directory exists and is writable by the WebUI.
      *
      * @return array{ok: bool, message?: string}
@@ -3452,12 +3531,14 @@ class CONFIGBACKUPUTIL extends UTILBASE
 
             $settingsPath = $this->allskyHome . '/' . ltrim($settingsFile, '/');
             $settingsLink = $this->allskyHome . '/config/settings.json';
-            if (!is_file($settingsPath)) {
-                return $failRestore("Restored settings file '$settingsFile' is missing; restore is incomplete.");
-            }
-            @unlink($settingsLink);
-            if (!@link($settingsPath, $settingsLink)) {
-                return $failRestore("Unable to create hard link 'config/settings.json' to '$settingsFile'.");
+            $settingsLinkResult = $this->createRestoredHardLink(
+                $settingsPath,
+                $settingsLink,
+                'config/settings.json',
+                $settingsFile
+            );
+            if (empty($settingsLinkResult['ok'])) {
+                return $failRestore((string)($settingsLinkResult['message'] ?? "Unable to create hard link 'config/settings.json' to '$settingsFile'."));
             }
 
             $ccFile = trim((string)($backupMeta['ccfile'] ?? ''));
@@ -3470,12 +3551,14 @@ class CONFIGBACKUPUTIL extends UTILBASE
 
             $ccPath = $this->allskyHome . '/' . ltrim($ccFile, '/');
             $ccLink = $this->allskyHome . '/config/cc.json';
-            if (!is_file($ccPath)) {
-                return $failRestore("Restored cc file '$ccFile' is missing; restore is incomplete.");
-            }
-            @unlink($ccLink);
-            if (!@link($ccPath, $ccLink)) {
-                return $failRestore("Unable to create hard link 'config/cc.json' to '$ccFile'.");
+            $ccLinkResult = $this->createRestoredHardLink(
+                $ccPath,
+                $ccLink,
+                'config/cc.json',
+                $ccFile
+            );
+            if (empty($ccLinkResult['ok'])) {
+                return $failRestore((string)($ccLinkResult['message'] ?? "Unable to create hard link 'config/cc.json' to '$ccFile'."));
             }
         }
 

@@ -648,6 +648,14 @@ function prepare_local_website()
 		MSG="Creating default ${ALLSKY_WEBSITE_CONFIGURATION_NAME}."
 		display_msg --log progress "${MSG}"
 		cp "${REPO_WEBSITE_CONFIGURATION_FILE}" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
+
+		# Set permissions on website configuration file
+		if [[ -f "${ALLSKY_WEBSITE_CONFIGURATION_FILE}" ]]; then
+			display_msg --log info "Setting permissions on website configuration file"
+			sudo chown "${ALLSKY_OWNER}":"${ALLSKY_WEBSERVER_GROUP}" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
+			sudo chmod 664 "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
+		fi
+
 	fi
 
 	if replace_website_placeholders "local" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}" ; then

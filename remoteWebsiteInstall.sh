@@ -646,6 +646,12 @@ function create_website_config()
 		DEST_FILE="${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
 		cp "${REPO_WEBCONFIG_FILE}" "${DEST_FILE}"
 
+		if [[ -f "${DEST_FILE}" ]]; then
+			display_msg --log info "Setting permissions on remote website configuration file"
+			sudo chown "${ALLSKY_OWNER}":"${ALLSKY_WEBSERVER_GROUP}" "${DEST_FILE}"	
+			sudo chmod 664 "${DEST_FILE}"
+		fi
+
 		MSG="Creating a new ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME}"
 		MSG+=" from repo file and updating placeholders."
 		display_msg --logonly info "${MSG}"

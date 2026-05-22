@@ -60,6 +60,11 @@ Most users do not need the whole guide on day one. What they need is a clear pat
 
 ## Good starting points {data-toc-label="Starting Points"}
 
+!!! warning "Upgrading Allsky"
+
+    If you are upgrading Allsky then please refer to the relevant section in the [Upgrade](/allsky_guide/upgrade/introduction.md) documentation as this will provide you with details of any breaking changes and upgrade related information.
+
+
 === "I am just getting started"
 
     Start with:

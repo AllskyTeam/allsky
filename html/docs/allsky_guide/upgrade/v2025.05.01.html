@@ -8,7 +8,7 @@
         <link rel="canonical" href="https://docs.allsky.local/allsky_guide/upgrade/v2025.05.01.html">
       
       
-        <link rel="prev" href="../server.html">
+        <link rel="prev" href="introduction.html">
       
       
         <link rel="next" href="../settings/allsky.html">
@@ -820,6 +820,34 @@
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="introduction.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -6074,7 +6102,7 @@
 <h2 id="overlay-manager-improvements">Overlay Manager improvements<a class="headerlink" href="#overlay-manager-improvements" title="Permanent link">¶</a></h2>
 <p>One of the more useful changes in this release is in the <strong>Overlay Manager</strong> and <strong>Overlay Editor</strong> workflow. If you maintain your own overlays, especially ones that have evolved over time, the new tools for <strong>remapping variables</strong> and <strong>splitting fields</strong> make it much easier to tidy up older overlays without rebuilding them from scratch.</p>
 <p>These changes are aimed at normal overlay maintenance rather than deep technical work. In practical terms, they help when an overlay still works in principle, but the variables inside it no longer match the way you want to organise the overlay, or when one text field has gradually become too crowded and would be clearer as several separate fields.</p>
-<details class="info">
+<details class="warning">
 <summary>Remapping variables</summary>
 <p>In this release, some overlay variables have changed name. That means an older overlay may still contain fields that point to variable names that are no longer the preferred or current ones.</p>
 <p>To help with that, the Overlay Editor now provides a <strong>remapping</strong> option in the <strong>field properties editor</strong>. The purpose of this is simple: instead of deleting a field and rebuilding it by hand, you can update the field so it points to the replacement variable.</p>
@@ -6106,9 +6134,15 @@
 </ul>
 <p>The real benefit is not just that the overlay can look tidier. It is also that once the label and variable have been separated, future editing becomes easier. You can move or format one without having to disturb the other, which makes the overlay much more flexible.</p>
 </details>
-<details class="info">
+<details class="warning">
 <summary>The Sun Moon and Planets</summary>
 <p>This feature has been removed from the overlay manager and put into a dedicated module. Please install the <code>Solar System</code> Module and configure it. The Allsky upgrade will NOT migrate any settings you had.</p>
+</details>
+<details class="warning">
+<summary>Dew heater module</summary>
+<p>If you previously used the dew heater module then you MUSt now add the environment module, allsky_temp and setup the core temperature sensor. After installing the module select the 'Core' tabe and configure the temperature sensor. You can use the test button to ensure the module is recording temperatures.</p>
+<p>Once the temperature module is working you will need to reconfigure the Dew Heater module. The first step is to set the Sensor the dew heater will use. On the 'Sensor' tab select 'Allsky' as the senor, this will then use the dat captured by the environment module.</p>
+<p>The dew heater functionality has been rewritten for this release so please refer to the <a href="../../allsky_modules/extra/dew_heater.html">Documentation</a> for details on howto setup the module </p>
 </details>
 <details class="info">
 <summary>A sensible way to use these features</summary>
@@ -6160,7 +6194,7 @@
       <nav class="md-footer__inner md-grid" aria-label="Footer">
         
           
-          <a href="../server.html" class="md-footer__link md-footer__link--prev" aria-label="Previous: Server">
+          <a href="introduction.html" class="md-footer__link md-footer__link--prev" aria-label="Previous: Introduction">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"></path></svg>
@@ -6170,7 +6204,7 @@
                 Previous
               </span>
               <div class="md-ellipsis">
-                Server
+                Introduction
               </div>
             </div>
           </a>

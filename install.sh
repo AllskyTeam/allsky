@@ -1057,6 +1057,19 @@ set_permissions()
 	[[ ! -d ${ALLSKY_SUPPORT_DIR} ]] && mkdir -p "${ALLSKY_SUPPORT_DIR}"
 	sudo chown "${ALLSKY_OWNER}":"${ALLSKY_WEBSERVER_GROUP}" "${ALLSKY_SUPPORT_DIR}"
 	sudo chmod 775 "${ALLSKY_SUPPORT_DIR}"
+
+	# Set permissions on website configuration files if they exist
+	if [[ -f "${ALLSKY_WEBSITE_CONFIGURATION_FILE}" ]]; then
+		display_msg --log info "Setting permissions on website configuration file"
+		sudo chown "${ALLSKY_OWNER}":"${ALLSKY_WEBSERVER_GROUP}" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
+		sudo chmod 664 "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
+	fi
+	if [[ -f "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" ]]; then
+		display_msg --log info "Setting permissions on remote website configuration file"
+		sudo chown "${ALLSKY_OWNER}":"${ALLSKY_WEBSERVER_GROUP}" "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"	
+		sudo chmod 664 "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
+	fi
+
 }
 
 

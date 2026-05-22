@@ -3364,6 +3364,12 @@ update_modules()
 	# Ignore stdout since it's also written to a log file.
 	"${ALLSKY_MODULE_INSTALLER}" "${args[@]}" > /dev/null
 
+	MODULES_DIR="${ALLSKY_MODULE_LOCATION}/modules"
+	if [[ -d "${MODULES_DIR}" ]]; then
+		display_msg --log progress "Removing remaining legacy modules."
+		rm -rf "${MODULES_DIR}" > "${TMP}" 2>&1
+	fi
+
 	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
 }
 

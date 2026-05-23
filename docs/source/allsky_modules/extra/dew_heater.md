@@ -241,44 +241,44 @@ Starting with on/off control is usually the fastest way to prove that the GPIO p
 
 - My heater stays on all of the time
 
-  - Increase the Allsky debug level and test the module so you can see the control messages in the log.
-  - Check that `Control Mode` is not set to `Manual On` or `Manual PWM`.
-  - Check that `Forced Temperature` is not causing the heater to remain on.
-  - Check that `Turn Heater On At` is not set too high.
-  - If `Margin Bias` is enabled in Advanced mode, check that it is not making the controller more aggressive than intended.
-  - In PWM mode, check that `Full Heat Margin` and `Max PWM %` are sensible for your installation.
-  - Check that the GPIO logic is correct. If your control hardware is active-low, `Invert GPIO` may need to be enabled.
+    - Increase the Allsky debug level and test the module so you can see the control messages in the log.
+    - Check that `Control Mode` is not set to `Manual On` or `Manual PWM`.
+    - Check that `Forced Temperature` is not causing the heater to remain on.
+    - Check that `Turn Heater On At` is not set too high.
+    - If `Margin Bias` is enabled in Advanced mode, check that it is not making the controller more aggressive than intended.
+    - In PWM mode, check that `Full Heat Margin` and `Max PWM %` are sensible for your installation.
+    - Check that the GPIO logic is correct. If your control hardware is active-low, `Invert GPIO` may need to be enabled.
 
 - My heater never switches on
 
-  - Increase the Allsky debug level and test the module so you can see the dew margin and control decision in the log.
-  - Check that `Control Mode` is not set to `Manual Off`.
-  - Check that the dew margin thresholds are not set too low.
-  - Check that `Daytime Disable` is not preventing operation in the current pipeline.
-  - Check whether `Minimum Off Time` or `Startup Grace Period` is intentionally holding the current state.
-  - Confirm that the heater GPIO pin is correct.
-  - Confirm that the switching hardware is wired correctly and that the heater has a valid power source.
+    - Increase the Allsky debug level and test the module so you can see the dew margin and control decision in the log.
+    - Check that `Control Mode` is not set to `Manual Off`.
+    - Check that the dew margin thresholds are not set too low.
+    - Check that `Daytime Disable` is not preventing operation in the current pipeline.
+    - Check whether `Minimum Off Time` or `Startup Grace Period` is intentionally holding the current state.
+    - Confirm that the heater GPIO pin is correct.
+    - Confirm that the switching hardware is wired correctly and that the heater has a valid power source.
 
 - My heater switches on but does not clear the dew
 
-  - Confirm that the heater itself has sufficient power for the dome or window being heated.
-  - Confirm that the heater is mounted in an effective location.
-  - In PWM mode, consider increasing `Max PWM %`, increasing `Turn Heater On At`, or using a more aggressive PWM curve.
-  - Confirm that the environmental sensor is mounted in a location that reflects real ambient conditions rather than a warmed or sheltered pocket of air.
+    - Confirm that the heater itself has sufficient power for the dome or window being heated.
+    - Confirm that the heater is mounted in an effective location.
+    - In PWM mode, consider increasing `Max PWM %`, increasing `Turn Heater On At`, or using a more aggressive PWM curve.
+    - Confirm that the environmental sensor is mounted in a location that reflects real ambient conditions rather than a warmed or sheltered pocket of air.
 
 - The heater switches on and off too often
 
-  - Increase the difference between `Turn Heater On At` and `Turn Heater Off Above`.
-  - This widens the hysteresis band and prevents rapid switching.
-  - If that is still not enough, use `Minimum On Time` and `Minimum Off Time` in Advanced mode.
-  - If the heater hardware itself cannot tolerate frequent switching well, these are some of the first settings to revisit.
+    - Increase the difference between `Turn Heater On At` and `Turn Heater Off Above`.
+    - This widens the hysteresis band and prevents rapid switching.
+    - If that is still not enough, use `Minimum On Time` and `Minimum Off Time` in Advanced mode.
+    - If the heater hardware itself cannot tolerate frequent switching well, these are some of the first settings to revisit.
 
 - PWM output does not behave the way I expected
 
-  - Remember that PWM is based on **dew margin**, not just temperature.
-  - If temperature changes but the dew point changes as well, the output may not follow temperature alone.
-  - Review the `Full Heat Margin`, `Min PWM %`, `Max PWM %`, `PWM Curve`, and `Margin Bias` settings together rather than in isolation.
-  - If in doubt, start with `quadratic`, observe the real results, and only then decide whether you need a gentler or more aggressive response.
+    - Remember that PWM is based on **dew margin**, not just temperature.
+    - If temperature changes but the dew point changes as well, the output may not follow temperature alone.
+    - Review the `Full Heat Margin`, `Min PWM %`, `Max PWM %`, `PWM Curve`, and `Margin Bias` settings together rather than in isolation.
+    - If in doubt, start with `quadratic`, observe the real results, and only then decide whether you need a gentler or more aggressive response.
 
 ## Important Notes { data-toc-label="Important Notes" }
 

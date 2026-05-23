@@ -927,6 +927,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#dew-heater" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dew Heater
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#system-page-scripts-module" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6138,12 +6149,6 @@
 <summary>The Sun Moon and Planets</summary>
 <p>This feature has been removed from the overlay manager and put into a dedicated module. Please install the <code>Solar System</code> Module and configure it. The Allsky upgrade will NOT migrate any settings you had.</p>
 </details>
-<details class="warning">
-<summary>Dew heater module</summary>
-<p>If you previously used the dew heater module then you MUSt now add the environment module, allsky_temp and setup the core temperature sensor. After installing the module select the 'Core' tabe and configure the temperature sensor. You can use the test button to ensure the module is recording temperatures.</p>
-<p>Once the temperature module is working you will need to reconfigure the Dew Heater module. The first step is to set the Sensor the dew heater will use. On the 'Sensor' tab select 'Allsky' as the senor, this will then use the dat captured by the environment module.</p>
-<p>The dew heater functionality has been rewritten for this release so please refer to the <a href="../../allsky_modules/extra/dew_heater.html">Documentation</a> for details on howto setup the module </p>
-</details>
 <details class="info">
 <summary>A sensible way to use these features</summary>
 <p>If you want to make use of these improvements, a sensible approach is:</p>
@@ -6160,6 +6165,14 @@
 <li>improving how the field is structured.</li>
 </ul>
 </details>
+<h2 id="dew-heater">Dew Heater<a class="headerlink" href="#dew-heater" title="Permanent link">¶</a></h2>
+<div class="admonition danger">
+<p class="admonition-title">This is a breaking change</p>
+<p>The Dew Heater module has been re written so will need to be restup from scratch. The new module provides much easier ways to setup the dew heater. If you do not resetup the de heater then it will nto work.</p>
+</div>
+<p>If you previously used the dew heater module then you <strong>MUST</strong> now add the environment module, allsky_temp and setup the core temperature sensor. After installing the module select the 'Core' tab and configure the temperature sensor. You can use the test button to ensure the module is recording temperatures.</p>
+<p>Once the temperature module is working you will need to reconfigure the Dew Heater module. The first step is to set the Sensor the dew heater will use. On the 'Sensor' tab select 'Allsky' as the sensor, this will then use the data captured by the environment module.</p>
+<p>The dew heater functionality has been rewritten for this release so please refer to the <a href="../../allsky_modules/extra/dew_heater.html">Documentation</a> for details on how to setup the module </p>
 <h2 id="system-page-scripts-module">System Page / Scripts Module<a class="headerlink" href="#system-page-scripts-module" title="Permanent link">¶</a></h2>
 <p>For security reasons scripts used in Buttons on the system page or run via the scripts module can only be run from the following directory</p>
 <div class="highlight"><pre><span></span><code>~/allsky/config/myFile

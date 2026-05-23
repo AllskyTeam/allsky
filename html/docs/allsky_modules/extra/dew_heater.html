@@ -6666,63 +6666,55 @@
 <ul>
 <li>
 <p>My heater stays on all of the time</p>
-</li>
-<li>
-<p>Increase the Allsky debug level and test the module so you can see the control messages in the log.</p>
-</li>
+<ul>
+<li>Increase the Allsky debug level and test the module so you can see the control messages in the log.</li>
 <li>Check that <code>Control Mode</code> is not set to <code>Manual On</code> or <code>Manual PWM</code>.</li>
 <li>Check that <code>Forced Temperature</code> is not causing the heater to remain on.</li>
 <li>Check that <code>Turn Heater On At</code> is not set too high.</li>
 <li>If <code>Margin Bias</code> is enabled in Advanced mode, check that it is not making the controller more aggressive than intended.</li>
 <li>In PWM mode, check that <code>Full Heat Margin</code> and <code>Max PWM %</code> are sensible for your installation.</li>
-<li>
-<p>Check that the GPIO logic is correct. If your control hardware is active-low, <code>Invert GPIO</code> may need to be enabled.</p>
+<li>Check that the GPIO logic is correct. If your control hardware is active-low, <code>Invert GPIO</code> may need to be enabled.</li>
+</ul>
 </li>
 <li>
 <p>My heater never switches on</p>
-</li>
-<li>
-<p>Increase the Allsky debug level and test the module so you can see the dew margin and control decision in the log.</p>
-</li>
+<ul>
+<li>Increase the Allsky debug level and test the module so you can see the dew margin and control decision in the log.</li>
 <li>Check that <code>Control Mode</code> is not set to <code>Manual Off</code>.</li>
 <li>Check that the dew margin thresholds are not set too low.</li>
 <li>Check that <code>Daytime Disable</code> is not preventing operation in the current pipeline.</li>
 <li>Check whether <code>Minimum Off Time</code> or <code>Startup Grace Period</code> is intentionally holding the current state.</li>
 <li>Confirm that the heater GPIO pin is correct.</li>
-<li>
-<p>Confirm that the switching hardware is wired correctly and that the heater has a valid power source.</p>
+<li>Confirm that the switching hardware is wired correctly and that the heater has a valid power source.</li>
+</ul>
 </li>
 <li>
 <p>My heater switches on but does not clear the dew</p>
-</li>
-<li>
-<p>Confirm that the heater itself has sufficient power for the dome or window being heated.</p>
-</li>
+<ul>
+<li>Confirm that the heater itself has sufficient power for the dome or window being heated.</li>
 <li>Confirm that the heater is mounted in an effective location.</li>
 <li>In PWM mode, consider increasing <code>Max PWM %</code>, increasing <code>Turn Heater On At</code>, or using a more aggressive PWM curve.</li>
-<li>
-<p>Confirm that the environmental sensor is mounted in a location that reflects real ambient conditions rather than a warmed or sheltered pocket of air.</p>
+<li>Confirm that the environmental sensor is mounted in a location that reflects real ambient conditions rather than a warmed or sheltered pocket of air.</li>
+</ul>
 </li>
 <li>
 <p>The heater switches on and off too often</p>
-</li>
-<li>
-<p>Increase the difference between <code>Turn Heater On At</code> and <code>Turn Heater Off Above</code>.</p>
-</li>
+<ul>
+<li>Increase the difference between <code>Turn Heater On At</code> and <code>Turn Heater Off Above</code>.</li>
 <li>This widens the hysteresis band and prevents rapid switching.</li>
 <li>If that is still not enough, use <code>Minimum On Time</code> and <code>Minimum Off Time</code> in Advanced mode.</li>
-<li>
-<p>If the heater hardware itself cannot tolerate frequent switching well, these are some of the first settings to revisit.</p>
+<li>If the heater hardware itself cannot tolerate frequent switching well, these are some of the first settings to revisit.</li>
+</ul>
 </li>
 <li>
 <p>PWM output does not behave the way I expected</p>
-</li>
-<li>
-<p>Remember that PWM is based on <strong>dew margin</strong>, not just temperature.</p>
-</li>
+<ul>
+<li>Remember that PWM is based on <strong>dew margin</strong>, not just temperature.</li>
 <li>If temperature changes but the dew point changes as well, the output may not follow temperature alone.</li>
 <li>Review the <code>Full Heat Margin</code>, <code>Min PWM %</code>, <code>Max PWM %</code>, <code>PWM Curve</code>, and <code>Margin Bias</code> settings together rather than in isolation.</li>
 <li>If in doubt, start with <code>quadratic</code>, observe the real results, and only then decide whether you need a gentler or more aggressive response.</li>
+</ul>
+</li>
 </ul>
 <h2 id="important-notes">Important Notes<a class="headerlink" href="#important-notes" title="Permanent link">¶</a></h2>
 <h4 id="relays">Relays<a class="headerlink" href="#relays" title="Permanent link">¶</a></h4>

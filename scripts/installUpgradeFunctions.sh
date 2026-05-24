@@ -984,10 +984,88 @@ function recheck_swap()
 	check_swap "after_install"  "true"
 }
 
+#
+# Determine which swap management system is currently being used.
+#
+# The result is returned in the global variable SWAP_SYSTEM.
+#
+# Possible values:
+#   rpi-swap         - Modern Raspberry Pi OS swap management (Bookworm/Trixie)
+#   dphys-swapfile   - Legacy Raspberry Pi swap management
+#   unknown          - Manual, custom or unsupported configuration
+#
+# How it works:
+#
+# 1) The function first checks active systemd swap units because this is the
+#    most reliable source of information about the currently active swap
+#    mechanism.
+#
+# 2) If an active swap unit contains references to "rpi-swap" then the system
+#    is using the newer Raspberry Pi swap framework.
+#
+# 3) If an active swap unit contains references to "dphys-swapfile" then the
+#    legacy swap system is being used.
+#
+# 4) If neither can be identified from active units, fallback checks are used:
+#      - Presence of dphys-swapfile.service
+#      - Presence of /etc/dphys-swapfile
+#      - Presence of /etc/rpi/swap.conf or /etc/rpi/swap.conf.d
+#
+# 5) If nothing matches, SWAP_SYSTEM is set to "unknown".
+#
+get_swap_system()
+{
+    SWAP_SYSTEM="unknown"
+
+    # Check active swap units first
+    if systemctl list-units --type=swap --no-legend >/dev/null 2>&1; then
+        while read -r unit _; do
+            [[ -z "${unit:-}" ]] && continue
+
+            local desc
+            local fragment
+            local source
+
+            desc="$(systemctl show "${unit}" -p Description --value 2>/dev/null || true)"
+            fragment="$(systemctl show "${unit}" -p FragmentPath --value 2>/dev/null || true)"
+            source="$(systemctl show "${unit}" -p SourcePath --value 2>/dev/null || true)"
+
+            if echo "${desc} ${fragment} ${source}" | grep -qi 'rpi-swap'; then
+                SWAP_SYSTEM="rpi-swap"
+                return 0
+            fi
+
+            if echo "${desc} ${fragment} ${source}" | grep -qi 'dphys-swapfile'; then
+                SWAP_SYSTEM="dphys-swapfile"
+                return 0
+            fi
+        done < <(systemctl list-units --type=swap --no-legend 2>/dev/null)
+    fi
+
+    # Fallback checks
+    if systemctl list-unit-files 2>/dev/null | grep -q '^dphys-swapfile\.service'; then
+        SWAP_SYSTEM="dphys-swapfile"
+        return 0
+    fi
+
+    if [[ -f /etc/dphys-swapfile ]]; then
+        SWAP_SYSTEM="dphys-swapfile"
+        return 0
+    fi
+
+    if [[ -f /etc/rpi/swap.conf || -d /etc/rpi/swap.conf.d ]]; then
+        SWAP_SYSTEM="rpi-swap"
+        return 0
+    fi
+
+    return 1
+}
+
 ####
 # Allow the user to change the amount of swap space used.
 function check_swap()
 {
+
 	local CALLED_FROM="${1}"
 	local PROMPT="${2:-false}"
 
@@ -1001,92 +1079,102 @@ function check_swap()
 
 	[[ -z ${WT_WIDTH} ]] && WT_WIDTH="$( calc_wt_size )"
 
-	get_ram_tmp_swap		# Sets ${RAM_SIZE} and ${SUGGESTED_SWAP_SIZE}
-	MSG="RAM_SIZE=${RAM_SIZE}, SUGGESTED_SWAP_SIZE=${SUGGESTED_SWAP_SIZE}."
-	# /dev/null so no ouput when not called from installer
-	m "${MSG}" "" "--log" "info" "${CALLED_FROM}" > /dev/null
+	get_swap_system
 
-	# With "free -mebi" the displayed swap is often 1 MB less than what's in
-	# /etc/dphys-swapfile, I think because "free -mebi" rounds down to an int.
-	# Fix by gettting size in kibi (kilo) and divide by 1024 and convert to an int.
-	CURRENT_SWAP=$( free --kibi |
-			gawk 'BEGIN { swap = 0; }
-			{
-				if ($1 == "Swap:") {
-					swap = $2 / 1024;
-					exit 0;
+	if [[ ${SWAP_SYSTEM} == "rpi-swap" ]]; then
+		# Add code once I knwo what to do !!
+	fi
+
+	if [[ ${SWAP_SYSTEM} == "dphys-swapfile" ]]; then
+
+		get_ram_tmp_swap		# Sets ${RAM_SIZE} and ${SUGGESTED_SWAP_SIZE}
+		MSG="RAM_SIZE=${RAM_SIZE}, SUGGESTED_SWAP_SIZE=${SUGGESTED_SWAP_SIZE}."
+		# /dev/null so no ouput when not called from installer
+		m "${MSG}" "" "--log" "info" "${CALLED_FROM}" > /dev/null
+
+		# With "free -mebi" the displayed swap is often 1 MB less than what's in
+		# /etc/dphys-swapfile, I think because "free -mebi" rounds down to an int.
+		# Fix by gettting size in kibi (kilo) and divide by 1024 and convert to an int.
+		CURRENT_SWAP=$( free --kibi |
+				gawk 'BEGIN { swap = 0; }
+				{
+					if ($1 == "Swap:") {
+						swap = $2 / 1024;
+						exit 0;
+					}
 				}
-			}
-			END { printf("%.f", swap); }'
-		)	# in MB
+				END { printf("%.f", swap); }'
+			)	# in MB
 
-	if [[ ${CURRENT_SWAP} -lt ${SUGGESTED_SWAP_SIZE} || ${PROMPT} == "true" ]]; then
-		if [[ ${CURRENT_SWAP} -eq 0 ]]; then
-			AMT="no"
-		else
-			AMT="${CURRENT_SWAP} MB of"
-		fi
-		MSG="\nYour Pi currently has ${AMT} swap space."
-		MSG+="\nBased on your memory size of ${RAM_SIZE} MB,"
-		if [[ ${CURRENT_SWAP} -ge ${SUGGESTED_SWAP_SIZE} ]]; then
-			CHANGE_SUGGESTED="false"
-			SUGGESTED_SWAP_SIZE=${CURRENT_SWAP}
-			MSG+=" there is no need to change anything, but you can if you would like."
-		else
-			CHANGE_SUGGESTED="true"
-			MSG+=" the recommended swap size is ${SUGGESTED_SWAP_SIZE} MB."
-			MSG+=" which will decrease the chance of timelapse and other failures."
-			MSG+="\n\nYou may change the amount of swap space by changing the number below."
-		fi
-
-		NEW_SIZE="$( get_0_or_positive "${SUGGESTED_SWAP_SIZE}" "disable swap space" "${MSG}" )"
-		if [[ ${NEW_SIZE} -eq 0 ]]; then
-			if [[ ${CHANGE_SUGGESTED} == "true" && ${SUGGESTED_SWAP_SIZE} -gt 0 ]]; then
-				MSG="With no swap space you run the risk of programs failing."
-				m "${MSG}" "" "--log" "warning" "${CALLED_FROM}"
+		if [[ ${CURRENT_SWAP} -lt ${SUGGESTED_SWAP_SIZE} || ${PROMPT} == "true" ]]; then
+			if [[ ${CURRENT_SWAP} -eq 0 ]]; then
+				AMT="no"
+			else
+				AMT="${CURRENT_SWAP} MB of"
+			fi
+			MSG="\nYour Pi currently has ${AMT} swap space."
+			MSG+="\nBased on your memory size of ${RAM_SIZE} MB,"
+			if [[ ${CURRENT_SWAP} -ge ${SUGGESTED_SWAP_SIZE} ]]; then
+				CHANGE_SUGGESTED="false"
+				SUGGESTED_SWAP_SIZE=${CURRENT_SWAP}
+				MSG+=" there is no need to change anything, but you can if you would like."
+			else
+				CHANGE_SUGGESTED="true"
+				MSG+=" the recommended swap size is ${SUGGESTED_SWAP_SIZE} MB."
+				MSG+=" which will decrease the chance of timelapse and other failures."
+				MSG+="\n\nYou may change the amount of swap space by changing the number below."
 			fi
 
-			if [[ ${CURRENT_SWAP} -gt 0 ]]; then
-				MSG="Swap space disabled."
+			NEW_SIZE="$( get_0_or_positive "${SUGGESTED_SWAP_SIZE}" "disable swap space" "${MSG}" )"
+			if [[ ${NEW_SIZE} -eq 0 ]]; then
+				if [[ ${CHANGE_SUGGESTED} == "true" && ${SUGGESTED_SWAP_SIZE} -gt 0 ]]; then
+					MSG="With no swap space you run the risk of programs failing."
+					m "${MSG}" "" "--log" "warning" "${CALLED_FROM}"
+				fi
+
+				if [[ ${CURRENT_SWAP} -gt 0 ]]; then
+					MSG="Swap space disabled."
+					m "${MSG}" "" "--log" "progress" "${CALLED_FROM}"
+
+					sudo dphys-swapfile swapoff				# Stop using swap file
+					sudo dphys-swapfile uninstall			# Remove the swap file
+					sudo sed -i "/CONF_SWAPSIZE=/ c CONF_SWAPSIZE=${NEW_SIZE}" "${SWAP_CONFIG_FILE}"
+				else
+					MSG="Swap space remaining disabled."
+					m "${MSG}" "" "--logonly" "info" "${CALLED_FROM}"
+				fi
+			elif [[ ${NEW_SIZE} -eq ${CURRENT_SWAP} && ${CHANGE_SUGGESTED} == "false" ]]; then
+				# User didn't change, and CURRENT_SWAP is sufficient.
+				MSG="Swap size will remain at ${CURRENT_SWAP} MB."
+				m "${MSG}" "" "--log" "progress" "${CALLED_FROM}"
+			else
+				MSG="Swap size set to ${NEW_SIZE} MB."
 				m "${MSG}" "" "--log" "progress" "${CALLED_FROM}"
 
-				sudo dphys-swapfile swapoff				# Stop using swap file
-				sudo dphys-swapfile uninstall			# Remove the swap file
+				sudo dphys-swapfile swapoff					# Stop using swap file
 				sudo sed -i "/CONF_SWAPSIZE=/ c CONF_SWAPSIZE=${NEW_SIZE}" "${SWAP_CONFIG_FILE}"
-			else
-				MSG="Swap space remaining disabled."
-				m "${MSG}" "" "--logonly" "info" "${CALLED_FROM}"
-			fi
-		elif [[ ${NEW_SIZE} -eq ${CURRENT_SWAP} && ${CHANGE_SUGGESTED} == "false" ]]; then
-			# User didn't change, and CURRENT_SWAP is sufficient.
-			MSG="Swap size will remain at ${CURRENT_SWAP} MB."
-			m "${MSG}" "" "--log" "progress" "${CALLED_FROM}"
-		else
-			MSG="Swap size set to ${NEW_SIZE} MB."
-			m "${MSG}" "" "--log" "progress" "${CALLED_FROM}"
 
-			sudo dphys-swapfile swapoff					# Stop using swap file
-			sudo sed -i "/CONF_SWAPSIZE=/ c CONF_SWAPSIZE=${NEW_SIZE}" "${SWAP_CONFIG_FILE}"
-
-			# If NEW_SIZE is greater than the current max, increase the max.
-			CURRENT_MAX="$( get_variable "CONF_MAXSWAP" "${SWAP_CONFIG_FILE}" )"
-			# TODO: Can we determine the default max rather than hard-code it?
-			CURRENT_MAX="${CURRENT_MAX:-2048}"
-			if [[ ${CURRENT_MAX} -lt ${NEW_SIZE} ]]; then
-				if [[ ${DEBUG} -gt 0 ]]; then
-					MSG="Max swap size increased to ${NEW_SIZE} MB."
-					m "${MSG}" "" "--logonly" "debug" "${CALLED_FROM}"
+				# If NEW_SIZE is greater than the current max, increase the max.
+				CURRENT_MAX="$( get_variable "CONF_MAXSWAP" "${SWAP_CONFIG_FILE}" )"
+				# TODO: Can we determine the default max rather than hard-code it?
+				CURRENT_MAX="${CURRENT_MAX:-2048}"
+				if [[ ${CURRENT_MAX} -lt ${NEW_SIZE} ]]; then
+					if [[ ${DEBUG} -gt 0 ]]; then
+						MSG="Max swap size increased to ${NEW_SIZE} MB."
+						m "${MSG}" "" "--logonly" "debug" "${CALLED_FROM}"
+					fi
+					sudo sed -i "/CONF_MAXSWAP/ c CONF_MAXSWAP=${NEW_SIZE}" "${SWAP_CONFIG_FILE}"
 				fi
-				sudo sed -i "/CONF_MAXSWAP/ c CONF_MAXSWAP=${NEW_SIZE}" "${SWAP_CONFIG_FILE}"
-			fi
 
-			sudo dphys-swapfile setup  > /dev/null		# Set up new swap file
-			sudo dphys-swapfile swapon					# Turn on new swap file
+				sudo dphys-swapfile setup  > /dev/null		# Set up new swap file
+				sudo dphys-swapfile swapon					# Turn on new swap file
+			fi
+		else
+			MSG="Size of current swap (${CURRENT_SWAP} MB) is sufficient; no change needed."
+			m "${MSG}" "" "--logonly" "info" "${CALLED_FROM}"
 		fi
-	else
-		MSG="Size of current swap (${CURRENT_SWAP} MB) is sufficient; no change needed."
-		m "${MSG}" "" "--logonly" "info" "${CALLED_FROM}"
 	fi
+
 
 	if [[ ${CALLED_FROM} == "install" ]]; then
 		STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")

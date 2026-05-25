@@ -554,7 +554,7 @@ function run_command()
 	fi
 
 	# Check if command is a function; if so, assume it's one of ours.
-	echo "CMDS=${CMDS[*]}" | grep -m 1 --silent "(${FUNCTION_TO_EXECUTE})"
+	echo "CMDS=${CMDS[*]}" | grep -m 1 --silent "(${COMMAND})"
 	if [[ $? -ne 0 ]]; then
 		E_ "\n${ME}: Unknown command '${COMMAND}'." >&2
 		usage_and_exit --commands-only 2
@@ -838,6 +838,7 @@ if [[ -z ${FUNCTION_TO_EXECUTE} ]]; then
 		P="${PROMPT}"	# restore prompt
 
 		[[ ${ON_TTY} == "true" ]] && clear
+
 		run_command "${COMMAND}"
 		RET=$?
 

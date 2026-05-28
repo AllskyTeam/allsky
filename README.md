@@ -54,7 +54,6 @@ Skip the details and **[head straight to the setup guide](#requirements)** to be
    * Create a mini timelapse from the last X captured images
 * Keogram creation
 * Keolapse creation
-* Keolapse creation
 * Startrails creation
 * Allsky Map
    * A global map of Allsky cameras
@@ -66,6 +65,9 @@ Skip the details and **[head straight to the setup guide](#requirements)** to be
    * Choose exactly which data fields to display from a rich, dynamic list
    * Group related fields together for easier movement and organization
    * Fine-tune layouts with precise alignment and spacing controls
+      * Left align
+      * Equal vertical spacing
+      * Layering
    * Insert predefined blocks - such as all Sun-related data - with a single click
    * Use any font to style your overlays your way
    * Customize the format of every field for consistent presentation
@@ -74,12 +76,16 @@ Skip the details and **[head straight to the setup guide](#requirements)** to be
    * Modular architecture allowing you to add only the features you need
    * Developers can create new modules using the provided developer documentation
    * Developers can contribute modules to the main Allsky project for the community
+   * Package manager to assist in the installation of modules
    * Multiple "flows" determine when modules run:
       * Daytime Capture - Modules that run during the day
       * Nighttime Capture - Modules that run during the night
       * Day -&gt; Night - Modules that run during the day-to-night transition
       * Night -&gt; Day - Modules that run during the night-to-day transition
       * Periodic - Modules that run at regular intervals
+   * Built in i2c database to ease selecting devices
+   * Built in GPIO pin selector to ease pin selection
+   * Diagnostic tools for connected hardware
    * Key Modules (include but not limited to):
       > <br>
       > NOTE: Some modules require external hardware or third-party services.
@@ -145,6 +151,16 @@ Skip the details and **[head straight to the setup guide](#requirements)** to be
          * Dew Heater
          * *And more...
       * Create your own custom charts
+   * Built in support system
+      * Creates data that can be submitted to the Allsky team to assist in diagnising issues
+   * Backup / Restore system
+      * Allows the Allksy configuration to be backed up, downloaded  and restored
+      * Allows for image data to be backed up, downloaded and restored
+   * Helper tools
+      * Test Startrail generation using differing options
+      * Test Timelapse generation using different settings
+      * Details of bad images
+      * Allsky status suggestions
 
 
 <!-- =============================================================================== --> 

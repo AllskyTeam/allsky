@@ -24,7 +24,7 @@ if [[ ! -d ${ALLSKY_SUPPORT_DIR} ]]; then
 	mkdir -p "${ALLSKY_SUPPORT_DIR}" || exit 2
 fi
 # Always run these to make sure the permissions are correct.
-sudo chown "${USER_NAME}:${WEBSERVER_OWNER}" "${ALLSKY_SUPPORT_DIR}"
+sudo chown "${ALLSKY_OWNER}:${ALLSKY_WEBSERVER_OWNER}" "${ALLSKY_SUPPORT_DIR}"
 sudo chmod 775 "${ALLSKY_SUPPORT_DIR}"
 
 DISPLAY_MSG_LOG="${ALLSKY_LOGS}/support.log"	# send log entries here
@@ -532,7 +532,7 @@ function generate_support_info()
 
 	zip -r "${TEMP_DIR}/${ZIP_NAME}" ./* > /dev/null 2>&1
 	sudo mv "${ZIP_NAME}" "${ALLSKY_SUPPORT_DIR}"
-	sudo chown "${USER_NAME}:${WEBSERVER_OWNER}" "${ALLSKY_SUPPORT_DIR}/${ZIP_NAME}"
+	sudo chown "${ALLSKY_OWNER}:${ALLSKY_WEBSERVER_OWNER}" "${ALLSKY_SUPPORT_DIR}/${ZIP_NAME}"
 	sudo chmod 664 "${ALLSKY_SUPPORT_DIR}/${ZIP_NAME}"
 
 	rm -rf "${TEMP_DIR}"

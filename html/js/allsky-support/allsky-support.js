@@ -10,6 +10,7 @@ class ALLSKYSUPPORT {
 	#supportFilesTable = null
 
 	constructor() {
+		$('#githubIdModal').appendTo('body');
 
 		$(document).on('click', '.as-support-log-delete', (event) => {
 			var logId = $(event.currentTarget).data('logid')

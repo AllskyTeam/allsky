@@ -185,6 +185,9 @@ function collect_support_info()
 		RPI_CAMERAS=""
 	fi
 
+	### Timezone
+	TZ_INFO="$( timedatectl )"
+
 	### Get installed package information
 	# REPOS="$( grep -r '^deb' /etc/apt/sources.list /etc/apt/sources.list.d/ )"
 }
@@ -238,6 +241,7 @@ function generate_support_info()
 		print_info "Total RAM:" "${MEM_TOTAL}"
 		print_info "User Name:" "${USER_NAME}"
 		print_info "User ID:" "${USER_ID}"
+		print_info "Timezone:" "${TZ_INFO}"
 	} > "${BASIC_FILE}"
 
 	if [[ ${GITHUB_NUMBER} != "none" ]]; then

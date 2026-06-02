@@ -41,6 +41,11 @@ class CONFIGBACKUPUTIL extends UTILBASE
     private ?string $cachedAllskyOwner = null;
 
     /**
+     * Cached system-local timezone used for backup filenames and metadata.
+     */
+    private ?DateTimeZone $localTimezone = null;
+
+    /**
      * Initialises path values used by backup and restore operations.
      */
     public function __construct()
@@ -81,6 +86,66 @@ class CONFIGBACKUPUTIL extends UTILBASE
     private function getBackupMetadataFile(): string
     {
         return $this->allskyConfig . '/backup.json';
+    }
+
+    /**
+     * Gets the system-local timezone rather than PHP's default timezone.
+     */
+    private function getLocalTimezone(): DateTimeZone
+    {
+        if ($this->localTimezone instanceof DateTimeZone) {
+            return $this->localTimezone;
+        }
+
+        $candidates = [];
+        $timezoneName = trim((string)@file_get_contents('/etc/timezone'));
+        if ($timezoneName !== '') {
+            $candidates[] = $timezoneName;
+        }
+
+        $localtimeTarget = @readlink('/etc/localtime');
+        if (is_string($localtimeTarget)) {
+            $zoneinfoPrefix = '/usr/share/zoneinfo/';
+            if (str_starts_with($localtimeTarget, $zoneinfoPrefix)) {
+                $candidates[] = substr($localtimeTarget, strlen($zoneinfoPrefix));
+            }
+        }
+
+        $envTimezone = trim((string)getenv('TZ'));
+        if ($envTimezone !== '') {
+            $candidates[] = $envTimezone;
+        }
+
+        $phpTimezone = trim(date_default_timezone_get());
+        if ($phpTimezone !== '') {
+            $candidates[] = $phpTimezone;
+        }
+        $candidates[] = 'UTC';
+
+        foreach (array_values(array_unique($candidates)) as $candidate) {
+            try {
+                $this->localTimezone = new DateTimeZone($candidate);
+                return $this->localTimezone;
+            } catch (Throwable $e) {
+                continue;
+            }
+        }
+
+        $this->localTimezone = new DateTimeZone('UTC');
+        return $this->localTimezone;
+    }
+
+    /**
+     * Formats a timestamp using the system-local timezone.
+     */
+    private function formatLocalDate(string $format, ?int $timestamp = null): string
+    {
+        $timezone = $this->getLocalTimezone();
+        if ($timestamp === null) {
+            return (new DateTimeImmutable('now', $timezone))->format($format);
+        }
+
+        return (new DateTimeImmutable('@' . $timestamp))->setTimezone($timezone)->format($format);
     }
 
     /**
@@ -1907,13 +1972,13 @@ class CONFIGBACKUPUTIL extends UTILBASE
             return ['ok' => false, 'message' => "Restore log directory '$logsDir' is not writable."];
         }
 
-        $fileName = 'backup-restore-' . date('Ymd-His') . '.log';
+        $fileName = 'backup-restore-' . $this->formatLocalDate('Ymd-His') . '.log';
         $path = $logsDir . '/' . $fileName;
 
         $lines = [];
         $lines[] = 'Allsky Restore Log';
         $lines[] = '==================';
-        $lines[] = 'Timestamp: ' . date(DATE_TIME_FORMAT);
+        $lines[] = 'Timestamp: ' . $this->formatLocalDate(DATE_TIME_FORMAT);
         $lines[] = 'Backup File: ' . (string)($details['backupFile'] ?? 'unknown');
         $lines[] = 'Backup Type: ' . (string)($details['backupType'] ?? 'unknown');
         $lines[] = 'Backup Version (from): ' . (string)($details['backupVersionFrom'] ?? 'unknown');
@@ -2606,7 +2671,7 @@ class CONFIGBACKUPUTIL extends UTILBASE
         $created = trim((string)($decoded['created'] ?? ''));
         if ($created === '') {
             $ts = (int)($backupFileInfo['createdTs'] ?? 0);
-            $created = ($ts > 0) ? date(DATE_TIME_FORMAT, $ts) : '';
+            $created = ($ts > 0) ? $this->formatLocalDate(DATE_TIME_FORMAT, $ts) : '';
         }
 
         $includedOptionalTargets = (isset($decoded['includedOptionalTargets']) && is_array($decoded['includedOptionalTargets']))
@@ -3023,7 +3088,7 @@ class CONFIGBACKUPUTIL extends UTILBASE
             return ['ok' => false, 'message' => "Required cc file '$resolvedCcFile' was not found; backup aborted."];
         }
 
-        $backupName = 'allsky-config-backup-' . date('Ymd-His') . '.tar.gz';
+        $backupName = 'allsky-config-backup-' . $this->formatLocalDate('Ymd-His') . '.tar.gz';
         $backupPath = $this->getBackupDir() . '/' . $backupName;
 
         $cameraInfo = $this->getCurrentCameraInfo();
@@ -3033,7 +3098,7 @@ class CONFIGBACKUPUTIL extends UTILBASE
         $archiveMetadata = [
             'backupFile' => $backupName,
             'backupType' => 'config',
-            'created' => date(DATE_TIME_FORMAT),
+            'created' => $this->formatLocalDate(DATE_TIME_FORMAT),
             'version' => $this->getCurrentVersion(),
             'cameratype' => $cameraInfo['cameratype'],
             'cameramodel' => $cameraInfo['cameramodel'],
@@ -3197,13 +3262,13 @@ class CONFIGBACKUPUTIL extends UTILBASE
             }
         }
 
-        $backupName = 'allsky-images-backup-' . date('Ymd-His') . '.tar.gz';
+        $backupName = 'allsky-images-backup-' . $this->formatLocalDate('Ymd-His') . '.tar.gz';
         $backupPath = $this->getBackupDir() . '/' . $backupName;
 
         $archiveMetadata = [
             'backupFile' => $backupName,
             'backupType' => 'images',
-            'created' => date(DATE_TIME_FORMAT),
+            'created' => $this->formatLocalDate(DATE_TIME_FORMAT),
             'version' => $this->getCurrentVersion(),
             'permissions' => $this->buildPermissionsMetadata($targets),
             'files' => $this->buildBackupFileListFromTargets($targets),
@@ -3565,7 +3630,7 @@ class CONFIGBACKUPUTIL extends UTILBASE
         $metadataExtra = [
             'lastRestore' => [
                 'file' => $backupName,
-                'restored' => date(DATE_TIME_FORMAT),
+                'restored' => $this->formatLocalDate(DATE_TIME_FORMAT),
                 'versionAfterRestore' => $this->getCurrentVersion(),
             ],
         ];
@@ -3970,7 +4035,7 @@ class CONFIGBACKUPUTIL extends UTILBASE
 
         $safeName = preg_replace('/[^A-Za-z0-9._-]/', '_', $originalName);
         if ($safeName === null || $safeName === '') {
-            $safeName = 'allsky-config-backup-upload-' . date('Ymd-His') . '.tar.gz';
+            $safeName = 'allsky-config-backup-upload-' . $this->formatLocalDate('Ymd-His') . '.tar.gz';
         }
         if (!preg_match('/\.tar\.gz$/i', $safeName)) {
             $safeName .= '.tar.gz';
@@ -3982,7 +4047,7 @@ class CONFIGBACKUPUTIL extends UTILBASE
             if ($base === null || $base === '') {
                 $base = 'allsky-config-backup-upload';
             }
-            $safeName = $base . '-' . date('Ymd-His') . '.tar.gz';
+            $safeName = $base . '-' . $this->formatLocalDate('Ymd-His') . '.tar.gz';
             $targetPath = $this->getBackupDir() . '/' . $safeName;
         }
 

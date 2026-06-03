@@ -691,8 +691,9 @@
     return function () {
       var p = this.point;
       var thumbUrl = (p && (p.custom || (p.options && p.options.custom))) || null;
+      var chartTime = (this.series && this.series.chart && this.series.chart.time) || Highcharts.time || Highcharts;
       var dt = (typeof this.x === 'number')
-        ? Highcharts.dateFormat('%Y-%m-%d %H:%M:%S', this.x)
+        ? chartTime.dateFormat('%Y-%m-%d %H:%M:%S', this.x)
         : this.x;
 
       var html = '<div style="min-width:160px;max-width:260px">';

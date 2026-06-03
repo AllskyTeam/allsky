@@ -4,22 +4,47 @@ if (basename(__FILE__) === basename($_SERVER['SCRIPT_FILENAME'])) {
     include_once('functions.php');
     redirect("/index.php");
 }
+
+if (!function_exists('getAllskyChartTimezone')) {
+  function getAllskyChartTimezone(): string
+  {
+    $timezoneName = trim((string) @file_get_contents('/etc/timezone'));
+    if ($timezoneName === '') {
+      $timezoneName = date_default_timezone_get();
+    }
+
+    try {
+      new DateTimeZone($timezoneName);
+      return $timezoneName;
+    } catch (Exception $e) {
+      $fallback = date_default_timezone_get();
+      try {
+        new DateTimeZone($fallback);
+        return $fallback;
+      } catch (Exception $fallbackError) {
+        return 'UTC';
+      }
+    }
+  }
+}
+
 function DisplayCharts()
 {
   global $pageHeaderTitle, $pageIcon, $pageHelp;
+  $chartTimezone = getAllskyChartTimezone();
 
-		echo addAsset([
-      '/js/highcharts/code/highcharts.js',
-      '/js/highcharts/code/highcharts-more.js',
-      '/js/highcharts/code/highcharts-3d.js',
-      '/js/highcharts/code/modules/series-label.js',
-      '/js/highcharts/code/modules/solid-gauge.js',
-      '/js/highcharts/code/modules/no-data-to-display.js',
-      '/js/jquery-chart/jquery-chart.js',
-      '/js/jquery-chart/jquery-chart-designer.js',
-      '/js/jquery-chart/jquery-timerange-picker.js',
-      '/js/charts.js'
-    ]);  
+  echo addAsset([
+    '/js/highcharts/code/highcharts.js',
+    '/js/highcharts/code/highcharts-more.js',
+    '/js/highcharts/code/highcharts-3d.js',
+    '/js/highcharts/code/modules/series-label.js',
+    '/js/highcharts/code/modules/solid-gauge.js',
+    '/js/highcharts/code/modules/no-data-to-display.js',
+    '/js/jquery-chart/jquery-chart.js',
+    '/js/jquery-chart/jquery-chart-designer.js',
+    '/js/jquery-chart/jquery-timerange-picker.js',
+    '/js/charts.js'
+  ]);
 ?>
 
   <div class="panel panel-allsky noselect">
@@ -69,6 +94,10 @@ function DisplayCharts()
   </div>
 
   <script>
+    window.ALLSKY_CHART_TIMEZONE = <?php echo json_encode($chartTimezone, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT); ?>;
+    if (window.Highcharts && window.ALLSKY_CHART_TIMEZONE) {
+      Highcharts.setOptions({ time: { timezone: window.ALLSKY_CHART_TIMEZONE } });
+    }
     let chartManager = new ASCHARTMANAGER();
   </script>
 

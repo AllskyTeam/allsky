@@ -984,16 +984,308 @@ function recheck_swap()
 	check_swap "after_install"  "true"
 }
 
+#
+# Determine which swap management system is currently being used.
+#
+# The result is returned in the global variable SWAP_SYSTEM.
+#
+# Possible values:
+#   rpi-swap         - Modern Raspberry Pi OS swap management (Bookworm/Trixie)
+#   dphys-swapfile   - Legacy Raspberry Pi swap management
+#   unknown          - Manual, custom or unsupported configuration
+#
+# How it works:
+#
+# 1) The function first checks active systemd swap units because this is the
+#    most reliable source of information about the currently active swap
+#    mechanism.
+#
+# 2) If an active swap unit contains references to "rpi-swap" then the system
+#    is using the newer Raspberry Pi swap framework.
+#
+# 3) If an active swap unit contains references to "dphys-swapfile" then the
+#    legacy swap system is being used.
+#
+# 4) If neither can be identified from active units, fallback checks are used:
+#      - Presence of dphys-swapfile.service
+#      - Presence of /etc/dphys-swapfile
+#      - Presence of /etc/rpi/swap.conf or /etc/rpi/swap.conf.d
+#
+# 5) If nothing matches, SWAP_SYSTEM is set to "unknown".
+#
+get_swap_system()
+{
+    SWAP_SYSTEM="unknown"
+
+    # Check active swap units first
+    if systemctl list-units --type=swap --no-legend >/dev/null 2>&1; then
+        while read -r unit _; do
+            [[ -z "${unit:-}" ]] && continue
+
+            local desc
+            local fragment
+            local source
+
+            desc="$(systemctl show "${unit}" -p Description --value 2>/dev/null || true)"
+            fragment="$(systemctl show "${unit}" -p FragmentPath --value 2>/dev/null || true)"
+            source="$(systemctl show "${unit}" -p SourcePath --value 2>/dev/null || true)"
+
+            if echo "${desc} ${fragment} ${source}" | grep -qi 'rpi-swap'; then
+                SWAP_SYSTEM="rpi-swap"
+                return 0
+            fi
+
+            if echo "${desc} ${fragment} ${source}" | grep -qi 'dphys-swapfile'; then
+                SWAP_SYSTEM="dphys-swapfile"
+                return 0
+            fi
+        done < <(systemctl list-units --type=swap --no-legend 2>/dev/null)
+    fi
+
+    # Fallback checks
+    if systemctl list-unit-files 2>/dev/null | grep -q '^dphys-swapfile\.service'; then
+        SWAP_SYSTEM="dphys-swapfile"
+        return 0
+    fi
+
+    if [[ -f /etc/dphys-swapfile ]]; then
+        SWAP_SYSTEM="dphys-swapfile"
+        return 0
+    fi
+
+    if [[ -f /etc/rpi/swap.conf || -d /etc/rpi/swap.conf.d ]]; then
+        SWAP_SYSTEM="rpi-swap"
+        return 0
+    fi
+
+    return 1
+}
+
+#
+# Get the currently configured swap size.
+#
+# The function determines the active swap management system and then attempts
+# to retrieve the configured swap size in MiB.
+#
+# Returned values:
+#
+#   CURRENT_SWAP
+#       Size of configured swap in MiB.
+#
+#   SWAP_SYSTEM
+#       Swap system detected by get_swap_system().
+#
+#   SWAP_MECHANISM
+#       rpi-swap Mechanism value when SWAP_SYSTEM is rpi-swap.
+#
+# Notes:
+#
+# - For rpi-swap:
+#     The configured size and mechanism are read from the active configuration
+#     files.
+#
+# - For dphys-swapfile:
+#     The size is read from CONF_SWAPSIZE in /etc/dphys-swapfile.
+#
+# - If the configured size cannot be determined, the function falls back to
+#   reading the currently active swap size from swapon.
+#
+# - If multiple swap devices exist, the total size is returned.
+#
+get_swap_info()
+{
+    CURRENT_SWAP=0
+    SWAP_MECHANISM=""
+
+    get_swap_system
+
+    case "${SWAP_SYSTEM}" in
+
+        rpi-swap)
+
+            local config_file
+            local config_files=()
+            local configured_size=""
+            local key
+            local value
+
+            if [[ -f /etc/rpi/swap.conf ]]; then
+                config_files+=("/etc/rpi/swap.conf")
+            fi
+
+            if [[ -d /etc/rpi/swap.conf.d ]]; then
+                while IFS= read -r config_file; do
+                    [[ -n "${config_file}" ]] && config_files+=("${config_file}")
+                done < <(find /etc/rpi/swap.conf.d -type f | sort)
+            fi
+
+            # Read the last configured values after applying files in order.
+            if [[ ${#config_files[@]} -gt 0 ]]; then
+                while IFS='=' read -r key value; do
+                    case "${key}" in
+                        FixedSizeMiB)
+                            configured_size="${value}"
+                            ;;
+                        Mechanism)
+                            SWAP_MECHANISM="${value}"
+                            ;;
+                    esac
+                done < <(
+                    awk -F= '
+                        /^[[:space:]]*(FixedSizeMiB|Mechanism)[[:space:]]*=/ {
+                            key = $1
+                            value = $2
+                            sub(/^[[:space:]]+/, "", key)
+                            sub(/[[:space:]]+$/, "", key)
+                            sub(/[;#].*/, "", value)
+                            sub(/^[[:space:]]+/, "", value)
+                            sub(/[[:space:]]+$/, "", value)
+                            print key "=" value
+                        }
+                    ' "${config_files[@]}"
+                )
+            fi
+
+            if [[ -n "${configured_size}" ]]; then
+                CURRENT_SWAP="${configured_size}"
+                return 0
+            fi
+            ;;
+
+        dphys-swapfile)
+
+            if [[ -f /etc/dphys-swapfile ]]; then
+
+                local configured_size
+
+                configured_size="$(
+                    awk -F= '
+                        /^\s*CONF_SWAPSIZE\s*=/ {
+                            gsub(/[[:space:]]/, "", $2)
+                            print $2
+                        }
+                    ' /etc/dphys-swapfile
+                )"
+
+                if [[ -n "${configured_size}" ]]; then
+                    CURRENT_SWAP="${configured_size}"
+                    return 0
+                fi
+            fi
+            ;;
+
+    esac
+
+    #
+    # Fallback:
+    # Sum currently active swap devices from swapon output.
+    #
+
+    local active_swap_kib
+
+    active_swap_kib="$(
+        swapon --noheadings --bytes --show=SIZE 2>/dev/null |
+        awk '{ total += $1 } END { print total }'
+    )"
+
+    if [[ -n "${active_swap_kib}" && "${active_swap_kib}" -gt 0 ]]; then
+        CURRENT_SWAP="$(( active_swap_kib / 1024 / 1024 ))"
+        return 0
+    fi
+
+    return 1
+}
+
+#
+# Sets the swap size and mechanism for rpi-swap.
+#
+# NOTE: rpi-swap REQUIRES a reboot for changes to take effect, so this function does not attempt 
+# to apply changes immediately.
+#
+function set_rpi_swap()
+{
+		local MECHANISM="${SWAP_MECHANISM:-swapfile}"
+		local RPI_SWAP_CONFIG_DIR="/etc/rpi/swap.conf.d"
+		local RPI_SWAP_OVERRIDE="/etc/rpi/swap.conf.d/80-allsky.conf"
+
+		if ! sudo mkdir -p "${RPI_SWAP_CONFIG_DIR}" >/dev/null 2>&1; then
+				MSG="Failed to create ${RPI_SWAP_CONFIG_DIR}"
+				m "${MSG}" "" "--logonly" "info" "${CALLED_FROM}"
+				return 1
+		fi
+
+		{
+				echo "[Main]"
+				echo "Mechanism=${MECHANISM}"
+
+				if [[ ${MECHANISM} == "swapfile" || ${MECHANISM} == "zram+file" ]]; then
+					echo
+					echo "[File]"
+					echo "FixedSizeMiB=${NEW_SIZE}"
+				fi
+		} | sudo tee "${RPI_SWAP_OVERRIDE}" >/dev/null
+
+		set_reboot_needed
+		MSG="rpi-swap changes require a reboot before they take effect."
+		m "${MSG}" "" "--log" "progress" "${CALLED_FROM}"
+}
+
+#
+# Selects the swap mechanism for rpi-swap.
+#
+# zram - Compressed RAM swap only. User does NOT control the size
+# swapfile - Disk-backed swap file only. User can specify the size
+# zram+file - ZRAM plus a disk swap file. User can specify the size of the disk swap file, 
+#             but not the ZRAM size which is automatically determined by rpi-swap.
+# none - Disable swap managed by rpi-swap
+#
+# Returned values:
+#
+# The selected option
+#
+select_swap_mechanism()
+{
+
+    local choice
+    local default_mechanism="${SWAP_MECHANISM:-swapfile}"
+
+    choice=$(
+        whiptail \
+            --title "Swap Configuration" \
+            --default-item "${default_mechanism}" \
+            --menu "Select the swap mechanism to use, if you are unsure then please select swapfile:" \
+            16 "${WT_WIDTH}" 5 \
+            "swapfile"  "Disk-backed swap only" \
+            "zram"      "Compressed RAM swap only" \
+            "zram+file" "Compressed RAM swap with disk swap" \
+            "none"      "Disable swap" \
+            3>&1 1>&2 2>&3
+    )
+
+    local exit_status=$?
+
+    if [[ ${exit_status} -ne 0 || -z ${choice} ]]; then
+        choice="${default_mechanism}"
+    fi
+
+    echo "${choice}"
+    return 0
+
+}
+
 ####
 # Allow the user to change the amount of swap space used.
 function check_swap()
 {
+
 	local CALLED_FROM="${1}"
 	local PROMPT="${2:-false}"
 
 	# global: TITLE  WT_WIDTH
 	local SWAP_CONFIG_FILE="/etc/dphys-swapfile"
 	local CURRENT_SWAP  AMT  M  MSG  NEW_SIZE  CURRENT_MAX  CHANGE_SUGGESTED
+	local DISABLE_RPI_SWAP="false"
+	local SET_RPI_SWAP_MECHANISM_ONLY="false"
 
 	if [[ ${CALLED_FROM} == "install" ]]; then
 		declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" && ${PROMPT} == "false" ]] && return
@@ -1006,19 +1298,8 @@ function check_swap()
 	# /dev/null so no ouput when not called from installer
 	m "${MSG}" "" "--log" "info" "${CALLED_FROM}" > /dev/null
 
-	# With "free -mebi" the displayed swap is often 1 MB less than what's in
-	# /etc/dphys-swapfile, I think because "free -mebi" rounds down to an int.
-	# Fix by gettting size in kibi (kilo) and divide by 1024 and convert to an int.
-	CURRENT_SWAP=$( free --kibi |
-			gawk 'BEGIN { swap = 0; }
-			{
-				if ($1 == "Swap:") {
-					swap = $2 / 1024;
-					exit 0;
-				}
-			}
-			END { printf("%.f", swap); }'
-		)	# in MB
+	# Sets CURRENT_SWAP, SWAP_SYSTEM, and SWAP_MECHANISM
+	get_swap_info
 
 	if [[ ${CURRENT_SWAP} -lt ${SUGGESTED_SWAP_SIZE} || ${PROMPT} == "true" ]]; then
 		if [[ ${CURRENT_SWAP} -eq 0 ]]; then
@@ -1039,49 +1320,88 @@ function check_swap()
 			MSG+="\n\nYou may change the amount of swap space by changing the number below."
 		fi
 
-		NEW_SIZE="$( get_0_or_positive "${SUGGESTED_SWAP_SIZE}" "disable swap space" "${MSG}" )"
-		if [[ ${NEW_SIZE} -eq 0 ]]; then
-			if [[ ${CHANGE_SUGGESTED} == "true" && ${SUGGESTED_SWAP_SIZE} -gt 0 ]]; then
-				MSG="With no swap space you run the risk of programs failing."
-				m "${MSG}" "" "--log" "warning" "${CALLED_FROM}"
+		if [[ ${SWAP_SYSTEM} == "rpi-swap" ]]; then
+			SWAP_MECHANISM="$( select_swap_mechanism )"
+			case "${SWAP_MECHANISM}" in
+				none)
+					DISABLE_RPI_SWAP="true"
+					;;
+				zram)
+					SET_RPI_SWAP_MECHANISM_ONLY="true"
+					;;
+			esac
+		fi
+
+		if [[ ${SET_RPI_SWAP_MECHANISM_ONLY} == "true" ]]; then
+			MSG="Swap mechanism set to ${SWAP_MECHANISM}."
+			m "${MSG}" "" "--log" "progress" "${CALLED_FROM}"
+			set_rpi_swap
+		else
+			if [[ ${DISABLE_RPI_SWAP} == "true" ]]; then
+				NEW_SIZE=0
+			else
+				NEW_SIZE="$( get_0_or_positive "${SUGGESTED_SWAP_SIZE}" "disable swap space" "${MSG}" )"
 			fi
 
-			if [[ ${CURRENT_SWAP} -gt 0 ]]; then
-				MSG="Swap space disabled."
+			if [[ ${NEW_SIZE} -eq 0 ]]; then
+				if [[ ${CHANGE_SUGGESTED} == "true" && ${SUGGESTED_SWAP_SIZE} -gt 0 ]]; then
+					MSG="With no swap space you run the risk of programs failing."
+					m "${MSG}" "" "--log" "warning" "${CALLED_FROM}"
+				fi
+
+				if [[ ${CURRENT_SWAP} -gt 0 || ${DISABLE_RPI_SWAP} == "true" ]]; then
+					MSG="Swap space disabled."
+					m "${MSG}" "" "--log" "progress" "${CALLED_FROM}"
+
+					if [[ ${SWAP_SYSTEM} == "rpi-swap" ]]; then
+						set_rpi_swap
+					fi
+
+					if [[ ${SWAP_SYSTEM} == "dphys-swapfile" ]]; then
+						sudo dphys-swapfile swapoff				# Stop using swap file
+						sudo dphys-swapfile uninstall			# Remove the swap file
+						sudo sed -i "/CONF_SWAPSIZE=/ c CONF_SWAPSIZE=${NEW_SIZE}" "${SWAP_CONFIG_FILE}"
+					fi
+
+				else
+					MSG="Swap space remaining disabled."
+					m "${MSG}" "" "--logonly" "info" "${CALLED_FROM}"
+				fi
+			elif [[ ${NEW_SIZE} -eq ${CURRENT_SWAP} && ${CHANGE_SUGGESTED} == "false" ]]; then
+				# User didn't change, and CURRENT_SWAP is sufficient.
+				MSG="Swap size will remain at ${CURRENT_SWAP} MB."
+				m "${MSG}" "" "--log" "progress" "${CALLED_FROM}"
+			else
+				MSG="Swap size set to ${NEW_SIZE} MB."
 				m "${MSG}" "" "--log" "progress" "${CALLED_FROM}"
 
-				sudo dphys-swapfile swapoff				# Stop using swap file
-				sudo dphys-swapfile uninstall			# Remove the swap file
-				sudo sed -i "/CONF_SWAPSIZE=/ c CONF_SWAPSIZE=${NEW_SIZE}" "${SWAP_CONFIG_FILE}"
-			else
-				MSG="Swap space remaining disabled."
-				m "${MSG}" "" "--logonly" "info" "${CALLED_FROM}"
-			fi
-		elif [[ ${NEW_SIZE} -eq ${CURRENT_SWAP} && ${CHANGE_SUGGESTED} == "false" ]]; then
-			# User didn't change, and CURRENT_SWAP is sufficient.
-			MSG="Swap size will remain at ${CURRENT_SWAP} MB."
-			m "${MSG}" "" "--log" "progress" "${CALLED_FROM}"
-		else
-			MSG="Swap size set to ${NEW_SIZE} MB."
-			m "${MSG}" "" "--log" "progress" "${CALLED_FROM}"
-
-			sudo dphys-swapfile swapoff					# Stop using swap file
-			sudo sed -i "/CONF_SWAPSIZE=/ c CONF_SWAPSIZE=${NEW_SIZE}" "${SWAP_CONFIG_FILE}"
-
-			# If NEW_SIZE is greater than the current max, increase the max.
-			CURRENT_MAX="$( get_variable "CONF_MAXSWAP" "${SWAP_CONFIG_FILE}" )"
-			# TODO: Can we determine the default max rather than hard-code it?
-			CURRENT_MAX="${CURRENT_MAX:-2048}"
-			if [[ ${CURRENT_MAX} -lt ${NEW_SIZE} ]]; then
-				if [[ ${DEBUG} -gt 0 ]]; then
-					MSG="Max swap size increased to ${NEW_SIZE} MB."
-					m "${MSG}" "" "--logonly" "debug" "${CALLED_FROM}"
+				if [[ ${SWAP_SYSTEM} == "rpi-swap" ]]; then
+					set_rpi_swap
 				fi
-				sudo sed -i "/CONF_MAXSWAP/ c CONF_MAXSWAP=${NEW_SIZE}" "${SWAP_CONFIG_FILE}"
-			fi
 
-			sudo dphys-swapfile setup  > /dev/null		# Set up new swap file
-			sudo dphys-swapfile swapon					# Turn on new swap file
+				if [[ ${SWAP_SYSTEM} == "dphys-swapfile" ]]; then
+					sudo dphys-swapfile swapoff					# Stop using swap file
+					sudo sed -i "/CONF_SWAPSIZE=/ c CONF_SWAPSIZE=${NEW_SIZE}" "${SWAP_CONFIG_FILE}"
+
+					# If NEW_SIZE is greater than the current max, increase the max.
+					CURRENT_MAX="$( get_variable "CONF_MAXSWAP" "${SWAP_CONFIG_FILE}" )"
+					# TODO: Can we determine the default max rather than hard-code it?
+					CURRENT_MAX="${CURRENT_MAX:-2048}"
+					if [[ ${CURRENT_MAX} -lt ${NEW_SIZE} ]]; then
+						if [[ ${DEBUG} -gt 0 ]]; then
+							MSG="Max swap size increased to ${NEW_SIZE} MB."
+							m "${MSG}" "" "--logonly" "debug" "${CALLED_FROM}"
+						fi
+
+						sudo sed -i "/CONF_MAXSWAP/ c CONF_MAXSWAP=${NEW_SIZE}" "${SWAP_CONFIG_FILE}"
+					fi
+				fi
+
+				if [[ ${SWAP_SYSTEM} == "dphys-swapfile" ]]; then
+					sudo dphys-swapfile setup  > /dev/null		# Set up new swap file
+					sudo dphys-swapfile swapon					# Turn on new swap file
+				fi
+			fi
 		fi
 	else
 		MSG="Size of current swap (${CURRENT_SWAP} MB) is sufficient; no change needed."

@@ -208,16 +208,24 @@ def read_digital(pin) -> Response:
 def set_digital() -> Response:
     try:
         pin, pin_num = normalise_pin(request.json.get("pin"))
-        state = str(request.json.get("state", "off")).lower() == "on"
+        state_value = request.json.get("state", "off")
+        state = state_value is True or str(state_value).strip().lower() in ("on", "true", "1", "high")
         name = str(request.json.get("name", "")).strip()
 
         if name:
             pin_names[pin] = name
 
         with gpio_lock:
-            _release_pwm_pin(pin)
-            _release_digital_pin(pin)
-            _claim_output(pin_num, 1 if state else 0)
+            if pin in pwm_pins:
+                _release_pwm_pin(pin)
+                digital_pins.pop(pin, None)
+                _claim_output(pin_num, 1 if state else 0)
+            elif pin not in digital_pins:
+                _claim_output(pin_num, 1 if state else 0)
+            elif digital_pins[pin]["direction"] != "output":
+                _release_digital_pin(pin)
+                _claim_output(pin_num, 1 if state else 0)
+
             digital_pins[pin] = {"direction": "output"}
             _write_pin_value(pin_num, state)
 
@@ -257,6 +265,17 @@ def set_pwm() -> Response:
             return jsonify({"error": "Duty must be between 0 and 65535"}), 400
 
         with gpio_lock:
+            if duty == 0:
+                if pin in pwm_pins:
+                    _release_pwm_pin(pin)
+
+                return jsonify({
+                    "pin": pin,
+                    "frequency": frequency,
+                    "duty": duty,
+                    "duty_percent": 0,
+                })
+
             _release_digital_pin(pin)
 
             if pin not in pwm_pins:

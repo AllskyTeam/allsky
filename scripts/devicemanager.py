@@ -20,7 +20,11 @@ try:
     from smbus2 import SMBus
     SMBUS_AVAILABLE = True
 except ImportError:
-    SMBUS_AVAILABLE = False
+    try:
+        from smbus import SMBus
+        SMBUS_AVAILABLE = True
+    except ImportError:
+        SMBUS_AVAILABLE = False
 
 def load_family_codes():
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -34,17 +38,21 @@ def scan_i2c_bus(bus_num):
     found = []
     if not SMBUS_AVAILABLE:
         return None
+    bus = None
     try:
-        with SMBus(bus_num) as bus:
-            for addr in range(0x03, 0x78):
-                try:
-                    bus.write_quick(addr)
-                    found.append(hex(addr))
-                except OSError:
-                    continue
+        bus = SMBus(bus_num)
+        for addr in range(0x03, 0x78):
+            try:
+                bus.write_quick(addr)
+                found.append(hex(addr))
+            except OSError:
+                continue
         return found
     except FileNotFoundError:
         return None
+    finally:
+        if bus is not None:
+            bus.close()
 
 def load_i2c_metadata():
     script_dir = os.path.dirname(os.path.abspath(__file__))

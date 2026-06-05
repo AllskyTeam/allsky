@@ -8,7 +8,11 @@ try:
     from smbus2 import SMBus
     SMBUS_AVAILABLE = True
 except ImportError:
-    SMBUS_AVAILABLE = False
+    try:
+        from smbus import SMBus
+        SMBUS_AVAILABLE = True
+    except ImportError:
+        SMBUS_AVAILABLE = False
 
 i2c_bp = Blueprint("i2c", __name__)
 
@@ -17,17 +21,21 @@ def scan_i2c_bus(bus_num):
     found = []
     if not SMBUS_AVAILABLE:
         return None
+    bus = None
     try:
-        with SMBus(bus_num) as bus:
-            for addr in range(0x03, 0x78):
-                try:
-                    bus.write_quick(addr)
-                    found.append(hex(addr))
-                except OSError:
-                    continue
+        bus = SMBus(bus_num)
+        for addr in range(0x03, 0x78):
+            try:
+                bus.write_quick(addr)
+                found.append(hex(addr))
+            except OSError:
+                continue
         return found
     except FileNotFoundError:
         return None
+    finally:
+        if bus is not None:
+            bus.close()
 
 
 def normalise_i2c_key(addr):

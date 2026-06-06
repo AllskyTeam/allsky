@@ -103,6 +103,7 @@
 
         var createTables = function () {
 
+            $('#mm-i2c-dialog-tab-detected-devices').off('click.allskyI2C', 'tbody tr');
             $('#mm-i2c-dialog-tab-detected-devices').DataTable().destroy()
             $('#mm-i2c-dialog-tab-library-library').DataTable().destroy()
 
@@ -178,7 +179,7 @@
                   plugin.settings.deviceTable.page(pageNumber).draw(false);
               }
   */
-            plugin.settings.deviceTable.on('click', 'tbody tr', (e) => {
+            plugin.settings.deviceTable.on('click.allskyI2C', 'tbody tr', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 let classList = e.currentTarget.classList;
@@ -383,8 +384,8 @@
                 })
                     .always(() => {
                         getData();
-                        setI2CBus(1);
                         createTables();
+                        setI2CBus(plugin.settings.bus);
                         updateUI();
                         $('body').LoadingOverlay('hide')
                     });
@@ -475,7 +476,7 @@
             });
 
             $(`#${plugin.settings.modalid}`).off('hidden.bs.modal').on('hidden.bs.modal', function () {
-                plugin.settings.deviceTable.off('click', 'tbody tr');
+                plugin.settings.deviceTable.off('click.allskyI2C', 'tbody tr');
 
                 $('#mm-i2c-dialog-tab-detected-devices').DataTable().destroy()
                 $('#mm-i2c-dialog-tab-library-library').DataTable().destroy()

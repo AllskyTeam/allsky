@@ -96,7 +96,7 @@ if ($useRemoteWebsite) {
 function message_and_exit($status, $message)
 {
 	// Tab after status
-	echo "${status}	$message";
+	echo "{$status}	$message";
 	exit;
 }
 ?>

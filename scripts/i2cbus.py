@@ -1,6 +1,12 @@
 #!/usr/bin/python3
 
-import smbus2
+try:
+    from smbus2 import SMBus
+except ImportError:
+    try:
+        from smbus import SMBus
+    except ImportError:
+        SMBus = None
 import json
 import glob
 import re
@@ -20,13 +26,18 @@ def get_i2c_buses(valid_buses={1, 2, 3, 4, 5, 6}):
 
 available_buses = get_i2c_buses()
 
+if SMBus is None:
+    print(json.dumps(data))
+    raise SystemExit(0)
+
 for bus in available_buses:
     data[bus] = {
         "id": bus,
         "devices": []
     }
+    i2c_bus = None
     try:
-        i2c_bus = smbus2.SMBus(bus)
+        i2c_bus = SMBus(bus)
 
         for address in range(0x00, 0x80):
             try:
@@ -35,10 +46,12 @@ for bus in available_buses:
             except OSError:
                 # Ignore errors; they indicate no device at this address
                 pass
-        i2c_bus.close()
     except Exception:
         # Ignore errors; this will probably be i2c disabled on the pi
         pass
+    finally:
+        if i2c_bus is not None:
+            i2c_bus.close()
     
 
 print(json.dumps(data))

@@ -1,0 +1,2 @@
+class GPIOBackendUnavailable(RuntimeError):
+    pass

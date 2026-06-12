@@ -45,6 +45,14 @@ class OEFIELD {
 		this.fieldData.groupId = group
 	}
 
+	get zindex() {
+		return Number.isFinite(Number(this.fieldData.zindex)) ? Number(this.fieldData.zindex) : 0;
+	}
+	set zindex(zindex) {
+		this.fieldData.zindex = Math.max(0, Number(zindex) || 0);
+		this.dirty = true;
+	}
+
 	get sample() {
 		return this.fieldData.sample;
 	}

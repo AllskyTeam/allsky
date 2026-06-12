@@ -1,4 +1,4 @@
-// This file is #include'd into the capture*.cpp files.
+// This file is #include'd into the capture*.cpp files. 
 // The CAMERA_TYPE #define must be set.
 // For the RPi, functions that mimic the ZWO "ASI" functions were added so the capture
 // code for both cameras can be as similar as possible.

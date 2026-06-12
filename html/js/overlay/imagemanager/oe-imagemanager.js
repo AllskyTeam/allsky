@@ -107,6 +107,9 @@
                     url: plugin.settings.thumbnailURL,
                     maxFilesize: 100,
                     acceptedFiles: 'image/png, image/jpeg',
+                    headers: {
+                        "X-CSRF-Token": window.csrfToken
+                    },
                     init: function() {
                         this.on('queuecomplete', () => {
                             loadThumbnails()

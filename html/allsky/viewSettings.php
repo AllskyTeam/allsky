@@ -3,7 +3,7 @@
 <head>
 <?php
 	$vSDir = "viewSettings";
-	echo "<link rel='stylesheet' type='text/css' href='$vSDir/custom.css'>";
+	echo "<link rel='stylesheet' type='text/css' href='$vSDir/allsky.css'>";
 	$settingsScript = "$vSDir/allskySettings.php";
 	if (! file_exists($settingsScript)) {
 		echo "<div class='errorMsgBox errorMsgBig'>";

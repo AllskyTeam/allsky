@@ -9,11 +9,12 @@
             columns: [],
             collapseall: false,
             collapseallsky: true,
-			stateKey: 'as-variables',
-			valueDiv: null,
-			selectStyle: 'single',
+            stateKey: 'as-variables',
+            valueDiv: null,
+            selectStyle: 'single',
             showBlocks: false,
             fonts: [],
+            showBlocks: true,
             variableSelected: function (variable) { }
         }
 
@@ -28,15 +29,20 @@
 
         plugin.settings = $.extend({}, defaults, options);
 
+        plugin.preselectList = [];
+        if (typeof plugin.settings.variable === 'string' && plugin.settings.variable.trim() !== '') {
+            plugin.preselectList = plugin.settings.variable.split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+        }
+
         let pluginPrefix = plugin.settings.id + '-' + Math.random().toString(36).substring(2, 9);
 
         plugin.mmId = pluginPrefix + '-allskyVariable';
         plugin.select = pluginPrefix + '-allsky-var-select';
-		plugin.container = pluginPrefix + '-container';
+        plugin.container = pluginPrefix + '-container';
         plugin.showAllButton = pluginPrefix + 'as-variable-show-all'
         plugin.refreshButton = pluginPrefix + 'as-variable-refresh'
-        plugin.resetButton = pluginPrefix + 'as-variable-reset'		
-		
+        plugin.resetButton = pluginPrefix + 'as-variable-reset'
+
         plugin.templatecontainer = pluginPrefix + '-allskyTemplatesContainer';
         plugin.mmtemplateId = pluginPrefix + '-allskyTemplates';
 
@@ -46,54 +52,88 @@
             setupEvents()
         }
 
-        var setupEvents = function() {
+        var setupEvents = function () {
 
             $('#' + plugin.mmId).on('hidden.bs.modal', function () {
                 plugin.destroy()
             });
 
             $(document).on('click', '#' + plugin.mmId + '-save', (event) => {
-                let rowData = $('#' + plugin.mmId + '-table').DataTable().row('.selected').data()
-                if (rowData !== undefined) {
-				    let selectedVariable = rowData.variable
-					plugin.settings.variable = selectedVariable
-                    plugin.settings.variableSelected.call(this, selectedVariable);
+                if (plugin.settings.selectStyle === 'multi') {
+                    let selectedData = $('#' + plugin.mmId + '-table').DataTable().rows('.selected').data().toArray();
+                    if (selectedData.length > 0) {
+                        let selectedVariables = selectedData.map(row => row.variable).join(', ');
+                        let selectedVariableTypes = selectedData.map(row => row.type).join(', ');
+                        plugin.settings.variable = selectedVariables;
+                        plugin.settings.variableSelected.call(this, selectedVariables, selectedVariableTypes);
+                    }
+                } else {
+                    let rowData = $('#' + plugin.mmId + '-table').DataTable().row('.selected').data()
+                    if (rowData !== undefined) {
+                        let selectedVariable = rowData.variable
+                        let selectedVariableType = rowData.type
+                        plugin.settings.variable = selectedVariable
+                        plugin.settings.variableSelected.call(this, selectedVariable, selectedVariableType);
+                    }
                 }
-                plugin.destroy()
-            });	
-            
-            $(document).on('click', '#' + plugin.showAllButton , (event) => {
+                closeModal()
+            });
+
+            $(document).on('click', '#' + plugin.showAllButton, (event) => {
                 var selectedValue = $('#' + plugin.showAllButton + ':checked').val()
                 if (selectedValue === undefined) {
                     selectedValue = 'no'
                 }
                 let newUrl = 'includes/moduleutil.php?request=VariableList&showempty=' + selectedValue
                 plugin.variableTable.ajax.url(newUrl).load()
-            })            
-            
+            })
+
             $(document).on('click', '#' + plugin.refreshButton, (event) => {
                 plugin.variableTable.ajax.reload()
             })
 
             $(document).on('click', '#' + plugin.resetButton, (event) => {
                 localStorage.removeItem(plugin.settings.stateKey)
-				buildTable()
+                buildTable()
             })
 
         }
 
-        var updateUI = function() {
-			$('#' + plugin.select).empty();
-			$('#' + plugin.select).append('<option value="">No Variable</option>');
-			$.each(plugin.settings.variables, function(index, value) {
-				$('#' + plugin.select).append('<option value="' + index + '">' + index + ' (' + value + ')</option>');
-			});
+        var updateUI = function () {
+            $('#' + plugin.select).empty();
+            $('#' + plugin.select).append('<option value="">No Variable</option>');
+            $.each(plugin.settings.variables, function (index, value) {
+                $('#' + plugin.select).append('<option value="' + index + '">' + index + ' (' + value + ')</option>');
+            });
 
         }
 
-        var buildUI = function() {
+        var buildUI = function () {
             $('#' + plugin.mmId + '-table').DataTable().destroy()
-
+            
+            let blocksHTMl = '';
+            let blocksTabHTML = '';
+            if (plugin.settings.showBlocks) {
+                blocksHTMl = `
+                    <div class="tab-pane" id="templates">
+                        <div class="as-var" id="${plugin.templatecontainer}">
+                            <div>
+                                <table id="${plugin.mmtemplateId}-table" class="display compact as-variable-list" style="width:98%;">
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Group</th>
+                                            <th>Description</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                </table>
+                            </div>
+                        </div>
+                    </div>                
+                `
+                blocksTabHTML = `<li><a href="#templates" role="tab" data-toggle="tab">Blocks</a></li>`;
+            }
             let variableHTML = `
                 <div class="modal as-variables" role="dialog" id="${plugin.mmId}">
                     <div class="modal-dialog modal-lg" role="document">
@@ -105,7 +145,7 @@
                             <div class="modal-body">
                                 <ul class="nav nav-tabs" role="tablist">
                                     <li class="active"><a href="#variables" role="tab" data-toggle="tab">Variables</a></li>
-                                    <li><a href="#templates" role="tab" data-toggle="tab">Blocks</a></li>
+                                    ${blocksTabHTML}
                                 </ul>
                                 <div class="tab-content" style="margin-top:15px;">
                                     <div class="tab-pane active" id="variables">
@@ -128,28 +168,13 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="tab-pane" id="templates">
-                                        <div class="as-var" id="${plugin.templatecontainer}">
-                                            <div>
-                                                <table id="${plugin.mmtemplateId}-table" class="display compact as-variable-list" style="width:98%;">
-                                                    <thead>
-                                                        <tr>
-                                                            <th>Name</th>
-                                                            <th>Group</th>
-                                                            <th>Description</th>
-                                                            <th></th>
-                                                        </tr>
-                                                    </thead>
-                                                </table>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    ${blocksHTMl}
                                 </div>
                             </div>
                             <div class="modal-footer">
                                 <div class="pull-left">
                                     <button type="button" class="btn btn-success" id="${plugin.refreshButton}" data-toggle="tooltip" data-placement="top" title="Reload the Allsky Variables">Refresh</button>
-                                    <button type="button" class="btn btn-info ml-2" id="${plugin.resetButton }" data-toggle="tooltip" data-placement="top" title="Reset the column states to default">Reset</button>
+                                    <button type="button" class="btn btn-info ml-2" id="${plugin.resetButton}" data-toggle="tooltip" data-placement="top" title="Reset the column states to default">Reset</button>
 
                                     <span class="ml-2">Show All Variables</span>
                                     <label class="el-switch el-switch-sm el-switch-green">
@@ -169,158 +194,159 @@
             `;
 
 
-			$('#' + plugin.mmId).remove();
-            $(document.body).append(variableHTML);	
+            $('#' + plugin.mmId).remove();
+            $(document.body).append(variableHTML);
 
-			$('#' + plugin.mmId).on('shown.bs.modal', function () {
-				buildTable()
-			});
+            $('#' + plugin.mmId).on('shown.bs.modal', function () {
+                buildTable()
+            });
 
             $('#' + plugin.mmId).modal({
                 keyboard: false
             });
 
-			$('[data-toggle="tooltip"]').tooltip()
+            $('[data-toggle="tooltip"]').tooltip()
 
         }
 
-		var buildTable = function() {
+        var buildTable = function () {
 
-			$('#' + plugin.mmId + '-table').off('preXhr.dt')
-			$('#' + plugin.mmId + '-table').off('xhr.dt')
-			$('#' + plugin.mmId + '-table').DataTable().destroy()
-			$('#' + plugin.mmtemplateId + '-table').DataTable().destroy()
+            $('#' + plugin.mmId + '-table').off('preXhr.dt')
+            $('#' + plugin.mmId + '-table').off('xhr.dt')
+            $('#' + plugin.mmId + '-table').DataTable().destroy()
+            $('#' + plugin.mmtemplateId + '-table').DataTable().destroy()
 
-            plugin.templateTable = $('#' + plugin.mmtemplateId + '-table')
-                .DataTable({
+            if (plugin.settings.showBlocks) {
+                plugin.templateTable = $('#' + plugin.mmtemplateId + '-table')
+                    .DataTable({
+                        initComplete: function () {
+                            const searchDiv = $('#' + plugin.mmtemplateId + '-table_wrapper').find('.dt-search');
 
-                    initComplete: function () {
-                        const searchDiv = $('#' + plugin.mmtemplateId + '-table_wrapper').find('.dt-search');
+                            if (searchDiv.length) {
+                                searchDiv.css({
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '10px',
+                                    flexWrap: 'nowrap'
+                                });
 
-                        if (searchDiv.length) {
-                            searchDiv.css({
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '10px',
-                                flexWrap: 'nowrap'
-                            });
+                                const spinnerGroup = $(`
+                                    <div style="display: flex; align-items: center;">
+                                        <label for="dt-font-size" style="margin-right: 5px;">Font Size</label>
+                                        <input type="number" id="block-font-size" class="form-control input-sm" value="10" min="1" style="width: 80px;">
+                                    </div>
+                                `);
 
-                            const spinnerGroup = $(`
-                                <div style="display: flex; align-items: center;">
-                                    <label for="dt-font-size" style="margin-right: 5px;">Font Size</label>
-                                    <input type="number" id="block-font-size" class="form-control input-sm" value="10" min="1" style="width: 80px;">
-                                </div>
-                            `);
+                                spinnerGroup.find('input').val(plugin.settings.defaultFontSize);
 
-                            spinnerGroup.find('input').val(plugin.settings.defaultFontSize);
+                                const fontDropdown = $(`
+                                    <div style="display: flex; align-items: center; margin-right: 10px;">
+                                        <label for="dt-font-family" style="margin-right: 5px;">Font</label>
+                                        <select id="block-font" class="form-control input-sm">
+                                        </select>
+                                    </div>
+                                `);
 
-                            const fontDropdown = $(`
-                                <div style="display: flex; align-items: center; margin-right: 10px;">
-                                    <label for="dt-font-family" style="margin-right: 5px;">Font</label>
-                                    <select id="block-font" class="form-control input-sm">
-                                    </select>
-                                </div>
-                            `);
+                                plugin.settings.fonts.forEach(f => {
+                                    const $option = $('<option>').val(f.value).text(f.text);
+                                    if (f.value === plugin.settings.defaultFont) {
+                                        $option.prop('selected', true);
+                                    }
+                                    fontDropdown.find('select').append($option);
+                                });
 
-                            plugin.settings.fonts.forEach(f => {
-                            const $option = $('<option>').val(f.value).text(f.text);
-                            if (f.value === plugin.settings.defaultFont) {
-                                $option.prop('selected', true);
+                                searchDiv.prepend(fontDropdown).prepend(spinnerGroup);
                             }
-                            fontDropdown.find('select').append($option);
-                            });
+                        },
+                        ajax: {
+                            url: 'includes/moduleutil.php?request=TemplateList',
+                            dataSrc: '',
+                            type: 'GET',
+                            dataType: 'json',
+                            cache: false
+                        },
+                        order: [[1, 'asc'], [0, 'asc']],
+                        paging: false,
+                        scrollY: '50vh',
+                        scrollCollapse: true,
+                        autoWidth: true,
+                        columns: [
+                            {
+                                data: 'name',
+                                render: function (data, type, row, meta) {
+                                    let result = data
+                                    if (row.value !== '') {
+                                        result = '<b class="as-variable-has-value">' + data + '</b>'
+                                    }
+                                    return result
+                                }
+                            }, {
+                                data: 'group',
+                                visible: false
+                            }, {
+                                data: 'description'
+                            }, {
+                                data: null,
+                                width: '100px',
+                                render: function (item, type, row, meta) {
+                                    let buttons = `
+                                        <button type="button" class="btn btn-success btn-xs oe-add-field-template" data-group="${row.group}" data-block="${row.blockname}" data-filename="${row.filename}">Add</button>
+                                    `;
 
-                            searchDiv.prepend(fontDropdown).prepend(spinnerGroup);
+                                    return buttons;
+                                }
+                            }
+                        ],
+                        rowGroup: {
+                            dataSrc: 'group',
+                            startRender: function (rows, group) {
+                                var collapsed = !!templateCollapsedGroups[group];
+
+                                let icon = collapsed ? '<i class="fa-solid fa-angles-right"></i>' : '<i class="fa-solid fa-angles-down"></i>';
+                                rows.nodes().each(function (r) {
+                                    r.style.display = collapsed ? 'none' : '';
+                                });
+
+                                group = group.replace(/^allsky_/, '').toUpperCase();
+                                return $('<tr/>')
+                                    .append('<td colspan="9">' + icon + ' ' + group + ' (' + rows.count() + ' Blocks)</td>')
+                                    .attr('data-name', group)
+                                    .toggleClass('collapsed', collapsed);
+                            }
                         }
-                    },                    
-                    ajax: {
-                        url: 'includes/moduleutil.php?request=TemplateList',
-                        dataSrc : '',
+                    })
+
+                var templateCollapsedGroups = {};
+                $('#' + plugin.mmtemplateId + '-table tbody').on('click', 'tr.dtrg-start', function () {
+                    var name = $(this).data('name');
+                    templateCollapsedGroups[name] = !templateCollapsedGroups[name];
+                    plugin.templateTable.draw(false);
+                });
+
+                $(document).off('click', '.oe-add-field-template');
+                $(document).on('click', '.oe-add-field-template', (e) =>{
+                    let block = $(e.currentTarget).data('block');
+                    let filename = $(e.currentTarget).data('filename');
+                    let group = $(e.currentTarget).data('group');
+                    $.ajax({
+                        url: 'includes/moduleutil.php?request=Template&block=' + block + '&filename=' + filename + "&group=" + group,
                         type: 'GET',
                         dataType: 'json',
-                        cache: false				
-                    },
-                    order: [[1, 'asc'], [0, 'asc']],
-                    paging: false,
-                    scrollY: '50vh',
-                    scrollCollapse: true,
-                    autoWidth: true,       
-                    columns: [
-                        { 
-                            data: 'name',
-                            render: function(data, type, row, meta) {
-                                let result = data
-                                if (row.value !== '') {
-                                    result = '<b class="as-variable-has-value">' + data + '</b>'
-                                }
-                                return result
-                            }                                              
-                        },{
-                            data: 'group',
-                            visible: false
-                        },{
-                            data: 'description'
-                        },{
-                            data: null,
-                            width: '100px',
-                            render: function (item, type, row, meta) {
-                                let buttons = `
-                                    <button type="button" class="btn btn-success btn-xs oe-add-field-template" data-group="${row.group}" data-block="${row.blockname}" data-filename="${row.filename}">Add</button>
-                                `;
-
-                                return buttons;
-                            }
+                        cache: false,             
+                        context: this
+                    }).done((fields) => {
+                        let result = {
+                            fields: fields,
+                            font: $('#block-font').val(),
+                            fontSize: $('#block-font-size').val()
                         }
-                    ],
-                    rowGroup: {
-                        dataSrc: 'group',
-                        startRender: function (rows, group) {
-                            var collapsed = !!templateCollapsedGroups[group];
-                            
-                            let icon = collapsed ? '<i class="fa-solid fa-angles-right"></i>' : '<i class="fa-solid fa-angles-down"></i>';
-                            rows.nodes().each(function (r) {
-                                r.style.display = collapsed ? 'none' : '';
-                            });    
-
-                            group = group.replace(/^allsky_/, '').toUpperCase();
-                            return $('<tr/>')
-                                .append('<td colspan="9">' + icon + ' ' + group + ' (' + rows.count() + ' Blocks)</td>')
-                                .attr('data-name', group)
-                                .toggleClass('collapsed', collapsed);
-                        }
-                    }                             
-                })            
-
-            var templateCollapsedGroups = {};                
-            $('#' + plugin.mmtemplateId + '-table tbody').on('click', 'tr.dtrg-start', function () {
-                var name = $(this).data('name');
-                templateCollapsedGroups[name] = !templateCollapsedGroups[name];
-                plugin.templateTable.draw(false);
-            });                
-
-
-            $(document).off('click', '.oe-add-field-template');
-            $(document).on('click', '.oe-add-field-template', (e) =>{
-                let block = $(e.currentTarget).data('block');
-                let filename = $(e.currentTarget).data('filename');
-                let group = $(e.currentTarget).data('group');
-                $.ajax({
-                    url: 'includes/moduleutil.php?request=Template&block=' + block + '&filename=' + filename + "&group=" + group,
-                    type: 'GET',
-                    dataType: 'json',
-                    cache: false,             
-                    context: this
-                }).done((fields) => {
-                    let result = {
-                        fields: fields,
-                        font: $('#block-font').val(),
-                        fontSize: $('#block-font-size').val()
-                    }
-                    $(document).trigger('addFields', result);
-                });                 
-            });
-
-
+                        $(document).trigger('addFields', result);
+                    });                 
+                });
+            } else {
+                $('#templates').hide();
+            }
+            
             var collapsedGroups = {};
             plugin.variableTable = $('#' + plugin.mmId + '-table')
                 .on('preXhr.dt', function (e, settings, data) {
@@ -329,8 +355,8 @@
                         imageColor: '#a94442',
                         textColor: '#a94442',
                         text: 'Loading Variables'
-                    }); 				
-                })			
+                    });
+                })
                 .on('xhr.dt', function (e, settings, json, xhr) {
                     if (plugin.settings.collapseallsky) {
                         collapsedGroups['Allsky'] = true
@@ -342,23 +368,61 @@
                         }
                     }
                     $('#' + plugin.mmId + ' .modal-dialog').LoadingOverlay('hide')
+
+
+                    if (plugin.preselectList && plugin.preselectList.length > 0) {
+                        const table = plugin.variableTable;
+                        const want = new Set(
+                            plugin.preselectList.map(s => String(s).toLowerCase().trim()).filter(Boolean)
+                        );
+
+                        console.debug('[allskyVariable] Preselect list:', plugin.preselectList);
+
+                        table.off('draw.preselect');
+                        table.on('draw.preselect', function () {
+                            try {
+                                const idxs = table.rows(function (idx, data) {
+                                    const v = (data && data.variable != null)
+                                        ? String(data.variable).toLowerCase().trim()
+                                        : '';
+                                    return want.has(v);
+                                }).indexes();
+
+                                console.debug('[allskyVariable] Matched row indexes:', idxs.toArray());
+
+                                table.rows().deselect();
+
+                                if (plugin.settings.selectStyle === 'multi') {
+                                    table.rows(idxs).select();
+                                } else if (idxs.length) {
+                                    table.row(idxs[0]).select();
+                                }
+                            } catch (err) {
+                                console.error('[allskyVariable] Preselect error:', err);
+                            } finally {
+                                table.off('draw.preselect');
+                            }
+                        });
+                    }
+
                 })
-                .on('dblclick', 'tr', function() {
+                .on('dblclick', 'tr', function () {
                     var rowData = plugin.variableTable.row(this).data();
                     if (rowData !== undefined) {
                         let selectedVariable = rowData.variable
+                        let selectedVariableType = rowData.type                        
                         plugin.settings.variable = selectedVariable
-                        plugin.settings.variableSelected.call(this, selectedVariable);
+                        plugin.settings.variableSelected.call(this, selectedVariable, selectedVariableType);
                     }
-                    plugin.destroy()
+                    closeModal()
                 })
                 .DataTable({
                     ajax: {
                         url: 'includes/moduleutil.php?request=VariableList&showempty=no',
-                        dataSrc : '',
+                        dataSrc: '',
                         type: 'GET',
                         dataType: 'json',
-                        cache: false				
+                        cache: false
                     },
                     stateSave: true,
                     stateSaveCallback: function (settings, data) {
@@ -366,7 +430,7 @@
                     },
                     stateLoadCallback: function (settings) {
                         return JSON.parse(localStorage.getItem(plugin.settings.stateKey));
-                    },				
+                    },
                     layout: {
                         topStart: {
                             buttons: [
@@ -386,27 +450,27 @@
                     },
                     scrollY: '50vh',
                     scrollCollapse: true,
-                    autoWidth: false,       
+                    autoWidth: false,
                     columns: [
-                        { 
+                        {
                             data: 'variable',
-                            render: function(data, type, row, meta) {
+                            render: function (data, type, row, meta) {
                                 let result = data
                                 if (row.value !== '') {
                                     result = '<b class="as-variable-has-value">' + data + '</b>'
                                 }
                                 return result
                             },
-                            width: '30%'                       
-                        },{
+                            width: '30%'
+                        }, {
                             data: 'group',
                             visible: true
-                        },{
-                            data: 'source',                        
+                        }, {
+                            data: 'source',
                             visible: false
-                        },{ 
+                        }, {
                             data: 'value',
-                            render: function(data, type, row, meta) {
+                            render: function (data, type, row, meta) {
                                 let result = data
                                 if (result !== null && typeof result === 'object') {
                                     let toolTip = ''
@@ -416,25 +480,27 @@
                                     toolTip = toolTip.slice(0, -2)
                                     result = data.value + '&nbsp;<a href="#" data-toggle="tooltip" title="' + toolTip + '">Options</a>'
                                 }
-                                if (type === 'display' && data.length > 10) {
-                                    result = '<span data-toggle="tooltip" title="' + data + '">' + data.substr(0, 10) + '…</span>';
-                                  }
+                                if (data !== null) {
+                                    if (type === 'display' && data.length > 10) {
+                                        result = '<span data-toggle="tooltip" title="' + data + '">' + data.substr(0, 10) + '…</span>';
+                                    }
+                                }
 
                                 return result
-                            },                        
-                            width: '20%'                        
-                        },{
+                            },
+                            width: '20%'
+                        }, {
                             data: 'format',
-                            visible: false,                        
-                            width: '20%'                         
-                        },{
+                            visible: false,
+                            width: '20%'
+                        }, {
                             data: 'sample',
-                            visible: false,                        
-                            width: '20%'                        
-                        },{
+                            visible: false,
+                            width: '20%'
+                        }, {
                             data: 'type',
                             width: '10%'
-                        },{
+                        }, {
                             data: 'description'
                         }
                     ],
@@ -442,22 +508,22 @@
                         dataSrc: 'group',
                         startRender: function (rows, group) {
                             var collapsed = !!collapsedGroups[group];
-                            
+
                             let icon = collapsed ? '<i class="fa-solid fa-angles-right"></i>' : '<i class="fa-solid fa-angles-down"></i>';
                             rows.nodes().each(function (r) {
                                 r.style.display = collapsed ? 'none' : '';
-                            });    
+                            });
 
                             return $('<tr/>')
                                 .append('<td colspan="9">' + icon + ' ' + group + ' (' + rows.count() + ' Variables)</td>')
                                 .attr('data-name', group)
                                 .toggleClass('collapsed', collapsed);
                         }
-                    }                
+                    }
                 })
-            
+
             if (plugin.settings.columns.length > 0) {
-                plugin.variableTable .columns().every(function (index) {
+                plugin.variableTable.columns().every(function (index) {
                     let columnHeader = this.header()
                     let columnName = $(columnHeader).text().toLowerCase()
                     if (plugin.settings.columns.includes(columnName)) {
@@ -467,29 +533,61 @@
                     }
                 })
             }
-            
-            
+
+
             $('#' + plugin.mmId + '-table tbody').on('click', 'tr.dtrg-start', function () {
                 var name = $(this).data('name');
                 collapsedGroups[name] = !collapsedGroups[name];
                 plugin.variableTable.draw(false);
             });
-		}
+        }
+
+        var closeModal = function () {
+            let modal = $('#' + plugin.mmId);
+            if (modal.length > 0 && modal.data('bs.modal') !== undefined) {
+                modal.modal('hide');
+            } else {
+                plugin.destroy();
+            }
+        }
+
+        var cleanupModalArtifacts = function () {
+            if ($('.modal.in').not('#' + plugin.mmId).length === 0) {
+                $('.modal-backdrop').remove();
+                $('body').removeClass('modal-open').css('padding-right', '');
+            }
+        }
+
+        var isDataTable = function (table) {
+            return table.length > 0 && $.fn.DataTable.isDataTable(table[0]);
+        }
 
         plugin.destroy = function () {
-            $('#' + plugin.mmId).remove()
-            $('#' + plugin.mmId).off('hidden.bs.modal')
-			$('#' + plugin.mmId + '-table').off('preXhr.dt')
-			$('#' + plugin.mmId + '-table').off('xhr.dt')			
+            let modal = $('#' + plugin.mmId);
+            let table = $('#' + plugin.mmId + '-table');
+            let templateTable = $('#' + plugin.mmtemplateId + '-table');
+
+            modal.find('.modal-dialog').LoadingOverlay('hide', true)
+            modal.off('hidden.bs.modal')
+            table.off('preXhr.dt')
+            table.off('xhr.dt')
             $(document).off('click', '#' + plugin.mmId + '-save')
             $(document).off('click', 'input[name="' + plugin.showAllButton + '"]')
             $(document).off('click', '#' + plugin.refreshButton)
             $(document).off('click', '#' + plugin.resetButton)
-            $('#' + plugin.mmId + '-table').DataTable().destroy()
+            $(document).off('click', '.oe-add-field-template')
+            if (isDataTable(table)) {
+                table.DataTable().destroy()
+            }
+            if (isDataTable(templateTable)) {
+                templateTable.DataTable().destroy()
+            }
+            modal.remove()
+            cleanupModalArtifacts()
             $(document).removeData('allskyVariable');
         }
 
-        plugin.init();       
+        plugin.init();
     }
 
     $.fn.allskyVariable = function (options) {

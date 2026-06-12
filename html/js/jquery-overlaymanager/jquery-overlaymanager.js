@@ -267,9 +267,7 @@
                             <button type="button" class="btn btn-primary pull-right ' + plugin.mmTrigger + '">Close</button>\
                         </div>\
                     </div>\
-                </div>\
-                <button class="oe-mm-trigger fa fa-xmark ' + plugin.mmTrigger + '">\
-                </button>';
+                </div>';
             
             plugin.mmNewDialog = pluginPrefix + "-new-dialog";
             plugin.mmNewDialogSave = pluginPrefix + "-new-dialog-save";
@@ -629,17 +627,17 @@
                         let day = $('#' + plugin.mmDaySelect).val();
                         let night = $('#' + plugin.mmNightSelect).val();
                         if (tod === 'day' || tod === 'both') {
-                            day = formData.data.filename + '.json';
+                            day = formData.data.filename;
                         }
                         if (tod === 'night' || tod === 'both') {
-                            night = formData.data.filename + '.json';                            
+                            night = formData.data.filename;
                         }
                         saveSettings(day, night);
                     }
                     
                     let configManager = window.oedi.get('config');
                     configManager.loadOverlays();
-                    let selected = $('#' + plugin.mmNewDialogFileName).val() + '.json';
+                    let selected = $('#' + plugin.mmNewDialogFileName).val();
                     configManager.loadOverlay(selected, 'user');
                     buildUI();
                     $('#' + plugin.mmNewDialog).modal('hide');
@@ -722,7 +720,7 @@
         }
 
         var updateNewFilename = function() {
-            let template = 'overlay{num}-{brand}_{model}-{width}x{height}-{tod}';
+            let template = 'overlay{num}-{brand}_{model}-{width}x{height}-{tod}.json';
 
             let brand = $('#' + plugin.mmNewDialogBrand).val();
             let fileName = template.replace('{brand}', brand);

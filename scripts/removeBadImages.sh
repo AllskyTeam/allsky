@@ -12,9 +12,9 @@
 ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck source-path=.
-source "${ALLSKY_HOME}/variables.sh" 		|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh" 		|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 usage_and_exit()
 {
@@ -90,8 +90,8 @@ fi
 
 # Get all settings we're going to use.  Their bash names are prefixed by "S_".
 #shellcheck disable=SC2119
-getAllSettings --var "imageremovebadlow imageremovebadhigh imageremovebadhighdarkframe \
-	takedarkframes imageremovebadcount " || exit 1
+getAllSettings --var "imageremovebadlow imageremovebadhigh imageremovebadcount \
+	imageremovebadhighdarkframe takedarkframes " || exit 1
 
 #shellcheck disable=SC2154
 HIGH="${S_imageremovebadhigh}"
@@ -107,6 +107,7 @@ if [[ ${S_takedarkframes} == "true" ]]; then
 fi
 #shellcheck disable=SC2154
 BAD_LIMIT="${S_imageremovebadcount}"
+[[ -z ${BAD_LIMIT} ]] && BAD_LIMIT=5	# imageremovebadcount many not be defined.
 
 # Find the full size image-*jpg and image-*png files (not the thumbnails) and
 # have "convert" compute a histogram in order to capture any error messages and determine
@@ -121,7 +122,7 @@ BAD_LIMIT="${S_imageremovebadcount}"
 
 set +a		# turn off auto-export since ${IMAGE_FILES} might be huge and produce errors
 
-cd "${DIRECTORY}" || exit "${EXIT_ERROR_STOP}"
+cd "${DIRECTORY}" || exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 # If the LOW threshold is 0 or < 0 it's disabled.
 # If the HIGH threshold is 0 or 1.0 (nothing can be brighter than 1.0) it's disabled.
@@ -283,4 +284,4 @@ else	# only 1 file so show it
 	fi
 fi
 
-exit "${EXIT_PARTIAL_OK}"		# partially ok because we deleted at least one file.
+exit "${ALLSKY_EXIT_PARTIAL_OK}"		# partially ok because we deleted at least one file.

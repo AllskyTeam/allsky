@@ -134,6 +134,30 @@ class OEFIELDMANAGER {
         }
     }
 
+    equalHorizontalSpaceFields(transformer) {
+        const nodes = Object.values(transformer.nodes())
+        if (nodes.length > 1) {
+
+            nodes.sort((a, b) => a.x() - b.x());
+
+            const leftNode = nodes[0];
+            const rightNode = nodes[nodes.length - 1];
+
+            const xStart = leftNode.x();
+            const xEnd = rightNode.x();
+            const middleCount = nodes.length - 2;
+
+            if (middleCount !== 0) {
+                const spacing = (xEnd - xStart) / (nodes.length - 1);
+
+                for (let i = 1; i < nodes.length - 1; i++) {
+                    let field = this.findField(nodes[i].id())
+                    field.x = xStart + i * spacing
+                }
+            }
+        }
+    }
+
     equalWidth(transformer) {
         const nodes = transformer.nodes();
         const firstRect = nodes[0]
@@ -208,6 +232,21 @@ class OEFIELDMANAGER {
         return result
     }
     
+    canSplitAny() {
+        let canSplitAny = false;
+
+        for (let [fieldName, field] of this.#fields.entries()) {
+            if (field.fieldType === 'fields') {
+                if (field.canSplit) {
+                    canSplitAny = true;
+                    break;
+                }
+            }
+        };
+
+        return canSplitAny;
+    }
+
     clearDirty() {
         for (let [fieldName, field] of this.#fields.entries()) {
             field.dirty = false;
@@ -218,29 +257,134 @@ class OEFIELDMANAGER {
     parseConfig() {
         this.#fields = new Map();
         let config = window.oedi.get('config');
-        let fields = config.getValue('fields', {});
+        let layers = [];
+
+        let fields = config.getValue('rects', {});
         for (let index in fields) {
-            let newField = new OETEXTFIELD(fields[index], this.#idcounter++);
-            newField.dirty = false;
-            fields[index].id = newField.id;
-            this.#fields.set(newField.id, newField);
+            layers.push({
+                type: 'rect',
+                data: fields[index],
+                zindex: this.#getLayerSortValue(fields[index], 0, index)
+            });
+        }
+
+        fields = config.getValue('fields', {});
+        for (let index in fields) {
+            layers.push({
+                type: 'text',
+                data: fields[index],
+                zindex: this.#getLayerSortValue(fields[index], 1, index)
+            });
         }
 
         fields = config.getValue('images', {});
         for (let index in fields) {
-            let newField = new OEIMAGEFIELD(fields[index], this.#idcounter++);
-            newField.dirty = false;
-            fields[index].id = newField.id;
-            this.#fields.set(newField.id, newField);
+            layers.push({
+                type: 'image',
+                data: fields[index],
+                zindex: this.#getLayerSortValue(fields[index], 2, index)
+            });
         }
 
-        fields = config.getValue('rects', {});
-        for (let index in fields) {
-            let newField = new OERECTFIELD(fields[index], this.#idcounter++);
+        layers.sort((a, b) => a.zindex - b.zindex);
+
+        for (let index in layers) {
+            const layer = layers[index];
+            let newField = null;
+
+            if (layer.type === 'text') {
+                newField = new OETEXTFIELD(layer.data, this.#idcounter++);
+            }
+            if (layer.type === 'image') {
+                newField = new OEIMAGEFIELD(layer.data, this.#idcounter++);
+            }
+            if (layer.type === 'rect') {
+                newField = new OERECTFIELD(layer.data, this.#idcounter++);
+            }
+
+            if (newField === null) {
+                continue;
+            }
             newField.dirty = false;
-            fields[index].id = newField.id;
+            newField.zindex = layer.zindex;
+            newField.dirty = false;
+            layer.data.id = newField.id;
             this.#fields.set(newField.id, newField);
         }
+    }
+
+    #getLayerSortValue(field, typeOrder, index) {
+        if (field !== null && field !== undefined && field.zindex !== undefined) {
+            const zindex = Number(field.zindex);
+            if (Number.isFinite(zindex)) {
+                return zindex;
+            }
+        }
+
+        return typeOrder;
+    }
+
+    #getTopZIndex() {
+        const fields = Array.from(this.#fields.values());
+        if (fields.length === 0) {
+            return 0;
+        }
+
+        return Math.max(...fields.map((field) => field.zindex));
+    }
+
+    reorderFields(fieldIds, direction) {
+        const selectedIds = fieldIds.filter((fieldId) => this.#fields.has(fieldId));
+        if (selectedIds.length === 0) {
+            return false;
+        }
+
+        const selected = new Set(selectedIds);
+        const zIndexes = Array.from(this.#fields.values()).map((field) => field.zindex);
+        const minZIndex = Math.min(...zIndexes);
+        const maxZIndex = Math.max(...zIndexes);
+
+        if (direction === 'front') {
+            for (let [fieldName, field] of this.#fields.entries()) {
+                if (selected.has(fieldName)) {
+                    field.zindex = maxZIndex + 1;
+                }
+            }
+        } else if (direction === 'back') {
+            for (let [fieldName, field] of this.#fields.entries()) {
+                if (selected.has(fieldName)) {
+                    field.zindex = 0;
+                }
+            }
+        } else if (direction === 'forward') {
+            for (let [fieldName, field] of this.#fields.entries()) {
+                if (selected.has(fieldName)) {
+                    field.zindex = field.zindex + 1;
+                }
+            }
+        } else if (direction === 'backward') {
+            for (let [fieldName, field] of this.#fields.entries()) {
+                if (selected.has(fieldName)) {
+                    field.zindex = Math.max(0, field.zindex - 1);
+                }
+            }
+        } else {
+            return false;
+        }
+
+        this.#fieldDeletedAddedDefaultsChanged = true;
+        return true;
+    }
+
+    orderedFields() {
+        return Array.from(this.#fields.entries())
+            .map(([fieldName, field], index) => ({ fieldName, field, index }))
+            .sort((a, b) => {
+                if (a.field.zindex === b.field.zindex) {
+                    return a.index - b.index;
+                }
+                return a.field.zindex - b.field.zindex;
+            });
     }
 
     addField(type, fieldText = 'NEW FIELD', id, format = null, sample = null, image = 'missing',x = 0, y = 0, width = 0, height = 0) {
@@ -290,6 +434,10 @@ class OEFIELDMANAGER {
                 newField = new OERECTFIELD(field, id);
                 this.#fields.set(newField.id, newField);
                 break;
+        }
+
+        if (newField !== null && newField.fieldData.zindex === undefined) {
+            newField.zindex = this.#getTopZIndex();
         }
 
         // reset x and y for offset
@@ -381,6 +529,7 @@ class OEFIELDMANAGER {
 
         for (let [fieldName, field] of this.#fields.entries()) {
             fieldJson = field.getJSON();
+            fieldJson.zindex = field.zindex;
 
             if (field instanceof OETEXTFIELD) {
                 fields.push(fieldJson);
@@ -424,7 +573,7 @@ class OEFIELDMANAGER {
 		$.LoadingOverlay('show', {text : 'Calculating field values'});
 		let loadingTimer = setTimeout(() => {
             $.LoadingOverlay('text', 'Sorry this is taking longer than expected ...');
-        }, 3000);
+        }, 5000);
 
         $('#oe-test-mode').addClass('red pulse');
 

@@ -10,9 +10,9 @@
 ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck source-path=.
-source "${ALLSKY_HOME}/variables.sh"		|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"		|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 function usage_and_exit()
 {
@@ -26,12 +26,12 @@ function usage_and_exit()
 	else
 		E_ "${USAGE}"
 	fi
-	echo "where:"
-	echo "  --help          displays this message and exits"
-	echo "  --settingsOnly  only uploads the settings.json file"
-	echo "  --from f        specifies who called ${ME}:"
+	echo "Arguments:"
+	echo "  --help            Display this message and exit"
+	echo "  --settingsOnly    Only uploads the settings.json file"
+	echo "  --from f          Specifies who called ${ME}:"
 	echo "      WebUI | install | endOfNight"
-	echo "  --allfiles      causes all 'view settings' files to be uploaded"
+	echo "  --allfiles        Causes all 'view settings' files to be uploaded"
 
 	exit "${RET}"
 }
@@ -211,7 +211,7 @@ if [[ -n ${WEBS} ]]; then
 		for file in \
 			"${ALLSKY_OPTIONS_FILE}" \
 			"${ALLSKY_WEBUI}/includes/allskySettings.php" \
-			"${ALLSKY_DOCUMENTATION}/css/custom.css" 
+			"${ALLSKY_WEBUI}/css/allsky.css" 
 		do
 			upload_file "${WEBS}" "${file}" "${ALLSKY_WEBSITE_VIEWSETTINGS_DIRECTORY_NAME}"
 		done

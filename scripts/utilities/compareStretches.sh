@@ -4,11 +4,11 @@
 ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck source-path=.
-source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 usage_and_exit()
 {
@@ -225,23 +225,9 @@ if [[ -n ${ERRORS} ]]; then
 	} >&2
 fi
 
-# Determine resolution of image so we can write text to it.
-# image.jpg JPEG 4056x3040 4056x3040+0+0 8-bit sRGB 1.8263MiB 0.000u 0:00.000
-RESOLUTION="$( identify "${IMAGE}" | gawk '{ print $3; }' )"
-WIDTH="${RESOLUTION%x*}"
-HEIGHT="${RESOLUTION##*x}"
-# Put text in bottom left.
-POINT_SIZE="$( echo "${WIDTH} / 33" | bc )"
-X="20"		# just need a little from left side
-Y=$(( HEIGHT - (POINT_SIZE * 2) ))
-# echo "POINT_SIZE=$POINT_SIZE, X=$X, Y=$Y"
-
 # Create the stretches.
 
 HOW="-sigmoidal-contrast"	# the way to stretch
-FONT="${ALLSKY_OVERLAY}/system_fonts/Courier_New_Bold.ttf"
-STROKE="black"
-FILL="yellow"
 
 function doImage()
 {
@@ -256,11 +242,14 @@ function doImage()
 		   TEXT="Stretch Amount: ${A}"
 		TEXT+="\nMid Point:      ${M}"
 	fi
-	convert "${HOW}" "${A}x${M}" -font "${FONT}" -pointsize "${POINT_SIZE}" \
-		-fill "${FILL}" -stroke "${STROKE}" -strokewidth 3 \
-		-annotate "+${X}+${Y}" "${TEXT}" \
-		"${FROM_FILE}" "${TO_FILE}" 2>&1
+	addTextToImage --extra-args "${HOW} ${A}x${M}" "${FROM_FILE}" "${TO_FILE}" "${TEXT}" 2>&1
+
+	# Create a thumbnail for the WebUI "Images" page.
+	cp "${TO_FILE}" "${THUMBNAILS_DIR}"
 }
+
+THUMBNAILS_DIR="${OUT_DIRECTORY}/thumbnails"
+mkdir -p "${THUMBNAILS_DIR}"
 
 if [[ ${CREATE_NO_STRETCH_IMAGE} == "true" ]]; then
 	# Do a "no stretch" version so the user can compare.
@@ -300,7 +289,7 @@ if [[ ${NUM_CREATED} -gt 0 ]]; then
 		DAY="$( basename "${OUT_DIRECTORY}" )"
 		echo -n "Click <a href='/helpers/show_images.php?_ts=${RANDOM}"
 		echo -n "&day=${DAY}&pre=stretch_&type=Test Stretch"
-		echo    "'>here</a> to see the results."
+		echo    "' external='true'>here</a> to see the results."
 	else
 		echo -e "\nThe ${NUM_CREATED} stretched image(s) are in '${OUT_DIRECTORY}'.\n"
 	fi

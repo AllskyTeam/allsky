@@ -16,9 +16,12 @@ requests
 mysql-connector-python
 photutils
 psutil
+gitpython
+whiptail-dialogs
 flask
+flask-login
 gunicorn
 flask-jwt-extended
 bcrypt
-gitpython
-whiptail-dialogs
+RPi.GPIO
+gpiozero

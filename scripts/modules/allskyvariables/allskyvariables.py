@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 
+from __future__ import annotations
+
 import shlex
 import subprocess
 import os
@@ -7,7 +9,17 @@ import json
 import sys
 import argparse
 import re
+import math
 from pathlib import Path
+
+def json_safe(value):
+    if isinstance(value, float) and not math.isfinite(value):
+        return None
+    if isinstance(value, dict):
+        return {key: json_safe(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [json_safe(item) for item in value]
+    return value
 
 class ALLSKYVARIABLES:
     _debug_mode = False
@@ -339,10 +351,10 @@ if __name__ == "__main__":
 
     variable_engine = ALLSKYVARIABLES(args.debug)
     variable_engine.setup_for_command_line(args.allskyhome)
-    variables = variable_engine.get_variables(args.empty, args.module, args.indexed, args.raw)
+    variables = json_safe(variable_engine.get_variables(args.empty, args.module, args.indexed, args.raw))
 
     if args.print:
-        print(json.dumps(variables))
+        print(json.dumps(variables, allow_nan=False))
 
     if args.prettyprint:
-        print(json.dumps(variables, indent=4))
+        print(json.dumps(variables, indent=4, allow_nan=False))

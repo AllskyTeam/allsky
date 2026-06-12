@@ -11,6 +11,19 @@
         font-size: 1.3rem;
     }
 
+    .date-format-builder-modal {
+        z-index: 10070 !important;
+    }
+
+    .date-format-builder-modal .modal-dialog {
+        position: relative;
+        z-index: 10080 !important;
+    }
+
+    .date-format-builder-backdrop {
+        z-index: 10060 !important;
+    }
+
     .drop-zone {
         border: 2px dashed #ccc;
         padding: 10px;

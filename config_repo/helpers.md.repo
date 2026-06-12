@@ -1,0 +1,1124 @@
+# Helper Tools Configuration
+
+The WebUI helper tools are defined in `config/helpers.json`.
+
+This configuration is intentionally declarative. A helper usually needs:
+
+- a menu title and page title
+- explanatory content
+- zero or more form fields
+- a command to run through `allsky-config`
+- optional extra command buttons
+- a way to present output, generated images, or generated videos
+
+Instead of creating a separate PHP page for each helper, add a helper
+definition to `helpers.json` and let the shared renderer and AJAX utility do
+the rest.
+
+Each helper sits under the top-level `helpers` object:
+
+```json
+{
+  "helpers": {
+    "my_helper_id": {
+      "title": "My Helper",
+      "pageTitle": "Run My Helper",
+      "action": "HelperRun",
+      "method": "POST",
+      "command": ["my_allsky_config_command", "--html"]
+    }
+  }
+}
+```
+
+The helper ID, such as `my_helper_id`, is used in the URL:
+
+```text
+index.php?page=helper&helper=my_helper_id
+```
+
+The same ID is then sent to `helperutils.php`, which looks up the helper
+definition, validates it, builds the command arguments, and either:
+
+- runs the helper via `HelperRun`, or
+- returns the command preview via `HelperCommand`
+- runs one configured extra command button via `HelperCommandRun`
+
+## How The Current UI Works
+
+The current helper UI has three possible presentation patterns:
+
+1. Manual helper with tabbed layout.
+   The page renders `Settings`, `Images`, and `Output` tabs. The `Images` and
+   `Output` tabs are shown or hidden according to whether there is anything to
+   display.
+
+2. Auto-run helper with tabbed layout.
+   The helper starts immediately on page load, but still uses the tabbed
+   layout if `showResultsTabs` is enabled.
+
+3. Auto-run helper with plain output.
+   The helper starts immediately on page load and renders a simple output area
+   if `showResultsTabs` is disabled.
+
+Manual helpers always render a `Settings` tab, even if they have no visible
+fields. In that case the form shows a message saying there are no settings for
+that helper, together with `Run` and `Show Command` buttons.
+
+`Show Command` opens a modal window containing the exact command that would be
+run. It does not execute the helper.
+
+Helpers may also define one or more extra command buttons with `commandButton`.
+These buttons are rendered beside the `Run` button. Each button runs its own
+JSON-defined `allsky-config` command and displays the resulting output in a
+modal window. If a button has `helpText`, hovering or focusing the button shows
+that text in a popover.
+
+## Top-Level Helper Fields
+
+### `title`
+
+Required in practice.
+
+This is the short label shown in the Helper Tools menu.
+
+```json
+"title": "Startrails Settings"
+```
+
+If omitted, the menu falls back to the helper ID. That works technically, but
+it is not suitable for normal use, so every helper should define `title`.
+
+### `pageTitle`
+
+Optional.
+
+This is the heading shown at the top of the helper panel.
+
+```json
+"pageTitle": "Help Determine Startrails Settings"
+```
+
+If omitted, the renderer falls back to `title`.
+
+Older configurations may use `headerTitle`. That is still accepted as a
+compatibility fallback, but new entries should use `pageTitle`.
+
+### `icon`
+
+Optional.
+
+This is the Font Awesome class used in the menu and page heading.
+
+```json
+"icon": "fa fa-star fa-fw"
+```
+
+If omitted, the menu uses a generic helper icon and the page heading falls back
+to the current page icon.
+
+### `action`
+
+Optional.
+
+This becomes the `request` parameter sent to `helperutils.php`.
+
+```json
+"action": "HelperRun"
+```
+
+For normal helpers, use `HelperRun`.
+
+If omitted, the renderer defaults to `HelperRun`.
+
+Older configurations may use `endpointRequest`. That is still accepted, but new
+entries should use `action`.
+
+### `method`
+
+Optional.
+
+This is the HTTP method used by both the real helper run and the command
+preview request.
+
+```json
+"method": "POST"
+```
+
+Use:
+
+- `GET` for helpers that do not require user input and can safely be run
+  without a submitted form
+- `POST` for helpers whose fields should be submitted back to the server
+
+If omitted, the renderer defaults to `POST`.
+
+### `autoRun`
+
+Optional.
+
+When `true`, the helper runs immediately when the page loads.
+
+```json
+"autoRun": true
+```
+
+When `false` or omitted, the helper waits for the user to press `Run`.
+
+This setting affects both behaviour and layout:
+
+- manual helpers always render a `Settings` tab
+- auto-run helpers only render tabs if `showResultsTabs` is enabled
+
+### `outputFormat`
+
+Optional.
+
+Controls how the `Output` tab content is rendered.
+
+```json
+"outputFormat": "text"
+```
+
+Supported values:
+
+- `text`: strips HTML tags and shows plain text
+- `html`: renders the returned output as HTML
+
+If omitted, `text` is used.
+
+This setting only affects the `Output` tab. It does not control whether the
+helper can show images or videos.
+
+### `showResultsTabs`
+
+Optional.
+
+Requests the tabbed results layout.
+
+```json
+"showResultsTabs": true
+```
+
+When the helper uses the tabbed layout, the page contains:
+
+- `Settings`
+- `Images`
+- `Output`
+
+The `Settings` tab is always visible. The `Images` and `Output` tabs are shown
+or hidden automatically depending on whether the helper has produced anything to
+display there.
+
+Important behaviour:
+
+- manual helpers use the tabbed layout even if `showResultsTabs` is `false`
+- auto-run helpers only use the tabbed layout if `showResultsTabs` is `true`
+
+Use `showResultsTabs: true` for helpers that may generate media, or for manual
+helpers where you want the consistent three-tab layout.
+
+Older configurations may use `results`. That is still accepted as a fallback,
+but new entries should use `showResultsTabs`.
+
+### `command`
+
+Required for normal helpers.
+
+This is the base argument list passed to `allsky-config`.
+
+```json
+"command": ["compare_stretches", "--html"]
+```
+
+Do not include:
+
+- `sudo`
+- `--user=...`
+- the path to `allsky-config`
+
+The PHP utility adds the execution wrapper itself.
+
+Each item must be a non-empty string. If `command` is missing, empty, or
+contains invalid elements, the server returns an error.
+
+### `messages`
+
+Optional.
+
+Controls the user-facing text shown while the helper is running.
+
+```json
+"messages": {
+  "running": "Running stretch comparison...",
+  "working": "Generating stretch previews...",
+  "runningButton": "Running..."
+}
+```
+
+Supported keys:
+
+- `running`: text placed in the output area as soon as the request starts
+- `working`: text shown in the full-page loading overlay
+- `runningButton`: temporary label used on the `Run` button while the helper is
+  executing
+
+Defaults:
+
+- `running`: `Running helper...`
+- `working`: `Working...`
+- `runningButton`: `Running...`
+
+### `contentHtml`
+
+Optional.
+
+An array of HTML fragments shown above the form or Settings tab content.
+
+```json
+"contentHtml": [
+  "<p>This helper creates several test images for comparison.</p>",
+  "<p class=\"morePadding\">Choose the input values below.</p>"
+]
+```
+
+These fragments support placeholder replacement. Keep them concise and use the
+same CSS classes already used in the WebUI.
+
+### `notices`
+
+Optional.
+
+An array of conditional notices shown above the form.
+
+Currently supported:
+
+```json
+"notices": [
+  {"type": "stretchWarning"}
+]
+```
+
+`stretchWarning` is used by the stretch helper. It warns the user when current
+Allsky settings suggest that the chosen image may already be stretched.
+
+### `fields`
+
+Optional.
+
+An array describing the visible form fields.
+
+If omitted or empty:
+
+- auto-run helpers can still function normally
+- manual helpers still render a form, but show a message stating that there are
+  no settings for that helper
+
+Field structure is documented below.
+
+### `footerHtml`
+
+Optional.
+
+HTML shown below the fields and above the buttons.
+
+```json
+"footerHtml": "<p>The length of each video is roughly images divided by FPS.</p>"
+```
+
+This supports placeholder replacement.
+
+### `submit`
+
+Optional.
+
+Customises the `Run` button for manual helpers.
+
+```json
+"submit": {
+  "name": "timelapses",
+  "label": "Create Timelapse Videos",
+  "warningHtml": "WARNING: It may be a minute or more before the results appear."
+}
+```
+
+Supported keys:
+
+- `name`: the HTML name of the submit input
+- `label`: the text shown on the button
+- `warningHtml`: optional HTML shown alongside the button row
+
+Defaults:
+
+- `name`: `helper`
+- `label`: `Run`
+
+If `submit` is omitted:
+
+- auto-run helpers render no run button
+- manual helpers still render a default `Run` button and a `Show Command`
+  button
+
+### `commandButton`
+
+Optional.
+
+An array of extra buttons rendered to the right of the `Run` button. Each
+button runs a separate command through `allsky-config` and displays the command
+output in a modal.
+
+```json
+"commandButton": [
+  {
+    "label": "Get Startrails Info",
+    "helpText": "Display brightness information from previous startrails runs.",
+    "modalTitle": "Startrails Info",
+    "command": ["get_startrails_info"],
+    "workingMessage": "Getting startrails info...",
+    "runningButtonLabel": "Getting...",
+    "outputFormat": "text"
+  }
+]
+```
+
+Supported keys:
+
+- `label`: text shown on the button
+- `helpText`: optional text shown in a popover when the button is hovered or
+  focused
+- `modalTitle`: title shown in the output modal
+- `command`: required base argument list passed to `allsky-config`
+- `workingMessage`: text shown in the full-page loading overlay while the
+  command runs
+- `runningButtonLabel`: temporary button text while the command runs
+- `outputFormat`: `text` strips HTML before display; `html` renders returned
+  output as HTML
+
+Do not include `sudo`, `--user=...`, or the path to `allsky-config` in a
+button command. The PHP utility adds the execution wrapper, just as it does for
+the helper's main `command`.
+
+Each button command is selected by its array index when the browser calls
+`HelperCommandRun`. The server ignores browser-supplied command text and only
+runs commands defined in `helpers.json`.
+
+## Field Structure
+
+Each entry in `fields` describes one input and how its value should be mapped to
+command-line arguments.
+
+Example:
+
+```json
+{
+  "name": "input_directory",
+  "label": "Use images from",
+  "type": {
+    "name": "directorybrowser",
+    "baseFolder": "{ALLSKY_IMAGES}",
+    "maxDepth": 1
+  },
+  "inputClass": "col-xs-6",
+  "default": {"type": "previousDay"},
+  "helpHtml": "Directory under <span class=\"fileName\">{ALLSKY_IMAGES}</span>.",
+  "args": [
+    {"flag": "--input"}
+  ]
+}
+```
+
+### `name`
+
+Required for a usable field.
+
+This becomes the HTML input name and ID, and is also the key used when the
+server reads submitted values.
+
+If omitted or empty, the field is skipped.
+
+### `label`
+
+Optional.
+
+Plain text label shown next to the field.
+
+```json
+"label": "Image to stretch"
+```
+
+If both `label` and `labelHtml` are omitted, the renderer falls back to the
+field `name`.
+
+### `labelHtml`
+
+Optional.
+
+HTML label shown next to the field.
+
+```json
+"labelHtml": "<span class=\"WebUISetting\">FPS</span> values to use"
+```
+
+Use this when the label needs WebUI-specific markup or styling.
+
+If both `label` and `labelHtml` are present, `labelHtml` takes precedence.
+
+### `type`
+
+Optional.
+
+`type` can be either:
+
+- a simple string such as `"text"`
+- an object whose `name` selects the type and whose other keys define options
+
+Examples:
+
+```json
+"type": "checkbox"
+```
+
+```json
+"type": {
+  "name": "number",
+  "min": 1,
+  "step": 1
+}
+```
+
+Supported type names:
+
+- `text`
+- `number`
+- `checkbox`
+- `imagepicker`
+- `directorybrowser`
+- `numberseries`
+
+Unknown types fall back to a text-style input so that small configuration
+mistakes do not break the whole helper page.
+
+#### `text`
+
+Renders a normal text input.
+
+Use this for free-form values, single filenames, already-formatted numeric
+lists, or anything else that does not need specialised UI behaviour.
+
+#### `number`
+
+Renders a numeric HTML input.
+
+This is appropriate when the helper expects one numeric value rather than a
+series of values.
+
+Supported options:
+
+- `min`
+- `step`
+
+These may be placed inside the `type` object or at the top level of the field,
+although new configurations should keep them inside `type`.
+
+#### `checkbox`
+
+Renders a switch-style checkbox.
+
+Use this for true/false helper options such as `verbose`.
+
+#### `imagepicker`
+
+Renders a read-only text field plus a `Browse` button.
+
+The picker allows the user to browse image files under `ALLSKY_IMAGES`, preview
+the selection, and submit the chosen absolute path back to the helper.
+
+Supported options:
+
+- `topLevelFoldersOnly`
+- `excludeTestFolders`
+- `showDefaultImage`
+
+#### `directorybrowser`
+
+Renders a read-only text field plus a `Browse` button for directory selection.
+
+The browser is rooted at `baseFolder`, writes the selected absolute directory
+into the field, and can be restricted to a limited depth.
+
+Supported options:
+
+- `baseFolder`
+- `maxDepth`
+
+The top-level `baseFolder` itself is not selectable. The user must choose a
+subdirectory.
+
+#### `numberseries`
+
+Renders a text field plus a `Series` button.
+
+The button opens a modal dialogue that helps the user generate a list of
+numbers quickly. The final stored value is still plain text, so helper scripts
+receive the same kind of string they always did.
+
+Supported options:
+
+- `numberType`
+- `min`
+- `max`
+- `step`
+- `count`
+- `decimals`
+- `separator`
+
+Use this for helpers that accept several numeric values in one field, such as
+threshold lists, bitrate lists, or FPS lists.
+
+### `inputClass`
+
+Optional.
+
+Bootstrap width class applied to the input wrapper.
+
+```json
+"inputClass": "col-xs-8"
+```
+
+If omitted, `col-xs-8` is used.
+
+### `default`
+
+Optional.
+
+The initial field value.
+
+This can be:
+
+- a literal value
+- a dynamic default descriptor
+
+Example literal:
+
+```json
+"default": "5  10  15  20"
+```
+
+Example dynamic default:
+
+```json
+"default": {"type": "previousDay"}
+```
+
+If omitted, the field starts empty.
+
+Supported dynamic default types are described below.
+
+#### `default.type = "setting"`
+
+Reads a value from the current Allsky settings.
+
+```json
+"default": {
+  "type": "setting",
+  "name": "timelapsefps",
+  "fallback": ""
+}
+```
+
+If the named setting is not present, `fallback` is used. If `fallback` is
+omitted, the result is empty.
+
+#### `default.type = "firstNonEmpty"`
+
+Resolves several candidate defaults in order and keeps the first non-empty
+result.
+
+```json
+"default": {
+  "type": "firstNonEmpty",
+  "values": [
+    {"type": "setting", "name": "filename", "fallback": ""},
+    {"type": "previousDay"}
+  ]
+}
+```
+
+This is useful when you want to prefer a more specific value but still fall
+back gracefully.
+
+#### `default.type = "path"`
+
+Builds a filesystem path by joining `parts`.
+
+```json
+"default": {
+  "type": "path",
+  "absolute": true,
+  "requireFile": true,
+  "parts": [
+    "{ALLSKY_CURRENT_DIR}",
+    {
+      "type": "setting",
+      "name": "filename",
+      "fallback": ""
+    }
+  ]
+}
+```
+
+`parts` may contain:
+
+- literal strings
+- placeholders such as `{ALLSKY_CURRENT_DIR}`
+- other dynamic default descriptors
+
+`absolute: true` preserves the full absolute path.
+
+`requireFile: true` causes the value to resolve to empty if the resulting file
+does not exist.
+
+#### `default.type = "latestImage"`
+
+Searches for the most recently modified image.
+
+```json
+"default": {
+  "type": "latestImage",
+  "root": "{ALLSKY_IMAGES}",
+  "recursive": true,
+  "excludeFolderPrefixes": ["test_"]
+}
+```
+
+Supported keys:
+
+- `root`: directory to search
+- `recursive`: whether subdirectories should be searched
+- `excludeFolderPrefixes`: folder-name prefixes to skip
+- `extensions`: optional list of file extensions to treat as images
+
+If `extensions` is omitted, the built-in image extensions are used.
+
+#### `default.type = "previousDay"`
+
+Returns the current capture day in `YYYYMMDD` format, based on Allsky’s helper
+logic.
+
+This uses the same “current time minus twelve hours” convention as other parts
+of Allsky so that dates line up with overnight capture behaviour.
+
+`yesterdayDay` is still accepted as a compatibility alias.
+
+#### `default.type = "sequence"`
+
+Generates a numeric sequence.
+
+```json
+"default": {
+  "type": "sequence",
+  "start": {
+    "type": "setting",
+    "name": "startrailsbrightnessthreshold",
+    "fallback": 0.10
+  },
+  "step": 0.03,
+  "count": 8,
+  "separator": "  "
+}
+```
+
+Supported keys:
+
+- `start`: a literal number or another dynamic default descriptor
+- `step`: increment between values
+- `count`: number of values to generate
+- `separator`: text placed between each value
+
+Defaults:
+
+- `step`: `1`
+- `count`: `0`
+- `separator`: one space
+
+#### `default.type = "timelapseInputDirectory"`
+
+Uses the helper’s timelapse-specific directory logic.
+
+This prefers the previous capture day if it exists, otherwise it falls back to
+the most recent image directory and updates the explanatory help placeholder
+accordingly.
+
+### `helpHtml`
+
+Optional.
+
+HTML shown beneath the field.
+
+```json
+"helpHtml": "Enter one or more space-separated values."
+```
+
+This supports placeholder replacement.
+
+Use `helpHtml` to explain:
+
+- what the value means
+- the expected format
+- any sensible starting point
+- the trade-off involved in choosing larger or smaller values
+
+### Type-Specific Options
+
+The following options are meaningful only for certain field types. New helper
+definitions should place them inside the `type` object, not at the field’s top
+level.
+
+#### `min`
+
+Used by:
+
+- `number`
+- `numberseries`
+
+For `number`, this becomes the HTML input’s `min` attribute.
+
+For `numberseries`, this constrains the generated series in the modal and
+describes the intended lower limit for user input.
+
+#### `max`
+
+Used by:
+
+- `numberseries`
+
+This defines the intended upper limit for values generated by the series modal.
+
+#### `step`
+
+Used by:
+
+- `number`
+- `numberseries`
+
+For `number`, this becomes the HTML input’s `step` attribute.
+
+For `numberseries`, it is the increment used when generating the series.
+
+#### `count`
+
+Used by:
+
+- `numberseries`
+
+The number of values the series modal should generate by default.
+
+#### `decimals`
+
+Used by:
+
+- `numberseries`
+
+Controls the number of decimal places shown for generated floating-point
+values.
+
+#### `separator`
+
+Used by:
+
+- `numberseries`
+
+The text used between generated values. Two spaces are common in the current
+helpers because they improve readability for numeric lists.
+
+#### `numberType`
+
+Used by:
+
+- `numberseries`
+
+Expected values:
+
+- `integer`
+- `float`
+
+This affects how the modal generates and normalises values.
+
+#### `baseFolder`
+
+Used by:
+
+- `directorybrowser`
+
+Sets the root directory that the browser is allowed to explore.
+
+Example:
+
+```json
+"type": {
+  "name": "directorybrowser",
+  "baseFolder": "{ALLSKY_IMAGES}",
+  "maxDepth": 1
+}
+```
+
+#### `maxDepth`
+
+Used by:
+
+- `directorybrowser`
+
+Limits how many levels below `baseFolder` the user may browse.
+
+Example:
+
+- `0`: effectively no subdirectory selection
+- `1`: user may select first-level subdirectories only
+- `2`: user may go two levels below the base folder
+
+#### `topLevelFoldersOnly`
+
+Used by:
+
+- `imagepicker`
+
+When `true`, the picker treats the first level under `ALLSKY_IMAGES` as the
+practical browsing root and does not continue into deeper nested folders in the
+usual way. This suits date-based image folders.
+
+#### `excludeTestFolders`
+
+Used by:
+
+- `imagepicker`
+
+When `true`, folders beginning with `test_` are hidden.
+
+#### `showDefaultImage`
+
+Used by:
+
+- `imagepicker`
+
+When `true`, the picker shows the resolved default image as a pinned item, if
+that default resolves to a real file under `ALLSKY_IMAGES`.
+
+### `args`
+
+Optional.
+
+Maps the submitted field value to one or more command-line arguments.
+
+```json
+"args": [
+  {"flag": "--num-images"}
+]
+```
+
+If `args` is omitted or empty, the field is still shown to the user but does
+not affect the command.
+
+Each item in `args` is an object.
+
+#### `flag`
+
+Required for argument mapping.
+
+The long option to append to the command.
+
+```json
+{"flag": "--input"}
+```
+
+Only normal long options are accepted. Invalid flags cause a server error.
+
+#### `boolean`
+
+Optional.
+
+Used mainly for checkbox fields.
+
+```json
+{"flag": "--verbose", "boolean": true}
+```
+
+When `boolean` is true:
+
+- the flag is added only if the submitted value evaluates to true
+- no separate value is appended after the flag
+
+#### `spaceToUnderscore`
+
+Optional.
+
+Useful for fields that accept several values in one text input.
+
+```json
+{"flag": "--thresholds", "spaceToUnderscore": true}
+```
+
+This converts internal whitespace into underscores before passing the value to
+`allsky-config`.
+
+Example:
+
+```text
+0.10 0.13 0.16
+```
+
+becomes:
+
+```text
+--thresholds 0.10_0.13_0.16
+```
+
+Use this only when the underlying helper script expects underscore-separated
+lists.
+
+## How Images And Videos Are Detected
+
+Image and video display is driven by helper output, not by a separate JSON
+field.
+
+If a helper script prints a `show_images.php` link, `helperutils.php` detects
+that link, extracts its parameters, and renders a gallery HTML fragment. That
+gallery is returned as `imagesHtml`, which the browser then places into the
+`Images` tab.
+
+`outputFormat` does not affect this behaviour. It only controls how the
+`Output` tab is rendered.
+
+## Placeholders
+
+Several configured values support placeholder replacement.
+
+Supported placeholders include:
+
+- `{ALLSKY_IMAGES}`
+- `{ALLSKY_CURRENT_DIR}`
+- `{timelapseWhen}`
+
+These placeholders are most often used in:
+
+- `contentHtml`
+- `helpHtml`
+- `footerHtml`
+- type options such as `baseFolder`
+- dynamic defaults such as `path.parts`
+
+Unknown placeholders are left unchanged.
+
+## Example: Manual Helper With No Fields
+
+```json
+{
+  "title": "Check Allsky",
+  "icon": "fa fa-check fa-fw",
+  "pageTitle": "Check Allsky Settings For Issues",
+  "action": "HelperRun",
+  "method": "GET",
+  "autoRun": false,
+  "outputFormat": "html",
+  "showResultsTabs": true,
+  "command": ["check_allsky", "--fromWebUI"],
+  "contentHtml": [
+    "<p>This page will check your Allsky installation for any Errors, Warning and provide suggestions on ways to improve it.</p>"
+  ],
+  "messages": {
+    "running": "Checking Allsky status...",
+    "working": "Checking Allsky status..."
+  }
+}
+```
+
+This renders:
+
+- a `Settings` tab containing a “no settings” message
+- a `Run` button
+- a `Show Command` button
+- an `Output` tab that receives the helper output after execution
+
+## Example: Form Helper With Generated Media
+
+```json
+{
+  "title": "Timelapse Settings",
+  "icon": "fa fa-video fa-fw",
+  "pageTitle": "Help Determine Timelapse Settings",
+  "action": "HelperRun",
+  "method": "POST",
+  "outputFormat": "text",
+  "showResultsTabs": true,
+  "command": ["compare_timelapse", "--html"],
+  "messages": {
+    "running": "Running timelapse comparison...",
+    "working": "Generating timelapse previews...",
+    "runningButton": "Running..."
+  },
+  "fields": [
+    {
+      "name": "input_directory",
+      "label": "Use images from",
+      "type": {
+        "name": "directorybrowser",
+        "baseFolder": "{ALLSKY_IMAGES}",
+        "maxDepth": 1
+      },
+      "args": [{"flag": "--input"}]
+    },
+    {
+      "name": "bitrates",
+      "labelHtml": "<span class=\"WebUISetting\">Bitrate</span> values to use",
+      "type": {
+        "name": "numberseries",
+        "numberType": "integer",
+        "step": 5000,
+        "count": 4,
+        "min": 1,
+        "separator": "  "
+      },
+      "args": [{"flag": "--bitrates", "spaceToUnderscore": true}]
+    }
+  ],
+  "submit": {
+    "name": "timelapses",
+    "label": "Create Timelapse Videos"
+  }
+}
+```
+
+This renders a full tabbed helper. If the helper script emits a valid
+`show_images.php` link, the resulting videos appear in the `Images` tab.
+
+## Adding A New Helper
+
+1. Add a new entry under `helpers`.
+2. Choose a stable helper ID, such as `focus_test`.
+3. Define `title`, `pageTitle`, `method`, and `command`.
+4. Add `contentHtml` if the page needs explanation.
+5. Add `fields` if the helper needs user input.
+6. Add `submit` if you want a custom run button label.
+7. Add `commandButton` entries if the helper needs extra command buttons.
+8. Enable `showResultsTabs` if the helper should use the tabbed layout when
+   running automatically, or if the helper is expected to produce media.
+9. Link to it with:
+
+```text
+index.php?page=helper&helper=focus_test
+```
+
+The Helper Tools menu is built from `helpers.json`, so a valid helper
+definition appears there automatically.
+
+## Safety Notes
+
+Helper commands are executed as argument arrays, not by concatenating a shell
+string. This avoids shell expansion of submitted values.
+
+The server also:
+
+- validates argument flags
+- rejects ASCII control characters in submitted values
+- keeps helper command definitions under server control
+
+Use `outputFormat: "html"` only for trusted HTML generated by Allsky code.

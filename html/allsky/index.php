@@ -131,7 +131,7 @@
 			}
 			if ($leftSidebarStyle !== null)
 				echo "		#leftSidebar { $leftSidebarStyle }";
-			if ($personalLink_style !== "")		// adds to what's in custom.css
+			if ($personalLink_style !== "")		// adds to what's in allsky.css
 				echo "		.personalLink { $personalLink_style }";
 		?>
 	</style>
@@ -228,6 +228,12 @@
 		echo "<i class='fa fa-tools'></i> ";
 		echo "<a href='http://thomasjacquin.com/make-your-own-allsky-camera' title='A guide to build an allsky camera' target='_blank'>Build your own</a>";
 		echo "</div>";
+	}
+
+	// Optional user footer.
+	$footer = "myFiles/footer.php";
+	if (file_exists($footer)) {
+		include_once($footer);
 	}
 
 	if ($includeGoogleAnalytics && file_exists("myFiles/analyticsTracking.js")) {

@@ -2,7 +2,7 @@ import threading
 import sqlite3
 import bcrypt
 import json
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import create_access_token
 from modules.auth_utils import validate_user
 
@@ -15,8 +15,9 @@ auth_lock = threading.Lock()
 def login():
     try: 
         with auth_lock:
-            username = request.json.get('username')
-            password = request.json.get('password')
+            payload = request.get_json(silent=True) or {}
+            username = payload.get('username')
+            password = payload.get('password')
 
             if not username or not password:
                 return jsonify({'error': 'Username and password required'}), 400
@@ -28,5 +29,6 @@ def login():
             token = create_access_token(identity=username, additional_claims={"permissions": result})
         return jsonify(access_token=token)
 
-    except Exception as e:
-        return jsonify({'error': 'Login failed', 'type': type(e).__name__, 'message': str(e)}), 500
+    except Exception:
+        current_app.logger.exception("Login failed")
+        return jsonify({'error': 'Login failed'}), 500

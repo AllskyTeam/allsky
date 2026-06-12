@@ -8,9 +8,9 @@
 ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck disable=SC1091 source=variables.sh
-source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 ARGS=$*
 
@@ -54,7 +54,7 @@ usage_and_exit()
 		wE_ "${MSG}"
 	fi
 	echo
-	echo "where:"
+	echo "Arguments:"
 	echo "  --cmd c      displays 'c' as a link in the WebUI."
 	echo "  --delete     if specified, only '--id ID' is required."
 	echo "  --no-date    does not add the current date to the message."
@@ -133,6 +133,9 @@ if [[ ${DELETE} == "false" && (-z ${TYPE} || -z ${MESSAGE}) ]]; then
 	echo "Command line: ${ARGS}" >&2
 	usage_and_exit 1
 fi
+
+# In case it doesn't exist, like if Allsky isn't installed yet.
+mkdir -p "$( dirname "${ALLSKY_MESSAGES}" )"
 
 if [[ ${DELETE} == "true" ]]; then
 	[[ ! -f ${ALLSKY_MESSAGES} ]] && exit 0

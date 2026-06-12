@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 
+from __future__ import annotations
+
 # TODO - Add deprectaed flag and use in installer
 # TODO - Save the migrated flows, ensure Allsky is stopped? Or add soemthing to the flow runner to suspend flows whilst the update happens
 # TODO - Do somehting with the messages in installer, i.e. have an invalid modules menu option
@@ -7,6 +9,7 @@
 # TODO - Test broken modules, incorrect meta data - DONE
 # TODO - Test bad locations passed in. - DONE
 
+from importlib import metadata
 import os
 import sys
 
@@ -21,11 +24,15 @@ if sys.executable != venv_python:
 import json
 import ast
 import argparse
+import py_compile
+import traceback
+import linecache
 from pathlib import Path
 from packaging import version
 from json import JSONDecodeError
 from functools import wraps
 from typing import Tuple
+from logging import Logger
 
 from exceptions import ModuleError, NoSourceError, NoVersionError
 
@@ -55,7 +62,7 @@ shared.setup_for_command_line()
 
 class ALLSKYMODULE:
     
-    def __init__(self, module_name: str, debug:bool=False, install_source:str|None=None):
+    def __init__(self, module_name: str, debug:bool=False, install_source:str|None=None, logger: Logger|None=None) -> None:
         self._module_paths = None
         self._debug_mode = debug
         self.name = module_name
@@ -65,6 +72,10 @@ class ALLSKYMODULE:
         self._source_info = None
         self._valid = False
         self._installed = False
+        self._deprecated = False
+        self._description = ""
+        self._logger = logger
+        
         self._module_errors = {
             "source": [],
             "installed": []
@@ -82,17 +93,36 @@ class ALLSKYMODULE:
     def _log(self, debug_only, message):
 
         if debug_only and self._debug_mode or not debug_only:
-            print(message)
+            if self._logger:
+                self._logger.info(message)
+            print(f"\033[0;32m{message}")
     
     
     @property
     def name(self) -> str:
         return self._module_name
-
+    
     @name.setter
     def name(self, value:str):
         self._module_name = value
 
+    @property
+    def description(self) -> str:
+        return self._description
+
+    @description.setter
+    def description(self, value:str):
+        self._description = value
+
+
+    @property
+    def deprecated(self) -> bool:
+        return self._deprecated
+
+    @deprecated.setter
+    def deprecated(self, value:bool):
+        self._deprecated = value
+            
     @property
     def name_for_flow(self) -> str:
         prefix = "allsky_"
@@ -116,7 +146,6 @@ class ALLSKYMODULE:
     def winstalled(self):
         return 'ON' if self.installed else 'OFF'
         
-    @staticmethod
     def ensure_valid(method):
         @wraps(method)
         def wrapper(self, *args, **kwargs): 
@@ -210,7 +239,7 @@ class ALLSKYMODULE:
             tree = ast.parse(src, filename=str(module_path))
         except SyntaxError:
             return False
-
+                
         for node in tree.body:
             if isinstance(node, ast.FunctionDef) and node.name == func_name:
                 arg_names = []
@@ -239,6 +268,13 @@ class ALLSKYMODULE:
                         
         meta_data = self._get_meta_data_from_file(installed_file_path)
 
+        if meta_data is not None:
+            self.deprecated = False
+            self.description = meta_data.get("description", self.name)
+            if "deprecation" in meta_data:
+                if "deprecated" in meta_data["deprecation"]:
+                    self.deprecated = shared.to_bool(meta_data["deprecation"]["deprecated"])
+                   
         if meta_data is None:
             status["valid"] = False
             status["message"].append('No valid meta data found')
@@ -254,6 +290,36 @@ class ALLSKYMODULE:
                 
         return status
     
+    def _check_python_syntax(self, filepath: str) -> bool:
+        """
+        Check syntax of a Python file without executing it.
+        Returns True if syntax is OK, False otherwise.
+        """
+        try:
+            py_compile.compile(filepath, doraise=True)
+            return True
+
+        except py_compile.PyCompileError as e:
+            # Extract and parse SyntaxError info
+            tb = e.exc_value
+            if isinstance(tb, SyntaxError):
+                filename = tb.filename
+                lineno = tb.lineno
+                offset = tb.offset
+                text = linecache.getline(filename, lineno).rstrip()
+                msg = tb.msg
+
+                print(f"\nSyntax error in: {filename}")
+                print(f"   → Line {lineno}, Column {offset}: {msg}")
+                if text:
+                    print(f"     {text}")
+                    if offset:
+                        print("     " + " " * (offset - 1) + "^")
+            else:
+                print(f"Compilation error:\n{traceback.format_exc()}")
+
+            return False
+        
     def _init_module(self):
         
         self._installed_info = []
@@ -267,6 +333,7 @@ class ALLSKYMODULE:
             installed_file_path = os.path.join(path, self.name + ".py")
             if os.path.exists(installed_file_path) and os.path.isfile(installed_file_path):
                 self._installed = True
+                self._check_python_syntax(installed_file_path)
                 status = self._validate_module(installed_file_path)
                 if status["valid"]:
                     self._installed_info = status
@@ -284,15 +351,19 @@ class ALLSKYMODULE:
         if self._install_source is not None:
             if os.path.exists(self._install_source):
                 source_file_path = os.path.join(self._install_source, self.name , self.name + ".py")
-                if shared.is_file_readable(source_file_path):
-                    status = self._validate_module(source_file_path)
-                    if status["valid"]:
-                        self._source_info = status
-                        self._source_info["path"] = os.path.join(self._install_source, self.name)
-                        self._valid = True                        
- 
-                    if status["message"]:
-                        self._module_errors["source"] += status["message"]
+                if shared.is_file_readable(source_file_path):                 
+                    if self._check_python_syntax(source_file_path):
+                        status = self._validate_module(source_file_path)
+                        if status["valid"]:
+                            self._source_info = status
+                            self._source_info["path"] = os.path.join(self._install_source, self.name)
+                            self._valid = True                        
+    
+                        if status["message"]:
+                            self._module_errors["source"] += status["message"]
+                            self._valid = False
+                    else:
+                        self._module_errors["source"] += [f"Module - ({source_file_path}) is not valid python"]
                         self._valid = False
                 else:
                     self._module_errors["source"] += [f"Unable to locate module file to install - ({source_file_path})"]
@@ -303,10 +374,14 @@ class ALLSKYMODULE:
         if self.installed:
             flows = shared.get_flows_with_module(self.name_for_flow)
             for flow, flow_data in flows.items():
-                flow_module_data = flow_data[self.name_for_flow]["metadata"]["argumentdetails"]
+                flow_module_data = (
+                    flow_data
+                        .get(self.name_for_flow, {})
+                        .get("metadata", {})
+                        .get("argumentdetails", {})
+                )                
                 code_module_data = self._get_meta_data_from_file(self._installed_info["full_path"])
-                print(self._installed_info["full_path"])
-                code_module_data = code_module_data["argumentdetails"]
+                code_module_data = code_module_data.get("argumentdetails", {})
                 
                 if shared.compare_flow_and_module(flow_module_data, code_module_data):
                     self._flows_differ = True
@@ -318,7 +393,6 @@ class ALLSKYMODULE:
         meta_data = self._get_meta_data_from_file_by_name(file_path, "meta_data")
         if meta_data is None:
             meta_data = self._get_meta_data_from_file_by_name(file_path, "metaData")
-
                 
         if meta_data is not None:
             try:
@@ -367,8 +441,10 @@ class ALLSKYMODULE:
             "blocks": os.path.join(moduledata_base_path, "blocks", self.name),
             "data": os.path.join(moduledata_base_path, "data", self.name),
             "info": os.path.join(moduledata_base_path, "info", self.name),
+            "charts": os.path.join(moduledata_base_path, "charts", self.name),
             "installer": os.path.join(moduledata_base_path, "installer", self.name),
-            "logfiles": os.path.join(moduledata_base_path, "logfiles", self.name)
+            "logfiles": os.path.join(moduledata_base_path, "logfiles", self.name),
+            "dbconfig": os.path.join(self._source_info["path"], "db", "db_data.json")
         }
 
     def _install_apt_dependencies(self) -> bool:
@@ -431,6 +507,19 @@ class ALLSKYMODULE:
 
         return result
 
+    def _install_copy_charts(self) -> bool:
+        result = False
+        source = os.path.join(self._source_info["path"], "charts")
+        if os.path.isdir(source):
+            result = shared.copy_folder(source, self._module_paths["charts"])
+            self._log(True, f"INFO: {self.name} Copied module charts - {'Successful' if result else 'Failed'}")            
+        else:
+            self._log(True, f"INFO: {self.name} No charts required")
+            result = True
+        
+
+        return result
+    
     def _install_copy_data(self) -> bool:
         result = False
         source = os.path.join(self._source_info["path"], self.name)
@@ -502,6 +591,31 @@ class ALLSKYMODULE:
            
         return result
     
+    def _install_database_config(self) -> bool:
+        result = True        
+        source = os.path.join(self._source_info["path"], "db", "db_data.json")
+        file_path = Path(source)
+        if file_path.is_file():
+            db_config = shared.load_json_file(self._module_paths["dbconfig"])
+            
+            if self._source_info is not None:
+                meta_data = self._source_info["meta_data"]
+                table = meta_data.get("extradata", {}).get("database", {}).get("table", None)
+                if table is not None:
+                    user_db_config_file = os.path.join(shared.get_environment_variable("ALLSKY_MYFILES_DIR"), "db_data.json")
+                    user_db_config = shared.load_json_file(user_db_config_file)
+                    user_db_config[table] = db_config[table]
+                    shared.save_json_file(user_db_config, user_db_config_file)
+                    self._log(False, f"INFO: {self.name} Add db config data")
+                else:
+                    self._log(True, f"INFO: {self.name} No db config required")                      
+            else:
+                self._log(False, f"ERROR: {self.name} No meta data available in _install_database_config")
+        else:
+            self._log(True, f"INFO: {self.name} No db config required")            
+            
+        return result
+        
     def _post_install(self) -> bool:
         result = True
         post_run_script = self._installer_data.get("post-install", {}).get("run", None)
@@ -519,28 +633,36 @@ class ALLSKYMODULE:
             else:
                 self._log(False, f"ERROR: _post_install -> Module {self.name} Post install routines failed. {text}")
                 result = False            
-                    
+        else:
+            self._log(False, f"INFO: {self.name} requires no post installation")
+                                     
         return result
     
     def _cleanup_module(self) -> bool:        
         result = True
-        
-        if str(self._installed_info["path"]) != str(self._module_paths["module"]):
-            try:
-                if self._installed_info is not None:
-                    if self._installed_info["path"]:
-                        installed_file_path = os.path.join(self._installed_info["path"], self.name + ".py")
-                        shared.remove_path(installed_file_path)
-                    
-                        dependencies_path = os.path.join(self._installed_info["path"],'dependencies', self.name)
-                        info_path = os.path.join(self._installed_info["path"],'info', self.name)
 
-                        shared.remove_path(dependencies_path)
-                        shared.remove_path(info_path)
+        do_cleanup = False
+        if self._installed_info:
+            if str(self._installed_info["path"]) != str(self._module_paths["module"]):
+                do_cleanup = True
+
+        if do_cleanup:
+            try:
+                self._log(False, f"INFO: {self.name} cleanup required")                
+                installed_file_path = os.path.join(self._installed_info["path"], self.name + ".py")
+                shared.remove_path(installed_file_path)
+            
+                dependencies_path = os.path.join(self._installed_info["path"],'dependencies', self.name)
+                info_path = os.path.join(self._installed_info["path"],'info', self.name)
+
+                shared.remove_path(dependencies_path)
+                shared.remove_path(info_path)
             except Exception as e:
                 self._log(False, f"ERROR: _cleanup_module -> Module {self.name} failed to remove - {e}")
                 result = False
-            
+        else:
+            self._log(False, f"INFO: {self.name} no cleanup required")
+                            
         return result
     
     @ensure_valid     
@@ -553,7 +675,9 @@ class ALLSKYMODULE:
             ("copy blocks",           self._install_copy_blocks),
             ("copy data",             self._install_copy_data),
             ("copy info",             self._install_copy_info),
+            ("copy charts",           self._install_copy_charts),
             ("installer info",        self._install_installer_info),
+            ("Database Config",       self._install_database_config),
             ("apt dependencies",      self._install_apt_dependencies),
             ("python dependencies",   self._install_python_dependencies),
             ("Post install",          self._post_install),
@@ -583,6 +707,7 @@ class ALLSKYMODULE:
                 shared.remove_path(self._module_paths["blocks"])
                 shared.remove_path(self._module_paths["data"])
                 shared.remove_path(self._module_paths["info"])
+                shared.remove_path(self._module_paths["charts"])
                 shared.remove_path(self._module_paths["installer"])
                 shared.remove_path(self._module_paths["logfiles"])
                 result = True
@@ -595,76 +720,91 @@ class ALLSKYMODULE:
     
     @ensure_valid                            
     def migrate_module(self) -> bool:
-        deprecated = []
-        additional = []
-        
-        self._log(False, f"INFO: Starting module migration")
-                    
-        self._init_module() #Need to reload the source info as it will have changed if a new version was installed
-                            
-        flows = shared.get_flows_with_module(self.name_for_flow)
-        for flow, flow_data in flows.items():
-            self._log(True, f"INFO: Analysing flow {flow}")
-            old_flow_data = flow_data[self.name_for_flow]["metadata"]
-            new_flow_data = self._installed_info["meta_data"]
+        try:
+            deprecated = []
+            additional = []
             
-            if not "arguments" in old_flow_data:
-                raise ModuleError(f"{flow} has corrupted meta data for module {self.name}, arguments is missing")
-            
-            for setting, value in old_flow_data["arguments"].items():
-                if setting in new_flow_data["arguments"]:
-                    new_flow_data["arguments"][setting] = value
-                else:
-                    deprecated.append({
-                        "setting": setting,
-                        "value": value
-                    })
-            
-            for setting, value in new_flow_data["arguments"].items():
-                if setting not in old_flow_data["arguments"]:
-                    new_flow_data["arguments"][setting] = value
-                    self._log(True, f"INFO: Additional {setting} - {value} added to flow")
-                    additional.append({
-                        "setting": setting,
-                        "value": value
-                    })                    
-
-            secrets = shared.load_secrets_file()
-            secrets_changed = False
-            for setting, value in new_flow_data["argumentdetails"].items():
-                if shared.to_bool(value.get("secret", False)):
-                    secrets_key = f"{self.name.upper()}.{setting.upper()}"
-                    if not secrets_key in secrets:
-                        secrets[secrets_key] = new_flow_data["arguments"].get(setting, "")
-                        new_flow_data["arguments"][setting] =  ""
-                        secrets_changed = True
-                        self._log(True, f"INFO: Setting {setting} migrated to env.json file")
-
-                    
-            if secrets_changed:
-                shared.save_secrets_file(secrets)
-            
-            flow_data[self.name_for_flow]["metadata"] = new_flow_data
-
-        self._log(False, f"INFO: Migrating flows containing module {self.name}")  
-        shared.save_flows_with_module(flows, self.name)
-        
-        self._log(True, f"INFO: Deprecated Settings")          
-        if deprecated:
-            for item in deprecated:
-                self._log(True, f"  Setting: {item['setting']}, Value: {item['value']}")
-        else:
-            self._log(True, "  No settings were deprecated")
-    
-        self._log(True, f"INFO: New Settings")
-        if additional:
-            for item in additional:
-                self._log(True, f"  Setting: {item['setting']}, Value: {item['value']}")
-        else:
-            self._log(True, "  No additional settings were found")
-                
-        self._log(True, f"INFO: Module migration complete")
+            self._log(False, f"INFO: Starting module migration")
                         
+            self._init_module() #Need to reload the source info as it will have changed if a new version was installed
+                                
+            flows = shared.get_flows_with_module(self.name_for_flow)
+            for flow, flow_data in flows.items():
+                self._log(True, f"INFO: Analysing flow {flow}")
+                old_flow_data = flow_data[self.name_for_flow].get("metadata", {})
+                new_flow_data = self._installed_info.get("meta_data", {})
+                
+                old_arguments =  old_flow_data.get("arguments", {})
+                old_argumentdetails = old_flow_data.get("argumentdetails", {})
+                
+                new_arguments =  new_flow_data.get("arguments", {})
+                new_argumentdetails = new_flow_data.get("argumentdetails", {})
+
+                if not old_arguments and not new_arguments:
+                    if not old_argumentdetails and not new_argumentdetails:
+                        self._log(False, f"INFO: No arguments to migrate for flow {flow}")
+                        continue
+                    else:
+                        self._log(False, f"ERROR: Modules argumentdetails found but no arguments - Cannot migrate flow {flow}")
+                        continue
+                                    
+                for setting, value in old_arguments.items():
+                    if setting in new_arguments:
+                        new_arguments[setting] = value
+                    else:
+                        deprecated.append({
+                            "setting": setting,
+                            "value": value
+                        })
+                
+                for setting, value in new_arguments.items():
+                    if setting not in old_arguments:
+                        new_arguments[setting] = value
+                        self._log(True, f"INFO: Additional {setting} - {value} added to flow")
+                        additional.append({
+                            "setting": setting,
+                            "value": value
+                        })                    
+
+                secrets = shared.load_secrets_file()
+                secrets_changed = False
+                for setting, value in new_argumentdetails.items():
+                    if shared.to_bool(value.get("secret", False)):
+                        secrets_key = f"{self.name.upper()}_{setting.upper()}"
+                        if not secrets_key in secrets:
+                            secrets[secrets_key] = new_arguments.get(setting, "")
+                            new_arguments[setting] = ""
+                            secrets_changed = True
+                            self._log(True, f"INFO: Setting {setting} migrated to env.json file")
+
+                if secrets_changed:
+                    shared.save_secrets_file(secrets)
+                
+                flow_data[self.name_for_flow]["metadata"] = new_flow_data
+
+            self._log(False, f"INFO: Migrating flows containing module {self.name}")  
+            shared.save_flows_with_module(flows, self.name)
+            
+            self._log(True, f"INFO: Deprecated Settings")          
+            if deprecated:
+                for item in deprecated:
+                    self._log(True, f"  Setting: {item['setting']}, Value: {item['value']}")
+            else:
+                self._log(True, "  No settings were deprecated")
+        
+            self._log(True, f"INFO: New Settings")
+            if additional:
+                for item in additional:
+                    self._log(True, f"  Setting: {item['setting']}, Value: {item['value']}")
+            else:
+                self._log(True, "  No additional settings were found")
+                    
+            self._log(True, f"INFO: Module migration complete")
+
+        except Exception as e:
+            tb = e.__traceback__
+            self._log(False, f"ERROR: Function migrate_module on line {tb.tb_lineno}: {e}")
+                                    
     @ensure_valid
     def install_or_update_module(self, force:bool = False) -> bool:
         result = False

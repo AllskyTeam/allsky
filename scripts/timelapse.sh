@@ -5,10 +5,9 @@
 ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck source-path=.
-source "${ALLSKY_HOME}/variables.sh"		|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"		|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${EXIT_ERROR_STOP}"
-
+source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 DEBUG="false"
 DO_HELP="false"
@@ -22,6 +21,7 @@ OUTPUT_DIR=""		# Used when more granularity is needed
 OUTPUT_FILE=""		# Used when more granularity is needed
 FPS=""
 TIMELAPSE_BITRATE=""
+DO_THUMBNAIL="true"
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
 	case "${ARG,,}" in
@@ -70,6 +70,9 @@ while [[ $# -gt 0 ]]; do
 			--bitrate)
 				TIMELAPSE_BITRATE="${2}"
 				shift
+				;;
+			--nothumbnail)
+				DO_THUMBNAIL="false"
 				;;
 			-*)
 				E_ "${ME}: Unknown argument '${ARG}'." >&2
@@ -361,6 +364,17 @@ if [[ ${RET} -ne -0 ]]; then
 	rm -f "${OUTPUT}"	# don't leave around to confuse user
 	[[ -n ${ALLSKY_TIMELAPSE_PID_FILE} ]] && rm -f "${ALLSKY_TIMELAPSE_PID_FILE}"
 	exit 1
+fi
+
+# Create thumbnail of timelapse
+DATE=${OUTPUT%/*}
+DATE=${DATE##*/}
+# Mini timelapses are not saved in ${ALLSKY_IMAGES}, so don't create a thumbnail for them.
+if [[ ${DO_THUMBNAIL} == "true" &&  ${DATE} != "$( basename "${ALLSKY_CURRENT_DIR}" )" ]]; then
+	RES="$( "${ALLSKY_UTILITIES}/thumbnail.sh" -t timelapse -d "${DATE}" --force 2>&1 )"
+	if [[ $? -ne 0 ]]; then
+		W_ "WARNING: unable to create startrails thumbnail: ${RES}."
+	fi
 fi
 
 # if the user wants output, give it to them

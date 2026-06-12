@@ -274,7 +274,7 @@ if ($capture_only) {
 		if ($shell) {
 			$val = quoteIt($val, $type_array[$name]);
 			$label = getVariableOrDefault($label_array, $name, "");
-			$val .= "; $prefix${name}_label=" . quoteIt($label, "text");
+			$val .= "; $prefix{$name}_label=" . quoteIt($label, "text");
 		}
 		echo "$prefix$name$delimiter$val\n";
 	}
@@ -389,7 +389,7 @@ if ($convert || $order) {
 			}
 			echo "$prefix$name$delimiter$default";
 			if ($delimiter === $default_delimiter)
-				echo "; $prefix${name}_type";
+				echo "; $prefix{$name}_type";
 			echo "$delimiter$type\n";
 		}
 	}
@@ -412,7 +412,7 @@ if ($convert || $order) {
 		if ($shell) {
 			$val = quoteIt($val, $type);
 			$label = getVariableOrDefault($label_array, $name, "");
-			$val .= "; $prefix${name}_label=" . quoteIt($label, "text");
+			$val .= "; $prefix{$name}_label=" . quoteIt($label, "text");
 		}
 		echo "$prefix$name$delimiter$val\n";
 	}

@@ -8,9 +8,9 @@
 ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck source-path=.
-source "${ALLSKY_HOME}/variables.sh"		|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"		|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 function usage_and_exit()
 {
@@ -26,7 +26,7 @@ function usage_and_exit()
 		echo -e "${MSG}"
 	fi
 	echo
-	echo "Where:"
+	echo "Arguments:"
 	echo "   --silent        Only outputs errors."
 	echo "   --file f        Optionally specifies the test file to upload."
 	echo "   --fromInstall   Outputs text without colors or other escape sequences."

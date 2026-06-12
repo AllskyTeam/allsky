@@ -10,9 +10,9 @@ ME="$( basename "${BASH_ARGV0}" )"
 # shellcheck source-path=..
 source "${ALLSKY_HOME}/variables.sh"	|| exit 1
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 
 if [[ -z ${LOGNAME} ]]; then
@@ -25,7 +25,7 @@ usage_and_exit()
 	local RET=${1}
 	exec >&2
 	echo
-	local USAGE="Usage: ${ME} [--help]"
+	local USAGE="Usage: ${ME} [--help] [--share-name s]"
 	if [[ ${RET} -ne 0 ]]; then
 		E_ "${USAGE}"
 	else
@@ -38,17 +38,30 @@ usage_and_exit()
 	echo "will be available to connect to a PC or MAC,"
 	echo "where it will be treated like any other disk.  You can then drag and drop files."
 	echo
+	echo "Arguments:"
+	echo "   --share-name        Name of share.  Default is '${SHARE_NAME}'."
+	echo "   --workgroup         Name of the workgroup the share is in.  Default is '${WORKGROUP}'."
 
 	exit "${RET}"
 }
 
 OK="true"
 DO_HELP="false"
+SHARE_NAME="${LOGNAME}_home"
+WORKGROUP="WORKGROUP"
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
 	case "${ARG,,}" in
 		--help)
 			DO_HELP="true"
+			;;
+		--share-name)
+			SHARE_NAME="${2}"
+			shift
+			;;
+		--workgroup)
+			WORKGROUP="${2}"
+			shift
 			;;
 		-*)
 			E_ "Unknown argument '${ARG}'." >&2
@@ -70,7 +83,6 @@ display_msg --logonly info "STARTING SAMBA INSTALLATION"
 
 CAP="${LOGNAME:0:1}"
 CAP="${CAP^^}${LOGNAME:1}"
-SHARE_NAME="${SHARE_NAME:-${LOGNAME}_home}"
 STARS="*************"
 
 # Check if SAMBA is already installed and configured
@@ -123,7 +135,6 @@ MSG+="\nyou are prompted for a CURRENT password, press '${cBOLD}Enter${cNBOLD}'.
 I_ "${MSG}\n"
 sudo smbpasswd -a "${LOGNAME}"			|| exit 1
 
-WORKGROUP="WORKGROUP"
 display_msg --log progress "Configuring SAMBA"
 
 sudo mv -f "${CONFIG_FILE}" "${CONFIG_FILE}.bak"

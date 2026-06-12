@@ -31,9 +31,10 @@ missingTypePlaceholder = "???"
 class ALLSKYOVERLAY(ALLSKYMODULEBASE):
     
 	meta_data = {
-		"name": "Overlays data on the image",
-		"description": "Overlays data fields on the image",
+		"name": "Overlay Information on an Image",
+		"description": "Overlay information (text, images, etc.) on an image.",
 		"module": "allsky_overlay",
+		"docs": "docs/allsky_guide/overlays/overview.html",
 		"group": "Image Analysis",
 		"version": "v1.0.1",
 		"centersettings": "false",
@@ -41,7 +42,7 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 			"day",
 			"night"
 		],
-		"help": "/documentation/overlays/overlays.html",
+		"help": "docs/allsky_guide/overlays/overview.html",
 		"arguments":{
 			"formaterrortext": "??",
 			"suntimeformat": "",
@@ -52,7 +53,7 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 				"required": "false",
 				"tab": "Overlays",
 				"description": "Format Error Text",
-				"help": "Value to place in a variable when the provided format is invalid. defaults to ??"
+				"help": "Value to place in a variable when the provided format is invalid. Default is '??'."
 			}
 		},
 		"changelog": {
@@ -95,7 +96,7 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 	def __init__(self, params, event, formaterrortext):
 		super().__init__(params, event)
 		config_folder = os.path.join(allsky_shared.ALLSKY_OVERLAY, 'config')
-		self._overlay_config_file = os.path.join(config_folder, self._OVERLAYCONFIGFILE)
+		self._overlay_config_file = None
 		self._load_overlay()
 
 		tmpFolder = os.path.join(config_folder, 'tmp')
@@ -108,8 +109,6 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 		self._variables = ALLSKYVARIABLES()
 		self._fields = self._variables.get_variables()
  
-		allsky_shared.log(4, f"INFO: Config file set to '{self._overlay_config_file}'.")
-
 		self._set_date_and_time()
 		self._debug = True
 		
@@ -124,10 +123,10 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 					self._overlay_editor_config['overlayErrorsText'] = 'Error found; see the WebU'
 					
 		except Exception as e:
-			allsky_shared.log(0,f'ERROR: Unable to read the overlay config file {oeConfigFile}')
+			self.log(0,f'ERROR: Unable to read the overlay config file {oeConfigFile}')
 	        
 	def _log(self, level, text, preventNewline = False, exitCode=None, sendToAllsky=False, addErrorToOverlay=False):
-		allsky_shared.log(level=level, text=text, preventNewline=preventNewline,exitCode=exitCode, sendToAllsky=sendToAllsky)
+		self.log(level=level, message=text, preventNewline=preventNewline,exitCode=exitCode, sendToAllsky=sendToAllsky)
 		if sendToAllsky:
 			if self._overlay_editor_config is not None:
 				if self._overlay_editor_config['overlayErrors']:
@@ -140,18 +139,22 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 		else:
 			overlayName = allsky_shared.getSetting('nighttimeoverlay')
 
-		userPath = os.path.join(os.environ['ALLSKY_OVERLAY'], 'myTemplates', overlayName)
-		if os.path.isfile(userPath):
-			self._overlay_config_file = userPath
-			self._log(4, f'INFO: Time of day is {dayORNight} using overlay {overlayName}')
-		else:
-			corePath = os.path.join(os.environ['ALLSKY_OVERLAY'], 'config', overlayName)
-			if os.path.isfile(corePath):
-				self._overlay_config_file = corePath
-				self._log(4, f'INFO: Time of day is {dayORNight} using overlay {overlayName}')
+		if overlayName:
+			userPath = os.path.join(os.environ['ALLSKY_OVERLAY'], 'myTemplates', overlayName)
+			if os.path.isfile(userPath):
+				self._overlay_config_file = userPath
+				self.log(4, f'INFO: Time of day is {dayORNight} using overlay {overlayName}')
 			else:
-				self._log(0, f'ERROR: Unable to locate an overlay file: TOD {dayORNight}, overlay "{overlayName}"', sendToAllsky=True)
-				
+				corePath = os.path.join(os.environ['ALLSKY_OVERLAY'], 'config', overlayName)
+				if os.path.isfile(corePath):
+					self._overlay_config_file = corePath
+					self.log(4, f'INFO: Time of day is {dayORNight} using overlay {overlayName}')
+				else:
+					self.log(0, f'ERROR: Unable to locate {dayORNight} overlay file, overlay "{overlayName}"', sendToAllsky=True)
+		else:
+			self.log(4, f'INFO: No overlay specified for time of day {dayORNight}, so no overlay will be applied.')
+			self._not_enabled = f"No overlay specified for time of day {dayORNight}"
+   
 	def _dump_debug_data(self):
 		debugFilePath = os.path.join(allsky_shared.ALLSKY_TMP, 'overlaydebug.txt')
 		env = {}
@@ -167,7 +170,7 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 				varValue = env[var]
 				debugFile.write(var + varValue + os.linesep)
 
-		allsky_shared.log(4, f"INFO: Debug information written to {debugFilePath}")
+		self.log(4, f"INFO: Debug information written to {debugFilePath}")
 
 	def _createTempDir(self, path):
 		if not os.path.isdir(path):
@@ -198,7 +201,7 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 			#	allsky_shared.log(1, f"WARNING: Config file '{self._overlay_config_file}' is empty.")
 			#	result = True
 		else:
-			self._log(0, f"ERROR: Config File '{self._overlay_config_file}' not accessible.", sendToAllsky=True)
+			self.log(0, f"ERROR: Config File '{self._overlay_config_file}' not accessible.", sendToAllsky=True)
 			result = False
 
 		return result
@@ -212,7 +215,7 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 
 		self._image = allsky_shared.image
 		if self._not_enabled != "":
-			allsky_shared.log(4, f'INFO: Not enabled: {self._not_enabled}')
+			self.log(4, f'INFO: Not enabled: {self._not_enabled}')
 		return result
 
 	def _save_image_file(self):
@@ -234,76 +237,57 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 			# Need .6f  or else really small numbers have scientific notation
 			if showIntermediate:
 				lastText = elapsedSinceLastTime.total_seconds()
-				allsky_shared.log(4, f"INFO: {text} took {lastText:.6f} seconds. Elapsed time {elapsedTime.total_seconds():.6f} seconds")
+				self.log(4, f"INFO: {text} took {lastText:.6f} seconds. Elapsed time {elapsedTime.total_seconds():.6f} seconds")
 			else:
-				allsky_shared.log(4, f"INFO: {text} Elapsed time {elapsedTime.total_seconds():.6f} seconds")
+				self.log(4, f"INFO: {text} Elapsed time {elapsedTime.total_seconds():.6f} seconds")
 
-	def _get_font(self, font, fontSize):
+	def _get_font(self, font, font_size=None):
 		
-		tt = os.path.join(allsky_shared.ALLSKY_OVERLAY, 'system_fonts')
-		systemFontMapCased = {
-			'Arial':           {'fontpath': f'{tt}/Arial.ttf'},
-			'Arial Black':     {'fontpath': f'{tt}/Arial_Black.ttf'},
-			'Times New Roman': {'fontpath': f'{tt}/Times_New_Roman.ttf'},
-			'Courier New':     {'fontpath': f'{tt}/cour.ttf'},
-			'Verdana':         {'fontpath': f'{tt}/Verdana.ttf'},
-			'Trebuchet MS':    {'fontpath': f'{tt}/trebuc.ttf'},
-			'Impact':          {'fontpath': f'{tt}/Impact.ttf'},
-			'Georgia':         {'fontpath': f'{tt}/Georgia.ttf'},
-			'Comic Sans MS':   {'fontpath': f'{tt}/comic.ttf'},
+		system_font_path = os.path.join(allsky_shared.ALLSKY_OVERLAY, 'system_fonts')
+		system_font_map = {
+			'arial':           {'fontpath': f'{system_font_path}/Arial.ttf'},
+			'arial black':     {'fontpath': f'{system_font_path}/Arial_Black.ttf'},
+			'times new roman': {'fontpath': f'{system_font_path}/Times_New_Roman.ttf'},
+			'courier new':     {'fontpath': f'{system_font_path}/cour.ttf'},
+			'verdana':         {'fontpath': f'{system_font_path}/Verdana.ttf'},
+			'trebuchet ms':    {'fontpath': f'{system_font_path}/trebuc.ttf'},
+			'impact':          {'fontpath': f'{system_font_path}/Impact.ttf'},
+			'georgia':         {'fontpath': f'{system_font_path}/Georgia.ttf'},
+			'comic sans ms':   {'fontpath': f'{system_font_path}/comic.ttf'},
 		}
 
-		systemFontMap = {
-			'arial':           {'fontpath': f'{tt}/Arial.ttf'},
-			'arial black':     {'fontpath': f'{tt}/Arial_Black.ttf'},
-			'times new roman': {'fontpath': f'{tt}/Times_New_Roman.ttf'},
-			'courier new':     {'fontpath': f'{tt}/cour.ttf'},
-			'verdana':         {'fontpath': f'{tt}/Verdana.ttf'},
-			'trebuchet ms':    {'fontpath': f'{tt}/trebuc.ttf'},
-			'impact':          {'fontpath': f'{tt}/Impact.ttf'},
-			'georgia':         {'fontpath': f'{tt}/Georgia.ttf'},
-			'comic sans ms':   {'fontpath': f'{tt}/comic.ttf'},
-		}
-
-		preMsg = f"Loading '{font}' font, size {fontSize} pixels"
+		pre_msg = f"Loading '{font}' font, size {font_size} pixels"
 		fontPath = None
 
-		font = font.lower()
-		if font in self._overlay_config['fonts']:
-			fontData = self._overlay_config['fonts'][font]
-			fontConfigPath = fontData['fontPath']
-			if fontConfigPath.startswith('/'):
-				fontConfigPath = fontConfigPath[1:]
-			C = allsky_shared.getEnvironmentVariable('ALLSKY_CONFIG', fatal=True)
-			fontPath = os.path.join(C, 'overlay', fontConfigPath)
+		if font.lower() in system_font_map:
+			font_path = system_font_map[font.lower()]['fontpath']
 		else:
-			if font in systemFontMap:
-				fontPath = systemFontMap[font]['fontpath']
-			else:
-				self._log(0, f"ERROR: System font '{font}' not found in internal map.", sendToAllsky=True)
+			overlay_path = allsky_shared.get_environment_variable('ALLSKY_OVERLAY', fatal=True)
+			font_path = os.path.join(overlay_path, 'fonts', f"{font}.ttf")
+    
+			if not allsky_shared.is_file_readable(font_path):			
+				self.log(0, f"ERROR: Font '{font}' not found in internal map nor as user font", sendToAllsky=True)
+				font_path = None
 
-		if fontPath is not None:
-			if fontSize is None:
-				if fontSize in fontData:
-					fontSize = fontData['fontSize']
-				else:
-					fontSize = self._overlay_config['settings']['defaultfontsize']
+		if font_path is not None:
+			if font_size is None:
+				font_size = self._overlay_config['settings']['defaultfontsize']
 
-			fontKey = font + '_' + str(fontSize)
-			if fontKey in self._fonts:
-				font = self._fonts[fontKey]
+			font_key = font + '_' + str(font_size)
+			if font_key in self._fonts:
+				font = self._fonts[font_key]
 				# Only display this message once per font/size
-				if fontKey not in self._font_msgs:
-					self._font_msgs[fontKey] = True
-					allsky_shared.log(4, f'INFO: {preMsg} from cache.')
+				if font_key not in self._font_msgs:
+					self._font_msgs[font_key] = True
+					self.log(4, f'INFO: {pre_msg} from cache.')
 			else:
 				try:
-					fontSize = allsky_shared.int(fontSize)
-					self._fonts[fontKey] = ImageFont.truetype(fontPath, fontSize)
-					font = self._fonts[fontKey]
-					allsky_shared.log(4, f'INFO: {preMsg} from disk.')
+					font_size = allsky_shared.int(font_size)
+					self._fonts[font_key] = ImageFont.truetype(font_path, font_size)
+					font = self._fonts[font_key]
+					self.log(4, f'INFO: {pre_msg} from disk.')
 				except OSError as err:
-					self._log(0, f"ERROR: Could not load font '{fontPath}' from disk.", sendToAllsky=True)
+					self.log(0, f"ERROR: Could not load font '{font_path}' from disk.", sendToAllsky=True)
 					font = None
 		else:
 			font = None
@@ -318,20 +302,25 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 		alpha = a
 		return bgr, alpha
 
-	def _add_rect(self):
-		if 'rects' in self._overlay_config:
-			for index, rectData in enumerate(self._overlay_config['rects']):
-				top_left = (int(rectData['x']), int(rectData['y']))
-				bottom_right = (int(rectData['x'] + rectData['width']), int(rectData['y'] + rectData['height']))
-				fill_colour, fill_opacity = self._rgba_to_bgr_alpha(rectData['fill'])
+	def _add_rect(self, rect_data=None):
+		rects = []
+		if rect_data is not None:
+			rects = [rect_data]
+		elif 'rects' in self._overlay_config:
+			rects = self._overlay_config['rects']
 
-				border_color = self._convert_RGB_to_BGR(rectData['stroke'], 1)
-				radius = int(rectData['cornerradius'])
-				thickness = int(rectData['strokewidth'])
+		for index, rectData in enumerate(rects):
+			top_left = (int(rectData['x']), int(rectData['y']))
+			bottom_right = (int(rectData['x'] + rectData['width']), int(rectData['y'] + rectData['height']))
+			fill_colour, fill_opacity = self._rgba_to_bgr_alpha(rectData['fill'])
+
+			border_color = self._convert_RGB_to_BGR(rectData['stroke'], 1)
+			radius = int(rectData['cornerradius'])
+			thickness = int(rectData['strokewidth'])
 	
-				self.draw_rounded_rect_fill_overlay(top_left, bottom_right, fill_colour, fill_opacity, radius)
-				if thickness > 0:
-					self.draw_rounded_rect_border(top_left, bottom_right, border_color, thickness, radius=radius)   
+			self.draw_rounded_rect_fill_overlay(top_left, bottom_right, fill_colour, fill_opacity, radius)
+			if thickness > 0:
+				self.draw_rounded_rect_border(top_left, bottom_right, border_color, thickness, radius=radius)
 
 	def draw_rounded_rect_fill_overlay(self, top_left, bottom_right, fill_color, fill_opacity, radius=20):
 		x1, y1 = top_left
@@ -386,9 +375,11 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 		for center, angle in corners:
 			cv2.ellipse(self._image, center, (radius, radius), angle, 0, 90, border_color, thickness)
 
-	def _add_text(self):
+	def _add_text(self, fields=None):
 		pil_image = Image.fromarray(self._image)
-		for field_data in self._overlay_fields:
+		if fields is None:
+			fields = self._overlay_fields
+		for field_data in fields:
 
 			field_label = field_data['label']
 
@@ -538,7 +529,7 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 				outOfBounds = True
 
 			if outOfBounds:
-				self._log(0, f"ERROR: Field '{fieldLabel}' is outside of the image", sendToAllsky=True)
+				self.log(0, f"ERROR: Field '{fieldLabel}' is outside of the image", sendToAllsky=True)
 		except:
 			pass
 
@@ -575,20 +566,23 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 		image.paste(im_txt, mask=im_txt)
 		return image
 
-	def _add_images(self):
-		for index, imageData in enumerate(self._overlay_config["images"]):
+	def _add_images(self, images=None, include_extra=True):
+		if images is None:
+			images = self._overlay_config["images"]
+		for index, imageData in enumerate(images):
 			self._do_add_image(imageData)
 
-		for index, extraFieldName in enumerate(self._extraData):
-			if self._extraData[extraFieldName]['image'] is not None:
-				imageData = {
-					'x': self._extraData[extraFieldName]['x'],
-					'y': self._extraData[extraFieldName]['y'],
-					'image': self._extraData[extraFieldName]['image'],
-					'scale': self._extraData[extraFieldName]['scale'],
-					'rotate': self._extraData[extraFieldName]['rotate']
-				}
-				self._do_add_image(imageData)
+		if include_extra:
+			for index, extraFieldName in enumerate(self._extraData):
+				if self._extraData[extraFieldName]['image'] is not None:
+					imageData = {
+						'x': self._extraData[extraFieldName]['x'],
+						'y': self._extraData[extraFieldName]['y'],
+						'image': self._extraData[extraFieldName]['image'],
+						'scale': self._extraData[extraFieldName]['scale'],
+						'rotate': self._extraData[extraFieldName]['rotate']
+					}
+					self._do_add_image(imageData)
 
 	def _do_add_image(self, imageData):
 		imageName = imageData["image"]
@@ -618,11 +612,11 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 				imageY = imageY - int(height / 2)
 
 				self._image = self._overlay_transparent(imageName, self._image, image, imageX, imageY, imageData)
-				allsky_shared.log(4, f"INFO: Adding image field {imageName}")
+				self.log(4, f"INFO: Adding image field {imageName}")
 			else:
-				self._log(1, f"WARNING: image '{imageName}' missing; ignoring.", sendToAllsky=True)
+				self.log(1, f"WARNING: image '{imageName}' missing; ignoring.", sendToAllsky=True)
 		else:
-			allsky_shared.log(1, "WARNING: Image not set so ignoring.")
+			self.log(1, "WARNING: Image not set so ignoring.")
 
 	def _overlay_transparent(self, imageName, background, overlay, x, y, imageData):
 		background_height, background_width = background.shape[0], background.shape[1]
@@ -665,7 +659,7 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 
 			background[y:y+h, x:x+w] = (1.0 - mask) * background[y:y+h, x:x+w] + mask * overlay_image
 		else:
-			self._log(0, f"ERROR: Image '{imageName}' is outside the bounds of the main image.", sendToAllsky=True)
+			self.log(0, f"ERROR: Image '{imageName}' is outside the bounds of the main image.", sendToAllsky=True)
 
 		return background
 
@@ -677,6 +671,49 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 		rot_mat = cv2.getRotationMatrix2D(image_center, -int(angle), 1.0)
 		result = cv2.warpAffine(image, rot_mat, image.shape[1::-1], flags=cv2.INTER_LINEAR)
 		return result
+
+	def _get_layer_sort_value(self, item, layer_type_order, index):
+		try:
+			return float(item['zindex'])
+		except (KeyError, TypeError, ValueError):
+			return (layer_type_order * 1000000) + index
+
+	def _add_overlay_layers(self):
+		layers = []
+
+		for index, rectData in enumerate(self._overlay_config.get('rects', [])):
+			layers.append({
+				'type': 'rect',
+				'data': rectData,
+				'zindex': self._get_layer_sort_value(rectData, 0, index)
+			})
+
+		configFields = self._overlay_config.get('fields', [])
+		for index, fieldData in enumerate(self._overlay_fields):
+			if index < len(configFields):
+				fieldData['zindex'] = configFields[index].get('zindex', fieldData.get('zindex'))
+			layers.append({
+				'type': 'text',
+				'data': fieldData,
+				'zindex': self._get_layer_sort_value(fieldData, 1, index)
+			})
+
+		for index, imageData in enumerate(self._overlay_config.get('images', [])):
+			layers.append({
+				'type': 'image',
+				'data': imageData,
+				'zindex': self._get_layer_sort_value(imageData, 2, index)
+			})
+
+		for layer in sorted(layers, key=lambda layer: layer['zindex']):
+			if layer['type'] == 'rect':
+				self._add_rect(layer['data'])
+			elif layer['type'] == 'text':
+				self._add_text([layer['data']])
+			elif layer['type'] == 'image':
+				self._add_images([layer['data']], include_extra=False)
+
+		self._add_images([], include_extra=True)
 
 	def _addErrors(self):
 		print(f'Errors = "{self._errors}"')
@@ -694,24 +731,21 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 			self._image = np.array(pilImage)
 		
 	def annotate(self):
-		self._start_time = datetime.now()
-		if self._load_config_file():
-			self._timer("Loading Image")
-			if self._load_image_file():
-				self._timer("Loading Extra Data")
-				self._add_rect()
-				self._timer("Adding All Rectangles")
-				self._add_text()
-				self._timer("Adding All Text Fields")
-				self._add_images()
-				self._timer("Adding All Image Fields")
-				self._save_image_file()
-				self._timer("Saving Final Image")
-				if self._debug:
-					self._timer("Writing debug data")
-				#self._dump_debug_data()
+		if self._overlay_config_file:
+			self._start_time = datetime.now()
+			if self._load_config_file():
+				self._timer("Loading Image")
+				if self._load_image_file():
+					self._timer("Loading Extra Data")
+					self._add_overlay_layers()
+					self._timer("Adding Overlay Layers")
+					self._save_image_file()
+					self._timer("Saving Final Image")
+					if self._debug:
+						self._timer("Writing debug data")
+					#self._dump_debug_data()
 
-		self._timer("Annotation Complete", showIntermediate=False)
+			self._timer("Annotation Complete", showIntermediate=False)
 
 def overlay(params, event):
 	global formatErrorPlaceholder

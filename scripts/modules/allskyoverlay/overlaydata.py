@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 
+from __future__ import annotations
+
 import os
 import sys
 import subprocess
@@ -19,7 +21,10 @@ import subprocess
 import shlex
 import re
 import time
+import html
 from pathlib import Path
+from pprint import pprint
+
 
 try:
 	import allsky_shared as shared
@@ -273,6 +278,19 @@ class ALLSKYOVERLAYDATA:
 				variable = raw_variable.replace('${','').replace('}', '')
 				if variable in self.extra_fields:
 					value = self.extra_fields[variable]['value']
+				else:
+					#
+     			# Cant find variable assume it doesnt have an AS_ prefix so ignore
+					# prefix and just try and find a match
+					#
+					for var_name in self.extra_fields:
+						if '_' in var_name:
+							check_var = var_name.split("_", 1)[1]
+							variable = raw_variable.replace('${','').replace('}', '')
+							if check_var == variable:
+								value = self.extra_fields[var_name]['value']
+								break
+      
 			self._debug(f'INFO: Using Value "{value}"')
 			pre_formatted_value = value
 
@@ -284,7 +302,10 @@ class ALLSKYOVERLAYDATA:
 							field_data[def_key] = def_value
 
 			if format_matches:
-				formats = format_matches[variable_pos]
+				if variable_pos < len(format_matches):
+					formats = format_matches[variable_pos]
+				else:
+					formats = ""
     
 				if variable in self.extra_fields:
 
@@ -359,18 +380,15 @@ class ALLSKYOVERLAYDATA:
 						self._debug('INFO: Field value is empty but no empty value provided')
 				else:
 					self._debug('INFO: Field value is empty but no empty value provided')
-
-			if value:
-				field_label = field_label.replace('&deg;', '\u00B0')
-			else:
-				field_label = field_label.replace('&deg;', '')
     
-			field_label = field_label.replace(raw_variable, str(value))
+			field_label = field_label.replace(raw_variable, str(value), 1)
 
 		field_data['label'] = field_label
 
 		self._debug(f'INFO: Final formatted label "{field_label}"')
 		self._debug('')
+
+		field_label = html.unescape(field_label)
 
 		return field_label
 

@@ -1,0 +1,5 @@
+{
+  "configuration.json": "configuration-schema.json",
+  "remote_configuration.json": "configuration-schema.json",
+  "monitorable_logs.json": "monitorable_logs-schema.json"
+}

@@ -16,8 +16,10 @@ import re
 class ALLSKYEXPORT(ALLSKYMODULEBASE):
 
 	meta_data = {
-		"name": "Allsky Export",
-		"description": "Exports Allsky data to json",
+		"name": "Export Allsky Data",
+		"description": "Export data created by Allsky to a file for use by other programs.",
+		"version": "v1.0.0",  
+  	"docs": "docs/allsky_modules/core/export.html",    
 		"module": "allsky_export",
 		"testable": "true",
 		"centersettings": "false",
@@ -34,14 +36,23 @@ class ALLSKYEXPORT(ALLSKYMODULEBASE):
 			"filelocation" : {
 				"required": "true",
 				"description": "File Location",
-				"help": "The location to save the json date"
+				"help": "The location to save the json file."
 			},
 			"extradata" : {
 				"required": "false",
 				"description": "Extra data to export",
-				"help": "Comma seperated list of additional variables to export to json"
+				"help": "Comma-separated list of additional variables to export."
 			}        
-		}          
+		},
+		"changelog": {
+			"v1.0.0" : [
+				{
+					"author": "Alex Greenland",
+					"authorurl": "https://github.com/allskyteam",
+					"changes": "Initial Release"
+				}
+			]   
+		}           
 	}
 
 	def run(self):
@@ -70,13 +81,13 @@ class ALLSKYEXPORT(ALLSKYMODULEBASE):
 					json.dump(export_data, out_file, indent=4)
      
 				result = f'Data exported to {save_path}'
-				allsky_shared.log(4, f'INFO: {result}')
+				self.log(4, f'INFO: {result}')
 			else:
 				result = f'No extra variables defined for export'
-				allsky_shared.log(0, f'ERROR: {result}')
+				self.log(0, f'ERROR: {result}')
 		else:
 			result = f'Invalid save path {save_path_raw}'
-			allsky_shared.log(0, f'ERROR: {result}')
+			self.log(0, f'ERROR: {result}')
           
 		return result
 

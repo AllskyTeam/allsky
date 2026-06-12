@@ -143,7 +143,7 @@ function make_thumb($src, $dest, $desired_width)
 	} elseif ( preg_match("/\.png$/", $src ) ) {
 		$funcext='png';
 	}
-	if (function_exists("imagecreatefrom${funcext}") == false)
+	if (function_exists("imagecreatefrom{$funcext}") == false)
 	{
 		if ($displayed_thumbnail_error_message == false)
 		{

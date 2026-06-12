@@ -1,0 +1,407 @@
+{
+  "helpers": {
+    "check_allsky": {
+      "title": "Check Allsky",
+      "icon": "fa fa-check fa-fw",
+      "pageTitle": "Check Allsky Settings For Issues",
+      "action": "HelperRun",
+      "method": "GET",
+      "autoRun": true,
+      "outputFormat": "html",
+      "showResultsTabs": true,
+      "command": [
+        "check_allsky",
+        "--fromWebUI"
+      ],
+      "contentHtml": [
+        "<p>This page will check your Allsky installation for any Errors, Warning and provide suggestions on ways to improve it.</p>"
+      ],      
+      "messages": {
+        "running": "Checking Allsky status...",
+        "working": "Checking Allsky status..."
+      },
+      "submit": {
+        "name": "checkallsky",
+        "label": "Run Check"
+      }      
+    },
+    "bad_images": {
+      "title": "Bad Images Info",
+      "icon": "fa fa-images fa-fw",
+      "pageTitle": "Display Information On Bad Images",
+      "action": "HelperRun",
+      "method": "GET",
+      "autoRun": true,
+      "outputFormat": "html",
+      "showResultsTabs": true,
+      "command": [
+        "bad_images_info"
+      ],
+      "contentHtml": [
+        "<p>This page display information on any bad images that have been rejected after capture.</p>"
+      ],      
+      "messages": {
+        "running": "Checking bad images...",
+        "working": "Checking bad images..."
+      },
+      "submit": {
+        "name": "checkbadimages",
+        "label": "Run Check"
+      }      
+    },    
+    "startrails_settings": {
+      "title": "Startrails Settings",
+      "icon": "fa fa-star fa-fw",
+      "pageTitle": "Help Determine Startrails Settings",
+      "action": "HelperRun",
+      "method": "POST",
+      "outputFormat": "text",
+      "showResultsTabs": true,
+      "command": [
+        "compare_startrails",
+        "--html"
+      ],
+      "messages": {
+        "running": "Running star trails command...",
+        "working": "Generating star trails...",
+        "runningButton": "Running..."
+      },
+      "contentHtml": [
+        "<p>If your startrails don't have trailed stars, it means you need to adjust the <span class=\"WebUISetting\">Brightness Threshold</span> setting.<br>See the <a external=\"true\" href=\"/docs/allsky_guide/howtos/startrails.html#brightnessthreshold\">startrails settings</a> for an explanation of this setting.</p>",
+        "<p>This page helps you determine what setting to use to get the most number of images included in your startrails and hence the longest trails possible.<br>Multiple startrails images will be created using the settings you enter and you can then compare them to find the best image.</p>"
+      ],
+      "fields": [
+        {
+          "name": "input_directory",
+          "label": "Use images from",
+          "type": {
+            "name": "directorybrowser",
+            "baseFolder": "{ALLSKY_IMAGES}",
+            "maxDepth": 1
+          },
+          "inputClass": "col-xs-8",
+          "default": {
+            "type": "previousDay"
+          },
+          "helpHtml": "Enter the directory on the Pi where the source images reside, typically in <span class=\"fileName\">{ALLSKY_IMAGES}</span>.<br>The default is yesterday.",
+          "args": [
+            {
+              "flag": "--input"
+            }
+          ]
+        },
+        {
+          "name": "num_images",
+          "label": "Number of images to include in each startrail",
+          "type": {
+            "name": "number",
+            "min": 1,
+            "step": 1
+          },
+          "inputClass": "col-xs-2",
+          "default": 20,
+          "helpHtml": "More images take more time to process but produce longer trailed stars.",
+          "args": [
+            {
+              "flag": "--num-images"
+            }
+          ]
+        },
+        {
+          "name": "thresholds",
+          "labelHtml": "<span class=\"WebUISetting\">Brightness Threshold</span> values to use",
+          "type": {
+            "name": "numberseries",
+            "numberType": "float",
+            "step": 0.03,
+            "count": 8,
+            "decimals": 2,
+            "separator": "  "
+          },
+          "inputClass": "col-xs-10",
+          "default": {
+            "type": "sequence",
+            "start": {
+              "type": "setting",
+              "name": "startrailsbrightnessthreshold",
+              "fallback": 0.10
+            },
+            "step": 0.03,
+            "count": 8,
+            "separator": "  "
+          },
+          "helpHtml": "Enter one or more space-separated <span class=\"WebUISetting\">Brightness Threshold</span> values.<br>The more values you have the longer it will take to process.",
+          "args": [
+            {
+              "flag": "--thresholds",
+              "spaceToUnderscore": true
+            }
+          ]
+        },
+        {
+          "name": "verbose",
+          "label": "Verbose Output?",
+          "type": "checkbox",
+          "default": false,
+          "helpHtml": "Check the box to output summary information for each startrails created.",
+          "args": [
+            {
+              "flag": "--verbose",
+              "boolean": true
+            }
+          ]
+        }
+      ],
+      "submit": {
+        "name": "startrails",
+        "label": "Create Startrails"
+      },
+      "commandButton": [
+        {
+          "label": "Get Startrails Info",
+          "helpText": "Display brightness information from previous startrails runs to help choose a Brightness Threshold setting.",
+          "modalTitle": "Startrails Info",
+          "command": [
+            "get_startrails_info"
+          ],
+          "runningMessage": "Getting startrails info...",
+          "workingMessage": "Getting startrails info...",
+          "runningButtonLabel": "Getting...",
+          "outputFormat": "text"
+        }
+      ]
+    },
+    "stretch_settings": {
+      "title": "Image Stretch Settings",
+      "icon": "fa fa-arrows-left-right fa-fw",
+      "pageTitle": "Help Determine Image Stretch Settings",
+      "action": "HelperRun",
+      "method": "POST",
+      "outputFormat": "text",
+      "showResultsTabs": true,
+      "command": [
+        "compare_stretches",
+        "--html"
+      ],
+      "messages": {
+        "running": "Running stretch comparison...",
+        "working": "Generating stretch previews...",
+        "runningButton": "Running..."
+      },
+      "notices": [
+        {
+          "type": "stretchWarning"
+        }
+      ],
+      "contentHtml": [
+        "<p>Stretching an image is typically done to lighten parts of an image, such as the stars, while keeping the rest of the image (mostly) unchanged. There are two settings to stretch an image:<ol><li><span class=\"WebUISetting\">Stretch Amount</span> - This determines how much stretch to apply.<li><span class=\"WebUISetting\">Stretch Mid Point</span> - This determines what parts of the image are stretched (dark parts, middle-grey parts, light parts, etc.).</ol>See the <a external=\"true\" href=\"/docs/allsky_guide/howtos/exposure_settings.html#stretch\">stretch settings</a> page for an explanation of these settings.</p>",
+        "<p class=\"morePadding\">This page helps you determine what stretch settings to use to bring out the details you want.<br>The image you select below will be stretched multiple times using different settings. You can then compare the images to find the best one.<br>You may then want to run the test again but with finer granularity.</p>"
+      ],
+      "fields": [
+        {
+          "name": "image",
+          "label": "Image to stretch",
+          "type": {
+            "name": "imagepicker",
+            "topLevelFoldersOnly": true,
+            "excludeTestFolders": true,
+            "showDefaultImage": true
+          },
+          "inputClass": "col-xs-8",
+          "default": {
+            "type": "firstNonEmpty",
+            "values": [
+              {
+                "type": "path",
+                "absolute": true,
+                "requireFile": true,
+                "parts": [
+                  "{ALLSKY_CURRENT_DIR}",
+                  {
+                    "type": "setting",
+                    "name": "filename",
+                    "fallback": ""
+                  }
+                ]
+              },
+              {
+                "type": "latestImage",
+                "root": "{ALLSKY_IMAGES}",
+                "recursive": true,
+                "excludeFolderPrefixes": [
+                  "test_"
+                ]
+              }
+            ]
+          },
+          "helpHtml": "Pick a typical image on the Pi.<br>If you are stretching nighttime images and running the test during the day, pick a different image.",
+          "args": [
+            {
+              "flag": "--image"
+            }
+          ]
+        },
+        {
+          "name": "amounts",
+          "labelHtml": "<span class=\"WebUISetting\">Stretch Amount</span> values to use",
+          "type": {
+            "name": "numberseries",
+            "numberType": "integer",
+            "step": 5,
+            "count": 4,
+            "min": 0,
+            "separator": "  "
+          },
+          "inputClass": "col-xs-8",
+          "default": "5  10  15  20",
+          "helpHtml": "Enter one or more space-separated <span class=\"WebUISetting\">Stretch Amount</span> values. The more values you have the longer it will take to process.<br><code>20</code> is a lot. Higher numbers lighten the image more.",
+          "args": [
+            {
+              "flag": "--amounts",
+              "spaceToUnderscore": true
+            }
+          ]
+        },
+        {
+          "name": "midpoints",
+          "labelHtml": "<span class=\"WebUISetting\">Stretch Mid Point</span> values to use",
+          "type": {
+            "name": "numberseries",
+            "numberType": "integer",
+            "step": 20,
+            "count": 3,
+            "min": 0,
+            "max": 100,
+            "separator": "  "
+          },
+          "inputClass": "col-xs-8",
+          "default": "10  30  50",
+          "helpHtml": "Enter one or more space-separated <span class=\"WebUISetting\">Stretch Mid Point</span> values. The more values you have the longer it will take to process.<br><code>0</code> lightens black items, <code>50</code> lightens middle-gray items, and <code>100</code> lightens white items.",
+          "args": [
+            {
+              "flag": "--midpoints",
+              "spaceToUnderscore": true
+            }
+          ]
+        }
+      ],
+      "submit": {
+        "name": "stretches",
+        "label": "Create Stretched Images"
+      }
+    },
+    "timelapse_settings": {
+      "title": "Timelapse Settings",
+      "icon": "fa fa-video fa-fw",
+      "pageTitle": "Help Determine Timelapse Settings",
+      "action": "HelperRun",
+      "method": "POST",
+      "outputFormat": "text",
+      "showResultsTabs": true,
+      "command": [
+        "compare_timelapse",
+        "--html"
+      ],
+      "messages": {
+        "running": "Running timelapse comparison...",
+        "working": "Generating timelapse previews...",
+        "runningButton": "Running..."
+      },
+      "contentHtml": [
+        "<p>This page helps you determine what timelapse settings to use to obtain the quality and video length you prefer.<br>The images in the directory you select below will be used to create multiple timelapse videos using different settings. You can then compare the videos to find the best one.<br>You may then want to run the test again but with finer granularity.</p>",
+        "<p class=\"morePadding\">You can change these settings:<ol><li><span class=\"WebUISetting\">Bitrate</span> - This determines what Bitrate settings to use.<li><span class=\"WebUISetting\">FPS</span> - This determines what FPS settings to use.</ol>See the <a external=\"true\" href=\"/docs/allsky_guide/settings/allsky.html#dailytimelapse\">timelapse</a> page for an explanation of these settings.</p>",
+        "<p>Your current settings for timelapse width and height, vcodec, and pixel format will be used.</p>"
+      ],
+      "fields": [
+        {
+          "name": "input_directory",
+          "label": "Use images from",
+          "type": {
+            "name": "directorybrowser",
+            "baseFolder": "{ALLSKY_IMAGES}",
+            "maxDepth": 1
+          },
+          "inputClass": "col-xs-8",
+          "default": {
+            "type": "timelapseInputDirectory"
+          },
+          "helpHtml": "Enter the directory on the Pi where the source images reside, typically in <span class=\"fileName\">{ALLSKY_IMAGES}</span>.{timelapseWhen}",
+          "args": [
+            {
+              "flag": "--input"
+            }
+          ]
+        },
+        {
+          "name": "num_images",
+          "label": "Number of images to include in the videos",
+          "type": "text",
+          "inputClass": "col-xs-8",
+          "default": 100,
+          "helpHtml": "Picking a lot of images will produce longer videos but will take longer to process. The default is a good starting point.",
+          "args": [
+            {
+              "flag": "--num-images"
+            }
+          ]
+        },
+        {
+          "name": "bitrates",
+          "labelHtml": "<span class=\"WebUISetting\">Bitrate</span> values to use",
+          "type": {
+            "name": "numberseries",
+            "numberType": "integer",
+            "step": 5000,
+            "count": 4,
+            "min": 1,
+            "separator": "  "
+          },
+          "inputClass": "col-xs-8",
+          "default": {
+            "type": "setting",
+            "name": "timelapsebitrate",
+            "fallback": ""
+          },
+          "helpHtml": "Enter one or more space-separated <span class=\"WebUISetting\">Bitrate</span> values. The more values you have the longer it will take to process.<br>Higher numbers will produce high-quality videos.",
+          "args": [
+            {
+              "flag": "--bitrates",
+              "spaceToUnderscore": true
+            }
+          ]
+        },
+        {
+          "name": "fps",
+          "labelHtml": "<span class=\"WebUISetting\">FPS</span> values to use",
+          "type": {
+            "name": "numberseries",
+            "numberType": "integer",
+            "step": 5,
+            "count": 4,
+            "min": 1,
+            "separator": "  "
+          },
+          "inputClass": "col-xs-8",
+          "default": {
+            "type": "setting",
+            "name": "timelapsefps",
+            "fallback": ""
+          },
+          "helpHtml": "Enter one or more space-separated <span class=\"WebUISetting\">FPS</span> values. The more values you have the longer it will take to process.<br>Higher numbers will produce shorter, smoother videos.",
+          "args": [
+            {
+              "flag": "--fps",
+              "spaceToUnderscore": true
+            }
+          ]
+        }
+      ],
+      "footerHtml": "<p>The length of each video in seconds is roughly the number of images divided by the <span class=\"WebUISetting\">FPS</span> value.</p>",
+      "submit": {
+        "name": "timelapses",
+        "label": "Create Timelapse Videos",
+        "warningHtml": "WARNING: It may be a minute or more the results appear."
+      }
+    }
+  }
+}

@@ -1,6 +1,7 @@
 [Unit]
 Description=AllSky Camera Service
 After=multi-user.target
+Wants=allskyperiodic.service allskyserver.service
 
 [Service]
 User=XX_ALLSKY_OWNER_XX
@@ -10,6 +11,7 @@ Restart=on-success
 RestartSec=2
 ; These exit code are fatal.
 RestartPreventExitStatus=XX_NO_RESTART_CODES_XX
+NoNewPrivileges=no
 
 ; TODO: Not sure if RestartKillSignal is recognized by the systemd that comes with Bullseye,
 ; so use ExecReload instead.

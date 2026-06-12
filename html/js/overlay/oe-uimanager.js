@@ -13,6 +13,7 @@ class OEUIMANAGER {
     #gridLayer = null;
     #backgroundLayer = null;
     #overlayLayer = null;
+    #zIndexLayer = null;
     #transformer = null;
     #movingField = null;
     #testMode = false;
@@ -39,6 +40,47 @@ class OEUIMANAGER {
     #drawRect = null
     #drawRectStartX = 0
     #drawRectStartY = 0
+    #toolbarDefaultPosition = {
+        top: 90,
+        left: 20
+    }
+    #floatingToolbarPlaceholderId = 'oe-editor-toolbar-placeholder'
+    #toolbarDockRect = null
+    #toolbarDockSnapDistance = 40
+    #floatingDialogZIndex = 2100
+    #lastMouseContext = {
+        screenX: null,
+        screenY: null,
+        imageX: null,
+        imageY: null
+    }
+    #lastDragEndContext = null
+    #lastTransformEndContext = null
+    #zIndexVisible = false
+
+    #getFieldHelpDelay() {
+        let delay = this.#configManager.settings?.fieldhelpdelay ?? 500;
+        delay = parseInt(delay, 10);
+        if (Number.isNaN(delay) || delay < 0) {
+            delay = 500;
+        }
+
+        return delay;
+    }
+
+    #setupFieldHelpPopovers() {
+        const delay = this.#getFieldHelpDelay();
+        const trigger = delay === 0 ? 'focus click' : 'hover focus click';
+
+        $('[data-toggle="popover"]')
+            .popover('destroy')
+            .attr('data-trigger', trigger)
+            .attr('data-delay', JSON.stringify({ show: delay, hide: 200 }))
+            .popover({
+                trigger: trigger,
+                delay: { show: delay, hide: 200 }
+            });
+    }
 
     constructor(imageObj) {
 
@@ -78,10 +120,14 @@ class OEUIMANAGER {
 
         this.#gridLayer = new Konva.Layer();
         this.#overlayLayer = new Konva.Layer();
+        this.#zIndexLayer = new Konva.Layer({
+            listening: false
+        });
         this.#drawLayer = new Konva.Layer();
         this.#oeEditorStage.add(this.#drawLayer);
         this.#oeEditorStage.add(this.#overlayLayer);
         this.#oeEditorStage.add(this.#gridLayer);
+        this.#oeEditorStage.add(this.#zIndexLayer);
 
         this.#drawRect = new Konva.Rect({
             fill: 'rgba(0, 0, 0, 0.5)',
@@ -93,6 +139,12 @@ class OEUIMANAGER {
 
         this.#oeEditorStage.on('mousemove', (e) => {
             let mousePos = this.#oeEditorStage.getPointerPosition();
+            this.#lastMouseContext = {
+                screenX: mousePos.x,
+                screenY: mousePos.y,
+                imageX: mousePos.x / this.#oeEditorStage.scaleX(),
+                imageY: mousePos.y / this.#oeEditorStage.scaleY()
+            };
             this.updateDebugWindowMousePos(mousePos.x, mousePos.y);
             this.updateDebugWindow();
         });
@@ -160,6 +212,143 @@ class OEUIMANAGER {
         return this.#transformer;
     }
 
+    #clampFloatingPosition(left, top, element) {
+        const elementWidth = element.outerWidth() || 0;
+        const elementHeight = element.outerHeight() || 0;
+        const maxLeft = Math.max(10, $(window).width() - elementWidth - 10);
+        const maxTop = Math.max(10, $(window).height() - elementHeight - 10);
+
+        return {
+            left: Math.min(Math.max(10, left), maxLeft),
+            top: Math.min(Math.max(10, top), maxTop)
+        };
+    }
+
+    #startFloatingDrag(element, event, onStop = null) {
+        if (event.which && event.which !== 1) {
+            return;
+        }
+
+        event.preventDefault();
+
+        const rect = element[0].getBoundingClientRect();
+        const startLeft = rect.left;
+        const startTop = rect.top;
+        const startX = event.clientX;
+        const startY = event.clientY;
+
+        $(document).off('.oe-floating-drag');
+        $(document).on('mousemove.oe-floating-drag', (moveEvent) => {
+            const position = this.#clampFloatingPosition(
+                startLeft + (moveEvent.clientX - startX),
+                startTop + (moveEvent.clientY - startY),
+                element
+            );
+
+            element.css({
+                left: position.left,
+                top: position.top
+            });
+        });
+
+        $(document).on('mouseup.oe-floating-drag', () => {
+            $(document).off('.oe-floating-drag');
+            if (typeof onStop === 'function') {
+                onStop();
+            }
+        });
+    }
+
+    #bringFloatingDialogToFront(dialog) {
+        this.#floatingDialogZIndex += 1;
+        dialog.css('z-index', this.#floatingDialogZIndex);
+    }
+
+    #initializeFloatingDialog(selector) {
+        const dialog = $(selector);
+        if (!dialog.length || dialog.data('oeFloatingDialogInit')) {
+            return dialog;
+        }
+
+        dialog.data('oeFloatingDialogInit', true);
+
+        dialog.on('mousedown.oe-dialog', () => {
+            this.#bringFloatingDialogToFront(dialog);
+        });
+
+        dialog.find('[data-role="oe-dialog-close"]').off('click.oe-dialog').on('click.oe-dialog', (event) => {
+            event.preventDefault();
+            this.#hideFloatingDialog(selector);
+        });
+
+        dialog.find('.modal-header').off('mousedown.oe-dialog').on('mousedown.oe-dialog', (event) => {
+            if ($(event.target).closest('button, a, input, select, textarea').length) {
+                return;
+            }
+
+            this.#bringFloatingDialogToFront(dialog);
+            this.#startFloatingDrag(dialog, event);
+        });
+
+        return dialog;
+    }
+
+    #showFloatingDialog(selector, options = {}) {
+        const dialog = this.#initializeFloatingDialog(selector);
+        if (!dialog.length) {
+            return;
+        }
+
+        if (options.beforeClose !== undefined) {
+            dialog.data('oeBeforeClose', options.beforeClose);
+        }
+        if (options.onClose !== undefined) {
+            dialog.data('oeOnClose', options.onClose);
+        }
+
+        const width = options.width || dialog.data('dialog-width');
+        if (width) {
+            dialog.css('width', width);
+        }
+
+        dialog.removeClass('hidden');
+
+        if (!dialog.data('oePositioned')) {
+            const initialPosition = this.#clampFloatingPosition(dialog.position().left || 20, dialog.position().top || 90, dialog);
+            dialog.css({
+                left: initialPosition.left,
+                top: initialPosition.top
+            });
+            dialog.data('oePositioned', true);
+        }
+
+        this.#bringFloatingDialogToFront(dialog);
+    }
+
+    #hideFloatingDialog(selector) {
+        const dialog = $(selector);
+        if (!dialog.length || dialog.hasClass('hidden')) {
+            return;
+        }
+
+        const beforeClose = dialog.data('oeBeforeClose');
+        if (typeof beforeClose === 'function' && beforeClose() === false) {
+            return;
+        }
+
+        dialog.addClass('hidden');
+
+        const onClose = dialog.data('oeOnClose');
+        if (typeof onClose === 'function') {
+            onClose();
+        }
+    }
+
+    #isFloatingDialogVisible(selector) {
+        const dialog = $(selector);
+        return dialog.length > 0 && !dialog.hasClass('hidden');
+    }
+
     #resizeWindow() {
         if (this.#stageMode === 'fit') {
             this.setZoom('oe-zoom-fit');
@@ -176,9 +365,14 @@ class OEUIMANAGER {
         this.#overlayLayer.off('dragstart');
         this.#overlayLayer.off('dragmove');
         this.#overlayLayer.off('dragend');
+        this.#oeEditorStage.off('contextmenu');
+        $(this.#oeEditorStage.container()).off('contextmenu.oe-field-context-menu');
+        $(document).off('.oe-field-context-menu');
     
         $(document).off('dblclick', '.draggable');
         $(document).off('click', '#oe-item-list');
+        $(document).off('click', '#oe-split-field');
+        $(document).off('click', '#oe-snap-fields');
         $(document).off('click', '.oe-list-delete');
         $(document).off('click', '.oe-all-list-add');
         $(document).off('click', '.oe-list-add');
@@ -190,6 +384,18 @@ class OEUIMANAGER {
         $(document).off('click', '#oe-save');
         $(document).off('click', '#oe-test-mode');
         $(document).off('click', '#oe-delete');
+        $(document).off('click', '#oe-send-back');
+        $(document).off('click', '#oe-move-back');
+        $(document).off('click', '#oe-move-front');
+        $(document).off('click', '#oe-send-front');
+        $(document).off('click', '#oe-toggle-zindex');
+        $(document).off('click', '#oe-align-menu.disabled');
+        $(document).off('click', '#oe-left-align');
+        $(document).off('click', '#oe-vertical-equal');
+        $(document).off('click', '#oe-horizontal-equal');
+        $(document).off('click', '#oe-group-menu.disabled');
+        $(document).off('click', '#oe-group');
+        $(document).off('click', '#oe-ungroup');
         $(document).off('click', '#oe-add-text');
         $(document).off('click', '#oe-add-image');
         $(document).off('click', '#oe-options');
@@ -201,7 +407,10 @@ class OEUIMANAGER {
         $(document).off('click', '#oe-font-dialog-upload-font');
         $(document).off('click', '#oe-upload-font');
         $(document).off('click', '.oe-list-font-delete');
+        $(document).off('click', '#oe-font-delete-dialog-do-delete');
+        $('#oe-font-delete-dialog').off('hidden.bs.modal');
         $(document).off('click', '.oe-zoom');
+        $(document).off('keydown.oe-zoom-shortcuts');
         $(document).off('click', '#oe-show-image-manager');
         $(document).off('oe-imagemanager-add');
         $(document).off('click', '#oe-toobar-debug-button');
@@ -214,8 +423,13 @@ class OEUIMANAGER {
         $(document).off('oe-config-updated');
         $(document).off('click','#oe-show-overlay-manager');
         $(document).off('addFields');
+        $('#textpropgrid').off('focusin', '#pgtextlabel, #pgtextformat, #pgtextsample, #pgtextempty');
+        $('#textpropgrid').off('focusout', '#pgtextlabel, #pgtextformat, #pgtextsample, #pgtextempty');
+
+        this.resetFloatingToolbar();
 
         this.#overlayLayer.destroyChildren();
+        this.#zIndexLayer.destroyChildren();
         this.#transformer = new Konva.Transformer({
             resizeEnabled: false
         });
@@ -243,6 +457,7 @@ class OEUIMANAGER {
             this.setupFonts()
             this.#drawLayer.draw();
             this.#overlayLayer.draw();
+            this.#refreshZIndexLabels();
         });
 
     }
@@ -253,13 +468,9 @@ class OEUIMANAGER {
         let fields = this.#fieldManager.fields;
         for (let [fieldName, field] of fields.entries()) {
             let object = field.shape;
-
-            if (field.fieldType === 'rect') {
-                this.#drawLayer.add(object)
-            } else {
-                this.#overlayLayer.add(object)
-            }
+            this.#overlayLayer.add(object)
         }
+        this.#syncCanvasZOrder()
     }
 
     buildUI() {
@@ -268,6 +479,7 @@ class OEUIMANAGER {
 
         this.addFields()
 
+        this.setupFloatingToolbar()
         this.setupToolbarEvents()
         this.setupDragAndDrop()
         this.setupErrorsEvents()
@@ -286,7 +498,157 @@ class OEUIMANAGER {
         this.checkFieldstimer()
 
         $('[data-toggle="tooltip"]').tooltip()
+        this.#setupFieldHelpPopovers()
+        $(document).off('click.oe-popover-toggle', '.as-field-help-toggle')
+        $(document).on('click.oe-popover-toggle', '.as-field-help-toggle', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+        });
+        $(document).off('show.bs.popover.oe-popover')
+        $(document).on('show.bs.popover.oe-popover', '[data-toggle="popover"]', function() {
+            $('[data-toggle="popover"]').not(this).popover('hide');
+        });
+        $(document).off('click.oe-popover-dismiss')
+        $(document).on('click.oe-popover-dismiss', (event) => {
+            if (!$(event.target).closest('.popover, [data-toggle="popover"]').length) {
+                $('[data-toggle="popover"]').popover('hide');
+            }
+        });
         $('.modal').on('shown.bs.modal', this.alignModal)
+    }
+
+    resetFloatingToolbar() {
+        const toolbar = $('#oe-editor-toolbar');
+        const placeholder = $('#' + this.#floatingToolbarPlaceholderId);
+
+        $(document).off('.oe-toolbar-drag');
+        toolbar.off('.oe-toolbar');
+
+        if (placeholder.length) {
+            placeholder.replaceWith(toolbar);
+        }
+
+        toolbar.removeClass('oe-editor-toolbar-floating');
+        toolbar.css({
+            top: '',
+            left: '',
+            width: '',
+            position: ''
+        });
+    }
+
+    dockFloatingToolbar() {
+        const toolbar = $('#oe-editor-toolbar');
+        const placeholder = $('#' + this.#floatingToolbarPlaceholderId);
+
+        if (placeholder.length) {
+            placeholder.replaceWith(toolbar);
+        }
+
+        toolbar.removeClass('oe-editor-toolbar-floating');
+        toolbar.css({
+            top: '',
+            left: '',
+            width: '',
+            position: ''
+        });
+    }
+
+    setupFloatingToolbar() {
+        const toolbar = $('#oe-editor-toolbar');
+        const handle = toolbar.find('.oe-toolbar-handle');
+
+        if (!toolbar.length) {
+            return;
+        }
+
+        handle.off('mousedown.oe-toolbar');
+        handle.on('mousedown.oe-toolbar', (event) => {
+            if (toolbar.hasClass('oe-editor-toolbar-floating')) {
+                this.#startFloatingDrag(toolbar, event, () => {
+                    if (!toolbar.hasClass('oe-editor-toolbar-floating') || this.#toolbarDockRect === null) {
+                        return;
+                    }
+
+                    const rect = toolbar[0].getBoundingClientRect();
+                    const navbar = toolbar.closest('body').find('#oe-main-navbar').first();
+                    let overlapsNavbar = false;
+
+                    if (navbar.length) {
+                        const navbarRect = navbar[0].getBoundingClientRect();
+                        overlapsNavbar =
+                            rect.left < navbarRect.right &&
+                            rect.right > navbarRect.left &&
+                            rect.top < navbarRect.bottom &&
+                            rect.bottom > navbarRect.top;
+                    }
+
+                    const withinDockZone =
+                        Math.abs(rect.top - this.#toolbarDockRect.top) <= this.#toolbarDockSnapDistance &&
+                        Math.abs(rect.left - this.#toolbarDockRect.left) <= this.#toolbarDockSnapDistance;
+
+                    if (withinDockZone || overlapsNavbar) {
+                        this.dockFloatingToolbar();
+                    }
+                });
+                return;
+            }
+
+            const rect = toolbar[0].getBoundingClientRect();
+            this.#toolbarDockRect = rect;
+            const placeholder = $('<div>', {
+                id: this.#floatingToolbarPlaceholderId,
+                css: {
+                    display: 'none'
+                }
+            });
+
+            toolbar.after(placeholder);
+            $('body').append(toolbar);
+
+            toolbar
+                .addClass('oe-editor-toolbar-floating')
+                .css({
+                    top: rect.top,
+                    left: rect.left,
+                    width: toolbar[0].scrollWidth,
+                    position: 'fixed'
+                });
+
+            this.#startFloatingDrag(toolbar, event, () => {
+                if (!toolbar.hasClass('oe-editor-toolbar-floating') || this.#toolbarDockRect === null) {
+                    return;
+                }
+
+                const currentRect = toolbar[0].getBoundingClientRect();
+                const navbar = toolbar.closest('body').find('#oe-main-navbar').first();
+                let overlapsNavbar = false;
+
+                if (navbar.length) {
+                    const navbarRect = navbar[0].getBoundingClientRect();
+                    overlapsNavbar =
+                        currentRect.left < navbarRect.right &&
+                        currentRect.right > navbarRect.left &&
+                        currentRect.top < navbarRect.bottom &&
+                        currentRect.bottom > navbarRect.top;
+                }
+
+                const withinDockZone =
+                    Math.abs(currentRect.top - this.#toolbarDockRect.top) <= this.#toolbarDockSnapDistance &&
+                    Math.abs(currentRect.left - this.#toolbarDockRect.left) <= this.#toolbarDockSnapDistance;
+
+                if (withinDockZone || overlapsNavbar) {
+                    this.dockFloatingToolbar();
+                }
+            });
+        });
+
+        handle.off('dblclick.oe-toolbar');
+        handle.on('dblclick.oe-toolbar', () => {
+            if (toolbar.hasClass('oe-editor-toolbar-floating')) {
+                this.dockFloatingToolbar();
+            }
+        });
     }
 
     setupImageManagerEvents() {
@@ -360,14 +722,14 @@ class OEUIMANAGER {
         })
 
 
-        jQuery(window).bind('beforeunload', ()=> {
+    /*    jQuery(window).bind('beforeunload', ()=> {
             if (this.#fieldManager.dirty || this.#configManager.dirty) {
                 return ' '
             } else {
                 return undefined
             }
         })
-
+    */
         $(window).on('resize', (event) => {
             $('.modal:visible').each(this.alignModal)
         })
@@ -503,6 +865,22 @@ class OEUIMANAGER {
             this.updateToolbar();
         });        
         
+        $('#textpropgrid')
+        .on('focusin', '#pgtextlabel, #pgtextformat, #pgtextsample, #pgtextempty', function () {
+            $(this).data('original', $(this).val());
+        })
+        .on('focusout', '#pgtextlabel, #pgtextformat, #pgtextsample, #pgtextempty', (e) => {
+            const original = $(e.currentTarget).data('original');
+            const current = $(e.currentTarget).val();
+
+            if (original !== current) {
+                if (this.testMode) {
+                    this.enableTestMode();
+                }
+            }
+        });
+
+
     }
 
     setupVariableManagerEvents() {
@@ -519,8 +897,13 @@ class OEUIMANAGER {
                 defaultFontSize: this.#configManager.getValue('settings.defaultfontsize'),
                 showBlocks: true,
                 variableSelected: (variable) => {
-                    let name = '${' + variable.replace('AS_', '') + '}'
+                    //let name = '${' + variable.replace('AS_', '') + '}'
+                    variable = '${' + variable + '}';
+                    let name = variable.replace(/^\$\{[^_]+_/, '${');
                     let field = this.#configManager.findFieldByName(name)
+                    if (field === null) {
+                        field = this.#configManager.findFieldByName(variable)
+                    }
                     let shape = this.#fieldManager.addField('text', field.name, null, field.format, field.sample)
                     this.setFieldOpacity(true)
                     this.#overlayLayer.add(shape)
@@ -570,26 +953,91 @@ class OEUIMANAGER {
     }
 
     setupToolbarEvents() {
+        $(document).on('click', '#oe-zorder-menu.disabled', (event) => {
+            event.preventDefault()
+            event.stopPropagation()
+        })
+
+        $(document).on('click', '#oe-send-back', (event) => {
+            this.#changeZOrder(event, 'back')
+        })
+
+        $(document).on('click', '#oe-move-back', (event) => {
+            this.#changeZOrder(event, 'backward')
+        })
+
+        $(document).on('click', '#oe-move-front', (event) => {
+            this.#changeZOrder(event, 'forward')
+        })
+
+        $(document).on('click', '#oe-send-front', (event) => {
+            this.#changeZOrder(event, 'front')
+        })
+
+        $(document).on('click', '#oe-toggle-zindex', (event) => {
+            event.preventDefault()
+            if ($(event.currentTarget).hasClass('disabled')) {
+                return
+            }
+            this.#toggleZIndexLabels()
+        })
+
+        $(document).on('click', '#oe-align-menu.disabled', (event) => {
+            event.preventDefault()
+            event.stopPropagation()
+        })
+
         $(document).on('click', '#oe-left-align', (event) => {
+            event.preventDefault()
+            if ($(event.currentTarget).hasClass('disabled')) {
+                return
+            }
             this.#fieldManager.leftAlignFields(this.#transformer)
             this.#configManager.dirty = true
             this.updateToolbar()
         })
 
         $(document).on('click', '#oe-vertical-equal', (event) => {
+            event.preventDefault()
+            if ($(event.currentTarget).hasClass('disabled')) {
+                return
+            }
             this.#fieldManager.equalSpaceFields(this.#transformer)
             this.#configManager.dirty = true
             this.updateToolbar()
         })
 
+        $(document).on('click', '#oe-horizontal-equal', (event) => {
+            event.preventDefault()
+            if ($(event.currentTarget).hasClass('disabled')) {
+                return
+            }
+            this.#fieldManager.equalHorizontalSpaceFields(this.#transformer)
+            this.#configManager.dirty = true
+            this.updateToolbar()
+        })
+
+        $(document).on('click', '#oe-group-menu.disabled', (event) => {
+            event.preventDefault()
+            event.stopPropagation()
+        })
+
         
         $(document).on('click', '#oe-group', (event) => {
+            event.preventDefault()
+            if ($(event.currentTarget).hasClass('disabled')) {
+                return
+            }
             this.#fieldManager.groupFields(this.#transformer)
             this.#configManager.dirty = true
             this.updateToolbar()
         })
 
         $(document).on('click', '#oe-ungroup', (event) => {
+            event.preventDefault()
+            if ($(event.currentTarget).hasClass('disabled')) {
+                return
+            }
             this.#fieldManager.unGroupFields(this.#transformer)
             this.#transformer.nodes([])
             this.#configManager.dirty = true
@@ -616,7 +1064,33 @@ class OEUIMANAGER {
         })
 
         $(document).on('click', '.oe-zoom', (event) => {
+            event.preventDefault()
             this.setZoom(event.currentTarget.id)
+        })
+
+        $(document).on('keydown.oe-zoom-shortcuts', (event) => {
+            if (!event.ctrlKey && !event.metaKey) {
+                return
+            }
+
+            if (this.#isEditableShortcutTarget(event.target)) {
+                return
+            }
+
+            const key = event.key
+            let zoomType = null
+
+            if (key === '+' || key === '=' || key === 'Add') {
+                zoomType = 'oe-zoom-in'
+            } else if (key === '-' || key === '_' || key === 'Subtract') {
+                zoomType = 'oe-zoom-out'
+            }
+
+            if (zoomType !== null) {
+                event.preventDefault()
+                event.stopPropagation()
+                this.setZoom(zoomType)
+            }
         })
 
         $(document).on('click','#oe-show-overlay-manager', (e) => {
@@ -644,17 +1118,262 @@ class OEUIMANAGER {
 
         $(document).on('click', '#oe-toobar-debug-button', (event) => {
 
-            let data = JSON.stringify(this.#configManager.config);
+            let data = JSON.stringify(this.#configManager.config, null, 2);
             $('#oe-debug-dialog-overlay').val(data);
-            data = JSON.stringify(this.#configManager.dataFields);
+            data = JSON.stringify(this.#configManager.dataFields, null, 2);
             $('#oe-debug-dialog-fields').val(data);
-            data = JSON.stringify(this.#configManager.appConfig);
+            data = JSON.stringify(this.#configManager.appConfig, null, 2);
             $('#oe-debug-dialog-config').val(data);
+            data = JSON.stringify(this.#buildRuntimeDiagnostics(), null, 2);
+            $('#oe-debug-dialog-runtime').val(data);
 
             $('#oe-debug-dialog').modal({
                 keyboard: false
             });
         })
+
+        $(document).on('click', '#oe-snap-fields', (event) => {
+            let fields = this.#fieldManager.fields
+            function snapToGrid(v, grid) {
+                return Math.round(v / grid) * grid;
+            }
+
+            function isSnapped(v, grid) {
+                return (v % grid) === 0;
+            }
+
+            const grid = this.#configManager.gridSize;
+
+            for (let [fieldName, field] of fields.entries()) {
+                if (!Number.isFinite(field.tlx) || !Number.isFinite(field.tly)) return;
+
+                if (!isSnapped(field.tlx, grid)) field.tlx = snapToGrid(field.tlx, grid);
+                if (!isSnapped(field.tly, grid)) field.tly = snapToGrid(field.tly, grid);
+            };
+        })
+
+        $(document).on('click', '#oe-split-field', (event) => {
+            const scaleX = this.#stageScale
+            const gridSize = this.#configManager.gridSize
+            const margin = (gridSize * 1) | 0;
+
+            let tlx = 0
+
+            function snapToGrid(value) {
+                return Math.round(value / gridSize) * gridSize;
+            }
+
+            const calcTLX = (field) => {
+                const fieldShapeWidth = field.shape.width()
+                const fieldWidth = (fieldShapeWidth * 1) | 0
+                tlx = (field.tlx + fieldWidth + margin) | 0;
+                tlx = snapToGrid(tlx)
+
+                return tlx
+
+            }
+
+            const createField = (fieldLabel, fieldSample, fieldFormat) => {
+                let shape = this.#fieldManager.addField('text', fieldLabel, null, fieldFormat, fieldSample)
+                let newField = this.#fieldManager.findField(shape)
+
+                this.#overlayLayer.add(newField.shape)
+                
+                return newField
+            }
+
+            const positionTextField = (field, targetTlx, targetTly) => {
+                const size = field.shape.measureSize(field.label);
+                field.shape.offset({
+                    x: (size.width / 2) | 0,
+                    y: (size.height / 2) | 0
+                });
+                field.x = targetTlx + field.shape.offsetX();
+                field.y = targetTly + field.shape.offsetY();
+            }
+
+            if (this.#selected !== null && this.#selected.fieldType === 'fields' && this.#selected.canSplit) {
+
+                let fieldInfo = this.#selected.split;
+
+                if (fieldInfo) {
+                    const oldFormats = this.#selected.format.split(/(?<=\})(?=\{)/);
+                    let prevField = this.#selected
+                    fieldInfo.forEach((variable,index) => {
+                        let name = variable.replace(/^\$\{[^_]+_/, '${');
+                        let field = this.#configManager.findFieldByName(name)
+                        if (field === null) {
+                            field = this.#configManager.findFieldByName(variable)
+                        }
+
+                        if (field) {
+                            if (index === 0) {
+                                const selectedTlx = this.#selected.tlx;
+                                const selectedTly = this.#selected.tly;
+                                this.#selected.label = variable;
+                                this.#selected.type = "text";
+                                this.#selected.sample = "";
+                                this.#selected.format = "";
+                                positionTextField(this.#selected, selectedTlx, selectedTly);
+                                prevField = this.#selected
+                            } else {
+                                let fieldFormat = field.format
+                                if (typeof oldFormats[index] !== "undefined") {
+                                    fieldFormat = oldFormats[index];
+                                }
+                                let newField = createField(field.name, "", field.format)
+                                newField.font = this.#selected.font;
+                                newField.fontsize = this.#selected.fontsize;
+                                newField.fill = this.#selected.colour;
+                                const newTlx = calcTLX(prevField);
+                                const newTly = this.#selected.tly;
+                                positionTextField(newField, newTlx, newTly);
+                                prevField = newField
+                            }
+                        } else {
+                            if (index === 0) {
+                                const selectedTlx = this.#selected.tlx;
+                                const selectedTly = this.#selected.tly;
+                                this.#selected.label = variable;
+                                this.#selected.type = "text";
+                                this.#selected.sample = "";
+                                this.#selected.format = "";
+                                positionTextField(this.#selected, selectedTlx, selectedTly);
+                                prevField = this.#selected
+                            }  else {
+                                let newField = createField(variable, "", "")
+                                newField.font = this.#selected.font;
+                                newField.fontsize = this.#selected.fontsize;
+                                newField.fill = this.#selected.colour;        
+                                const newTlx = calcTLX(prevField);
+                                const newTly = this.#selected.tly;
+                                positionTextField(newField, newTlx, newTly);
+                                prevField = newField
+                            }  
+                        }
+                    })
+
+                    this.updatePropertyEditor()
+                    this.updateToolbar()
+                    if (this.testMode) {
+                        this.enableTestMode()
+                    }  
+
+
+                }
+            }
+        })
+
+        $(document).on('click', '#oe-undo', (event) => {
+            this.#fieldManager.undo()
+        })
+
+    }
+
+    #isEditableShortcutTarget(target) {
+        if (target === null || target === undefined) {
+            return false
+        }
+
+        const tagName = target.tagName ? target.tagName.toLowerCase() : ''
+        return target.isContentEditable || tagName === 'input' || tagName === 'textarea' || tagName === 'select'
+    }
+
+    #changeZOrder(event, direction) {
+        event.preventDefault()
+        event.stopPropagation()
+
+        if ($(event.currentTarget).hasClass('disabled')) {
+            return
+        }
+
+        const nodes = this.#transformer.nodes()
+        if (nodes.length === 0) {
+            return
+        }
+
+        const selectedIds = nodes.map((node) => node.id())
+        if (this.#fieldManager.reorderFields(selectedIds, direction)) {
+            this.#syncCanvasZOrder()
+            this.#configManager.dirty = true
+            this.updateToolbar()
+        }
+    }
+
+    #syncCanvasZOrder() {
+        for (let layer of this.#fieldManager.orderedFields()) {
+            const field = layer.field
+            field.shape.moveToTop()
+        }
+
+        this.#transformer.moveToTop()
+        this.#snapRectangle.moveToTop()
+        this.#overlayLayer.batchDraw()
+        this.#refreshZIndexLabels()
+    }
+
+    #toggleZIndexLabels() {
+        this.#zIndexVisible = !this.#zIndexVisible
+        $('#oe-toggle-zindex').toggleClass('active', this.#zIndexVisible)
+        $('#oe-toggle-zindex i').toggleClass('fa-hashtag', !this.#zIndexVisible)
+        $('#oe-toggle-zindex i').toggleClass('fa-eye-slash', this.#zIndexVisible)
+        $('#oe-toggle-zindex').contents().filter(function() {
+            return this.nodeType === 3
+        }).remove()
+        $('#oe-toggle-zindex').append(this.#zIndexVisible ? ' Hide Z-Index' : ' Show Z-Index')
+        this.#refreshZIndexLabels()
+    }
+
+    #refreshZIndexLabels() {
+        if (this.#zIndexLayer === null) {
+            return
+        }
+
+        this.#zIndexLayer.destroyChildren()
+
+        if (!this.#zIndexVisible) {
+            this.#zIndexLayer.draw()
+            return
+        }
+
+        const fontSize = this.#configManager.zIndexFontSize;
+        const padding = Math.max(4, Math.round(fontSize / 5));
+
+        for (let layer of this.#fieldManager.orderedFields()) {
+            const field = layer.field
+            const shape = field.shape
+            if (shape === null || shape === undefined) {
+                continue
+            }
+
+            const rect = shape.getClientRect({
+                relativeTo: this.#oeEditorStage
+            })
+
+            const label = new Konva.Label({
+                x: Math.max(0, rect.x),
+                y: Math.max(0, rect.y),
+                listening: false
+            })
+
+            label.add(new Konva.Tag({
+                fill: '#111827',
+                opacity: 0.85,
+                cornerRadius: 3
+            }))
+
+            label.add(new Konva.Text({
+                text: `z:${field.zindex}`,
+                fontSize: fontSize,
+                padding: padding,
+                fill: '#ffffff'
+            }))
+
+            this.#zIndexLayer.add(label)
+        }
+
+        this.#zIndexLayer.moveToTop()
+        this.#zIndexLayer.draw()
     }
 
     setupDragAndDrop() {
@@ -751,7 +1470,9 @@ class OEUIMANAGER {
                 const newH = Math.abs(pos.y - this.#drawRectStartY)
               
                 const field = this.#fieldManager.addField('rect', '', null, null, null, null , newX, newY, newW, newH)
-                this.#drawLayer.add(field);
+                this.#overlayLayer.add(field);
+                this.#transformer.moveToTop()
+                this.#snapRectangle.moveToTop()
 
                 this.#drawStart = false
             }
@@ -797,8 +1518,34 @@ class OEUIMANAGER {
             }
         });
 
+        $(this.#oeEditorStage.container()).on('contextmenu.oe-field-context-menu', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            this.#oeEditorStage.setPointersPositions(event.originalEvent);
+
+            const pointer = this.#oeEditorStage.getPointerPosition();
+            if (pointer === null) {
+                this.#hideFieldContextMenu();
+                return false;
+            }
+
+            const fields = this.#getFieldsAtPoint(pointer);
+            if (fields.length === 0) {
+                this.#hideFieldContextMenu();
+                return false;
+            }
+
+            this.#showFieldContextMenu(fields, event.originalEvent.clientX, event.originalEvent.clientY);
+            return false;
+        });
+
         this.#oeEditorStage.on('click tap', (event) => {
+            if (event.evt && event.evt.button === 2) {
+                return;
+            }
+
             let shape = event.target;
+            this.#hideFieldContextMenu();
 
             this.updateToolbar();
 
@@ -818,57 +1565,7 @@ class OEUIMANAGER {
                 return;
             }
 
-            let shapes = this.#fieldManager.getGroupedFields(shape)
-
-            this.#transformer.resizeEnabled(false);
-            this.setTransformerState(shape);
-
-            if (event.target.getClassName() === 'Image') {
-                this.#transformer.resizeEnabled(true);
-                this.#transformer.keepRatio(true);
-                this.#transformer.enabledAnchors(['top-left', 'top-right', 'bottom-left', 'bottom-right']);
-            }
-
-            if (event.target.getClassName() === 'Rect') {
-                this.#transformer.resizeEnabled(true);
-                this.#transformer.keepRatio(false );
-                this.#transformer.enabledAnchors(['top-left', 'top-right', 'bottom-left', 'bottom-right']);
-            }
-
-            if (event.evt.shiftKey) {                
-                const transformerNodes = this.#transformer.nodes();
-                const index = transformerNodes.indexOf(shape);
-                
-                if (index !== -1) {
-                    transformerNodes.splice(index, 1);
-                } else {
-                    transformerNodes.push(shape);
-                }
-                this.#transformer.nodes(transformerNodes);
-            } else {
-                if (this.#transformer.nodes().length > 1) {
-                    this.#transformer.nodes([event.target]);
-                } else {
-                    this.#transformer.nodes(shapes);
-                }
-            }
-
-            this.#transformer.nodes().forEach((node) => {
-                const field = this.#fieldManager.findField(node.id())
-                field.shape.draggable(true)
-            })
-
-            this.#selected = this.#fieldManager.findField(shape);
-            this.setFieldOpacity(false);
-            this.setFieldOpacity(true, shape.id());
-
-            this.#snapRectangle.offset({x: shape.width()/2, y: shape.height()/2});
-
-            if (this.#transformer.nodes().length == 1) {
-                this.updatePropertyEditor();
-            }
-            this.updateDebugWindow();
-            this.updateToolbar();
+            this.#selectFieldShape(shape, event.evt.shiftKey, true);
         });
 
         this.#drawLayer.on('dblclick dbltap', (event) => {
@@ -949,7 +1646,20 @@ class OEUIMANAGER {
                     this.#selected.rotation = shape.rotation();
                     this.updatePropertyEditor();
                 }
+                this.#lastTransformEndContext = {
+                    id: shape.id(),
+                    className: shape.getClassName(),
+                    x: shape.x() | 0,
+                    y: shape.y() | 0,
+                    width: shape.width() | 0,
+                    height: shape.height() | 0,
+                    rotation: shape.rotation() | 0,
+                    scaleX: shape.scaleX(),
+                    scaleY: shape.scaleY(),
+                    timestamp: new Date().toISOString()
+                };
                 this.updateToolbar();
+                this.#refreshZIndexLabels();
             }
 
         });
@@ -1192,7 +1902,7 @@ class OEUIMANAGER {
                             if (item.type == 'user' && item.name !== defaultFont) {
                                 buttons += `
                                     <span data-toggle="tooltip" title="${tooltip}">
-                                        <button type="button" class="btn btn-danger btn-xs oe-list-font-delete" data-fontname="${item.name}"><i class="fa-solid fa-trash"></i></button>
+                                        <button type="button" class="btn btn-danger btn-xs oe-list-font-delete" data-fontname="${item.path}"><i class="fa-solid fa-trash"></i></button>
                                     </span>`;
                             }
                             return buttons;
@@ -1215,25 +1925,46 @@ class OEUIMANAGER {
         $(document).off('click', '.oe-list-font-delete');
         $(document).on('click', '.oe-list-font-delete', (event) => {
             event.stopPropagation();
-            
-            $('#oe-font-delete-dialog').modal({
+
+            var fontName = $(event.currentTarget).data('fontname');
+            if (typeof fontName === 'undefined') {
+                return;
+            }
+
+            let $dialog = $('#oe-font-delete-dialog');
+            $dialog.data('fontname', fontName);
+            $('#oe-font-delete-dialog-font-name').text(fontName);
+            $('#oe-font-delete-dialog-font-used').toggleClass('hidden', !this.#fieldManager.isFontUsed(fontName));
+            $('#oe-font-delete-dialog-do-delete').prop('disabled', false);
+
+            $dialog.modal({
                 keyboard: false,
                 width: 500
             });
-            
-            /*var fontName = $(event.currentTarget).data('fontname');
-            if (fontName !== 'undefined') {
+        });
 
-                if (this.#fieldManager.isFontUsed(fontName)) {
-                    debugger;
-                }
-                if (window.confirm('Are you sure you wish to delete this font? If the font is in use then all fields will be set to the default font.')) {
-                        let uiManager = window.oedi.get('uimanager');
-                        uiManager.deleteFont(fontName);
-                        this.#configManager.dirty = true;
-                        this.updateToolbar();
-                }
-            }*/
+        $(document).off('click', '#oe-font-delete-dialog-do-delete');
+        $(document).on('click', '#oe-font-delete-dialog-do-delete', () => {
+            let $dialog = $('#oe-font-delete-dialog');
+            let fontName = $dialog.data('fontname');
+            if (typeof fontName === 'undefined') {
+                return;
+            }
+
+            $('#oe-font-delete-dialog-do-delete').prop('disabled', true);
+            $dialog.modal('hide');
+            this.deleteFont(fontName);
+            this.#configManager.dirty = true;
+            this.updateToolbar();
+        });
+
+        $('#oe-font-delete-dialog').off('hidden.bs.modal');
+        $('#oe-font-delete-dialog').on('hidden.bs.modal', () => {
+            let $dialog = $('#oe-font-delete-dialog');
+            $dialog.removeData('fontname');
+            $('#oe-font-delete-dialog-font-name').text('');
+            $('#oe-font-delete-dialog-font-used').addClass('hidden');
+            $('#oe-font-delete-dialog-do-delete').prop('disabled', true);
         });
 
     }
@@ -1278,6 +2009,7 @@ class OEUIMANAGER {
             });
 
             $('#oe-app-options-show-grid').prop('checked', this.#configManager.gridVisible);
+            $('#oe-app-options-confirm-delete').prop('checked', this.#configManager.confirmDelete);
             $('#oe-app-options-grid-size option[value=' + this.#configManager.gridSize + ']').attr('selected', 'selected');
             $('#oe-app-options-grid-opacity').val(this.#configManager.gridOpacity);
             $('#oe-app-options-snap-background').prop('checked', this.#configManager.snapBackground);
@@ -1286,6 +2018,7 @@ class OEUIMANAGER {
             $('#oe-app-options-select-field-opacity').val(this.#configManager.selectFieldOpacity);
             $('#oe-app-options-mousewheel-zoom').prop('checked', this.#configManager.mouseWheelZoom);
             $('#oe-app-options-background-opacity').val(this.#configManager.backgroundImageOpacity);
+            $('#oe-app-options-zindex-font-size').val(this.#configManager.zIndexFontSize);
             $('#oe-app-options-grid-colour').val(this.#configManager.gridColour);
 
             $('#oe-app-options-show-errors').prop('checked', this.#configManager.overlayErrors);
@@ -1396,6 +2129,8 @@ class OEUIMANAGER {
             this.#configManager.selectFieldOpacity = $('#oe-app-options-select-field-opacity').val() | 0;
             this.#configManager.mouseWheelZoom = $('#oe-app-options-mousewheel-zoom').prop('checked');
             this.#configManager.backgroundImageOpacity = $('#oe-app-options-background-opacity').val() | 0;
+            this.#configManager.zIndexFontSize = $('#oe-app-options-zindex-font-size').val() | 0;
+            this.#configManager.confirmDelete = $('#oe-app-options-confirm-delete').prop('checked');
 
             this.#configManager.overlayErrors = $('#oe-app-options-show-error').prop('checked');
             this.#configManager.overlayErrorsText = $('#oe-app-options-show-error').val();
@@ -1403,6 +2138,7 @@ class OEUIMANAGER {
             this.#fieldManager.updateFieldDefaults();
             this.drawGrid();
             this.updateBackgroundImage();
+            this.#refreshZIndexLabels();
 
             this.#configManager.saveSettings();
             this.#fieldManager.defaultsModified();
@@ -1411,6 +2147,179 @@ class OEUIMANAGER {
             this.updateToolbar();
             this.setupDebug();
         });
+    }
+
+    #selectFieldShape(shape, shiftKey = false, includeGroup = false) {
+        let shapes = includeGroup ? this.#fieldManager.getGroupedFields(shape) : [shape]
+
+        this.#transformer.resizeEnabled(false);
+        this.setTransformerState(shape);
+
+        if (shape.getClassName() === 'Image') {
+            this.#transformer.resizeEnabled(true);
+            this.#transformer.keepRatio(true);
+            this.#transformer.enabledAnchors(['top-left', 'top-right', 'bottom-left', 'bottom-right']);
+        }
+
+        if (shape.getClassName() === 'Rect') {
+            this.#transformer.resizeEnabled(true);
+            this.#transformer.keepRatio(false);
+            this.#transformer.enabledAnchors(['top-left', 'top-right', 'bottom-left', 'bottom-right']);
+        }
+
+        if (shiftKey) {
+            const transformerNodes = this.#transformer.nodes();
+            const index = transformerNodes.indexOf(shape);
+
+            if (index !== -1) {
+                transformerNodes.splice(index, 1);
+            } else {
+                transformerNodes.push(shape);
+            }
+            this.#transformer.nodes(transformerNodes);
+        } else {
+            if (includeGroup && this.#transformer.nodes().length <= 1) {
+                this.#transformer.nodes(shapes);
+            } else {
+                this.#transformer.nodes([shape]);
+            }
+        }
+
+        this.#transformer.nodes().forEach((node) => {
+            const field = this.#fieldManager.findField(node.id())
+            field.shape.draggable(true)
+        })
+
+        this.#selected = this.#fieldManager.findField(shape);
+        this.setFieldOpacity(false);
+        this.setFieldOpacity(true, shape.id());
+
+        this.#snapRectangle.offset({x: shape.width()/2, y: shape.height()/2});
+
+        if (this.#transformer.nodes().length == 1) {
+            this.updatePropertyEditor();
+        }
+        this.updateDebugWindow();
+        this.updateToolbar();
+    }
+
+    #getFieldsAtPoint(pointer) {
+        const pointRect = {
+            x: pointer.x,
+            y: pointer.y,
+            width: 1,
+            height: 1
+        };
+
+        return Array.from(this.#fieldManager.fields.values())
+            .map((field) => field.shape)
+            .filter((shape) => shape !== null && shape !== undefined && shape.isVisible() && shape.hasName('field'))
+            .filter((shape) => Konva.Util.haveIntersection(pointRect, shape.getClientRect()))
+            .reverse();
+    }
+
+    #showFieldContextMenu(shapes, clientX, clientY) {
+        this.#hideFieldContextMenu();
+
+        const menu = $('<ul>', {
+            id: 'oe-field-context-menu',
+            class: 'dropdown-menu oe-field-context-menu'
+        });
+
+        shapes.forEach((shape) => {
+            const field = this.#fieldManager.findField(shape.id());
+            if (field === null) {
+                return;
+            }
+
+            $('<a>', {
+                href: '#',
+                text: this.#getFieldContextLabel(field),
+                'data-field-id': shape.id()
+            }).prepend($('<i>', {
+                class: this.#getFieldContextIcon(field)
+            })).appendTo($('<li>').appendTo(menu));
+        });
+
+        $('body').append(menu);
+        menu.css({
+            display: 'block',
+            left: clientX,
+            top: clientY
+        });
+
+        const maxLeft = Math.max(10, $(window).width() - menu.outerWidth() - 10);
+        const maxTop = Math.max(10, $(window).height() - menu.outerHeight() - 10);
+        menu.css({
+            left: Math.min(clientX, maxLeft),
+            top: Math.min(clientY, maxTop)
+        });
+
+        menu.on('click.oe-field-context-menu', 'a', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const field = this.#fieldManager.findField($(event.currentTarget).data('field-id'));
+            if (field !== null) {
+                this.#selectFieldShape(field.shape, false, false);
+            }
+            this.#hideFieldContextMenu();
+        });
+
+        setTimeout(() => {
+            $(document).off('mousedown.oe-field-context-menu keydown.oe-field-context-menu');
+            $(document).on('mousedown.oe-field-context-menu', (event) => {
+                if (event.button !== 0) {
+                    return;
+                }
+
+                if ($(event.target).closest('#oe-field-context-menu').length === 0) {
+                    this.#hideFieldContextMenu();
+                }
+            });
+            $(document).on('keydown.oe-field-context-menu', (event) => {
+                if (event.key === 'Escape') {
+                    this.#hideFieldContextMenu();
+                }
+            });
+        }, 0);
+    }
+
+    #hideFieldContextMenu() {
+        $('#oe-field-context-menu').remove();
+        $(document).off('mousedown.oe-field-context-menu keydown.oe-field-context-menu');
+    }
+
+    #getFieldContextLabel(field) {
+        if (field instanceof OETEXTFIELD) {
+            return ` Text: ${field.label || field.id}`;
+        }
+
+        if (field instanceof OEIMAGEFIELD) {
+            return ` Image: ${field.image || field.id}`;
+        }
+
+        if (field instanceof OERECTFIELD) {
+            return ` Rectangle: ${field.id}`;
+        }
+
+        return ` Field: ${field.id}`;
+    }
+
+    #getFieldContextIcon(field) {
+        if (field instanceof OETEXTFIELD) {
+            return 'fa-solid fa-font';
+        }
+
+        if (field instanceof OEIMAGEFIELD) {
+            return 'fa-regular fa-image';
+        }
+
+        if (field instanceof OERECTFIELD) {
+            return 'fa-regular fa-square';
+        }
+
+        return 'fa-solid fa-location-dot';
     }
 
     #dragStart(event) {
@@ -1466,8 +2375,24 @@ class OEUIMANAGER {
             }
 
             if (field !== null) {
+                
+                //this.#fieldManager.saveState();
+
                 field.x = shape.x() | 0
                 field.y = shape.y() | 0
+
+                this.#lastDragEndContext = {
+                    id: shape.id(),
+                    className: shape.getClassName(),
+                    x: shape.x() | 0,
+                    y: shape.y() | 0,
+                    tlx: (shape.x() - shape.offsetX()) | 0,
+                    tly: (shape.y() - shape.offsetY()) | 0,
+                    offsetX: shape.offsetX() | 0,
+                    offsetY: shape.offsetY() | 0,
+                    rotation: shape.rotation() | 0,
+                    timestamp: new Date().toISOString()
+                };
 
                 if (field.fieldType === 'rect') {
                     field.width = shape.width() | 0
@@ -1483,12 +2408,14 @@ class OEUIMANAGER {
                 if (this.#configManager.snapBackground) {
                     this.#snapRectangle.visible(false);
                 }
+
             }
 
         }
 
         this.checkFields();
         this.updateToolbar();
+        this.#refreshZIndexLabels();
     }
 
     checkFieldstimer() {
@@ -1561,7 +2488,7 @@ class OEUIMANAGER {
                     'id': fieldName,
                     'name': name,
                     'field': field,
-                    'type': result.fieldType
+                    'type': result.type
                 });
             }
         }
@@ -1673,21 +2600,33 @@ class OEUIMANAGER {
         this.updateToolbar();
     }
 
+    #doDeleteField() {
+        this.hidePropertyEditor()
+        this.#fieldManager.deleteFields(this.#transformer)
+        this.#transformer.nodes([])
+        this.setFieldOpacity(false)
+        this.#selected = null
+        this.setFieldOpacity(false)
+        this.updateToolbar()
+        this.#refreshZIndexLabels()
+    }
+
     #deleteField(event) {
-        bootbox.confirm({
-            message: 'Are you sure you wish to delete this field(s)?',
-            callback: (result) => {
-                if (result) {
-                    this.hidePropertyEditor()
-                    this.#fieldManager.deleteFields(this.#transformer)
-                    this.#transformer.nodes([])
-                    this.setFieldOpacity(false)
-                    this.#selected = null
-                    this.setFieldOpacity(false)
-                    this.updateToolbar()
+
+        if (this.#configManager.confirmDelete) {
+
+            bootbox.confirm({
+                message: 'Are you sure you wish to delete this field(s)?',
+                callback: (result) => {
+                    if (result) {
+                        this.#doDeleteField();
+                    }
                 }
-            }
-        })
+            })
+
+        } else {
+            this.#doDeleteField()
+        }
     }
 
     setZoom(type) {
@@ -1755,8 +2694,22 @@ class OEUIMANAGER {
     updateToolbar() {
 
         let selectedOverlay = this.#configManager.selectedOverlay;
+        const hasFieldSelection = this.#selected !== null || this.#transformer.nodes().length > 0;
         if (selectedOverlay.type === 'allsky' && !this.#debugMode)  {
             $('#oe-delete').addClass('disabled');
+            $('#oe-zorder-menu').addClass('disabled');
+            $('#oe-send-back').addClass('disabled');
+            $('#oe-move-back').addClass('disabled');
+            $('#oe-move-front').addClass('disabled');
+            $('#oe-send-front').addClass('disabled');
+            $('#oe-toggle-zindex').addClass('disabled');
+            $('#oe-align-menu').addClass('disabled');
+            $('#oe-left-align').addClass('disabled');
+            $('#oe-vertical-equal').addClass('disabled');
+            $('#oe-horizontal-equal').addClass('disabled');
+            $('#oe-group-menu').addClass('disabled');
+            $('#oe-group').addClass('disabled');
+            $('#oe-ungroup').addClass('disabled');
             $('#oe-save').addClass('disabled');
             $('#oe-add-text').addClass('disabled');
             $('#oe-add-image').addClass('disabled');
@@ -1769,10 +2722,24 @@ class OEUIMANAGER {
             $('#oe-options').addClass('disabled');            
         } else {        
             $('#oe-delete').removeClass('disabled');
+            $('#oe-zorder-menu').removeClass('disabled');
+            $('#oe-send-back').removeClass('disabled');
+            $('#oe-move-back').removeClass('disabled');
+            $('#oe-move-front').removeClass('disabled');
+            $('#oe-send-front').removeClass('disabled');
+            $('#oe-toggle-zindex').removeClass('disabled');
+            $('#oe-align-menu').removeClass('disabled');
+            $('#oe-left-align').removeClass('disabled');
+            $('#oe-vertical-equal').removeClass('disabled');
+            $('#oe-horizontal-equal').removeClass('disabled');
+            $('#oe-group-menu').removeClass('disabled');
+            $('#oe-group').removeClass('disabled');
+            $('#oe-ungroup').removeClass('disabled');
             $('#oe-save').removeClass('disabled');
             $('#oe-add-text').removeClass('disabled');
             $('#oe-add-image').removeClass('disabled');
             $('#oe-item-list').removeClass('disabled');
+            $('#oe-split-field').addClass('disabled');
             $('#oe-test-mode').removeClass('disabled');
             $('#oe-field-errors').removeClass('disabled');
             $('#oe-toobar-debug-button').removeClass('disabled');
@@ -1780,12 +2747,42 @@ class OEUIMANAGER {
             $('#oe-show-image-manager').removeClass('disabled');
             $('#oe-options').removeClass('disabled');            
 
-            if (this.#selected === null) {
+            if (!hasFieldSelection) {
                 $('#oe-delete').addClass('disabled');
                 $('#oe-delete').removeClass('green');
+                $('#oe-send-back').addClass('disabled');
+                $('#oe-move-back').addClass('disabled');
+                $('#oe-move-front').addClass('disabled');
+                $('#oe-send-front').addClass('disabled');
+                $('#oe-align-menu').addClass('disabled');
+                $('#oe-left-align').addClass('disabled');
+                $('#oe-vertical-equal').addClass('disabled');
+                $('#oe-horizontal-equal').addClass('disabled');
+                $('#oe-group-menu').addClass('disabled');
+                $('#oe-group').addClass('disabled');
+                $('#oe-ungroup').addClass('disabled');
             } else {
                 $('#oe-delete').removeClass('disabled');
                 $('#oe-delete').addClass('green');
+                $('#oe-zorder-menu').removeClass('disabled');
+                $('#oe-send-back').removeClass('disabled');
+                $('#oe-move-back').removeClass('disabled');
+                $('#oe-move-front').removeClass('disabled');
+                $('#oe-send-front').removeClass('disabled');
+
+                if (this.#selected !== null) {
+                    if (this.#selected.fieldType === 'fields') {                
+                        if (!this.#fieldManager.canSplitAny()) {
+                            $('#oe-split-field').addClass('hidden');
+                        } else {
+                            if (this.#selected.canSplit) {
+                                $('#oe-split-field').removeClass('hidden');
+                                $('#oe-split-field').removeClass('disabled');
+                            }                        
+                        }
+                    }
+                }
+
             }
 
             if (this.#fieldManager.dirty || this.#configManager.dirty) {
@@ -1805,21 +2802,21 @@ class OEUIMANAGER {
             }
 
             if (this.#transformer.nodes().length > 1) {
+                $('#oe-group-menu').removeClass('disabled');
                 $('#oe-group').removeClass('disabled');                
                 $('#oe-ungroup').removeClass('disabled');
+                $('#oe-align-menu').removeClass('disabled');
                 $('#oe-left-align').removeClass('disabled');
                 $('#oe-vertical-equal').removeClass('disabled');
+                $('#oe-horizontal-equal').removeClass('disabled');
             } else {
+                $('#oe-group-menu').addClass('disabled');
                 $('#oe-group').addClass('disabled');
                 $('#oe-ungroup').addClass('disabled');
+                $('#oe-align-menu').addClass('disabled');
                 $('#oe-left-align').addClass('disabled');
                 $('#oe-vertical-equal').addClass('disabled');
-            }
-
-            if (this.#fieldManager.allRects(this.#transformer)) {
-                $('#oe-equal-width').removeClass('disabled');    
-            } else {
-                $('#oe-equal-width').addClass('disabled');
+                $('#oe-horizontal-equal').addClass('disabled');
             }
         }
     }
@@ -1828,9 +2825,7 @@ class OEUIMANAGER {
         if (this.#debugPosMode) {
             this.#createDebugWindow();
         } else {
-            if ($('#debugdialog').hasClass('ui-dialog-content')) {
-                $('#debugdialog').dialog('destroy');
-            }
+            this.#hideFloatingDialog('#debugdialog');
         }
     }
 
@@ -1893,14 +2888,12 @@ class OEUIMANAGER {
                 dataType: 'json',
                 cache: false,
                 processData:false,
-                context: this,
-                beforeSend: function( xhr ) {
-                    $('#oe-fontupload-submit').addClass('disabled');
-                }                
+                context: this               
             }).done( (fontData) => {
                 $('#oe-fontupload-submit').removeClass('disabled');
                 for (let i = 0; i < fontData.length; i++) {
-                    let fontFace = new FontFace(fontData[i].key, 'url(' + window.oedi.get('BASEDIR') + fontData[i].path + ')');
+                    let fontUrl = (window.oedi.get('BASEDIR') + fontData[i].path).split('/').map(encodeURIComponent).join('/');
+                    let fontFace = new FontFace(fontData[i].key, 'url("' + fontUrl + '")');
                     fontFace.load();
                     document.fonts.add(fontFace);
                 }
@@ -2037,7 +3030,7 @@ class OEUIMANAGER {
             let result = document.fonts.delete(fontToDelete);
             if (result) {
                 $.ajax({
-                    url: 'includes/overlayutil.php?request=font&fontName=' + fontName,
+                    url: 'includes/overlayutil.php?request=Font&fontName=' + encodeURIComponent(fontName),
                     type: 'DELETE',
                     context: this
                 }).done((result) => {
@@ -2165,8 +3158,8 @@ class OEUIMANAGER {
 
     hidePropertyEditor() {
         if (this.#selected instanceof OETEXTFIELD) {
-            if ($("#textdialog").hasClass('ui-dialog-content')) {
-                $('#textdialog').dialog('close');
+            if (this.#isFloatingDialogVisible('#textdialog')) {
+                this.#hideFloatingDialog('#textdialog');
                 $('#textpropgrid').jqPropertyGrid('Destroy');
                 try {
                     $('#oe-default-font-colour').spectrum('Destroy');
@@ -2175,21 +3168,21 @@ class OEUIMANAGER {
         }
 
         if (this.#selected instanceof OEIMAGEFIELD) {
-            if ($("#imagedialog").hasClass('ui-dialog-content')) {
+            if (this.#isFloatingDialogVisible('#imagedialog')) {
                 $('#imagepropgrid').jqPropertyGrid('Destroy');
-                $('#imagedialog').dialog('close');
+                this.#hideFloatingDialog('#imagedialog');
             }
         }
 
         if (this.#selected instanceof OERECTFIELD) {
-            if ($("#rectdialog").hasClass('ui-dialog-content')) {
+            if (this.#isFloatingDialogVisible('#rectdialog')) {
                 $('#rectpropgrid').jqPropertyGrid('Destroy');
-                $('#rectdialog').dialog('close');
+                this.#hideFloatingDialog('#rectdialog');
             }
         }
 
-        if ($("#formatdialog").hasClass('ui-dialog-content')) {
-            $('#formatdialog').dialog('close');
+        if (this.#isFloatingDialogVisible('#formatdialog')) {
+            this.#hideFloatingDialog('#formatdialog');
         }
         
     }
@@ -2220,27 +3213,27 @@ class OEUIMANAGER {
 			}*/
 
             let textVisible = false;
-            if ($('#textdialog').closest('.ui-dialog').is(':visible')) {
+            if (this.#isFloatingDialogVisible('#textdialog')) {
                 textVisible = true;
             }
             let imageVisible = false;
-            if ($('#imagedialog').closest('.ui-dialog').is(':visible')) {
+            if (this.#isFloatingDialogVisible('#imagedialog')) {
                 imageVisible = true;
             }
             let rectVisible = false;
-            if ($('#rectdialog').closest('.ui-dialog').is(':visible')) {
+            if (this.#isFloatingDialogVisible('#rectdialog')) {
                 rectVisible = true;
             }
 
             if (this.#selected instanceof OETEXTFIELD) {
                 if (imageVisible) {
                     $('#imagepropgrid').jqPropertyGrid('Destroy');
-                    $('#imagedialog').dialog('close');
+                    this.#hideFloatingDialog('#imagedialog');
                     this.#createTextPropertyEditor();
                 }
                 if (rectVisible) {
                     $('#rectpropgrid').jqPropertyGrid('Destroy');
-                    $('#rectdialog').dialog('close');
+                    this.#hideFloatingDialog('#rectdialog');
                     this.#createTextPropertyEditor();
                 }
                 let strokeColour = this.#selected.stroke;
@@ -2266,13 +3259,13 @@ class OEUIMANAGER {
             }
             if (this.#selected instanceof OEIMAGEFIELD) {
                 if (textVisible) {
-                    $('#textdialog').dialog('close');
+                    this.#hideFloatingDialog('#textdialog');
                     $('#textpropgrid').jqPropertyGrid('Destroy');
                     this.#createImagePropertyEditor();                    
                 }
                 if (rectVisible) {
                     $('#rectpropgrid').jqPropertyGrid('Destroy');
-                    $('#rectdialog').dialog('close');
+                    this.#hideFloatingDialog('#rectdialog');
                     this.#createImagePropertyEditor();
                 }
                 $('#imagepropgrid').jqPropertyGrid('set', {
@@ -2287,13 +3280,13 @@ class OEUIMANAGER {
 
             if (this.#selected instanceof OERECTFIELD) {
                 if (textVisible) {
-                    $('#textdialog').dialog('close');
+                    this.#hideFloatingDialog('#textdialog');
                     $('#textpropgrid').jqPropertyGrid('Destroy');
                     this.#createRectPropertyEditor();                    
                 }
                 if (imageVisible) {
                     $('#imagepropgrid').jqPropertyGrid('Destroy');
-                    $('#imagedialog').dialog('close');
+                    this.#hideFloatingDialog('#imagedialog');
                     this.#createRectPropertyEditor();
                 }
                 $('#rectpropgrid').jqPropertyGrid('set', {
@@ -2476,13 +3469,10 @@ class OEUIMANAGER {
         };
 
         $('#rectpropgrid').jqPropertyGrid(rectData, options);
-        $('#rectdialog').dialog({
-            resizable: false,
-            closeOnEscape: false,
+        this.#showFloatingDialog('#rectdialog', {
             width: 350,
-            beforeClose: function (event, ui) {
-                let uiManager = window.oedi.get('uimanager');
-                uiManager.setFieldOpacity(false);
+            beforeClose: () => {
+                this.setFieldOpacity(false);
             }
         });
 
@@ -2520,15 +3510,101 @@ class OEUIMANAGER {
 		let configManager = window.oedi.get('config')
 		let types = configManager.getTypes(true)
 
+        $(document).off('click', '#oe-swap-field');
+        $(document).on('click', '#oe-swap-field', (e) => {
+            $.allskyVariable({
+                id: 'var',
+                variable: '',
+				stateKey: 'as-oe',
+                fonts: this.#fonts,
+                defaultFont: this.#configManager.getValue('settings.defaultfont'),
+                defaultFontSize: this.#configManager.getValue('settings.defaultfontsize'),
+                showBlocks: false,
+                variableSelected: (variable, type) => {
+                    variable = '${' + variable + '}';
+                    this.#selected.label = variable;
+                    this.#selected.type = type;                    
+                    this.updatePropertyEditor()
+                    this.updateToolbar()
+                    if (this.testMode) {
+                        this.enableTestMode()
+                    }
+                }
+            })
+        });
+
+        $(document).off('click', '#oe-edit-label-field');
+        $(document).on('click', '#oe-edit-label-field', () => {
+            const $field = $('#pgtextlabel');
+            const $dialog = $('#oe-text-edit-dialog');
+
+            $dialog.data('target', '#pgtextlabel');
+            $('#oe-text-edit-dialog-value').val($field.val());
+            $dialog.modal('show');
+        });
+
+        $('#oe-text-edit-dialog').off('hidden.bs.modal');
+        $('#oe-text-edit-dialog').on('hidden.bs.modal', () => {
+            const $dialog = $('#oe-text-edit-dialog');
+            const target = $dialog.data('target');
+
+            if (!target) {
+                return;
+            }
+
+            const $field = $(target);
+            if ($field.length === 0) {
+                $dialog.removeData('target');
+                return;
+            }
+
+            const value = $('#oe-text-edit-dialog-value').val();
+            if ($field.val() !== value) {
+                $field.val(value);
+                $field.trigger('input');
+                $field.trigger('change');
+            }
+
+            $dialog.removeData('target');
+        });
+
+        $(document).off('click', '#oe-text-edit-dialog-apply');
+        $(document).on('click', '#oe-text-edit-dialog-apply', () => {
+            $('#oe-text-edit-dialog').modal('hide');
+        });
+
+        $(document).off('click', '#oe-format-field');
+        $(document).on('click', '#oe-format-field', (e) => {
+		    let selected = this.#selected
+            let type = selected.type;
+            this.#createFormatHelpWindow(type);            
+        });
+
 		var textConfig = {
-            label: { group: 'Label', name: 'Item', type: 'text' },
-            type: { group: 'Label', name: 'type', type: 'options', options: types },
-            format: { group: 'Label', name: 'Format', type: 'text', helpcallback: function (name) {
+            label: { 
+                group: 'Label', 
+                name: 'Item', 
+                type: 'text', 
+                postHTML: '<button type="button" id="oe-swap-field" class="btn btn-primary btn-sm btn-oe-small"><i class="fa-solid fa-arrow-right-arrow-left"></i></button><button type="button" id="oe-edit-label-field" class="btn btn-primary btn-sm btn-oe-small"><i class="fa-solid fa-pen-to-square"></i></button>' 
+            },
+            type: { 
+                group: 'Label', 
+                name: 'type', 
+                type: 'options', 
+                options: types
+            },
+            format: { 
+                group: 'Label', 
+                name: 'Format', 
+                type: 'text', 
+                postHTML: '<button type="button" id="oe-format-field" class="btn btn-primary btn-sm btn-oe-small"><i class="fa-solid fa-square-root-variable"></i></button>' 
+            },
+            /*format: { group: 'Label', name: 'Format', type: 'text', helpcallback: function (name) {
                 let uiManager = window.oedi.get('uimanager')
 				let selected = uiManager.#selected
                 let type = selected.type;
                 uiManager.#createFormatHelpWindow(type);
-            }},
+            }},*/
             sample: { group: 'Label', name: 'Sample', type: 'text' },
             empty: { group: 'Label', name: 'Empty Value', type: 'text' },
 
@@ -2591,12 +3667,7 @@ class OEUIMANAGER {
             }
             uiManager.checkFieldBounds(field.shape, uiManager.editorStage , uiManager.transformer);
 
-            // If we are in test mode then re enable it after the field has ben updated
-            if (uiManager.testMode) {
-                uiManager.enableTestMode();
-            }
             uiManager.updateToolbar();
-
         }
 
         var options = {
@@ -2606,14 +3677,10 @@ class OEUIMANAGER {
         };
 
         $('#textpropgrid').jqPropertyGrid(textData, options);
-        $('#textdialog').dialog({
-            resizable: false,
-            closeOnEscape: false,
-            width: 350,
-            beforeClose: function (event, ui) {
-                let uiManager = window.oedi.get('uimanager');
-               // uiManager.selected = null;
-                uiManager.setFieldOpacity(false);
+        this.#showFloatingDialog('#textdialog', {
+            width: 400,
+            beforeClose: () => {
+                this.setFieldOpacity(false);
             }
         });
     }
@@ -2669,8 +3736,6 @@ class OEUIMANAGER {
                 });
             }
 
-            
-
             uiManager.updateToolbar();
         }
 
@@ -2682,13 +3747,8 @@ class OEUIMANAGER {
         };
 
         $('#imagepropgrid').jqPropertyGrid(imageData, options);
-        $('#imagedialog').dialog({
-            resizable: false,
-            closeOnEscape: false,
-            beforeClose: function (event, ui) {
-                let uiManager = window.oedi.get('uimanager');
-               // uiManager.selected = null;
-            }
+        this.#showFloatingDialog('#imagedialog', {
+            width: 380
         });
     }
 
@@ -2712,6 +3772,299 @@ class OEUIMANAGER {
         var rotatedY = Math.sin(angle) * (pt.x - o.x) + Math.cos(angle) * (pt.y - o.y) + o.y;  
       
         return {x: rotatedX, y: rotatedY};
+    }
+
+    #roundDebugValue(value, digits = 2) {
+        if (!Number.isFinite(value)) {
+            return value;
+        }
+        return Number(value.toFixed(digits));
+    }
+
+    #buildFieldDebugSummary(field) {
+        const shape = field.shape;
+        const gridSize = Number(this.#configManager.gridSize) || 0;
+        const clientRect = shape.getClientRect();
+        const rawTopLeft = {
+            x: shape.x() - shape.offsetX(),
+            y: shape.y() - shape.offsetY()
+        };
+        const rotatedTopLeft = this.rotatePoint(
+            rawTopLeft,
+            { x: shape.x(), y: shape.y() },
+            shape.rotation()
+        );
+        const outOfBounds = this.isFieldOutsideViewport(field);
+        const snappedTopLeft = gridSize > 0 ? {
+            x: Math.round(rawTopLeft.x / gridSize) * gridSize,
+            y: Math.round(rawTopLeft.y / gridSize) * gridSize
+        } : null;
+        const savePreview = field.getJSON();
+        if (field instanceof OEIMAGEFIELD || field instanceof OERECTFIELD) {
+            delete savePreview.src;
+        }
+
+        const warnings = [];
+        if (Math.abs(field.x - shape.x()) > 0.5 || Math.abs(field.y - shape.y()) > 0.5) {
+            warnings.push('stored x/y differ from shape x/y');
+        }
+        if (Math.abs(field.tlx - rotatedTopLeft.x) > 1 || Math.abs(field.tly - rotatedTopLeft.y) > 1) {
+            warnings.push('stored tlx/tly differ from rotated top-left');
+        }
+        if (!Number.isFinite(field.x) || !Number.isFinite(field.y) || !Number.isFinite(field.tlx) || !Number.isFinite(field.tly)) {
+            warnings.push('non-finite coordinate detected');
+        }
+
+        return {
+            id: field.id,
+            type: field instanceof OEIMAGEFIELD ? 'image' : (field instanceof OERECTFIELD ? 'rect' : 'text'),
+            fieldType: field.fieldType,
+            label: field.label ?? null,
+            image: field.image ?? null,
+            group: field.group,
+            loaded: field.loaded,
+            dirty: field.dirty,
+            canSplit: typeof field.canSplit === 'boolean' ? field.canSplit : null,
+            splitTokens: field.split ?? null,
+            x: this.#roundDebugValue(field.x),
+            y: this.#roundDebugValue(field.y),
+            tlx: this.#roundDebugValue(field.tlx),
+            tly: this.#roundDebugValue(field.tly),
+            calcX: this.#roundDebugValue(typeof field.calcX === 'number' ? field.calcX : null),
+            calcY: this.#roundDebugValue(typeof field.calcY === 'number' ? field.calcY : null),
+            offsetX: this.#roundDebugValue(shape.offsetX()),
+            offsetY: this.#roundDebugValue(shape.offsetY()),
+            shapeX: this.#roundDebugValue(shape.x()),
+            shapeY: this.#roundDebugValue(shape.y()),
+            width: this.#roundDebugValue(shape.width()),
+            height: this.#roundDebugValue(shape.height()),
+            clientRect: {
+                x: this.#roundDebugValue(clientRect.x),
+                y: this.#roundDebugValue(clientRect.y),
+                width: this.#roundDebugValue(clientRect.width),
+                height: this.#roundDebugValue(clientRect.height)
+            },
+            rotation: this.#roundDebugValue(shape.rotation()),
+            scale: field instanceof OEIMAGEFIELD ? this.#roundDebugValue(field.scale, 3) : null,
+            rawTopLeft: {
+                x: this.#roundDebugValue(rawTopLeft.x),
+                y: this.#roundDebugValue(rawTopLeft.y)
+            },
+            rotatedTopLeft: {
+                x: this.#roundDebugValue(rotatedTopLeft.x),
+                y: this.#roundDebugValue(rotatedTopLeft.y)
+            },
+            snappedTopLeft: snappedTopLeft === null ? null : {
+                x: this.#roundDebugValue(snappedTopLeft.x),
+                y: this.#roundDebugValue(snappedTopLeft.y)
+            },
+            isSnapped: snappedTopLeft === null ? null : (
+                Math.abs(rawTopLeft.x - snappedTopLeft.x) < 1 &&
+                Math.abs(rawTopLeft.y - snappedTopLeft.y) < 1
+            ),
+            outOfBounds,
+            savePreview,
+            warnings
+        };
+    }
+
+    #buildRuntimeDiagnostics() {
+        const fields = [];
+        const savePreview = {
+            fields: [],
+            images: [],
+            rects: []
+        };
+        const inconsistentFields = [];
+        const typeCounts = {
+            text: 0,
+            image: 0,
+            rect: 0
+        };
+        const groups = new Set();
+        const splitCapableFields = [];
+        const unloadedFields = [];
+        const dirtyFields = [];
+        const outOfBoundsFields = [];
+        const fieldIds = [];
+        const labelCollisions = {};
+        const bounds = {
+            minX: null,
+            minY: null,
+            maxX: null,
+            maxY: null
+        };
+
+        for (let [fieldName, field] of this.#fieldManager.fields.entries()) {
+            const summary = this.#buildFieldDebugSummary(field);
+            fields.push(summary);
+            fieldIds.push(summary.id);
+            if (summary.type === 'text') {
+                typeCounts.text += 1;
+                savePreview.fields.push(summary.savePreview);
+            } else if (summary.type === 'image') {
+                typeCounts.image += 1;
+                savePreview.images.push(summary.savePreview);
+            } else if (summary.type === 'rect') {
+                typeCounts.rect += 1;
+                savePreview.rects.push(summary.savePreview);
+            }
+            if (summary.group !== null && summary.group !== undefined) {
+                groups.add(summary.group);
+            }
+            if (summary.canSplit) {
+                splitCapableFields.push({
+                    id: summary.id,
+                    label: summary.label ?? summary.id,
+                    splitTokens: summary.splitTokens
+                });
+            }
+            if (!summary.loaded) {
+                unloadedFields.push({
+                    id: summary.id,
+                    label: summary.label ?? summary.image ?? summary.id,
+                    type: summary.type
+                });
+            }
+            if (summary.dirty) {
+                dirtyFields.push({
+                    id: summary.id,
+                    label: summary.label ?? summary.image ?? summary.id,
+                    type: summary.type
+                });
+            }
+            if (summary.label !== null) {
+                labelCollisions[summary.label] = (labelCollisions[summary.label] ?? 0) + 1;
+            }
+            if (summary.clientRect !== null) {
+                const minX = summary.clientRect.x;
+                const minY = summary.clientRect.y;
+                const maxX = summary.clientRect.x + summary.clientRect.width;
+                const maxY = summary.clientRect.y + summary.clientRect.height;
+
+                bounds.minX = bounds.minX === null ? minX : Math.min(bounds.minX, minX);
+                bounds.minY = bounds.minY === null ? minY : Math.min(bounds.minY, minY);
+                bounds.maxX = bounds.maxX === null ? maxX : Math.max(bounds.maxX, maxX);
+                bounds.maxY = bounds.maxY === null ? maxY : Math.max(bounds.maxY, maxY);
+            }
+            if (summary.warnings.length > 0 || summary.outOfBounds.outOfBounds) {
+                const inconsistentField = {
+                    id: summary.id,
+                    label: summary.label ?? summary.image ?? summary.id,
+                    warnings: summary.warnings,
+                    outOfBounds: summary.outOfBounds
+                };
+                inconsistentFields.push(inconsistentField);
+                if (summary.outOfBounds.outOfBounds) {
+                    outOfBoundsFields.push(inconsistentField);
+                }
+            }
+        }
+
+        const transformerNodes = this.#transformer.nodes().map((node) => ({
+            id: node.id(),
+            className: node.getClassName()
+        }));
+        const selectionRectVisible = this.#selectionRect.visible();
+        const selectionRect = {
+            visible: selectionRectVisible,
+            x: this.#roundDebugValue(this.#selectionRect.x()),
+            y: this.#roundDebugValue(this.#selectionRect.y()),
+            width: this.#roundDebugValue(this.#selectionRect.width()),
+            height: this.#roundDebugValue(this.#selectionRect.height())
+        };
+        const stagePosition = this.#oeEditorStage.position();
+        const backgroundRect = this.#backgroundImage.getClientRect();
+        const duplicateLabels = Object.entries(labelCollisions)
+            .filter(([, count]) => count > 1)
+            .map(([label, count]) => ({ label, count }));
+
+        return {
+            overlay: {
+                selectedOverlay: this.#configManager.selectedOverlay,
+                fieldCount: fields.length,
+                fieldIds,
+                fieldTypeCounts: typeCounts,
+                groupCount: groups.size,
+                splitCapableFieldCount: splitCapableFields.length,
+                splitCapableFields,
+                unloadedFieldCount: unloadedFields.length,
+                unloadedFields,
+                dirtyFieldCount: dirtyFields.length,
+                dirtyFields,
+                errorFieldCount: this.#errorFields.length,
+                errorFields: this.#errorFields.map((field) => ({
+                    id: field.id,
+                    name: field.name,
+                    type: field.type
+                })),
+                duplicateLabels,
+                occupiedBounds: bounds,
+                outOfBoundsFieldCount: outOfBoundsFields.length,
+                outOfBoundsFields
+            },
+            editorState: {
+                debugMode: this.#debugMode,
+                debugPositionMode: this.#debugPosMode,
+                testMode: this.#testMode,
+                dirty: this.dirty,
+                configDirty: this.#configManager.dirty,
+                fieldDirty: this.#fieldManager.dirty,
+                stageMode: this.#stageMode,
+                stageScale: this.#roundDebugValue(this.#stageScale, 4),
+                stageDraggable: this.#oeEditorStage.draggable(),
+                stagePosition: {
+                    x: this.#roundDebugValue(stagePosition.x),
+                    y: this.#roundDebugValue(stagePosition.y)
+                },
+                viewport: {
+                    width: $('#oe-viewport').width() ?? null,
+                    height: $('#oe-viewport').height() ?? null
+                },
+                stageSize: {
+                    width: this.#oeEditorStage.width(),
+                    height: this.#oeEditorStage.height()
+                },
+                backgroundImage: {
+                    width: this.#backgroundImage.width(),
+                    height: this.#backgroundImage.height(),
+                    clientRect: {
+                        x: this.#roundDebugValue(backgroundRect.x),
+                        y: this.#roundDebugValue(backgroundRect.y),
+                        width: this.#roundDebugValue(backgroundRect.width),
+                        height: this.#roundDebugValue(backgroundRect.height)
+                    },
+                    opacity: this.#roundDebugValue(this.#backgroundImage.opacity(), 3)
+                },
+                selection: {
+                    active: this.#selectionActive,
+                    transformerNodeCount: transformerNodes.length,
+                    transformerNodes,
+                    selectionRect
+                }
+            },
+            gridAndSnap: {
+                visible: this.#configManager.gridVisible,
+                size: Number(this.#configManager.gridSize) || 0,
+                colour: this.#configManager.gridColour,
+                opacity: this.#configManager.gridOpacity,
+                snapBackground: this.#configManager.snapBackground,
+                snapRectangleVisible: this.#snapRectangle?.visible() ?? false
+            },
+            interactionContext: {
+                lastMouse: this.#lastMouseContext,
+                lastDragEnd: this.#lastDragEndContext,
+                lastTransformEnd: this.#lastTransformEndContext
+            },
+            configSnapshot: {
+                app: this.#configManager.appConfig,
+                layoutDefaults: this.#configManager.config,
+                fieldDefinitions: this.#configManager.dataFields
+            },
+            savePreview,
+            inconsistentFields,
+            fields
+        };
     }
 
     updateDebugWindow() {
@@ -2832,15 +4185,17 @@ class OEUIMANAGER {
         };
 
         $('#debugpropgrid').jqPropertyGrid(debugData, options);
-        $('#debugdialog').dialog({
-            resizable: false,
-            closeOnEscape: false,
+        this.#showFloatingDialog('#debugdialog', {
+            width: 380
         });
     }
 
     #createFormatHelpWindow(type) {
 		var filterType = type
-        $('#formatlisttable').DataTable().destroy()
+        var fType = ''		// ECC testing
+        if ($.fn.DataTable.isDataTable('#formatlisttable')) {
+            $('#formatlisttable').DataTable().destroy()
+        }
         $('#formatlisttable').removeClass('hidden')
         $(document).off('click', '.oe-format-replace')
         $(document).off('click', '.oe-format-add')
@@ -2867,6 +4222,8 @@ class OEUIMANAGER {
 
 				$('#oe-format-filters').off('change')			
 				$('#oe-format-filters').on('change', function() {
+	filterType = this.value;	// ECC testing
+	//x console.log("Got change, value=", this.value);
 					if (this.value === 'all') {
 						formatTable.column(3).search('').draw()
 					} else {
@@ -2880,7 +4237,7 @@ class OEUIMANAGER {
 					url: 'includes/overlayutil.php?request=Formats',
 					dataType: 'json'
 				},
-                order: [[3, 'asc']],
+                order: [[4, 'asc']],
                 paging: false,
 				scrollY: '25vh',
 				scrollCollapse: true,
@@ -2888,7 +4245,7 @@ class OEUIMANAGER {
 				columns: [
 					{ 
 						data: 'format',
-						width: '15%',
+						width: '20%',
                         render: function(data, type, row, meta) {
                             let result = data
                             if (row.value !== '') {
@@ -2906,7 +4263,10 @@ class OEUIMANAGER {
 						width: '20%'					
 					},                  
 					{ 
-						data: 'type',
+                        data: function(data, type) {
+                            fType = data.type.charAt(0).toUpperCase() + data.type.slice(1);
+							return fType;
+						},
 						visible: false
 					},
 					{ 
@@ -2921,11 +4281,13 @@ class OEUIMANAGER {
 						render: function (item, type, row, meta) {
                             let buttons = '';
                             if (item.legacy !== 'Legacy') {
-                                let buttonReplace = '<button type="button" title="Replace Format" class="btn btn-success btn-xs oe-format-replace" data-index="' + meta.row + '" data-format="' + item.format + '"><i class="fa-solid fa-right-to-bracket"></i></button>';
+                                let icon = '<i class="fa-solid fa-right-to-bracket"></i></button>';
+                                let buttonReplace = '<button type="button" title="Replace Format" class="btn btn-success btn-xs oe-format-replace" data-index="' + meta.row + '" data-format="' + item.format + '">' + icon + '</button>';
                                 let buttonAdd = ''
 
                                 if (row.stackable) {
-                                    buttonAdd = '<button type="button" title="Add to format" class="btn btn-primary btn-xs oe-format-add" data-format="' + item.format + '"><i class="fa-solid fa-plus"></i></button>';
+                                    icon = '<i class="fa-solid fa-plus"></i></button>';
+                                    buttonAdd = '<button type="button" title="Add to format" class="btn btn-primary btn-xs oe-format-add" data-format="' + item.format + '">' + icon + '</button>';
                                 }
                                 
                                 buttons = '<div class="btn-group">' + buttonReplace + buttonAdd + '</div>';
@@ -2937,21 +4299,33 @@ class OEUIMANAGER {
                     rowGroup: {
                         dataSrc: 'legacy',
                         startRender: function (rows, group) {
-                            if (group == 'No group') {
-                                group = 'Available Formats';
-                            }                            
+                            // TODO: Only show "Available Formats" if showing all filters (filterType == "all").
+							let label = '';
+							let showHeader = true;
+							if (filterType !== "all" && group !== 'Legacy') {
+								showHeader = false;
+							}
+		//x console.log("filterType=" + filterType, " group=" + group, " showHeader=", showHeader);
+                            if (group === 'No group') {
+                                group = '<u>Available Formats';
+                                // TODO: FIX: this works except when "Show All" is selected, then every group says "Temperature"
+                                // group += ' for ' + fType;
+                                group += '</u>';
+								label = "<br>";
+                            }
                             var collapsed = !!legacyCollapsedGroups[group];
                             
-                            let icon = collapsed ? '<i class="fa-solid fa-angles-right"></i>' : '<i class="fa-solid fa-angles-down"></i>';
                             rows.nodes().each(function (r) {
                                 r.style.display = collapsed ? 'none' : '';
                             });    
 
-                            if (group === 'Legacy') {
-                                group = 'Legacy Formats - NO NOT USE';
+                            if (group === 'Legacy') {	// TODO: Add filter name if "Show All" is selected.
+                                group = 'Legacy Formats - DO NOT USE';
                             }
+                            let icon = collapsed ? '<i class="fa-solid fa-angles-right"></i>' : '<i class="fa-solid fa-angles-down"></i>';
+							if (showHeader) label += icon + ' ' + group;
                             return $('<tr/>')
-                                .append('<td colspan="9">' + icon + ' ' + group + '</td>')
+                                .append('<td colspan="9">' + label + '</td>')
                                 .attr('data-name', group)
                                 .toggleClass('collapsed', collapsed);
                         }
@@ -2965,19 +4339,19 @@ class OEUIMANAGER {
                 formatTable.draw(false);
             });  
 
-        $('#formatdialog').dialog({
-            resizable: false,
-            closeOnEscape: false,
+        this.#showFloatingDialog('#formatdialog', {
             width: 900,
-            close: function(event, ui) {
+            onClose: () => {
 				$(document).off('click', '.oe-format-replace')
 				$(document).off('click', '.oe-format-add')
 				$(document).off('click', '#oe-format-filters-close')
 				$('#oe-format-filters').off('change')
 				$('#formatlisttable').off('preXhr.dt')
-				$('#formatlisttable').off('xhr.dt')					
-				$('#formatlisttable').DataTable().destroy()
-			}			
+				$('#formatlisttable').off('xhr.dt')
+                if ($.fn.DataTable.isDataTable('#formatlisttable')) {
+    				$('#formatlisttable').DataTable().destroy()
+                }
+			}
         })
         
 		$(document).off('click', '.oe-format-replace')
@@ -2992,7 +4366,7 @@ class OEUIMANAGER {
             const table = $('#formatlisttable').DataTable();
             const rowData = table.row(index).data();
 
-            if (rowData.format === 'customdate') {
+            if (rowData.format === 'customdate' || rowData.format === 'Custom date') {
                 $.fn.dateFormatBuilder({
                     onSave: function (format) {
                         let uiManager = window.oedi.get('uimanager')
@@ -3009,7 +4383,7 @@ class OEUIMANAGER {
                         data: jsonData,
                         keys: keys,
                         initialValues: format,
-                        title: 'Configure Format Options',
+                        title: 'Configure Format "' + rowData.format + '" Options',
                         onSubmit: function (resultString) {
                             let uiManager = window.oedi.get('uimanager')
                             //let format = '{' + $(event.currentTarget).data('format') + '}'
@@ -3032,7 +4406,7 @@ class OEUIMANAGER {
 
         $(document).off('click', '#oe-format-filters-close')		
         $(document).on('click', '#oe-format-filters-close', (event) => {
-			$('#formatdialog').dialog('close')
+			this.#hideFloatingDialog('#formatdialog')
         })
 		
     }

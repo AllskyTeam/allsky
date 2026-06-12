@@ -252,7 +252,7 @@ function add_options_field($field, $options, $setting) {
 			$options_str .= "\n";
 
 		} else {	// single value - check it for _values, etc.
-			if ($opt === "${setting}_values") {
+			if ($opt === "{$setting}_values") {
 				handle_options($setting);
 			}
 		}
@@ -409,9 +409,9 @@ foreach ($repo_array as $repo) {
 	$type = getVariableOrDefault($repo, "type", null);
 	if ($name === $endSetting) {
 		$options_str .= "{\n";
-		$options_str .= "${q}name${q} : ${q}$name${q},\n";
-		$options_str .= "${q}type${q} : ${q}$type${q},\n";
-		$options_str .= "${q}display${q} : false\n";
+		$options_str .= "{$q}name{$q} : {$q}$name{$q},\n";
+		$options_str .= "{$q}type{$q} : {$q}$type{$q},\n";
+		$options_str .= "{$q}display{$q} : false\n";
 		$options_str .= "}\n";
 		break;		// hit the end
 	}
@@ -515,7 +515,7 @@ if ($settings_file !== "") {
 	$cameraModel = str_replace(" ", "_", $cameraModel);
 
 	// e.g., "settings_ZWO_ASI123.json"
-	$cameraSpecificSettingsName = "${FileName}_${cameraType}_${cameraModel}.${FileExt}";
+	$cameraSpecificSettingsName = "{$FileName}_{$cameraType}_{$cameraModel}.{$FileExt}";
 
 	$fullSpecificFileName = dirname($settings_file) . "/$cameraSpecificSettingsName";
 	$specificFileExists =  file_exists($fullSpecificFileName);

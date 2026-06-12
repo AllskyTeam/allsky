@@ -1,0 +1,14 @@
+{
+    "backupDirectory": "/home/pi/allskybackups",
+    "backupTargets": [
+        "/config/settings.json",
+        "/config/cc.json",
+        "/config/overlay/mytemplates/*",
+        "/config/overlay/images/*",
+        "/config/overlay/imagethumbnails/*",
+        "/config/overlay/fonts/*",
+        "/config/overlay/config/*",
+        "/config/modules/*",
+        "./env.json"
+    ]
+}

@@ -1,5 +1,10 @@
 <?php
 
+if (basename(__FILE__) === basename($_SERVER['SCRIPT_FILENAME'])) {
+    include_once('functions.php');
+    redirect("/index.php");
+}
+
 $debug = false;
 
 // Get the json for the given file if we haven't already and return a pointer to the data.
@@ -130,7 +135,7 @@ function setValue($name, $value, $type) {
 	}
 }
 
-// Return the file name after accounting for any ${} variables.
+// Return the file name after accounting for any ${} shell variables.
 // Since there will often only be one file used by multiple settings,
 // as an optimization save the last name.
 $lastFileName = null;
@@ -164,7 +169,7 @@ function DisplayAllskyConfig() {
 	global $endSetting;
 	global $saveChangesLabel;
 	global $forceRestart;
-	global $pageHeaderTitle, $pageIcon;
+	global $pageHeaderTitle, $pageIcon, $pageHelp;
 
 	$cameraTypeName = "cameratype";			// json setting name
 	$cameraModelName = "cameramodel";		// json setting name
@@ -572,8 +577,8 @@ if ($debug) {
 					$ok = runCommand($CMD, "", "success", false, "", $return_val);
 
 					$msg = "";
-					// EXIT_PARTIAL_OK means there were problem(s) and nothing changed.
-					if ($return_val === EXIT_PARTIAL_OK) {
+					// ALLSKY_EXIT_PARTIAL_OK means there were problem(s) and nothing changed.
+					if ($return_val === ALLSKY_EXIT_PARTIAL_OK) {
 						$ok = false;
 					} else {
 						// If Allsky needs to be configured again, e.g., a new camera type/model,
@@ -651,11 +656,11 @@ if ($debug) {
 							$moreArgs .= " --allFiles";
 
 						// postData.sh will output necessary messages.
-						$cmd = "${CMD}/postData.sh --from WebUI $cmdDebugArg $moreArgs";
+						$cmd = "{$CMD}/postData.sh --from WebUI $cmdDebugArg $moreArgs";
 						$worked = runCommand($cmd, "", "success", false);
 
 						if ($fromConfiguration) {
-							$cmd = "${CMD}/checkAllsky.sh --fromWebUI";
+							$cmd = "{$CMD}/checkAllsky.sh --fromWebUI";
 							echo '<script>console.log(`Running: ' . $cmd . '`);</script>';
 							exec("$cmd 2>&1", $result, $return_val);
 							// Only 1 line is just an "ok" line so don't record.
@@ -751,24 +756,27 @@ if ($debug) {
 	if ($formReadonly != "readonly") $settingsDescription = "";
 ?>
 
-<div class="panel panel-allsky" id="settingsPanel">
+<div class="panel panel-allsky allow-select" id="settingsPanel">
 <?php
 	if ($formReadonly == "readonly") {
 		$x = "(READ ONLY) &nbsp; &nbsp; ";
 	} else {
 		$x = "<i class='$pageIcon'></i> ";
 	}
-	echo "<div class='panel-heading'>$x $pageHeaderTitle for &nbsp;<b>$cameraType $cameraModel</b></div>";
-	echo "<div class='panel-body' style='padding: 5px;'>";
+	echo "<div class='panel-heading clearfix'>";
+		echo "<span>$x $pageHeaderTitle for &nbsp;<b>$cameraType $cameraModel</b></span>";
+		if (!empty($pageHelp)) { doHelpLink(htmlspecialchars($pageHelp, ENT_QUOTES)); }
+	echo "</div>";
+	echo "<div class='panel-body'>";
 	if ($formReadonly != "readonly") {
 		echo "<div id='messages'>";
 			$status->showMessages();
 		echo "</div>";
 		$t = time();
-		echo "<form method='POST' action='${ME}?_ts=${t}' name='conf_form'>";
+		echo "<form method='POST' action='{$ME}?_ts={$t}' name='conf_form'>";
 ?>
 		<div class="sticky settings-nav">
-			<div class="settings-buttons container-fluid">
+			<div class="settings-buttons container-fluid" style="padding-left: 0; padding-right: 0;">
 				<div class="row">
 					<div class="col-md-11 col-sm-11 col-xs-11 nowrap buttons">
 						<button type="submit" class="btn btn-primary"
@@ -779,7 +787,7 @@ if ($debug) {
 						<button type="submit" class="btn ml-3 btn-warning"
 								id="settings-reset" name="reset_settings"
 								title="Reset to default values">
-							<i class="fa-solid fa-rotate-left"></i> Reset to default values
+							<i class="fa-solid fa-rotate-left"></i> Reset to defaults
 						</button>
 					</div>
 					
@@ -936,7 +944,7 @@ if ($debug) { echo ": &nbsp; value=$value"; }
 					$shortMsg = getVariableOrDefault($error_array_short, $name, "");
 
 					if ($shortMsg == "" && $value !== "") {
-//x echo "<br>=== Checking $name: value=$value, type=${type_array[$name]}";
+//x echo "<br>=== Checking $name: value=$value, type={$type_array[$name]}";
 						$e = checkType($name,
 								$value,
 								$value,
@@ -1157,15 +1165,15 @@ if ($debug) { echo ": &nbsp; value=$value"; }
 							$type == "float" || $type == "percent") {
 								$type = "text";
 						}
-						echo "\n\t\t<input class='form-control boxShadow settingInput settingInputTextNumber'" .
+						echo "\n\t\t<input class='form-control settingInput settingInputTextNumber'" .
 							" type='$type' $readonly $readonlyForm name='$name' value='$value' >";
 
 					} else if ($type == "widetext"){
-						echo "\n\t\t<input class='form-control boxShadow settingInputWidetext'" .
+						echo "\n\t\t<input class='form-control settingInputWidetext'" .
 							" type='text' $readonlyForm name='$name' value='$value'>";
 
 					} else if ($type == "select"){
-						echo "\n\t\t<select class='form-control boxShadow settingInput settingInputSelect'" .
+						echo "\n\t\t<select class='form-control settingInput settingInputSelect'" .
 							" $readonlyForm name='$name'>";
 						foreach($option['options'] as $opt){
 							$val = getVariableOrDefault($opt, 'value', "?");
@@ -1179,7 +1187,7 @@ if ($debug) { echo ": &nbsp; value=$value"; }
 						echo "</select>";
 
 					} else if ($type == "boolean"){
-						echo "\n\t\t<div class='switch-field boxShadow settingInput settingInputBoolean'>";
+						echo "\n\t\t<div class='switch-field settingInput settingInputBoolean'>";
 							echo "\n\t\t<input id='switch_no_$name' class='form-control' type='radio' ".
 								"$readonlyForm name='$name' value='false' ".
 								($value == "false" ? " checked " : "").  ">";
@@ -1306,7 +1314,6 @@ if ($debug) { echo ": &nbsp; value=$value"; }
 
 <?php
 	if (! $formReadonly)
-		echo '<script src="js/settings.js"></script>';
-
+		echo addAsset('js/settings.js');
 }
 ?>

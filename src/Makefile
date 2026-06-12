@@ -135,6 +135,7 @@ deps install uninstall:
 	@echo "This must be run with root permissions."
 	@echo "Please run 'sudo make $@'."
 else
+	# The functionality of "deps" is now done in install.sh, where it can be skipped if already done.
 deps:
 	@echo "`date +%F\ %R:%S` Installing build dependencies..."
 	@apt -y install libopencv-dev libusb-dev libusb-1.0-0-dev

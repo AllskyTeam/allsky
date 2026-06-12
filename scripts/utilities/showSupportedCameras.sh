@@ -7,12 +7,13 @@
 ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck source-path=.
-source "${ALLSKY_HOME}/variables.sh"		|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"		|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 OK="true"
 DO_HELP="false"
+HTML="false"
 DO_ZWO="false"
 DO_RPI="false"
 ZWO_FILE="${ALLSKY_HOME}/src/lib/armv7/libASICamera2.a"
@@ -21,6 +22,9 @@ while [[ $# -gt 0 ]]; do
 	case "${ARG,,}" in
 		--help)
 			DO_HELP="true"
+			;;
+		--html)
+			HTML="true"
 			;;
 		--rpi)
 			DO_RPI="true"
@@ -31,12 +35,12 @@ while [[ $# -gt 0 ]]; do
 		--zwo-file)
 			ZWO_FILE="${2}"
 			if [[ ! -f ${ZWO_FILE} ]]; then
-				E_ "File '${ZWO_FILE}' not found." >&2
+				wE_ "File '${ZWO_FILE}' not found." >&2
 				OK="false"
 			fi
 			;;
 		-*)
-			E_ "Unknown argument '${ARG}'." >&2
+			wE_ "Unknown argument '${ARG}'." >&2
 			OK="false"
 			;;
 	esac
@@ -48,11 +52,12 @@ usage_and_exit()
 	local RET=${1}
 	exec 2>&1
 	echo
-	local MSG="Usage: ${ME} [--help] [--zwo-file f] --rpi | --zwo"
+	local USAGE="Usage: ${ME} [--help] [--zwo-file f] --rpi | --zwo"
 	if [[ ${RET} -ne 0 ]]; then
-		E_ "${MSG}"
+		E_ "${USAGE}"
+		[[ ${HTML} == "true" ]] && RET="${ALLSKY_EXIT_ERROR_STOP}"
 	else
-		echo -e "${MSG}"
+		echo -e "${USAGE}"
 	fi
 	echo "where:"
 	echo "    '--help' displays this message and exits."
@@ -69,7 +74,7 @@ usage_and_exit()
 [[ ${DO_HELP} == "true" ]] && usage_and_exit 0
 [[ ${OK} == "false" ]] && usage_and_exit 1
 if [[ ${DO_RPI} == "false" && ${DO_ZWO} == "false" ]]; then
-	E_  "You must specify --rpi and/or --zwo" >&2
+	wE_  "You must specify --rpi and/or --zwo" >&2
 	usage_and_exit 2
 fi
 

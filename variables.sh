@@ -150,7 +150,11 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" || ${1} == "--force" ]]; then
 
 	# Log-related information.
 	ALLSKY_LOGS="${ALLSKY_CONFIG}/logs"
-	ALLSKY_POST_INSTALL_ACTIONS="${ALLSKY_LOGS}/post-installation_actions.txt"
+	ALLSKY_WEB_LOGS="${ALLSKY_LOGS}/weblogs"	# logs the web browser can get to
+	ALLSKY_WEB_LOGS_URL="/$( basename "${ALLSKY_WEB_LOGS}" )"
+	P="post-installation_actions.txt"
+	ALLSKY_POST_INSTALL_ACTIONS="${ALLSKY_WEB_LOGS}/${P}"
+	ALLSKY_POST_INSTALL_ACTIONS_URL="${ALLSKY_WEB_LOGS_URL}/${P}"
 	ALLSKY_OLD_REMINDER="${ALLSKY_LOGS}/allsky-OLD_reminder.txt"
 	ALLSKY_CHECK_LOG="${ALLSKY_LOGS}/checkAllsky.html"
 
@@ -171,15 +175,20 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" || ${1} == "--force" ]]; then
 	ALLSKY_OVERLAY="${ALLSKY_CONFIG}/overlay"
 	ALLSKY_MY_OVERLAY_TEMPLATES="${ALLSKY_OVERLAY}/myTemplates"
 	ALLSKY_MODULES="${ALLSKY_CONFIG}/modules"
+	ALLSKY_MY_MODULES="${ALLSKY_MYFILES_DIR}/modules"
 	ALLSKY_MODULE_LOCATION="/opt/allsky"
 	ALLSKY_EXTRA_LEGACY="${ALLSKY_OVERLAY}/extra"
 	ALLSKY_EXTRA="${ALLSKY_TMP}/extra"
+	ALLSKY_MODULE_INSTALLER="${ALLSKY_SCRIPTS}/modules/allskymodulemanager/moduleinstaller.py"
 	
-	# URL for the Allsy API
+	# URL for the Allsky API.
 	ALLSKY_API_URL="http://localhost:8090"
 
-	# Path to the Allsky database
-	ALLSKY_DATABASES="${ALLSKY_MYFILES_DIR}/allsky.db"
+	# Database-related variables.
+	ALLSKY_DATABASE="${ALLSKY_MYFILES_DIR}/allsky.db"
+	ALLSKY_DATABASE_COMMAND="${ALLSKY_UTILITIES}/db.py"
+	ALLSKY_IMAGES_TABLE="allsky_image"
+	ALLSKY_STARTRAILS_TABLE="allsky_startrails"
 
 	# Directories and files for the flow timer function
 	ALLSKY_FLOWTIMINGS="${ALLSKY_TMP}/flowtimings"
@@ -202,7 +211,7 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" || ${1} == "--force" ]]; then
 	ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE="${ALLSKY_CONFIG}/${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME}"
 
 	# Holds all the Allsky documentation.
-	ALLSKY_DOCUMENTATION="${ALLSKY_WEBUI}/documentation"
+	ALLSKY_DOCUMENTATION="${ALLSKY_WEBUI}/docs"
  
  	# Holds the version of the Pi.
 	ALLSKY_PI_VERSION_FILE="${ALLSKY_CONFIG}/piversion.txt"
@@ -276,17 +285,19 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" || ${1} == "--force" ]]; then
 	ALLSKY_MINITIMELAPSE_FILE="/${ALLSKY_CURRENT_DIR}/${ALLSKY_MINITIMELAPSE_NAME}"
 	ALLSKY_MINITIMELAPSE_URL="/${ALLSKY_IMG_DIR}/${ALLSKY_MINITIMELAPSE_NAME}"
 
-	# Python virtual environment
+	# Python virtual environments
 	ALLSKY_PYTHON_VENV="${ALLSKY_HOME}/venv"
+	ALLSKY_PYTHON_SERVER_VENV="${ALLSKY_HOME}/venv_server"
 
 	# These EXIT codes from the capture programs must match what's in src/include/allsky_common.h
-	EXIT_OK=0
-	EXIT_PARTIAL_OK=90		# command partially worked
-	EXIT_RESTARTING=98		# process is restarting, i.e., stop, then start
-	EXIT_RESET_USB=99		# need to reset USB bus; cannot continue
+	ALLSKY_EXIT_OK=0
+	ALLSKY_EXIT_PARTIAL_OK=90		# command partially worked
+	ALLSKY_EXIT_RESTARTING=98		# process is restarting, i.e., stop, then start
+	ALLSKY_EXIT_RESET_USB=99		# need to reset USB bus; cannot continue
 	# Anything at or above EXIT_ERROR_STOP is unrecoverable and the service must be stopped
-	EXIT_ERROR_STOP=100		# unrecoverable error - need user action so stop service
-	EXIT_NO_CAMERA=101		# cannot find camera
+	ALLSKY_EXIT_ERROR_STOP=100		# unrecoverable error - need user action so stop service
+	ALLSKY_EXIT_NO_CAMERA=101		# cannot find camera
+	ALLSKY_EXIT_STOP=102			# Stop, but no error
 
 	# Name of the Pi's OS in lowercase.
 	ALLSKY_PI_OS="$( grep VERSION_CODENAME /etc/os-release )"

@@ -4,11 +4,11 @@
 ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck source-path=.
-source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 # shellcheck disable=SC2034
 export DISPLAY_MSG_LOG="${ALLSKY_LOGS}/moveImages.log"		# display_msg() logs here
@@ -133,7 +133,7 @@ if [[ ! -d ${NEW_ALLSKY_IMAGES} ]]; then
 	if ! E="$( sudo mkdir -p "${NEW_ALLSKY_IMAGES}" 2>&1 )" ; then
 		MSG="Unable to create '${NEW_ALLSKY_IMAGES}'"
 		display_msg --log error "${MSG}:" "${E}"
-		do_exit "${EXIT_ERROR_STOP}"
+		do_exit "${ALLSKY_EXIT_ERROR_STOP}"
 	fi
 	display_msg --logonly info "  > Created '${NEW_ALLSKY_IMAGES}'."
 else
@@ -201,7 +201,7 @@ fi
 # ${OLD_ALLSKY_IMAGES} are where they currently are.
 unset ALLSKY_VARIABLE_SET		# forces variables.sh to be re-read
 #shellcheck source-path=.
-source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 display_msg --logonly info "Making configuration changes."
 "${ALLSKY_HOME}/install.sh" --function do_change_images

@@ -21,7 +21,7 @@ Environment variables:
 - ALLSKY_MYFILES_DIR
 - ALLSKY_MODULE_LOCATION
 - ALLSKY_SCRIPTS
-- ALLSKY_DATABASES (path to SQLite DB)
+- ALLSKY_DATABASE (path to SQLite DB)
 - ALLSKY_SETTINGS_FILE (JSON)
 - ALLSKY_ENV (JSON holding env-style configuration for Allsky)
 
@@ -65,6 +65,7 @@ import json
 import sqlite3
 from pathlib import Path
 from whiptail import Whiptail
+import logging
 
 modules_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(modules_dir)
@@ -111,7 +112,6 @@ valid_module_paths = [allsky_my_files_folder, allsky_modules_location, allsky_mo
 for valid_module_path in valid_module_paths:
     sys.path.append(os.path.abspath(valid_module_path))
 
-from gpiozero import Device            
 import allsky_shared as shared
 
 shared.setup_for_command_line()
@@ -144,9 +144,7 @@ class ALLSKYDATABASEMANAGER:
         Detected Raspberry Pi version number (e.g., 3, 4, 5).
     """
 
-    _welcome = "Allsky allows data be stored in a local database for various functions, such as graphs and other analytics.\
-        This feature is optional. Would you like to enable this feature?\
-        "
+    _welcome = "Allsky utilises a database to store information about images, settings, and other data.\n\n Would you like to use the recommended configuration. (If you are unsure then please select 'Yes').\n\nSelecting 'No' will allow you to manually configure the database"
     _low_performance = "\nSince you are running on a PI with reduced CPU and RAM it is recommended that you use sqlite"
     _high_performance = "\nSince you are running a PI with sufficient CPU and RAM it is recommended that you use MySQL (MariaDB) although you may select sqlite if you wish"
     _enable_database = "\n\nWould you like to enable this feature? If you select No then you can rerun this script at any time and enable the database"
@@ -159,7 +157,6 @@ class ALLSKYDATABASEMANAGER:
     _purge_database_time = "Enter a number of hours to keep, or a number followed by 'd' for days to keep:"
     _whiptail_database_disabled = "No database is configured or enabled. Please check the database configuration"
     _whiptail_add_remote_user = "Creating a user for remote access will require changing the MySQL server to be accessible outside of this pi. This may pose a security risk if the pi is exposed to the internet.\n\nAre you sure you wish to proceed?"    
-    _whiptail_purge_missing = "You are using a database but the purge module is NOT installed. Please install the purge module in the periodic flow.\n\nFailure to run the purge module will result in degraded performance of Allsky and potential disk space issues."
     
     _back_title= "Allsky Database Manager"
     _whiptail_title_select_database = "Select Database"
@@ -184,7 +181,19 @@ class ALLSKYDATABASEMANAGER:
             Namespace with `debug` and other flags.
         """
         self._debug_mode = args.debug
+        self._log_file = args.logfile
+                
+        self._logger = None
         
+        if self._log_file:
+            self._logger = logging.getLogger("allsky_module_installer")
+            self._logger.setLevel(logging.INFO)
+
+            handler = logging.FileHandler(self._log_file)
+            formatter = logging.Formatter("%(message)s")
+            handler.setFormatter(formatter)
+            self._logger.addHandler(handler)
+                            
         self._mysql_installed, self._mysql_type = self._mysql_service_installed()
         self._is_sqlite3_installed()
         self._database_config = self._get_allsky_database_config()
@@ -261,21 +270,15 @@ class ALLSKYDATABASEMANAGER:
                 self._info_prompt(self._whiptail_error, self._back_title, self._whiptail_database_disabled, 11, 50)
         return wrapper
                                             
-    def _log(self, log_level, message) -> None:
+    def _log(self, debug_only, message) -> None:
         """
         Log a message via Allsky or stdout (debug).
-
-        Parameters
-        ----------
-        log_level : int
-            Allsky log level.
-        message : str
-            Message to log.
         """
-        if self._debug_mode:
+        if debug_only and self._debug_mode or not debug_only:
+            if self._log_file:
+                self._logger.info(message)
             print(message)
-        else:
-            shared.log(log_level, message)
+            
 
     def _get_pi_version(self) -> int:
         """
@@ -286,8 +289,8 @@ class ALLSKYDATABASEMANAGER:
         int
             Major version number parsed from model string; 0 if unknown.
         """
-        Device.ensure_pin_factory()
-        pi_full_version = Device.pin_factory.board_info.model
+        pi_info = shared.get_pi_board_info()
+        pi_full_version = pi_info.model if pi_info is not None else ""
 
         match = re.match(r"(\d+)", pi_full_version)
         pi_version = int(match.group(1)) if match else 0
@@ -313,7 +316,7 @@ class ALLSKYDATABASEMANAGER:
             result = True
             self._sqlite_installed = True
         except ImportError:
-            self._log(1,"ERROR: Unable to use SQLite on this pi. Please contact the Allsky support team via GitHub")
+            self._log(False,"ERROR: Unable to use SQLite on this pi. Please contact the Allsky support team via GitHub")
             sys.exit(1)
             
         return result
@@ -360,13 +363,6 @@ class ALLSKYDATABASEMANAGER:
             True if user selected "Yes".
         """
         _message = self._welcome
-        
-        if self.is_fast_pi:
-            _message += self._low_performance
-        else:
-            _message += self._high_performance
-        
-        _message += self._enable_database
         
         w = Whiptail(title="Welcome", backtitle="Allsky Database Manager", height=20, width=60)
         result = w.yesno(_message)
@@ -741,7 +737,7 @@ class ALLSKYDATABASEMANAGER:
             return update_command
                 
         result = None
-        db_path = os.environ['ALLSKY_DATABASES']
+        db_path = os.environ['ALLSKY_DATABASE']
         with sqlite3.connect(db_path, timeout=10) as conn:
             cursor = conn.cursor()
             cursor.execute(command)
@@ -923,7 +919,7 @@ class ALLSKYDATABASEMANAGER:
             return True
 
         except Exception as e:
-            self._log(4, f"ERROR: _set_allsky_options failed -> {e}")
+            self._log(False, f"ERROR: _set_allsky_options failed -> {e}")
             return False
 
     def _info_prompt(self, title:str, back_title:str, message:str, height:int=12, width:int=60):
@@ -1059,151 +1055,12 @@ class ALLSKYDATABASEMANAGER:
                   
             if self._database_config["databasetype"] == "sqlite":
                 try:
-                    db_path = os.environ['ALLSKY_DATABASES']
+                    db_path = os.environ['ALLSKY_DATABASE']
                     shared.remove_path(db_path)
                 except KeyError:
                     pass
 
             self._info_prompt(self._whiptail_message, self._back_title, self._reset_complete)
-
-    @warn_no_database
-    def _purge_database(self):
-        """
-        Purge rows older than a specified age across all Allsky tables.
-
-        For MySQL: enumerates tables matching 'allsky_%' that have a 'timestamp'
-        column and deletes rows with timestamp < cutoff.
-
-        For SQLite: enumerates tables, checks for 'timestamp', and deletes rows
-        older than cutoff.
-
-        Prompts user for the age threshold in hours or 'Xd' for days.
-        """
-        purge_result = []
-        purged_something = False
-        
-        if self._database_config["databasetype"] == "mysql" and not self._mysql_installed:
-            self._info_prompt("Warning", self._back_title, "MySQL is enabled in the Allsky config but its not currently installed. Please install MySQL")
-            return
-                            
-        w = Whiptail(
-            title=self._whiptail_message,
-            backtitle=self._back_title,
-            height=10,
-            width=40            
-        )
-
-        while True:
-            value, code = w.inputbox(self._purge_database_time, default="7d")
-
-            if code != 0:
-                break
-
-            value = value.strip().lower()
-
-            try:
-                if value.endswith("d"):
-                    num_days = int(value[:-1])
-                    hours = num_days * 24
-                    break
-                else:
-                    hours = int(value)
-                    break
-            except ValueError:
-                w.msgbox("Invalid input. Please enter a number (e.g. 12) or number+d (e.g. 7d).")
-        
-        if code == 0:
-            cutoff = int(time.time()) - (hours * 60 * 60)
-            
-            if self._database_config["databasetype"] == "mysql":
-                command = [
-                    f"USE {self._database_config['databasedatabase']}", 
-                    'SHOW TABLES LIKE "allsky_%";'
-                ]
-                tables = self._run_mysql_command(
-                    self._database_config["databasehost"],
-                    self._database_config["databaseuser"],
-                    self._database_config["databasepassword"],
-                    command,
-                    command_type="fetchall"
-                )
-                
-                for table in tables:
-                    table_name = table[0]
-                    command = [
-                        f"USE {self._database_config['databasedatabase']}", 
-                        f"SHOW COLUMNS FROM `{table_name}` LIKE 'timestamp'"
-                    ]
-                    has_timestamp = self._run_mysql_command(
-                        self._database_config["databasehost"],
-                        self._database_config["databaseuser"],
-                        self._database_config["databasepassword"],
-                        command,
-                        command_type="fetchone"
-                    )
-                    if has_timestamp:
-                        command = [
-                            f"USE {self._database_config['databasedatabase']}", 
-                            f"SELECT COUNT(*) FROM `{table_name}` WHERE `timestamp` < {cutoff}"
-                        ]
-                        rows_to_delete = self._run_mysql_command(
-                            self._database_config["databasehost"],
-                            self._database_config["databaseuser"],
-                            self._database_config["databasepassword"],
-                            command,
-                            command_type="fetchone"
-                        )  
-                 
-                        if rows_to_delete:
-                            rows_to_delete = rows_to_delete[0]
-                        else:
-                            rows_to_delete = 0
-                        
-                        if rows_to_delete > 0:
-                            command = [
-                                f"USE {self._database_config['databasedatabase']}", 
-                                f"DELETE FROM `{table_name}` WHERE `timestamp` < {cutoff}"
-                            ]
-                            result = self._run_mysql_command(
-                                self._database_config["databasehost"],
-                                self._database_config["databaseuser"],
-                                self._database_config["databasepassword"],
-                                command
-                            )                        
-                            purge_result.append(f"{table_name} had {rows_to_delete} rows purged")
-                            purged_something = True
-                        else:
-                            purge_result.append(f"{table_name} has no rows requiring deletion")
-                    else:
-                        purge_result.append(f"{table_name} has no timestamp so data cannot be purged")
-                        
-            if self._database_config["databasetype"] == "sqlite":
-                command = "SELECT name FROM sqlite_master WHERE type='table'"
-                tables = self._run_sqlite_command(command, "fetchall")
-                for table in tables:
-                    table_name = table[0]                    
-                    if table_name.startswith("allsky_"):
-                        command = f"PRAGMA table_info({table_name})"
-                        columns = self._run_sqlite_command(command, "fetchall")
-                        column_names = [col[1] for col in columns]                        
-                        if "timestamp" in column_names:
-                            command = f"SELECT COUNT(*) FROM {table_name} WHERE timestamp < {cutoff}"
-                            rows_to_delete = self._run_sqlite_command(command, "fetchone")
-                            if rows_to_delete > 0:
-                                command = f"DELETE FROM {table_name} WHERE timestamp < {cutoff}"
-                                rows_deleted = self._run_sqlite_command(command)
-                                purged_something = True
-                            else:
-                                purge_result.append(f"{table_name} has no rows requiring deletion")
-                        else:
-                            purge_result.append(f"{table_name} has no timestamp so data cannot be purged")                                
-                                
-            dialog_text = "\n".join(purge_result)
-            self._info_prompt(
-                self._whiptail_message,
-                self._back_title,
-                dialog_text
-            )
 
     @warn_no_database    
     def _show_mysql_status(self):
@@ -1372,26 +1229,45 @@ class ALLSKYDATABASEMANAGER:
         """
         if not self.is_database_configured:
             if self._display_welcome():
+                database_to_use = "sqlite"
+            else:
                 database_to_use = self._select_database_server()
-                if database_to_use == "mysql" and not self._mysql_installed:
-                    if self._show_mysql_warning_message():
-                        if not self._install_database_server(database_to_use):
-                            # TODO: install failed handling
-                            pass
-                    else:
-                        sys.exit(1)
-                    
-                if database_to_use == "mysql":
-                    action, user_name, password = self._select_mysql_database_user()
-                    if action == "create" or action == "select":
-                        database_name = self._database_config["databasedatabase"] if "databasedatabase" in self._database_config else ""
-                        result, db_name = self._select_mysql_database("localhost", user_name, password, database_name)
-                        if result:
-                            result = self._set_allsky_options("mysql", "localhost", user_name, password, db_name)
-                            self._mysql_installed, self._mysql_type = self._mysql_service_installed()
 
-                if database_to_use == "sqlite":
-                    result = self._set_allsky_options("sqlite", "", "", "", "")
+            # This message is basically a duplicate of the ones below.
+            #### self._log(False, f"INFO: User selected database: {database_to_use}")
+            
+            if database_to_use == "mysql" and not self._mysql_installed:
+                if self._show_mysql_warning_message():
+                    if not self._install_database_server(database_to_use):
+                        # TODO: install failed handling
+                        self._log(False, "ERROR: MySQL installation failed.")
+                        pass
+                    else:
+                        self._log(False, "INFO: MySQL installation complete.")
+                else:
+                    self._log(False, "INFO: User declined MySQL installation after warning.")
+                    sys.exit(1)
+                
+            if database_to_use == "mysql":
+                action, user_name, password = self._select_mysql_database_user()
+                if action == "create" or action == "select":
+                    self._log(False, f"INFO: User selected MySQL user '{user_name}' with action '{action}'.")
+                    database_name = self._database_config["databasedatabase"] if "databasedatabase" in self._database_config else ""
+                    result, db_name = self._select_mysql_database("localhost", user_name, password, database_name)
+                    if result:
+                        result = self._set_allsky_options("mysql", "localhost", user_name, password, db_name)
+                        self._mysql_installed, self._mysql_type = self._mysql_service_installed()
+                        self._log(False, f"INFO: MySQL database '{db_name}' selected and configured for Allsky.")
+                    else:
+                        self._log(False, "INFO: No MySQL database selected. Switching to SQLite3.")
+                        database_to_use = "sqlite"
+                else:
+                    self._log(False, "INFO: No MySQL user selected or created. Switching to SQLite3.")
+                    database_to_use = "sqlite"
+
+            if database_to_use == "sqlite":
+                result = self._set_allsky_options("sqlite", "", "", "", "allsky")
+                self._log(False, "INFO: Configured to use SQLite3 database.")
                     
     def run(self):
         """
@@ -1402,10 +1278,8 @@ class ALLSKYDATABASEMANAGER:
           2) Run Setup Wizard
           3) Create Remote MySQL User
           4) Reset ALL Data
-          5) Purge Database
-          6) Exit
+          5) Exit
         """
-        self.preflight_checks()
         w = Whiptail(
             title=self._whiptail_title_main_menu,
             backtitle=self._back_title,
@@ -1419,13 +1293,12 @@ class ALLSKYDATABASEMANAGER:
                 ("2", "Run Setup Wizard"),
                 ("3", "Create Remote MySQL User"),
                 ("4", "Reset ALL Data"),
-                ("5", "Purge Database"),
-                ("6", "Exit"),
+                ("5", "Exit"),
             ]
 
             choice, code = w.menu("Select an option:", options)
 
-            if code != 0 or choice == "6":
+            if code != 0 or choice == "5":
                 break
             
             if choice == "1":
@@ -1439,29 +1312,6 @@ class ALLSKYDATABASEMANAGER:
                           
             if choice == "4":
                 self._reset_database()
-
-            if choice == "5":
-                self._purge_database()
-
-    def preflight_checks(self) -> bool:
-        """
-        Pre-run checks and warnings.
-
-        Currently warns if DB is enabled but purge flow isn't installed.
-
-        Returns
-        -------
-        bool
-            True (always), reserved for future gating.
-        """
-        result = True
-        database_config = shared.get_database_config()
-        if "databaseenabled" in database_config:
-            if database_config["databaseenabled"]:
-                flows = shared.get_flows_with_module("purgedb")
-                if not flows:
-                    self._info_prompt(self._whiptail_warning, self._back_title, self._whiptail_purge_missing)
-        return result
                                                 
     def remove_mysql(self, remove_data: bool = False):
         """
@@ -1494,7 +1344,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Allsky database manager")
     parser.add_argument("--debug", action="store_true", help="Enable debug mode, shows more detailed errors")  
     parser.add_argument("--auto", action="store_true", help="Step through installing / configuring the database")  
-    parser.add_argument("--removemysql", action="store_true", help="For testign only remove mysql")  
+    parser.add_argument("--removemysql", action="store_true", help="For testign only remove mysql")
+    parser.add_argument("--logfile", type=str, help="Log to this file rather than stdout")  
+    
     args = parser.parse_args()    
     
     database_manager = ALLSKYDATABASEMANAGER(args)

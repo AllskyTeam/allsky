@@ -4,11 +4,11 @@
 ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck source-path=.
-source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 usage_and_exit()
 {
@@ -55,7 +55,7 @@ THRESHOLDS=""
 THRESHOLD="$( settings ".startrailsbrightnessthreshold" )"
 d_THRESHOLDS="${THRESHOLD}"
 i=1
-while [[ ${i} -le 7 ]];
+while [[ ${i} -le 7 ]];		# 7 seems like a good number of thresholds
 do
 	THRESHOLD="$( gawk -v T="${THRESHOLD}" 'BEGIN { printf("%0.2f", T + 0.03); }' )"
 	d_THRESHOLDS+=" ${THRESHOLD}"
@@ -100,12 +100,13 @@ while [[ $# -gt 0 ]]; do
 	esac
 	shift
 done
+
 [[ ${DO_HELP} == "true" ]] && usage_and_exit 0
-[[ ${OK} == "false" ]] && usage_and_exit 1
+[[ ${OK} == "false" ]] && usage_and_exit "${ALLSKY_EXIT_ERROR_STOP}"
 if [[ ${HTML} == "true" &&
 		( -z ${IN_DIRECTORY} || -z ${COUNT} || -z ${THRESHOLDS} ) ]]; then
 	echo "<p style='color: red'>All settings must be specified on the command line.</p>" >&2
-	usage_and_exit 2
+	usage_and_exit "${ALLSKY_EXIT_ERROR_STOP}"
 fi
 
 # Prompt for missing data.
@@ -135,6 +136,11 @@ if [[ -z ${IN_DIRECTORY} ]]; then
 		fi
 		echo "Enter directory name: "
 	done
+else
+	if [[ ! -d ${IN_DIRECTORY} ]]; then
+		echo -e "Directory '${IN_DIRECTORY}' does not exist." >&2
+		exit 1
+	fi
 fi
 if [[ -z ${COUNT} ]]; then
 	while true
@@ -209,13 +215,43 @@ sudo chown "${ALLSKY_OWNER}:${WEBSERVER_GROUP}" "${OUT_DIRECTORY}"
 
 # Create the list of images.
 
-### TODO: replace with DB query.  Add intelligence to list, e.g., night only, ...
-
 IMAGES="${OUT_DIRECTORY}/images.txt"
-find "${IN_DIRECTORY}" -type f -name "*.${ALLSKY_EXTENSION}" 2>/dev/null | head -"${COUNT}" > "${IMAGES}"
+
+NIGHT_ONLY="$( settings ".startrailsnightonly" )"
+[[ -z ${NIGHT_ONLY} ]] && NIGHT_ONLY="false"
+
+NUM_IMAGES=0
+if [[ ${NIGHT_ONLY} == "true" ]]; then
+	NIGHT="nighttime "
+	SQL="SELECT AS_CAMERAIMAGE FROM ${ALLSKY_IMAGES_TABLE} WHERE \
+		AS_DATE_NAME = '$( basename "${IN_DIRECTORY}" )' AND AS_DAY_OR_NIGHT = 'NIGHT' \
+		ORDER BY AS_CAMERAIMAGE LIMIT ${COUNT}"
+	LIST="$( "${ALLSKY_DATABASE_COMMAND}" --run "${SQL}" 2>&1 )"
+	RET=$?
+	## echo -e "SQL=\n${SQL}, records=$( wc -l "${IMAGES}" )"
+	if [[ ${RET} -ne 0 ]]; then
+		wE_ "ERROR: Unable to get list of ${NIGHT} images from database: $( cat "${IMAGES}" )"
+		exit "${ALLSKY_EXIT_ERROR_STOP}"
+	fi
+	if [[ -z ${LIST} ]]; then
+		wW_ "NOTICE: No ${NIGHT}images found in database; using ALL images instead.\n"
+	else
+		# Need full pathnames.
+		# shellcheck disable=SC2001	# Old, inefficient way:
+		## echo "${LIST}" | sed "s;^;${IN_DIRECTORY}/;" > "${IMAGES}"
+
+		echo "${LIST/#/${IN_DIRECTORY}/}" > "${IMAGES}"
+	fi
+fi
+if [[ ${NUM_IMAGES} -eq 0 ]]; then
+	NIGHT=""
+	find "${IN_DIRECTORY}" -type f -name "*.${ALLSKY_EXTENSION}" -maxdepth 1 2>/dev/null |
+		head -"${COUNT}" > "${IMAGES}"
+fi
+
 if [[ ! -s ${IMAGES} ]]; then
-	echo -e "${ME}: ERROR: no images found in '${IN_DIRECTORY}' with extension '.${ALLSKY_EXTENSION}'." >&2
-	exit 1
+	wW_ "WARNING: No ${NIGHT}images found in '${IN_DIRECTORY}' with extension '.${ALLSKY_EXTENSION}'." >&2
+	exit 0
 fi
 
 # Check for input errors
@@ -239,23 +275,10 @@ if [[ -n ${ERRORS} ]]; then
 	} >&2
 fi
 
-# Determine resolution of the first image so we can write text to it.
-# Assume all images are the same resolution.
-# image.jpg JPEG 4056x3040 4056x3040+0+0 8-bit sRGB 1.8263MiB 0.000u 0:00.000
-FIRST="$( head -1 "${IMAGES}" | sed 's/\t.*//' )"
-RESOLUTION="$( identify "${FIRST}" | gawk '{ print $3; }' )"
-WIDTH="${RESOLUTION%x*}"
-HEIGHT="${RESOLUTION##*x}"
-# Put text in bottom left.
-POINT_SIZE="$( echo "${WIDTH} / 33" | bc )"
-X="20"		# just need a little from left side
-Y=$(( HEIGHT - ( POINT_SIZE * 2) ))
-
-FONT="${ALLSKY_OVERLAY}/system_fonts/Courier_New_Bold.ttf"
-STROKE="black"
-FILL="yellow"
-
 # Create the startrails.
+THUMBNAILS_DIR="${OUT_DIRECTORY}/thumbnails"
+mkdir -p "${THUMBNAILS_DIR}"
+
 NUM_CREATED=0
 for THRESHOLD in ${THRESHOLDS}
 do
@@ -265,7 +288,7 @@ do
 		--output "${OUTPUT}" \
 		--brightness "${THRESHOLD}" 2>&1 )"
 	RET=$?
-	if [[ ${RET} -eq 0 || ${RET} -eq ${EXIT_PARTIAL_OK} ]]; then
+	if [[ ${RET} -eq 0 || ${RET} -eq ${ALLSKY_EXIT_PARTIAL_OK} ]]; then
 		(( NUM_CREATED++ ))
 		echo "Created '${OUTPUT}' with Brightness Threshold of ${THRESHOLD}."
 		if [[ ${VERBOSE} == "true" ]]; then
@@ -283,14 +306,14 @@ do
 		# Add text
 		TEXT="Brightness Threshold: ${THRESHOLD}"
 		TEXT+="\n${NUM_USED} of ${COUNT} images used."
-		convert -font "${FONT}" -pointsize "${POINT_SIZE}" \
-			-fill "${FILL}" -stroke "${STROKE}" -strokewidth 3 \
-			-annotate "+${X}+${Y}" "${TEXT}" \
-			"${OUTPUT}" "${OUTPUT}" 2>&1
+		addTextToImage "${OUTPUT}" "${OUTPUT}" "${TEXT}" 2>&1
+
+		# Create a thumbnail for the WebUI "Images" page.
+		cp "${OUTPUT}" "${THUMBNAILS_DIR}"
 	else
 		echo -e "ERROR: Unable to make startrails.  Quitting." >&2
 		remove_colors "${MSG}" >&2
-		exit 3
+		exit "${ALLSKY_EXIT_ERROR_STOP}"
 	fi
 done
 
@@ -300,7 +323,7 @@ if [[ ${NUM_CREATED} -gt 0 ]]; then
 		DAY="$( basename "${OUT_DIRECTORY}" )"
 		echo -n "Click <a href='/helpers/show_images.php?_ts=${RANDOM}"
 		echo -n "&day=${DAY}&pre=startrails_&type=Test Startrails"
-		echo    "'>here</a> to see the results."
+		echo    "' external='true' >here</a> to see the results."
 	else
 		echo -e "\nThe ${NUM_CREATED} startrails image(s) are in '${OUT_DIRECTORY}'.\n"
 	fi

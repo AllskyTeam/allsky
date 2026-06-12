@@ -1,0 +1,27 @@
+{
+  "onewire": {
+    "enabled": true,
+    "tabname": "1-Wire",
+    "endpoint": "/onewire/devices/html"
+  },
+  "i2c": {
+    "enabled": true,
+    "tabname": "I2C",
+    "endpoint": "/i2c/devices/html"
+  },
+  "serial": {
+    "enabled": true,
+    "tabname": "Serial",
+    "endpoint": "/serial/sample/html"
+  },
+  "gpio": { 
+    "enabled": true,
+    "tabname": "GPIO Status",
+    "endpoint": "/gpio/status/html"
+  },
+  "processes": { 
+    "enabled": true,
+    "tabname": "Processes",
+    "endpoint": "/system/top"
+  }  
+}

@@ -16,8 +16,10 @@ import numpy as np
 class ALLSKYHISTOGRAM(ALLSKYMODULEBASE):
 
     meta_data = {
-        "name": "Histogram",
-        "description": "Displays a histogram of the image",
+        "name": "Display Image Histogram",
+        "description": "Add an image's histogram to the image.",
+		"version": "v1.0.0",  
+  	    "docs": "docs/allsky_modules/core/histogram.html",         
         "module": "allsky_histogram",
         "group": "Image Adjustments",
         "events": [
@@ -34,53 +36,62 @@ class ALLSKYHISTOGRAM(ALLSKYMODULEBASE):
 			"x" : {
 				"required": "false",
 				"description": "x",
-				"help": "X position of the histogram",
-				"tab": "Settings",   
+				"help": "X position of the histogram.",
+				"tab": "Settings",
 				"type": {
 					"fieldtype": "spinner",
 					"min": "0",
 					"max": "6000",
 					"step": "1"
-				}     
+				}
 			},
 			"y" : {
 				"required": "false",
 				"description": "y",
-				"help": "Y position of the histogram",
-				"tab": "Settings",   
+				"help": "Y position of the histogram.",
+				"tab": "Settings",
 				"type": {
 					"fieldtype": "spinner",
 					"min": "0",
 					"max": "6000",
 					"step": "1"
-				}     
+				}
 			},
 			"width" : {
 				"required": "false",
 				"description": "Width",
-				"help": "Width of the histogram",
-				"tab": "Settings",   
+				"help": "Width of the histogram in pixels.",
+				"tab": "Settings",
 				"type": {
 					"fieldtype": "spinner",
 					"min": "0",
 					"max": "6000",
 					"step": "1"
-				}     
+				}
 			},
 			"height" : {
 				"required": "false",
 				"description": "Height",
-				"help": "Height of the histogram",
-				"tab": "Settings",   
+				"help": "Height of the histogram in pixels.",
+				"tab": "Settings",
 				"type": {
 					"fieldtype": "spinner",
 					"min": "0",
 					"max": "6000",
 					"step": "1"
-				}     
+				}
 			}
-        }
-    }    
+        },
+		"changelog": {
+			"v1.0.0" : [
+				{
+					"author": "Alex Greenland",
+					"authorurl": "https://github.com/allskyteam",
+					"changes": "Initial Release"
+				}
+			]   
+		}  
+    }
 
     def _draw_histogram(self, x = 2500, y=2000, width=1000, height=500):
         img = allsky_shared.image.copy()
@@ -161,25 +172,25 @@ class ALLSKYHISTOGRAM(ALLSKYMODULEBASE):
 
     def run(self):
         result = 'Histogram drawn'
-        
+
         try:
             x = self.get_param('x', 0,int)
             y = self.get_param('y', 0,int)
             width = self.get_param('width', 1000,int)
             height = self.get_param('height', 500,int)
-            
+
             self._draw_histogram(x, y, width, height)
             result = f'Histogram drawn at x={x}, y={y}, width={width}, height={height}'
         except Exception as e:
             result = f'Failed to draw histogram: {e}'
-            allsky_shared.log(0, f'ERROR: {result}')
+            self.log(0, f'ERROR: {result}')
         else:
-            allsky_shared.log(4, f'INFO: {result}')
-        
-        return result        
+            self.log(4, f'INFO: {result}')
+
+        return result
 
 def histogram(params, event):
     allsky_load_image = ALLSKYHISTOGRAM(params, event)
     result = allsky_load_image.run()
 
-    return result  
+    return result

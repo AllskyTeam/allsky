@@ -35,11 +35,12 @@ img.current {
 	font-family: 'Ubuntu', sans-serif;
 	font-weight: 400;
 	padding-left: 90px;
-	padding-top: 12px;
-	background: url('../allsky-logo.png') left center;
-	background-size: 75px;
+	padding-top: 18px;
+	filter: brightness(2);
+	background: url('../logo.png') left center;
+	background-size: 60px;
 	background-repeat: no-repeat;
-	height: 55px;
+	height: 65px;
 }
 
 .personalLink {

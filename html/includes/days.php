@@ -1,5 +1,10 @@
 <?php
 
+if (basename(__FILE__) === basename($_SERVER['SCRIPT_FILENAME'])) {
+    include_once('functions.php');
+    redirect("/index.php");
+}
+
 function ListDays()
 {
 
@@ -8,9 +13,8 @@ function ListDays()
 	$useThumbnailsIfExist = false;
 
 	global $page;
-	global $pageHeaderTitle, $pageIcon;
+	global $pageHeaderTitle, $pageIcon, $pageHelp;
 	global $fa_size, $fa_size_px;
-	global $useMeteors;
 
 	if (! is_dir(ALLSKY_IMAGES)) {
 		echo "<br><div class='errorMsgBig'>";
@@ -21,63 +25,86 @@ function ListDays()
 
 	$date = getVariableOrDefault($_POST, 'delete_directory', null);
 	if ($date !== null) {
-		$msg = delete_directory(ALLSKY_IMAGES . "/$date");
-		if ($msg == "") {
-			echo "<div class='alert alert-success'>Deleted directory $date</div>";
-		} else {
-			echo "<div class='alert alert-danger'><b>Unable to delete directory for $date</b>: $msg</div>";
+		if (CSRFValidate()) {
+			$msg = delete_directory($date);
+			$displayDate = htmlspecialchars(is_scalar($date) ? (string) $date : "", ENT_QUOTES);
+			$displayMsg = htmlspecialchars((string) $msg, ENT_QUOTES);
+			if ($msg == "") {
+				echo "<div class='alert alert-success'>Deleted directory $displayDate</div>";
+			} else {
+				echo "<div class='alert alert-danger'><b>Unable to delete directory for $displayDate</b>: $displayMsg</div>";
+			}
 		}
 	}
 
 	// Get list of directories.
 	$days = getValidImageDirectories();
 	if (count($days) > 0) arsort($days);
-?>
 
-<style>
-	table th {
-		text-align:center;
-		padding: 0 10px;
+	$timezoneName = trim((string) @file_get_contents('/etc/timezone'));
+	if ($timezoneName === '') {
+		$timezoneName = date_default_timezone_get();
 	}
-	table tr td {
-		padding: 0 10px;
-	}
-</style>
+	$displayTimezone = new DateTimeZone($timezoneName);
+?>
 <div class="row">
 	<div class="col-lg-12">
 	<div class="panel panel-allsky">
-	<div class="panel-heading"><i class="<?php echo $pageIcon ?>"></i> <?php echo $pageHeaderTitle ?></div>
+	<div class="panel-heading clearfix">
+        <span><i class="<?php echo $pageIcon ?>"></i> <?php echo $pageHeaderTitle ?></span>
+		<?php if (!empty($pageHelp)) { doHelpLink($pageHelp); } ?>
+    </div>
 	<div class="panel-body">
 	<div class="row">
+		<div class="col-md-12">
+		<div class="well well-sm system-summary-card days-summary-card">
 	<form action="?page=<?php echo $page ?>" method="POST"
 		onsubmit="return confirm('Are you sure you want to delete ALL images for that day?');">
-	<table style='margin-top: 15px; text-align:center'>
-	  <thead>
-			<tr style="border-bottom: 1px solid #888">
-				<th style="text-align:center">Day</th>
-				<th style="text-align:center">Images</th>
-				<th style="text-align:center">Timelapse</th>
-				<th style="text-align:center">Keogram</th>
-				<th style="text-align:center">Startrails</th>
-<?php if ($useMeteors) { ?>
-				<th style="text-align:center">Meteors</th>
-<?php } ?>
-			</tr>
-	  </thead>
-	  <tbody>
-		<tr>
-			<td style='font-weight:bold'>All</td>
-			<td><span title="There are too many total images to view on one page.">-</span></td>
-			<td><?php insertHref("list_videos", "All"); ?></td>
-			<td><?php insertHref("list_keograms", "All"); ?></td>
-			<td><?php insertHref("list_startrails", "All"); ?></td>
-<?php if ($useMeteors) { ?>
-			<td><?php insertHref("list_meteors", "All"); ?></td>
-<?php } ?>
-
-			<!-- don't allow deleting All directories - too risky -->
-			<td style='padding: 22px 0'><span title="You cannot delete All files at once.">-</span></td>
-		</tr>
+		<div class="days-summary-header">
+			<h4>Available Days</h4>
+		</div>
+		<div class="days-grid">
+		<div class="days-grid-card days-grid-header">
+			<div class="row days-grid-row">
+				<div class="col-sm-2 days-day-col">
+					<button type="button" class="btn btn-link days-sort-toggle" data-sort="day" aria-label="Sort by day">
+						<span class="days-grid-label">Day</span>
+						<span class="days-sort-icons" aria-hidden="true">
+							<i class="fa fa-caret-up days-sort-up"></i>
+							<i class="fa fa-caret-down days-sort-down"></i>
+						</span>
+					</button>
+				</div>
+				<div class="col-sm-2 hidden-xs hidden-sm">
+					<span class="days-grid-label">Date</span>
+				</div>
+				<div class="col-sm-8 days-actions-col">
+					<div class="row days-grid-actions">
+						<div class="col-xs-3 text-center days-action-col"><span class="days-grid-label">Images</span></div>
+						<div class="col-xs-3 text-center days-action-col"><span class="days-grid-label">Timelapse</span></div>
+						<div class="col-xs-2 text-center days-action-col"><span class="days-grid-label">Keogram</span></div>
+						<div class="col-xs-2 text-center days-action-col"><span class="days-grid-label">Startrails</span></div>
+						<div class="col-xs-2 text-right hidden-xs"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="days-grid-list">
+			<div class="row days-grid-row days-grid-row-static" data-sort-day="99999999">
+				<div class="col-sm-2 days-day-col">
+					<span class="days-grid-value days-table-day">All</span>
+				</div>
+				<div class="col-sm-2 hidden-xs hidden-sm"><span class="days-grid-value">-</span></div>
+				<div class="col-sm-8 days-actions-col">
+					<div class="row days-grid-actions">
+						<div class="col-xs-3 text-center days-action-col"><span class="days-grid-value"><span title="There are too many total images to view on one page.">-</span></span></div>
+						<div class="col-xs-3 text-center days-action-col"><span class="days-grid-value"><?php insertHref("list_videos", "All"); ?></span></div>
+						<div class="col-xs-2 text-center days-action-col"><span class="days-grid-value"><?php insertHref("list_keograms", "All"); ?></span></div>
+						<div class="col-xs-2 text-center days-action-col"><span class="days-grid-value"><?php insertHref("list_startrails", "All"); ?></span></div>
+						<div class="col-xs-2 text-right hidden-xs"><span class="days-grid-value"><span title="You cannot delete All files at once.">-</span></span></div>
+					</div>
+				</div>
+			</div>
 <?php
 
 foreach ($days as $day) {
@@ -91,31 +118,27 @@ foreach ($days as $day) {
 	$has_keogram = is_dir(ALLSKY_IMAGES . "/$day/keogram");
 	$has_startrails = is_dir(ALLSKY_IMAGES . "/$day/startrails");
 
-	// It's very possible there will be no meteor files
-	$has_meteors = is_dir(ALLSKY_IMAGES . "/$day/meteors");
-	if ($has_meteors) {
-		$i = getValidImageNames(ALLSKY_IMAGES . "/$day/meteors", true);	// true == stop after 1
-		$has_meteors = (count($i) > 0);
-	}
-
-	if (! $has_images && ! $has_timelapse && ! $has_keogram && ! $has_startrails && ! $has_meteors) {
+	if (! $has_images && ! $has_timelapse && ! $has_keogram && ! $has_startrails) {
 		echo "<script>console.log('Directory \"$day\" has no images, timelapse, et.al.; ignoring.');</script>";
 		continue;
 	}
 
-	echo "\t\t<tr>\n";
-	echo "\t\t\t<td style='font-weight:bold'>$day</td>\n";
+	$displayDate = $day;
+	$dateObject = DateTimeImmutable::createFromFormat('Ymd', $day, $displayTimezone);
+	if ($dateObject !== false) {
+		$displayDate = $dateObject->format('j M Y');
+	}
 
-	echo "\t\t\t<td>";
+	ob_start();
 	if ($has_images) {
-		$icon = "<i class='fa fa-image fa-${fa_size} fa-fw'></i>";
+		$icon = "<i class='fa fa-image fa-fw fa-{$fa_size}'></i>";
 		echo "<a href='index.php?page=list_images&day=$day' title='Images'>$icon</a>";
 	} else {
 		echo "none";
 	}
-	echo "</td>\n";
+	$imagesHtml = ob_get_clean();
 
-	echo "\t\t\t<td>";
+	ob_start();
 	if ($has_timelapse) {
 		$icon = "";
 		if ($useThumbnailsIfExist) {
@@ -126,16 +149,16 @@ foreach ($days as $day) {
 				$images_dir = "/images";
 				$thumb = str_replace(ALLSKY_IMAGES, "/images", $thumb[0]);
 				// 22px is roughly the width of a "fa-lg fa-fw" icon.
-				$icon = "<img src='$thumb' width='${fa_size_px}px'>";
+				$icon = "<img src='$thumb' width='{$fa_size_px}px'>";
 			}
 		}
 		insertHref("list_videos", $day, false, $icon);
 	} else {
 		echo "none";
 	}
-	echo "</td>\n";
+	$timelapseHtml = ob_get_clean();
 
-	echo "\t\t\t<td>";
+	ob_start();
 	if ($has_keogram) {
 # TODO: create and use keogram thumbnails (they should probably be about 400px high because
 # a "regular" thumbnail is only 100 px wide so you can't see any details.
@@ -143,40 +166,47 @@ foreach ($days as $day) {
 	} else {
 		echo "none";
 	}
-	echo "</td>\n";
+	$keogramHtml = ob_get_clean();
 
-	echo "\t\t\t<td>";
+	ob_start();
 	if ($has_startrails) {
 # TODO: create and use startrails thumbnails.
 		insertHref("list_startrails", $day);
 	} else {
 		echo "none";
 	}
-	echo "</td>\n";
+	$startrailsHtml = ob_get_clean();
 
-if ($useMeteors) {
-	echo "\t\t\t<td>";
-	if ($has_meteors) {
-# TODO: create and use meteors thumbnails.
-		insertHref("list_meteors", $day);
-	} else {
-		echo "none";
-	}
-	echo "</td>\n";
-}
-
-	echo "\t\t\t<td style='padding: 5px'>
+	$deleteHtml = "
 				<button type='submit' data-toggle='confirmation'
-					class='btn btn-delete' name='delete_directory' value='$day'>
+					class='btn btn-danger btn-sm' name='delete_directory' value='$day'>
 					<i class='fa fa-trash'></i> <span class='hidden-xs'>Delete</span>
 				</button>
-			</td>
-		</tr>";
+			";
+
+	echo "  <div class='row days-grid-row' data-sort-day='" . htmlspecialchars($day, ENT_QUOTES) . "'>\n";
+	echo "    <div class='col-sm-2 days-day-col'><span class='days-grid-value days-table-day'>$day</span></div>\n";
+	echo "    <div class='col-sm-2 hidden-xs hidden-sm'><span class='days-grid-value'>" . htmlspecialchars($displayDate) . "</span></div>\n";
+	echo "    <div class='col-sm-8 days-actions-col'>\n";
+	echo "      <div class='row days-grid-actions'>\n";
+	echo "        <div class='col-xs-3 text-center days-action-col'><span class='days-grid-value'>$imagesHtml</span></div>\n";
+	echo "        <div class='col-xs-3 text-center days-action-col'><span class='days-grid-value'>$timelapseHtml</span></div>\n";
+	echo "        <div class='col-xs-2 text-center days-action-col'><span class='days-grid-value'>$keogramHtml</span></div>\n";
+	echo "        <div class='col-xs-2 text-center days-action-col'><span class='days-grid-value'>$startrailsHtml</span></div>\n";
+	echo "        <div class='col-xs-2 text-right hidden-xs'><span class='days-grid-value'>$deleteHtml</span></div>\n";
+	echo "      </div>\n";
+	echo "    </div>\n";
+	echo "  </div>\n";
 }
 ?>
-	  </tbody>
-	</table>
+	</div>
+	</div>
+<?php
+	CSRFToken();
+?>
 	</form>
+	</div><!-- /.days-summary-card -->
+	</div><!-- /.col-md-12 -->
 	</div><!-- /.row -->
 	</div><!-- /.panel-body -->
 	</div><!-- /.panel-primary -->
@@ -186,19 +216,32 @@ if ($useMeteors) {
 }
 
 // Helper functions
-function delete_directory($directory_name)
+function delete_directory($date)
 {
 	global $page;
 
 	// First make sure this is a valid directory.
-	if (! is_valid_directory($directory_name)) {
+	if (! is_valid_directory($date)) {
 		return "Invalid directory name.";
+	}
+
+	$baseDirectory = realpath(ALLSKY_IMAGES);
+	$directory_name = ALLSKY_IMAGES . "/$date";
+	$targetDirectory = realpath($directory_name);
+
+	if ($baseDirectory === false || $targetDirectory === false) {
+		return "Invalid directory path.";
+	}
+
+	$baseDirectoryPrefix = rtrim($baseDirectory, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+	if (strpos($targetDirectory, $baseDirectoryPrefix) !== 0) {
+		return "Invalid directory path.";
 	}
 
 	// If there is any output it's from an error message.
 	$output = null;
 	$retval = null;
-	exec("sudo rm -r '$directory_name' 2>&1", $output, $retval);
+	exec("sudo rm -r " . escapeshellarg($targetDirectory) . " 2>&1", $output, $retval);
 	if ($output == null) {
 		if ($retval != 0)
 			$output = "Unknown error, retval=$retval.";

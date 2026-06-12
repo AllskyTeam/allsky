@@ -1,0 +1,13 @@
+{
+    "icon": "fa-solid fa-gauge",
+    "group": "Hardware",
+    "title": "Memory Used % Guage",
+    "type": "gauge",
+    "table": "allsky_hardware",
+    "series": [
+        {
+            "name": "Memory Used %",
+            "variable": "AS_MEMORYUSEDPERCENTAGE"
+        }
+    ]
+}

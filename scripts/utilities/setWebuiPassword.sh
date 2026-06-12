@@ -5,11 +5,11 @@
 ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck source-path=.
-source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 # display_msg() sends log entries to this file.
 # shellcheck disable=SC2034
@@ -42,12 +42,13 @@ MIN_ALLSKY_VERSION=2024.12.06
 ####
 # Create a password hash.
 # This is separated out into a function so that we can easily change the
-# method used to create the hash
-#
+# method used to create the hash.
 function hash_password()
 {
     local NEW_ADMIN_PASSWORD="${1}"
-    php -r "echo password_hash('${NEW_ADMIN_PASSWORD}', PASSWORD_BCRYPT);"
+    
+    # shellcheck disable=SC2016
+    printf "%s" "${NEW_ADMIN_PASSWORD}" | php -r '$password = stream_get_contents(STDIN); echo password_hash($password, PASSWORD_BCRYPT);'
 }
 
 ####
@@ -73,7 +74,7 @@ function check_password_match()
     local BCRYPT_PASSWORD="${2}"
     local RESULT
 
-    RESULT=$(php -r "echo password_verify('${PLAIN_PASSWORD}', '${BCRYPT_PASSWORD}');")
+    RESULT=$(PLAIN_PASSWORD="${PLAIN_PASSWORD}" BCRYPT_PASSWORD="${BCRYPT_PASSWORD}" php -r 'echo password_verify(getenv("PLAIN_PASSWORD"), getenv("BCRYPT_PASSWORD")) ? "1" : "0";')
 
     if [[ ${RESULT} -eq 1 ]]; then
         echo true

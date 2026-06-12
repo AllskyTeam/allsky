@@ -8,9 +8,9 @@
 ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck source-path=.
-source "${ALLSKY_HOME}/variables.sh"		|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"		|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 OK="true"
 DO_HELP="false"
@@ -44,7 +44,7 @@ usage_and_exit()
 	else
 		echo -e "${USAGE}"
 	fi
-	echo "where:"
+	echo "Arguments:"
 	echo "    --help         displays this message and exits."
 	echo "    --camera NUM   use camera number NUM."
 	echo

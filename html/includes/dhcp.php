@@ -1,5 +1,10 @@
 <?php
 
+if (basename(__FILE__) === basename($_SERVER['SCRIPT_FILENAME'])) {
+    include_once('functions.php');
+    redirect("/index.php");
+}
+
 define('RASPI_DNSMASQ_CONFIG', '/etc/dnsmasq.conf');
 define('RASPI_DNSMASQ_LEASES', '/var/lib/misc/dnsmasq.leases');
 
@@ -7,9 +12,49 @@ define('RASPI_DNSMASQ_LEASES', '/var/lib/misc/dnsmasq.leases');
 * Manage DHCP configuration
 */
 
+function DisplayDHCPConfig() {
+	global $page;
+	global $pageHeaderTitle, $pageIcon;
+
+?>
+<div class="panel panel-warning">
+	<div class="panel-heading">
+		<h3 class="panel-title">
+			<i class="<?php echo $pageIcon ?>" aria-hidden="true"></i>
+			<?php echo $pageHeaderTitle ?>
+		</h3>
+	</div>
+	<div class="panel-body">
+		<div class="alert alert-warning" role="alert">
+			<h4>
+				<i class="fa fa-exclamation-triangle fa-fw" aria-hidden="true"></i>
+				DHCP server configuration has been deprecated
+			</h4>
+			<p>This page is no longer available in Allsky.</p>
+		</div>
+
+		<p>
+			If you still need DHCP server configuration support, please start a discussion
+			on the AllskyTeam GitHub page and include details about your setup and use case.
+		</p>
+		<p class="text-muted">
+			Useful details include your device model, operating system version, network
+			interface, and the DHCP configuration you need.
+		</p>
+		<p>
+			<a class="btn btn-primary" href="https://github.com/AllskyTeam/allsky/discussions" target="_blank" rel="noopener" external="true">
+				<i class="fa fa-comments fa-fw" aria-hidden="true"></i>
+				Open AllskyTeam Discussions
+			</a>
+		</p>
+	</div>
+</div>
+<?php
+}
 // Main function
-function DisplayDHCPConfig()
+function DisplayDHCPConfig_old()
 {
+	/*
 	global $page;
 	global $pageHeaderTitle, $pageIcon;
 
@@ -172,6 +217,7 @@ function DisplayDHCPConfig()
 		}
 	}
 	$interval = "$mselected$hselected$dselected";
+
 ?>
 
 <div class="panel panel-success">
@@ -179,7 +225,7 @@ function DisplayDHCPConfig()
 	<div class="panel-body">
 		<?php if ($myStatus->isMessage()) echo "<p>" . $myStatus->showMessages() . "</p>"; ?>
 
-		<!-- Nav tabs -->
+
 			<ul class="nav nav-tabs">
 				<li class="active"><a href="#server-settings" data-toggle="tab">DHCP server settings</a></li>
 				<li><a href="#client-list" data-toggle="tab">Client list</a></li>
@@ -298,8 +344,10 @@ function DisplayDHCPConfig()
 	</div><!-- ./ Panel body -->
 </div><!-- /.panel-primary -->
 <?php
+	*/
 }
 
+/*
 function ParseConfig( $arrConfig ) {
 	$config = array();
 	foreach( $arrConfig as $line ) {
@@ -311,5 +359,5 @@ function ParseConfig( $arrConfig ) {
 	}
 	return $config;
 }
-
+*/
 ?>

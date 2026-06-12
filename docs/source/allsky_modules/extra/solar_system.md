@@ -1,0 +1,248 @@
+This module calculates data for Solar System objects, the Sun, planets satellites etc. These are called ephemeris, or ephemeris the plural.
+
+Data used in this modules calculations is obtained from a variety of sources:
+
+- [**The Jet Propulsion Labratory** ](https://www.jpl.nasa.gov){ target="_blank" rel="noopener" } Provides the binary SPICE ephemeris file that contains highly accurate positions and motions of:
+    - The Sun
+    - Moon
+    - Planets (Mercury → Neptune)
+    - The Earth–Moon barycentre
+- [**Celestrak** ](https://celestrak.org){ target="_blank" rel="noopener" } Provides the data for calculating:
+    - Earth satellite positions
+
+## Settings { data-toc-label="Settings" }
+
+### Moon { data-toc-label="Moon" }
+
+| Setting | Description |
+|--------|-------------|
+| Enable | Enable this to calculate ephemeris for the Moon |
+| Min Elevation | Above this elevation the Moon will be considered visible |
+
+### Sun { data-toc-label="Sun" }
+
+| Setting | Description |
+|--------|-------------|
+| Enable | Enable this to calculate ephemeris for the Sun |
+
+### Planets { data-toc-label="Planets" }
+
+| Setting | Description |
+|--------|-------------|
+| Enable Mercury | Enable this to calculate ephemeris for Mercury |
+| Enable Venus | Enable this to calculate ephemeris for Venus |
+| Enable Mars | Enable this to calculate ephemeris for Mars |
+| Enable Jupiter | Enable this to calculate ephemeris for Jupiter |
+| Enable Saturn | Enable this to calculate ephemeris for Saturn |
+| Enable Uranus | Enable this to calculate ephemeris for Uranus |
+| Enable Neptune | Enable this to calculate ephemeris for Neptune |
+| Enable Pluto | Enable this to calculate ephemeris for Pluto |
+| Min Elevation | Above this elevation the planet will be considered visible |
+
+### ISS { data-toc-label="ISS" }
+| Setting | Description |
+|--------|-------------|
+| Enable ISS | Select this to calculate ISS data |
+| Legacy TLE Format | Use the legacy CelesTrak TLE download format for ISS. Leave off to use the new CSV format |
+| Visible Only | When calculating passes only show those where ISS is visible |
+| Debug Passes | Enabling this will display the pass information when testing the module, only useful for diagnosing issues |
+| Pass Days | The number of days to look ahead for passes |
+| Number Of Passes | The number of passes to return |
+| AOS/LOS Elevation | The elevation at which Acquisition and Loss of satellite times are calculated |
+| Min Elevation | Only return passes where the max elevation is above this value |
+
+
+Calculating passes for ISS can be fairly slow so be careful with the number of days ahead you look. A sensible value is 5 to 15 days. Also note that the TLE data will become less accurate the further out you look.
+
+### Satellites { data-toc-label="Satellites" }
+| Setting | Description |
+|--------|-------------|
+| Legacy TLE Format | Use the legacy CelesTrak TLE download format for satellites. Leave off to use the new CSV format |
+| NORAD Id's | List of Norad Id's for satellites, see below for more details |
+| Min Elevation | Above this elevation the satellites will be considered visible |
+
+!!! warning  "International Space Station"
+
+    Do not add ISS to the list of Norad Id's. Instead use the iSS tab to manage the space station.
+
+
+**NORAD ID's**
+Enter norad ID's as a comma separated list of the numeric Id's.
+
+So if for example you just want ISS then enter 25544 as the Norad Id.
+
+Calculating large numbers of satellites can be slow so be careful
+
+!!! info  "Element Set Data formats"
+
+    Data is only retreived from Celestrak every two days to prevent being blocked by the site
+
+## Available Variables { data-toc-label="Available Variables" }
+
+!!! info  "Localisation"
+
+    All values are relative to the location and timezone defined in the main Allsky settings
+
+### The Moons Variables { data-toc-label="The Moons Variables" }
+
+| Variable | Sample | Description |
+|--------|-----| -------------|
+| AS_MOON_AZIMUTH	| 357 | The Azimuth of the Moon |
+| AS_MOON_ELEVATION	| -36.02 | The Elevation of the Moon |
+| AS_MOON_ILLUMINATION | 11.5 | The Moons illumination percentage |
+| AS_MOON_SYMBOL | W | The Moon symbol for use with the moon font on overlays |
+
+### The Suns Variables { data-toc-label="The Suns Variables" }
+
+| Variable | Sample | Description |
+|--------|-----| -------------|
+| AS_SUN_DAWN | 20251029 06:14:04 | The time of Dawn |
+| AS_SUN_SUNRISE | 20251029 06:50:27 | The time of Sunrise |
+| AS_SUN_NOON | 20251029 11:42:34 | The time of Noon |
+| AS_SUN_SUNSET | 20251028 16:35:54 | The time of Sunset |
+| AS_SUN_DUSK | 20251028 17:12:07 | The time of Dusk |
+| AS_SUN_AZIMUTH | 307 | The Sun's Azimuth |
+| AS_SUN_ELEVATION | -40 | The Sun's Elevation |
+
+### The Planets Variables { data-toc-label="The Planets Variables" }
+
+In the examples below replace Mercury with the relevant planet name
+
+| Variable | Sample | Description |
+|--------|-----| -------------|
+| AS_Mercury_ALT | -36deg 58' 52.9" | The altitude of the Planet in Human readable text |
+| AS_Mercury_ALTD | -36 | The degrees portion of the altitude |
+| AS_Mercury_ALTM | 58 | The minutes portion of the altitude |
+| AS_Mercury_ALTS | 52 | The seconds portion of the altitude |
+| AS_Mercury_AZ | 285deg 40' 14.5" | The azimuth of the Planet in Human readable text |
+| AS_Mercury_AZD | 285 | The degrees portion of the azimuth |
+| AS_Mercury_AZM | 40 | The minutes portion of the azimuth |
+| AS_Mercury_AZS | 14 | The seconds portion of the azimuth |
+| AS_Mercury_RA | 15h 19m 09.98s | The planets RA |
+| AS_Mercury_DEC | -20deg 05' 17.8" | The planets Dec |
+| AS_Mercury_DISTANCE_KM | 195626327 | The planets distance from Earth in Kilometers |
+| AS_Mercury_DISTANCE_KM_FORMATTED | 195,626,327 | The planets distance from Earth in Kilometers formatted |
+| AS_Mercury_DISTANCE_MILES | 121556526 | The planets distance from Earth in miles |
+| AS_Mercury_DISTANCE_MILES_FORMATTED | 121,556,526 | The planets distance from Earth in miles formatted |
+| AS_Mercury_VISIBLE | No | Is the planet visible |
+
+### The Satellites Variables { data-toc-label="The Satellites Variables" }
+
+In the examples below replace 66645 with the Norad Id.
+
+| Variable | Sample | Description |
+|--------|-----| -------------|
+| AS_66645_NAME | ISS (ZARYA) | The name of the Satellite |
+| AS_66645_ALT | -14deg 52' 59.3" | The altitude of the Satellite in Human readable text |
+| AS_66645_ALTD | -14 | The degrees portion of the altitude |
+| AS_66645_ALTM | 52 | The minutes portion of the altitude |
+| AS_66645_ALTS | 59 | The seconds portion of the altitude |
+| AS_66645_AZ | 107deg 35' 18.5" | The azimuth of the Satellite in Human readable text |
+| AS_66645_AZD | 107 | The degrees portion of the azimuth |
+| AS_66645_AZM | 35 | The minutes portion of the azimuth |
+| AS_66645_AZS | 18 | The seconds portion of the azimuth |
+| AS_66645_DISTANCE	| 4494.53506453087 | The planets distance from Earth in Kilometers |
+| AS_66645VISIBLE | No | Is the satellite visible |
+
+If ISS passes are enabled then the following variables are generated
+
+| Variable | Sample | Description |
+|--------|-----| -------------|
+| AS_25544_VISIBLE_PASSES | None Found | A text variable that can be used on overlays if no passes are available ||
+| AS_25544_PASS1_RISE_TIME | Date | The date and time ISS rises above the 'Min Elevation' setting |
+| AS_25544_PASS1_CUL_TIME | Date | The date and time of the maximum elevation of the pass |
+| AS_25544_PASS1_SET_TIME | Date | The date and time ISS sets below the 'Min Elevation' setting |
+| AS_25544_PASS1_DURATION | Number | The duration of the pass in seconds |
+| AS_25544_PASS1_MAX_ELE | Number | The maximum elevation of the pass |
+| AS_25544_PASS1_VISIBLE | Boolean | Flag to indicate if any part of the pass will be visible Z
+
+If you add a table of pass information, or use one of the provided blocks, then you can place the AS_25544_VISIBLE_PASSES on top of the table. If there are no passes this will be displayed, useful for indicating that there are no passes
+
+## Blocks { data-toc-label="Blocks" }
+
+Several blocks are provide to make adding data to the overlays easier. These can be access from the variable manager in the overlay editor
+
+## Charts { data-toc-label="Charts" }
+
+Several charts are available that display Moon related information. These can be found in the Chart Manager
+
+
+## How to use the module { data-toc-label="How to use the module" }
+
+Add the Solar System module to the Periodic pipeline, then open the module settings and configure the tabs you need. Only enable the objects you want to use; calculating unnecessary satellite or pass data can slow the module down.
+
+After changing the settings, save the module configuration. Use the module test button to check that the expected values are being generated before adding them to overlays, blocks, or charts.
+
+### General tab { data-toc-label="General tab" }
+
+Use the **General** tab to set the observer elevation in metres above sea level. The module uses the latitude, longitude and timezone from the main Allsky settings, and this elevation value completes the observer location used for the calculations.
+
+Set this as accurately as practical for your site. A rough value is normally enough for overlay information, but a better value improves rise, set, elevation and satellite pass calculations.
+
+### Moon tab { data-toc-label="Moon tab" }
+
+Use the **Moon** tab to enable Moon calculations.
+
+Enable **Enable the Moon** if you want Moon position, illumination, phase symbol, rise time, set time, next new Moon, next full Moon, or Moon visibility variables. Set **Minimum elevation** to the elevation above the horizon where the Moon should be treated as visible.
+
+For example, use a higher minimum elevation if trees, buildings or your camera housing block the low horizon.
+
+### Sun tab { data-toc-label="Sun tab" }
+
+Use the **Sun** tab to enable Sun calculations.
+
+Enable **Enable the Sun** if you want dawn, sunrise, noon, sunset, dusk, Sun azimuth, or Sun elevation variables. These values are useful for overlays and for checking the current solar position against the image.
+
+### Planets tab { data-toc-label="Planets tab" }
+
+Use the **Planets** tab to choose which planets are calculated.
+
+Enable only the planets you want to display or record. The **Minimum elevation** setting is shared by the enabled planets and controls when each planet is considered visible.
+
+The generated variable names use the planet name, for example `AS_Mercury_VISIBLE`, `AS_Mercury_AZ`, and `AS_Mercury_DISTANCE_KM`.
+
+### ISS tab { data-toc-label="ISS tab" }
+
+Use the **ISS** tab for International Space Station calculations. Do not add the ISS NORAD ID to the Satellites tab.
+
+Enable **Enable ISS** to calculate ISS position and pass information. Use **Visible Only** if you only want passes that should be visible from your location. Set **Pass Days** to control how far ahead the module searches, and **Number Of Passes** to limit how many passes are returned.
+
+Leave **Legacy TLE Format** off to use the new CelesTrak CSV format. Enable it only if you need the legacy TLE request format.
+
+Use **AOS/LOS Elevation** to set the elevation used for acquisition and loss of signal times, and **Min Elevation** to ignore passes whose maximum elevation is too low to be useful. Keep **Pass Days** modest, typically 5 to 15 days, because pass calculations take time and TLE accuracy decreases further into the future.
+
+Enable **Debug Passes** only while testing or diagnosing pass calculations. It adds pass details to the test output and is not normally needed.
+
+### Satellites tab { data-toc-label="Satellites tab" }
+
+!!! danger  "ISS Warning"
+
+    Do not add ISS using this tab. Instead use the dedicated ISS tab to calculate data for ISS
+
+!!! info  "Initial run"
+
+    When the satellite picker is run for the first time it will download all of the required data, this can take upto a minute depending upon your connection
+
+Use the **Satellites** tab for satellites other than ISS.
+
+Add satellites using their NORAD IDs. You can enter multiple IDs as a comma-separated list, or use the satellite picker if available. Satellite IDs can be found on the Celestrak website.
+
+Leave **Legacy TLE Format** off to use the new CelesTrak CSV format. Enable it only if you need the legacy TLE request format.
+
+Set **Minimum Elevation** to the elevation above which each satellite should be treated as visible. Satellites are only classed as visible if they are above this elevation and sunlit.
+
+Avoid adding large numbers of satellites unless you need them. Each satellite increases the amount of work the module performs.
+
+## Available in { data-toc-label="Available in" }
+
+=== "Pipelines available In"
+    
+    <div class="grid cards" markdown>
+
+    -   :fontawesome-solid-clock:{ .lg .middle } __Periodic__
+
+        ---
+
+          - The Periodic pipeline
+
+    </div>

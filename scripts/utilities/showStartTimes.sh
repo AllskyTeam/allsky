@@ -4,9 +4,9 @@
 ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck source-path=.
-source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 usage_and_exit()
 {
@@ -26,7 +26,7 @@ usage_and_exit()
 	echo "OR"
 	W_ "    ${ME}  ${ME_F} [--help] [--zero] [--no-header] [--angle A] [--latitude LAT] [--longitude LONG]"
 	echo
-	echo "Where:"
+	echo "Arguments:"
 	echo "   --help              Displays this message and exits."
 	echo "   --zero              Also displays information for an angle of 0."
 	echo "   --no-header         Only displays the data, no header."

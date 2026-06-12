@@ -1,925 +1,1414 @@
 "use strict";
 
-class CHARTMANAGER {
+/**
+ * ASCHARTMANAGER
+ * - Manages tabs of draggable/resizable charts (allskyChart plugin).
+ * - Persists layout and global settings (including a global time range).
+ * - Applies the global time range to every chart and forces reloads when it changes.
+ * - Integrates with a chart designer for creating/editing custom charts.
+ */
+class ASCHARTMANAGER {
+  tabCounter = 1;
+  _zoomSyncing = false;
 
-    chartStorageKey = 'allsky-charts'
-    chartLockedKey = 'allsky-charts-locked'
-    refreshIntervals = {}
-    countdownTimers = {}
-    chartCount = 0
-    charts = new Map()
-    chartListVisible = false
-    chartsLocked = false
-    tabCount = 1
-    darkTheme = {
-        colors: [
-            '#8087E8', '#A3EDBA', '#F19E53', '#6699A1',
-            '#E1D369', '#87B4E7', '#DA6D85', '#BBBAC5'
-        ],
-        chart: {
-            backgroundColor: '#272727',
-            style: {
-                fontFamily: 'IBM Plex Sans, sans-serif'
-            }
-        },
-        title: {
-            style: {
-                fontSize: '22px',
-                fontWeight: '500',
-                color: '#fff'
-            }
-        },
-        subtitle: {
-            style: {
-                fontSize: '16px',
-                fontWeight: '400',
-                color: '#fff'
-            }
-        },
-        credits: {
-            style: {
-                color: '#f0f0f0'
-            }
-        },
-        caption: {
-            style: {
-                color: '#f0f0f0'
-            }
-        },
-        tooltip: {
-            borderWidth: 0,
-            backgroundColor: '#f0f0f0',
-            shadow: true
-        },
-        legend: {
-            backgroundColor: 'transparent',
-            itemStyle: {
-                fontWeight: '400',
-                fontSize: '12px',
-                color: '#fff'
-            },
-            itemHoverStyle: {
-                fontWeight: '700',
-                color: '#fff'
-            }
-        },
-        plotOptions: {
-            series: {
-                dataLabels: {
-                    color: '#46465C',
-                    style: {
-                        fontSize: '13px'
-                    }
-                },
-                marker: {
-                    lineColor: '#333'
-                }
-            },
-            boxplot: {
-                fillColor: '#505053'
-            },
-            candlestick: {
-                lineColor: null,
-                upColor: '#DA6D85',
-                upLineColor: '#DA6D85'
-            },
-            errorbar: {
-                color: 'white'
-            },
-            dumbbell: {
-                lowColor: '#f0f0f0'
-            },
-            map: {
-                borderColor: '#909090',
-                nullColor: '#78758C'
-            }
-        },
-        drilldown: {
-            activeAxisLabelStyle: {
-                color: '#F0F0F3'
-            },
-            activeDataLabelStyle: {
-                color: '#F0F0F3'
-            },
-            drillUpButton: {
-                theme: {
-                    fill: '#fff'
-                }
-            }
-        },
-        xAxis: {
-            gridLineColor: '#707073',
-            labels: {
-                style: {
-                    color: '#fff',
-                    fontSize: '12px'
-                }
-            },
-            lineColor: '#707073',
-            minorGridLineColor: '#505053',
-            tickColor: '#707073',
-            title: {
-                style: {
-                    color: '#fff'
-                }
-            }
-        },
-        yAxis: {
-            gridLineColor: '#707073',
-            labels: {
-                style: {
-                    color: '#fff',
-                    fontSize: '12px'
-                }
-            },
-            lineColor: '#707073',
-            minorGridLineColor: '#505053',
-            tickColor: '#707073',
-            tickWidth: 1,
-            title: {
-                style: {
-                    color: '#fff',
-                    fontWeight: '300'
-                }
-            }
-        },
-        colorAxis: {
-            gridLineColor: '#45445d',
-            labels: {
-                style: {
-                    color: '#fff',
-                    fontSize: '12px'
-                }
-            },
-            minColor: '#342f95',
-            maxColor: '#2caffe',
-            tickColor: '#45445d'
-        },
-        mapNavigation: {
-            enabled: true,
-            buttonOptions: {
-                theme: {
-                    fill: '#46465C',
-                    'stroke-width': 1,
-                    stroke: '#BBBAC5',
-                    r: 2,
-                    style: {
-                        color: '#fff'
-                    },
-                    states: {
-                        hover: {
-                            fill: '#000',
-                            'stroke-width': 1,
-                            stroke: '#f0f0f0',
-                            style: {
-                                color: '#fff'
-                            }
-                        },
-                        select: {
-                            fill: '#000',
-                            'stroke-width': 1,
-                            stroke: '#f0f0f0',
-                            style: {
-                                color: '#fff'
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        // Scroll charts
-        rangeSelector: {
-            buttonTheme: {
-                fill: '#46465C',
-                stroke: '#BBBAC5',
-                'stroke-width': 1,
-                style: {
-                    color: '#fff'
-                },
-                states: {
-                    hover: {
-                        fill: '#1f1836',
-                        style: {
-                            color: '#fff'
-                        },
-                        'stroke-width': 1,
-                        stroke: 'white'
-                    },
-                    select: {
-                        fill: '#1f1836',
-                        style: {
-                            color: '#fff'
-                        },
-                        'stroke-width': 1,
-                        stroke: 'white'
-                    }
-                }
-            },
-            inputBoxBorderColor: '#BBBAC5',
-            inputStyle: {
-                backgroundColor: '#2F2B38',
-                color: '#fff'
-            },
-            labelStyle: {
-                color: '#fff'
-            }
-        },
-        navigator: {
-            handles: {
-                backgroundColor: '#BBBAC5',
-                borderColor: '#2F2B38'
-            },
-            outlineColor: '#CCC',
-            maskFill: 'rgba(255,255,255,0.1)',
-            series: {
-                color: '#A3EDBA',
-                lineColor: '#A3EDBA'
-            },
-            xAxis: {
-                gridLineColor: '#505053'
-            }
-        },
-        scrollbar: {
-            barBackgroundColor: '#BBBAC5',
-            barBorderColor: '#808083',
-            buttonArrowColor: '#2F2B38',
-            buttonBackgroundColor: '#BBBAC5',
-            buttonBorderColor: '#2F2B38',
-            rifleColor: '#2F2B38',
-            trackBackgroundColor: '#78758C',
-            trackBorderColor: '#2F2B38'
-        }
-    }
-    lightTheme = {
-        chart: {
-            backgroundColor: '#FFFFFF',
-            style: {
-                fontFamily: 'Lucida Grande, Lucida Sans Unicode, Verdana, Arial, Helvetica, sans-serif'
-            }
-        },
-        title: {
-            style: {
-                color: '#333333',
-                fontSize: '18px'
-            }
-        },
-        xAxis: {
-            labels: {
-                style: {
-                    color: '#666666'
-                }
-            }
-        },
-        yAxis: {
-            labels: {
-                style: {
-                    color: '#666666'
-                }
-            }
-        },
-        legend: {
-            itemStyle: {
-                color: '#333333'
-            },
-            itemHoverStyle: {
-                color: '#000000'
-            }
-        },
-        tooltip: {
-            backgroundColor: 'rgba(255, 255, 255, 0.85)',
-            style: {
-                color: '#333333'
-            }
-        },
-        colors: [
-            '#7cb5ec', '#434348', '#90ed7d', '#f7a35c',
-            '#8085e9', '#f15c80', '#e4d354', '#2b908f',
-            '#f45b5b', '#91e8e1'
-        ]
-    }
+  constructor(opts = {}) {
+    this.opts = Object.assign({
+      saveUrl: 'includes/chartutil.php?request=SaveCharts',
+      loadUrl: 'includes/chartutil.php?request=SaveCharts',
+      wrap: false,
+      field: 'state',
+      includeMeta: true,
+      saveDebounceMs: 300,
+      ajaxHeaders: undefined,
 
-    createChartBox(id, moduleName, chartKey, left, top, width, height) {
-        const box = $('<div class="allsky-charts-dashboard-chart"></div>').attr({
-            'data-left': left, 'data-top': top, 'data-width': width, 'data-height': height
+      // Grid / snapping defaults (global)
+      gridEnabled: true,
+      gridSize: 24,
+      snapType: 'end', // 'move' or 'end'
+
+      // Chart auto-refresh defaults (per chart)
+      autoRefreshSecondsDefault: 30,
+      autoRefreshOptionsDefault: [0, 10, 20, 30, 60, 120],
+
+      // Global time-range defaults (persisted)
+      timeDefaults: { mode: 'quick', quick: '24h', from: null, to: null },
+
+      // Designer integration options
+      designer: {
+        enabled: true,
+        devPanel: true,
+        mountSelector: 'body',
+        variablesUrl: 'includes/chartutil.php?request=AvailableVariables',
+        graphDataUrl: 'includes/chartutil.php?request=GraphData',
+        saveUrl: 'includes/chartutil.php?request=SaveCustomChart',
+        loadChartUrl: 'includes/chartutil.php?request=LoadCustomChart'
+      }
+    }, opts);
+
+    // Global time-range state
+    this._timeRange = Object.assign({}, this.opts.timeDefaults);
+
+    // Debounced saver (URL or local)
+    this._saveDebounced = this._debounce(() => {
+      if (this.opts.saveUrl) {
+        this.saveStateToUrl(this.opts.saveUrl, {
+          wrap: this.opts.wrap,
+          field: this.opts.field,
+          includeMeta: this.opts.includeMeta,
+          ajax: { headers: this.opts.ajaxHeaders }
         });
+      } else {
+        this.saveState();
+      }
+    }, this.opts.saveDebounceMs);
 
-        const container = $(`<div class="allsky-charts-chart-container" id="${id}" data-module="${moduleName}" data-chartkey="${chartKey}"></div>`);
-        const resizer = $('<div class="allsky-charts-resizer"></div>');
-        const toolbar = $(`<div class="allsky-charts-chart-toolbar"></div>`);
-        const select = $('<select></select>').css({ fontSize: '12px', marginRight: '5px' }).append(`
-            <option value="0">None</option>
-            <option value="5000">5s</option>
-            <option value="10000">10s</option>
-            <option value="30000">30s</option>
-            <option value="60000">1m</option>
-        `);
+    // Charts queued for tabs that are not visible yet
+    this._pendingChartsByTab = Object.create(null);
 
-        const refreshBtn = $('<button title="Refresh" class="btn btn-primary btn-xs ml-1"><i class="fa-solid fa-arrows-rotate"></i></button>')
-        const closeBtn = $('<button title="Close" class="btn btn-danger btn-xs ml-1">×</button>')
+    this.buildHTML();
+    this.injectListStyles();
+    this.buildOptionsModal();
+    this.setupEvents();
+    this._initTimeRangeButton();
+    this._initDesignerIntegration();
 
-        const tabSelect = $('<select class="tab-selector ml-1" title="Move chart to another tab"></select>')
-        .css({ fontSize: '12px', marginRight: '5px' })
-    
-        const tabList = this.getTabList();
-        tabList.forEach(tab => {
-            tabSelect.append(`<option value="${tab.id}">${tab.name}</option>`)
-        })
-            
-        tabSelect.on('change', () => {
-            const newTabId = tabSelect.val()
-            $(`#${newTabId}`).append(box)
-            this.saveCharts()
-        })
-    
-        toolbar.append(select, refreshBtn, tabSelect, closeBtn);
+    // When a tab is shown, instantiate any queued charts in that tab
+    $(document)
+      .off('shown.bs.tab.asGM')
+      .on('shown.bs.tab.asGM', '#as-gm-tablist a[data-toggle="tab"]', (e) => {
+        const tabId = $(e.target).attr('href').slice(1);
+        this._restoreChartsIfPending(tabId);
+      });
 
-        const indicator = $('<div class="allsky-charts-refresh-indicator">⏳</div>').hide()
-
-        select.on('change', () => {
-            clearInterval(this.refreshIntervals[id]);
-            clearInterval(this.countdownTimers[id]);
-
-            const interval = parseInt(select.val());
-            if (interval > 0) {
-                let countdown = interval / 1000;
-                indicator.text(countdown + 's').show();
-
-                this.refreshIntervals[id] = setInterval(() => {
-                    this.renderChart(id, moduleName, chartKey);
-                    countdown = interval / 1000;
-                }, interval);
-
-                this.countdownTimers[id] = setInterval(() => {
-                    if (countdown > 0) {
-                        countdown--;
-                        indicator.text(countdown + 's');
-                    }
-                }, 1000);
-            } else {
-                indicator.hide();
-            }
-
-            this.saveCharts();
-        });
-
-        refreshBtn.on('click', () => {
-            this.renderChart(id, moduleName, chartKey);
-        });
-
-        closeBtn.on('click', () => {
-            clearInterval(this.refreshIntervals[id])
-            clearInterval(this.countdownTimers[id])
-            this.charts.delete(chartKey)
-            box.remove()
-            this.saveCharts()
-        })
-
-        box.hover(
-            () => toolbar.fadeIn(150),
-            () => toolbar.fadeOut(150)
-        )
-
-        box.append(container, resizer, toolbar, indicator);
-        this.makeDraggable(box);
-        this.makeResizable(box, resizer);
-        this.positionChartBox(box[0]);
-        return box[0];
+    // Initial load of saved state (tabs/layout/settings/time-range)
+    if (this.opts.loadUrl) {
+      this.loadStateFromUrl(this.opts.loadUrl, {
+        clearExisting: true,
+        reuseTabIds: true,
+        ajax: { headers: this.opts.ajaxHeaders }
+      });
     }
+  }
 
-    renderChart(id, moduleName, chartKey, options = {}) {
+  /* ================= UI shell ================= */
 
-        const dom = document.getElementById(id);
-        if (!dom) {
-            return
-        }
-
-        this.positionChartBox(dom.closest('.allsky-charts-dashboard-chart'));
-
-        $.ajax({
-            url: 'includes/moduleutil.php?request=GraphData',
-            type: 'POST',
-            data: {
-                module: moduleName,
-                chartkey: chartKey
-            },
-            dataType: 'json',
-            success: (allskyChartData) => {
-
-                const hasTooltip = allskyChartData.tooltip
-                if (hasTooltip !== undefined) {
-                    allskyChartData.tooltip =  {
-                        useHTML: true,
-                        formatter: function () {
-                            return `
-                                <b>${Highcharts.dateFormat('%A, %b %e, %Y %H:%M', this.x)}</b><br>
-                                Value: ${this.y}<br>
-                                <img src="${this.point.data}" style="width:100px;height:auto;border:1px solid #ccc;" />
-                                `;
-                        }
-                    }
-                    const chartType = allskyChartData.chart?.type;
-                    if (chartType === 'line' || chartType === 'spline') {
-                        allskyChartData.chart = allskyChartData.chart || {};
-                        allskyChartData.chart.events = allskyChartData.chart.events || {};
-
-                        allskyChartData.series[0].data.forEach(point => {
-                            Highcharts.addEvent(point, 'click', function () {
-                                console.log('Point clicked:', this);
-                                window.open(this.data.replace('thumbnails/',''), '_blank');
-                            });
-                        });                    
-                    }
-                }
-
-                if (this.charts.has(chartKey)) {
-                    const chart = this.charts.get(chartKey);
-                    chart.update(allskyChartData);
-                } else {
-                    const chart = Highcharts.chart(dom, allskyChartData)
-                }
-                
-                this.setTheme()
-            },
-            error: function (xhr, status, error) {
-                console.error('Error:', error)
-            }
-        })
-
+  show() {
+    const menu = $('#as-charts-toolbox-wrapper');
+    if (!menu.hasClass('active')) {
+      menu.addClass('active');
+      this.buildChartGroups();
     }
+  }
 
-    positionChartBox(box) {
-        if (!box || !box.dataset) {
-            return
-        }
-        const rect = $('#allsky-charts-main')[0].getBoundingClientRect()
-        const left = (parseFloat(box.dataset.left) / 100) * rect.width
-        const top = (parseFloat(box.dataset.top) / 100) * rect.height
-        const width = (parseFloat(box.dataset.width) / 100) * rect.width
-        const height = (parseFloat(box.dataset.height) / 100) * rect.height
-        $(box).css({ left, top, width, height })
-        const container = $(box).find('.allsky-charts-chart-container')[0]
-        if (container) {
-            //echarts.getInstanceByDom(container)?.resize()
-        }
+  hide() {
+    const menu = $('#as-charts-toolbox-wrapper');
+    if (menu.hasClass('active')) menu.removeClass('active');
+  }
+
+  /**
+   * Mounts the static manager UI (toolbox, tabs container) and core styles.
+   */
+  buildHTML() {
+    $('#as-chart-manager').remove();
+
+    const chartManager = `
+      <div id="as-chart-manager" class="noselect">
+        <div id="as-charts-toolbox-wrapper">
+          <nav class="navbar navbar-default">
+            <div class="container-fluid">
+              <div class="collapse navbar-collapse">
+                <ul class="nav navbar-nav">
+                  <li><h3>Available charts</h3></li>
+                </ul>
+              </div>
+            </div>
+          </nav>
+          <div id="as-charts-groups" class="panel-group"></div>
+        </div>
+      </div>`;
+
+    $('body').append(chartManager);
+
+    if (!document.getElementById('as-gm-style-core')) {
+      $('<style id="as-gm-style-core">#as-gm-tablist-content .tab-pane{position:relative;overflow:hidden;}</style>').appendTo('head');
     }
-
-    makeDraggable(el) {
-        let isDragging = false
-        let offsetX = 0
-        let offsetY = 0
-
-        el.on('mousedown', (e) => {
-            if (!this.chartsLocked) {
-                if ($(e.target).is('select, button') || $(e.target).hasClass('allsky-charts-resizer')) {
-                    return
-                }
-
-                isDragging = true
-                offsetX = e.offsetX
-                offsetY = e.offsetY
-            }
-        })
-        $(document).on('mousemove', (e) => {
-            if (!isDragging) return;
-            const rect = $('#allsky-charts-main')[0].getBoundingClientRect();
-            const x = ((e.clientX - rect.left - offsetX) / rect.width) * 100;
-            const y = ((e.clientY - rect.top - offsetY) / rect.height) * 100;
-            el.attr('data-left', x).attr('data-top', y);
-            this.positionChartBox(el[0]);
-        }).on('mouseup', () => {
-            if (isDragging) {
-                this.saveCharts()
-            }
-            isDragging = false;
-        })
+    if (!document.getElementById('as-gm-measuring-style')) {
+      $('<style id="as-gm-measuring-style">')
+        .text(`
+          .as-gm-measuring{
+            position:fixed !important;
+            left:-10000px !important;
+            top:-10000px !important;
+            display:block !important;
+            visibility:visible !important;
+            pointer-events:none !important;
+            opacity:1 !important;
+            z-index:-1 !important;
+          }
+          .as-grid-bg {
+            background-image:
+              linear-gradient(to right, rgba(0,0,0,0.07) 1px, transparent 1px),
+              linear-gradient(to bottom, rgba(0,0,0,0.07) 1px, transparent 1px);
+          }
+        `)
+        .appendTo('head');
     }
+  }
 
-    makeResizable(box, handle) {
-        let isResizing = false, startX, startY, startW, startH;
-        handle.on('mousedown', (e) => {
-            if (!this.chartsLocked) {
-                e.preventDefault()
-                isResizing = true
-                startX = e.clientX
-                startY = e.clientY
-                startW = box.width()
-                startH = box.height()
-            }
-        })
-        $(document).on('mousemove', (e) => {
-            if (!isResizing) {
-                return
-            }
-            const rect = $('#allsky-charts-main')[0].getBoundingClientRect()
-            const width = ((startW + (e.clientX - startX)) / rect.width) * 100
-            const height = ((startH + (e.clientY - startY)) / rect.height) * 100
-            box.attr('data-width', width).attr('data-height', height)
-            this.positionChartBox(box[0])
-        }).on('mouseup', (e) => {
-            if (isResizing) {
-                this.saveCharts()
-            }
-            isResizing = false
-        })
+  /**
+   * Styles for the left list (available chart entries).
+   */
+  injectListStyles() {
+    if (document.getElementById('asg-list-style')) return;
+    $('<style id="asg-list-style">')
+      .text(`
+        .as-cm-chart-entry { padding:8px 10px; display:flex; align-items:center; justify-content:space-between; border:0 !important; }
+        .as-cm-title { display:inline-flex; align-items:center; gap:6px; cursor:grab; }
+        .as-cm-title:active { cursor:grabbing; }
+        .as-cm-actions { margin-left:auto; display:inline-flex; gap:6px; }
+        .as-cm-actions .btn { padding:2px 6px; }
+      `)
+      .appendTo('head');
+  }
+
+  /* ================= Options modal ================= */
+
+  /**
+   * Builds the Options modal and binds its controls to manager settings.
+   */
+  buildOptionsModal() {
+    if ($('#asChartsOptionsModal').length) return;
+
+    const modal = `
+<div class="modal fade" id="asChartsOptionsModal" tabindex="-1" role="dialog" aria-labelledby="asChartsOptionsLabel">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Cancel"><span>&times;</span></button>
+        <h4 class="modal-title" id="asChartsOptionsLabel"><i class="fa fa-gear"></i> Chart Manager Options</h4>
+      </div>
+      <div class="modal-body">
+        <form id="asChartsOptionsForm" class="form-horizontal">
+          <div class="form-group">
+            <label class="col-sm-4 control-label">Grid enabled</label>
+            <div class="col-sm-8">
+              <div class="checkbox" style="margin-top:0;">
+                <label><input type="checkbox" id="opt-grid-enabled"> Enable drag grid / snap</label>
+              </div>
+              <p class="help-block">When enabled, charts snap to a fixed grid while moving/resizing.</p>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="opt-grid-size" class="col-sm-4 control-label">Grid size (px)</label>
+            <div class="col-sm-4">
+              <input type="number" class="form-control" id="opt-grid-size" min="4" max="400" step="1" placeholder="px">
+            </div>
+            <div class="col-sm-4"><p class="help-block">Typical: 8–48</p></div>
+          </div>
+
+          <div class="form-group">
+            <label for="opt-snap-type" class="col-sm-4 control-label">Drag snap type</label>
+            <div class="col-sm-4">
+              <select id="opt-snap-type" class="form-control">
+                <option value="end">end (snap when released)</option>
+                <option value="move">move (snap while dragging)</option>
+              </select>
+            </div>
+            <div class="col-sm-4"><p class="help-block">How snapping behaves during drag.</p></div>
+          </div>
+
+          <div class="form-group">
+            <label for="opt-default-autorefresh" class="col-sm-4 control-label">Default auto-refresh</label>
+            <div class="col-sm-4">
+              <select id="opt-default-autorefresh" class="form-control"></select>
+            </div>
+            <div class="col-sm-4">
+              <p class="help-block">Used for <em>newly created</em> charts.</p>
+            </div>
+          </div>
+
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+        <button type="button" id="asChartsOptionsSave" class="btn btn-primary">Save</button>
+      </div>
+    </div>
+  </div>
+</div>`;
+    $('body').append(modal);
+
+    const $selAuto = $('#opt-default-autorefresh');
+    const opts = this.opts.autoRefreshOptionsDefault || [0, 10, 20, 30, 60, 120];
+    $selAuto.empty();
+    opts.forEach((sec) => {
+      const label = sec === 0 ? 'None' : `${sec}s`;
+      $('<option>').val(String(sec)).text(label).appendTo($selAuto);
+    });
+
+    $('#opt-grid-enabled').prop('checked', !!this.opts.gridEnabled);
+    $('#opt-grid-size').val(this.opts.gridSize);
+    $('#opt-snap-type').val((this.opts.snapType === 'move') ? 'move' : 'end');
+    $selAuto.val(String(this.opts.autoRefreshSecondsDefault));
+
+    $(document).off('click.asOptions').on('click.asOptions', '#as-charts-toolbox-options', () => {
+      $('#opt-grid-enabled').prop('checked', !!this.opts.gridEnabled);
+      $('#opt-grid-size').val(this.opts.gridSize);
+      $('#opt-snap-type').val((this.opts.snapType === 'move') ? 'move' : 'end');
+      $selAuto.val(String(this.opts.autoRefreshSecondsDefault));
+      $('#asChartsOptionsModal').modal('show');
+    });
+
+    $('#asChartsOptionsSave').off('click').on('click', () => {
+      const enabled = $('#opt-grid-enabled').is(':checked');
+      let size = parseInt($('#opt-grid-size').val(), 10);
+      if (!Number.isFinite(size) || size < 4) size = 4;
+      if (size > 400) size = 400;
+
+      let defSecs = parseInt($('#opt-default-autorefresh').val(), 10);
+      if (!Number.isFinite(defSecs) || defSecs < 0) defSecs = 0;
+
+      const snapTypeSel = String($('#opt-snap-type').val());
+      const snapType = (snapTypeSel === 'move') ? 'move' : 'end';
+
+      this.opts.gridEnabled = enabled;
+      this.opts.gridSize = size;
+      this.opts.snapType = snapType;
+      this.opts.autoRefreshSecondsDefault = defSecs;
+
+      this._applySettingsToUI();
+      this._saveDebounced();
+
+      $('#asChartsOptionsModal').modal('hide');
+    });
+  }
+
+  /**
+   * Applies grid background to a pane according to current settings.
+   */
+  _updatePaneGridBg($pane) {
+    const sz = `${this.opts.gridSize}px ${this.opts.gridSize}px`;
+    if (this.opts.gridEnabled) {
+      $pane.addClass('as-grid-bg');
+      $pane.css({ backgroundSize: sz, backgroundImage: '' });
+    } else {
+      $pane.removeClass('as-grid-bg');
+      $pane.css({ backgroundImage: 'none', backgroundSize: '', backgroundPosition: '' });
     }
+  }
 
-    loadCharts() {
-        this.loadTabNamesAndBuildTabs()
-        const data = JSON.parse(localStorage.getItem(this.chartStorageKey) || '[]');
-        data.forEach(({ chartId, moduleName, chartKey, position, interval, tabId }) => {
-            const box = $(this.createChartBox(chartId, moduleName, chartKey, position.left, position.top, position.width, position.height))
-            tabId = tabId || 'tab1';            
-            $('#' + tabId).append(box);         
-            this.renderChart(chartId, moduleName, chartKey)
-            box.find('select').val(interval).trigger('change')
-        })
-        this.chartCount = data.reduce((max, c) => Math.max(max, parseInt(c.chartId.split('-')[1])), 0)
-        this.setTheme()
-    }
+  /**
+   * Refreshes UI elements impacted by settings (grid background + snapping).
+   */
+  _applySettingsToUI() {
+    $('#as-gm-tablist-content .tab-pane').each((_, pane) => {
+      this._updatePaneGridBg($(pane));
+    });
+    $('#as-gm-tablist-content .tab-pane').each((_, pane) => {
+      this._applySnapToPane($(pane));
+    });
+  }
 
-    reloadAllCharts() {
-        $('.allsky-charts-dashboard-chart').each((_, el) => {
-            const $box = $(el);
-            const container = $box.find('.allsky-charts-chart-container');
-            const id = container.attr('id');
-            const moduleName = container.data('module');
-            const chartKey = container.data('chartkey');
-    
-            this.renderChart(id, moduleName, chartKey);
-        });
-    }
+  /* ================= Available charts list ================= */
 
-    saveCharts() {
-        const data = $('.allsky-charts-dashboard-chart').map(function () {
-            const box = $(this)
-            const container = box.find('.allsky-charts-chart-container')
-            const select = box.find('select')
+  /**
+   * Loads and renders the list of available charts (grouped).
+   */
+  buildChartGroups() {
+    $.ajax({
+      url: 'includes/chartutil.php?request=AvailableGraphs',
+      type: 'GET',
+      async: false,
+      cache: false,
+      dataType: 'json',
+      success: (allskyChartData) => {
+        const chartGroups = $('#as-charts-groups');
+        chartGroups.empty();
 
-            return {
-                chartId: container.attr('id'),
-                moduleName: container.data('module'),
-                chartKey: container.data('chartkey'),
-                tabId: container.closest('.tab-pane').attr('id'),              
-                position: {
-                    left: box.attr('data-left'),
-                    top: box.attr('data-top'),
-                    width: box.attr('data-width'),
-                    height: box.attr('data-height')
-                },
-                interval: select.val()
-            }
-        }).get()
+        $.each(allskyChartData, (categoryName, chartsArray) => {
+          const collapseId = 'category-' + String(categoryName.replace(/ /g, '-')).toLowerCase();
 
-        localStorage.setItem(this.chartStorageKey, JSON.stringify(data));
-    }
+          const $panel  = $('<div>', { class: 'panel panel-default chart-category' });
 
-    saveTabNames() {
-        const tabNames = {};
-        $('#allsky-charts-tabbar li.custom-tab').each(function () {
-            const href = $(this).find('a').attr('href'); // e.g., #tab2
-            const name = $(this).find('.tab-title').text().trim();
-            if (href) {
-                tabNames[href.replace('#', '')] = name;
-            }
-        });
-        localStorage.setItem('allsky-tab-names', JSON.stringify(tabNames));
-    }
-    
-    loadTabNamesAndBuildTabs() {
-        const tabNames = JSON.parse(localStorage.getItem('allsky-tab-names') || '{}');
-    
-        for (const [tabId, title] of Object.entries(tabNames)) {
-            if ($(`#${tabId}`).length === 0) {
-                this.tabCount++
-                // Tab content
-                $('#allsky-charts-main').append(`<div id="${tabId}" class="tab-pane fade"></div>`);
-    
-                // Tab header
-                $(`
-                    <li class="custom-tab">
-                        <a href="#${tabId}" data-toggle="tab">
-                            <span class="tab-title" contenteditable="false">${title}</span>
-                        </a>
-                        <span class="close-tab"><i class="fa-solid fa-trash-can"></i></span>
-                    </li>
-                `).insertBefore('#add-tab-btn');
-            } else {
-                // Update the name in case it was renamed
-                $(`#allsky-charts-tabbar a[href="#${tabId}"] .tab-title`).text(title);
-            }
-        }
-    
-        $('#allsky-charts-tabbar li:not(#add-tab-btn)').first().find('a').tab('show');
-    }
+          const $heading = $('<div>', { class: 'panel-heading' }).append(
+            $('<h4>', { class: 'panel-title' }).append(
+              $('<a>', { class: 'collapsed', 'data-toggle': 'collapse', href: '#' + collapseId, text: categoryName })
+            )
+          );
 
-    deleteTabName(tabId) {
-        tabId = tabId.replace('#', '');
-        const tabNames = JSON.parse(localStorage.getItem('allsky-tab-names') || '{}');
-        delete tabNames[tabId];
-        localStorage.setItem('allsky-tab-names', JSON.stringify(tabNames));
-    }
+          const $bodyWrap = $('<div>', { id: collapseId, class: 'panel-collapse collapse' });
+          const $body = $('<div>', { class: 'panel-body' });
 
-    setTheme() {
-        if ($('body').hasClass('dark')) {
-            Highcharts.setOptions(this.darkTheme)
-        } else {
-            Highcharts.setOptions(this.lightTheme)
-        }
-    }
+          (chartsArray || []).forEach((chart) => {
+            const enabledClass = chart.enabled ? 'as-cm-chart-entry-enabled' : '';
+            const safeId = String(chart.filename || chart.title || 'chart').replace(/[^\w\-:.]/g, '_');
 
-    #setLockedState() {
-        $('#allsky-charts-chart-toggle-lock').removeClass('fa-lock')
-        $('#allsky-charts-chart-toggle-lock').removeClass('fa-lock-open')
-        if (this.chartsLocked) {
-            $('#allsky-charts-chart-toggle-lock').addClass('fa-lock')
-        } else {
-            $('#allsky-charts-chart-toggle-lock').addClass('fa-lock-open')
-        }
-        localStorage.setItem(this.chartLockedKey, this.chartsLocked ? 'true' : 'false')
-    }
+            const $title = $('<span class="as-cm-title" draggable="'+(!!chart.enabled)+'">')
+              .append($('<i>', { class: (chart.icon || 'fa fa-chart-line') + ' fs-18' }).css({ marginRight: '6px' }))
+              .append(document.createTextNode(chart.title || chart.filename || 'Chart'))
+              .data('drag', { filename: chart.filename, title: chart.title || chart.filename || '' });
 
-    buildUI() {
-        $.ajax({
-            url: 'includes/moduleutil.php?request=AvailableGraphs',
-            type: 'GET',
-            async: false,
-            dataType: 'json',
-            success: function (allskyChartData) {
-                var sidebar = $('#allsky-charts-sidebar')
-                $.each(allskyChartData, function (categoryName, chartsArray) {
-                    var collapseId = 'category-' + categoryName.toLowerCase()
-                    var panel = $('<div>', { class: 'panel panel-default chart-category' })
-
-                    var heading = $('<div>', { class: 'panel-heading' }).append(
-                        $('<h4>', { class: 'panel-title' }).append(
-                            $('<a>', {
-                                class: 'collapsed',
-                                'data-toggle': 'collapse',
-                                href: '#' + collapseId,
-                                text: categoryName
-                            })
-                        )
-                    )
-
-                    var body = $('<div>', {
-                        id: collapseId,
-                        class: 'panel-collapse collapse'
-                    }).append(
-                        $('<div>', { class: 'panel-body' })
-                    )
-
-                    chartsArray.forEach(function (chart) {
-                        var item = $('<div>', {
-                            class: 'allsky-charts-chart-menu-item',
-                            'data-module': chart.module,
-                            'data-chartkey': chart.key,
-                            draggable: true
-                        }).append(
-                            $('<i>', { class: chart.icon }).css({ marginRight: '5px' }),
-                            chart.title
-                        )
-
-                        body.find('.panel-body').append(item)
-                    })
-
-                    panel.append(heading).append(body)
-                    sidebar.append(panel)
-                })
-            },
-            error: function (xhr, status, error) {
-                console.error('Error:', error)
-            }
-        })
-
-        this.chartsLocked = localStorage.getItem(this.chartLockedKey) === 'true'
-        this.#setLockedState()
-
-        $('#allsky-charts-sidebar').hide()
-    }
-
-    getTabList() {
-        const tabs = [];
-        $('#allsky-charts-tabbar li.custom-tab').each(function () {
-            const href = $(this).find('a').attr('href')
-            const name = $(this).find('.tab-title').text().trim()
-            if (href) {
-                tabs.push({ id: href.replace('#', ''), name })
-            }
-        })
-
-        return tabs
-    }
-
-    updateAllTabSelectors() {
-        const tabList = this.getTabList();
-        $('.tab-selector').each(function () {
-            const current = $(this).val()
-            $(this).empty()
-            tabList.forEach(tab => {
-                $(this).append(`<option value="${tab.id}">${tab.name}</option>`);
-            })
-            $(this).val(current)
-        })
-    }
-
-    addEvents() {
-        let draggingSidebar = false
-        let offsetX = 0
-        let offsetY = 0
-
-        $('#add-tab-btn').on('click', (e) => {
-            this.tabCount++
-        
-            const newTabId = `tab${this.tabCount}`
-            const newTabTitle = `Tab ${this.tabCount}`
-        
-            const $newTab = $(`
-                <li class="custom-tab">
-                    <a href="#${newTabId}" data-toggle="tab">
-                        <span class="tab-title" contenteditable="false">${newTabTitle}</span>
-                    </a>
-                    <span class="close-tab"><i class="fa-solid fa-trash-can"></i></span>
-                </li>
-            `).insertBefore('#add-tab-btn');
-        
-            $('#allsky-charts-main').append(`<div id="${newTabId}" class="tab-pane fade"></div>`);
-        
-            $newTab.find('a').tab('show')
-            this.saveTabNames()
-            this.updateAllTabSelectors()
-        });
-
-        $('#allsky-charts-tabbar').on('click', '.close-tab', (e) => {
-            e.stopPropagation(); // Prevent the tab from switching
-        
-            const $li = $(e.currentTarget).closest('li');
-            const href = $li.find('a').attr('href'); // e.g., "#tab2"
-            const $tabPane = $(href);            
-            const tabId = href.replace('#', '');
-            const tabName = $li.find('.tab-title').text().trim();
-        
-            // Optional: Protect tab1
-            if (tabId === 'tab1') {
-                alert('Tab 1 cannot be deleted.');
-                return;
-            }
-
-            const hasCharts = $tabPane.find('.allsky-charts-dashboard-chart').length > 0;
-            if (hasCharts) {
-                alert(`You can't delete "${tabName}" — it still contains charts.`);
-                return;
-            }
-
-            // Confirm deletion
-            const confirmed = confirm(`Are you sure you want to delete "${tabName}" and all its charts?`);
-            if (!confirmed) return;
-        
-            // Remove charts in the tab
-            $(href).find('.allsky-charts-dashboard-chart').each(function () {
-                $(this).remove(); // You might also want to clear refresh timers here
+            const $entry = $('<div>', {
+              id: `as-cm-chart-entry-${safeId}`,
+              class: `as-cm-chart-entry fs-16 noselect ${enabledClass}`,
+              'data-module': chart.module,
+              'data-filename': chart.filename,
+              'data-title': chart.title || chart.filename || ''
             });
-        
-            // Remove tab content + header
-            $(href).remove();
-            $li.remove();
-        
-            // Switch to the first available tab
-            $('#allsky-charts-tabbar li.custom-tab:not(#add-tab-btn)').first().find('a').tab('show');
-        
-            // Remove tab name from storage
-            this.deleteTabName(tabId);
-        
-            // Save updated chart layout
-            this.saveCharts()
-            this.updateAllTabSelectors()
-        });
 
+            const $right = $('<div class="as-cm-actions"></div>');
 
-        $('#allsky-charts-lock').click((e) => {
-            this.chartsLocked = !this.chartsLocked
-            this.#setLockedState()
-        })
+            if (chart.custom === true) {
+              const $btnEdit = $('<button type="button" class="btn btn-xs btn-primary" title="Edit"><i class="fa-regular fa-pen-to-square"></i> Edit</button>');
+              const $btnDelete = $('<button type="button" class="btn btn-xs btn-danger" title="Delete"><i class="fa-regular fa-trash-can"></i> Delete</button>');
 
-        $('#allsky-charts-chart-list-toggle').click(function () {
-            this.chartListVisible = !this.chartListVisible
+              $btnEdit.on('click', (e) => {
+                e.stopPropagation();
+                $(document).trigger('asCharts:customEdit', [{
+                  module: chart.module,
+                  filename: chart.filename,
+                  title: chart.title || chart.filename || ''
+                }]);
+              });
 
-            if (this.chartListVisible) {
-                $('#allsky-charts-sidebar').show()
-                $('#allsky-charts-sidebar').css('left', '225px');
-                $('#allsky-charts-sidebar').css('top', '150px');                
-                $('#allsky-charts-chart-list-toggle-label')
-                    .removeClass('label-default')
-                    .addClass('label-success')
-                    .text('ON');
-            } else {
-                $('#allsky-charts-sidebar').hide()
-                $('#allsky-charts-chart-list-toggle-label')
-                    .removeClass('label-success')
-                    .addClass('label-default')
-                    .text('OFF');
+              $btnDelete.on('click', (e) => {
+                e.stopPropagation();
+                $(document).trigger('asCharts:customDelete', [{
+                  module: chart.module,
+                  filename: chart.filename,
+                  title: chart.title || chart.filename || ''
+                }]);
+              });
+
+              $right.append($btnEdit, $btnDelete);
             }
+
+            $entry.append($title).append($right);
+            $body.append($entry);
+          });
+
+          $panel.append($heading).append($bodyWrap.append($body));
+          chartGroups.append($panel);
         });
+      }
+    });
+  }
 
-        $('#allsky-charts-sidebar').on('mousedown', function (e) {
-            if ($(e.target).closest('.allsky-charts-chart-menu-item').length) {
-                return
-            }
-            draggingSidebar = true
-            offsetX = e.clientX - this.offsetLeft
-            offsetY = e.clientY - this.offsetTop
-        })
+  /* ================= Tabs ================= */
 
-        $(document)
-            .on('mousemove', function (e) {
-                if (!draggingSidebar) {
-                    return
-                }
-                $('#allsky-charts-sidebar').css({ left: `${e.clientX - offsetX}px`, top: `${e.clientY - offsetY}px` })
-            })
-            .on('mouseup', () => draggingSidebar = false)
+  /**
+   * Creates a new tab with a pane and activates it.
+   */
+  addTab(title, content) {
+    this.tabCounter++;
+    const tabId = "as-gm-tab-" + this.tabCounter;
 
-        $('.allsky-charts-chart-menu-item').attr('draggable', true).on('dragstart', function (e) {
-            e.originalEvent.dataTransfer.setData('module', $(this).data('module'))
-            e.originalEvent.dataTransfer.setData('chartkey', $(this).data('chartkey'))
-        })
+    const newTab = $(
+      '<li><a href="#' + tabId + '" data-toggle="tab">' +
+      '<span class="tab-title">' + (title || 'Tab ' + this.tabCounter) + '</span>' +
+      '<span class="as-gm-tab-tools">' +
+      '<button class="close close-tab"><i class="fa-regular fa-xmark small text-danger"></i></button></a></li>' +
+      '</span>'
+    );
 
-        $('#allsky-charts-main').on('dragover', (e) => {
-            e.preventDefault()
-        })
+    $('#as-gm-add-tab').before(newTab);
 
-        $('#allsky-charts-main').on('drop', (e) => {
-            e.preventDefault()
-            let activeTab = $('#allsky-charts-main .tab-pane.active')[0]
-            let el = e.currentTarget
-            const moduleName = e.originalEvent.dataTransfer.getData('module')
-            const chartKey = e.originalEvent.dataTransfer.getData('chartkey')
+    const newContent = $(
+      '<div class="tab-pane fade as-gm-tab" id="' + tabId + '">' +
+      (content || '') +
+      '</div>'
+    );
+    $('#as-gm-tablist-content').append(newContent);
 
-            const rect = el.getBoundingClientRect()
-            const left = ((e.originalEvent.clientX - rect.left) / rect.width) * 100
-            const top = ((e.originalEvent.clientY - rect.top) / rect.height) * 100
-            const id = 'chart-' + (++this.chartCount)
-            const box = this.createChartBox(id, moduleName, chartKey, left, top, 30, 20)
-            if (box) {
-                //el.appendChild(box)
-                activeTab.appendChild(box);
-                this.renderChart(id, moduleName, chartKey)
-                this.setTheme()
-                this.saveCharts()
-            }
-        })
+    this._updatePaneGridBg(newContent);
 
-        $(window).on('resize', () => {
-            $('.allsky-charts-dashboard-chart').each((_, el) => this.positionChartBox(el))
-        })
+    newTab.find('a').tab('show');
+    return tabId;
+  }
 
-        $(document).on('allsky-theme-change', (e) => {
-            this.setTheme()
-            this.reloadAllCharts()          
-        })
+  /**
+   * Removes a tab and its charts, switches focus appropriately, and saves.
+   */
+  removeTab(tabId) {
+    const $pane = $('#' + tabId);
+    const $li = $('#as-gm-tablist a[href="#' + tabId + '"]').closest('li');
+    const wasActive = $li.hasClass('active');
 
-        $('.chart-category').each(function () {
-            const $panel = $(this);
-            const $items = $panel.find('.allsky-charts-chart-menu-item');
-            const $collapse = $panel.find('.panel-collapse');
+    try {
+      const insts = $pane.data('allskyChart_instances') || [];
+      insts.forEach((inst) => {
+        try {
+          if (typeof inst.destroy === 'function') inst.destroy();
+          else if (inst.chart && typeof inst.chart.destroy === 'function') inst.chart.destroy();
+          const $node = inst.$root || inst.$el || inst.$container || inst.$box;
+          if ($node && $node.length) $node.remove();
+        } catch (e) { console.warn('Chart destroy failed:', e); }
+      });
+      $pane.removeData('allskyChart_instances');
+    } catch (e) { console.warn('Instance cleanup failed:', e); }
 
-           // if ($items.length === 1) {
-           //     $collapse.addClass('in'); // Bootstrap 3 collapse "open" class
-           //     $panel.find('.panel-title a').removeClass('collapsed');
-           // }
-        });
-
-        $('[data-toggle="tooltip"]').tooltip();
-
-        this.loadCharts()
-
-        // Double-click to enable editing
-        $('#allsky-charts-tabbar').on('dblclick', '.tab-title', function (e) {
-            e.stopPropagation();
-            const $title = $(this);
-            $title.attr('contenteditable', 'true').focus();
-        });
-
-        // Blur or Enter key to finish editing
-        $('#allsky-charts-tabbar').on('blur', '.tab-title', (e) => {
-            $(e.currentTarget).attr('contenteditable', 'false');
-            this.saveTabNames(); // persist if you want
-        });
-
-        $('#allsky-charts-tabbar').on('keydown', '.tab-title', function (e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                $(this).blur();
-            }
-        });        
+    if (this._pendingChartsByTab && this._pendingChartsByTab[tabId]) {
+      delete this._pendingChartsByTab[tabId];
     }
 
-    run() {
-        this.buildUI()
-        this.addEvents()
+    const $nextLink = $li.next('li').not('#as-gm-add-tab').find('a[data-toggle="tab"]');
+    const $prevLink = $li.prev('li').find('a[data-toggle="tab"]');
+
+    $li.remove();
+    $pane.remove();
+
+    if (wasActive) {
+      const $toShow = $nextLink.length ? $nextLink : $prevLink;
+      if ($toShow && $toShow.length) {
+        $toShow.tab('show');
+        const newId = $toShow.attr('href').slice(1);
+        this._restoreChartsIfPending(newId);
+      }
     }
+
+    if (this.opts && this.opts.saveUrl) {
+      this.saveStateToUrl(this.opts.saveUrl, {
+        wrap: this.opts.wrap,
+        field: this.opts.field,
+        includeMeta: this.opts.includeMeta,
+        ajax: { headers: this.opts.ajaxHeaders }
+      }).catch((e) => console.warn('Save after delete failed:', e));
+    } else {
+      this.saveState();
+    }
+  }
+
+  /**
+   * Starts inline rename for a tab (double-click title).
+   */
+  startRename(a) {
+    const href = a.attr('href');
+    if (href) this._ensureTitleSpan(href.slice(1));
+    const $title = a.find('.tab-title');
+    if (a.find('.tab-title-editor').length) return;
+
+    const current = ($title.text() || '').trim();
+    const $input = $('<input type="text" class="form-control input-sm tab-title-editor">').val(current);
+
+    $('.as-gm-tab-tools').css({ visibility: 'hidden', display: 'none' });
+    $title.replaceWith($input);
+    $input.focus().select();
+
+    const finish = (saveIt) => {
+      const newText = saveIt ? ($input.val().trim() || current) : current;
+      $input.replaceWith(`<span class="tab-title">${$('<div>').text(newText).html()}</span>`);
+      $('.as-gm-tab-tools').css({ visibility: 'visible', display: 'inline' });
+
+      if (this.opts && this.opts.saveUrl) {
+        this.saveStateToUrl(this.opts.saveUrl, {
+          wrap: this.opts.wrap,
+          field: this.opts.field,
+          includeMeta: this.opts.includeMeta,
+          ajax: { headers: this.opts.ajaxHeaders }
+        }).catch((e) => console.warn('Rename save failed:', e));
+      } else {
+        this.saveState();
+      }
+    };
+
+    $input.on('keydown', (e) => { if (e.key === 'Enter') finish(true); if (e.key === 'Escape') finish(false); });
+    $input.on('blur', () => finish(true));
+  }
+
+  /* ================= Events / DnD ================= */
+
+  /**
+   * Binds toolbox visibility, tab actions, DnD from list, and custom chart actions.
+   */
+  setupEvents() {
+    $('#as-charts-menu').off('click').on('click', (e) => this.show());
+
+    $(document).on('click', (e) => {
+      const isInside = $(e.target).closest('#as-charts-toolbox-wrapper').length > 0;
+      const isExcluded = $(e.target).closest('#as-charts-menu').length > 0;
+      if (!isInside && !isExcluded) this.hide();
+    });
+
+    $(document).off('click.asCreateChart').on('click.asCreateChart', '#as-create-chart', (e) => {
+      e.preventDefault();
+      this._openDesigner();
+    });
+
+    $('#as-gm-add-tab').off('click').on('click', (e) => this.addTab());
+    $('#as-gm-tablist')
+      .on('click', '.close-tab', (e) => {
+        e.stopPropagation();
+        const tabId = $(e.currentTarget).closest('a').attr('href').substring(1);
+        this.removeTab(tabId);
+      })
+      .on('dblclick', '.tab-title', (e) => {
+        const el = e.currentTarget;
+        e.stopPropagation();
+        e.preventDefault();
+        this.startRename($(el).closest('a'));
+      });
+
+    // Drag from left list (title only)
+    $(document).off('dragstart.asSidebar').on('dragstart.asSidebar', '.as-cm-title', function (e) {
+      const meta = $(this).data('drag') || {};
+      e.originalEvent.dataTransfer.setData('text/plain', JSON.stringify({ filename: meta.filename || meta.title || '', title: meta.title || '' }));
+    });
+
+    // Drop onto pane to create a chart
+    $(document).on('dragover', '.as-gm-tab', function (e) { e.preventDefault(); });
+    $(document).on('drop', '.as-gm-tab', (e) => {
+      const targetTab = e.currentTarget.id;
+      const payloadTxt = e.originalEvent.dataTransfer.getData('text/plain');
+      if (!payloadTxt) return;
+
+      let meta;
+      try { meta = JSON.parse(payloadTxt); } catch(_) { meta = {}; }
+      const filename = meta && meta.filename ? meta.filename : (meta && meta.title ? meta.title : null);
+      if (!filename) return;
+
+      const $pane = $(`#${targetTab}`);
+      this._updatePaneGridBg($pane);
+
+      this._createChartFromState($pane, {
+        filename: filename,
+        top: 0, left: 0, width: 320, height: 240,
+        autoRefreshSeconds: this.opts.autoRefreshSecondsDefault | 0
+      });
+    });
+
+    // Custom chart delete (immediate UI removal + server call)
+    $(document)
+      .off('asCharts:customDelete.handler')
+      .on('asCharts:customDelete.handler', (e, info) => {
+        if (!info || !info.filename) return;
+        const display = info.title || info.filename;
+        if (!window.confirm(`Delete custom chart “${display}”? This can’t be undone.`)) return;
+
+        this._purgeChartEverywhere(info.filename);
+        try { this._saveDebounced(); } catch(_) {}
+
+        $.ajax({
+          url: 'includes/chartutil.php?request=DeleteCustomChart',
+          method: 'POST',
+          data: JSON.stringify({ name: info.filename }),
+          contentType: 'application/json; charset=utf-8',
+          dataType: 'json',
+          cache: false
+        })
+        .done((resp) => {
+          if (resp && resp.ok) {
+            $(`.as-cm-chart-entry[data-filename="${info.filename}"]`).remove();
+            this.buildChartGroups();
+          } else {
+            const msg = (resp && resp.error) ? resp.error : 'Unknown server error';
+            this._popup(`Delete failed: ${msg}`);
+          }
+        })
+        .fail((xhr) => {
+          const msg = (xhr && xhr.responseText) ? xhr.responseText : `HTTP ${xhr.status || ''}`;
+          this._popup(`Delete failed: ${msg}`);
+        });
+      });
+
+    // Custom chart edit (open designer prefilled)
+    $(document)
+      .off('asCharts:customEdit.handler')
+      .on('asCharts:customEdit.handler', (e, info) => {
+        this._openDesigner({ name: info && info.filename });
+      });
+  }
+
+  /* ================= Instances / bounds / refresh ================= */
+
+  /**
+   * Returns bounds (and per-chart auto-refresh) for all charts in a tab.
+   */
+  getAllChartBoundsIn(tab) {
+    const instances = tab.data('allskyChart_instances') || [];
+    return instances
+      .map((inst, i) => {
+        const b = inst.getBounds && inst.getBounds();
+        if (!b) return null;
+
+        let seconds = null;
+        try {
+          if (typeof inst.getAutoRefreshSeconds === 'function') {
+            const s = parseInt(inst.getAutoRefreshSeconds(), 10);
+            if (Number.isFinite(s)) seconds = s;
+          }
+          if (seconds == null && typeof inst._autoSeconds === 'number') {
+            seconds = inst._autoSeconds | 0;
+          }
+          if (seconds == null) {
+            const $root = inst.$root || inst.$el || inst.$container || inst.$box || $([]);
+            const $sel = $root.find('[data-role="auto-refresh"], [name="autoRefresh"], .auto-refresh, .as-hc-autorefresh').filter('select').first();
+            if ($sel.length) seconds = Math.max(0, parseInt($sel.val(), 10) || 0);
+          }
+        } catch (e) { console.warn('read auto-refresh seconds failed:', e); }
+
+        const out = {
+          index: i,
+          title: inst.$title ? inst.$title.text() : null,
+          top: b.top, left: b.left, width: b.width, height: b.height,
+          filename: b.filename || inst.filename || null
+        };
+        if (seconds != null) out.autoRefreshSeconds = Math.max(0, seconds | 0);
+        return out;
+      })
+      .filter(Boolean);
+  }
+
+  /**
+   * Executes a function with a hidden pane temporarily made measurable.
+   */
+  _makeMeasurable($pane, fn) {
+    if ($pane.is(':visible')) return fn();
+    const el = $pane[0];
+    const s = el.style;
+    const orig = { display: s.display, visibility: s.visibility, position: s.position, left: s.left, top: s.top, width: s.width };
+    $pane.addClass('as-gm-measuring');
+    const $host = $('#as-gm-tablist-content');
+    const hostW = $host.width() || $pane.parent().width() || 800;
+    s.width = hostW + 'px';
+    el.offsetHeight;
+    let out;
+    try { out = fn(); }
+    finally {
+      $pane.removeClass('as-gm-measuring');
+      s.display = orig.display; s.visibility = orig.visibility; s.position = orig.position; s.left = orig.left; s.top = orig.top; s.width = orig.width;
+    }
+    return out;
+  }
+
+  /* ================= SAVE ================= */
+
+  /**
+   * Returns a JSON string of current state (settings + tabs + charts).
+   */
+  saveState() {
+    const payload = this._collectState();
+    return JSON.stringify(payload, null, 2);
+  }
+
+  /**
+   * Constructs the state object for persistence.
+   */
+  _collectState() {
+    const tabs = [];
+    $('#as-gm-tablist-content .tab-pane').each((_, el) => {
+      const $pane = $(el);
+      const tabId = $pane.attr('id');
+      const title = this._getTabTitle(tabId);
+      const created = this._makeMeasurable($pane, () => {
+        return this.getAllChartBoundsIn($pane) || [];
+      }) || [];
+      const queuedRaw = (this._pendingChartsByTab && this._pendingChartsByTab[tabId])
+        ? this._pendingChartsByTab[tabId]
+        : [];
+      const queued = queuedRaw.map((c) => this._normalizeBounds(c));
+      const charts = created.concat(queued);
+      tabs.push({ tabId, title, charts });
+    });
+
+    return {
+      settings: {
+        gridEnabled: !!this.opts.gridEnabled,
+        gridSize: this.opts.gridSize | 0,
+        snapType: (this.opts.snapType === 'move') ? 'move' : 'end',
+        defaultAutoRefreshSeconds: this.opts.autoRefreshSecondsDefault | 0,
+        timeRange: this._timeRange || this.opts.timeDefaults
+      },
+      tabs
+    };
+  }
+
+  /**
+   * Saves state via HTTP (optionally wrapped with metadata).
+   */
+  saveStateToUrl(url, opts = {}) {
+    const { wrap = false, field = 'state', includeMeta = true, ajax = {} } = opts;
+    const state = this._collectState();
+    let payload = state;
+    if (wrap) {
+      payload = { [field]: state };
+      if (includeMeta) payload.meta = { savedAt: new Date().toISOString(), version: 5 };
+    }
+    return $.ajax(Object.assign({
+      url,
+      method: 'POST',
+      data: JSON.stringify(payload),
+      contentType: 'application/json; charset=utf-8',
+      dataType: 'json',
+      cache: false,
+      headers: this.opts.ajaxHeaders
+    }, ajax));
+  }
+
+  /* ================= LOAD ================= */
+
+  /**
+   * Loads state JSON from URL and applies it.
+   */
+  loadStateFromUrl(url, opts = {}) {
+    const { clearExisting = true, reuseTabIds = true, ajax = {} } = opts;
+    return $.ajax(Object.assign({
+      url, method: 'GET', dataType: 'json', cache: false, headers: this.opts.ajaxHeaders
+    }, ajax)).then((resp) => {
+      const payload = (resp && resp.state) ? resp.state : resp;
+      if (Array.isArray(payload)) {
+        this.loadState({ tabs: payload }, { clearExisting, reuseTabIds });
+      } else if (payload && typeof payload === 'object') {
+        this.loadState(payload, { clearExisting, reuseTabIds });
+      }
+    }).catch((xhr, status, err) => {
+      console.error('loadStateFromUrl(): AJAX error', { status, err, xhr });
+    });
+  }
+
+  /**
+   * Applies an in-memory state object or JSON string to the UI.
+   * - Restores settings and tabs.
+   * - Re-applies global time range (and reloads charts).
+   */
+  loadState(state, opts = {}) {
+    const { clearExisting = true, reuseTabIds = true } = opts;
+    const data = (typeof state === 'string') ? JSON.parse(state) : state;
+    if (!data) return;
+
+    const settings = data.settings || {};
+    this.opts.gridEnabled = (typeof settings.gridEnabled === 'boolean') ? settings.gridEnabled : true;
+    this.opts.gridSize = Number.isFinite(settings.gridSize) ? Math.max(4, Math.min(400, settings.gridSize | 0)) : 24;
+    this.opts.snapType = (settings.snapType === 'move') ? 'move' : 'end';
+    if (Number.isFinite(settings.defaultAutoRefreshSeconds)) {
+      this.opts.autoRefreshSecondsDefault = Math.max(0, settings.defaultAutoRefreshSeconds | 0);
+    }
+
+    this._timeRange = (settings.timeRange && typeof settings.timeRange === 'object')
+      ? Object.assign({}, this.opts.timeDefaults, settings.timeRange)
+      : Object.assign({}, this.opts.timeDefaults);
+
+    this._applySettingsToUI();
+    $('#opt-grid-enabled').prop('checked', !!this.opts.gridEnabled);
+    $('#opt-grid-size').val(this.opts.gridSize);
+    $('#opt-snap-type').val(this.opts.snapType);
+    $('#opt-default-autorefresh').val(String(this.opts.autoRefreshSecondsDefault));
+
+    // Sync the time-range picker with the restored range
+    try { $('#as-tr-btn').timeRangeModal('setRange', this._timeRange); } catch (_) {}
+
+    const tabs = Array.isArray(data.tabs) ? data.tabs : (Array.isArray(data) ? data : []);
+    if (tabs.length === 0) return;
+
+    if (clearExisting && reuseTabIds) {
+      const keepIds = new Set(tabs.map(t => t.tabId).filter(Boolean));
+      $('#as-gm-tablist-content .tab-pane').each((_, el) => { const id = el.id; if (!keepIds.has(id)) $(el).remove(); });
+      $('#as-gm-tablist li').each((_, li) => {
+        const $a = $(li).find('a[href^="#"]');
+        if (!$a.length) return;
+        const id = $a.attr('href').slice(1);
+        if (!keepIds.has(id)) $(li).remove();
+      });
+    }
+
+    tabs.forEach((t, idx) => {
+      let tabId = t.tabId || '';
+      const title = (t.title || `Tab ${idx + 1}`).trim();
+      const charts = Array.isArray(t.charts) ? t.charts : [];
+
+      const exists = tabId && $(`#${tabId}`).length > 0;
+      if (reuseTabIds && exists) {
+        this._setTabTitle(tabId, title);
+        const $pane = $(`#${tabId}`).empty().addClass('tab-pane as-gm-tab');
+        this._updatePaneGridBg($pane);
+      } else {
+        tabId = this.addTab(title);
+        const $pane = $(`#${tabId}`);
+        this._updatePaneGridBg($pane);
+      }
+
+      this._pendingChartsByTab[tabId] = (this._pendingChartsByTab[tabId] || []).concat(charts);
+    });
+
+    const $active = $('#as-gm-tablist li.active a[data-toggle="tab"]');
+    if ($active.length) this._restoreChartsIfPending($active.attr('href').slice(1));
+    else {
+      const $first = $('#as-gm-tablist li:not(#as-gm-add-tab) a[data-toggle="tab"] ').first();
+      if ($first.length) $first.tab('show');
+    }
+
+    // Important: propagate time-range to all charts and reload them
+    this._applyTimeRangeToAllPanes();
+  }
+
+  /* ================= Title / ID helpers ================= */
+
+  _ensureTitleSpan(tabId) {
+    const $a = $(`#as-gm-tablist a[href="#${tabId}"]`);
+    if (!$a.length) return $();
+    let $title = $a.find('.tab-title');
+    if ($title.length) return $title;
+
+    const $clone = $a.clone();
+    $clone.find('.as-gm-tab-tools, i, .close, button').remove();
+    const text = ($clone.text() || '').trim() || 'Tab';
+    const $tools = $a.find('.as-gm-tab-tools').detach();
+    $a.empty().append(`<span class="tab-title">${$('<div>').text(text).html()}</span>`);
+    if ($tools.length) $a.append($tools);
+    return $a.find('.tab-title');
+  }
+
+  _getTabTitle(tabId) {
+    const $a = $(`#as-gm-tablist a[href="#${tabId}"]`);
+    if (!$a.length) return '';
+    const $title = this._ensureTitleSpan(tabId);
+    return ($title.text() || '').trim();
+  }
+
+  _setTabTitle(tabId, title) {
+    const $title = this._ensureTitleSpan(tabId);
+    if ($title.length) $title.text(title);
+  }
+
+  /* ================= Bounds / normalize / create ================= */
+
+  /**
+   * Coerces values to integer pixels with fallback.
+   */
+  _toNumber(v, fallback = 0) {
+    if (typeof v === 'number' && Number.isFinite(v)) return Math.round(v);
+    if (typeof v === 'string') {
+      const n = parseFloat(v.trim());
+      if (Number.isFinite(n)) return Math.round(n);
+    }
+    return Math.round(fallback);
+  }
+
+  /**
+   * Normalizes chart bounds and per-chart auto-refresh seconds.
+   */
+  _normalizeBounds(c) {
+    let seconds = null;
+    if (c && c.autoRefreshSeconds != null && Number.isFinite(+c.autoRefreshSeconds)) {
+      seconds = Math.max(0, (+c.autoRefreshSeconds) | 0);
+    } else if (c && c.refresh && Number.isFinite(+c.refresh.intervalMs)) {
+      seconds = Math.max(0, Math.round(+c.refresh.intervalMs / 1000));
+    }
+    return {
+      top: this._toNumber(c.top, 0),
+      left: this._toNumber(c.left, 0),
+      width: this._toNumber(c.width, 320),
+      height: this._toNumber(c.height, 240),
+      filename: c.filename || null,
+      ...(c.chartConfig ? { chartConfig: c.chartConfig } : {}),
+      ...(seconds != null ? { autoRefreshSeconds: seconds } : {})
+    };
+  }
+
+  /**
+   * Resolves a quick time-range key into absolute unix seconds.
+   */
+  _resolveQuickRange(quick) {
+    const now = Math.floor(Date.now() / 1000);
+    const map = {
+      '1h': now - 3600,
+      '6h': now - 6 * 3600,
+      '24h': now - 24 * 3600,
+      '7d': now - 7 * 86400,
+      '30d': now - 30 * 86400
+    };
+    const from = map[quick] != null ? map[quick] : (now - 24 * 3600);
+    return { from, to: now };
+  }
+
+  /**
+   * Returns a concrete {from,to} pair based on current global time-range.
+   */
+  _currentRangePair() {
+    const tr = this._timeRange || this.opts.timeDefaults || { mode:'quick', quick:'24h' };
+    if (tr.mode === 'range' && Number.isFinite(tr.from) && Number.isFinite(tr.to)) {
+      return { from: tr.from, to: tr.to };
+    }
+    const q = this._resolveQuickRange(tr.quick || '24h');
+    return { from: q.from, to: q.to };
+  }
+
+  /**
+   * Builds the POST body for chart config requests (includes range + optional chart reference).
+   */
+  _buildGraphPostBody({ filename = null, chartConfig = null } = {}) {
+    const range = this._currentRangePair();
+    const body = { range, _ts: Date.now() };
+    if (chartConfig && typeof chartConfig === 'object') body.chartConfig = chartConfig;
+    else if (filename) body.filename = filename;
+    else body.filename = '';
+    return body;
+  }
+
+  /**
+   * Creates and mounts a chart instance inside a pane from saved/chart data.
+   * - Ensures plugin receives current time range via POST body and URL query.
+   * - Wraps the instance refresh to always re-apply the latest range before reloads.
+   */
+  _createChartFromState($pane, c, { force = false } = {}) {
+    if (!force && !$pane.is(':visible')) {
+      const tabId = $pane.attr('id');
+      (this._pendingChartsByTab[tabId] ||= []).push(c);
+      return;
+    }
+
+    const nc = this._normalizeBounds(c);
+    if (!nc.filename && !nc.chartConfig) return;
+
+    const beforeLen = ($pane.data('allskyChart_instances') || []).length;
+    const seconds = (nc.autoRefreshSeconds != null && Number.isFinite(+nc.autoRefreshSeconds))
+      ? Math.max(0, (+nc.autoRefreshSeconds) | 0)
+      : (this.opts.autoRefreshSecondsDefault | 0);
+
+    const postBody = this._buildGraphPostBody({ filename: nc.filename, chartConfig: nc.chartConfig });
+
+    // Persist time-range to URL as well (some backends may read either body or query)
+    const baseUrl = 'includes/chartutil.php?request=GraphData';
+    const qs = this._timeQueryString();
+
+    $pane.allskyChart({
+      configUrl: baseUrl + qs,
+      configAjax: {
+        method: 'POST',
+        data: JSON.stringify(postBody),
+        contentType: 'application/json; charset=utf-8',
+        dataType: 'json',
+        cache: false,
+        headers: this.opts.ajaxHeaders
+      },
+      filename: nc.filename,
+      initialPos: { top: nc.top, left: nc.left },
+      initialSize: { width: nc.width, height: nc.height },
+      grid: {
+        enabled: !!this.opts.gridEnabled,
+        size: { x: this.opts.gridSize, y: this.opts.gridSize },
+        snap: this.opts.snapType || 'end'
+      },
+      autoRefresh: {
+        enabled: true,
+        options: this.opts.autoRefreshOptionsDefault.slice(0),
+        defaultSeconds: seconds
+      },
+      onAutoRefreshChange: (secs, inst) => this._onAutoRefreshChange(secs, inst),
+      onBoundsChange: () => this._saveDebounced(),
+      onDelete: () => this._saveDebounced()
+    });
+
+    // After plugin mounts, complete configuration and wrap refresh
+    requestAnimationFrame(() => {
+      const after = $pane.data('allskyChart_instances') || [];
+      const newInsts = after.slice(beforeLen);
+      newInsts.forEach((inst) => {
+        this._applyBounds(inst, nc);
+        this._applyAutoRefresh(inst, seconds);
+
+        // Keep a manager copy and push into plugin via public setters (critical for future refreshes)
+        inst._gmGraphPostBody = postBody;
+        if (!inst._gmBaseConfigUrl) inst._gmBaseConfigUrl = baseUrl;
+
+        try { if (typeof inst.setGraphPostBody === 'function') inst.setGraphPostBody(postBody); } catch(_) {}
+        try { if (typeof inst.setConfigUrl === 'function') inst.setConfigUrl(baseUrl + qs); } catch(_) {}
+
+        this._wrapInstanceRefreshWithFreshRange(inst);
+        try {
+          if (typeof inst.setTimeRange === 'function') inst.setTimeRange(this._timeRange);
+          inst._gmLastTimeRangeSig = JSON.stringify(this._timeRange || {});
+        } catch (_) {}
+      });
+      this._applySnapToPane($pane);
+    });
+  }
+
+  /**
+   * Instantiates any charts queued for a tab once it becomes visible.
+   */
+  _restoreChartsIfPending(tabId) {
+    const pending = this._pendingChartsByTab[tabId];
+    if (!pending || !pending.length) return;
+    const $pane = $(`#${tabId}`);
+    this._updatePaneGridBg($pane);
+    pending.splice(0).forEach((c) => this._createChartFromState($pane, c, { force: true }));
+  }
+
+  /**
+   * Applies saved geometry to a chart instance.
+   */
+  _applyBounds(inst, b) {
+    try {
+      if (!inst) return;
+      if (typeof inst.setBounds === 'function') {
+        inst.setBounds(b);
+      } else {
+        if (typeof inst.setPosition === 'function') inst.setPosition(b.left, b.top);
+        if (typeof inst.setSize === 'function') inst.setSize(b.width, b.height);
+        const $node = inst.$root || inst.$el || inst.$container || inst.$box;
+        if ($node && $node.length) {
+          if ($node.css('position') === 'static') $node.css('position', 'absolute');
+          $node.css({ top: b.top, left: b.left, width: b.width, height: b.height });
+        }
+      }
+      if (typeof inst.reflow === 'function') inst.reflow();
+      if (inst.chart && typeof inst.chart.reflow === 'function') inst.chart.reflow();
+    } catch (e) {
+      console.warn('Bounds enforcement failed:', e);
+    }
+  }
+
+  /**
+   * Ensures a chart instance uses the given auto-refresh interval.
+   */
+  _applyAutoRefresh(inst, seconds) {
+    if (!inst) return;
+    try {
+      if (typeof inst.setAutoRefresh === 'function') {
+        inst.setAutoRefresh(Math.max(0, parseInt(seconds, 10) || 0));
+      } else {
+        inst._autoSeconds = Math.max(0, parseInt(seconds, 10) || 0);
+        const $root = inst.$root || inst.$el || inst.$container || inst.$box || $([]);
+        const $sel = $root.find('[data-role="auto-refresh"], [name="autoRefresh"], .auto-refresh, .as-hc-autorefresh').filter('select').first();
+        if ($sel.length) { $sel.val(String(inst._autoSeconds)).trigger('change'); }
+      }
+      inst._autoSeconds = Math.max(0, parseInt(seconds, 10) || 0);
+    } catch (e) { console.warn('apply auto-refresh to instance failed:', e); }
+  }
+
+  /**
+   * Pushes snap settings to a pane's charts.
+   */
+  _applySnapToPane($pane) {
+    try {
+      const enabled = !!this.opts.gridEnabled;
+      const size = Math.max(1, this.opts.gridSize | 0);
+      const type = (this.opts.snapType === 'move') ? 'move' : 'end';
+      $pane.allskyChart('setSnapEnabled', enabled);
+      $pane.allskyChart('setSnapType', type);
+      $pane.allskyChart('setSnapSize', size);
+    } catch (e) { console.warn('apply snap to pane failed:', e); }
+  }
+
+  /**
+   * Records per-chart auto-refresh changes and persists state.
+   */
+  _onAutoRefreshChange(seconds, inst) {
+    try {
+      const secs = Math.max(0, parseInt(seconds, 10) || 0);
+      inst._autoSeconds = secs;
+      this._saveDebounced();
+    } catch (e) { console.warn('onAutoRefreshChange handler failed:', e); }
+  }
+
+  /**
+   * Simple debounce utility bound to instance.
+   */
+  _debounce(fn, wait = 300) {
+    let t;
+    return (...args) => { clearTimeout(t); t = setTimeout(() => fn.apply(this, args), wait); };
+  }
+
+  /* ================= Time range → POST bodies + Reload ================= */
+
+  /**
+   * Schedules a single refresh on the next animation frame.
+   */
+  _refreshInstOnce(inst) {
+    if (inst._gmRefreshScheduled) return;
+    inst._gmRefreshScheduled = true;
+    requestAnimationFrame(() => {
+      inst._gmRefreshScheduled = false;
+      if (typeof inst.refresh === 'function') inst.refresh();
+    });
+  }
+
+  /**
+   * Reloads all charts in a pane using available plugin hooks.
+   */
+  _reloadPaneCharts($pane) {
+    try {
+      try { $pane.allskyChart('refreshAll'); return; } catch (_) {}
+
+      const insts = ($pane.data('allskyChart_instances') || []).filter(Boolean);
+      insts.forEach((inst, idx) => {
+        if (inst && typeof inst.refresh === 'function') {
+          inst.refresh();
+          return;
+        }
+        try { $pane.allskyChart('refreshByIndex', idx); return; } catch (_) {}
+        try { $pane.allskyChart('refresh', inst); return; } catch (_) {}
+        try { $(inst.$root || inst.$el || inst.$container || inst.$box || $pane).trigger('asChart:refresh'); } catch (_) {}
+        try {
+          if (typeof inst.reflow === 'function') inst.reflow();
+          if (inst.chart && typeof inst.chart.reflow === 'function') inst.chart.reflow();
+        } catch (_) {}
+      });
+    } catch (e) {
+      console.warn('reload pane charts failed:', e);
+    }
+  }
+
+  /**
+   * Applies current global time range to every chart and forces a reload.
+   * - Updates each chart's internal POST body via plugin API (setGraphPostBody).
+   * - Keeps URL query in sync (setConfigUrl) for backends that read from query.
+   * - Calls a pane-wide reload to fetch fresh data.
+   */
+  _applyTimeRangeToAllPanes() {
+    const trSig = JSON.stringify(this._timeRange || {});
+    const freshRange = this._currentRangePair();
+
+    $('#as-gm-tablist-content .tab-pane').each((_, pane) => {
+      const $pane = $(pane);
+      const insts = ($pane.data('allskyChart_instances') || []).filter(Boolean);
+
+      insts.forEach((inst) => {
+        try {
+          const tr = this._timeRange || this.opts.timeDefaults || { mode:'quick', quick:'24h' };
+          let useRange = freshRange;
+          if (tr.mode === 'range' && Number.isFinite(tr.from) && Number.isFinite(tr.to)) {
+            useRange = { from: tr.from, to: tr.to };
+          }
+
+          // Update manager copy and push to plugin
+          if (inst._gmGraphPostBody && typeof inst._gmGraphPostBody === 'object') {
+            inst._gmGraphPostBody.range = useRange;
+            inst._gmGraphPostBody._ts = Date.now();
+          } else {
+            inst._gmGraphPostBody = { range: useRange, _ts: Date.now() };
+          }
+
+          if (typeof inst.setGraphPostBody === 'function') {
+            inst.setGraphPostBody(inst._gmGraphPostBody);
+          }
+
+          // Sync URL query
+          const base = inst._gmBaseConfigUrl || 'includes/chartutil.php?request=GraphData';
+          const url = base + this._timeQueryString();
+          if (typeof inst.setConfigUrl === 'function') {
+            inst.setConfigUrl(url);
+          }
+
+          if (typeof inst.setTimeRange === 'function') inst.setTimeRange(this._timeRange);
+          inst._gmLastTimeRangeSig = trSig;
+        } catch (e) { console.warn('apply time range failed:', e); }
+      });
+
+      // Reload the pane after all instances are updated
+      this._reloadPaneCharts($pane);
+    });
+  }
+
+  /**
+   * Initializes the time-range picker button and hooks up apply/clear events.
+   */
+  _initTimeRangeButton() {
+    const saved = this._timeRange || this.opts.timeDefaults || { mode: 'quick', quick: '24h', from: null, to: null };
+    const $btn = $('#as-tr-btn');
+    if (!$btn.length) return;
+
+    try { $btn.timeRangeModal({ range: saved, modalTitle: 'Time range', dialogClass: '' }); } catch (e) {}
+
+    $btn.on('tr.apply', (e, range) => {
+      this._timeRange = range;
+      this._applyTimeRangeToAllPanes();
+      this._saveDebounced();
+    });
+    $btn.on('tr.clear', () => {
+      this._timeRange = { mode:'quick', quick:'24h', from:null, to:null };
+      this._applyTimeRangeToAllPanes();
+      this._saveDebounced();
+    });
+  }
+
+  /**
+   * Wraps a chart's refresh() so the latest time-range is injected just before reload.
+   */
+  _wrapInstanceRefreshWithFreshRange(inst) {
+    if (!inst || inst._gmRefreshWrapped) return;
+    const original = (typeof inst.refresh === 'function') ? inst.refresh.bind(inst) : null;
+    inst.refresh = () => {
+      try { this._reapplyFreshRangeToInstance(inst); } catch (e) { console.warn('fresh range apply failed:', e); }
+      if (original) original();
+    };
+    inst._gmRefreshWrapped = true;
+  }
+
+  /**
+   * Re-applies the latest time-range to a single chart's POST body and URL.
+   */
+  _reapplyFreshRangeToInstance(inst) {
+    const tr = this._timeRange || this.opts.timeDefaults || { mode:'quick', quick:'24h' };
+    let useRange = this._currentRangePair();
+    if (tr.mode === 'range' && Number.isFinite(tr.from) && Number.isFinite(tr.to)) {
+      useRange = { from: tr.from, to: tr.to };
+    }
+
+    if (!inst._gmGraphPostBody || typeof inst._gmGraphPostBody !== 'object') {
+      inst._gmGraphPostBody = { range: useRange, _ts: Date.now() };
+    } else {
+      inst._gmGraphPostBody.range = useRange;
+      inst._gmGraphPostBody._ts = Date.now();
+    }
+
+    try { if (typeof inst.setGraphPostBody === 'function') inst.setGraphPostBody(inst._gmGraphPostBody); } catch(_) {}
+
+    const base = inst._gmBaseConfigUrl || 'includes/chartutil.php?request=GraphData';
+    const url = base + this._timeQueryString();
+    try { if (typeof inst.setConfigUrl === 'function') inst.setConfigUrl(url); } catch(_) {}
+
+    if (typeof inst.setTimeRange === 'function') {
+      inst.setTimeRange(this._timeRange);
+    }
+  }
+
+  /* ================= Designer integration ================= */
+
+  /**
+   * Prepares the hidden designer host and initializes the designer plugin once.
+   */
+  _initDesignerIntegration() {
+    if (!this.opts.designer || !this.opts.designer.enabled) return;
+
+    if (!$('#chartDesignerHost').length) {
+      $('<div id="chartDesignerHost" style="display:none;"></div>').appendTo(this.opts.designer.mountSelector || 'body');
+    }
+
+    if (!$('#chartDesignerHost').data('allskyChartDesigner')) {
+      try {
+        $('#chartDesignerHost').allskyChartDesigner({
+          enableDeveloper: !!this.opts.designer.devPanel,
+          variablesUrl: this.opts.designer.variablesUrl,
+          graphDataUrl:  this.opts.designer.graphDataUrl,
+          loadChartUrl:  this.opts.designer.loadChartUrl,
+          onSave: (configJSON) => this._saveCustomChart(configJSON)
+        });
+      } catch (e) {
+        console.warn('Designer init failed:', e);
+      }
+    }
+
+    $(document).off('allskyChartDesigner:save.asMgr')
+      .on('allskyChartDesigner:save.asMgr', (e, payload) => {
+        const cfg = payload && payload.configJSON;
+        if (cfg) this._saveCustomChart(cfg);
+      });
+  }
+
+  /**
+   * Opens the designer in new or edit mode.
+   */
+  _openDesigner(options = {}) {
+    try {
+      const api = $('#chartDesignerHost').data('allskyChartDesigner');
+      if (api && typeof api.open === 'function') {
+        api.open(options);
+      } else {
+        $('#chartDesignerHost').trigger('allskyChartDesigner:open', [options]);
+      }
+    } catch (e) {
+      this._popup('Chart editor is not available.');
+    }
+  }
+
+  /**
+   * Saves a custom chart configuration to the server and refreshes the list.
+   */
+  _saveCustomChart(configJSON) {
+    const title = (configJSON && String(configJSON.title || '').trim()) || '';
+    if (!title) {
+      this._popup('Please enter a chart title before saving.');
+      return;
+    }
+
+    $.ajax({
+      url: this.opts.designer.saveUrl || 'includes/chartutil.php?request=SaveCustomChart',
+      method: 'POST',
+      data: JSON.stringify({ title: title, config: configJSON }),
+      contentType: 'application/json; charset=utf-8',
+      dataType: 'json',
+      cache: false
+    })
+    .done((resp) => {
+      if (resp && resp.ok) {
+        this._popup('Custom chart saved.');
+        this.buildChartGroups();
+      } else {
+        const msg = (resp && resp.error) ? resp.error : 'Unknown error';
+        this._popup(`Save failed: ${msg}`);
+      }
+    })
+    .fail((xhr) => {
+      const msg = (xhr && xhr.responseText) ? xhr.responseText : `HTTP ${xhr.status || ''}`;
+      this._popup(`Save failed: ${msg}`);
+    });
+  }
+
+  /* ================= Remove a chart everywhere (helper) ================= */
+
+  /**
+   * Removes a chart (by filename) from pending queues and destroys live instances.
+   */
+  _purgeChartEverywhere(filename) {
+    if (!filename) return;
+
+    Object.keys(this._pendingChartsByTab || {}).forEach((tabId) => {
+      const list = this._pendingChartsByTab[tabId];
+      if (!Array.isArray(list)) return;
+      this._pendingChartsByTab[tabId] = list.filter((c) => (c && c.filename) !== filename);
+    });
+
+    $('#as-gm-tablist-content .tab-pane').each((_, pane) => {
+      const $pane = $(pane);
+      let insts = $pane.data('allskyChart_instances') || [];
+      const keep = [];
+
+      insts.forEach((inst) => {
+        try {
+          const b = inst.getBounds && inst.getBounds();
+          const instFile =
+            (b && b.filename) ||
+            inst.filename ||
+            (inst.$root && inst.$root.data && inst.$root.data('filename')) ||
+            null;
+
+          if (instFile === filename) {
+            try { if (typeof inst.destroy === 'function') inst.destroy(); } catch(_){}
+            try { if (inst.chart && typeof inst.chart.destroy === 'function') inst.chart.destroy(); } catch(_){}
+            const $node = inst.$root || inst.$el || inst.$container || inst.$box;
+            if ($node && $node.length) $node.remove();
+          } else {
+            keep.push(inst);
+          }
+        } catch (e) {
+          keep.push(inst);
+        }
+      });
+
+      $pane.data('allskyChart_instances', keep);
+    });
+  }
+
+  /* ================= Helpers ================= */
+
+  /**
+   * Simple alert helper that prefers bootbox if present.
+   */
+  _popup(message, title) {
+    if (window.bootbox && typeof bootbox.alert === 'function') {
+      bootbox.alert({ title: title || 'Notice', message: String(message || '') });
+    } else {
+      alert(String(message || ''));
+    }
+  }
+
+  /**
+   * Builds a URL query string with the current concrete {from,to}.
+   */
+  _timeQueryString() {
+    const { from, to } = this._currentRangePair();
+    return `&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`;
+  }
 }
-
-$(function () {
-    let chartManager = new CHARTMANAGER()
-    chartManager.run()
-})

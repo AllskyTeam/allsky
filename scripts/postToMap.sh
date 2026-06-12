@@ -11,9 +11,9 @@ ME="$( basename "${BASH_ARGV0}" )"
 # The script can be called manually, via endOfNight.sh, or via the WebUI.
 
 #shellcheck source-path=.
-source "${ALLSKY_HOME}/variables.sh"		|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"		|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 function usage_and_exit()
 {
@@ -284,21 +284,21 @@ else
 	W=""
 	# Check for required fields
 	if [[ -z ${CAMERA} ]]; then
-		E+="ERROR: 'Camera' is required.${BR}"
+		E+="ERROR: 'Camera' is required for the Allsky Map.${BR}"
 	fi
 	if [[ -z ${COMPUTER} ]]; then
-		E+="ERROR: 'Computer' is required.${BR}"
+		E+="ERROR: 'Computer' is required for the Allsky Map.${BR}"
 	fi
 
 	# Check for optional, but suggested fields
 	if [[ -z ${LOCATION} ]]; then
-		W+="WARNING: 'Location' not set; continuing.${BR}"
+		W+="WARNING: 'Location' not set for the Allsky Map; continuing.${BR}"
 	fi
 	if [[ -z ${OWNER} ]]; then
-		W+="WARNING: 'Owner' not set; continuing.${BR}"
+		W+="WARNING: 'Owner' not set for the Allsky Map; continuing.${BR}"
 	fi
 	if [[ -z ${LENS} ]]; then
-		W+="WARNING: 'Lens' not set; continuing.${BR}"
+		W+="WARNING: 'Lens' not set for the Allsky Map; continuing.${BR}"
 	fi
 
 	# website_url and image_url are optional

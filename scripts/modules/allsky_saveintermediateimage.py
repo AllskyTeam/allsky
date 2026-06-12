@@ -19,9 +19,11 @@ import pathlib
 class ALLSKYSAVEINTERMMEDIATEIMAGE(ALLSKYMODULEBASE):
 
 	meta_data = {
-		"name": "Saves an intermediate image",
-		"description": "Saves an intermediate image",
+		"name": "Save an Intermediate Image",
+		"description": "Save the current version of an image in a specified location.",
 		"module": "allsky_saveintermediateimage",
+		"version": "v1.0.0",
+    "docs": "docs/allsky_modules/core/intermediate_image.html",  
 		"group": "Allsky Core",      
 		"events": [
 			"day",
@@ -34,9 +36,18 @@ class ALLSKYSAVEINTERMMEDIATEIMAGE(ALLSKYMODULEBASE):
 			"imagefolder" : {
 				"required": "true",
 				"description": "Image folder",
-				"help": "The folder to save the image in. The folder will be created if it does not exist. You can use AllSky Variables in the path"
+				"help": "The folder to save the image in. The folder will be created if it does not exist. You can use Allsky variables in the folder name."
 			}
-		}      
+		},
+		"changelog": {
+			"v1.0.0" : [
+				{
+					"author": "Alex Greenland",
+					"authorurl": "https://github.com/allskyteam",
+					"changes": "Initial Release"
+				}
+			]   
+		}        
 	}
 
  
@@ -63,19 +74,28 @@ class ALLSKYSAVEINTERMMEDIATEIMAGE(ALLSKYMODULEBASE):
 			save_path = self.get_param('imagefolder', '', str)   
 			path = allsky_shared.convertPath(save_path)
 			if path is not None:
-				path = os.path.join(path, os.path.basename(allsky_shared.CURRENTIMAGEPATH))
-				if not self.__write_image(allsky_shared.image, path, quality):
-					result = f'Failed to save image {path}'
-					allsky_shared.log(0, f'ERROR: {result}')
+     
+				p = pathlib.Path(path)
+
+				# If the path already contains a file extension, treat it as a filename
+				if p.suffix:
+						final_path = str(p)
 				else:
-					result = f'Image {path} Saved'
-					allsky_shared.log(1, f'INFO: {result}')
+						# Otherwise treat it as a directory
+						final_path = os.path.join(path, os.path.basename(allsky_shared.CURRENTIMAGEPATH))
+         
+				if not self.__write_image(allsky_shared.image, final_path, quality):
+					result = f'Failed to save image {final_path}'
+					self.log(0, f'ERROR: {result}')
+				else:
+					result = f'Image {final_path} Saved'
+					self.log(1, f'INFO: {result}')
 			else:
 				result = f'Invalid path {save_path}'
-				allsky_shared.log(0, f'ERROR: {result}')
+				self.log(0, f'ERROR: {result}')
 		else:
 			result = 'Cannot determine the image quality. Intermediate image NOT saved.'
-			allsky_shared.log(0, f'ERROR: {result}')
+			self.log(0, f'ERROR: {result}')
 
 		return result
 

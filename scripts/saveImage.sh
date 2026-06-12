@@ -8,9 +8,9 @@ ME="$( basename "${BASH_ARGV0}" )"
 [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]] && echo "${ME} $*"
 
 #shellcheck disable=SC1091 source-path=.
-source "${ALLSKY_HOME}/variables.sh"		|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"		|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 usage_and_exit()
 {
@@ -28,7 +28,7 @@ usage_and_exit()
 [[ $# -lt 2 ]] && usage_and_exit 1
 
 # Export so other scripts can use it.
-export DAY_OR_NIGHT="${1}"
+export DAY_OR_NIGHT="${1}";		export AS_DAY_OR_NIGHT="${DAY_OR_NIGHT}"
 [[ ${DAY_OR_NIGHT} != "DAY" && ${DAY_OR_NIGHT} != "NIGHT" ]] && usage_and_exit 1
 
 # ${CURRENT_IMAGE} is the full path to a uniquely-named file created by the capture program.
@@ -38,7 +38,7 @@ export DAY_OR_NIGHT="${1}"
 # that's what websites look for and what is uploaded.
 
 # Export so other scripts can use it.
-export CURRENT_IMAGE="${2}"
+export CURRENT_IMAGE="${2}";		export AS_CURRENT_IMAGE="${CURRENT_IMAGE}"
 shift 2
 if [[ ! -f ${CURRENT_IMAGE} ]] ; then
 	E_ "*** ${ME}: ERROR: File '${CURRENT_IMAGE}' not found; ignoring."
@@ -51,6 +51,24 @@ fi
 
 WORKING_DIR=$( dirname "${CURRENT_IMAGE}" )		# the directory the image is currently in
 WEBSITE_FILE="${WORKING_DIR}/${ALLSKY_FULL_FILENAME}"	# The file name the websites look for
+CURRENT_ALLSKY_STATUS="$( get_allsky_status )"
+# Only update if different so we don't loose original timestamp
+if [[ ${CURRENT_ALLSKY_STATUS} != "${ALLSKY_STATUS_RUNNING}" ]]; then
+	set_allsky_status "${ALLSKY_STATUS_RUNNING}" || echo "Unable to set Allsky Status"
+fi
+
+if [[ ${1} == "--focus-mode" ]]; then
+	# Add the metric to the image, rename it, and exit.
+	FOCUS_METRIC="${2}"
+	NUM_EXPOSURES="${3}"
+	TEXT="Focus Mode, metric = ${FOCUS_METRIC}"
+	TEXT+="\nFrame: ${NUM_EXPOSURES}"
+	# Use defaults for everything but Y location - put near top.
+	addTextToImage --y 100 "${CURRENT_IMAGE}" "${CURRENT_IMAGE}" "${TEXT}"
+	mv "${CURRENT_IMAGE}" "${WEBSITE_FILE}"
+	exit $?
+fi
+
 
 # Make sure only one save happens at once.
 # Multiple concurrent saves (which can happen if the delay is short or post-processing
@@ -141,7 +159,7 @@ function display_error_and_exit()	# error message, notification string
 	# Don't let the service restart us because we will get the same error again.
 	stop_Allsky
 	set_allsky_status "${ALLSKY_STATUS_ERROR}"
-	exit "${EXIT_ERROR_STOP}"
+	exit "${ALLSKY_EXIT_ERROR_STOP}"
 }
 
 # Resize the image if required
@@ -192,9 +210,9 @@ if [[ ${CROP_IMAGE} -gt 0 ]]; then
 	ERROR_MSG="$( checkCropValues "${CROP_TOP}" "${CROP_RIGHT}" "${CROP_BOTTOM}" "${CROP_LEFT}" \
 		"${AS_RESOLUTION_X}" "${AS_RESOLUTION_Y}" 2>&1 )"
 	if [[ -z ${ERROR_MSG} ]]; then
+		CROP_WIDTH=$(( AS_RESOLUTION_X - CROP_RIGHT - CROP_LEFT ))
+		CROP_HEIGHT=$(( AS_RESOLUTION_Y - CROP_TOP - CROP_BOTTOM ))
 		if [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
-			CROP_WIDTH=$(( AS_RESOLUTION_X - CROP_RIGHT - CROP_LEFT ))
-			CROP_HEIGHT=$(( AS_RESOLUTION_Y - CROP_TOP - CROP_BOTTOM ))
 			echo -e "${ME} Cropping '${CURRENT_IMAGE}' to ${CROP_WIDTH}x${CROP_HEIGHT}."
 		fi
 		C=""
@@ -245,6 +263,7 @@ else
 	# During the daytime we alway save the file in today's directory.
 	export DATE_NAME="$( date +'%Y%m%d' )"
 fi
+export AS_DATE_NAME="${DATE_NAME}"
 
 activate_python_venv
 python3 "${ALLSKY_SCRIPTS}/flow-runner.py"
@@ -499,9 +518,5 @@ fi
 
 # We create ${WEBSITE_FILE} as late as possible to avoid it being overwritten.
 mv "${CURRENT_IMAGE}" "${WEBSITE_FILE}" || echo "ERROR: ${ME} Unable to rename current image to final name." >&2
-
-# Only update if different so we don't loose original timestamp
-STATUS="$( get_allsky_status )"
-[[ ${STATUS} != "${ALLSKY_STATUS_RUNNING}" ]] && set_allsky_status "${ALLSKY_STATUS_RUNNING}"
 
 exit 0

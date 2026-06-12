@@ -6,13 +6,13 @@
 ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck source-path=.
-source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/checkFunctions.sh"			|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/checkFunctions.sh"			|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 function usage_and_exit()
 {
@@ -21,6 +21,13 @@ function usage_and_exit()
 	E+="Usage: ${ME} [--debug] [--optionsOnly] [--cameraTypeOnly] [--from f] [--addNewSettings]"
 	E+="\n\tkey  label  old_value  new_value  [...]"
 	wE_ "${E}"
+	echo
+	echo "Arguments:"
+	echo "  --optionsOnly       Only create the options file, not the settings file."
+	echo "  --cameraTypeOnly    Only process changes to camera type."
+	echo "  --from f            We were invoked by 'f'."
+	echo "  --addNewSettings    Add settings that are new to this Allsky release."
+	echo
 	echo "There must be a multiple of 4 key/label/old_value/new_value arguments."
 	exit "${1}"
 }
@@ -197,7 +204,7 @@ function checkTimelapse()
 	fi
 
 	# Check for only 1 value of 0.
-	if ! checkWidthHeight "${TYPE}Timelapse" "${TYPE}timelapse" \
+	if ! _checkWidthHeight "${TYPE}Timelapse" "${TYPE}timelapse" \
 			"${W}" "${H}" "${C_sensorWidth}" "${C_sensorHeight}" 2>&1 ; then
 		THIS_OK="false"
 	fi
@@ -350,7 +357,7 @@ do
 				if [[ ! -e "${ALLSKY_BIN}/capture_${CAMERA_TYPE}" ]]; then
 					MSG="Unknown ${WSNs}${LABEL}${WSNe}: '${CAMERA_TYPE}'."
 					wE_ "${ERROR_PREFIX}ERROR: ${MSG}"
-					exit "${EXIT_NO_CAMERA}"
+					exit "${ALLSKY_EXIT_NO_CAMERA}"
 				fi
 			fi
 
@@ -436,8 +443,8 @@ do
 					# Restore prior cc file if there was one.
 					[[ -f ${CC_FILE_OLD} ]] && mv "${CC_FILE_OLD}" "${ALLSKY_CC_FILE}"
 
-					# Invoker displays error message on EXIT_NO_CAMERA.
-					if [[ ${RET} -ne "${EXIT_NO_CAMERA}" ]]; then
+					# Invoker displays error message on ALLSKY_EXIT_NO_CAMERA.
+					if [[ ${RET} -ne "${ALLSKY_EXIT_NO_CAMERA}" ]]; then
 						E="${wBR}ERROR: "
 						if [[ ${RET} -eq 139 ]]; then
 							E+="Segmentation fault in ${CMD}"
@@ -447,6 +454,7 @@ do
 						wE_ "${E}"
 					fi
 # TODO: re-set settings to prior values?
+					echo "'${CMD}' failed with RET=${RET}: ${R}."
 					exit "${RET}"		# the actual exit code is important
 				fi
 				[[ -n ${R} ]] && echo -e "${R}"
@@ -485,10 +493,10 @@ do
 				rm -f "${CC_FILE_OLD}"
 			fi
 
-			# createAllskyOptions.php will use the cc file and the options template file
+			# create_options_file() will use the cc file and the options template file
 			# to create an ALLSKY_OPTIONS_FILE and ALLSKY_SETTINGS_FILE for this camera type/model.
 			# If there is an existing camera-specific settings file for the new
-			# camera type/model then createAllskyOptions.php will use it and link it
+			# camera type/model then create_options_file() will use it and link it
 			# to ALLSKY_SETTINGS_FILE.
 			# If there is no existing camera-specific file, i.e., this camera is new
 			# to Allsky, it will create a default settings file using the generic
@@ -503,15 +511,14 @@ do
 			fi
 
 			if debug ; then
-				MSG="Calling: ${ALLSKY_SCRIPTS}/createAllskyOptions.php ${FORCE} ${DEBUG_ARG}"
+				MSG="Calling: create_options_file ${FORCE} ${DEBUG_ARG}"
 				MSG+="\n\t--cc-file ${ALLSKY_CC_FILE}"
 				MSG+="\n\t--options-file ${ALLSKY_OPTIONS_FILE}"
 				MSG+="\n\t--settings-file ${ALLSKY_SETTINGS_FILE}"
 				wD_ "${MSG}"
 			fi
 			# shellcheck disable=SC2086
-			R="$( "${ALLSKY_SCRIPTS}/createAllskyOptions.php" \
-				${FORCE} ${DEBUG_ARG} \
+			R="$( create_options_file ${FORCE} ${DEBUG_ARG} \
 				--cc-file "${ALLSKY_CC_FILE}" \
 				--options-file "${ALLSKY_OPTIONS_FILE}" \
 				--settings-file "${ALLSKY_SETTINGS_FILE}" \
@@ -655,8 +662,7 @@ do
 			;;
 
 		"type")
-# TODO: Use  ${S_filename}  ??
-			check_filename_type "$( settings '.filename' )" "${NEW_VALUE}" || OK="false"
+			check_filename_type "${S_filename}" "${NEW_VALUE}" || OK="false"
 			;;
 
 		"filename")
@@ -665,6 +671,20 @@ do
 				WEBSITE_VALUE_CHANGED="true"
 			else
 				OK="false"
+			fi
+			;;
+
+		"focusmode")
+			if [[ ${NEW_VALUE} == "true" ]]; then
+				if [[ ${S_takedarkframes} == "true" ]]; then
+					wE_ "ERROR: ${WSNs}${LABEL}${WSNe} and ${WSNs}${S_takedarkframes_label}${WSNe} cannot be active at the same time."
+					# Restore to old value
+					echo "${wBR}Disabling ${WSNs}${LABEL}${WSNe}."
+					update_json_file ".${KEY}" "${OLD_VALUE}" "${ALLSKY_SETTINGS_FILE}" "boolean"
+					(( NUM_CHANGED-- ))
+				else
+					wE_ "Focus Mode is enable - don't forget to turn off when done focusing."
+				fi
 			fi
 			;;
 
@@ -866,7 +886,16 @@ do
 							MSG+="The ${STRONGs}url${STRONGe} field for ${FIELD} in the "
 							MSG+="Allsky Website's configuration file is empty."
 							MSG+="${NL}"
-							MSG+="See the Allsky Documentation for what it should be set to."
+							MSG+="Change it on the <span class='WebUILink'>Settings - Editor</span> page in the WebUI."
+							MSG+="${NL}"
+							if [[ ${S_uselocalwebsite} == "true" ]]; then
+								MSG+="For ${STRONGs}local${STRONGe} Websites it should be ${WSFs}/current/mini-timelapse.mp4${WSFe}."
+								MSG+="${NL}"
+							fi
+							if [[ ${S_useremotewebsite} == "true" ]]; then
+								MSG+="For ${STRONGs}remote${STRONGe} Websites it should be ${WSFs}mini-timelapse.mp4${WSFe}."
+								MSG+="${NL}"
+							fi
 							wW_ "${MSG}"
 						fi
 					fi
@@ -881,7 +910,7 @@ do
 							[[ -n ${F} ]] && F+=" and "
 							F+="${WSFs}${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME}${WSFe}"
 						fi
-						wI_ "${MSG} ${F} file(s) in the WebUI's 'Editor' page."
+						wW_ "${MSG} ${F} file(s) in the WebUI's <span class='WebUILink'>Settings - Editor</span> page."
 					fi
 				else
 					W="WARNING: Unable read '${FIELD}' in '${CONFIG}'."
@@ -998,6 +1027,15 @@ do
 			fi
 			;;
 
+		"enabledatabase")
+			if [[ ${NEW_VALUE} == "false" ]]; then
+				W="WARNING: "
+				W+="Disabling ${WSNs}${LABEL}${WSNe} will cause many new features not to work properly."
+				wW_ "${W}"
+# ALEX TODO: Anything if NEW_VALUE == "true" ?
+			fi
+			;;
+
 		"uselogin")
 			if [[ ${NEW_VALUE} == "false" ]]; then
 				W="WARNING: "
@@ -1019,7 +1057,7 @@ done
 
 [[ ${OK} == "false" ]] && exit 1
 
-[[ ${NUM_CHANGED} -le 0 ]] && exit "${EXIT_PARTIAL_OK}" 		# Nothing changed
+[[ ${NUM_CHANGED} -le 0 ]] && exit "${ALLSKY_EXIT_PARTIAL_OK}" 		# Nothing changed
 
 USE_REMOTE_WEBSITE="${S_useremotewebsite}"
 USE_REMOTE_SERVER="${S_useremoteserver}"
@@ -1059,7 +1097,7 @@ if [[ ${USE_REMOTE_WEBSITE} == "true" || ${USE_REMOTE_SERVER} == "true" ]]; then
 			W+="${wBR}Please do so now."
 			if [[ ${FROM} == "webui" ]]; then
 				W+="${wBR}See <a allsky='true' external='true'"
-				W+=" href='/documentation/installations/AllskyWebsite.html'>the documentation</a>"
+				W+=" href='/docs/allsky_guide/allsky.html'>the documentation</a>"
 			fi
 			wW_ "${W}"
 			[[ ${WEBSITES} != "local" ]] && WEBSITES=""
@@ -1125,6 +1163,7 @@ if [[ ${WEBSITE_VALUE_CHANGED} == "true" ]]; then
 		echo -n "WARNING: ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME} not updated"
 		echo    " because the remote Website is not enabled."
 	fi
+
 fi
 
 if [[ ${RUN_POSTTOMAP} == "true" ]]; then

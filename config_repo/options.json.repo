@@ -1,77 +1,4 @@
 [
-	{
-		"name": "databasesettingsheader",
-		"label": "Database Settings",
-		"type": "header"
-	},
-	{
-		"name": "enabledatabase",
-		"default": false,
-		"description": "Enable the Allsky database.",
-		"label": "Enable Database",
-		"type": "boolean",
-		"carryforward": true,
-		"checkchanges": true
-	},
-	{
-		"name": "databasetype",
-		"default": "none",
-		"description": "The database to use to store data.",
-		"label": "Database Tyoe",
-		"type": "select_text",
-		"carryforward": true,
-		"optional": true,
-		"options": [
-			{
-				"value": "mysql",
-				"label": "MySQL"
-			},
-			{
-				"value": "sqlite",
-				"label": "SQLite"
-			}
-		]
-	},
-	{
-		"name": "databasehost",
-		"default": "",
-		"description": "The ip / hostname of the server running the database.",
-		"label": "Database Host",
-		"type": "text",
-		"carryforward": true,
-		"optional": true,
-		"source": "${ALLSKY_ENV}"
-	},
-	{
-		"name": "databaseuser",
-		"default": "",
-		"description": "The username used to connect to the database.",
-		"label": "Database User",
-		"type": "text",
-		"carryforward": true,
-		"optional": true,
-		"source": "${ALLSKY_ENV}"
-	},
-	{
-		"name": "databasepassword",
-		"default": "",
-		"description": "The password used to connect to the database.",
-		"label": "User Password",
-		"type": "text",
-		"carryforward": true,
-		"optional": true,
-		"source": "${ALLSKY_ENV}"
-	},
-	{
-		"name": "databasedatabase",
-		"default": "",
-		"description": "The database to use.",
-		"label": "Database",
-		"type": "text",
-		"carryforward": true,
-		"optional": true,
-		"source": "${ALLSKY_ENV}"
-	},
 {
 "name" : "daynighttab========================================",
 "display" : false,
@@ -128,7 +55,7 @@
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "_default",
-"description" : "Maximum daytime <span class='WebUISetting'>Auto-Exposure</span> time in milliseconds (1000ms = 1 sec).<br>Click <a allsky='true' external='true' href='/documentation/settings/allsky.html#daymaxautoexposure'>here</a> to see how this setting impacts the time between exposures.",
+"description" : "Maximum daytime <span class='WebUISetting'>Auto-Exposure</span> time in milliseconds (1000ms = 1 sec).<br>Click <a external='true' href='/docs/allsky_guide/settings/allsky.html#daymaxautoexposure'>here</a> to see how this setting impacts the time between exposures.",
 "label" : "Max Auto-Exposure",
 "label_prefix" : "Daytime",
 "type" : "float",
@@ -141,7 +68,7 @@
 "minimum" : "_min",
 "maximum" : "_max",
 "default" : "day_default",
-"description" : "Manual exposure time in milliseconds (1000ms = 1 sec). Can be a fraction.<br>If daytime <span class='WebUISetting'>Auto-Exposure</span> is enabled, this number is used as a starting point.<br>Click <a allsky='true' external='true' href='/documentation/settings/allsky.html#dayexposure'>here</a> to see how this setting impacts the time between exposures.",
+"description" : "Manual exposure time in milliseconds (1000ms = 1 sec). Can be a fraction.<br>If daytime <span class='WebUISetting'>Auto-Exposure</span> is enabled, this number is used as a starting point.<br>Click <a external='true' href='/docs/allsky_guide/settings/allsky.html#dayexposure'>here</a> to see how this setting impacts the time between exposures.",
 "label" : "Manual Exposure",
 "label_prefix" : "Daytime",
 "type" : "float",
@@ -346,7 +273,7 @@
 "name" : "daytuningfile",
 "display" : "_display",
 "default" : "",
-"description" : "Name of the optional day camera tuning file to use.<br>See the documentation for a <a allsky='true' external='true' href='/documentation/settings/allsky.html#daytuningfile'>description of this setting</a>.",
+"description" : "Name of the optional day camera tuning file to use.<br>See the documentation for a <a external='true' href='/docs/allsky_guide/settings/allsky.html#daytuningfile'>description of this setting</a>.",
 "label" : "Tuning File",
 "label_prefix" : "Daytime",
 "type" : "widetext",
@@ -823,6 +750,15 @@
 "action" : "reload"
 },
 {
+"name" : "focusmode",
+"default" : false,
+"description" : "Enable enter focus mode.",
+"label" : "Focus Mode",
+"type" : "boolean",
+"usage" : "capture",
+"action" : "reload"
+},
+{
 "name" : "consistentdelays",
 "default" : true,
 "description" : "Enable to have the delays between images be a consistent length.<br>The time between the start of exposures will always be <span class='WebUISetting'>Max Auto-Exposure + Delay</span>.",
@@ -881,7 +817,7 @@
 },
 {
 "name" : "angle",
-"default" : -6,
+"default" : "-6",
 "description" : "Altitude of the Sun in degrees relative to the horizon at which to switch between day and night.",
 "label" : "Angle",
 "type" : "float",
@@ -893,7 +829,7 @@
 {
 "name" : "takedarkframes",
 "default" : false,
-"description" : "Enable to capture dark frames, which are used to decrease noise.<br>See the <a allsky='true' external='true' href='/documentation/explanations/darkFrames.html#howtousedarks'>Dark frames</a> documentation on how to take dark frames.",
+"description" : "Enable to capture dark frames, which are used to decrease noise.<br>See the <a external='true' href='/docs/allsky_guide/howtos/dark_frames.html#howtousedarks'>Dark frames</a> documentation on how to take dark frames.",
 "label" : "Take Dark Frames",
 "type" : "boolean",
 "usage" : "capture",
@@ -901,15 +837,12 @@
 },
 {
 "name" : "imageremovebadhighdarkframe",
-"minimum" : 0,
-"maximum" : 0.25,
 "default" : 0.05,
-"description" : "Delete dark frames whose mean is above this value.  Increase if your camera is very noisy and you are SURE the lens is fully covered.",
-"label" : "Dark Frame Upper Threshold",
+"description" : "Ignore dark frames brighter than this.",
+"label" : "Remove Bad Darks Threshold High",
 "type" : "float",
 "usage" : "capture",
-"carryforward" : true,
-"checkchanges" : true
+"action" : "reload"
 },
 {
 "name" : "usedarkframes",
@@ -959,7 +892,7 @@
 {
 "name" : "debuglevel",
 "default" : 1,
-"description" : "Debug level. Use <span class='WebUIValue'>3</span> while debugging.  See the <a external='true' allsky='true' href='/documentation/settings/allsky.html#debuglevel'>documentation</a> for meaning of the levels.",
+"description" : "Debug level. Use <span class='WebUIValue'>3</span> while debugging.  See the <a external='true' href='/docs/allsky_guide/settings/allsky.html#debuglevel'>documentation</a> for meaning of the levels.",
 "label" : "Debug Level",
 "type" : "select_integer",
 "usage" : "capture",
@@ -973,7 +906,6 @@
 ],
 "action" : "reload"
 },
-
 {
 "name" : "postcapturetab========================================",
 "display" : false,
@@ -993,8 +925,8 @@
 "description" : "Delete images whose mean is below this value.<br><span class='WebUIValue'>0</span> disables this check.",
 "label" : "Remove Bad Images Threshold Low",
 "type" : "float",
-"usage" : "capture",
-"booldependson" : "savedaytimeimages OR savenighttimeimages"
+"booldependson" : "savedaytimeimages OR savenighttimeimages",
+"action" : "restart"
 },
 {
 "name" : "imageremovebadhigh",
@@ -1004,19 +936,16 @@
 "description" : "Delete images whose mean is above this value.<br><span class='WebUIValue'>0</span> disables this check.",
 "label" : "Remove Bad Images Threshold High",
 "type" : "float",
-"usage" : "capture",
-"booldependson" : "savedaytimeimages OR savenighttimeimages"
+"booldependson" : "savedaytimeimages OR savenighttimeimages",
+"action" : "restart"
 },
 {
 "name" : "imageremovebadcount",
-"minimum" : 1,
-"maximum" : 20,
 "default" : 5,
-"description" : "Display a System Message when this many consecutive 'bad' images are found.",
+"description" : "After this many 'bad' images display a message.",
 "label" : "Remove Bad Images Threshold Count",
 "type" : "integer",
-"usage" : "capture",
-"booldependson" : "savedaytimeimages OR savenighttimeimages"
+"action" : "restart"
 },
 {
 "name" : "imagecreatethumbnails",
@@ -1076,7 +1005,7 @@
 "minimum" : 0,
 "maximum" : "_max",
 "default" : 0,
-"description" : "Number of pixels to crop off the top of image.  Must be an even number",
+"description" : "Number of pixels to crop off the top of image.",
 "label" : "Image Crop Top",
 "type" : "integer",
 "checkchanges" : true,
@@ -1087,7 +1016,7 @@
 "minimum" : 0,
 "maximum" : "_max",
 "default" : 0,
-"description" : "Number of pixels to crop off the right side of image.  Must be an even number",
+"description" : "Number of pixels to crop off the right side of image.",
 "label" : "Image Crop Right",
 "type" : "integer",
 "checkchanges" : true,
@@ -1098,7 +1027,7 @@
 "minimum" : 0,
 "maximum" : "_max",
 "default" : 0,
-"description" : "Number of pixels to crop off the bottom of image.  Must be an even number",
+"description" : "Number of pixels to crop off the bottom of image.",
 "label" : "Image Crop Bottom",
 "type" : "integer",
 "checkchanges" : true,
@@ -1109,7 +1038,7 @@
 "minimum" : 0,
 "maximum" : "_max",
 "default" : 0,
-"description" : "Number of pixels to crop off the left side of image.  Must be an even number",
+"description" : "Number of pixels to crop off the left side of image.",
 "label" : "Image Crop Left",
 "type" : "integer",
 "checkchanges" : true,
@@ -1134,12 +1063,32 @@
 {
 "name" : "timelapsegenerate",
 "default" : true,
-"description" : "Enable to generate a timelapse video at the end of night.<br>See the <span class='settingsHeader'>Websites and Remote Server Settings</span> section for upload settings.",
+"description" : "Enable to generate a timelapse video at the end of night.",
 "label" : "Generate",
 "label_prefix" : "Daily Timelapse",
 "type" : "boolean",
 "carryforward" : true,
 "booldependson" : "savedaytimeimages OR savenighttimeimages"
+},
+{
+"name" : "timelapseupload",
+"default" : true,
+"description" : "Enable to upload the timelapse video to an Allsky Website and/or remote server.",
+"label" : "Upload",
+"label_prefix" : "Daily Timelapse",
+"type" : "boolean",
+"carryforward" : true,
+"booldependson" : "timelapsegenerate"
+},
+{
+"name" : "timelapseuploadthumbnail",
+"default" : true,
+"description" : "Enable to upload the timelapse video thumbnail.",
+"label" : "Upload Thumbnail",
+"label_prefix" : "Daily Timelapse",
+"type" : "boolean",
+"carryforward" : true,
+"booldependson" : "timelapsegenerate AND timelapseupload AND (uselocalwebsite OR useremotewebsite OR useremoteserver)"
 },
 {
 "name" : "timelapsewidth",
@@ -1208,6 +1157,7 @@
 "optional" : true,
 "booldependson" : "timelapsegenerate"
 },
+
 {
 "name" : "minitimelapseheader",
 "label" : "Mini-Timelapse",
@@ -1218,7 +1168,7 @@
 "minimum" : 0,
 "maximum" : "none",
 "default" : 0,
-"description" : "Number of images in a mini-timelapse. <span class='WebUIValue'>0</span> disables mini-timelapse creation.<br>See the <span class='settingsHeader'>Websites and Remote Server Settings</span> section for upload settings.",
+"description" : "Number of images in a mini-timelapse. <span class='WebUIValue'>0</span> disables mini-timelapse creation.",
 "label" : "Number Of Images",
 "label_prefix" : "Mini-Timelapse",
 "type" : "integer",
@@ -1246,6 +1196,27 @@
 "label_prefix" : "Mini-Timelapse",
 "type" : "integer",
 "carryforward" : true,
+"valuedependson" : "minitimelapsenumimages=[1-9]*"
+},
+{
+"name" : "minitimelapseupload",
+"default" : false,
+"description" : "Enable to upload the mini-timelapse video to an Allsky Website and/or remote server.",
+"label" : "Upload",
+"label_prefix" : "Mini-Timelapse",
+"type" : "boolean",
+"carryforward" : true,
+"valuedependson" : "minitimelapsenumimages=[1-9]*"
+},
+{
+"name" : "minitimelapseuploadthumbnail",
+"default" : true,
+"description" : "Enable to upload the mini-timelapse video thumbnail.",
+"label" : "Upload Thumbnail",
+"label_prefix" : "Mini-Timelapse",
+"type" : "boolean",
+"carryforward" : true,
+"booldependson" : "minitimelapseupload AND (uselocalwebsite OR useremotewebsite OR useremoteserver)",
 "valuedependson" : "minitimelapsenumimages=[1-9]*"
 },
 {
@@ -1359,13 +1330,24 @@
 {
 "name" : "keogramgenerate",
 "default" : true,
-"description" : "Enable to generate a keogram at the end of night.<br>See the <span class='settingsHeader'>Websites and Remote Server Settings</span> section for upload settings.",
+"description" : "Enable to generate a keogram at the end of night.",
 "label" : "Generate",
 "label_prefix" : "Keograms",
 "type" : "boolean",
 "carryforward" : true,
 "booldependson" : "savedaytimeimages OR savenighttimeimages"
 },
+{
+"name" : "keogramupload",
+"default" : true,
+"description" : "Enable to upload the keogram to an Allsky Website and/or remote server.",
+"label" : "Upload",
+"label_prefix" : "Keograms",
+"type" : "boolean",
+"carryforward" : true,
+"booldependson" : "keogramgenerate AND (uselocalwebsite OR useremotewebsite OR useremoteserver)"
+},
+
 {
 "name" : "keogramexpand",
 "default" : true,
@@ -1399,7 +1381,7 @@
 {
 "name" : "keogramfontcolor",
 "default" : "#ffffff",
-"description" : "Font color.  See <a external='true' allsky='true' href='/documentation/settings/allsky.html#keogramfontcolor'>the documentation</a> for a description of this field.",
+"description" : "Font color.  See <a external='true' href='/docs/allsky_guide/settings/allsky.html#keogramfontcolor'>the documentation</a> for a description of this field.",
 "label" : "Font Color",
 "label_prefix" : "Keograms",
 "type" : "color",
@@ -1437,6 +1419,7 @@
 "optional" : true,
 "booldependson" : "keogramgenerate"
 },
+
 {
 "name" : "startrailssubheader",
 "label" : "Startrails",
@@ -1445,12 +1428,22 @@
 {
 "name" : "startrailsgenerate",
 "default" : true,
-"description" : "Enable to generate a startrails at the end of night.<br>See the <span class='settingsHeader'>Websites and Remote Server Settings</span> section for upload settings.",
+"description" : "Enable to generate a startrails at the end of night.",
 "label" : "Generate",
 "label_prefix" : "Startrails",
 "type" : "boolean",
 "carryforward" : true,
 "booldependson" : "savedaytimeimages OR savenighttimeimages"
+},
+{
+"name" : "startrailsnightonly",
+"default" : false,
+"description" : "Only include nighttime images in startrails?",
+"label" : "Night images only",
+"label_prefix" : "Startrails",
+"type" : "boolean",
+"carryforward" : true,
+"booldependson" : "startrailsgenerate"
 },
 {
 "name" : "startrailsbrightnessthreshold",
@@ -1464,6 +1457,16 @@
 "booldependson" : "startrailsgenerate"
 },
 {
+"name" : "startrailsupload",
+"default" : true,
+"description" : "Enable to upload the startrails to an Allsky Website and/or remote server.",
+"label" : "Upload",
+"label_prefix" : "Startrails",
+"type" : "boolean",
+"carryforward" : true,
+"booldependson" : "startrailsgenerate AND (uselocalwebsite OR useremotewebsite OR useremoteserver)"
+},
+{
 "name" : "startrailsextraparameters",
 "default" : "",
 "description" : "Optional additional startrails creation parameters.<br>Run <code>~/allsky/bin/startrails --help</code> for a list of options.",
@@ -1473,6 +1476,7 @@
 "optional" : true,
 "booldependson" : "startrailsgenerate"
 },
+
 {
 "name" : "websitetab========================================",
 "label" : "Website",
@@ -1515,67 +1519,6 @@
 "type" : "integer",
 "carryforward" : true,
 "booldependson" : "uselocalwebsite OR useremotewebsite OR useremoteserver"
-},
-{
-"name" : "timelapseupload",
-"default" : true,
-"description" : "Enable to upload the timelapse video to an Allsky Website and/or remote server.",
-"label" : "Upload Daily Timelapse",
-"label_prefix" : "Daily Timelapse",
-"type" : "boolean",
-"carryforward" : true,
-"booldependson" : "timelapsegenerate"
-},
-{
-"name" : "timelapseuploadthumbnail",
-"default" : true,
-"description" : "Enable to upload the timelapse video thumbnail.",
-"label" : "Upload Daily Timelapse Thumbnail",
-"label_prefix" : "Daily Timelapse",
-"type" : "boolean",
-"carryforward" : true,
-"booldependson" : "timelapsegenerate AND timelapseupload AND (uselocalwebsite OR useremotewebsite OR useremoteserver)"
-},
-{
-"name" : "keogramupload",
-"default" : true,
-"description" : "Enable to upload the keogram to an Allsky Website and/or remote server.",
-"label" : "Upload Keogram",
-"label_prefix" : "Keograms",
-"type" : "boolean",
-"carryforward" : true,
-"booldependson" : "keogramgenerate AND (uselocalwebsite OR useremotewebsite OR useremoteserver)"
-},
-{
-"name" : "startrailsupload",
-"default" : true,
-"description" : "Enable to upload the startrails to an Allsky Website and/or remote server.",
-"label" : "Upload Startrails",
-"label_prefix" : "Startrails",
-"type" : "boolean",
-"carryforward" : true,
-"booldependson" : "startrailsgenerate AND (uselocalwebsite OR useremotewebsite OR useremoteserver)"
-},
-{
-"name" : "minitimelapseupload",
-"default" : false,
-"description" : "Enable to upload the mini-timelapse video to an Allsky Website and/or remote server.",
-"label" : "Upload Mini-Timelapse",
-"label_prefix" : "Mini-Timelapse",
-"type" : "boolean",
-"carryforward" : true,
-"valuedependson" : "minitimelapsenumimages=[1-9]*"
-},
-{
-"name" : "minitimelapseuploadthumbnail",
-"default" : true,
-"description" : "Enable to upload the mini-timelapse video thumbnail.",
-"label" : "Upload Mini-Timelapse Thumbnail",
-"label_prefix" : "Mini-Timelapse",
-"type" : "boolean",
-"carryforward" : true,
-"booldependson" : "minitimelapseupload AND (uselocalwebsite OR useremotewebsite OR useremoteserver)",
-"valuedependson" : "minitimelapsenumimages=[1-9]*"
 },
 {
 "name" : "displaysettings",
@@ -1623,7 +1566,7 @@
 {
 "name" : "useremotewebsite",
 "default" : false,
-"description" : "Enable to use a remote Allsky Website.<br>See the Allsky Documentation for how to install the Website.",
+"description" : "Enable to use a remote Allsky Website.<br>See the <a external='true' href='/docs/allsky_guide/website.html'>Allsky Documentation</a> for how to install the Website.",
 "label" : "Use Remote Website",
 "type" : "boolean",
 "carryforward" : true,
@@ -2203,7 +2146,7 @@
 },
 {
 "name" : "uselogin",
-"default" : true,
+"default" : false,
 "description" : "Determines if you need to login to the WebUI or not.<br><b>If your Pi is accessible on the Internet, do NOT turn this off!!</b>.",
 "label" : "Require WebUI Login",
 "type" : "boolean",
@@ -2211,9 +2154,39 @@
 "carryforward" : true
 },
 {
+"name" : "liveviewmode",
+"default" : "fullwidth",
+"description" : "Controls how the image is displayed on the <span class='WebUIWebPage'>Live View</span> page.<br><strong>Full Width</strong> always fills the panel width and may require vertical scrolling.<br><strong>Fit Image</strong> keeps the whole image visible in the panel without a vertical scrollbar.",
+"label" : "Live View Mode",
+"type" : "select_text",
+"carryforward" : true,
+"options" : [
+	{"value" : "fullwidth", "label" : "Full Width"},
+	{"value" : "scaled", "label" : "Fit Image"}
+]
+},
+{
+"name" : "inlinemessages",
+"default" : true,
+"description" : "If enabled system messages are shown at the top of the page rather than via the menu.",
+"label" : "Inline System Messages",
+"type" : "boolean",
+"carryforward" : true
+},
+{
+"name" : "fieldhelpdelay",
+"minimum" : 0,
+"maximum" : 60000,
+"default" : 500,
+"description" : "Milliseconds to wait before showing field help. Set to 0 to require a click.",
+"label" : "Field Help Delay",
+"type" : "integer",
+"carryforward" : true
+},
+{
 "name" : "webuidatafiles",
 "default" : "",
-"description" : "See the documentation for a <a allsky='true' external='true' href='/documentation/settings/allsky.html'>description of this setting</a>.",
+"description" : "See the documentation for a <a external='true' href='/docs/allsky_guide/settings/allsky.html#WebUI-settings'>description of this setting</a>.",
 "label" : "System Page Additions",
 "type" : "widetext",
 "carryforward" : true,
@@ -2235,9 +2208,126 @@
 "label" : "NOT DISPLAYED IN WebUI",
 "type" : "text"
 },
-
 {
-
+"name" : "databasesettingsheader",
+"label" : "Allsky Database Settings",
+"type" : "header"
+},
+{
+"name" : "databasesubheader",
+"label" : "<div class='panel panel-danger' style='margin-bottom: 0'><div class='panel-heading'>*** Only change these settings if you know what you are doing. ***</div></div>",
+"type" : "header-sub"
+},
+{
+"name" : "enabledatabase",
+"default" : true,
+"description" : "Enable the Allsky database.<br>Many new features will not work if the database is disabled.",
+"label" : "Enable Database",
+"type" : "boolean",
+"carryforward" : true,
+"checkchanges" : true
+},
+{
+"name" : "databasedatabase",
+"default" : "allsky",
+"description" : "The name of the database to use.",
+"label" : "Database",
+"type" : "text",
+"carryforward" : true,
+"optional" : true
+},
+{
+"name" : "databasetype",
+"default" : "sqlite",
+"description" : "The type of database.<br>MySQL has more features but uses a lot more CPU and memory.",
+"label" : "Database Type",
+"type" : "select_text",
+"carryforward" : true,
+"options" : [
+	{"value" : "sqlite", "label" : "SQLite"},
+	{"value" : "mysql", "label" : "MySQL"}
+],
+"optional" : true
+},
+{
+"name" : "databasehost",
+"default" : "",
+"description" : "(MySQL only) The IP address or hostname of the server running the database.<br>By default the database runs on your Pi.",
+"label" : "Database Host",
+"type" : "text",
+"carryforward" : true,
+"optional" : true,
+"source" : "${ALLSKY_ENV}"
+},
+{
+"name" : "databaseuser",
+"default" : "",
+"description" : "(MySQL only) The username used to connect to the database.",
+"label" : "Database User",
+"type" : "text",
+"carryforward" : true,
+"optional" : true,
+"source" : "${ALLSKY_ENV}"
+},
+{
+"name" : "databasepassword",
+"default" : "",
+"description" : "(MySQL only) The password used to connect to the database.",
+"label" : "User Password",
+"type" : "text",
+"carryforward" : true,
+"optional" : true,
+"source" : "${ALLSKY_ENV}"
+},
+{
+"name" : "allskysensortab========================================",
+"label" : "Allsky Sensor Server",
+"type" : "header-tab"
+},
+{
+"name" : "cameraheading",
+"label" : "Allsky Sensor Server",
+"type" : "header"
+},
+{
+"name" : "enableallskysensorserver",
+"default" : false,
+"description" : "Enable to use a Allsky Sensor Server.",
+"label" : "Server Enabled",
+"type" : "boolean",
+"carryforward" : true
+},
+{
+"name" : "allskysensorservercameraname",
+"default" : "",
+"description" : "The name this camera will appear as on the Allsky Sensor Server.",
+"label" : "Allsky Sensor Camera Name",
+"carryforward" : true,
+"type" : "text",
+"optional" : true,
+"source" : "${ALLSKY_ENV}"
+},
+{
+"name" : "allskysensorserverurl",
+"default" : "",
+"description" : "The URL of your Allsky Sensor Server. Please refer to the setup guide in the Allsky Sensor Server",
+"label" : "Allsky Sensor URL",
+"type" : "widetext",
+"carryforward" : true,
+"optional" : true,
+"source" : "${ALLSKY_ENV}"
+},
+{
+"name" : "allskysensorservertoken",
+"default" : "",
+"description" : "The Token for the Alsky Sensor Server. Please refer to the setup guide in the Allsky Sensor Server",
+"label" : "Allsky Sensor Token",
+"type" : "widetext",
+"carryforward" : true,
+"optional" : true,
+"source" : "${ALLSKY_ENV}"
+},
+{
 "name" : "cameratab========================================",
 "label" : "Camera Type",
 "type" : "header-tab"

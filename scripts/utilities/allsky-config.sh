@@ -8,17 +8,19 @@
 ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck source-path=.
-source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 # allow user to select additional commands after 1st one?
 ALLOW_MORE_COMMANDS="true"
 
 TITLE="*** Allsky Configuration ***"
 
+# TODO: FIX: get rid of old whiptail code when we know this new code works
+USE_DIALOG="true"		# Use the "dialog" command or older whiptail code
 
 ####################################### Functions - one per command
 
@@ -30,7 +32,7 @@ function usage_and_exit()
 	[[ ${1} == "--commands-only" ]] && COMMANDS_ONLY="true" && shift
 
 	local RET=${1}
-	
+
 	exec 2>&1
 	echo
 
@@ -42,7 +44,7 @@ function usage_and_exit()
 			W_ "${MSG}"
 		fi
 		echo
-		echo "Where:"
+		echo "Arguments:"
 		echo "   --help           Displays this message and exits."
 		echo "   --help command   Displays a help message for the specified command, then exits."
 		echo "   --debug          Displays debugging information."
@@ -62,7 +64,7 @@ function usage_and_exit()
 	echo "      encoders"
 	echo "      pix_fmts"
 
-	echo "      config_timelapse"
+	echo "      compare_timelapses [see --help for arguments]"
 	echo "      compare_startrails [see --help for arguments]"
 	echo "      compare_stretches [see --help for arguments]"
 
@@ -70,14 +72,16 @@ function usage_and_exit()
 	echo "      change_tmp"
 	echo "      samba"
 
-	echo "      bad_images_info [--show_bad_images]"
+	echo "      bad_images_info [--list_bad_images]"
 	echo "      check_post_data"
 	echo "      compare_paths --website | --server"
 	echo "      test_upload --website | --server"
 
+	echo "      manage_modules [see --help for arguments]"
 	echo "      check_allsky [see --help for arguments]"
 	echo "      move_images"
 	echo "      prepare_logs [debug_level]"
+	echo "      recreate_files"
 
 	if [[ ${COMMANDS_ONLY} == "false" ]]; then
 		echo "  If no 'command' is specified you are prompted for one."
@@ -98,8 +102,8 @@ function show_supported_cameras()
 
 	if [[ $# -eq 0 && -n ${FUNCTION_TO_EXECUTE} ]]; then
 		# Command to run specified on command line but required options not given.
-		E_ "${ME} ${ME_F}: Need to specify all arguments on command line." >&2
-		"${COMMAND_TO_EXECUTE}" --help
+		E_ "\n${ME} ${ME_F}: Need to specify all arguments on command line." >&2
+		E_ "     Need '--RPi' and / or '--ZWO'.\n" >&2
 		exit 2
 	fi
 
@@ -112,8 +116,13 @@ function show_supported_cameras()
 		OPTS+=("--ZWO"			"ZWO (very long list)")
 		OPTS+=("--RPi --ZWO"	"both")
 
+		#XXX FIX: when using the dialog command the prompt below doesn't include
+		# the choices.
+		local SAVED_USE_DIALOG="${USE_DIALOG}"
+		USE_DIALOG="false"	
 		# If the user selects "Cancel" prompt() returns 1 and we exit the loop.
 		ARGS="$( prompt "${PROMPT}" "${OPTS[@]}" )"
+		USE_DIALOG="${SAVED_USE_DIALOG}"
 	else
 		# shellcheck disable=SC2124
 		ARGS="${@}"
@@ -180,7 +189,7 @@ function show_installed_locales()
 		echo " see the 'Locale' setting on the WebUI's"
 		echo "'Settings -> Allsky' Documentation page for instructions on how to install it."
 	else
-		echo " <a href='/documentation/settings/allsky.html#locale'>click here</a>"
+		echo " <a href='/docs/allsky_guide/settings/allsky.html#locale'>click here</a>"
 		echo "for instructions on how to install it."
 		HTML="--html"
 	fi
@@ -213,7 +222,7 @@ function new_rpi_camera_info()
 function samba()
 {
 	if [[ ${ON_TTY} == "false" ]]; then
-		W_ "${ME} ${ME_F} must run from a terminal." >&2
+		W_ "${ME} ${ME_F} must be run from a terminal." >&2
 		return
 	fi
 
@@ -227,7 +236,7 @@ function samba()
 function move_images()
 {
 	if [[ ${ON_TTY} == "false" ]]; then
-		W_ "${ME} ${ME_F} must run from a terminal." >&2
+		W_ "${ME} ${ME_F} must be run from a terminal." >&2
 		return
 	fi
 
@@ -265,8 +274,8 @@ function website_server_cmd()
 
 	if [[ $# -eq 0 && -n ${FUNCTION_TO_EXECUTE} ]]; then
 		# Command to run specified on command line but required options not given.
-		E_ "${ME} ${ME_F}: Need to specify all arguments on command line.\n" >&2
-#		"${COMMAND_TO_EXECUTE}" --help
+		E_ "\n${ME} ${ME_F}: Need to specify all arguments on command line." >&2
+		E_ "   Need either '--website' or '--server'.\n" >&2
 		exit 2
 	fi
 
@@ -274,13 +283,17 @@ function website_server_cmd()
 
 	if [[ $# -eq 0 && -z ${FUNCTION_TO_EXECUTE} ]]; then
 		OPTS=()
-		OPTS+=("--website"	\
-			"${MSG1}")
-		OPTS+=("--server"	\
-			"${MSG2}")
+		OPTS+=("--website"	"${MSG1}")
+		OPTS+=("--server"	"${MSG2}")
+
+		#XXX FIX: when using the dialog command the prompt below doesn't include
+		# the choices.
+		local SAVED_USE_DIALOG="${USE_DIALOG}"
+		USE_DIALOG="false"	
 
 		# If the user selects "Cancel" prompt() returns 1 and we exit the loop.
 		ARGS="$( prompt "\n${PROMPT}" "${OPTS[@]}" )"
+		USE_DIALOG="${SAVED_USE_DIALOG}"
 
 # TODO: Remove this check once "remoteserverurl" is implemented.
 		if [[ ${ARGS} == "--server" ]]; then
@@ -314,6 +327,17 @@ function compare_paths()
 
 
 #####
+# Recreate files after a "git pull" or whenever any "parent" file changes.
+# It's very possible some of the files don't need updating, but it's quick to
+# update them and not always quick to check if they need updating.
+function recreate_files()
+{
+	# shellcheck disable=SC2068
+	"${ALLSKY_UTILITIES}/recreateFiles.sh" "${@}"
+}
+
+
+#####
 # Test a file upload.
 function test_upload()
 {
@@ -336,7 +360,7 @@ function test_upload()
 
 #####
 # Display brightness information from the startrails command.
-get_startrails_info()
+function get_startrails_info()
 {
 	# shellcheck disable=SC2068
 	getStartrailsInfo.sh "${@}"
@@ -345,7 +369,7 @@ get_startrails_info()
 
 #####
 # Create multiple startrails with different thresholds.
-compare_startrails()
+function compare_startrails()
 {
 	# shellcheck disable=SC2068
 	compareStartrails.sh "${@}"
@@ -354,7 +378,7 @@ compare_startrails()
 
 #####
 # Create multiple stretched images with different amounts and midpoints.
-compare_stretches()
+function compare_stretches()
 {
 	# shellcheck disable=SC2068
 	compareStretches.sh "${@}"
@@ -363,15 +387,10 @@ compare_stretches()
 
 #####
 # Help determine some timelapse settings.
-config_timelapse()
+function compare_timelapses()
 {
-	if [[ ${ON_TTY} == "false" ]]; then
-		W_ "${ME} ${ME_F} must run from a terminal." >&2
-		return
-	fi
-
 	# shellcheck disable=SC2068
-	configTimelapse.sh "${@}"
+	compareTimelapse.sh "${@}"
 }
 
 
@@ -393,7 +412,7 @@ function change_tmp()
 	fi
 
 	if [[ ${ON_TTY} == "false" ]]; then
-		W_ "${ME} ${ME_F} must run from a terminal." >&2
+		W_ "${ME} ${ME_F} must be run from a terminal." >&2
 		return
 	fi
 
@@ -429,7 +448,7 @@ function change_swap()
 	fi
 
 	if [[ ${ON_TTY} == "false" ]]; then
-		W_ "${ME} ${ME_F} must run from a terminal." >&2
+		W_ "${ME} ${ME_F} must be run from a terminal." >&2
 		return
 	fi
 
@@ -503,6 +522,14 @@ function get_filesystems()
 	getFilesystems.sh "${@}"
 }
 
+#####
+# Allow users to install and uninstall modules.
+function manage_modules()
+{
+	# shellcheck disable=SC2068
+	manageModules.sh "${@}"
+}
+
 
 ####################################### Helper functions
 
@@ -513,7 +540,22 @@ function run_command()
 	local COMMAND="${1}"
 	shift
 
-	if ! type "${COMMAND}" > /dev/null 2>&1 ; then
+	local HTML
+	if [[ ${COMMAND:0:4} == "HTML" ]]; then
+		HTML="--html"
+		COMMAND="${COMMAND:4}"
+	else
+		HTML=""
+	fi
+
+	if [[ -z ${COMMAND} ]]; then
+		E_ "\n${ME}: No command specified." >&2
+		usage_and_exit --commands-only 2
+	fi
+
+	# Check if command is a function; if so, assume it's one of ours.
+	echo "CMDS=${CMDS[*]}" | grep -m 1 --silent "(${COMMAND})"
+	if [[ $? -ne 0 ]]; then
 		E_ "\n${ME}: Unknown command '${COMMAND}'." >&2
 		usage_and_exit --commands-only 2
 	fi
@@ -524,16 +566,17 @@ function run_command()
 	fi
 
 	ME_F="${COMMAND}"		# global
-	"${COMMAND}" "${@}"
+	# shellcheck disable=SC2086
+	"${COMMAND}" ${HTML} "${@}"
 }
 
 
 #####
 # Prompt for a command or argument from a list.
 if [[ ${ON_TTY} == "true" ]]; then
-	WT_LINES=$( tput lines 2>/dev/null )
+	T_LINES=$( tput lines 2>/dev/null )
 fi
-WT_LINES="${WT_LINES:-24}"
+T_LINES="${T_LINES:-24}"
 
 function prompt()
 {
@@ -542,17 +585,36 @@ function prompt()
 	local OPTIONS=("${@}")
 	local NUM_OPTIONS=$(( ${#OPTIONS[@]} / 2 ))
 
-# whiptail's menubox has:
-# 4 lines at top
-# then the menu (NUM_OPTIONS lines)
-# 2 blank lines
-# 1 "<Ok> / <Cancel>" line
-# 2 blank lines
-# If all that doesn't fit in the terminal windows, whiptail does NOT scroll.
+if [[ ${USE_DIALOG} == "true" ]]; then
+	D_WIDTH="85"
+	D_MENU_HEIGHT="${NUM_OPTIONS}"
+	local OPT="$( dialog --no-tags --title "${TITLE}" \
+		--default-item "${DEFAULT_MENU_ITEM}" \
+		"--menu" "${PROMPT}" \
+		"${T_LINES}" "${D_WIDTH}" "${D_MENU_HEIGHT}" "${OPTIONS[@]}" 3>&1 1>&2 2>&3 )"
+	local RET=$?
+	if [[ ${RET} -ne 0 ]]; then
+		E_ "\n${ME}: 'dialog' failed." >&2
+		exit 2
+	else
+		echo "${OPT}"
+		return "${RET}"
+	fi
+
+else
+	# whiptail's menubox has:
+	# 4 lines at top
+	# then the menu (NUM_OPTIONS lines)
+	# 2 blank lines
+	# 1 "<Ok> / <Cancel>" line
+	# 2 blank lines
+	# If all that doesn't fit in the terminal windows, whiptail does NOT scroll.
 	local LINES=$(( 4 + NUM_OPTIONS + 2 + 1 + 2 ))
-	if [[ ${LINES} -ge ${WT_LINES} ]]; then
-		echo "Please resize you window to at least $(( LINES + 1 )) lines."
-		echo "It is only ${WT_LINES} lines now."
+
+	if [[ ${LINES} -ge ${T_LINES} ]]; then
+		echo "Please resize your window to at least $(( LINES + 1 )) lines."
+		echo "It is only ${T_LINES} lines now."
+		return 1
 	fi >&2
 
 	local OPT="$( whiptail --title "${TITLE}" --notags --menu "${PROMPT}" \
@@ -566,6 +628,7 @@ function prompt()
 		echo "${OPT}"
 		return "${RET}"
 	fi
+fi
 }
 
 
@@ -595,7 +658,7 @@ function L()
 	local NAME="${1}"
 
 	local NUM="$( printf "%2d" "${N}" )"
-	echo -e "     ${NUM}.  ${NAME}"
+	echo -e "  ${NUM}. ${NAME}"
 }
 
 
@@ -649,111 +712,123 @@ if [[ -z ${FUNCTION_TO_EXECUTE} ]]; then
 	# No command given on command line so prompt for one.
 
 	if [[ ${ON_TTY} == "false" ]]; then
-		W_ "${ME} must run from a terminal or have all arguments included on the command line." >&2
+		W_ "${ME} must be run from a terminal or have all arguments included on the command line." >&2
 		exit 2
 	fi
 
 	PROMPT="\nSelect a command to run:"
+fi
 	CMDS=()
 	N=0
 
 #####
+	# The command names must be in () within CMDS so we can determine if
+	# a command passed to us is valid.
 	CMDS+=("header"	      "Commands to Display Information" )
 
 	((N++));	C="get_startrails_info"
-	CMDS+=("${C}"	"$( L "Get information on startrails image brightness           (${C})" )")
+	CMDS+=("${C}"	"$( L "Get information on startrails image brightness (${C})" )")
 
 	DEFAULT_MENU_ITEM="${C}"		# Must be 1st item
 
 	((N++));	C="show_start_times"
-	CMDS+=("${C}"	"$( L "Show daytime and nighttime start times                   (${C})" )")
+	CMDS+=("${C}"	"$( L "Show daytime and nighttime start times         (${C})" )")
 
 	((N++));	C="show_supported_cameras"
-	CMDS+=("${C}"	"$( L "Show supported cameras                                   (${C})" )")
+	CMDS+=("${C}"	"$( L "Show supported cameras                         (${C})" )")
 
 	((N++));	C="show_connected_cameras"
-	CMDS+=("${C}"	"$( L "Show connected cameras                                   (${C})" )")
+	CMDS+=("${C}"	"$( L "Show connected cameras                         (${C})" )")
 
 	((N++));	C="new_rpi_camera_info"
-	CMDS+=("${C}"	"$( L "Collect information for new RPi camera                   (${C})" )")
+	CMDS+=("${C}"	"$( L "Collect information for new RPi camera         (${C})" )")
 
 	((N++));	C="show_installed_locales"
-	CMDS+=("${C}"	"$( L "Show the locales installed on the Pi                     (${C})" )")
+	CMDS+=("${C}"	"$( L "Show the locales installed on the Pi           (${C})" )")
 
 	((N++));	C="get_filesystems"
-	CMDS+=("${C}"	"$( L "Determine where a secodary storage device is             (${C})" )")
+	CMDS+=("${C}"	"$( L "Determine where a secodary storage device is   (${C})" )")
 
 	((N++));	C="encoders"
-	CMDS+=("${C}"	"$( L "Show list of timelapse encoders available                (${C})" )")
+	CMDS+=("${C}"	"$( L "Show available timelapse encoders              (${C})" )")
 
 	((N++));	C="pix_fmts"
-	CMDS+=("${C}"	"$( L "Show list of timelapse pixel formats available           (${C})" )")
+	CMDS+=("${C}"	"$( L "Show available of timelapse pixel formats      (${C})" )")
 
 
 #####
 	CMDS+=("header"	      "Commands to Create Test Images or Videos" )
 
-# TODO: Not sure if I like it better with, or without this phrase:
-X="with different settings"
-X="                       "
-	((N++));	C="config_timelapse"
-	CMDS+=("${C}"	"$( L "Create multiple timelapse videos ${X} (${C})" )")
+	((N++));	C="compare_timelapses"
+	CMDS+=("${C}"	"$( L "Create multiple timelapse videos               (${C})" )")
 
 	((N++));	C="compare_startrails"
-	CMDS+=("${C}"	"$( L "Create multiple startrails ${X}       (${C})" )")
+	CMDS+=("${C}"	"$( L "Create multiple startrails                     (${C})" )")
 
 	((N++));	C="compare_stretches"
-	CMDS+=("${C}"	"$( L "Create multiple stretched images ${X} (${C})" )")
+	CMDS+=("${C}"	"$( L "Create multiple stretched images               (${C})" )")
 
 
 #####
 	CMDS+=("header"	      "Commands to Change Pi Settings" )
 
 	((N++));	C="change_swap"
-	CMDS+=("${C}"	"$( L "Add swap space or change size                            (${C})" )")
+	CMDS+=("${C}"	"$( L "Add swap space or change size                  (${C})" )")
 
 	((N++));	C="change_tmp"
-	CMDS+=("${C}" 	"$( L "Move ~/allsky/tmp to memory or change size               (${C})") ")
+	CMDS+=("${C}" 	"$( L "Move ~/allsky/tmp to memory or change size     (${C})") ")
 
 	((N++));	C="samba"
-	CMDS+=("${C}" 	"$( L "Simplify copying files to/from the Pi                    (${C})" )")
+	CMDS+=("${C}" 	"$( L "Simplify copying files to/from the Pi          (${C})" )")
 
 
 #####
 	CMDS+=("header"	      "Troubleshooting Commands" )
 
 	((N++));	C="bad_images_info"
-	CMDS+=("${C}"	"$( L "Display information on 'bad' images                      (${C})" )")
+	CMDS+=("${C}"	"$( L "Display information on 'bad' images            (${C})" )")
 
 	((N++));	C="check_post_data"
-	CMDS+=("${C}"	"$( L "Troubleshoot the 'data.json is X days old' message       (${C})" )")
+	CMDS+=("${C}"	"$( L "Troubleshoot 'data.json' messages              (${C})" )")
 
 	((N++));	C="compare_paths"
-	CMDS+=("${C}"	"$( L "Compare upload and Website paths                         (${C})" )")
+	CMDS+=("${C}"	"$( L "Compare upload and Website paths               (${C})" )")
 
 	((N++));	C="test_upload"
-	CMDS+=("${C}"	"$( L "Test uploading a file                                    (${C})" )")
+	CMDS+=("${C}"	"$( L "Test uploading a file                          (${C})" )")
 
 
 
 #####
 	CMDS+=("header"	      "Misc. Commands" )
 
-	((N++));	C="check_allsky"
-	CMDS+=("${C}"	"$( L "Check Allsky for setting errors and warnings             (${C})" )")
+	((N++));	C="manage_modules"
+	CMDS+=("${C}"	"$( L "Install or uninstall modules.                  (${C})" )")
 
 	((N++));	C="move_images"
-	CMDS+=("${C}"	"$( L "Move ~/allsky/images to a different location             (${C})" )")
+	((N++));	C="check_allsky"
+	CMDS+=("${C}"	"$( L "Check Allsky for setting errors and warnings   (${C})" )")
+
+	((N++));	C="move_images"
+	CMDS+=("${C}"	"$( L "Move ~/allsky/images to a different location   (${C})" )")
 
 	((N++));	C="prepare_logs"
-	CMDS+=("${C}"	"$( L "Prepare log files for troubleshooting                    (${C})" )")
+	CMDS+=("${C}"	"$( L "Prepare log files for troubleshooting          (${C})" )")
 
+	((N++));	C="recreate_files"
+	CMDS+=("${C}"	"$( L "Recreate various files after a 'git pull'      (${C})" )")
+
+
+if [[ -z ${FUNCTION_TO_EXECUTE} ]]; then
 	##### Prompt
 	# If the user selects "Cancel" prompt() returns 1 and we exit the loop.
 	P="${PROMPT}"
 	while COMMAND="$( prompt "${P}" "${CMDS[@]}" )"
 	do
-		[[ -z ${COMMAND} ]] && exit 0
+		if [[ -z ${COMMAND} ]]; then
+			[[ ${ON_TTY} == "true" ]] && clear
+			exit 0
+		fi
 
 		if [[ ${COMMAND} == "header" ]]; then
 			# There isn't a way in whiptail to group items so we fake it.
@@ -761,7 +836,8 @@ X="                       "
 			continue
 		fi
 		P="${PROMPT}"	# restore prompt
-		
+
+		[[ ${ON_TTY} == "true" ]] && clear
 
 		run_command "${COMMAND}"
 		RET=$?

@@ -5,36 +5,40 @@
 ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck source-path=.
-source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 # If Allsky is already running, exit.  Let prior copy continue runnning.
 if [[ $( pgrep --count "${ME}" ) -gt 1 ]]; then
 	echo "     ***** Allsky already running; see below. Exiting new copy. *****" >&2
 	# Show other processes.  Don't show any newer than 5 seconds so we don't show ourself.
 	ps -f -p "$( pgrep --older 5 "${ME}" )"
-	exit "${EXIT_ERROR_STOP}"
+	exit "${ALLSKY_EXIT_ERROR_STOP}"
 fi
 
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 # NOT_STARTED_MSG, STOPPED_MSG, ERROR_MSG_PREFIX, and ZWO_VENDOR are globals
 
 # Output from this script goes either to the log file or a tty,
 # so can't use "w*" colors.
 
-if [[ ! -d ${ALLSKY_CONFIG} ]]; then
+if [[ ! -d ${ALLSKY_BIN} ]]; then
+	MSG2="Allsky needs to be installed.  Run:  cd ~/allsky; ./install.sh"
 	MSG="*** ====="
-	MSG+="\nAllsky needs to be installed.  Run:  cd ~/allsky; ./install.sh"
+	MSG+="${MSG2}"
 	MSG+="\n*** ====="
 	E_ "${MSG}" >&2
 
-	# Can't call addMessage.sh or copyNotificationImage.sh or almost anything
-	# since they use ${ALLSKY_CONIG} and/or ${ALLSKY_TMP} which don't exist yet.
+	# Can't call copyNotificationImage.sh or almost anything
+	# since they use files and directories which may not yet exist.
+	# However, addMessage.sh may work, so try it.
+	"${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${MSG2}" > /dev/null 2>&1
+
 	set_allsky_status "${ALLSKY_STATUS_NEVER_RUN}"
-	doExit "${EXIT_ERROR_STOP}" "no-image" "" ""
+	doExit "${ALLSKY_EXIT_ERROR_STOP}" "no-image" "" ""
 fi
 
 ####
@@ -89,10 +93,27 @@ fi
 # Make it easy to find the beginning of this run in the log file.
 echo "     ***** Starting Allsky *****"
 
+if [[ ! -d ${ALLSKY_IMAGES} ]]; then
+	echo ">>> Creating '${ALLSKY_IMAGES}' <<<"
+	mkdir "${ALLSKY_IMAGES}"
+fi
+
 # Make sure ${CAMERA_TYPE} is valid; if not, exit with a message.
 verify_CAMERA_TYPE "${CAMERA_TYPE}"
 
 cd "${ALLSKY_HOME}" || exit 1
+
+# Make directories that need to exist.
+if [[ -d ${ALLSKY_CURRENT_DIR} ]]; then
+	# Remove any lingering temporary old image files.
+	rm -f "${ALLSKY_CURRENT_DIR}/${ALLSKY_FILENAME}"-20*."${ALLSKY_EXTENSION}"	# "20" for 2000 and later
+else
+	# We should never get here since ${ALLSKY_CURRENT_DIR} is created during installation,
+	# but "just in case"...
+	mkdir -p "${ALLSKY_CURRENT_DIR}"
+	chmod 775 "${ALLSKY_CURRENT_DIR}"
+	sudo chgrp "${WEBSERVER_GROUP}" "${ALLSKY_CURRENT_DIR}"
+fi
 
 # Make sure they rebooted if they were supposed to.
 if reboot_needed ; then
@@ -103,12 +124,12 @@ fi
 
 if [[ ${NEEDS_REBOOT} == "true" ]]; then
 	set_allsky_status "${ALLSKY_STATUS_REBOOT_NEEDED}"
-	doExit "${EXIT_ERROR_STOP}" "RebootNeeded" "" "The Pi needs to be rebooted."
+	doExit "${ALLSKY_EXIT_ERROR_STOP}" "RebootNeeded" "" "The Pi needs to be rebooted."
 fi
 
 # Get all settings we're going to use.
 #shellcheck disable=SC2119
-getAllSettings --var "lastchanged cameranumber locale" || exit 1
+getAllSettings --var "lastchanged cameranumber locale imageremovebadlow imageremovebadhigh imageremovebadcount imageremovebadhighdarkframe" || exit 1
 
 # If the "lastchanged" setting is missing, the user needs to review/change the settings.
 # This will happen after an installation or upgrade, which also sets the Allsky status.
@@ -117,6 +138,7 @@ if [[ -z ${S_lastchanged} ]]; then
 	if [[ ${STATUS} == "${ALLSKY_STATUS_REBOOT_NEEDED}" ]]; then
 		# It's been rebooted and now we need to force "lastchanged" to be set.
 		STATUS="${ALLSKY_STATUS_NEEDS_REVIEW}"
+		set_allsky_status "${STATUS}"
 	fi
 
 	if [[ ${STATUS} == "${ALLSKY_STATUS_NEEDS_REVIEW}" ]]; then
@@ -138,10 +160,10 @@ if [[ -z ${S_lastchanged} ]]; then
 	fi
 	if [[ ${NEEDS_REBOOT} == "true" ]]; then
 		MSG+=" The Pi also needs to be rebooted." >&2
-		doExit "${EXIT_ERROR_STOP}" "${IMAGE_NAME}" \
+		doExit "${ALLSKY_EXIT_ERROR_STOP}" "${IMAGE_NAME}" \
 			"" "${WEBUI_MSG} and then the Pi rebooted."
 	else
-		doExit "${EXIT_ERROR_STOP}" "${IMAGE_NAME}" "" "${WEBUI_MSG}."
+		doExit "${ALLSKY_EXIT_ERROR_STOP}" "${IMAGE_NAME}" "" "${WEBUI_MSG}."
 	fi
 	[[ -n ${MSG} ]] && echo "*** ===== ${MSG}" >&2		# to the log
 fi
@@ -201,15 +223,14 @@ if [[ -f ${ALLSKY_POST_INSTALL_ACTIONS} ]]; then
 		# shellcheck disable=SC2154
 		rm -f "${F}"		# so next time we'll remind them.
 		set_allsky_status "${ALLSKY_STATUS_ACTIONS_NEEDED}"
-		doExit "${EXIT_ERROR_STOP}" "no-image" "" ""
+		doExit "${ALLSKY_EXIT_ERROR_STOP}" "no-image" "" ""
 	else
 		# First delete the initial message if there since we're posting a reminder.
 		"${ALLSKY_SCRIPTS}/addMessage.sh" --id AM_POST --delete
 
 		MSG="Reminder: Click here to see the action(s) that need to be performed."
-		PIA="${ALLSKY_POST_INSTALL_ACTIONS/${ALLSKY_HOME}/}"
 		"${ALLSKY_SCRIPTS}/addMessage.sh" --id AM_RM_POST --type warning \
-			--msg "${MSG}" --url "${PIA}" \
+			--msg "${MSG}" --url "${ALLSKY_POST_INSTALL_ACTIONS_URL}" \
 			--cmd "\nOnce you perform them, click here to remove this message."
 	fi
 fi
@@ -233,7 +254,7 @@ if [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 				E_ "*** ${FATAL_MSG} ${MSG} Stopping Allsky." >&2
 				IMAGE_MSG="${ERROR_MSG_PREFIX}"
 				IMAGE_MSG+="\nToo many consecutive\nUSB bus resets done!\n${SEE_LOG_MSG}"
-				doExit "${EXIT_ERROR_STOP}" "Error" 
+				doExit "${ALLSKY_EXIT_ERROR_STOP}" "Error" 
 					"${IMAGE_MSG}" "${NOT_STARTED_MSG}: ${MSG}"
 			fi
 		else
@@ -257,7 +278,7 @@ if [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 			"" "5" "yellow" "${ALLSKY_EXTENSION}" "" \
 			"WARNING:\n\nResetting USB bus\n${REASON}.\nAttempt ${NUM_USB_RESETS}."
 
-		SEARCH="${ZWO_VENDOR}:${ZWO_CAMERA_ID}"
+		SEARCH="${ZWO_VENDOR}:"
 		# Get the hub number the camera is on.
 		local HUB="$( sudo "${ALLSKY_BIN}/uhubctl" --exact --search "${SEARCH}" |
 			gawk -v Z="${SEARCH}" '
@@ -273,6 +294,8 @@ if [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 					}
 				}'
 		)"
+		### From what I can tell, uhubctl doesn't work on the Pi; at least
+		### it never seems to fix any USB problems.
 		sudo "${ALLSKY_BIN}/uhubctl" --action off --exact --search "${SEARCH}" --location "${HUB}"
 		sleep 3		# give it a few seconds, plus, allow the notification images to be seen
 		sudo "${ALLSKY_BIN}/uhubctl" --action on --exact --search "${SEARCH}" --location "${HUB}"
@@ -281,6 +304,7 @@ if [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 else	# RPi
 	# "true" means use doExit() on error
 	RPi_COMMAND_TO_USE="$( determineCommandToUse "true" "${ERROR_MSG_PREFIX}" "false" )"
+	[[ -n ${RPi_COMMAND_TO_USE} ]] && RPi_COMMAND_TO_USE="-cmd ${RPi_COMMAND_TO_USE}"
 fi
 
 # "true" means ignore errors
@@ -303,7 +327,7 @@ if [[ ${CAMERA_TYPE_FOUND} == "false" ]]; then
 	IMAGE_MSG="${ERROR_MSG_PREFIX}"
 	IMAGE_MSG+="${NOT_STARTED_MSG}\n"
 	IMAGE_MSG+="\nNo connected ${CAMERA_TYPE}\ncameras found!"
-	doExit "${EXIT_ERROR_STOP}" "Error" \
+	doExit "${ALLSKY_EXIT_ERROR_STOP}" "Error" \
 		"${IMAGE_MSG}" "${MSG}"
 fi
 
@@ -322,7 +346,7 @@ if [[ ! ${CCM} =~ "${CAM}" ]]; then
 		IMAGE_MSG+="The camera changed."
 		IMAGE_MSG+="\nCheck Camera Type\n& Model in the WebUI."
 		reset_usb "Camera changed"
-		doExit "${EXIT_ERROR_STOP}" "Error" "${IMAGE_MSG}"
+		doExit "${ALLSKY_EXIT_ERROR_STOP}" "Error" "${IMAGE_MSG}"
 	fi
 fi
 
@@ -364,7 +388,7 @@ rm -f "${ALLSKY_NOTIFICATION_LOG}"	# clear out any notificatons from prior runs.
 if ! ARGS="$( "${ALLSKY_SCRIPTS}/convertJSON.php" --capture-only )" ; then
 	E_ "${ME}: ERROR: convertJSON.php returned: ${ARGS}"
 	set_allsky_status "${ALLSKY_STATUS_ERROR}"
-	exit "${EXIT_ERROR_STOP}"
+	exit "${ALLSKY_EXIT_ERROR_STOP}"
 fi
 
 # We must pass "-config ${ARGS_FILE}" on the command line and
@@ -377,7 +401,13 @@ fi
 	# These aren't settings but are needed by the capture programs.
 	echo "version=${ALLSKY_VERSION}"
 	echo "save_dir=${ALLSKY_CURRENT_DIR}"
+	echo "imageremovebadlow=${S_imageremovebadlow}"
+	echo "imageremovebadhigh=${S_imageremovebadhigh}"
+	[[ -z ${S_imageremovebadcount} ]] && S_imageremovebadcount=5
+	echo "imageremovebadcount=${S_imageremovebadcount}"
 	echo "bad_image_count_file=${ALLSKY_BAD_IMAGE_COUNT}"
+	[[ -z ${S_imageremovebadhighdarkframe} ]] && S_imageremovebadhighdarkframe="0.05"
+	echo "imageremovebadhighdarkframe=${S_imageremovebadhighdarkframe}"
 	[[ ${PREVIEW} == "true" ]] && echo "preview=true"
 } > "${ARGS_FILE}"
 
@@ -402,26 +432,35 @@ set_allsky_status "${ALLSKY_STATUS_STARTING}"
 
 # Run the camera-specific capture program - this is the main attraction...
 CAMERA_NUMBER="${S_cameranumber:-0}"		# default
+# shellcheck disable=SC2086
 "${ALLSKY_BIN}/${CAPTURE}" \
 	-debuglevel "${ALLSKY_DEBUG_LEVEL}" \
-	-cmd "${RPi_COMMAND_TO_USE}" \
+	${RPi_COMMAND_TO_USE} \
 	-cameramodel "${CAMERA_MODEL}" \
 	-cameranumber "${CAMERA_NUMBER}" \
 	-locale "${S_locale}" \
 	-config "${ARGS_FILE}"
 RETCODE=$?
 
-if [[ ${RETCODE} -eq ${EXIT_OK} ]]; then
+if [[ ${RETCODE} -eq ${ALLSKY_EXIT_OK} ]]; then
 	[[ ${CAMERA_TYPE} == "ZWO" ]] && rm -f "${RESETTING_USB_LOG}"
 	set_allsky_status "${ALLSKY_STATUS_STOPPED}"
 	# The user probably stopped Allsky, and the WebUI's status will show "Stopped".
 	# In case the user wants to see the last image, do NOT call copyNotificationImage.sh.
-	doExit "${EXIT_OK}" ""
+	doExit "${ALLSKY_EXIT_OK}" ""
 fi
 
-if [[ ${RETCODE} -eq ${EXIT_RESTARTING} ]]; then
+if [[ ${RETCODE} -eq ${ALLSKY_EXIT_STOP} ]]; then
+	set_allsky_status "${ALLSKY_STATUS_STOPPED}"
+	# Give it time to finish uploading and processing last image.
+	sleep 5
+	stop_Allsky
+	exit 0
+fi
+
+if [[ ${RETCODE} -eq ${ALLSKY_EXIT_RESTARTING} ]]; then
 	if [[ ${ON_TTY} == "true" ]]; then
-		echo "*** Can restart allsky now. ***"
+		echo "*** Can restart Allsky now. ***"
 		NOTIFICATION_TYPE="NotRunning"
 	else
 		NOTIFICATION_TYPE="Restarting"
@@ -431,11 +470,11 @@ if [[ ${RETCODE} -eq ${EXIT_RESTARTING} ]]; then
 	doExit 0 "${NOTIFICATION_TYPE}"		# use 0 so the service is restarted
 fi
 
-if [[ ${RETCODE} -eq ${EXIT_RESET_USB} ]]; then
+if [[ ${RETCODE} -eq ${ALLSKY_EXIT_RESET_USB} ]]; then
 	# Reset the USB bus
-	reset_usb " (too many capture errors)"
+	reset_usb "(too many capture errors)"
 	if [[ ${ON_TTY} == "true" ]]; then
-		echo "*** USB bus was reset; You can restart allsky now. ***"
+		echo "*** USB bus was reset; You can restart Allsky now. ***"
 		NOTIFICATION_TYPE="NotRunning"
 	else
 		NOTIFICATION_TYPE="Restarting"
@@ -445,8 +484,8 @@ if [[ ${RETCODE} -eq ${EXIT_RESET_USB} ]]; then
 	doExit 0 ""		# use 0 so the service is restarted
 fi
 
-# RETCODE -ge ${EXIT_ERROR_STOP} means we should not restart until the user fixes the error.
-if [[ ${RETCODE} -ge ${EXIT_ERROR_STOP} ]]; then
+# RETCODE -ge ${ALLSKY_EXIT_ERROR_STOP} means we should not restart until the user fixes the error.
+if [[ ${RETCODE} -ge ${ALLSKY_EXIT_ERROR_STOP} ]]; then
 	echo "***"
 	if [[ ${ON_TTY} == "true" ]]; then
 		echo "*** After fixing, restart ${ME}. ***"

@@ -120,7 +120,7 @@ function doExit()
 		OUTPUT_A_MSG="true"
 	fi
 
-	if [[ ${EXITCODE} -ge ${EXIT_ERROR_STOP} ]]; then
+	if [[ ${EXITCODE} -ge ${ALLSKY_EXIT_ERROR_STOP} ]]; then
 		# With fatal EXIT_ERROR_STOP errors, we can't continue so display a notification image
 		# even if the user has them turned off.
 		if [[ -n ${CUSTOM_MESSAGE} ]]; then
@@ -143,7 +143,7 @@ function doExit()
 
 	# Don't let the service restart us because we'll likely get the same error again.
 	# Stop here so the message above is output first.
-	[[ ${EXITCODE} -ge ${EXIT_ERROR_STOP} ]] && stop_Allsky
+	[[ ${EXITCODE} -ge ${ALLSKY_EXIT_ERROR_STOP} ]] && stop_Allsky
 
 	exit "${EXITCODE}"
 }
@@ -183,7 +183,7 @@ function verify_CAMERA_TYPE()
 		E_ "${FATAL_MSG} ${MSG}" >&2
 
 		if [[ ${IGNORE_ERRORS} != "true" ]]; then
-			doExit "${EXIT_NO_CAMERA}" "Error" "${IMAGE_MSG}" "${MSG}"
+			doExit "${ALLSKY_EXIT_NO_CAMERA}" "Error" "${IMAGE_MSG}" "${MSG}"
 		fi
 
 		return 1
@@ -232,7 +232,7 @@ function determineCommandToUse()
 				echo "${NO_CMD_FOUND} ${MSG}" >&2
 				if [[ ${USE_doExit} == "true" ]]; then
 					EXIT_MSG="${PREFIX}\nRPi camera command\nnot found!."
-					doExit "${EXIT_ERROR_STOP}" "Error" "${EXIT_MSG}" "${MSG}"
+					doExit "${ALLSKY_EXIT_ERROR_STOP}" "Error" "${EXIT_MSG}" "${MSG}"
 				fi
 			# else don't echo anything
 			fi
@@ -247,7 +247,7 @@ function determineCommandToUse()
 	# If the cable is bad the camera might be found but not work,
 	# and the command can hang.
 
-	timeout 120 "${CMD_TO_USE_}" --timeout 1 --nopreview > /dev/null 2>&1
+	local ERR="$( timeout 120 "${CMD_TO_USE_}" --timeout 1 --nopreview 2>&1 )"
 	RET=$?
 	if [[ ${RET} -eq 0 || ${RET} -eq 137 ]]; then
 		# If another of these commands is running ours will hang for
@@ -260,14 +260,15 @@ function determineCommandToUse()
 		# Time out.
 		# This usually means a camera exists but there's a problem connecting to it.
 		echo "'${CMD_TO_USE_}' timed out." >&2
-		return "${EXIT_ERROR_STOP}"
+		return "${ALLSKY_EXIT_ERROR_STOP}"
 
 	else
 		if [[ ${IGNORE_ERRORS} == "false" ]]; then
 			echo "'${CMD_TO_USE_}' failed with return code ${RET}." >&2
+			[[ -n ${ERR} ]] && indent "${ERR}" >&2
 			if [[ ${USE_doExit} == "true" ]]; then
 				EXIT_MSG="${PREFIX}\n${CMD_TO_USE_} failed!"
-				doExit "${EXIT_ERROR_STOP}" "Error" "${EXIT_MSG}" "${MSG}"
+				doExit "${ALLSKY_EXIT_ERROR_STOP}" "Error" "${EXIT_MSG}" "${MSG}"
 			fi
 		fi
 		return 1
@@ -480,7 +481,7 @@ function validate_camera()
 			E_ "\n${MSG}\n"
 		else
 			MSG+="\n\nClick this message to ask that Allsky support this camera."
-			URL="/documentation/explanations/requestCameraSupport.html";
+			URL="/docs/allsky_guide/howtos/new_camera.html";
 			local CMD_MSG="Click here to see the supported ${CT} cameras."
 			[[ ${CT} == "ZWO" ]] && CMD_MSG+=" WARNING: the list is long!"
 			"${ALLSKY_SCRIPTS}/addMessage.sh" \
@@ -916,7 +917,7 @@ function check_settings_link()
 	FULL_FILE="${1}"
 	if [[ -z ${FULL_FILE} ]]; then
 		echo "${FUNCNAME[0]}(): Settings file not specified."
-		return "${EXIT_ERROR_STOP}"
+		return "${ALLSKY_EXIT_ERROR_STOP}"
 	fi
 	if [[ ! -f ${FULL_FILE} ]]; then
 		echo "${FUNCNAME[0]}(): File '${FULL_FILE}' not found."
@@ -924,11 +925,11 @@ function check_settings_link()
 	fi
 	if [[ -z ${CAMERA_TYPE} ]]; then
 		CAMERA_TYPE="$( settings ".${CT}"  "${FULL_FILE}" )"
-		[[ $? -ne 0 || -z ${CAMERA_TYPE} ]] && return "${EXIT_ERROR_STOP}"
+		[[ $? -ne 0 || -z ${CAMERA_TYPE} ]] && return "${ALLSKY_EXIT_ERROR_STOP}"
 	fi
 	if [[ -z ${CAMERA_MODEL} ]]; then
 		CAMERA_MODEL="$( settings ".${CM}"  "${FULL_FILE}" )"
-		[[ $? -ne 0 || -z ${CAMERA_TYPE} ]] && return "${EXIT_ERROR_STOP}"
+		[[ $? -ne 0 || -z ${CAMERA_TYPE} ]] && return "${ALLSKY_EXIT_ERROR_STOP}"
 	fi
 
 	DIRNAME="$( dirname "${FULL_FILE}" )"
@@ -1283,7 +1284,7 @@ function indent()
 }
 
 
-# Python virtual environment
+# Python virtual environments
 PYTHON_VENV_ACTIVATED="false"
 function activate_python_venv()
 {
@@ -1292,19 +1293,38 @@ function activate_python_venv()
 
 	local ACTIVATE="${ALLSKY_PYTHON_VENV}/bin/activate"
 
-	if [[ ${ALLSKY_PI_OS} == "bookworm" && -s ${ACTIVATE} ]]; then
-		#shellcheck disable=SC1090,SC1091
-		source "${ACTIVATE}" || exit 1
-		PYTHON_VENV_ACTIVATED="true"
-		return 0	# Successfully activated
-	fi
-	return 1
+	#shellcheck disable=SC1090,SC1091
+	source "${ACTIVATE}" || exit 1
+	PYTHON_VENV_ACTIVATED="true"
+	return 0	# Successfully activated
 }
 
 function deactivate_python_venv()
 {
 	[[ ${PYTHON_VENV_ACTIVATED} == "true" ]] && deactivate
 }
+
+
+PYTHON_SERVER_VENV_ACTIVATED="false"
+function activate_python_server_venv()
+{
+	# TODO: will need to change when the OS after Bookworm is released.
+	# Maybe check for != bullseye  ?
+
+	local ACTIVATE="${ALLSKY_PYTHON_SERVER_VENV}/bin/activate"
+
+	#shellcheck disable=SC1090,SC1091
+	source "${ACTIVATE}" || exit 1
+	PYTHON_SERVER_VENV_ACTIVATED="true"
+	return 0	# Successfully activated
+
+}
+
+function deactivate_python_server_venv()
+{
+	[[ ${PYTHON_SERVER_VENV_ACTIVATED} == "true" ]] && deactivate
+}
+
 
 
 # Determine if the specified value is a number.
@@ -1571,4 +1591,91 @@ function remove_colors()
 			-e "s/${N}//g" \
 			-e "s/\\\Z.//g" \
 	)"
+}
+
+
+#####
+# Add very basic text to an image.
+addTextToImage()
+{
+	local POINT_SIZE=""
+	local FONT="${ALLSKY_OVERLAY}/system_fonts/Courier_New_Bold.ttf"
+	local STROKE="black"
+	local STROKE_WIDTH="2"
+	local FILL="yellow"
+	local X="20"
+	local Y=""
+	local EXTRA_ARGS=""
+
+	while [[ $# -gt 0 ]]; do
+		ARG="${1}"
+		case "${ARG,,}" in
+			--point-size)
+				POINT_SIZE="${2}"
+				shift
+				;;
+			--font)
+				FONT="${2}"
+				shift
+				;;
+			--stroke)
+				STROKE="${2}"
+				shift
+				;;
+			--stroke-width)
+				STROKE_WIDTH="${2}"
+				shift
+				;;
+			--fill)
+				FILL="${2}"
+				shift
+				;;
+			--x)
+				X="${2}"
+				shift
+				;;
+			--y)
+				Y="${2}"
+				shift
+				;;
+			--extra-args)
+				# An additional step, like stretch an image, to perform at
+				# same time to avoid calling "convert" twice.
+				EXTRA_ARGS="${2}"
+				shift
+				;;
+			--*)
+				E_ "Unknown argument: ${ARG}" >&2
+				;;
+			*)
+				break;
+				;;
+		esac
+		shift
+	done
+
+	local IN_IMAGE="${1}"
+	local OUT_IMAGE="${2}"
+	local TEXT="${3}"
+
+	# "identify" output:
+	#	image.jpg JPEG 4056x3040 4056x3040+0+0 8-bit sRGB 1.8263MiB 0.000u 0:00.000
+	local RESOLUTION="$( identify "${IN_IMAGE}" | gawk '{ print $3; }' )"
+	local WIDTH="${RESOLUTION%x*}"
+	local HEIGHT="${RESOLUTION##*x}"
+
+	# If the location wasn't specified put text in bottom left.
+	[[ -z ${POINT_SIZE} ]] && POINT_SIZE="$( echo "${WIDTH} / 33" | bc )"
+	if [[ -z ${Y} ]]; then
+		Y=$(( HEIGHT - ( POINT_SIZE * 2) ))
+	elif [[ ${Y} -lt 0 ]]; then
+		# relative to the bottom of the image
+		Y=$(( HEIGHT + Y - ( POINT_SIZE * 2) ))
+	fi
+
+	#shellcheck disable=SC2086
+	convert ${EXTRA_ARGS} -font "${FONT}" -pointsize "${POINT_SIZE}" \
+		-fill "${FILL}" -stroke "${STROKE}" -strokewidth "${STROKE_WIDTH}" \
+		-annotate "+${X}+${Y}" "${TEXT}" \
+		"${IN_IMAGE}" "${OUT_IMAGE}" 2>&1
 }

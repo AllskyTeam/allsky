@@ -48,15 +48,50 @@
         "gradient": false,
         "transparent": true,
         "lang": "en",
-        "colours": {
-            "comment": "See the Wiki for how to change colors on the constellation overlay.",
-            "normal": {
-                "XXX_cardinal": "rgba(0,255,0,1)"
-            },
-            "negative": {
-                "XXX_cardinal": "rgba(255,255,255,1)"
-            }
-        },
+		"colours": {
+			"comment": "See the Wiki for how to change colors on the constellation overlay.",
+			"normal": {
+				"polaroutline": "#ffffff",
+				"txt": "rgb(255,255,255)",
+				"black": "rgb(0,0,0)",
+				"white": "rgb(255,255,255)",
+				"grey": "rgb(100,100,100)",
+				"stars": "rgb(255,255,255)",
+				"sun": "rgb(255,215,0)",
+				"moon": "rgb(150,150,150)",
+				"cardinal": "rgba(163,228,255, 1)",
+				"constellation": "rgba(180,180,255,0.8)",
+				"constellationboundary": "rgba(255,255,100,0.6)",
+				"showers": "rgba(100,255,100,0.8)",
+				"galaxy": "rgba(100,200,255,0.5)",
+				"az": "rgba(100,100,255,0.4)",
+				"eq": "rgba(255,100,100,0.4)",
+				"ec": "rgba(255,0,0,0.4)",
+				"gal": "rgba(100,200,255,0.4)",
+				"meridian": "rgba(25,255,0,0.4)",
+				"pointers": "rgb(200,200,200)"
+			},
+			"negative": {
+				"polaroutline": "rgb(255,255,255)",
+				"txt": "rgb(0,0,0)",
+				"black": "rgb(0,0,0)",
+				"white": "rgb(255,255,255)",
+				"grey": "rgb(100,100,100)",
+				"stars": "rgb(0,0,0)",
+				"sun": "rgb(0,0,0)",
+				"moon": "rgb(0,0,0)",
+				"cardinal": "rgba(0,0,0,1)",
+				"constellation": "rgba(0,0,0,0.8)",
+				"constellationboundary": "rgba(0,0,0,0.6)",
+				"showers": "rgba(0,0,0,0.8)",
+				"galaxy": "rgba(0,0,0,0.5)",
+				"az": "rgba(0,0,255,0.6)",
+				"eq": "rgba(255,100,100,0.8)",
+				"ec": "rgba(255,0,0,0.6)",
+				"gal": "rgba(100,200,255,0.8)",
+				"meridian": "rgba(0,255,0,0.6)"
+			}
+		},
         "live": true,
         "id": "starmap",
         "AllskyVersion": "XX_ALLSKY_VERSION_XX"
@@ -65,6 +100,9 @@
         "comment": "These settings impact the look and feel of the Website home page.",
         "title": "XX_NEED_TO_UPDATE_XX",
         "og_description": "XX_NEED_TO_UPDATE_XX",
+        "og_type": "website",
+        "og_url": "XX_NEED_TO_UPDATE_XX",
+        "og_image": "image.jpg",
         "backgroundImage": {
             "url": "",
             "style": ""
@@ -80,9 +118,6 @@
             "title": "",
             "style": ""
         },
-        "og_type": "website",
-        "og_url": "https://github.com/AllskyTeam/allsky/",
-        "og_image": "image.jpg",
         "favicon": "allsky-favicon.png",
         "thumbnailsizex": 100,
         "thumbnailsizey": 75,
@@ -144,10 +179,6 @@
                 "icon": "fa fa-2x fa-fw fa-info-circle",
                 "other": "ng-click='toggleInfo()' ng-class=\"{'active': showInfo}\"",
                 "style": ""
-            },
-            {
-                "display": false,
-                "comment": "Add leftSidebar items above."
             }
         ],
         "leftSidebarStyle": "",
@@ -231,11 +262,8 @@
                 "variable": "AllskyVersion",
                 "value": "",
                 "style": ""
-            },
-            {
-                "comment": "Add popout items above."
             }
         ]
     },
-    "ConfigVersion": "5"
+    "ConfigVersion": "6"
 }

@@ -13,13 +13,13 @@
 ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck disable=SC1091 source-path=.
-source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh" 				|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/functions.sh" 				|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/checkFunctions.sh"			|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/checkFunctions.sh"			|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 usage_and_exit()
 {
@@ -556,13 +556,13 @@ if [[ ${CHECK_WARNINGS} == "true" ]]; then
 
 	if [[ ${S_startrailsgenerate} == "true" && ${S_startrailsupload} == "false" && ${USE_SOMETHING} == "true" ]]; then
 		heading "Warning"
-		echo -ne "Startrails are being created (${WSNs}${S_startrailsgenerate}${WSNe} = Yes)"
+		echo -ne "Startrails are being created (${WSNs}${S_startrailsgenerate_label}${WSNe} = Yes)"
 		echo -ne " but not uploaded (${WSNs}${S_startrailsupload_label}${WSNe} = No)${wBR}"
 		echo -ne "${FIX}: Either disable startrails generation or (more likely) enable upload.${wBR}"
 	fi
 	if [[ ${S_startrailsgenerate} == "false" && ${S_startrailsupload} == "true" ]]; then
 		heading "Warning"
-		echo -ne "Startrails are not being created (${WSNs}${S_startrailsgenerate}${WSNe} = No)"
+		echo -ne "Startrails are not being created (${WSNs}${S_startrailsgenerate_label}${WSNe} = No)"
 		echo -ne " but ${WSNs}${S_startrailsupload_label}${WSNe} = Yes${wBR}"
 		echo -ne "${FIX}: Either enable startrails generation or disable upload.${wBR}"
 	fi
@@ -873,7 +873,7 @@ else
 		fi
 		if [[ ${NUM_ERRORS} -gt 0 ]]; then
 			echo -ne "${wERROR}Errors: ${NUM_ERRORS}${wNC}${wBR}"
-			RET="${EXIT_ERROR_STOP}"
+			RET="${ALLSKY_EXIT_ERROR_STOP}"
 		fi
 	fi
 

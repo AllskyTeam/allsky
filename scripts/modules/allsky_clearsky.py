@@ -15,10 +15,11 @@ from photutils.detection import DAOStarFinder
 class ALLSKYCLEARSKY(ALLSKYMODULEBASE):
 
 	meta_data = {
-		"name": "Clear Sky Alarm",
-		"description": "Clear Sky Alarm",
+		"name": "Clear Sky Indicator",
+		"description": "Indicate if the sky is clear or cloudy based on the number of stars in an image.",
 		"module": "allsky_clearsky",
-		"version": "v1.0.2",
+		"version": "v1.0.3",
+  	"docs": "docs/allsky_modules/core/clear_sky.html",  
 		"extradatafilename": "allsky_clearsky.json",
 		"events": [
 			"day",
@@ -26,78 +27,14 @@ class ALLSKYCLEARSKY(ALLSKYMODULEBASE):
 		],
 		"experimental": "true",
   		"group": "Image Analysis",
-        "graphs": {
-            "chart1": {
-				"icon": "fa-solid fa-chart-line",
-				"title": "Sky State",
-				"group": "Analysis",
-				"main": "true",
-				"config": {
-					"tooltip": "true",
-					"chart": {
-						"type": "spline",
-						"zooming": {
-							"type": "x"
-						}
-					},
-					"title": {
-						"text": "Sky State"
-					},
-					"plotOptions": {
-						"series": {
-							"animation": "false"
-						}
-					},
-					"xAxis": {
-						"type": "datetime",
-						"dateTimeLabelFormats": {
-							"day": "%Y-%m-%d",
-							"hour": "%H:%M"
-						}
-					},
-					"yAxis": [
-						{ 
-							"title": {
-								"text": "Sky State"
-							} 
-						},
-						{ 
-							"title": {
-								"text": "Star Count"
-							},
-       						"opposite": "true" 
-						}
-					],
-					"lang": {
-						"noData": "No data available"
-					},
-					"noData": {
-						"style": {
-							"fontWeight": "bold",
-							"fontSize": "16px",
-							"color": "#666"
-						}
-					}
-				},
-				"series": {
-					"state": {
-						"name": "Sky State",
-						"yAxis": 0,
-						"variable": "AS_CLEARSKYSTATEFLAG"                 
-					},
-					"state": {
-						"name": "Star Count",
-						"yAxis": 1,
-						"variable": "AS_CLEARSKYSTATESTARS"                 
-					}          
-				}
-			}
-		}, 
 		"extradata": {
 			"database": {
 				"enabled": "True",
-				"table": "allsky_clearsky"
-			}, 
+				"table": "allsky_clearsky",
+    			"pk": "id",
+    			"pk_source": "image_timestamp",
+    			"pk_type": "int"    
+			},
 			"values": {
 				"AS_CLEARSKYSTATE": {
 					"name": "${CLEARSKYSTATE}",
@@ -118,13 +55,13 @@ class ALLSKYCLEARSKY(ALLSKYMODULEBASE):
 				"AS_CLEARSKYSTATESTARS": {
 					"name": "${CLEARSKYSTATESTARS}",
 					"format": "",
-					"sample": "",                
+					"sample": "",
 					"group": "Environment",
 					"description": "Sky State Star Count",
 					"type": "number"
 				}
 			}
-		}, 
+		},
 		"arguments":{
 			"annotate": "false",
 			"clearvalue": 10,
@@ -136,7 +73,7 @@ class ALLSKYCLEARSKY(ALLSKYMODULEBASE):
 			"roi": {
 				"required": "false",
 				"description": "Region of Interest",
-				"help": "The area of the image to check for clear skies. Format is x1,y1,x2,y2",
+				"help": "The area of the image to check for clear skies. Format is x1,y1,x2,y2.",
 				"type": {
 					"fieldtype": "roi"
 				}
@@ -144,7 +81,7 @@ class ALLSKYCLEARSKY(ALLSKYMODULEBASE):
 			"roifallback" : {
 				"required": "true",
 				"description": "Fallback %",
-				"help": "If no ROI is set then this % of the image, from the center will be used",
+				"help": "If no ROI is set then this % of the image, from the center will be used.",
 				"type": {
 					"fieldtype": "spinner",
 					"min": 1,
@@ -155,7 +92,7 @@ class ALLSKYCLEARSKY(ALLSKYMODULEBASE):
 			"clearvalue" : {
 				"required": "true",
 				"description": "Clear Sky",
-				"help": "If more than this number of stars are found the sky will be considered clear",
+				"help": "If more than this number of stars are found the sky is considered clear.",
 				"type": {
 					"fieldtype": "spinner",
 					"min": 1,
@@ -166,7 +103,7 @@ class ALLSKYCLEARSKY(ALLSKYMODULEBASE):
 			"annotate" : {
 				"required": "false",
 				"description": "Annotate Stars",
-				"help": "If selected the identified stars in the image will be highlighted",
+				"help": "Select to highlight identified stars in the image.",
 				"tab": "Debug",
 				"type": {
 					"fieldtype": "checkbox"
@@ -175,7 +112,7 @@ class ALLSKYCLEARSKY(ALLSKYMODULEBASE):
 			"debugimage" : {
 				"required": "false",
 				"description": "Debug Image",
-				"help": "Image to use for debugging. DO NOT set this unless you know what you are doing",
+				"help": "Image to use for debugging. DO NOT set this unless you know what you are doing.",
 				"tab": "Debug"
 			},
 			"graph": {
@@ -203,10 +140,19 @@ class ALLSKYCLEARSKY(ALLSKYMODULEBASE):
 						"Updates for the new module manager structure"
 					]
 				}
-			]                                                          
+			],
+			"v1.0.3" : [
+				{
+					"author": "Alex Greenland",
+					"authorurl": "https://github.com/allskyteam",
+					"changes": [
+						"Updates star detection"
+					]
+				}
+			]   
 		}
 	}
-    
+
 	def run(self):
 		try:
 			roi_str = self.get_param('roi', '', str, True)
@@ -222,39 +168,39 @@ class ALLSKYCLEARSKY(ALLSKYMODULEBASE):
 
 			if roi_str.strip():
 				roi_x, roi_y, roi_w, roi_h = map(int, roi_str.split(','))
-				self.log(f'INFO: Using roi of {roi_x},{roi_y},{roi_w},{roi_h}')
+				self.log(4, f'INFO: Using roi of {roi_x},{roi_y},{roi_w},{roi_h}')
 			else:
 				roi_w = int(width * roi_percent)
 				roi_h = int(height * roi_percent)
 				roi_x = (width - roi_w) // 2
 				roi_y = (height - roi_h) // 2
-				self.log(f'INFO: Using roi % of {roi_percent} and roi of {roi_x},{roi_y},{roi_w},{roi_h}')
+				self.log(4, f'INFO: Using roi % of {roi_percent} and roi of {roi_x},{roi_y},{roi_w},{roi_h}')
 
 			if image.ndim == 3:
 				gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-				self.log('INFO: Converted image to grayscale')
+				self.log(4, 'INFO: Converted image to grayscale')
 			else:
 				gray = image
 
 			roi_image = gray[roi_y:roi_y + roi_h, roi_x:roi_x + roi_w]
 			image_data = roi_image.astype(float)
 
-			sources, image = allsky_shared.count_starts_in_image(image_data)
-
+			sources, _ = allsky_shared.count_starts_in_image(image_data)
+  
 			if sources is not None:
 				found_stars = len(sources)
-				self.log(f'INFO: Number of stars detected in ROI: {len(sources)}')
+				self.log(4, f'INFO: Number of stars detected in ROI: {len(sources)}')
 
 				if annotate_image:
 					for i, row in enumerate(sources):
-						x = int(row['xcentroid'] + roi_x)
-						y = int(row['ycentroid'] + roi_y)
+						x = int(row[0] + roi_x)
+						y = int(row[1] + roi_y)
 
-						self.log(f'INFO: star {i}, x={x}, y={y}')
+						self.log(4, f'INFO: star {i}, x={x}, y={y}')
 
 						cv2.circle(allsky_shared.image, (x, y), 20, (0, 0, 255), 2)
 			else:
-				self.log(f'INFO: No stars detected in ROI')
+				self.log(4, f'INFO: No stars detected in ROI')
 
 			if annotate_image:
 				cv2.rectangle(allsky_shared.image, (roi_x, roi_y), (roi_x + roi_w, roi_y + roi_h), (255, 255, 0), 2)
@@ -266,15 +212,15 @@ class ALLSKYCLEARSKY(ALLSKYMODULEBASE):
 			extra_data['AS_CLEARSKYSTATE'] = sky_state
 			extra_data['AS_CLEARSKYSTATESTARS'] = found_stars
 			extra_data['AS_CLEARSKYSTATEFLAG'] = 1 if sky_state.strip().lower() == "clear" else 0
-			allsky_shared.saveExtraData(self.meta_data["extradatafilename"], extra_data, self.meta_data['module'], self.meta_data['extradata'])
+			allsky_shared.saveExtraData(self.meta_data["extradatafilename"], extra_data, self.meta_data['module'], self.meta_data['extradata'], event=self.event)
 
 			result = f'Sky is {sky_state} with {found_stars} stars detected in the ROI'
-			self.log(f'INFO: {result}')
+			self.log(4, f'INFO: {result}')
 		except Exception as e:
 			eType, eObject, eTraceback = sys.exc_info()
 			result = f'Module Clear Sky Alarm failed on line {eTraceback.tb_lineno} - {e}'
-			allsky_shared.log(0,f'ERROR: {result}')
-   
+			self.log(0, f'ERROR: {result}')
+
 		return result
 
 def clearsky(params, event):

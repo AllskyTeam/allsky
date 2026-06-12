@@ -5,6 +5,7 @@ class OECONFIG {
     #appConfig = {};
     #dataFields = {};
     #overlayDataFields = {};
+    #settings = {};
     #selectedOverlay = {
         type: null,
         name: null
@@ -48,6 +49,10 @@ class OECONFIG {
         return this.#appConfig;
     }
 
+    get settings() {
+        return this.#settings;
+    }
+
     loadOverlays() {
         $.ajax({
             url: 'includes/overlayutil.php?request=Overlays',
@@ -76,6 +81,7 @@ class OECONFIG {
                     this.#dataFields = result.data;
                     this.#overlayDataFields = result.overlaydata;
                     this.#appConfig = result.appconfig;
+                    this.#settings = result.settings || {};
                 }                
             });
         } catch (error) {
@@ -125,16 +131,24 @@ class OECONFIG {
                     const promises = [];
                     fontData.data.forEach(font => {
                         //console.log('url(' + window.oedi.get('BASEDIR') + font.path + ')');
-                        let fontFace = new FontFace(font.name, 'url(' + window.oedi.get('BASEDIR') + font.path + ')');
+                        let fontUrl = (window.oedi.get('BASEDIR') + font.path).split('/').map(encodeURIComponent).join('/');
+                        let fontFace = new FontFace(font.name, 'url("' + fontUrl + '")');
                         promises.push(
                             fontFace.load()
+                            .catch(err => {
+                                let fontName = font.name || font.path || 'unknown font';
+                                console.log(`Font failed to load: ${fontName}`, err);
+                                return null;
+                            })
                         );
                     });
 
                     Promise.all(promises)
                     .then(loadedFonts => {
                         for (let font in loadedFonts) {
-                            document.fonts.add(loadedFonts[font]);
+                            if (loadedFonts[font] !== null) {
+                                document.fonts.add(loadedFonts[font]);
+                            }
                         }
                         
                         $(document).trigger('oe-uimanager-fonts-loaded');
@@ -210,6 +224,13 @@ class OECONFIG {
         }         
     }
 
+    get confirmDelete() {
+        return this.#appConfig.confirmDelete;
+    }
+    set confirmDelete(state) {
+        this.#appConfig.confirmDelete = state;
+    }
+
     get gridVisible() {
         return this.#appConfig.gridVisible;
     }
@@ -282,6 +303,14 @@ class OECONFIG {
     }
     set backgroundImageOpacity(opacity) {
         this.#appConfig.backgroundopacity = parseInt(opacity);
+    }
+
+    get zIndexFontSize() {
+        const size = parseInt(this.#appConfig.zindexfontsize);
+        return Number.isFinite(size) && size > 0 ? size : 56;
+    }
+    set zIndexFontSize(size) {
+        this.#appConfig.zindexfontsize = parseInt(size);
     }
 
     get allDataFields() {
@@ -548,6 +577,7 @@ class OECONFIG {
     }
 
     rebuildOverlayFonts() {
+        return;
         this.setValue('fonts', {});
         for (const field of this.#config.fields) {
             if ('font' in field) {

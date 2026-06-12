@@ -1,0 +1,15 @@
+{
+    "icon": "fas fa-chart-line",
+    "group": "Analysis",
+    "title": "Star Count",
+    "type": "line",
+    "main": true,    
+    "table": "allsky_stars",     
+    "series": [
+        {
+            "name": "Star Count",
+            "yAxis": 0,
+            "variable": "AS_STARCOUNT"
+        }
+    ]
+}

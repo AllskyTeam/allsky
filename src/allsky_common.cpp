@@ -1,4 +1,4 @@
-// Functions used by the "capture" and other programs.
+// Functions used by the "capture" and other programs.  
 // When outputting messages containing settings, use the names as they appear in the WebUI.
 
 #include <opencv2/core.hpp>
@@ -32,7 +32,7 @@ char debug_text[500];						// buffer to hold debug messages
 
 /**
  * Helper function to display debug info.
- * If the required_level is negative then also put the info in a "message" file.
+ * If the required_level is 0 or negative then also put the info in a "message" file.
 **/
 void Log(int required_level, const char *fmt, ...)
 {
@@ -42,6 +42,7 @@ void Log(int required_level, const char *fmt, ...)
 		va_start(va, fmt);
 		vsnprintf(msg, sizeof(msg)-1, fmt, va);
 		printf("%s", msg);
+		va_end(va);
 
 		if (required_level <= 0)
 		{
@@ -73,8 +74,6 @@ void Log(int required_level, const char *fmt, ...)
 			Log(4, "Executing %s\n", command);
 			(void) system(command);
 		}
-
-		va_end(va);
 	}
 }
 
@@ -114,6 +113,7 @@ std::string exec(const char *cmd)
 	std::tr1::shared_ptr<FILE> pipe(popen(cmd, "r"), pclose);
 	if (!pipe)
 		return "ERROR";
+
 	char buffer[128];
 	std::string result = "";
 	while (!feof(pipe.get()))
@@ -134,6 +134,12 @@ void add_variables_to_command(config cg, char *cmd, timeval startDateTime)
 
 	int const s = 100;
 	char tmp[s];
+
+	if (cg.focusMode) {
+		// This must come first.
+		snprintf(tmp, s, " --focus-mode %ld", cg.lastFocusMetric);
+		strcat(cmd, tmp);
+	}
 
 	snprintf(tmp, s, " TIMESTAMP=%ld", startDateTime.tv_sec);
 	strcat(cmd, tmp);
@@ -179,20 +185,15 @@ void add_variables_to_command(config cg, char *cmd, timeval startDateTime)
 		}
 	}
 	if (cg.lastMean >= 0.0) {
-		snprintf(tmp, s, " MEAN=%f", cg.lastMean);
+		snprintf(tmp, s, " MEAN=%-.5f", cg.lastMean);
 		strcat(cmd, tmp);
 	}
 
 	// Since negative temperatures are valid, check against an impossible temperature.
-	// The temperature passed to us is 10 times the actual temperature so we can deal with
-	// integers with 1 decimal place, which is all we care about.
-	if (cg.supportsTemperature && cg.lastSensorTemp != NOT_SET) {
-		snprintf(tmp, s, " TEMPERATURE_C=%d", (int)round(cg.lastSensorTemp));
-		strcat(cmd, tmp);
-		snprintf(tmp, s, " TEMPERATURE_F=%d", (int)round((cg.lastSensorTemp * 1.8) +32));
+	if (cg.supportsTemperature && cg.lastSensorTemp != NOT_CHANGED) {
+		snprintf(tmp, s, " TEMPERATURE_C=%.1f TEMPERATURE_F=%.1f", cg.lastSensorTemp, (cg.lastSensorTemp * 1.8) +32);
 		strcat(cmd, tmp);
 	}
-
 
 	if (cg.currentBin >= 0) {
 		snprintf(tmp, s, " BIN=%ld", cg.currentBin);
@@ -567,7 +568,7 @@ void closeUp(int e)
 
 	if (e == EXIT_RESTARTING)
 		(void) displayNotificationImage("--expires 15 Restarting &");
-	else if (e == EXIT_OK)
+	else if (e == EXIT_OK || e == EXIT_STOP)
 		(void) displayNotificationImage("--expires 2 NotRunning &");
 	else
 		(void) displayNotificationImage("--expires 0 Error &");
@@ -577,7 +578,11 @@ void closeUp(int e)
 	sleep(3);
 
 	printf("     ***** %s Allsky", a);
-	if (e != EXIT_OK) printf(" (code %d)", e);
+	if (e == EXIT_STOP) {
+		printf(" after %d image%s.", CG.maxImages, CG.maxImages == 1 ? "" : "s");
+	} else if (e != EXIT_OK) {
+		printf(" (code %d)", e);
+	}
    	printf(" *****\n");
 
 	// ZWO seems to hang on ASICloseCamera() if taking a picture when the signal is sent,
@@ -751,7 +756,7 @@ void displayHelp(config cg)
 	printf(" -%-*s - 'true' enables saving of daytime images [%s].\n", n, "savedaytimeimages b", yesNo(cg.daytimeSave));
 	printf(" -%-*s - 'true' enables daytime auto-exposure [%s].\n", n, "dayautoexposure b", yesNo(cg.dayAutoExposure));
 	printf(" -%-*s - Maximum daytime auto-exposure in ms.\n", n, "daymaxexposure n");
-	printf(" -%-*s - Daytime exposure in us [%'ld].\n", n, "dayexposure n", cg.dayExposure_us);
+	printf(" -%-*s - Daytime exposure in ms [%'ld].\n", n, "dayexposure n", cg.dayExposure_us / 1000);
 	printf(" -%-*s - Daytime mean target brightness [%.2f].\n", n, "daymean", cg.myModeMeanSetting.dayMean);
 	printf(" -%-*s - Daytime mean target threshold [%.2f].\n", n, "daymeanthreshold n", cg.myModeMeanSetting.dayMean_threshold);
 	if (cg.ct == ctRPi) {
@@ -780,7 +785,7 @@ void displayHelp(config cg)
 	printf(" -%-*s - 'true' enables saving of nighttime images [%s].\n", n, "savenighttimeimages b", yesNo(cg.nighttimeSave));
 	printf(" -%-*s - 'true' enables nighttime auto-exposure [%s].\n", n, "nightautoexposure b", yesNo(cg.nightAutoExposure));
 	printf(" -%-*s - Maximum nighttime auto-exposure in ms.\n", n, "nightmaxexposure n");
-	printf(" -%-*s - Nighttime exposure in us [%'ld].\n", n, "nightexposure n", cg.nightExposure_us);
+	printf(" -%-*s - Nighttime exposure in ms [%'ld].\n", n, "nightexposure n", cg.nightExposure_us / 1000);
 	printf(" -%-*s - Nighttime mean target brightness [%.2f].\n", n, "nightmean n", cg.myModeMeanSetting.nightMean);
 	if (cg.ct == ctRPi) {
 		printf("  %-*s   NOTE: Enable nighttime auto-gain and auto-exposure for best results.\n", n, "");
@@ -833,7 +838,8 @@ void displayHelp(config cg)
 		printf(" -%-*s - Amount to rotate image in degrees - 0 or 180 [%ld].\n", n, "rotation n", cg.rotation);
 	}
 	printf(" -%-*s - 0 = No flip, 1 = Horizontal, 2 = Vertical, 3 = Both [%ld].\n", n, "flip n", cg.flip);
-	printf(" -%-*s - 'true' enables focus mode [%s].\n", n, "determinefocus b", yesNo(cg.determineFocus));
+	printf(" -%-*s - 'true' enables focus mode [%s].\n", n, "focusmode b", yesNo(cg.focusMode));
+	printf(" -%-*s - 'true' calculates focus metric [%s].\n", n, "determinefocus b", yesNo(cg.determineFocus));
 	printf(" -%-*s - 'true' enables consistent delays between images [%s].\n", n, "consistentdelays b", yesNo(cg.consistentDelays));
 	printf(" -%-*s - Format the time is displayed in [%s].\n", n, "timeformat s", cg.timeFormat);
 	printf(" -%-*s - Latitude of the camera [no default - you must set it].\n", n, "latitude s");
@@ -878,6 +884,7 @@ void displayHelp(config cg)
 		printf("  %-*s     Bullseye:           libcamera-still\n", n, "");
 		printf("  %-*s     Bookworm and newer: rpicam-still\n", n, "");
 	}
+	printf(" -%-*s - Max images to take before exiting (0 takes all) [%d].\n", n, "maximages n", cg.maxImages);
 /* These are too advanced for anyone other than developers.
 	printf(" -%-*s - Be careful changing these values, ExposureChange (Steps) = p0 + (p1*diff) + (p2*diff)^2 [%.1f].\n", n, "mean-p0 n", cg.myModeMeanSetting.dayMean_threshold);
 	printf(" -%-*s - [%.1f].\n", n, "mean-p1 n", cg.myModeMeanSetting.mean_p1);
@@ -1000,7 +1007,11 @@ void displaySettings(config cg)
 		printf("   ZWO Exposure Type: %s\n", getZWOexposureType(cg.ZWOexposureType));
 	}
 	printf("   Preview: %s\n", yesNo(cg.preview));
-	printf("   Focus mode: %s\n", yesNo(cg.determineFocus));
+	if (cg.maxImages != 0) {
+		printf("   Maximum images to take before exiting: %d\n", cg.maxImages);
+	}
+	printf("   Focus mode: %s\n", yesNo(cg.focusMode));
+	printf("   Calculate focus metric: %s\n", yesNo(cg.determineFocus));
 	printf("   Taking Dark Frames: %s\n", yesNo(cg.takeDarkFrames));
 	printf("   Delete Dark Frames higher than: %.4f\n", cg.darkFrameTooHigh);
 	printf("   Remove Bad Images Threshold Low: %.4f\n", cg.imageTooLow);
@@ -1066,6 +1077,8 @@ bool day_night_timeSleep(bool displayedMsg, config cg, bool isDaytime)
 
 void delayBetweenImages(config cg, long lastExposure_us, std::string sleepType)
 {
+	if (cg.currentDelay_ms == 0) return;	// will be 0 in Focus Mode
+
 	if (cg.takeDarkFrames) {
 		// Need to sleep a little since saving .png files takes a while.
 		usleep(5 * US_IN_SEC);
@@ -1270,6 +1283,7 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[], bool readConfig
 	{
 		char *a = argv[i];
 		if (*a == '-') a++;		// skip leading "-"
+		if (*a == '-') a++;		// skip second leading "-"
 
 		Log(4, "%s >>> Parameter [%-*s]  Value: [%s]\n", b, n, a, argv[i+1]);
 
@@ -1287,7 +1301,7 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[], bool readConfig
 				return(false);
 			}
 		}
-		else if (strcmp(a, "-help") == 0)
+		else if (strcmp(a, "help") == 0)
 		{
 			cg->help = true;
 			cg->quietExit = true;	// we display the help message and quit
@@ -1331,6 +1345,14 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[], bool readConfig
 		else if (strcmp(a, "preview") == 0)
 		{
 			cg->preview = getBoolean(argv[++i]);
+		}
+		else if (strcmp(a, "maximages") == 0)
+		{
+			cg->maxImages = atoi(argv[++i]);
+			if (cg->maxImages < 0) {
+				cg->callSaveImage = false;
+				cg->maxImages = -(cg->maxImages);
+			}
 		}
 
 		// daytime settings
@@ -1561,6 +1583,10 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[], bool readConfig
 		else if (strcmp(a, "flip") == 0)
 		{
 			cg->flip = atol(argv[++i]);
+		}
+		else if (strcmp(a, "focusmode") == 0)
+		{
+			cg->focusMode = getBoolean(argv[++i]);
 		}
 		else if (strcmp(a, "determinefocus") == 0)
 		{

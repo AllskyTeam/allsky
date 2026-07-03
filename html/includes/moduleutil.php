@@ -805,8 +805,16 @@ class MODULEUTIL extends UTILBASE {
         }
 
         // Build the command arguments safely for runProcess()
+        $runAsUser = trim((string)(defined('ALLSKY_OWNER') ? ALLSKY_OWNER : ''));
+        if ($runAsUser === '') {
+            $runAsUser = get_current_user();
+        }
+
         $argv = [
             '/usr/bin/sudo',
+            '-u',
+            $runAsUser,
+            '--',
             $this->allsky_scripts . '/test_flow.sh',
             '--allsky_home',    $this->allsky_home,
             '--allsky_scripts', $this->allsky_scripts,

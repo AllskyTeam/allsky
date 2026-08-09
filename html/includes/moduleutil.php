@@ -35,7 +35,8 @@ class MODULEUTIL extends UTILBASE {
             'VariableList' => ['get'],
             'WatchdogManageService' => ['get'],
             'WatchdogStatus' => ['get'],
-            'ProxyLocalApi' => ['get']
+            'ProxyLocalApi' => ['get'],
+            'ModuleFile' => ['get']            
         ];
     }
 
@@ -567,7 +568,7 @@ class MODULEUTIL extends UTILBASE {
         return $result;
     }
 
-    private function getModuleFile() {
+    public function getModuleFile() {
         $rawFilename = $_GET['file'] ?? '';
         $filename = basename($rawFilename);
 
@@ -582,7 +583,7 @@ class MODULEUTIL extends UTILBASE {
             $fileContents = 'File ' . $filename . ' Not found';
         }
 
-        $this->sendResponse($fileContents);
+        $this->sendHTMLResponse($fileContents);
     }
 
     private function getModuleHelp() {

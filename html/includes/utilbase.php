@@ -189,6 +189,7 @@ class UTILBASE
     protected function sendHTTPResponse(string $message = '', int $httpCode = 200): void
     {
         http_response_code($httpCode);
+        header('Cache-Control: no-store');
 
         if ($this->jsonResponse) {
             header('Content-Type: application/json; charset=utf-8');
@@ -209,6 +210,23 @@ class UTILBASE
 
     /**
      * Success response helper.
+     * - Forces html content-type.
+     */
+    protected function sendHTMLResponse($payload = 'ok', int $httpCode = 200): void
+    {
+        http_response_code($httpCode);
+        header('Content-Type: text/html; charset=utf-8');
+        header('Cache-Control: no-store,max-age=0,no-cache');
+
+        // For non-200, we stop early: callers should have used sendHTTPResponse()
+        if ($httpCode !== 200) exit;
+
+        echo $payload;
+        exit;
+    }
+
+    /**
+     * Success response helper.
      * - Forces JSON content-type.
      * - Allows passing a string that is already JSON (zero-copy fast path).
      * - Encodes arrays/objects safely; on encoding failure, returns an error JSON.
@@ -217,6 +235,7 @@ class UTILBASE
     {
         http_response_code($httpCode);
         header('Content-Type: application/json; charset=utf-8');
+        header('Cache-Control: no-store,max-age=0,no-cache');
 
         // For non-200, we stop early: callers should have used sendHTTPResponse()
         if ($httpCode !== 200) exit;

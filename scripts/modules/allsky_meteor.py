@@ -163,13 +163,13 @@ def meteor(params, event):
             meteorCount = 0
             lineCount = 0
             if lines is not None:
-                for i in range(lines.shape[0]):
-                    for x1,y1,x2,y2 in lines[i]:
-                        if dist.euclidean((x1, y1), (x2, y2)) > length:
-                            meteorCount += 1
-                            if annotate:
-                                cv2.line(s.image,(x1,y1),(x2,y2),(0,255,0),10)
+                lines = lines.reshape(-1, 4)  # OpenCV 5.x returns (N,4); OpenCV <5 returns (N,1,4)
+                for x1,y1,x2,y2 in lines:
                     lineCount += 1
+                    if dist.euclidean((x1, y1), (x2, y2)) > length:
+                        meteorCount += 1
+                        if annotate:
+                            cv2.line(s.image,(x1,y1),(x2,y2),(0,255,0),10)
 
             s.setEnvironmentVariable("AS_METEORLINECOUNT", str(lineCount))
             s.setEnvironmentVariable("AS_METEORCOUNT", str(meteorCount))

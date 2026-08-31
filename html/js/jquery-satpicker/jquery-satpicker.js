@@ -22,6 +22,7 @@
 
     minSearchChars: 1,
     maxResults: 500,
+    pageSize: null,
     maxRenderRows: 600,
 
     // Catalog columns (explicit widths so they don't squash)
@@ -60,6 +61,8 @@
       close: "fa fa-times",
       search: "fa fa-search",
       clear: "fa fa-eraser",
+      previous: "fa fa-chevron-left",
+      next: "fa fa-chevron-right",
       add: "fa fa-plus",
       added: "fa fa-check",
       remove: "fa fa-trash",
@@ -137,6 +140,54 @@
     return '<i class="' + esc(cls) + '"' + t + ' aria-hidden="true"></i>';
   }
 
+  function launchSortValue(v) {
+    var s = toIdString(v);
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+    if (!m) return 0;
+    return parseInt(m[1] + m[2] + m[3], 10) || 0;
+  }
+
+  function catalogSortValue(v) {
+    var s = toIdString(v).toUpperCase();
+    var m;
+
+    if (/^\d+$/.test(s)) {
+      return parseInt(s, 10) || 0;
+    }
+
+    m = /^([A-Z])(\d+)$/.exec(s);
+    if (m) {
+      return 100000 + ((m[1].charCodeAt(0) - 64) * 10000) + (parseInt(m[2], 10) || 0);
+    }
+
+    return 0;
+  }
+
+  function recentFirstCompare(a, b) {
+    var ad = launchSortValue(a.launch_date);
+    var bd = launchSortValue(b.launch_date);
+    if (ad !== bd) {
+      if (!ad) return 1;
+      if (!bd) return -1;
+      return bd - ad;
+    }
+
+    var ai = catalogSortValue(a.norad_id);
+    var bi = catalogSortValue(b.norad_id);
+    if (ai !== bi) return bi - ai;
+
+    return String(a.name || "").localeCompare(String(b.name || ""));
+  }
+
+  function searchRank(s, qLower) {
+    var name = String(s._nameLower || "");
+    var id = String(s.norad_id || "").toLowerCase();
+
+    if (name === qLower || id === qLower) return 0;
+    if (name.indexOf(qLower) === 0 || id.indexOf(qLower) === 0) return 1;
+    return 2;
+  }
+
   function SatellitePicker(options) {
     this.opts = jQuery.extend(true, {}, defaults, options || {});
     // fallback if removeAll icon not present in FA version
@@ -149,6 +200,9 @@
 
     this.sats = [];
     this.indexReady = false;
+    this.loadedDataUrl = null;
+    this.loadingDataUrl = null;
+    this.page = 1;
     this.selected = {};
 
     this.groups = [];
@@ -164,10 +218,15 @@
 
     this.$status = null;
     this.$count = null;
+    this.$pager = null;
+    this.$prevPage = null;
+    this.$nextPage = null;
+    this.$pageInfo = null;
     this.$selectedCount = null;
 
     this.$catalogHead = null;
     this.$catalogBody = null;
+    this.$catalogScroll = null;
     this.$selectedHead = null;
     this.$selectedBody = null;
 
@@ -178,6 +237,13 @@
   // ---------------- Public API ----------------
 
   SatellitePicker.prototype.open = function () {
+    var dataUrl = this._resolveDataUrl();
+    if (!this.indexReady && this.loadingDataUrl !== dataUrl) {
+      this._loadData();
+    } else if (this.indexReady && this.loadedDataUrl !== dataUrl) {
+      this.reload();
+    }
+
     var z = this._computeTopZ() + this.opts.stackOffset;
 
     this.$backdrop.css({
@@ -230,6 +296,22 @@
 
     this._renderSelected();
     this._renderCatalog();
+  };
+
+  SatellitePicker.prototype.reload = function () {
+    this.indexReady = false;
+    this.loadedDataUrl = null;
+    this.sats = [];
+    this.groups = [];
+    this.countries = [];
+    this.page = 1;
+    this.$group.html('<option value="">All groups</option>');
+    this.$country.html('<option value="">All countries</option>');
+    this.$root.find(".js-sp-filters").hide();
+    this._renderSelected();
+    this._renderCatalog();
+    this._loadData();
+    return this;
   };
 
   // ---------------- Internal: stacking ----------------
@@ -290,6 +372,11 @@
       + '            <div class="text-muted js-sp-status" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"></div>'
       + '          </div>'
       + '          <div class="col-sm-4 text-right">'
+      + '            <div class="btn-group btn-group-xs js-sp-pager" style="display:none; margin-right:8px;">'
+      + '              <button type="button" class="btn btn-default js-sp-prev-page">' + faIcon(ic.previous, "Previous page") + '</button>'
+      + '              <button type="button" class="btn btn-default disabled js-sp-page-info" tabindex="-1">Page 1 of 1</button>'
+      + '              <button type="button" class="btn btn-default js-sp-next-page">' + faIcon(ic.next, "Next page") + '</button>'
+      + '            </div>'
       + '            <span class="label label-default">Shown: <span class="js-sp-count">0</span></span>'
       + '            &nbsp;'
       + '            <span class="label label-primary">' + faIcon(ic.selected, "Selected") + ' <span class="js-sp-selected-count">0</span></span>'
@@ -304,7 +391,7 @@
       + '                <strong>Catalog</strong>'
       + '                <span class="text-muted" style="margin-left:10px;">(double-click row to add/remove)</span>'
       + '              </div>'
-      + '              <div class="panel-body" style="flex:1 1 auto; overflow:auto; padding:0;">'
+      + '              <div class="panel-body js-sp-catalog-scroll" style="flex:1 1 auto; overflow:auto; padding:0;">'
       + '                <div class="satpicker-scrollx" style="overflow-x:auto; overflow-y:hidden;">'
       + '                  <table class="table table-condensed table-hover" style="margin:0; min-width:1100px;">'
       + '                    <thead class="js-sp-catalog-head" style="position:sticky; top:0; z-index:2; background:#fff;"></thead>'
@@ -361,10 +448,15 @@
 
     this.$status = this.$root.find(".js-sp-status");
     this.$count = this.$root.find(".js-sp-count");
+    this.$pager = this.$root.find(".js-sp-pager");
+    this.$prevPage = this.$root.find(".js-sp-prev-page");
+    this.$nextPage = this.$root.find(".js-sp-next-page");
+    this.$pageInfo = this.$root.find(".js-sp-page-info");
     this.$selectedCount = this.$root.find(".js-sp-selected-count");
 
     this.$catalogHead = this.$root.find(".js-sp-catalog-head");
     this.$catalogBody = this.$root.find(".js-sp-catalog-body");
+    this.$catalogScroll = this.$root.find(".js-sp-catalog-scroll");
     this.$selectedHead = this.$root.find(".js-sp-selected-head");
     this.$selectedBody = this.$root.find(".js-sp-selected-body");
 
@@ -386,6 +478,7 @@
 
     this.$root.find(".js-sp-clear").on("click", function () {
       self.$search.val("");
+      self.page = 1;
       self._renderCatalog();
       self.$search.focus();
     });
@@ -394,12 +487,26 @@
     this.$search.on("keyup", function () {
       window.clearTimeout(debounceTimer);
       debounceTimer = window.setTimeout(function () {
+        self.page = 1;
         self._renderCatalog();
       }, 120);
     });
 
-    this.$group.on("change", function () { self._renderCatalog(); });
-    this.$country.on("change", function () { self._renderCatalog(); });
+    this.$group.on("change", function () {
+      self.page = 1;
+      self._renderCatalog();
+    });
+    this.$country.on("change", function () {
+      self.page = 1;
+      self._renderCatalog();
+    });
+
+    this.$prevPage.on("click", function () {
+      self._setPage(self.page - 1);
+    });
+    this.$nextPage.on("click", function () {
+      self._setPage(self.page + 1);
+    });
 
     this.$root.on("dblclick", "tr.js-sp-cat-row", function () {
       var id = jQuery(this).data("id");
@@ -435,20 +542,33 @@
 
   // ---------------- Data ----------------
 
+  SatellitePicker.prototype._resolveDataUrl = function () {
+    if (typeof this.opts.dataUrl === "function") {
+      return String(this.opts.dataUrl(this) || "");
+    }
+
+    return String(this.opts.dataUrl || "");
+  };
+
   SatellitePicker.prototype._loadData = function () {
     var self = this;
+    var dataUrl = this._resolveDataUrl();
 
-    if (!this.opts.dataUrl) {
+    if (!dataUrl) {
       this._setStatus("No dataUrl provided.", true);
       return;
     }
 
     this._setStatus("Loading satellites…", false);
+    this.loadingDataUrl = dataUrl;
 
-    var ajaxOpts = jQuery.extend(true, {}, this.opts.ajax, { url: this.opts.dataUrl });
+    var ajaxOpts = jQuery.extend(true, {}, this.opts.ajax, { url: dataUrl });
 
     jQuery.ajax(ajaxOpts)
       .done(function (resp) {
+        self.loadedDataUrl = dataUrl;
+        self.loadingDataUrl = null;
+
         var raw = getByPath(resp, self.opts.dataPath) || resp;
         if (!jQuery.isArray(raw)) {
           self._setStatus("Satellite data is not an array (check dataPath).", true);
@@ -502,8 +622,22 @@
 
         self._renderCatalog();
       })
-      .fail(function (xhr, status) {
-        self._setStatus("Failed to load satellites (" + status + ").", true);
+      .fail(function (xhr, status, error) {
+        self.loadingDataUrl = null;
+
+        var detail = status || error || "error";
+        if (xhr && xhr.responseJSON && xhr.responseJSON.message) {
+          detail = xhr.responseJSON.message;
+        } else if (xhr && xhr.responseText) {
+          try {
+            var parsed = JSON.parse(xhr.responseText);
+            if (parsed && parsed.message) detail = parsed.message;
+          } catch (e) {
+            detail = xhr.responseText;
+          }
+        }
+
+        self._setStatus("Failed to load satellites (" + detail + ").", true);
       });
   };
 
@@ -524,6 +658,55 @@
       cHtml += '<option value="' + esc(this.countries[j]) + '">' + esc(this.countries[j]) + '</option>';
     }
     this.$country.html(cHtml);
+  };
+
+  SatellitePicker.prototype._sortMatches = function (matches, query, isNumeric) {
+    if (isNumeric) return;
+
+    var qLower = jQuery.trim(query || "").toLowerCase();
+    matches.sort(function (a, b) {
+      if (qLower) {
+        var ar = searchRank(a, qLower);
+        var br = searchRank(b, qLower);
+        if (ar !== br) return ar - br;
+      }
+
+      return recentFirstCompare(a, b);
+    });
+  };
+
+  SatellitePicker.prototype._getPageSize = function () {
+    var configured = this.opts.pageSize != null ? this.opts.pageSize : this.opts.maxResults;
+    var size = parseInt(configured, 10);
+    var renderCap = parseInt(this.opts.maxRenderRows, 10);
+
+    if (isNaN(size) || size < 1) size = 500;
+    if (!isNaN(renderCap) && renderCap > 0) size = Math.min(size, renderCap);
+
+    return size;
+  };
+
+  SatellitePicker.prototype._setPage = function (page) {
+    var parsed = parseInt(page, 10);
+    if (isNaN(parsed) || parsed < 1) parsed = 1;
+
+    this.page = parsed;
+    this._renderCatalog();
+    this.$catalogScroll.scrollTop(0);
+  };
+
+  SatellitePicker.prototype._updatePager = function (page, totalPages, totalMatches) {
+    if (!this.$pager) return;
+
+    if (totalPages <= 1 || totalMatches <= 0) {
+      this.$pager.hide();
+      return;
+    }
+
+    this.$pager.show();
+    this.$pageInfo.text("Page " + page + " of " + totalPages);
+    this.$prevPage.prop("disabled", page <= 1);
+    this.$nextPage.prop("disabled", page >= totalPages);
   };
 
   // ---------------- Rendering ----------------
@@ -571,6 +754,7 @@
     if (!this.indexReady) {
       this._setStatus("Loading satellites…", false);
       this.$count.text("0");
+      this._updatePager(1, 1, 0);
       this._updateSelectedCount();
       return;
     }
@@ -582,6 +766,7 @@
     if (query.length < this.opts.minSearchChars && !group && !country) {
       this._setStatus("Type to search, or use filters.", false);
       this.$count.text("0");
+      this._updatePager(1, 1, 0);
       this._updateSelectedCount();
       return;
     }
@@ -609,23 +794,38 @@
       var match = false;
       if (!query) match = true;
       else if (isNumeric) match = (String(s.norad_id).indexOf(query) !== -1);
-      else match = (String(s._nameLower).indexOf(qLower) !== -1) || (String(s.norad_id).indexOf(query) !== -1);
+      else match = (String(s._nameLower).indexOf(qLower) !== -1) || (String(s.norad_id).toLowerCase().indexOf(qLower) !== -1);
 
       if (match) out.push(s);
-      if (out.length >= this.opts.maxResults) break;
     }
 
-    var render = out.slice(0, this.opts.maxRenderRows);
+    this._sortMatches(out, query, isNumeric);
+
+    var pageSize = this._getPageSize();
+    var totalPages = Math.max(1, Math.ceil(out.length / pageSize));
+    if (this.page > totalPages) this.page = totalPages;
+    if (this.page < 1) this.page = 1;
+
+    var startIndex = (this.page - 1) * pageSize;
+    var render = out.slice(startIndex, startIndex + pageSize);
 
     if (!render.length) {
       this._setStatus("No matches.", false);
       this.$count.text("0");
+      this._updatePager(1, 1, 0);
       this._updateSelectedCount();
       return;
     }
 
-    this._setStatus(render.length + " shown. Scroll horizontally for more columns.", false);
+    var status;
+    if (totalPages > 1) {
+      status = (startIndex + 1) + "-" + (startIndex + render.length) + " of " + out.length + " shown. Scroll horizontally for more columns.";
+    } else {
+      status = render.length + " shown. Scroll horizontally for more columns.";
+    }
+    this._setStatus(status, false);
     this.$count.text(String(render.length));
+    this._updatePager(this.page, totalPages, out.length);
 
     var cols = this.opts.columns;
     var ic = this.opts.icons;

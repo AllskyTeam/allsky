@@ -1126,7 +1126,10 @@ class MODULESEDITOR {
 
 
 						var picker = $.satellitePicker({
-							dataUrl: "/includes/satutil.php?request=Satellites",
+							dataUrl: function () {
+								let source = $('#satTleSource').val() || 'retlector';
+								return "/includes/satutil.php?request=Satellites&source=" + encodeURIComponent(source);
+							},
 							preselected: fieldValue,
 							onSubmit: function (csv, selected) {
 								$(`#${key}`).val(csv);
@@ -1140,13 +1143,13 @@ class MODULESEDITOR {
 
 						$(document).off('click', '#reset-satpicker-' + key)
 						$(document).on('click', '#reset-satpicker-' + key, (event) => {
-							let el = $(event.target).data('source');
+							let el = $(event.currentTarget).data('source');
 							$('#' + el).val('');
 						});
 
 						$(document).off('click', '#open-satpicker-' + key)
 						$(document).on('click', '#open-satpicker-' + key, (event) => {
-							let el = $(event.target).data('source');
+							let el = $(event.currentTarget).data('source');
 							let data = $('#' + el).val();
 
 							picker.open();

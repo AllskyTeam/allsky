@@ -2379,7 +2379,7 @@
 {
 "name" : "developermode",
 "default" : true,
-"description" : "Enables Developer mode. Please refer to the <a external='true' href='/docs/allsky_guide/developer.html'>Allsky Developer Guide</a> for more information.",
+"description" : "Enables Developer mode. Please refer to the <a external='true' href='/docs/developer_guide/introduction.html'>Allsky Developer Guide</a> for more information.",
 "label" : "Developer Mode",
 "type" : "boolean",
 "optional" : true

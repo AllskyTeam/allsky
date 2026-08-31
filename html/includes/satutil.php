@@ -16,10 +16,9 @@ include_once('utilbase.php');
  *
  * Requirements implemented:
  *  - Download sat catalog from https://celestrak.org/pub/satcat.txt
- *  - Download configured CelesTrak GP group TLEs
+ *  - Download configured group TLEs from Retlector by default with CelesTrak fallback
  *  - Re-download any files older than 2 days
- *  - On any downloads, rebuild satellites.json cache by reading all *.tle files in folder
- *    ignoring numeric filenames like 25544.tle
+ *  - On any downloads, rebuild satellites cache from the selected source's *.tle files
  *  - Provide an AJAX method that returns the JSON to the plugin
  */
 class SATUTIL extends UTILBASE
@@ -35,12 +34,12 @@ class SATUTIL extends UTILBASE
 
     // ---------- Config ----------
     private const MAX_AGE_DAYS = 2;
+    private const DEFAULT_TLE_SOURCE = 'retlector';
 
     // Change these if you want another location
     private string $dataDir;
     private string $tleDir;
     private string $satcatFile;
-    private string $cacheFile;
 
     /** @var string[] */
     private array $tleGroups = [
@@ -60,7 +59,6 @@ class SATUTIL extends UTILBASE
         $this->dataDir    = $base;
         $this->tleDir     = $this->dataDir . '/tle';
         $this->satcatFile = $this->dataDir . '/satcat.txt';
-        $this->cacheFile  = $this->dataDir . '/satellites.json';
 
         $this->ensureDirs();
     }
@@ -73,14 +71,17 @@ class SATUTIL extends UTILBASE
     public function getSatellites(): void
     {
         try {
-            // Requirement: check update-needed on every Satellites request
-            $this->updateIfNeeded();
+            $source = $this->getRequestedTleSource();
+            $cacheFile = $this->getCacheFile($source);
 
-            $json = @file_get_contents($this->cacheFile);
+            // Requirement: check update-needed on every Satellites request
+            $this->updateIfNeeded($source, $cacheFile);
+
+            $json = @file_get_contents($cacheFile);
             if ($json === false || trim($json) === '') {
                 // If cache missing/corrupt, rebuild now and return it
-                $this->rebuildCache();
-                $json = @file_get_contents($this->cacheFile) ?: '[]';
+                $this->rebuildCache($source, $cacheFile);
+                $json = @file_get_contents($cacheFile) ?: '[]';
             }
 
             $this->sendResponse($json);
@@ -97,7 +98,8 @@ class SATUTIL extends UTILBASE
     public function getUpdate(): void
     {
         try {
-            $result = $this->updateIfNeeded();
+            $source = $this->getRequestedTleSource();
+            $result = $this->updateIfNeeded($source, $this->getCacheFile($source));
             $this->sendResponse(json_encode($result, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
         } catch (Throwable $e) {
             $this->send500('SAT update failed: ' . $e->getMessage());
@@ -128,43 +130,108 @@ class SATUTIL extends UTILBASE
         return $age > $this->maxAgeSeconds();
     }
 
+    private function getRequestedTleSource(): string
+    {
+        $source = trim((string)($_GET['source'] ?? $_GET['tleSource'] ?? self::DEFAULT_TLE_SOURCE));
+        $source = strtolower($source);
+
+        if (in_array($source, ['retlector', 'celestrak'], true)) {
+            return $source;
+        }
+
+        return self::DEFAULT_TLE_SOURCE;
+    }
+
+    private function getTleSourceOrder(string $source): array
+    {
+        if ($source === 'celestrak') {
+            return ['celestrak', 'retlector'];
+        }
+
+        return ['retlector', 'celestrak'];
+    }
+
+    private function getCacheFile(string $source): string
+    {
+        return $this->dataDir . '/satellites_' . $source . '.json';
+    }
+
+    private function getTleFile(string $source, string $group): string
+    {
+        return $this->tleDir . '/' . $source . '_' . $this->safeFilePart($group) . '.tle';
+    }
+
+    private function safeFilePart(string $value): string
+    {
+        $safe = preg_replace('/[^A-Za-z0-9_-]/', '_', $value);
+        return $safe !== null && $safe !== '' ? $safe : 'unknown';
+    }
+
+    private function getTleGroupUrl(string $source, string $group): string
+    {
+        if ($source === 'retlector') {
+            return 'https://retlector.eu/' . rawurlencode($group) . '/tle';
+        }
+
+        if ($source === 'celestrak') {
+            return 'https://celestrak.org/NORAD/elements/gp.php?GROUP=' . rawurlencode($group) . '&FORMAT=TLE';
+        }
+
+        throw new RuntimeException('Unknown TLE source: ' . $source);
+    }
+
     /**
      * Update satcat + group TLEs if any file is stale; rebuild cache if changed or cache missing.
      * @return array{changed:bool, log:string[]}
      */
-    private function updateIfNeeded(): array
+    private function updateIfNeeded(string $source, string $cacheFile): array
     {
         $changed = false;
         $log = [];
 
         // satcat
         if ($this->fileIsStale($this->satcatFile)) {
-            $this->downloadToFile('https://celestrak.org/pub/satcat.txt', $this->satcatFile);
-            $changed = true;
-            $log[] = 'Downloaded satcat.txt';
+            try {
+                $this->downloadToFile('https://celestrak.org/pub/satcat.txt', $this->satcatFile);
+                $changed = true;
+                $log[] = 'Downloaded satcat.txt';
+            } catch (Throwable $e) {
+                if (file_exists($this->satcatFile)) {
+                    $log[] = 'Using stale satcat.txt: ' . $e->getMessage();
+                } else {
+                    $log[] = 'satcat.txt unavailable: ' . $e->getMessage();
+                }
+            }
         } else {
             $log[] = 'satcat.txt fresh';
         }
 
         // group TLEs
-        foreach ($this->tleGroups as $group) {
+        foreach (array_unique($this->tleGroups) as $group) {
             $group = trim((string)$group);
             if ($group === '') continue;
 
-            $dest = $this->tleDir . '/' . $group . '.tle';
+            $dest = $this->getTleFile($source, $group);
             if ($this->fileIsStale($dest)) {
-                $url = 'https://celestrak.org/NORAD/elements/gp.php?GROUP=' . rawurlencode($group) . '&FORMAT=tle';
-                $this->downloadToFile($url, $dest);
-                $changed = true;
-                $log[] = "Downloaded {$group}.tle";
+                try {
+                    $actualSource = $this->downloadTleGroupToFile($source, $group, $dest);
+                    $changed = true;
+                    $log[] = "Downloaded {$group}.tle from {$actualSource}";
+                } catch (Throwable $e) {
+                    if (file_exists($dest)) {
+                        $log[] = "Using stale {$group}.tle: " . $e->getMessage();
+                    } else {
+                        $log[] = "Skipped {$group}.tle: " . $e->getMessage();
+                    }
+                }
             } else {
                 $log[] = "{$group}.tle fresh";
             }
         }
 
         // rebuild cache when anything changed or missing
-        if ($changed || !file_exists($this->cacheFile)) {
-            $this->rebuildCache();
+        if ($changed || !file_exists($cacheFile)) {
+            $this->rebuildCache($source, $cacheFile);
             $log[] = 'Rebuilt satellites cache';
         } else {
             $log[] = 'Cache fresh';
@@ -176,7 +243,7 @@ class SATUTIL extends UTILBASE
     /**
      * Download a URL to a local file using cURL, writing atomically via .tmp.
      */
-    private function downloadToFile(string $url, string $destPath): void
+    private function downloadToFile(string $url, string $destPath, ?callable $validator = null): void
     {
         $tmp = $destPath . '.tmp';
 
@@ -215,10 +282,39 @@ class SATUTIL extends UTILBASE
             throw new RuntimeException("Downloaded file too small: {$url}");
         }
 
+        if ($validator !== null) {
+            $text = @file_get_contents($tmp);
+            if ($text === false || $validator($text) !== true) {
+                @unlink($tmp);
+                throw new RuntimeException("Downloaded file did not pass validation: {$url}");
+            }
+        }
+
         if (!rename($tmp, $destPath)) {
             @unlink($tmp);
             throw new RuntimeException('Failed to move temp file into place: ' . $destPath);
         }
+    }
+
+    private function downloadTleGroupToFile(string $preferredSource, string $group, string $destPath): string
+    {
+        $errors = [];
+
+        foreach ($this->getTleSourceOrder($preferredSource) as $source) {
+            $url = $this->getTleGroupUrl($source, $group);
+
+            try {
+                $this->downloadToFile($url, $destPath, function (string $text): bool {
+                    return count($this->parseTleText($text)) > 0;
+                });
+
+                return $source;
+            } catch (Throwable $e) {
+                $errors[] = $source . ': ' . $e->getMessage();
+            }
+        }
+
+        throw new RuntimeException('All TLE sources failed for ' . $group . ': ' . implode('; ', $errors));
     }
 
     /**
@@ -228,26 +324,30 @@ class SATUTIL extends UTILBASE
      * - Parse TLEs and merge group memberships + satcat meta
      * - Write satellites.json
      */
-    private function rebuildCache(): void
+    private function rebuildCache(string $source, string $cacheFile): void
     {
         if (!file_exists($this->satcatFile)) {
-            $this->downloadToFile('https://celestrak.org/pub/satcat.txt', $this->satcatFile);
+            try {
+                $this->downloadToFile('https://celestrak.org/pub/satcat.txt', $this->satcatFile);
+            } catch (Throwable $e) {
+                // TLE names are enough for the selector; satcat only enriches optional columns.
+            }
         }
 
-        $satcatMeta = $this->parseSatcatLegacy($this->satcatFile); // [norad => meta]
+        $satcatMeta = file_exists($this->satcatFile) ? $this->parseSatcatLegacy($this->satcatFile) : []; // [norad => meta]
 
-        $files = glob($this->tleDir . '/*.tle') ?: [];
+        $files = glob($this->tleDir . '/' . $source . '_*.tle') ?: [];
         $sats = []; // [norad => record]
 
         foreach ($files as $file) {
             $base = basename($file);
 
-            // Ignore numeric filenames like 25544.tle
-            if (preg_match('/^\d+\.tle$/', $base)) {
+            $prefix = $source . '_';
+            if (substr($base, 0, strlen($prefix)) !== $prefix) {
                 continue;
             }
 
-            $group = preg_replace('/\.tle$/', '', $base);
+            $group = preg_replace('/\.tle$/', '', substr($base, strlen($prefix)));
             $tleSats = $this->parseTleFile($file);
 
             foreach ($tleSats as $norad => $tleInfo) {
@@ -277,7 +377,7 @@ class SATUTIL extends UTILBASE
 
         $out = array_values($sats);
         usort($out, function ($a, $b) {
-            return (int)$a['norad_id'] <=> (int)$b['norad_id'];
+            return strnatcasecmp((string)$a['norad_id'], (string)$b['norad_id']);
         });
 
         $json = json_encode($out, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
@@ -285,13 +385,13 @@ class SATUTIL extends UTILBASE
             throw new RuntimeException('json_encode failed rebuilding cache');
         }
 
-        $tmp = $this->cacheFile . '.tmp';
+        $tmp = $cacheFile . '.tmp';
         if (file_put_contents($tmp, $json) === false) {
             throw new RuntimeException('Failed writing temp cache: ' . $tmp);
         }
-        if (!rename($tmp, $this->cacheFile)) {
+        if (!rename($tmp, $cacheFile)) {
             @unlink($tmp);
-            throw new RuntimeException('Failed moving cache into place: ' . $this->cacheFile);
+            throw new RuntimeException('Failed moving cache into place: ' . $cacheFile);
         }
     }
 
@@ -358,6 +458,11 @@ class SATUTIL extends UTILBASE
             throw new RuntimeException('Failed to read TLE file: ' . $path);
         }
 
+        return $this->parseTleText($text);
+    }
+
+    private function parseTleText(string $text): array
+    {
         $lines = preg_split('/\r\n|\n|\r/', trim($text));
         $lines = array_values(array_filter($lines, fn($l) => trim((string)$l) !== ''));
 
@@ -414,8 +519,8 @@ class SATUTIL extends UTILBASE
     {
         // TLE line1 satellite number is columns 3-7 (1-based) => substr(2,5)
         if (strlen($line1) < 7) return null;
-        $norad = trim(substr($line1, 2, 5));
-        if ($norad === '' || !ctype_digit($norad)) return null;
+        $norad = strtoupper(trim(substr($line1, 2, 5)));
+        if ($norad === '' || !preg_match('/^[A-Z0-9]+$/', $norad)) return null;
         return $norad;
     }
 }

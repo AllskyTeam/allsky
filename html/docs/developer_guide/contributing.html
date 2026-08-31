@@ -5345,6 +5345,34 @@
   
   
     <li class="md-nav__item">
+      <a href="module_workflow.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Module Workflow
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="folder_structure.html" class="md-nav__link">
         
   
@@ -5638,10 +5666,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_4_11">
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_4_12">
         
           
-          <label class="md-nav__link" for="__nav_5_4_11" id="__nav_5_4_11_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_5_4_12" id="__nav_5_4_12_label" tabindex="0">
             
   
   
@@ -5659,8 +5687,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_4_11_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_4_11">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_4_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_4_12">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -6379,7 +6407,7 @@ git<span class="w"> </span>remote<span class="w"> </span>-v
 <p>The <code>origin</code> remote should point to your fork. The <code>upstream</code> remote should point to the AllskyTeam repository.</p>
 <h3 id="keep-your-base-branch-clean">Keep Your Base Branch Clean<a class="headerlink" href="#keep-your-base-branch-clean" title="Permanent link">¶</a></h3>
 <p>Your local base branch should be treated as a clean tracking branch, not as a development branch. That is one of the simplest habits that prevents unnecessary Git pain later.</p>
-<p>For most <code>allsky</code> work, the base branch is <code>master</code>. For new module work in <code>allsky-modules</code>, the base branch is normally <code>dev</code>.</p>
+<p>For most <code>allsky</code> work and new module work in <code>allsky-modules</code>, the base branch is normally <code>master</code>.</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="4:2"><input checked="checked" id="__tabbed_4_1" name="__tabbed_4" type="radio"><input id="__tabbed_4_2" name="__tabbed_4" type="radio"><div class="tabbed-labels"><label for="__tabbed_4_1"><code>allsky</code></label><label for="__tabbed_4_2"><code>allsky-modules</code> module work</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
@@ -6390,7 +6418,7 @@ git<span class="w"> </span>merge<span class="w"> </span>upstream/master
 </div>
 <div class="tabbed-block">
 <div class="highlight"><pre><span></span><code>git<span class="w"> </span>fetch<span class="w"> </span>upstream
-git<span class="w"> </span>checkout<span class="w"> </span>-B<span class="w"> </span>dev<span class="w"> </span>upstream/dev
+git<span class="w"> </span>checkout<span class="w"> </span>-B<span class="w"> </span>master<span class="w"> </span>upstream/master
 </code></pre></div>
 </div>
 </div>
@@ -6552,12 +6580,12 @@ git<span class="w"> </span>checkout<span class="w"> </span>your-branch-name
 git<span class="w"> </span>merge<span class="w"> </span>master
 </code></pre></div>
 <p>Then push the updated branch again.</p>
-<p>For a module pull request targeting <code>allsky-modules</code> <code>dev</code>, use <code>dev</code> as the base branch instead:</p>
+<p>For a module pull request targeting <code>allsky-modules</code> <code>master</code>, use <code>master</code> as the base branch:</p>
 <div class="highlight"><pre><span></span><code>git<span class="w"> </span>fetch<span class="w"> </span>upstream
-git<span class="w"> </span>checkout<span class="w"> </span>dev
-git<span class="w"> </span>merge<span class="w"> </span>upstream/dev
+git<span class="w"> </span>checkout<span class="w"> </span>master
+git<span class="w"> </span>merge<span class="w"> </span>upstream/master
 git<span class="w"> </span>checkout<span class="w"> </span>your-branch-name
-git<span class="w"> </span>merge<span class="w"> </span>dev
+git<span class="w"> </span>merge<span class="w"> </span>master
 </code></pre></div>
 <p>If you are comfortable with rebasing and prefer a cleaner history on your own fork, you can rebase instead, but do so carefully once a pull request is already under review. Reviewers generally care more about a stable, understandable branch than about a perfectly minimal commit graph.</p>
 <h3 id="contributing-to-allsky-modules">Contributing To <code>allsky-modules</code><a class="headerlink" href="#contributing-to-allsky-modules" title="Permanent link">¶</a></h3>
@@ -6573,47 +6601,19 @@ git<span class="w"> </span>merge<span class="w"> </span>dev
 </ul>
 <p>Do not rely on undocumented assumptions. If the module expects hardware, a service, credentials, or an external API, make that clear in the code and in the documentation. Optional integrations are fine, but hidden requirements are not.</p>
 <h4 id="submitting-a-new-module">Submitting A New Module<a class="headerlink" href="#submitting-a-new-module" title="Permanent link">¶</a></h4>
-<p>New modules should be submitted to the <code>dev</code> branch of <code>AllskyTeam/allsky-modules</code>.</p>
-<p>Start from an up-to-date copy of the modules repository:</p>
-<div class="highlight"><pre><span></span><code>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/&lt;your-github-user&gt;/allsky-modules.git
-<span class="nb">cd</span><span class="w"> </span>allsky-modules
-git<span class="w"> </span>remote<span class="w"> </span>add<span class="w"> </span>upstream<span class="w"> </span>https://github.com/AllskyTeam/allsky-modules.git
-git<span class="w"> </span>fetch<span class="w"> </span>upstream
-git<span class="w"> </span>checkout<span class="w"> </span>-B<span class="w"> </span>dev<span class="w"> </span>upstream/dev
-git<span class="w"> </span>checkout<span class="w"> </span>-b<span class="w"> </span>module/allsky_your_module
-</code></pre></div>
-<p>Create a top-level folder for the module. The folder and main Python file should use the same <code>allsky_</code> name:</p>
-<div class="highlight"><pre><span></span><code>allsky_your_module/
-├── allsky_your_module.py
-├── installer.json
-├── manifest.json
-└── README.md
-</code></pre></div>
-<p>Build and test the module before generating the manifest. At a minimum, check that:</p>
-<ul>
-<li>the module metadata is complete and uses sensible defaults,</li>
-<li>the module entry point works in an Allsky pipeline,</li>
-<li>dependencies are declared in <code>installer.json</code>,</li>
-<li>post-install helpers are inside the module folder,</li>
-<li>charts, blocks, database configuration, and data files are included only when the module needs them,</li>
-<li>the README explains what the module does and how users should configure it,</li>
-<li>hardware, API, account, credential, or network requirements are documented.</li>
-</ul>
-<p>After the module files are final, generate the security manifest:</p>
-<div class="highlight"><pre><span></span><code>tools/create-module-manifest.sh<span class="w"> </span>allsky_your_module
-</code></pre></div>
-<p>To inspect the manifest without writing it:</p>
-<div class="highlight"><pre><span></span><code>tools/create-module-manifest.sh<span class="w"> </span>--dry-run<span class="w"> </span>allsky_your_module
-</code></pre></div>
-<p>Do not edit <code>manifest.json</code> by hand. If you change any file inside the module folder, regenerate the manifest before committing. For a normal new module pull request, only regenerate the manifest for the module you changed.</p>
-<p>Commit and push the module:</p>
-<div class="highlight"><pre><span></span><code>git<span class="w"> </span>status
-git<span class="w"> </span>diff
-git<span class="w"> </span>add<span class="w"> </span>allsky_your_module
-git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">"Add allsky_your_module module"</span>
-git<span class="w"> </span>push<span class="w"> </span>-u<span class="w"> </span>origin<span class="w"> </span>module/allsky_your_module
-</code></pre></div>
-<p>Open a pull request into the <code>dev</code> branch of <code>AllskyTeam/allsky-modules</code>. In the pull request description, include what the module does, what it depends on, how you tested it, and any known limitations.</p>
+<p>New modules should be submitted to the <code>master</code> branch of <code>AllskyTeam/allsky-modules</code>. Follow the full <a class="external" href="module_workflow.html" rel="noopener" target="_blank">Module Workflow</a> before opening a pull request.</p>
+<p>At a high level, the expected workflow is:</p>
+<ol>
+<li>Develop and test the module inside an Allsky installation, normally under <code>~/allsky/config/myfiles/modules</code>.</li>
+<li>Use GitHub to fork <code>AllskyTeam/allsky-modules</code> and create a module branch from <code>master</code>.</li>
+<li>Package the module into a top-level <code>allsky_your_module</code> folder in the <code>allsky-modules</code> repository.</li>
+<li>Declare dependencies and post-install actions in <code>installer.json</code> when needed.</li>
+<li>Generate <code>manifest.json</code> with <code>tools/create-module-manifest.sh allsky_your_module</code>.</li>
+<li>Enable Allsky developer mode and set <code>developermodulerepo</code> and <code>developermodulerepobranch</code> to your fork and test branch.</li>
+<li>Install, run, uninstall, and reinstall the module from the Module Package Manager.</li>
+</ol>
+<p>Do not edit <code>manifest.json</code> by hand. Regenerate it after any change inside the module folder, including code, support files, <code>installer.json</code>, charts, blocks, database configuration, README files, or post-install helpers.</p>
+<p>Open a pull request into the <code>master</code> branch of <code>AllskyTeam/allsky-modules</code> only after the module installs cleanly from your developer repository branch. In the pull request description, include what the module does, what it depends on, how you tested the package-manager installation, and any known limitations.</p>
 <div class="admonition tip">
 <p class="admonition-title">Think about maintainability</p>
 <p>Extra modules often outlive the original contributor’s immediate interest. A module that is easy to understand, clearly documented, and explicit about its dependencies is much easier for the project to keep healthy over time.</p>

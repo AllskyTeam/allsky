@@ -54,6 +54,12 @@ class MODULEINSTALLERUTIL extends UTILBASE
     /** @var string Default module repository branch. */
     private string $defaultBranch;
 
+    /** @var bool True when the developer module repository setting is active. */
+    private bool $developerModuleRepoEnabled;
+
+    /** @var string Optional developer module repository branch setting. */
+    private string $developerModuleRepoBranch;
+
     /** @var string Temporary checkout path for the module repository. */
     private string $repoPath;
 
@@ -98,6 +104,18 @@ class MODULEINSTALLERUTIL extends UTILBASE
         $this->moduleDataDir = ALLSKY_MYFILES_DIR . '/modules/moduledata';
         $this->repoUrl = rtrim((string)ALLSKY_GITHUB_ROOT, '/') . '/' . trim((string)ALLSKY_GITHUB_ALLSKY_MODULES_REPO, '/');
         $this->defaultBranch = (string)ALLSKY_GITHUB_MAIN_BRANCH;
+        $this->developerModuleRepoEnabled = false;
+        $this->developerModuleRepoBranch = '';
+
+        $developerMode = $this->toBool($this->getSetting('developermode', '', 'false'));
+        $developerModuleRepo = trim((string)$this->getSetting('developermodulerepo', '', ''));
+        if ($developerMode && $developerModuleRepo !== '') {
+            $this->developerModuleRepoEnabled = true;
+            $this->repoUrl = $this->normaliseRepositoryUrl($developerModuleRepo);
+            $this->developerModuleRepoBranch = trim((string)$this->getSetting('developermodulerepobranch', '', ''));
+            $this->defaultBranch = $this->developerModuleRepoBranch;
+        }
+
         $this->repoPath = rtrim(sys_get_temp_dir(), '/') . '/allsky-modules';
         $this->owner = defined('ALLSKY_OWNER') ? (string)ALLSKY_OWNER : get_current_user();
         $this->allskyGroup = defined('ALLSKY_GROUP') ? (string)ALLSKY_GROUP : $this->owner;
@@ -106,9 +124,72 @@ class MODULEINSTALLERUTIL extends UTILBASE
     }
 
     /**
+     * Read a value from the global settings array prepared by initialize_variables().
+     * Optionally swap spaces with a given character for filename-ish values.
+     */
+    private function getSetting(string $name, string $swapSpaces = '', $default = 'overlay.json')
+    {
+        /** @var array $settings_array */
+        global $settings_array;
+        $val = getVariableOrDefault($settings_array, $name, $default);
+        if ($swapSpaces !== '') $val = str_replace(' ', $swapSpaces, (string)$val);
+        return $val;
+    }
+
+    /**
+     * Turns the developer module repository setting into a git clone URL.
+     *
+     * @param string $repo Repository setting value.
+     *
+     * @return string Repository URL.
+     */
+    private function normaliseRepositoryUrl(string $repo): string
+    {
+        $repo = trim($repo);
+        if ($repo === '') {
+            return $repo;
+        }
+
+        if (preg_match('#^(?:https?://|ssh://|git://|git@)#i', $repo) === 1) {
+            return rtrim($repo, '/');
+        }
+
+        if (str_starts_with($repo, 'github.com/')) {
+            return 'https://' . trim($repo, '/');
+        }
+
+        if (str_contains($repo, '/')) {
+            $root = parse_url((string)ALLSKY_GITHUB_ROOT);
+            if (is_array($root) && isset($root['scheme'], $root['host'])) {
+                return $root['scheme'] . '://' . $root['host'] . '/' . trim($repo, '/');
+            }
+        }
+
+        return rtrim((string)ALLSKY_GITHUB_ROOT, '/') . '/' . trim($repo, '/');
+    }
+
+    /**
+     * Returns developer-mode information for the browser.
+     *
+     * @param string $branch Selected repository branch.
+     *
+     * @return array<string, mixed>
+     */
+    private function getDeveloperModeResponse(string $branch): array
+    {
+        return [
+            'enabled' => $this->developerModuleRepoEnabled,
+            'repo' => $this->repoUrl,
+            'branch' => $branch,
+            'configuredBranch' => $this->developerModuleRepoBranch,
+        ];
+    }
+        
+    /**
      * Returns the list of source modules and built-in core modules for the
-     * module manager.  The requested branch is refreshed first so the browser
-     * sees the same module catalogue that install actions will use.
+     * module manager.  The repository is refreshed first, then the requested or
+     * configured branch is checked out so the browser sees the same module
+     * catalogue that install actions will use.
      *
      * @return void
      */
@@ -116,15 +197,11 @@ class MODULEINSTALLERUTIL extends UTILBASE
     {
         try {
             $requestedBranch = trim((string)($_GET['branch'] ?? ''));
-            $branch = $requestedBranch !== '' ? $requestedBranch : $this->getPreferredBranch();
             $refresh = filter_var($_GET['refresh'] ?? false, FILTER_VALIDATE_BOOLEAN);
 
-            $this->ensureRepo($branch, $refresh);
+            $this->ensureRepo($refresh);
             $branches = $this->getRemoteBranches();
-            if (!in_array($branch, $branches, true)) {
-                $preferredBranch = $this->getPreferredBranch();
-                $branch = in_array($preferredBranch, $branches, true) ? $preferredBranch : $this->defaultBranch;
-            }
+            $branch = $this->resolveRepositoryBranch($requestedBranch, $branches);
             $this->checkoutBranch($branch);
 
             $modules = [];
@@ -147,6 +224,7 @@ class MODULEINSTALLERUTIL extends UTILBASE
                 'branch' => $branch,
                 'branches' => $branches,
                 'repo' => $this->repoUrl,
+                'developerMode' => $this->getDeveloperModeResponse($branch),
                 'modules' => $modules,
                 'coreModules' => $coreModules,
                 'currentVersion' => $this->getCurrentVersion(),
@@ -166,9 +244,9 @@ class MODULEINSTALLERUTIL extends UTILBASE
     {
         try {
             $requestedBranch = trim((string)($_GET['branch'] ?? ''));
-            $branch = $requestedBranch !== '' ? $requestedBranch : $this->getPreferredBranch();
 
-            $this->ensureRepo($branch, false);
+            $this->ensureRepo(false);
+            $branch = $this->resolveRepositoryBranch($requestedBranch, $this->getRemoteBranches());
             $this->checkoutBranch($branch);
 
             $this->sendResponse([
@@ -191,7 +269,6 @@ class MODULEINSTALLERUTIL extends UTILBASE
             $moduleName = trim((string)($_POST['module'] ?? ''));
             $action = trim((string)($_POST['action'] ?? ''));
             $requestedBranch = trim((string)($_POST['branch'] ?? ''));
-            $branch = $requestedBranch !== '' ? $requestedBranch : $this->defaultBranch;
 
             if (!preg_match('/^allsky_[A-Za-z0-9_]+$/', $moduleName)) {
                 $this->send400('Invalid module name.');
@@ -202,7 +279,8 @@ class MODULEINSTALLERUTIL extends UTILBASE
                 $this->send400('Invalid action.');
             }
 
-            $this->ensureRepo($branch, false);
+            $this->ensureRepo(false);
+            $branch = $this->resolveRepositoryBranch($requestedBranch, $this->getRemoteBranches());
             $this->checkoutBranch($branch);
             $modulePath = $this->repoPath . '/' . $moduleName;
 
@@ -563,26 +641,23 @@ class MODULEINSTALLERUTIL extends UTILBASE
     }
 
     /**
-     * Ensures the temporary module repository exists, is clean, and is checked
-     * out to the requested branch.
+     * Ensures the temporary module repository exists, matches the configured
+     * source repository, and has current remote branch refs.
      *
-     * @param string $branch Branch to fetch and check out.
      * @param bool $reCheckout True to discard and clone a fresh repository.
      *
      * @return void
      *
      * @throws RuntimeException When the checkout cannot be prepared safely.
      */
-    private function ensureRepo(string $branch, bool $reCheckout): void
+    private function ensureRepo(bool $reCheckout): void
     {
         $this->assertRepoOwnership();
 
-        if (is_dir($this->repoPath . '/.git') && !$reCheckout) {
+        if (is_dir($this->repoPath . '/.git') && !$reCheckout && $this->repositoryOriginMatches()) {
             $this->runGitCommand(['reset', '--hard'], null, $this->repoPath);
             $this->runGitCommand(['clean', '-fdx'], null, $this->repoPath);
             $this->runGitCommand(['fetch', '--prune', 'origin'], null, $this->repoPath);
-            $this->runGitCommand(['checkout', $branch], null, $this->repoPath);
-            $this->runGitCommand(['pull', 'origin', $branch], null, $this->repoPath);
             return;
         }
 
@@ -595,7 +670,40 @@ class MODULEINSTALLERUTIL extends UTILBASE
             throw new RuntimeException('Unable to create temporary module repository folder.');
         }
 
-        $this->runGitCommand(['clone', '--branch', $branch, $this->repoUrl, $this->repoPath], null, $parent);
+        $this->runGitCommand(['clone', $this->repoUrl, $this->repoPath], null, $parent);
+    }
+
+    /**
+     * Checks whether an existing checkout points at the configured repository.
+     *
+     * @return bool True when origin matches the active repository URL.
+     */
+    private function repositoryOriginMatches(): bool
+    {
+        try {
+            $origin = $this->runGitCommand(['config', '--get', 'remote.origin.url'], null, $this->repoPath);
+        } catch (Throwable $e) {
+            return false;
+        }
+
+        return $this->normaliseGitRemoteUrl($origin) === $this->normaliseGitRemoteUrl($this->repoUrl);
+    }
+
+    /**
+     * Normalises git remote URLs for simple equality checks.
+     *
+     * @param string $url Remote URL.
+     *
+     * @return string Normalised remote URL.
+     */
+    private function normaliseGitRemoteUrl(string $url): string
+    {
+        $url = rtrim(trim($url), '/');
+        if (str_ends_with($url, '.git')) {
+            $url = substr($url, 0, -4);
+        }
+
+        return $url;
     }
 
     /**
@@ -641,18 +749,74 @@ class MODULEINSTALLERUTIL extends UTILBASE
     }
 
     /**
-     * Selects the module branch that should match the running Allsky version.
+     * Selects the preferred module branch before validating it against the
+     * repository's available branches.
      *
      * @return string Preferred module repository branch.
      */
     private function getPreferredBranch(): string
     {
+        if ($this->developerModuleRepoEnabled) {
+            return $this->developerModuleRepoBranch;
+        }
+
         $version = $this->getCurrentVersion();
         if ($version !== '') {
             return $version;
         }
 
         return $this->defaultBranch;
+    }
+
+    /**
+     * Resolves the repository branch to use for this request.
+     *
+     * Developer mode uses the configured developer branch when present; when it
+     * is blank, it falls back to the first branch available in the checkout.
+     *
+     * @param string $requestedBranch Branch selected by the browser, if any.
+     * @param array<int, string> $branches Available remote branches.
+     *
+     * @return string Branch to check out.
+     *
+     * @throws RuntimeException When no branch can be resolved.
+     */
+    private function resolveRepositoryBranch(string $requestedBranch, array $branches): string
+    {
+        $requestedBranch = trim($requestedBranch);
+        if ($requestedBranch !== '' && in_array($requestedBranch, $branches, true)) {
+            return $requestedBranch;
+        }
+
+        $preferredBranch = trim($this->getPreferredBranch());
+        if ($preferredBranch !== '') {
+            if ($this->developerModuleRepoEnabled || in_array($preferredBranch, $branches, true)) {
+                return $preferredBranch;
+            }
+        }
+
+        $defaultBranch = trim($this->defaultBranch);
+        if ($defaultBranch !== '' && in_array($defaultBranch, $branches, true)) {
+            return $defaultBranch;
+        }
+
+        if ($branches !== []) {
+            return $branches[0];
+        }
+
+        if ($requestedBranch !== '') {
+            return $requestedBranch;
+        }
+
+        if ($preferredBranch !== '') {
+            return $preferredBranch;
+        }
+
+        if ($defaultBranch !== '') {
+            return $defaultBranch;
+        }
+
+        throw new RuntimeException('No branches were found in the module repository.');
     }
 
     /**

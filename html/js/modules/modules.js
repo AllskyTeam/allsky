@@ -3128,6 +3128,29 @@ class MODULESEDITOR {
 		return $('#module-installer-branch').val() || this.#installerBranch || '';
 	}
 
+	#renderInstallerRepositoryFooter(result) {
+		const developerMode = result?.developerMode || {};
+		const repo = developerMode.repo || result?.repo || '';
+		const footer = $('#module-installer-repo');
+
+		$('#module-installer-developer-note').remove();
+		footer
+			.removeClass('text-warning')
+			.addClass('text-muted')
+			.css('font-weight', '')
+			.text(repo);
+
+		if (!developerMode.enabled) {
+			return;
+		}
+
+		footer
+			.removeClass('text-muted')
+			.addClass('text-warning')
+			.css('font-weight', '600')
+			.html(`Developer module repository: ${this.#escapeHtml(repo)}`);
+	}
+
 	#moduleMatchesInstallerSearch(module, searchText) {
 		if (!searchText) {
 			return true;
@@ -3674,7 +3697,7 @@ class MODULESEDITOR {
 	#renderInstallerModules(result) {
 		this.#installerData = result;
 		this.#installerBranch = result.branch;
-		$('#module-installer-repo').text(result.repo || '');
+		this.#renderInstallerRepositoryFooter(result);
 		this.#renderCoreModules(result.coreModules || []);
 
 		const branchSelect = $('#module-installer-branch');

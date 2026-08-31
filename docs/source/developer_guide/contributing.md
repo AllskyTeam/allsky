@@ -96,7 +96,7 @@ The `origin` remote should point to your fork. The `upstream` remote should poin
 
 Your local base branch should be treated as a clean tracking branch, not as a development branch. That is one of the simplest habits that prevents unnecessary Git pain later.
 
-For most `allsky` work, the base branch is `master`. For new module work in `allsky-modules`, the base branch is normally `dev`.
+For most `allsky` work and new module work in `allsky-modules`, the base branch is normally `master`.
 
 === "`allsky`"
 
@@ -110,7 +110,7 @@ For most `allsky` work, the base branch is `master`. For new module work in `all
 
     ```bash
     git fetch upstream
-    git checkout -B dev upstream/dev
+    git checkout -B master upstream/master
     ```
 
 If you prefer rebasing over merging for your personal workflow, that is fine, but the key point is the same: start new work from the current upstream base branch.
@@ -317,14 +317,14 @@ git merge master
 
 Then push the updated branch again.
 
-For a module pull request targeting `allsky-modules` `dev`, use `dev` as the base branch instead:
+For a module pull request targeting `allsky-modules` `master`, use `master` as the base branch:
 
 ```bash
 git fetch upstream
-git checkout dev
-git merge upstream/dev
+git checkout master
+git merge upstream/master
 git checkout your-branch-name
-git merge dev
+git merge master
 ```
 
 If you are comfortable with rebasing and prefer a cleaner history on your own fork, you can rebase instead, but do so carefully once a pull request is already under review. Reviewers generally care more about a stable, understandable branch than about a perfectly minimal commit graph.
@@ -346,64 +346,21 @@ Do not rely on undocumented assumptions. If the module expects hardware, a servi
 
 #### Submitting A New Module { data-toc-label="Submitting Module" }
 
-New modules should be submitted to the `dev` branch of `AllskyTeam/allsky-modules`.
+New modules should be submitted to the `master` branch of `AllskyTeam/allsky-modules`. Follow the full [Module Workflow](module_workflow.md){ target="_blank" rel="noopener" .external } before opening a pull request.
 
-Start from an up-to-date copy of the modules repository:
+At a high level, the expected workflow is:
 
-```bash
-git clone https://github.com/<your-github-user>/allsky-modules.git
-cd allsky-modules
-git remote add upstream https://github.com/AllskyTeam/allsky-modules.git
-git fetch upstream
-git checkout -B dev upstream/dev
-git checkout -b module/allsky_your_module
-```
+1. Develop and test the module inside an Allsky installation, normally under `~/allsky/config/myfiles/modules`.
+2. Use GitHub to fork `AllskyTeam/allsky-modules` and create a module branch from `master`.
+3. Package the module into a top-level `allsky_your_module` folder in the `allsky-modules` repository.
+4. Declare dependencies and post-install actions in `installer.json` when needed.
+5. Generate `manifest.json` with `tools/create-module-manifest.sh allsky_your_module`.
+6. Enable Allsky developer mode and set `developermodulerepo` and `developermodulerepobranch` to your fork and test branch.
+7. Install, run, uninstall, and reinstall the module from the Module Package Manager.
 
-Create a top-level folder for the module. The folder and main Python file should use the same `allsky_` name:
+Do not edit `manifest.json` by hand. Regenerate it after any change inside the module folder, including code, support files, `installer.json`, charts, blocks, database configuration, README files, or post-install helpers.
 
-```text
-allsky_your_module/
-├── allsky_your_module.py
-├── installer.json
-├── manifest.json
-└── README.md
-```
-
-Build and test the module before generating the manifest. At a minimum, check that:
-
-- the module metadata is complete and uses sensible defaults,
-- the module entry point works in an Allsky pipeline,
-- dependencies are declared in `installer.json`,
-- post-install helpers are inside the module folder,
-- charts, blocks, database configuration, and data files are included only when the module needs them,
-- the README explains what the module does and how users should configure it,
-- hardware, API, account, credential, or network requirements are documented.
-
-After the module files are final, generate the security manifest:
-
-```bash
-tools/create-module-manifest.sh allsky_your_module
-```
-
-To inspect the manifest without writing it:
-
-```bash
-tools/create-module-manifest.sh --dry-run allsky_your_module
-```
-
-Do not edit `manifest.json` by hand. If you change any file inside the module folder, regenerate the manifest before committing. For a normal new module pull request, only regenerate the manifest for the module you changed.
-
-Commit and push the module:
-
-```bash
-git status
-git diff
-git add allsky_your_module
-git commit -m "Add allsky_your_module module"
-git push -u origin module/allsky_your_module
-```
-
-Open a pull request into the `dev` branch of `AllskyTeam/allsky-modules`. In the pull request description, include what the module does, what it depends on, how you tested it, and any known limitations.
+Open a pull request into the `master` branch of `AllskyTeam/allsky-modules` only after the module installs cleanly from your developer repository branch. In the pull request description, include what the module does, what it depends on, how you tested the package-manager installation, and any known limitations.
 
 !!! tip "Think about maintainability"
 

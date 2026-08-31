@@ -2366,7 +2366,42 @@
 "checkchanges" : true,
 "action" : "restart"
 },
-
+{
+"name" : "developertab========================================",
+"label" : "Developer Options",
+"type" : "header-tab"
+},
+{
+"name" : "developerheading",
+"label" : "Developer options",
+"type" : "header"
+},
+{
+"name" : "developermode",
+"default" : true,
+"description" : "Enables Developer mode. Please refer to the <a external='true' href='/docs/allsky_guide/developer.html'>Allsky Developer Guide</a> for more information.",
+"label" : "Developer Mode",
+"type" : "boolean",
+"optional" : true
+},
+{
+"name" : "developermodulerepo",
+"default" : "",
+"description" : "The github repository to install modules from.",
+"label" : "Repo",
+"carryforward" : true,
+"type" : "widetext",
+"optional" : true
+},
+{
+"name" : "developermodulerepobranch",
+"default" : "",
+"description" : "The default github repository branch for modules",
+"label" : "Branch",
+"carryforward" : true,
+"type" : "text",
+"optional" : true
+},
 {
 "name" : "XX_END_XX",
 "type" : "boolean"

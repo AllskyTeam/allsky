@@ -777,6 +777,212 @@ function ListFileType($dir, $imageFileName, $formalImageTypeName, $type) {
 	echo "</div>";
 }
 
+// CG: variation of listFileType for Meteors
+function ListMeteors($dir, $imageFilePrefix, $formalImageTypeName, $type) {
+	global $page;
+
+	$num = 0;	// Let the user know when there are no images for the specified day
+	// "/images" is an alias in the web server for ALLSKY_IMAGES
+	$images_dir = "/images";
+	$chosen_day = getVariableOrDefault($_GET, 'day', null);
+ 	if ($chosen_day === null) {
+		echo "<br><br><br>";
+		echo "<h2 class='alert-danger'>ERROR: No 'day' specified in URL.</h2>";
+		return;
+	}
+
+	if (! is_dir(ALLSKY_IMAGES)) {
+		echo "<br><div class='errorMsgBig'>";
+		echo "ERROR: '" . ALLSKY_IMAGES . "' directory is missing!";
+		echo "</div>";
+		return;
+	}
+	
+	echo "<h2>$formalImageTypeName - $chosen_day</h2>\n";
+	echo "<div class='row'>\n";
+
+	//$imageList = [];
+	
+	$cleanDir = rtrim($dir, "/");
+	//$pattern = ALLSKY_IMAGES . "/$chosen_day/" . rtrim($dir, "/") . "/*.json";
+	$pattern = ALLSKY_IMAGES . "/$chosen_day/$cleanDir/*.json";
+
+	foreach (glob($pattern) as $imageData) {
+		$imageList[] = $imageData;
+		$num += 1;
+	}
+	if ($num == 0) {
+		echo "<span class='alert-warning'>There are no $formalImageTypeName for this day ($chosen_day).</span>";
+		echo ALLSKY_IMAGES . "/$chosen_day/$dir*.json";
+	} else {
+		// table setup and header
+		?>
+		<style>
+			table th {
+				text-align:center;
+				padding: 0 10px;
+			}
+			table tr td {
+				padding: 10px 10px;
+			}
+		</style>
+		<div class="row">
+			<div class="col-lg-12">
+			<div class="panel panel-primary">
+			<div class="panel-body">
+			<div class="row">
+			<form action="?page=<?php echo urlencode($page); ?>&day=<?php echo urlencode($chosen_day); ?>" method="POST" onsubmit="return confirm('Are you sure you want to delete that meteor?');">
+			<table style='margin-top: 15px; text-align:center'>
+			<thead>
+					<tr style="border-bottom: 1px solid #888">
+						<th style="text-align:center">Time</th>
+						<th style="text-align:center">Image</th>
+						<th style="text-align:center">Marked</th>
+						<th style="text-align:center">Data</th>
+						<th style="text-align:center">Center</th>
+						<th style="text-align:center">Ends</th>
+						<th style="text-align:center">Frags</th>
+						<th style="text-align:center">Showers</th>
+						<th style="text-align:center">Radiant</th>
+						<th style="text-align:center">-</th>
+					</tr>
+			</thead>
+			<tbody>
+		<?php
+		if (!empty($imageList)) {
+			foreach ($imageList as $imageData) {
+				// $imageData_name = basename($imageData);
+				$json_file = file_get_contents($imageData);
+				$json_data = json_decode($json_file, true);
+
+				$meteor_number = count($json_data);
+				//decode json record
+				$datetime = $json_data[0]['time'];
+				$time = substr($datetime, -6);
+
+				$meteor = "$images_dir/$chosen_day/$cleanDir/meteors-$datetime.jpg";
+				$meteor_th = "$images_dir/$chosen_day/$cleanDir/thumbnails/meteors-$datetime.jpg";
+
+				$meteor_mark = "$images_dir/$chosen_day/$cleanDir/meteors-$datetime-marked.jpg";
+				$meteor_mark_th = "$images_dir/$chosen_day/$cleanDir/thumbnails/meteors-$datetime-marked.jpg";
+
+				$len = $json_data[0]['length'];
+				$ang = $json_data[0]['angle'];
+				$elong = $json_data[0]['elong'];
+				$peak = $json_data[0]['peak'];
+
+				$cx = $json_data[0]['cx'];
+				$cy = $json_data[0]['cy'];
+
+				$p1 = $json_data[0]['p1'];
+				$p2 = $json_data[0]['p2'];
+
+				$frag_n = $json_data[0]['frag_n'];
+				$frag_ext = $json_data[0]['frag_ext'];
+
+				$showers = $json_data[0]['showers'];
+
+				$radiant = $json_data[0]['radiant'];
+
+
+				echo"\t\t<tr>\n";
+				echo "\t\t\t<td rowspan=$meteor_number style='font-weight:bold'>$time</td>\n";			
+				
+				echo "\t\t\t<td rowspan=$meteor_number><a href='$meteor'><img src='$meteor_th' style='height:80px'></a></td>";
+				echo "\t\t\t<td rowspan=$meteor_number><a href='$meteor_mark'><img src='$meteor_mark_th' style='height:80px'></a></td>";
+				
+				echo "\t\t\t<td>Len: " . $len . "<br>Ang: " . $ang . "<br>Elong: " . $elong . "<br>Peak: " . $peak . "</td>\n";
+				echo "\t\t\t<td>X: " . $cx . "<br>Y: " . $cy . "</td>\n";
+				echo "\t\t\t<td>p1: " . $p1[0] . "," . $p1[1] . "<br>p2: " . $p2[0] . "," . $p2[1] . "</td>\n";
+				echo "\t\t\t<td>n: " . $frag_n . "<br>ext: " . $frag_ext . "</td>\n";
+				echo "\t\t\t<td>";
+				if (empty($showers)) {
+					echo "none";
+				} else {
+					$lastKey = array_key_last($showers);
+					foreach ($showers as $key => $shower) {
+						echo "$shower";
+						if ($key !== $lastKey) {
+							echo "<br>";
+						}
+					}
+				}
+				echo "\t\t\t</td>\n";
+				echo "\t\t\t<td>$radiant</td>\n";
+
+				echo "\t\t\t<td rowspan=$meteor_number style='padding: 5px'>
+							<button type='submit' data-toggle='confirmation'
+								class='btn btn-delete' 
+								name='delete_meteor' value='" . htmlspecialchars($datetime, ENT_QUOTES, 'UTF-8') . "'>
+								<i class='fa fa-trash'></i> <span class='hidden-xs'>Delete</span>
+							</button>
+						</td>";
+				
+				echo"\t\t</tr>";
+
+				if ($meteor_number > 1) {
+					echo"\t\t<tr>\n";
+					for ($i = 1; $i < $meteor_number; $i++) {
+						//decode json record
+						$datetime = $json_data[$i]['time'];
+						$time = substr($datetime, -6);
+
+						$len = $json_data[$i]['length'];
+						$ang = $json_data[$i]['angle'];
+						$elong = $json_data[$i]['elong'];
+						$peak = $json_data[$i]['peak'];
+
+						$cx = $json_data[$i]['cx'];
+						$cy = $json_data[$i]['cy'];
+
+						$p1 = $json_data[$i]['p1'];
+						$p2 = $json_data[$i]['p2'];
+
+						$frag_n = $json_data[$i]['frag_n'];
+						$frag_ext = $json_data[$i]['frag_ext'];
+
+						$showers = $json_data[$i]['showers'];
+
+						$radiant = $json_data[$i]['radiant'];
+
+						echo "\t\t\t<td>Len: " . $len . "<br>Ang: " . $ang . "<br>Elong: " . $elong . "<br>Peak: " . $peak . "</td>\n";
+						echo "\t\t\t<td>X: " . $cx . "<br>Y: " . $cy . "</td>\n";
+						echo "\t\t\t<td>p1: " . $p1[0] . "," . $p1[1] . "<br>p2: " . $p2[0] . "," . $p2[1] . "</td>\n";
+						echo "\t\t\t<td>n: " . $frag_n . "<br>ext: " . $frag_ext . "</td>\n";
+						echo "\t\t\t<td>";
+						if (empty($showers)) {
+							echo "none";
+						} else {
+							$lastKey = array_key_last($showers);
+							foreach ($showers as $key => $shower) {
+								echo "$shower";
+								if ($key !== $lastKey) {
+									echo "<br>";
+								}
+							}
+						}
+						echo "\t\t\t</td>\n";
+						echo "\t\t\t<td>$radiant</td>\n";
+
+					}
+					echo"\t\t</tr>";
+				}
+			}
+		}
+		// table closing
+		?>
+			</tbody>
+			</table>
+			</form>
+			</div><!-- /.row -->
+			</div><!-- /.panel-body -->
+			</div><!-- /.panel-primary -->
+			</div><!-- /.col-lg-12 -->
+		</div><!-- /.row -->
+		<?php		
+	}
+}
+
 // Run a command and display the appropriate status message.
 // If $addMsg is false, then don't add our own message.
 function runCommand($cmd, $onSuccessMessage, $messageColor, $addMsg=true, $onFailureMessage="", &$return_val=null)

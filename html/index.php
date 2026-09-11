@@ -135,6 +135,9 @@ if ($useRemoteWebsite) {
 		case "list_videos":			$Title = "Timelapse$day";		break;
 		case "list_keograms":		$Title = "Keogram$day";			break;
 		case "list_startrails":		$Title = "Startrails$day";		break;
+		// CG name meteors list page
+		case "list_meteors":		$Title = "Meteors$day";			break;
+		// CG
 		case "editor":				$Title = "Editor";				break;
 		case "overlay":				$Title = "Overlay Editor";		break;
 		case "module":				$Title = "Module Manager";		break;
@@ -504,6 +507,18 @@ if ($useRemoteWebsite) {
 						// directory, file name prefix, formal name, type of file
 						ListFileType("startrails/", "startrails", "Startrails", "picture");
 						break;
+					// CG list meteors
+					case "list_meteors":
+						include_once('includes/days.php');
+						if (getVariableOrDefault($_GET, 'meteor_status', '') === 'deleted') {
+							echo "<div class='alert alert-success'>Meteor deleted.</div>";
+						} elseif (getVariableOrDefault($_GET, 'meteor_status', '') === 'error') {
+							echo "<div class='alert alert-danger'><b>Unable to delete meteor.</b></div>";
+						}
+						// directory, file name prefix, formal name
+						ListMeteors("meteors/", "meteors", "Meteors", "picture");
+						break;
+					// CG
 					case "editor":
 						include_once('includes/editor.php');
 						DisplayEditor();

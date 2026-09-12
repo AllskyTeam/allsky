@@ -1,0 +1,28 @@
+{
+  "logs": [
+    {
+      "id": "lighttpd",
+      "description": "Lighttpd Error Log",
+      "location": "/var/log/lighttpd/error.log",
+      "default": false
+    },
+    {
+      "id": "allsky",
+      "description": "Allsky Log",
+      "location": "/var/log/allsky.log",
+      "default": true
+    },
+    {
+      "id": "allsky1",
+      "description": "Allsky Log (prior copy)",
+      "location": "/var/log/allsky.log.1",
+      "default": false
+    },
+    {
+      "id": "allskyperiodic",
+      "description": "Allsky Periodic Log",
+      "location": "/var/log/allskyperiodic.log",
+      "default": false
+    }
+  ]
+}

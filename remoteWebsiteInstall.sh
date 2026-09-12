@@ -11,13 +11,13 @@
 ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck source-path=.
-source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/checkFunctions.sh"			|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/checkFunctions.sh"			|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 # display_msg() sends log entries to this file.
 # shellcheck disable=SC2034
@@ -41,37 +41,18 @@ USER_AGENT="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML,
 calc_d_sizes
 
 # Remote connectivity variables
-REMOTE_WEBSITE_URL="$( settings ".remotewebsiteurl" "${SETTINGS_FILE}" )"
-REMOTE_WEBSITE_IMAGE_URL="$( settings ".remotewebsiteimageurl" "${SETTINGS_FILE}" )"
+REMOTE_WEBSITE_URL="$( settings ".remotewebsiteurl" "${ALLSKY_SETTINGS_FILE}" )"
+REMOTE_WEBSITE_IMAGE_URL="$( settings ".remotewebsiteimageurl" "${ALLSKY_SETTINGS_FILE}" )"
 REMOTE_USER="$( settings ".REMOTEWEBSITE_USER" "${ALLSKY_ENV}" )"
 REMOTE_HOST="$( settings ".REMOTEWEBSITE_HOST" "${ALLSKY_ENV}" )"
 REMOTE_PORT="$( settings ".REMOTEWEBSITE_PORT" "${ALLSKY_ENV}" )"
 [[ -n ${REMOTE_PORT} ]] && REMOTE_PORT="-p ${REMOTE_PORT}"
 REMOTE_PASSWORD="$( settings ".REMOTEWEBSITE_PASSWORD" "${ALLSKY_ENV}" )"
-REMOTE_DIR="$( settings ".remotewebsiteimagedir" "${SETTINGS_FILE}" )"
-REMOTE_PROTOCOL="$( settings ".remotewebsiteprotocol" "${SETTINGS_FILE}" )"
+REMOTE_DIR="$( settings ".remotewebsiteimagedir" "${ALLSKY_SETTINGS_FILE}" )"
+REMOTE_PROTOCOL="$( settings ".remotewebsiteprotocol" "${ALLSKY_SETTINGS_FILE}" )"
 REMOTE_PROTOCOL="${REMOTE_PROTOCOL,,}"		# convert to lowercase
 
-if [[ ${REMOTE_PROTOCOL} == "sftp" || ${REMOTE_PROTOCOL} == "ftp" || ${REMOTE_PROTOCOL} == "ftps" ]]; then
-	LFTP_CMDS="set dns:fatal-timeout 10; set net:max-retries 2; set net:timeout 10"
-	X="$( settings ".REMOTEWEBSITE_LFTP_COMMANDS" "${ALLSKY_ENV}" )"
-	[[ -n ${X} ]] && LFTP_CMDS+="; ${X}"
-else
-	#### TODO: this script needs to support ALL protocols, not just *ftp*.
-	# When it does, remove this code.
-	exec >&2
-	echo -e "\n\n"
-	echo    "************* NOTICE *************"
-	echo    "This script currently only supports ftp protocols."
-	echo    "Support for the '${REMOTE_PROTOCOL}' protocol will be added in"
-	echo    "a future release."
-	echo -e "\n"
-	echo    "In the meantime, if you have an existing remote Allsky Website,"
-	echo    "it should continue to work."
-	echo -e "\n"
 
-	exit 0
-fi
 
 # Titles for various dialogs
 # don't use:  DIALOG_BACK_TITLE="Allsky Remote Website Installer"
@@ -252,7 +233,7 @@ function pre_install_checks()
 		DIALOG_TEXT+="$( dE_ "NOT WORKING." )"
 		display_box "--infobox" "${DIALOG_PRE_CHECK}" "${DIALOG_TEXT}"
 
-		if [[ ${VALID_RET} -eq ${EXIT_ERROR_STOP} ]]; then
+		if [[ ${VALID_RET} -eq ${ALLSKY_EXIT_ERROR_STOP} ]]; then
 			if [[ -n ${GLOBAL_ERROR_MSG} ]]; then
 				MSG="${GLOBAL_ERROR_MSG}"
 			else
@@ -377,13 +358,7 @@ function prompt_to_upload()
 		fi
  		DIALOG_TEXT+="\n\n$( dU_ "Do you want to upload them to the remote server?" )"
 		DIALOG_TEXT+="\n\n\nThis will overwrite any files already there."
-		if [[ -n ${X} ]]; then
-			# Possibly old images - set default answer to "No".
-			DEFAULT="--defaultno"
-		else
-			# Current images - set default answer to "Yes" (which is the default).
-			DEFAULT=""
-		fi
+		DEFAULT="--defaultno"
 
 		# shellcheck disable=SC2086
 		if display_box "--yesno" "${DIALOG_WELCOME_TITLE}" "${DIALOG_TEXT}" ${DEFAULT} ; then
@@ -671,6 +646,12 @@ function create_website_config()
 		DEST_FILE="${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
 		cp "${REPO_WEBCONFIG_FILE}" "${DEST_FILE}"
 
+		if [[ -f "${DEST_FILE}" ]]; then
+			display_msg --log info "Setting permissions on remote website configuration file"
+			sudo chown "${ALLSKY_OWNER}":"${ALLSKY_WEBSERVER_GROUP}" "${DEST_FILE}"	
+			sudo chmod 664 "${DEST_FILE}"
+		fi
+
 		MSG="Creating a new ${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME}"
 		MSG+=" from repo file and updating placeholders."
 		display_msg --logonly info "${MSG}"
@@ -796,7 +777,7 @@ function check_if_website_is_valid()
 	GLOBAL_ERROR_MSG="$( _check_web_connectivity --url "${REMOTE_WEBSITE_URL}" --from "install" )"
 	RET=$?
 	if [[ ${RET} -ne 0 ]]; then
-		if [[ ${RET} -eq "${EXIT_PARTIAL_OK}" ]]; then
+		if [[ ${RET} -eq "${ALLSKY_EXIT_PARTIAL_OK}" ]]; then
 			# We only have basic connectivity so the site is probably empty
 			# so the checks for files below will fail.  Return now.
 			MSG="Skipping remaining validity checks due to Basic Connectivity."
@@ -804,7 +785,7 @@ function check_if_website_is_valid()
 			return 0
 		else
 			display_msg --logonly info "${GLOBAL_ERROR_MSG}"
-			return "${EXIT_ERROR_STOP}"
+			return "${ALLSKY_EXIT_ERROR_STOP}"
 		fi
 	fi
 
@@ -994,7 +975,7 @@ function usage_and_exit()
 
 	MSG="Usage: ${ME} [--help] [--debug] [--skipupload] [-auto] [--text]"
 	echo -e "\n${C}${MSG}${cNC}"
-	echo "where:"
+	echo "Arguments:"
 	echo "   --help         Displays this message and exits."
 	echo "   --debug        Adds addtional debugging information to the installation log."
 	echo "   --skipupload   Skips uploading of the remote Website code."
@@ -1009,14 +990,14 @@ function usage_and_exit()
 # Disable the remote Website.
 function disable_remote_website()
 {
-	update_json_file ".useremotewebsite" "false" "${SETTINGS_FILE}"
+	update_json_file ".useremotewebsite" "false" "${ALLSKY_SETTINGS_FILE}"
 	display_msg --logonly info "Remote Website temporarily disabled."
 }
 ####
 # Enable the remote Website.
 function enable_remote_website()
 {
-	update_json_file ".useremotewebsite" "true" "${SETTINGS_FILE}"
+	update_json_file ".useremotewebsite" "true" "${ALLSKY_SETTINGS_FILE}"
 	display_msg --logonly info "Remote Website enabled."
 }
 
@@ -1086,6 +1067,43 @@ done
 [[ ${HELP} == "true" ]] && usage_and_exit 0
 [[ ${OK} == "false" ]] && usage_and_exit 1
 
+if [[ ${REMOTE_PROTOCOL} == "sftp" || ${REMOTE_PROTOCOL} == "ftp" || ${REMOTE_PROTOCOL} == "ftps" ]]; then
+	LFTP_CMDS="set dns:fatal-timeout 10; set net:max-retries 2; set net:timeout 10"
+	X="$( settings ".REMOTEWEBSITE_LFTP_COMMANDS" "${ALLSKY_ENV}" )"
+	[[ -n ${X} ]] && LFTP_CMDS+="; ${X}"
+
+elif [[ ${SKIP_UPLOAD} == "false" ]]; then
+	#### TODO: this script needs to support ALL protocols, not just *ftp*.
+	# When it does, remove this code and add "mirror" code to other protocols.
+	exec >&2
+	echo
+	echo
+	echo    "************* NOTICE *************"
+	echo    "This script currently only supports ftp protocols."
+	echo    "Support for the '${REMOTE_PROTOCOL}' protocol will be added in the future."
+	echo
+	echo
+
+	echo    "***** WORKAROUND:"
+	echo    "If you are able to manually copy the files and directories in"
+	echo    "'${ALLSKY_WEBSITE}' to the remote Website, do that, then run this on the Pi:"
+	echo    "   cd ~/allsky"
+	echo    "   ./${ME} --skipupload"
+	echo
+	echo    "If that is successful and you can access the remote Website,"
+	echo	"remove these files from the server:"
+	for i in "${OLD_FILES_TO_REMOVE[@]}"; do
+		[[ ${i} != "${ALLSKY_WEBSITE_CONFIGURATION_NAME}" ]] && echo "   ${i}"
+	done
+	echo
+	echo    "*****"
+	echo
+	echo    "If you are unable to perform the WORKAROUND and"
+	echo    "you have an existing remote Allsky Website, it should continue to work."
+	echo
+
+	exit 0
+fi
 display_msg --logonly info "STARTING INSTALLATION.\n"
 
 pre_install_checks

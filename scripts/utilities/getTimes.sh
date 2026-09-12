@@ -3,9 +3,9 @@
 ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck disable=SC1091 source=variables.sh
-source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 
 TMP="${ALLSKY_TMP}/${ME}.txt"
@@ -157,5 +157,5 @@ gawk 'BEGIN {
 	echo
 	echo "Computer = $( settings ".computer" )"
 	echo "Camera = $( settings ".camera" )"
-	echo "PI_OS = ${PI_OS}"
+	echo "ALLSKY_PI_OS = ${ALLSKY_PI_OS}"
 	echo "Day AWB = $( settings --null ".dayawb" ), Night AWB = $( settings --null ".nightawb" )"

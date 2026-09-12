@@ -116,6 +116,11 @@ Other than the first few fields, fields can be in any order but are usually in t
         * _reload_ - the program re-reads the file containing the command-line arguments (which is created partially using the settings file).
         * _restart_ - the program restarts - other than for camera changes, this isn't needed very often.
         * _stop_ - the program stops and requires the user to manually start it.  For example, when enabling dark frame capture, this allows the user to cover the lens then start Allsky.
+* __noreset__
+    * Determines if the field should be reset when clicking on the "Reset to default values" button in the WebUI.
+    * Type: boolean
+    * Default: false
+    * Notes: Optional.  Some settings in the settings file are calculated hence have no default and should NOT be reset.  If the "overlay" fields are cleared the user will get errors about not finding an overlay file, so don't reset them.
 * __booldependson__
     * Lists which boolean setting(s) that when "true" (a.k.a., "on") will cause this setting to be displayed.
     * Type: list of one or more setting __name__'s.

@@ -50,7 +50,6 @@ pthread_cond_t condStartSave;
 ASI_CONTROL_CAPS ControlCaps;
 int numTotalErrors				= 0;				// Total number of errors, fyi
 int numConsecutiveErrors		= 0;				// Number of consecutive errors
-int maxErrors					= 5;				// Max number of errors in a row before we exit
 bool gotSignal					= false;			// Did we get a signal?
 int iNumOfCtrl					= NOT_SET;			// Number of camera control capabilities
 pthread_t threadDisplay			= 0;
@@ -141,21 +140,9 @@ void *Display(void *params)
 	return (void *)0;
 }
 
-void *SaveImgThd(void *para)
+// Save the image.
+void saveImage()
 {
-	while (bSaveRun)
-	{
-		pthread_mutex_lock(&mtxSaveImg);
-		pthread_cond_wait(&condStartSave, &mtxSaveImg);
-
-		if (gotSignal)
-		{
-			// we got a signal to exit, so don't save the (probably incomplete) image
-			pthread_mutex_unlock(&mtxSaveImg);
-			break;
-		}
-
-
 		// I don't know how to cast "st" to 0, so call now() and ignore it.
 		auto st = std::chrono::high_resolution_clock::now();
 		auto et = st;
@@ -165,13 +152,25 @@ void *SaveImgThd(void *para)
 		{
 			bSavingImg = true;
 
-			char cmd[1100+strlen(CG.allskyHome)];
 			Log(4, "  > Saving %s image '%s'\n",
 				CG.takeDarkFrames ? "dark" : dayOrNight.c_str(), CG.finalFileName);
-			snprintf(cmd, sizeof(cmd), "%s/scripts/saveImage.sh %s '%s'",
-				CG.allskyHome, dayOrNight.c_str(), CG.fullFilename);
-			add_variables_to_command(CG, cmd, exposureStartDateTime);
-			strcat(cmd, " &");
+
+			char cmd[1100+strlen(CG.allskyHome)];
+
+			if (CG.focusMode)
+			{
+				// In focusMode, wait for processing to complete since we
+				// don't otherwise delay between images.
+				snprintf(cmd, sizeof(cmd), "%s/saveImage.sh %s '%s' --focus-mode %ld %d", CG.allskyScripts,
+					dayOrNight.c_str(), CG.fullFilename, CG.lastFocusMetric, numExposures);
+			}
+			else
+			{
+				snprintf(cmd, sizeof(cmd), "%s/saveImage.sh %s '%s'", CG.allskyScripts,
+					dayOrNight.c_str(), CG.fullFilename);
+				add_variables_to_command(CG, cmd, exposureStartDateTime);
+				strcat(cmd, " &");
+			}
 
 			try
 			{
@@ -186,7 +185,11 @@ void *SaveImgThd(void *para)
 
 			if (result)
 			{
-				system(cmd);
+				if (CG.callSaveImage) {
+					system(cmd);
+				} else {
+					Log(3, "=== Saved %s\n", CG.fullFilename);
+				}
 
 				static int totalSaves = 0;
 				static double totalTime_ms = 0;
@@ -210,6 +213,24 @@ void *SaveImgThd(void *para)
 			// This can happen if the program is closed before the first picture.
 			Log(0, "----- SaveImgThd(): pRgb.data is null\n");
 		}
+}
+
+// Save an image using a separate thread so it's done in parallel.
+void *SaveImgThd(void *para)
+{
+	while (bSaveRun)
+	{
+		pthread_mutex_lock(&mtxSaveImg);
+		pthread_cond_wait(&condStartSave, &mtxSaveImg);
+
+		if (gotSignal)
+		{
+			// we got a signal to exit, so don't save the (probably incomplete) image
+			pthread_mutex_unlock(&mtxSaveImg);
+			break;
+		}
+
+		saveImage();
 
 		pthread_mutex_unlock(&mtxSaveImg);
 	}
@@ -232,6 +253,7 @@ double computeHistogram(unsigned char *imageBuffer, config cg, bool useHistogram
 	unsigned char *buf = imageBuffer;
 	const int histogramEntries = 256;
 	int histogram[histogramEntries];
+	long widthInBytes;
 
 	// Clear the histogram array.
 	for (int i = 0; i < histogramEntries; i++) {
@@ -239,13 +261,14 @@ double computeHistogram(unsigned char *imageBuffer, config cg, bool useHistogram
 	}
 
 	// Different image types have a different number of bytes per pixel.
-	cg.width *= currentBpp;
-	int roiX1, roiX2, roiY1, roiY2;
+	widthInBytes = (int)cg.width * currentBpp;
+//x printf(">>>>>>>>>>>> 0 cg.width=%ld, cg.height=%ld, widthInBytes=%ld\n", cg.width, cg.height, widthInBytes);
+	int roiX1, roiX2, roiY1, roiY2;		// X values are in bytes
 	if (useHistogramBox)
 	{
-		roiX1 = (cg.width * cg.HB.histogramBoxPercentFromLeft) - (cg.HB.currentHistogramBoxSizeX * currentBpp / 2);
+		roiX1 = (widthInBytes * cg.HB.histogramBoxPercentFromLeft) - (cg.HB.currentHistogramBoxSizeX * currentBpp / 2);
 		roiX2 = roiX1 + (currentBpp * cg.HB.currentHistogramBoxSizeX);
-		roiY1 = (cg.height * cg.HB.histogramBoxPercentFromTop) - (cg.HB.currentHistogramBoxSizeY / 2);
+		roiY1 = ((int)cg.height * cg.HB.histogramBoxPercentFromTop) - (cg.HB.currentHistogramBoxSizeY / 2);
 		roiY2 = roiY1 + cg.HB.currentHistogramBoxSizeY;
 
 		// Start off and end on a logical pixel boundries.
@@ -253,21 +276,26 @@ double computeHistogram(unsigned char *imageBuffer, config cg, bool useHistogram
 		roiX2 = (roiX2 / currentBpp) * currentBpp;
 	} else {
 		roiX1 = 0;
-		roiX2 = cg.width;
+		roiX2 = widthInBytes;
 		roiY1 = 0;
 		roiY2 = cg.height;
 	}
+//x printf(">>>>>>>>>>>> 1 roiX1=%d, roiY1=%d, roiX2=%d, roiY2=%d\n", roiX1, roiY1, roiX2, roiY2);
 
 	// For RGB24, data for each pixel is stored in 3 consecutive bytes: blue, green, red.
 	// For all image types, each row in the image contains one row of pixels.
 	// currentBpp doesn't apply to rows, just columns.
+
+// this debugging code is to prove to myself that we're not overwriting buf[].
+int numOver = 0;
+int totalBytes = cg.width * cg.height;
 	switch (cg.imageType) {
 	case IMG_RGB24:
 	case IMG_RAW8:
 	case IMG_Y8:
 		for (int y = roiY1; y < roiY2; y++) {
 			for (int x = roiX1; x < roiX2; x += currentBpp) {
-				int i = (cg.width * y) + x;
+				int i = (widthInBytes * y) + x;
 				int avg = buf[i];
 				if (cg.imageType == IMG_RGB24) {
 					// For RGB24 this averages the blue, green, and red pixels.
@@ -280,16 +308,22 @@ double computeHistogram(unsigned char *imageBuffer, config cg, bool useHistogram
 		}
 		break;
 	case IMG_RAW16:
+totalBytes *= 2;
 		for (int y = roiY1; y < roiY2; y++) {
 			for (int x = roiX1; x < roiX2; x+=currentBpp) {
-				int i = (cg.width * y) + x;
+				int i = (widthInBytes * y) + x;
 				int pixelValue;
 				// Use the least significant byte.
 				// This assumes the image data is laid out in big endian format.
+if (i >= totalBytes-1) numOver++;
 				pixelValue = buf[i+1];
-				histogram[pixelValue]++;
+				if (pixelValue < histogramEntries)
+				{
+					histogram[pixelValue]++;
+				}
 			}
 		}
+if (numOver) printf(">>>>>> ERROR: OVERFLOW: numOver=%d, totalBytes=%'d\n", numOver, totalBytes);
 		break;
 	case ASI_IMG_END:
 		break;
@@ -373,6 +407,7 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 	}
 
 	ASI_ERROR_CODE status, ret;
+	int exitCode;
 
 	// ZWO recommends timeout_ms = (exposure*2) + 500 ms
 	// After some discussion, we're doing +5000ms to account for delays induced by
@@ -393,7 +428,9 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 		status = ASIStartVideoCapture(cg->cameraNumber);
 		if (status != ASI_SUCCESS) {
 			Log(0, "  > %s: ERROR: ASIStartVideoCapture() failed: %s.\n", cg->ME, getRetCode(status));
-			Log(1, "  > Total errors=%'d\n", numTotalErrors+1);
+			if (! checkMaxErrors(&exitCode, cg->maxErrors))
+				closeUp(exitCode);
+
 			return(status);
 		}
 		capturingVideo = true;
@@ -401,7 +438,6 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 
 	// Make sure the actual time to take the picture is "close" to the requested time.
 	auto tStart = std::chrono::high_resolution_clock::now();
-	int exitCode;
 
 	if (cg->ZWOexposureType == ZWOsnap)
 	{
@@ -409,9 +445,9 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 		if (status != ASI_SUCCESS)
 		{
 			Log(0, "  > %s: ERROR: ASIStartExposure() failed: %s.\n", cg->ME, getRetCode(status));
-			Log(1, "  > Total errors=%'d\n", numTotalErrors+1);
-			if (! checkMaxErrors(&exitCode, maxErrors))
+			if (! checkMaxErrors(&exitCode, cg->maxErrors))
 				closeUp(exitCode);
+
 			return(status);
 		}
 
@@ -435,9 +471,9 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 			{
 				Log(0, "  > %s: ERROR: ASIGetExpStatus() failed after %d sleeps: %s.\n",
 					cg->ME, num_sleeps, getRetCode(status));
-				Log(1, "  > Total errors=%'d\n", numTotalErrors+1);
-				if (! checkMaxErrors(&exitCode, maxErrors))
+				if (! checkMaxErrors(&exitCode, cg->maxErrors))
 					closeUp(exitCode);
+
 				return(status);
 			}
 			usleep(sleep_us);
@@ -452,9 +488,9 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 			// This error DOES happen sometimes.
 			// Unfortunately "s" is either success or failure - not much help.
 			Log(1, "    > ERROR: Exposure failed after %d sleeps, s=%d.\n", num_sleeps, s);
-			Log(1, "  > Total errors=%'d\n", numTotalErrors+1);
-			if (! checkMaxErrors(&exitCode, maxErrors))
+			if (! checkMaxErrors(&exitCode, cg->maxErrors))
 				closeUp(exitCode);
+
 			return(ASI_ERROR_END);
 		}
 
@@ -465,9 +501,9 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 			// every failure appear in the WebUI message center, log with level 1.
 			Log(1, "  > ERROR: ASIGetDataAfterExp() failed after %d sleeps: %s.\n",
 				num_sleeps, getRetCode(status));
-			Log(1, "  > Total errors=%'d\n", numTotalErrors+1);
-			if (! checkMaxErrors(&exitCode, maxErrors))
+			if (! checkMaxErrors(&exitCode, cg->maxErrors))
 				closeUp(exitCode);
+
 			return(status);
 		}
 
@@ -477,10 +513,9 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 		{
 			Log(0, "  > %s: ERROR: Failed getting image: %s.\n",
 				cg->ME, getRetCode(status));
-			Log(1, "  > Total errors=%'d\n", numTotalErrors+1);
 	
 			// Check if we reached the maximum number of consective errors
-			if (! checkMaxErrors(&exitCode, maxErrors))
+			if (! checkMaxErrors(&exitCode, cg->maxErrors))
 				closeUp(exitCode);
 			return(status);
 		}
@@ -571,7 +606,7 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 	char tempBuf[500] = { 0 };
 	char *tb = tempBuf;
 
-	cg->lastMean = computeHistogram(imageBuffer, *cg, true);
+	cg->lastMean = computeHistogram(imageBuffer, *cg, cg->takeDarkFrames ? false : true);
 	sprintf(tb, " @ mean %.3f, %sgain %ld",
 		cg->lastMean, cg->currentAutoGain ? "(auto) " : "", (long) cg->lastGain);
 	cg->lastExposure_us = cg->currentExposure_us;
@@ -582,7 +617,8 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 	// When in auto-exposure mode the returned exposure length is what the driver thinks the
 	// next exposure should be, and will eventually converge on the correct exposure.
 
-	Log(1, "  > GOT IMAGE%s.", tb);
+	Log(1, "  > GOT IMAGE%s.\n", tb);
+
 	ret = ASIGetControlValue(cg->cameraNumber, ASI_EXPOSURE, &suggestedNextExposure_us, &wasAutoExposure);
 	if (ret != ASI_SUCCESS)
 	{
@@ -591,8 +627,14 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 	}
 	else if (cg->ZWOexposureType != ZWOsnap)
 	{
-		Log(3, cg->HB.useHistogram ? " Ignoring suggested next exposure of %s." : "  Suggested next exposure: %s.",
-			length_in_units(suggestedNextExposure_us, true));
+		const char *m;
+		if (cg->HB.useHistogram) {
+			m = " Ignoring suggested next exposure of %s.";
+		} else {
+			m = "  Suggested next exposure: %s.";
+		}
+		Log(3, "  >>> ");
+		Log(3, m, length_in_units(suggestedNextExposure_us, true));
 	}
 	Log(1, "\n");
 
@@ -605,7 +647,7 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 	}
 	else
 	{
-		cg->lastSensorTemp = (long) ((double)temp / cg->divideTemperatureBy);
+		cg->lastSensorTemp = (double)temp / cg->divideTemperatureBy;
 	}
 
 	if (cg->isColorCamera)
@@ -785,13 +827,13 @@ bool checkMaxErrors(int *e, int maxErrors)
 	// even with extremely large timeout values, so apparently ASI_ERROR_TIMEOUT doesn't
 	// necessarily mean it's timing out. Exit forcing us to be restarted.
 	numTotalErrors++;
+	Log(1, "  > Total errors=%'d\n", numTotalErrors);
 	numConsecutiveErrors++; sleep(2);
 	if (numConsecutiveErrors >= maxErrors)
 	{
 		*e = EXIT_RESET_USB;		// exit code. Need to reset USB bus
-		Log(0, "*** %s: ERROR: Maximum number of consecutive errors of %d reached; capture program exited.\n",
+		Log(0, "*** %s: ERROR: Maximum number of consecutive errors of %d reached; capture program exiting.\n",
 			CG.ME, maxErrors);
-		Log(1, "  > Total errors=%'d\n", numTotalErrors+1);
 		return(false);	// gets us out of inner and outer loop
 	}
 	return(true);
@@ -820,7 +862,6 @@ int main(int argc, char *argv[])
 	pthread_mutex_init(&mtxSaveImg, 0);
 	pthread_cond_init(&condStartSave, 0);
 
-	char bufTime[128]			= { 0 };
 	char bufTemp[1024]			= { 0 };
 	char const *bayer[]			= { "RG", "BG", "GR", "GB" };
 	bool justTransitioned		= false;
@@ -832,7 +873,7 @@ int main(int argc, char *argv[])
 	// or night version so the code doesn't always have to check if it's day or night.
 	// The settings have either "day" or "night" in the name.
 	// In theory, almost every setting could have both day and night versions (e.g., width & height),
-	// but the chances of someone wanting different versions.
+	// but the chances of someone wanting different versions are hopefully small.
 
 	int maxHistogramAttempts	= 15;	// max number of times we'll try for a better histogram mean
 
@@ -930,12 +971,6 @@ int main(int argc, char *argv[])
 
 	long originalWidth  = CG.width;
 	long originalHeight = CG.height;
-	// Limit these to a reasonable value based on the size of the sensor.
-	validateLong(&CG.overlay.iTextLineHeight, 0, (long)(iMaxHeight / 2), "Line Height", true);
-	validateLong(&CG.overlay.iTextX, 0, (long)iMaxWidth - 10, "Text X", true);
-	validateLong(&CG.overlay.iTextY, 0, (long)iMaxHeight - 10, "Text Y", true);
-	validateFloat(&CG.overlay.fontsize, 0.1, iMaxHeight / 2, "Font Size", true);
-	validateLong(&CG.overlay.linewidth, 0, (long)(iMaxWidth / 2), "Font Weight", true);
 
 	if (CG.saveCC)
 	{
@@ -952,9 +987,10 @@ int main(int argc, char *argv[])
 	bool ok = true;
 	if (CG.HB.sArgs[0] != '\0')
 	{
-		if (sscanf(CG.HB.sArgs, "%d %d %f %f", &CG.HB.histogramBoxSizeX, &CG.HB.histogramBoxSizeY, &CG.HB.histogramBoxPercentFromLeft, &CG.HB.histogramBoxPercentFromTop) != 4)
+		if (sscanf(CG.HB.sArgs, "%d %d %f %f", &CG.HB.histogramBoxSizeX, &CG.HB.histogramBoxSizeY,
+			&CG.HB.histogramBoxPercentFromLeft, &CG.HB.histogramBoxPercentFromTop) != 4)
 		{
-			Log(0, "*** %s: ERROR: Not enough histogram box parameters should be 4: '%s'\n", CG.ME, CG.HB.sArgs);
+			Log(0, "*** %s: ERROR: Not enough histogram box parameters; should be 4: '%s'\n", CG.ME, CG.HB.sArgs);
 			ok = false;
 		} else {
 			if (CG.HB.histogramBoxSizeX < 1 || CG.HB.histogramBoxSizeY < 1)
@@ -1080,10 +1116,6 @@ int main(int argc, char *argv[])
 	}
 
 	// Initialization
-	int originalITextX		= CG.overlay.iTextX;
-	int originalITextY		= CG.overlay.iTextY;
-	int originalFontsize	= CG.overlay.fontsize;
-	int originalLinewidth	= CG.overlay.linewidth;
 	// Have we displayed "not taking picture during day/night" message, if applicable?
 	bool displayedNoDaytimeMsg		= false;
 	bool displayedNoNighttimeMsg	= false;
@@ -1106,10 +1138,6 @@ int main(int argc, char *argv[])
 		Log(4, "Will adjust gain at transitions\n");
 	}
 
-	if (CG.overlay.ImgExtraText[0] != '\0' && CG.overlay.extraFileAge > 0) {
-		Log(4, "Extra Text File Age Disabled So Displaying Anyway\n");
-	}
-
 	if (CG.ZWOexposureType == ZWOvideo && ! capturingVideo)
 	{
 		// Start video capture; we'll stop when exiting.
@@ -1121,6 +1149,20 @@ int main(int argc, char *argv[])
 		}
 		capturingVideo = true;
 	}
+
+	if (CG.focusMode)
+	{
+		// Make things as efficient as possible.
+		CG.debugLevel = 1;
+		CG.daytimeCapture = true;		CG.daytimeSave = false;
+		CG.nighttimeCapture = true;		CG.nighttimeSave = false;
+		CG.determineFocus = true;
+		CG.dayDelay_ms = 0;
+		CG.nightDelay_ms = 0;
+		CG.consistentDelays = false;
+	}
+
+	// Start taking pictures
 
 	while (bMain)
 	{
@@ -1172,7 +1214,7 @@ int main(int argc, char *argv[])
 			{
 				// Just transitioned from night to day, so execute end of night script
 				Log(1, "Processing end of night data\n");
-				snprintf(bufTemp, sizeof(bufTemp)-1, "%s/scripts/endOfNight.sh &", CG.allskyHome);
+				snprintf(bufTemp, sizeof(bufTemp)-1, "%s/endOfNight.sh &", CG.allskyScripts);
 				system(bufTemp);
 				justTransitioned = false;
 				displayedNoDaytimeMsg = false;
@@ -1187,7 +1229,8 @@ int main(int argc, char *argv[])
 				continue;
 			}
 
-			Log(1, "==========\n=== Starting daytime capture ===\n==========\n");
+			Log(1, "==========\n=== Starting daytime %s ===\n==========\n",
+				CG.focusMode ? "focus mode" : "capture");
 
 			// We only skip initial frames if we are starting in daytime and using auto-exposure.
 			if (numExposures == 0 && CG.dayAutoExposure)
@@ -1271,7 +1314,7 @@ int main(int argc, char *argv[])
 			{
 				// Just transitioned from day to night, so execute end of day script
 				Log(1, "Processing end of day data\n");
-				snprintf(bufTemp, sizeof(bufTemp)-1, "%s/scripts/endOfDay.sh &", CG.allskyHome);
+				snprintf(bufTemp, sizeof(bufTemp)-1, "%s/endOfDay.sh &", CG.allskyScripts);
 				system(bufTemp);
 				justTransitioned = false;
 			}
@@ -1285,7 +1328,8 @@ int main(int argc, char *argv[])
 				continue;
 			}
 
-			Log(1, "==========\n=== Starting nighttime capture ===\n==========\n");
+			Log(1, "==========\n=== Starting nighttime %s ===\n==========\n",
+				CG.focusMode ? "focus mode" : "capture");
 
 			// We only skip initial frames if we are starting in nighttime and using auto-exposure.
 			if (numExposures == 0 && CG.nightAutoExposure)
@@ -1333,10 +1377,30 @@ int main(int argc, char *argv[])
 		}
 		// ========== Done with dark frams / day / night settings
 
+		if (CG.focusMode && numExposures == 1)
+		{
+			// Once we know the correct exposure, manual exposure and gain are faster.
+			if (CG.HB.useHistogram)
+			{
+				// On ZWO, "useHistogram" means we're using auto-exposure.
+				Log(1, "Turning off auto-exposure due to focus mode\n");
+				CG.HB.useHistogram = false;
+			}
+			if (CG.currentAutoGain)
+			{
+				Log(1, "Turning off auto-gain due to focus mode\n");
+				CG.currentAutoGain = false;
+			}
+		}
+
 		CG.myModeMeanSetting.minMean = CG.myModeMeanSetting.currentMean - CG.myModeMeanSetting.currentMean_threshold;
 		CG.myModeMeanSetting.maxMean = CG.myModeMeanSetting.currentMean + CG.myModeMeanSetting.currentMean_threshold;
 
-		Log(3, "minMean=%.3f, maxMean=%.3f\n", CG.myModeMeanSetting.minMean, CG.myModeMeanSetting.maxMean);
+		if (! CG.takeDarkFrames)
+		{
+			// We don't adjust exposure for dark frames.
+			Log(3, "minMean=%.3f, maxMean=%.3f\n", CG.myModeMeanSetting.minMean, CG.myModeMeanSetting.maxMean);
+		}
 
 
 		if (CG.myModeMeanSetting.currentMean > 0.0)
@@ -1394,10 +1458,6 @@ int main(int argc, char *argv[])
 			// Only need to do at the beginning and if bin changes.
 			CG.height						= originalHeight / CG.currentBin;
 			CG.width						= originalWidth / CG.currentBin;
-			CG.overlay.iTextX				= originalITextX / CG.currentBin;
-			CG.overlay.iTextY				= originalITextY / CG.currentBin;
-			CG.overlay.fontsize				= originalFontsize / CG.currentBin;
-			CG.overlay.linewidth			= originalLinewidth / CG.currentBin;
 			CG.HB.currentHistogramBoxSizeX	= CG.HB.histogramBoxSizeX / CG.currentBin;
 			CG.HB.currentHistogramBoxSizeY	= CG.HB.histogramBoxSizeY / CG.currentBin;
 
@@ -1462,12 +1522,7 @@ int main(int argc, char *argv[])
 			Log(1, "STARTING EXPOSURE at: %s   @ %s\n",
 				exposureStart, length_in_units(CG.currentExposure_us, true));
 
-			// Get start time for overlay. Make sure it has the same time as exposureStart.
-			if (CG.overlay.showTime)
-			{
-				sprintf(bufTime, "%s", formatTime(exposureStartDateTime, CG.timeFormat));
-			}
-
+//x printf(">>>>>>>>>>>> pRgb columns=%d, rows=%d, channels=%d, depth=%d, elemSize=%ld\n", pRgb.cols, pRgb.rows, pRgb.channels(), pRgb.depth(), pRgb.elemSize());
 			asiRetCode = takeOneExposure(&CG, pRgb.data);
 			if (asiRetCode == ASI_SUCCESS)
 			{
@@ -1826,80 +1881,73 @@ long saved_newExposure_us = newExposure_us;
 					}
 				}
 
-				// If takeDarkFrames is off, add overlay text to the image
-				if (! CG.takeDarkFrames)
-				{
-					if (CG.overlay.overlayMethod == OVERLAY_METHOD_LEGACY)
-					{
-						(void) doOverlay(pRgb, CG, bufTime, gainChange);
-						if (CG.overlay.showHistogramBox)
-						{
-							// Draw a rectangle where the histogram box is.
-							// Put a black and white line one next to each other so they
-							// can be seen in light and dark images.
-							int lt = cv::LINE_AA, thickness = 2;
-							int X1 = (CG.width * CG.HB.histogramBoxPercentFromLeft) - (CG.HB.histogramBoxSizeX / 2);
-							int X2 = X1 + CG.HB.histogramBoxSizeX;
-							int Y1 = (CG.height * CG.HB.histogramBoxPercentFromTop) - (CG.HB.histogramBoxSizeY / 2);
-							int Y2 = Y1 + CG.HB.histogramBoxSizeY;
-							cv::Scalar outerLine, innerLine;
-							outerLine = cv::Scalar(0,0,0);
-							innerLine = cv::Scalar(255,255,255);
-							cv::rectangle(pRgb, cv::Point(X1, Y1), cv::Point(X2, Y2), outerLine, thickness, lt, 0);
-							cv::rectangle(pRgb, cv::Point(X1+thickness, Y1+thickness), cv::Point(X2-thickness, Y2-thickness), innerLine, thickness, lt, 0);
-						}
-					}
-					if (currentAdjustGain)
-					{
-						// Determine if we need to change the gain on the next image.
-						// This must come AFTER the "showGain" above.
-						gainChange = determineGainChange(CG);
-						setControl(CG.cameraNumber, ASI_GAIN, CG.currentGain + gainChange, CG.currentAutoGain ? ASI_TRUE : ASI_FALSE);
-					}
-				}
+				if (meanIsOK(&CG, exposureStartDateTime)) {		// meanIsOK() outputs any error message
 
-				// Save the image
-				if (! bSavingImg)
-				{
-					// For dark frames we already know the finalFilename.
 					if (! CG.takeDarkFrames)
 					{
-						// Create the name of the file that goes in the images/<date> directory.
-						snprintf(CG.finalFileName, sizeof(CG.finalFileName), "%s-%s.%s",
-							CG.fileNameOnly, formatTime(exposureStartDateTime, "%Y%m%d%H%M%S"), CG.imageExt);
-						snprintf(CG.fullFilename, sizeof(CG.fullFilename), "%s/%s", CG.saveDir, CG.finalFileName);
+						if (currentAdjustGain)
+						{
+							// Determine if we need to change the gain on the next image.
+							// This must come AFTER the "showGain" above.
+							gainChange = determineGainChange(CG);
+							setControl(CG.cameraNumber, ASI_GAIN, CG.currentGain + gainChange, CG.currentAutoGain ? ASI_TRUE : ASI_FALSE);
+						}
 					}
 
-					pthread_mutex_lock(&mtxSaveImg);
-					pthread_cond_signal(&condStartSave);
-					pthread_mutex_unlock(&mtxSaveImg);
-				}
-				else
-				{
-					// Hopefully the user can use the time it took to save a file to disk
-					// to help determine why they are getting this warning.
-					// Perhaps their disk is very slow or their delay is too short.
-					Log(-1, "  > WARNING: currently saving an image; cannot save new one at %s.\n", exposureStart);
+					// Save the image
+					if (! bSavingImg)
+					{
+						// For dark frames we already know the finalFilename.
+						if (! CG.takeDarkFrames)
+						{
+							// Create the name of the file that goes in the images/<date> directory.
+							snprintf(CG.finalFileName, sizeof(CG.finalFileName), "%s-%s.%s",
+								CG.fileNameOnly, formatTime(exposureStartDateTime, "%Y%m%d%H%M%S"), CG.imageExt);
+							snprintf(CG.fullFilename, sizeof(CG.fullFilename), "%s/%s", CG.saveDir, CG.finalFileName);
+						}
 
-					// TODO: wait for the prior image to finish saving.
+						if (CG.focusMode) {
+							saveImage();
+						} else {
+							// In non-focusMode we save the image in the background since processing
+							// the image can take a long time.
+							pthread_mutex_lock(&mtxSaveImg);
+							pthread_cond_signal(&condStartSave);
+							pthread_mutex_unlock(&mtxSaveImg);
+						}
+					}
+					else
+					{
+						// Hopefully the user can use the time it took to save a file to disk
+						// to help determine why they are getting this warning.
+						// Perhaps their disk is very slow or their delay is too short.
+						Log(-1, "  > WARNING: currently saving an image; cannot save new one at %s.\n", exposureStart);
+
+						// TODO: wait for the prior image to finish saving.
+					}
 				}
 
-				std::string s;
-				if (CG.currentAutoExposure)
-				{
-					s = "auto";
+				// See if we should exit.
+				if (CG.maxImages > 0 && numExposures >= CG.maxImages) {
+					closeUp(EXIT_STOP);
 				}
-				else if (CG.HB.useHistogram)
-				{
-					s = "histogram";
-				} else {
-					s = "manual";
-				}
-				// Delay applied before next exposure
-				delayBetweenImages(CG, CG.lastExposure_us, s);
-
-				dayOrNight = calculateDayOrNight(CG.latitude, CG.longitude, CG.angle);
 			}
+
+			std::string s;
+			if (CG.currentAutoExposure)
+			{
+				s = "auto";
+			}
+			else if (CG.HB.useHistogram)
+			{
+				s = "histogram";
+			} else {
+				s = "manual";
+			}
+			// Delay applied before next exposure
+			delayBetweenImages(CG, CG.lastExposure_us, s);
+
+			dayOrNight = calculateDayOrNight(CG.latitude, CG.longitude, CG.angle);
 		}
 
 		if (lastDayOrNight != dayOrNight)

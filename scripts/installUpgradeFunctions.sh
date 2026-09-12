@@ -6,40 +6,37 @@
 ######################################### variables
 
 # export to keep shellcheck quiet
+
+	# This file is created during installation and used by PHP and Python scripts.
+export ALLSKY_VARIABLES_JSON_FILE="${ALLSKY_HOME}/variables.json"
+
 	# The login installing Allsky
 export ALLSKY_OWNER=$( id --group --name )
 export ALLSKY_GROUP=${ALLSKY_OWNER}
-export WEBSERVER_OWNER="www-data"
-export WEBSERVER_GROUP="${WEBSERVER_OWNER}"
-export NEED_TO_UPDATE="XX_NEED_TO_UPDATE_XX"
+export ALLSKY_WEBSERVER_OWNER="www-data"
+export ALLSKY_WEBSERVER_GROUP="${ALLSKY_WEBSERVER_OWNER}"
+export ALLSKY_NEED_TO_UPDATE="XX_NEED_TO_UPDATE_XX"
 
 	# Central location for all master repository files.
 export ALLSKY_REPO="${ALLSKY_HOME}/config_repo"
 export REPO_WEBCONFIG_FILE="${ALLSKY_REPO}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}.repo"
 export REPO_SUDOERS_FILE="${ALLSKY_REPO}/sudoers.repo"
-export ALLSKY_DEFINES_INC="allskyDefines.inc"
-export REPO_WEBUI_DEFINES_FILE="${ALLSKY_REPO}/${ALLSKY_DEFINES_INC}.repo"
 export REPO_LIGHTTPD_FILE="${ALLSKY_REPO}/lighttpd.conf.repo"
-export REPO_AVI_FILE="${ALLSKY_REPO}/avahi-daemon.conf.repo"
-export REPO_OPTIONS_FILE="${ALLSKY_REPO}/$( basename "${OPTIONS_FILE}" ).repo"
+export REPO_AVAHI_FILE="${ALLSKY_REPO}/avahi-daemon.conf.repo"
+export REPO_OPTIONS_FILE="${ALLSKY_REPO}/$( basename "${ALLSKY_OPTIONS_FILE}" ).repo"
 export REPO_ENV_FILE="${ALLSKY_REPO}/$( basename "${ALLSKY_ENV}" ).repo"
 export REPO_WEBSITE_CONFIGURATION_FILE="${ALLSKY_REPO}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}.repo"
 
-##### Information on prior Allsky versions and files.
-	# Location of old-style WebUI and Website.
-# TODO: delete these two in v2025.xx.xx
-export OLD_WEBUI_LOCATION="/var/www/html"
-export OLD_WEBSITE_LOCATION="${OLD_WEBUI_LOCATION}/allsky"
-
 	# Directory of prior version of Allsky, if it exists.
-export PRIOR_ALLSKY_DIR="$( dirname "${ALLSKY_HOME}" )/${ALLSKY_INSTALL_DIR}-OLD"
+export ALLSKY_PRIOR_DIR="$( dirname "${ALLSKY_HOME}" )/${ALLSKY_INSTALL_DIR}-OLD"
+export OLDEST_DIR="${ALLSKY_PRIOR_DIR/OLD/OLDEST}"
 	# Prior "config" directory, if it exists.
-export PRIOR_CONFIG_DIR="${PRIOR_ALLSKY_DIR}/$( basename "${ALLSKY_CONFIG}" )"
-export PRIOR_WEBSITE_DIR="${PRIOR_ALLSKY_DIR}${ALLSKY_WEBSITE/${ALLSKY_HOME}/}"
+export PRIOR_CONFIG_DIR="${ALLSKY_PRIOR_DIR}/$( basename "${ALLSKY_CONFIG}" )"
+export PRIOR_WEBSITE_DIR="${ALLSKY_PRIOR_DIR}${ALLSKY_WEBSITE/${ALLSKY_HOME}/}"
 export PRIOR_WEBSITE_CONFIG_FILE="${PRIOR_WEBSITE_DIR}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
 export PRIOR_REMOTE_WEBSITE_CONFIGURATION_FILE="${PRIOR_CONFIG_DIR}/${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME}"
-export PRIOR_PYTHON_VENV="${PRIOR_ALLSKY_DIR}/venv/lib"
-export PRIOR_MYFILES_DIR="${ALLSKY_MYFILES_DIR/${ALLSKY_HOME}/${PRIOR_ALLSKY_DIR}}"
+export PRIOR_PYTHON_VENV="${ALLSKY_PRIOR_DIR}/venv/lib"
+export PRIOR_MYFILES_DIR="${ALLSKY_MYFILES_DIR/${ALLSKY_HOME}/${ALLSKY_PRIOR_DIR}}"
 
 	# Name of setting that determines version of Website config file.
 export WEBSITE_CONFIG_VERSION="ConfigVersion"
@@ -47,7 +44,7 @@ export WEBSITE_CONFIG_VERSION="ConfigVersion"
 export WEBSITE_ALLSKY_VERSION="config.AllskyVersion"
 
 	# Location of prior files varies by release; this is most recent location.
-# TODO: delete these two in v2025.xx.xx
+# TODO: delete these two in release after v2026...
 export PRIOR_CONFIG_FILE="${PRIOR_CONFIG_DIR}/config.sh"
 export PRIOR_FTP_FILE="${PRIOR_CONFIG_DIR}/ftp-settings.sh"
 
@@ -55,6 +52,9 @@ export PRIOR_FTP_FILE="${PRIOR_CONFIG_DIR}/ftp-settings.sh"
 export LIGHTTPD_LOG_DIR="/var/log/lighttpd"
 export LIGHTTPD_LOG_FILE="${LIGHTTPD_LOG_DIR}/error.log"
 export LIGHTTPD_CONFIG_FILE="/etc/lighttpd/lighttpd.conf"
+export LIGHTTPD_ALLSKY_STRING="# Allsky changes"	# String that's added to the config file
+
+export FINAL_SUDOERS_FILE="/etc/sudoers.d/allsky"
 
 ######################################### functions
 
@@ -94,7 +94,7 @@ function get_Git_version()
 	local BRANCH="${1}"
 	local PACKAGE="${2}"
 	local VF="$( basename "${ALLSKY_VERSION_FILE}" )"
-	local V="$( curl --show-error --silent "${GITHUB_RAW_ROOT}/${PACKAGE}/${BRANCH}/${VF}" | tr -d '\n\r' )"
+	local V="$( curl --show-error --silent "${ALLSKY_GITHUB_RAW_ROOT}/${PACKAGE}/${BRANCH}/${VF}" | tr -d '\n\r' )"
 	# "404" means the branch isn't found since all new branches have a version file.
 	[[ ${V} != "404: Not Found" ]] && echo -n "${V}"
 }
@@ -171,45 +171,6 @@ function get_variable()
 	return 0
 }
 
-
-#####
-# Strip out all color escape sequences.
-# The message may have an actual escape character or may have the
-# four characters "\033" which represent an escape character.
-
-# I don't know how to replace "\n" with an actual newline in sed,
-# and there HAS to be a better way to strip the escape sequences.
-# I simply replace actual escape characters in the input with "033" then
-# replace "033[" with "033X".
-# Feel free to improve...
-function remove_colors()
-{
-	local MSG="${1}"
-
-	local ESC="$( echo -en '\033' )"
-
-	# Ignore any initial "\" in the colors.
-	# In case a variable isn't defined, set it to a string that won't be found.
-	local G="${GREEN/\\/}"							; G="${G/033\[/033X}"
-	local Y="${YELLOW/\\/}"		; Y="${Y:-abcxyz}"	; Y="${Y/033\[/033X}"
-	local R="${RED/\\/}"		; R="${R:-abcxyz}"	; R="${R/033\[/033X}"
-	#shellcheck disable=SC2154
-	local D="${cDEBUG/\\/}"		; D="${D:-abcxyz}"	; D="${D/033\[/033X}"
-	local N="${NC/\\/}"			; N="${N:-abcxyz}"	; N="${N/033\[/033X}"
-
-	# Outer "echo -e" handles "\n" (2 characters) in input.
-	# No "-e" needed on inner "echo".
-	echo -e "$( echo "${MSG}" |
-		sed -e "s/${ESC}/033/g" \
-			-e "s/033\[/033X/g" \
-			-e "s/${G}//g" \
-			-e "s/${Y}//g" \
-			-e "s/${R}//g" \
-			-e "s/${D}//g" \
-			-e "s/${N}//g" \
-			-e "s/\\\Z.//g" \
-	)"
-}
 
 #####
 # Display a message of various types in appropriate colors.
@@ -297,6 +258,10 @@ function display_msg()
 	if [[ ! -f ${DISPLAY_MSG_LOG} ]]; then
 		mkdir -p "$( dirname "${DISPLAY_MSG_LOG}" )"
 		touch "${DISPLAY_MSG_LOG}"
+	elif [[ ! -w ${DISPLAY_MSG_LOG} ]]; then
+		# A user had a problem where the log file was owned by the web server,
+		# so make sure it's owned by the user.
+		sudo chown "${ALLSKY_OWNER}:${ALLSKY_GROUP}" "${DISPLAY_MSG_LOG}"
 	fi
 
 	# Assume if GREEN isn't defined then no colors are defined.
@@ -440,7 +405,7 @@ function update_json_file()		# [-d] field, new value, file, [type]
 		return 1
 	fi
 
-	FILE="${3:-${SETTINGS_FILE}}"
+	FILE="${3:-${ALLSKY_SETTINGS_FILE}}"
 	TEMP="/tmp/$$"
 
 	if [[ ${DELETE} == "true" ]]; then
@@ -499,17 +464,20 @@ function update_array_field()
 	if [[ ${NEW_VALUE} == "--delete" ]]; then
 		update_json_file -d ".${ARRAY}[${I}]" "" "${FILE}"
 	else
-		local URL=".${ARRAY}[${I}].${FIELD}"
-		local V="$( settings "${URL}" "${FILE}" )"
+		local F=".${ARRAY}[${I}].${FIELD}"
+		local V="$( settings "${F}" "${FILE}" )"
 		if [[ ${V} != "${NEW_VALUE}" ]]; then
-			update_json_file "${URL}" "${NEW_VALUE}" "${FILE}"
+			update_json_file "${F}" "${NEW_VALUE}" "${FILE}"
+			if [[ $? -ne 0 ]]; then
+				echo "WARNING: Unable to update '${VALUE}' to '${NEW_VALUE} in '${FILE}'." >&2
+			fi
 		fi
 	fi
 }
 
 
 ####
-# Replace all the ${NEED_TO_UPDATE} placeholders and
+# Replace all the ${ALLSKY_NEED_TO_UPDATE} placeholders and
 # update mini-timelapse URL.
 function replace_website_placeholders()
 {
@@ -542,9 +510,9 @@ function replace_website_placeholders()
 			MINI_TLAPSE_DISPLAY_VALUE="true"
 			if [[ ${TYPE} == "local" ]]; then
 				#shellcheck disable=SC2153
-				MINI_TLAPSE_URL_VALUE="/${IMG_DIR}/mini-timelapse.mp4"
+				MINI_TLAPSE_URL_VALUE="/${ALLSKY_MINITIMELAPSE_URL}"
 			else
-				MINI_TLAPSE_URL_VALUE="mini-timelapse.mp4"
+				MINI_TLAPSE_URL_VALUE="${ALLSKY_MINITIMELAPSE_NAME}"
 			fi
 		fi
 	else
@@ -553,7 +521,7 @@ function replace_website_placeholders()
 		return 1
 	fi
 
-	# For these setting, check if it's == ${NEED_TO_UPDATE}.
+	# For these setting, check if it's == ${ALLSKY_NEED_TO_UPDATE}.
 	# If so, and the settings file's value isn't null, update it in the config file.
 	# If the config file has a value, use it, even if it's "".
 
@@ -561,7 +529,7 @@ function replace_website_placeholders()
 	local LENS  COMPUTER  IMAGE_NAME
 
 	LATITUDE="$( settings ".config.latitude" "${FILE}" )"
-	if [[ ${LATITUDE} == "${NEED_TO_UPDATE}" ]]; then
+	if [[ ${LATITUDE} == "${ALLSKY_NEED_TO_UPDATE}" ]]; then
 		# Convert latitude and longitude to use N, S, E, W.
 		TEMP="$( settings ".latitude" )"
 		if [[ -n ${TEMP} ]]; then
@@ -571,7 +539,7 @@ function replace_website_placeholders()
 	[[ -z ${LATITUDE} ]] && display_msg --log warning "latitude is empty"
 
 	LONGITUDE="$( settings ".config.longitude" "${FILE}" )"
-	if [[ ${LONGITUDE} == "${NEED_TO_UPDATE}" ]]; then
+	if [[ ${LONGITUDE} == "${ALLSKY_NEED_TO_UPDATE}" ]]; then
 		TEMP="$( settings ".longitude" )"
 		if [[ -n ${TEMP} ]]; then
 			LONGITUDE="$( convertLatLong "${TEMP}" "longitude" )"
@@ -586,7 +554,7 @@ function replace_website_placeholders()
 	fi
 
 	LOCATION="$( settings ".config.location" "${FILE}" )"
-	if [[ ${LOCATION} == "${NEED_TO_UPDATE}" ]]; then
+	if [[ ${LOCATION} == "${ALLSKY_NEED_TO_UPDATE}" ]]; then
 		TEMP="$( settings ".location" )"
 		if [[ -n ${TEMP} ]]; then
 			LOCATION="${TEMP}"
@@ -594,7 +562,7 @@ function replace_website_placeholders()
 	fi
 
 	OWNER="$( settings ".config.owner" "${FILE}" )"
-	if [[ ${OWNER} == "${NEED_TO_UPDATE}" ]]; then
+	if [[ ${OWNER} == "${ALLSKY_NEED_TO_UPDATE}" ]]; then
 		TEMP="$( settings ".owner" )"
 		if [[ -n ${TEMP} ]]; then
 			OWNER="${TEMP}"
@@ -602,13 +570,13 @@ function replace_website_placeholders()
 	fi
 
 	CAMERA="$( settings ".config.camera" "${FILE}" )"
-	if [[ ${CAMERA} == "${NEED_TO_UPDATE}" ]]; then
+	if [[ ${CAMERA} == "${ALLSKY_NEED_TO_UPDATE}" ]]; then
 		# TYPE and MODEL are already in the environment.
 		CAMERA="${CAMERA_TYPE} ${CAMERA_MODEL}"
 	fi
 
 	LENS="$( settings ".config.lens" "${FILE}" )"
-	if [[ ${LENS} == "${NEED_TO_UPDATE}" ]]; then
+	if [[ ${LENS} == "${ALLSKY_NEED_TO_UPDATE}" ]]; then
 		TEMP="$( settings ".lens" )"
 		if [[ -n ${TEMP} ]]; then
 			LENS="${TEMP}"
@@ -616,7 +584,7 @@ function replace_website_placeholders()
 	fi
 
 	COMPUTER="$( settings ".config.computer" "${FILE}" )"
-	if [[ ${COMPUTER} == "${NEED_TO_UPDATE}" ]]; then
+	if [[ ${COMPUTER} == "${ALLSKY_NEED_TO_UPDATE}" ]]; then
 		TEMP="$( settings ".computer" )"
 		if [[ -n ${TEMP} ]]; then
 			COMPUTER="${TEMP}"
@@ -624,7 +592,7 @@ function replace_website_placeholders()
 	fi
 
 	EQUIPMENT="$( settings ".config.equipmentinfo" "${FILE}" )"
-	if [[ ${EQUIPMENT} == "${NEED_TO_UPDATE}" ]]; then
+	if [[ ${EQUIPMENT} == "${ALLSKY_NEED_TO_UPDATE}" ]]; then
 		TEMP="$( settings ".equipmentinfo" )"
 		if [[ -n ${TEMP} ]]; then
 			EQUIPMENT="${TEMP}"
@@ -633,10 +601,12 @@ function replace_website_placeholders()
 
 	if [[ ${TYPE} == "local" ]]; then
 		#shellcheck disable=SC2153
-		IMAGE_NAME="/${IMG_DIR}/${FULL_FILENAME}"
+		IMAGE_NAME="/${ALLSKY_IMG_DIR}/${ALLSKY_FULL_FILENAME}"
 	else
-		IMAGE_NAME="${FULL_FILENAME}"
+		IMAGE_NAME="${ALLSKY_FULL_FILENAME}"
 	fi
+
+	display_msg --logonly info "Updating entries in ${FILE}."
 
 	"${ALLSKY_SCRIPTS}/updateJsonFile.sh" --verbosity silent --file "${FILE}" \
 		config.imageName			"imageName"			"${IMAGE_NAME}" \
@@ -678,6 +648,14 @@ function prepare_local_website()
 		MSG="Creating default ${ALLSKY_WEBSITE_CONFIGURATION_NAME}."
 		display_msg --log progress "${MSG}"
 		cp "${REPO_WEBSITE_CONFIGURATION_FILE}" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
+
+		# Set permissions on website configuration file
+		if [[ -f "${ALLSKY_WEBSITE_CONFIGURATION_FILE}" ]]; then
+			display_msg --log info "Setting permissions on website configuration file"
+			sudo chown "${ALLSKY_OWNER}":"${ALLSKY_WEBSERVER_GROUP}" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
+			sudo chmod 664 "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
+		fi
+
 	fi
 
 	if replace_website_placeholders "local" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}" ; then
@@ -714,8 +692,12 @@ function update_old_website_config_file()
 	# Version: 2 from v2024.12.06
 	# Version: 3 from v2024.12.06_01
 	#	Added "meteors/"
-	# Current version: 4 from v2024.12.06_03
+	# Version: 4 from v2024.12.06_03
 	#	Added "equipmentinfo" setting
+	# Current version: 5 from v2025.xx.xx
+	#	Changed "imageName" to "/current/image.jpg" in local config file.
+	#		imageName is updated in replace_website_placeholders() so not done here.
+	#	timelapse and mini-timelapse icons changed.
 
 	if [[ ${PRIOR_VERSION} -eq 1 ]]; then
 		# These steps bring version 1 up to 2.
@@ -817,6 +799,27 @@ function update_old_website_config_file()
 		fi
 	fi
 
+	if [[ ${PRIOR_VERSION} -le 5 ]] ; then	# use -le so testers get updated.
+		# Update timelapse icons
+		update_array_field "${FILE}" "homePage.leftSidebar" "icon" \
+			"fa fa-2x fa-fw fa-play-circle" "fa fa-2x fa-fw fa-video"
+		update_array_field "${FILE}" "homePage.leftSidebar" "icon" \
+			"fa fa-2x fa-fw icon-mini-timelapse" "fa fa-2x fa-fw fa-file-video"
+	fi
+
+	if [[ ${PRIOR_VERSION} -le 6 ]] ; then
+		# Replace the old XXX_cardinal-only colours with the current full colour set.
+		TEMP="/tmp/$$"
+		jq --indent 4 --slurpfile repo "${REPO_WEBSITE_CONFIGURATION_FILE}" \
+			'.config.colours = $repo[0].config.colours' "${FILE}" > "${TEMP}"
+		if [[ $? -eq 0 ]]; then
+			# cp so it keeps ${FILE}'s attributes
+			cp "${TEMP}" "${FILE}" && rm -f "${TEMP}"
+		else
+			rm -f "${TEMP}"
+		fi
+	fi
+
 	# Set to current config and Allsky versions.
 	update_json_file ".${WEBSITE_CONFIG_VERSION}" "${CURRENT_VERSION}" "${FILE}"
 	update_json_file ".${WEBSITE_ALLSKY_VERSION}" "${ALLSKY_VERSION}" "${FILE}"
@@ -826,21 +829,30 @@ function update_old_website_config_file()
 # Create the lighttpd configuration file.
 function create_lighttpd_config_file()
 {
-	local TMP="/tmp/x"
+	local ADD_STRING="true"
+	[[ ${1} == "--no-string" ]] && ADD_STRING="false"
 
-	sudo rm -f "${TMP}"
+	local TMP="/tmp/x.${RANDOM}"
+
 	sed \
 		-e "s;XX_ALLSKY_WEBUI_XX;${ALLSKY_WEBUI};g" \
-		-e "s;XX_WEBSERVER_OWNER_XX;${WEBSERVER_OWNER};g" \
-		-e "s;XX_WEBSERVER_GROUP_XX;${WEBSERVER_GROUP};g" \
+		-e "s;XX_ALLSKY_WEBSERVER_OWNER_XX;${ALLSKY_WEBSERVER_OWNER};g" \
+		-e "s;XX_ALLSKY_WEBSERVER_GROUP_XX;${ALLSKY_WEBSERVER_GROUP};g" \
 		-e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};g" \
+		-e "s;XX_ALLSKY_CURRENT_DIR_XX;${ALLSKY_CURRENT_DIR};g" \
 		-e "s;XX_ALLSKY_IMAGES_XX;${ALLSKY_IMAGES};g" \
-		-e "s;XX_ALLSKY_CONFIG_XX;${ALLSKY_CONFIG};g" \
 		-e "s;XX_ALLSKY_WEBSITE_XX;${ALLSKY_WEBSITE};g" \
+		-e "s;XX_ALLSKY_WEB_LOGS_XX;${ALLSKY_WEB_LOGS};g" \
 		-e "s;XX_ALLSKY_DOCUMENTATION_XX;${ALLSKY_DOCUMENTATION};g" \
 		-e "s;XX_ALLSKY_OVERLAY_XX;${ALLSKY_OVERLAY};g" \
-		-e "s;XX_MY_OVERLAY_TEMPLATES_XX;${MY_OVERLAY_TEMPLATES};g" \
+		-e "s;XX_ALLSKY_MY_OVERLAY_TEMPLATES_XX;${ALLSKY_MY_OVERLAY_TEMPLATES};g" \
 			"${REPO_LIGHTTPD_FILE}"  >  "${TMP}"
+
+	if [[ ${ADD_STRING} == "true" ]]; then
+		# Add the string that indicates the web server and its dependencies have been installed.
+		echo "${LIGHTTPD_ALLSKY_STRING}" >> "${TMP}"
+	fi
+
 	sudo install -m 0644 "${TMP}" "${LIGHTTPD_CONFIG_FILE}" && rm -f "${TMP}"
 }
 
@@ -848,15 +860,16 @@ function create_lighttpd_config_file()
 # Create the lighttpd log file with permissions so user can update it.
 function create_lighttpd_log_file()
 {
-	display_msg --log progress "Creating new ${LIGHTTPD_LOG_FILE}."
+	display_msg --logonly progress "Creating new ${LIGHTTPD_LOG_FILE}."
 
 	# Remove any old log files.
 	# Start off with a 0-length log file the user can write to.
 	sudo chmod 755 "${LIGHTTPD_LOG_DIR}"
 	sudo rm -fr "${LIGHTTPD_LOG_DIR}"/*
-	sudo truncate -s 0 "${LIGHTTPD_LOG_FILE}"
+
+	sudo touch "${LIGHTTPD_LOG_FILE}"
 	sudo chmod 664 "${LIGHTTPD_LOG_FILE}"
-	sudo chown "${WEBSERVER_GROUP}:${ALLSKY_GROUP}" "${LIGHTTPD_LOG_FILE}"
+	sudo chown "${ALLSKY_WEBSERVER_GROUP}:${ALLSKY_GROUP}" "${LIGHTTPD_LOG_FILE}"
 }
 
 ####
@@ -971,16 +984,308 @@ function recheck_swap()
 	check_swap "after_install"  "true"
 }
 
+#
+# Determine which swap management system is currently being used.
+#
+# The result is returned in the global variable SWAP_SYSTEM.
+#
+# Possible values:
+#   rpi-swap         - Modern Raspberry Pi OS swap management (Bookworm/Trixie)
+#   dphys-swapfile   - Legacy Raspberry Pi swap management
+#   unknown          - Manual, custom or unsupported configuration
+#
+# How it works:
+#
+# 1) The function first checks active systemd swap units because this is the
+#    most reliable source of information about the currently active swap
+#    mechanism.
+#
+# 2) If an active swap unit contains references to "rpi-swap" then the system
+#    is using the newer Raspberry Pi swap framework.
+#
+# 3) If an active swap unit contains references to "dphys-swapfile" then the
+#    legacy swap system is being used.
+#
+# 4) If neither can be identified from active units, fallback checks are used:
+#      - Presence of dphys-swapfile.service
+#      - Presence of /etc/dphys-swapfile
+#      - Presence of /etc/rpi/swap.conf or /etc/rpi/swap.conf.d
+#
+# 5) If nothing matches, SWAP_SYSTEM is set to "unknown".
+#
+get_swap_system()
+{
+    SWAP_SYSTEM="unknown"
+
+    # Check active swap units first
+    if systemctl list-units --type=swap --no-legend >/dev/null 2>&1; then
+        while read -r unit _; do
+            [[ -z "${unit:-}" ]] && continue
+
+            local desc
+            local fragment
+            local source
+
+            desc="$(systemctl show "${unit}" -p Description --value 2>/dev/null || true)"
+            fragment="$(systemctl show "${unit}" -p FragmentPath --value 2>/dev/null || true)"
+            source="$(systemctl show "${unit}" -p SourcePath --value 2>/dev/null || true)"
+
+            if echo "${desc} ${fragment} ${source}" | grep -qi 'rpi-swap'; then
+                SWAP_SYSTEM="rpi-swap"
+                return 0
+            fi
+
+            if echo "${desc} ${fragment} ${source}" | grep -qi 'dphys-swapfile'; then
+                SWAP_SYSTEM="dphys-swapfile"
+                return 0
+            fi
+        done < <(systemctl list-units --type=swap --no-legend 2>/dev/null)
+    fi
+
+    # Fallback checks
+    if systemctl list-unit-files 2>/dev/null | grep -q '^dphys-swapfile\.service'; then
+        SWAP_SYSTEM="dphys-swapfile"
+        return 0
+    fi
+
+    if [[ -f /etc/dphys-swapfile ]]; then
+        SWAP_SYSTEM="dphys-swapfile"
+        return 0
+    fi
+
+    if [[ -f /etc/rpi/swap.conf || -d /etc/rpi/swap.conf.d ]]; then
+        SWAP_SYSTEM="rpi-swap"
+        return 0
+    fi
+
+    return 1
+}
+
+#
+# Get the currently configured swap size.
+#
+# The function determines the active swap management system and then attempts
+# to retrieve the configured swap size in MiB.
+#
+# Returned values:
+#
+#   CURRENT_SWAP
+#       Size of configured swap in MiB.
+#
+#   SWAP_SYSTEM
+#       Swap system detected by get_swap_system().
+#
+#   SWAP_MECHANISM
+#       rpi-swap Mechanism value when SWAP_SYSTEM is rpi-swap.
+#
+# Notes:
+#
+# - For rpi-swap:
+#     The configured size and mechanism are read from the active configuration
+#     files.
+#
+# - For dphys-swapfile:
+#     The size is read from CONF_SWAPSIZE in /etc/dphys-swapfile.
+#
+# - If the configured size cannot be determined, the function falls back to
+#   reading the currently active swap size from swapon.
+#
+# - If multiple swap devices exist, the total size is returned.
+#
+get_swap_info()
+{
+    CURRENT_SWAP=0
+    SWAP_MECHANISM=""
+
+    get_swap_system
+
+    case "${SWAP_SYSTEM}" in
+
+        rpi-swap)
+
+            local config_file
+            local config_files=()
+            local configured_size=""
+            local key
+            local value
+
+            if [[ -f /etc/rpi/swap.conf ]]; then
+                config_files+=("/etc/rpi/swap.conf")
+            fi
+
+            if [[ -d /etc/rpi/swap.conf.d ]]; then
+                while IFS= read -r config_file; do
+                    [[ -n "${config_file}" ]] && config_files+=("${config_file}")
+                done < <(find /etc/rpi/swap.conf.d -type f | sort)
+            fi
+
+            # Read the last configured values after applying files in order.
+            if [[ ${#config_files[@]} -gt 0 ]]; then
+                while IFS='=' read -r key value; do
+                    case "${key}" in
+                        FixedSizeMiB)
+                            configured_size="${value}"
+                            ;;
+                        Mechanism)
+                            SWAP_MECHANISM="${value}"
+                            ;;
+                    esac
+                done < <(
+                    awk -F= '
+                        /^[[:space:]]*(FixedSizeMiB|Mechanism)[[:space:]]*=/ {
+                            key = $1
+                            value = $2
+                            sub(/^[[:space:]]+/, "", key)
+                            sub(/[[:space:]]+$/, "", key)
+                            sub(/[;#].*/, "", value)
+                            sub(/^[[:space:]]+/, "", value)
+                            sub(/[[:space:]]+$/, "", value)
+                            print key "=" value
+                        }
+                    ' "${config_files[@]}"
+                )
+            fi
+
+            if [[ -n "${configured_size}" ]]; then
+                CURRENT_SWAP="${configured_size}"
+                return 0
+            fi
+            ;;
+
+        dphys-swapfile)
+
+            if [[ -f /etc/dphys-swapfile ]]; then
+
+                local configured_size
+
+                configured_size="$(
+                    awk -F= '
+                        /^\s*CONF_SWAPSIZE\s*=/ {
+                            gsub(/[[:space:]]/, "", $2)
+                            print $2
+                        }
+                    ' /etc/dphys-swapfile
+                )"
+
+                if [[ -n "${configured_size}" ]]; then
+                    CURRENT_SWAP="${configured_size}"
+                    return 0
+                fi
+            fi
+            ;;
+
+    esac
+
+    #
+    # Fallback:
+    # Sum currently active swap devices from swapon output.
+    #
+
+    local active_swap_kib
+
+    active_swap_kib="$(
+        swapon --noheadings --bytes --show=SIZE 2>/dev/null |
+        awk '{ total += $1 } END { print total }'
+    )"
+
+    if [[ -n "${active_swap_kib}" && "${active_swap_kib}" -gt 0 ]]; then
+        CURRENT_SWAP="$(( active_swap_kib / 1024 / 1024 ))"
+        return 0
+    fi
+
+    return 1
+}
+
+#
+# Sets the swap size and mechanism for rpi-swap.
+#
+# NOTE: rpi-swap REQUIRES a reboot for changes to take effect, so this function does not attempt 
+# to apply changes immediately.
+#
+function set_rpi_swap()
+{
+		local MECHANISM="${SWAP_MECHANISM:-swapfile}"
+		local RPI_SWAP_CONFIG_DIR="/etc/rpi/swap.conf.d"
+		local RPI_SWAP_OVERRIDE="/etc/rpi/swap.conf.d/80-allsky.conf"
+
+		if ! sudo mkdir -p "${RPI_SWAP_CONFIG_DIR}" >/dev/null 2>&1; then
+				MSG="Failed to create ${RPI_SWAP_CONFIG_DIR}"
+				m "${MSG}" "" "--logonly" "info" "${CALLED_FROM}"
+				return 1
+		fi
+
+		{
+				echo "[Main]"
+				echo "Mechanism=${MECHANISM}"
+
+				if [[ ${MECHANISM} == "swapfile" || ${MECHANISM} == "zram+file" ]]; then
+					echo
+					echo "[File]"
+					echo "FixedSizeMiB=${NEW_SIZE}"
+				fi
+		} | sudo tee "${RPI_SWAP_OVERRIDE}" >/dev/null
+
+		set_reboot_needed
+		MSG="rpi-swap changes require a reboot before they take effect."
+		m "${MSG}" "" "--log" "progress" "${CALLED_FROM}"
+}
+
+#
+# Selects the swap mechanism for rpi-swap.
+#
+# zram - Compressed RAM swap only. User does NOT control the size
+# swapfile - Disk-backed swap file only. User can specify the size
+# zram+file - ZRAM plus a disk swap file. User can specify the size of the disk swap file, 
+#             but not the ZRAM size which is automatically determined by rpi-swap.
+# none - Disable swap managed by rpi-swap
+#
+# Returned values:
+#
+# The selected option
+#
+select_swap_mechanism()
+{
+
+    local choice
+    local default_mechanism="${SWAP_MECHANISM:-swapfile}"
+
+    choice=$(
+        whiptail \
+            --title "Swap Configuration" \
+            --default-item "${default_mechanism}" \
+            --menu "Select the swap mechanism to use, if you are unsure then please select swapfile:" \
+            16 "${WT_WIDTH}" 5 \
+            "swapfile"  "Disk-backed swap only" \
+            "zram"      "Compressed RAM swap only" \
+            "zram+file" "Compressed RAM swap with disk swap" \
+            "none"      "Disable swap" \
+            3>&1 1>&2 2>&3
+    )
+
+    local exit_status=$?
+
+    if [[ ${exit_status} -ne 0 || -z ${choice} ]]; then
+        choice="${default_mechanism}"
+    fi
+
+    echo "${choice}"
+    return 0
+
+}
+
 ####
 # Allow the user to change the amount of swap space used.
 function check_swap()
 {
+
 	local CALLED_FROM="${1}"
 	local PROMPT="${2:-false}"
 
 	# global: TITLE  WT_WIDTH
 	local SWAP_CONFIG_FILE="/etc/dphys-swapfile"
 	local CURRENT_SWAP  AMT  M  MSG  NEW_SIZE  CURRENT_MAX  CHANGE_SUGGESTED
+	local DISABLE_RPI_SWAP="false"
+	local SET_RPI_SWAP_MECHANISM_ONLY="false"
 
 	if [[ ${CALLED_FROM} == "install" ]]; then
 		declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" && ${PROMPT} == "false" ]] && return
@@ -993,19 +1298,8 @@ function check_swap()
 	# /dev/null so no ouput when not called from installer
 	m "${MSG}" "" "--log" "info" "${CALLED_FROM}" > /dev/null
 
-	# With "free -mebi" the displayed swap is often 1 MB less than what's in
-	# /etc/dphys-swapfile, I think because "free -mebi" rounds down to an int.
-	# Fix by gettting size in kibi (kilo) and divide by 1024 and convert to an int.
-	CURRENT_SWAP=$( free --kibi |
-			gawk 'BEGIN { swap = 0; }
-			{
-				if ($1 == "Swap:") {
-					swap = $2 / 1024;
-					exit 0;
-				}
-			}
-			END { printf("%.f", swap); }'
-		)	# in MB
+	# Sets CURRENT_SWAP, SWAP_SYSTEM, and SWAP_MECHANISM
+	get_swap_info
 
 	if [[ ${CURRENT_SWAP} -lt ${SUGGESTED_SWAP_SIZE} || ${PROMPT} == "true" ]]; then
 		if [[ ${CURRENT_SWAP} -eq 0 ]]; then
@@ -1026,49 +1320,88 @@ function check_swap()
 			MSG+="\n\nYou may change the amount of swap space by changing the number below."
 		fi
 
-		NEW_SIZE="$( get_0_or_positive "${SUGGESTED_SWAP_SIZE}" "disable swap space" "${MSG}" )"
-		if [[ ${NEW_SIZE} -eq 0 ]]; then
-			if [[ ${CHANGE_SUGGESTED} == "true" && ${SUGGESTED_SWAP_SIZE} -gt 0 ]]; then
-				MSG="With no swap space you run the risk of programs failing."
-				m "${MSG}" "" "--log" "warning" "${CALLED_FROM}"
+		if [[ ${SWAP_SYSTEM} == "rpi-swap" ]]; then
+			SWAP_MECHANISM="$( select_swap_mechanism )"
+			case "${SWAP_MECHANISM}" in
+				none)
+					DISABLE_RPI_SWAP="true"
+					;;
+				zram)
+					SET_RPI_SWAP_MECHANISM_ONLY="true"
+					;;
+			esac
+		fi
+
+		if [[ ${SET_RPI_SWAP_MECHANISM_ONLY} == "true" ]]; then
+			MSG="Swap mechanism set to ${SWAP_MECHANISM}."
+			m "${MSG}" "" "--log" "progress" "${CALLED_FROM}"
+			set_rpi_swap
+		else
+			if [[ ${DISABLE_RPI_SWAP} == "true" ]]; then
+				NEW_SIZE=0
+			else
+				NEW_SIZE="$( get_0_or_positive "${SUGGESTED_SWAP_SIZE}" "disable swap space" "${MSG}" )"
 			fi
 
-			if [[ ${CURRENT_SWAP} -gt 0 ]]; then
-				MSG="Swap space disabled."
+			if [[ ${NEW_SIZE} -eq 0 ]]; then
+				if [[ ${CHANGE_SUGGESTED} == "true" && ${SUGGESTED_SWAP_SIZE} -gt 0 ]]; then
+					MSG="With no swap space you run the risk of programs failing."
+					m "${MSG}" "" "--log" "warning" "${CALLED_FROM}"
+				fi
+
+				if [[ ${CURRENT_SWAP} -gt 0 || ${DISABLE_RPI_SWAP} == "true" ]]; then
+					MSG="Swap space disabled."
+					m "${MSG}" "" "--log" "progress" "${CALLED_FROM}"
+
+					if [[ ${SWAP_SYSTEM} == "rpi-swap" ]]; then
+						set_rpi_swap
+					fi
+
+					if [[ ${SWAP_SYSTEM} == "dphys-swapfile" ]]; then
+						sudo dphys-swapfile swapoff				# Stop using swap file
+						sudo dphys-swapfile uninstall			# Remove the swap file
+						sudo sed -i "/CONF_SWAPSIZE=/ c CONF_SWAPSIZE=${NEW_SIZE}" "${SWAP_CONFIG_FILE}"
+					fi
+
+				else
+					MSG="Swap space remaining disabled."
+					m "${MSG}" "" "--logonly" "info" "${CALLED_FROM}"
+				fi
+			elif [[ ${NEW_SIZE} -eq ${CURRENT_SWAP} && ${CHANGE_SUGGESTED} == "false" ]]; then
+				# User didn't change, and CURRENT_SWAP is sufficient.
+				MSG="Swap size will remain at ${CURRENT_SWAP} MB."
+				m "${MSG}" "" "--log" "progress" "${CALLED_FROM}"
+			else
+				MSG="Swap size set to ${NEW_SIZE} MB."
 				m "${MSG}" "" "--log" "progress" "${CALLED_FROM}"
 
-				sudo dphys-swapfile swapoff				# Stop using swap file
-				sudo dphys-swapfile uninstall			# Remove the swap file
-				sudo sed -i "/CONF_SWAPSIZE=/ c CONF_SWAPSIZE=${NEW_SIZE}" "${SWAP_CONFIG_FILE}"
-			else
-				MSG="Swap space remaining disabled."
-				m "${MSG}" "" "--logonly" "info" "${CALLED_FROM}"
-			fi
-		elif [[ ${NEW_SIZE} -eq ${CURRENT_SWAP} && ${CHANGE_SUGGESTED} == "false" ]]; then
-			# User didn't change, and CURRENT_SWAP is sufficient.
-			MSG="Swap size will remain at ${CURRENT_SWAP} MB."
-			m "${MSG}" "" "--log" "progress" "${CALLED_FROM}"
-		else
-			MSG="Swap size set to ${NEW_SIZE} MB."
-			m "${MSG}" "" "--log" "progress" "${CALLED_FROM}"
-
-			sudo dphys-swapfile swapoff					# Stop using swap file
-			sudo sed -i "/CONF_SWAPSIZE=/ c CONF_SWAPSIZE=${NEW_SIZE}" "${SWAP_CONFIG_FILE}"
-
-			# If NEW_SIZE is greater than the current max, increase the max.
-			CURRENT_MAX="$( get_variable "CONF_MAXSWAP" "${SWAP_CONFIG_FILE}" )"
-			# TODO: Can we determine the default max rather than hard-code it?
-			CURRENT_MAX="${CURRENT_MAX:-2048}"
-			if [[ ${CURRENT_MAX} -lt ${NEW_SIZE} ]]; then
-				if [[ ${DEBUG} -gt 0 ]]; then
-					MSG="Max swap size increased to ${NEW_SIZE} MB."
-					m "${MSG}" "" "--logonly" "debug" "${CALLED_FROM}"
+				if [[ ${SWAP_SYSTEM} == "rpi-swap" ]]; then
+					set_rpi_swap
 				fi
-				sudo sed -i "/CONF_MAXSWAP/ c CONF_MAXSWAP=${NEW_SIZE}" "${SWAP_CONFIG_FILE}"
-			fi
 
-			sudo dphys-swapfile setup  > /dev/null		# Set up new swap file
-			sudo dphys-swapfile swapon					# Turn on new swap file
+				if [[ ${SWAP_SYSTEM} == "dphys-swapfile" ]]; then
+					sudo dphys-swapfile swapoff					# Stop using swap file
+					sudo sed -i "/CONF_SWAPSIZE=/ c CONF_SWAPSIZE=${NEW_SIZE}" "${SWAP_CONFIG_FILE}"
+
+					# If NEW_SIZE is greater than the current max, increase the max.
+					CURRENT_MAX="$( get_variable "CONF_MAXSWAP" "${SWAP_CONFIG_FILE}" )"
+					# TODO: Can we determine the default max rather than hard-code it?
+					CURRENT_MAX="${CURRENT_MAX:-2048}"
+					if [[ ${CURRENT_MAX} -lt ${NEW_SIZE} ]]; then
+						if [[ ${DEBUG} -gt 0 ]]; then
+							MSG="Max swap size increased to ${NEW_SIZE} MB."
+							m "${MSG}" "" "--logonly" "debug" "${CALLED_FROM}"
+						fi
+
+						sudo sed -i "/CONF_MAXSWAP/ c CONF_MAXSWAP=${NEW_SIZE}" "${SWAP_CONFIG_FILE}"
+					fi
+				fi
+
+				if [[ ${SWAP_SYSTEM} == "dphys-swapfile" ]]; then
+					sudo dphys-swapfile setup  > /dev/null		# Set up new swap file
+					sudo dphys-swapfile swapon					# Turn on new swap file
+				fi
+			fi
 		fi
 	else
 		MSG="Size of current swap (${CURRENT_SWAP} MB) is sufficient; no change needed."
@@ -1226,7 +1559,7 @@ function check_tmp()
 			# which isn't a problem since it'll be unmounted at the next reboot.
 			# We know from the grep above that ${FSTAB} has ${ALLSKY_TMP}
 			# but the mount point is currently in the PRIOR Allsky.
-			D="${PRIOR_ALLSKY_DIR}/tmp"
+			D="${ALLSKY_PRIOR_DIR}/tmp"
 			if [[ -d "${D}" ]] && is_mounted "${D}" ; then
 				if ! umount_dir "${D}" "${CALLED_FROM}" ; then
 					set_reboot_needed		# Will force the unmount
@@ -1309,7 +1642,7 @@ function check_tmp()
 
 	if [[ ${NEW_SIZE} -gt 0 ]]; then
 		STRING="tmpfs ${ALLSKY_TMP} tmpfs size=${NEW_SIZE}M,noatime,lazytime,nodev,"
-		STRING+="nosuid,mode=775,uid=${ALLSKY_OWNER},gid=${WEBSERVER_GROUP}"
+		STRING+="nosuid,mode=775,uid=${ALLSKY_OWNER},gid=${ALLSKY_WEBSERVER_GROUP}"
 
 		if [[ -n ${CURRENT_STRING} ]]; then
 			if ! sudo sed -i -e "s;${CURRENT_STRING};${STRING};" ${FSTAB} ; then
@@ -1355,7 +1688,7 @@ function check_tmp()
 
 			# in case it wasn't already
 			chmod 775 "${ALLSKY_TMP}"
-			sudo chgrp "${WEBSERVER_GROUP}" "${ALLSKY_TMP}"
+			sudo chgrp "${ALLSKY_WEBSERVER_GROUP}" "${ALLSKY_TMP}"
 
 			restore_tmp
 		fi
@@ -1401,7 +1734,7 @@ function prompt_for_lat_long()
 			return
 
 		elif VALUE="$( convertLatLong "${VALUE}" "${SETTING_NAME}" 2>&1 )" ; then
-			update_json_file ".${SETTING_NAME}" "${VALUE}" "${SETTINGS_FILE}"
+			update_json_file ".${SETTING_NAME}" "${VALUE}" "${ALLSKY_SETTINGS_FILE}"
 			display_msg --log progress "${WEBUI_SETTING_LABEL} set to ${VALUE}."
 			echo "${VALUE}"
 			return
@@ -1417,11 +1750,11 @@ function prompt_for_lat_long()
 # If we can't, prompt for them.
 function get_lat_long()
 {
-	# Global: SETTINGS_FILE
+	# Global: ALLSKY_SETTINGS_FILE
 	local MSG  LATITUDE  LAT  LONGITUDE  LON  RAW_LOCATION  MY_LOCATION_PARTS  ERR  X
 
-	if [[ ! -f ${SETTINGS_FILE} ]]; then
-		display_msg --log error "INTERNAL ERROR: '${SETTINGS_FILE}' not found!"
+	if [[ ! -f ${ALLSKY_SETTINGS_FILE} ]]; then
+		display_msg --log error "INTERNAL ERROR: '${ALLSKY_SETTINGS_FILE}' not found!"
 		return 1
 	fi
 
@@ -1562,11 +1895,22 @@ function get_RAM()
 # Return the "computer" - the Pi model and amount of memory in GB
 function get_computer()
 {
+	local PI_MODEL_ONLY="false"
+	if [[ ${1} == "--pi-model-only" ]]; then
+		PI_MODEL_ONLY="true"
+		shift
+	fi
 	# The file has a NULL at the end so to avoid a bash warning, ignore it.
-	local MODEL="$( tr --delete '\0' < /sys/firmware/devicetree/base/model |
-			sed 's/Raspberry Pi/RPi/')"
-	local GB="$( get_RAM "GB" )"
-	echo "${MODEL}, ${GB} GB"
+	# Contents example:
+	#	Raspberry Pi 5 Model B Rev 1.0p
+	local MODEL="$( tr --delete '\0' < /sys/firmware/devicetree/base/model )"
+
+	if [[ ${PI_MODEL_ONLY} == "true" ]]; then
+		echo "${MODEL}" | gawk '{ printf("%s", $3); }'
+	else
+		local GB="$( get_RAM "GB" )"
+		echo "${MODEL/Raspberry Pi/RPi}, ${GB} GB"
+	fi
 }
 
 
@@ -1667,7 +2011,9 @@ function add_new_settings()
 
 	display_msg --logonly info "Checking for new settings in options file."
 
-	local TAB="$( echo -e '\t' )"
+	if [[ -z ${TAB} ]]; then
+		local TAB="$( echo -e '\t' )"
+	fi
 	local NEW="$( "${ALLSKY_SCRIPTS}/convertJSON.php" \
 		--options-only \
 		--settings-file "${SETTINGS}" \
@@ -1867,4 +2213,251 @@ function display_file()
 		--textbox "${FILENAME}" 22 77
 }
 
-#########
+####
+# Create the variables.json file based on variables.sh.
+# Source in the two files where variables we care about are defined.
+# Look for variables that begin with "ALLSKY_" and "EXIT_" (exit codes).
+function create_variables_json()
+{
+	local CALLED_FROM="${1}"
+
+	if [[ ${CALLED_FROM} == "install" ]]; then
+		declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
+		display_msg --logonly info "Creating '${ALLSKY_VARIABLES_JSON_FILE}."
+	fi
+
+	{
+		echo "{"
+		(
+			# "env -i" clears the environment.
+			env -i bash -c "export ALLSKY_HOME='${ALLSKY_HOME}'; \
+				source '${ALLSKY_HOME}/variables.sh' --force; \
+				source '${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh'; \
+			   	env"
+		) | grep -E '^ALLSKY_|^EXIT_' |
+			sort |
+			sed -e 's/^/    "/' -e 's/=/" : "/' -e 's/$/",/' -e 's/"true",$/true,/' -e 's/"false",$/false,/'
+			# TODO: Remove quotes from around numbers and floats (with "." for decimal point).
+
+		# Add "special cases"
+		echo "    \"HOME\" : \"${HOME}\""
+
+		echo "}"
+	} > "${ALLSKY_VARIABLES_JSON_FILE}"
+
+	if [[ ${CALLED_FROM} == "install" ]]; then
+		STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
+	fi
+}
+
+# (re)create the options file.
+function create_options_file()
+{
+	local DEBUG_ARG=""
+	local FORCE=""
+	local CC_FILE="${ALLSKY_CC_FILE}"
+	local OPTIONS_FILE="${ALLSKY_OPTIONS_FILE}"
+	local SETTINGS_FILE="${ALLSKY_SETTINGS_FILE}"
+	local NO_SETTINGS="false"
+
+	while [ $# -gt 0 ]; do
+		local ARG="${1}"
+		case "${ARG,,}" in
+			--debug)
+				DEBUG_ARG="${ARG}"
+				;;
+			--force)
+				FORCE="${ARG}"
+				;;
+			--cc-file)
+				CC_FILE="${2}"
+				shift
+				;;
+			--options-file)
+				OPTIONS_FILE="${2}"
+				shift
+				;;
+			--settings-file)
+				SETTINGS_FILE="${2}"
+				shift
+				;;
+			--no-settings-file)
+				NO_SETTINGS="true"
+				;;
+			*)
+				display_msg --log error "create_options_file(): Unknown argument: '${ARG}'." >&2
+				return "${ALLSKY_EXIT_ERROR_STOP}"
+				;;
+		esac
+		shift
+	done
+
+	if [[ ${NO_SETTINGS} == "true" ]]; then
+		# Don't do anything with the settings file.
+		# Useful when we only want to recreate the options file, e.g., the repo file changed.
+		SETTINGS_FILE=""
+	fi
+
+	# shellcheck disable=SC2086
+	"${ALLSKY_SCRIPTS}/createAllskyOptions.php" \
+		${FORCE} ${DEBUG_ARG} \
+		--cc-file "${CC_FILE}" \
+		--options-file "${OPTIONS_FILE}" \
+		--settings-file "${SETTINGS_FILE}"
+}
+
+
+# Create or update the sudoers file.
+function create_sudoers()
+{
+	local TMP="/tmp/sudoers.${RANDOM}"
+
+	sed \
+		-e "s;XX_ALLSKY_OWNER_XX;${ALLSKY_OWNER};" \
+		-e "s;XX_ALLSKY_SCRIPTS_XX;${ALLSKY_SCRIPTS};" \
+		-e "s;XX_ALLSKY_UTILITIES_XX;${ALLSKY_UTILITIES};" \
+		"${REPO_SUDOERS_FILE}"  >  "${TMP}"
+	sudo install -m 0644 "${TMP}" "${FINAL_SUDOERS_FILE}" && rm -f "${TMP}"
+}
+
+
+# Copy repo files while updating them.
+function update_repo_files()
+{
+	sed \
+		-e "s;XX_ALLSKY_STARTRAILS_TABLE_XX;${ALLSKY_STARTRAILS_TABLE};" \
+		"${ALLSKY_REPO}/db_data.json.repo" \
+	> "${ALLSKY_CONFIG}/db_data.json"
+}
+
+
+# Set some default locations needed by the capture programs so we
+# don't need to pass them in on the command line - if they are passed in,
+# those values overwrite the defaults.
+function update_allsky_common()
+{
+	local FILES_DOWNLOADED_FILE="${1}"
+	local DOT_H="${ALLSKY_HOME}/src/include/allsky_common.h"
+
+	# shellcheck disable=SC2154
+	sed \
+		-e "s;XX_ALLSKY_HOME_XX;${ALLSKY_HOME};" \
+		-e "s;XX_ALLSKY_SCRIPTS_XX;${ALLSKY_SCRIPTS};" \
+		-e "s;XX_CONNECTED_CAMERAS_FILE_XX;${ALLSKY_CONNECTED_CAMERAS_INFO};" \
+		-e "s;XX_RPI_CAMERA_INFO_FILE_XX;${ALLSKY_RPi_SUPPORTED_CAMERAS};" \
+		-e "s;XX_EXIT_OK_XX;${ALLSKY_EXIT_OK};" \
+		-e "s;XX_EXIT_RESTARTING_XX;${ALLSKY_EXIT_RESTARTING};" \
+		-e "s;XX_EXIT_RESET_USB_XX;${ALLSKY_EXIT_RESET_USB};" \
+		-e "s;XX_EXIT_ERROR_STOP_XX;${ALLSKY_EXIT_ERROR_STOP};" \
+		-e "s;XX_EXIT_NO_CAMERA_XX;${ALLSKY_EXIT_NO_CAMERA};" \
+		-e "s;XX_EXIT_STOP_XX;${ALLSKY_EXIT_STOP};" \
+		"${DOT_H}.repo" \
+	> "${DOT_H}"
+
+	# See if any source files changed.  If so, re-run make if told to.
+	# Source files end in .cpp, .c, or .h.
+	if [[ -s ${FILES_DOWNLOADED_FILE} ]] && \
+		grep --silent -E "^src/.*\.cpp|^src/.*\.c|^src/.*\.h" "${FILES_DOWNLOADED_FILE}" ; then
+
+		# At least one file in the "src" directory changed, so re-run make.
+		# TODO: FIX: No longer needed, "deps" done in install.sh:		sudo make -C src deps &&
+		local X="$(
+			cd "${ALLSKY_HOME}" &&
+			make -C src all &&
+			sudo make install
+		)"
+		if [[ $? -ne 0 ]]; then
+			echo "'make' failed: ${X}" >&2
+			return 1
+		fi
+	fi
+
+	return 0
+}
+
+
+# Create symbolic links
+function create_links()
+{
+	local FROM="${1}"
+	if [[ ${FROM} != "install" ]]; then
+		function display_msg()
+		{
+			echo "* ${3}"
+		}
+	fi
+
+	local T="${ALLSKY_SCRIPTS}/functions.php"
+	if [[ ! -f "${T}" ]]; then
+		local F="${ALLSKY_WEBUI}/includes/functions.php"
+		display_msg --logonly info "Creating link to ${F}"
+		ln -s "${F}" "${T}"		|| echo "Unable to ln -s '${F}' '${T}'" >&2
+	fi
+
+	T="${ALLSKY_SCRIPTS}/allsky-config"
+	if [[ ! -f "${T}" ]]; then
+		local F="${ALLSKY_UTILITIES}/allsky-config.sh"
+		display_msg --logonly info "Creating link to ${F}"
+		ln -s "${F}" "${T}"		|| echo "Unable to ln -s '${F}' '${T}'" >&2
+	fi
+}
+
+
+# Set up the file that contains information on all supported RPi cameras.
+function setup_rpi_supported_cameras()
+{
+	local CMD="${1}"
+	local FORCE="${2}"
+
+	if [[ ! -f ${ALLSKY_RPi_SUPPORTED_CAMERAS} || ${FORCE} == "true" ]]; then
+		local notCMD
+		local B="$( basename "${ALLSKY_RPi_SUPPORTED_CAMERAS}" )"
+
+		# "libcamera" is the only software packages supported as of 2025,
+		# but leave the code to check for any future new software.
+		if [[ -z ${CMD} ]]; then
+			notCMD="xxxxx"		# won't match anything
+			CMD="all"
+		elif [[ ${CMD} == "NEW-TBD-SOFTWARE" ]]; then
+			notCMD="libcamera"
+		else
+			notCMD="NEW-TBD-SOFTWARE"
+		fi
+
+		local MSG="Creating ${ALLSKY_RPi_SUPPORTED_CAMERAS} with '${CMD}' entries."
+		display_msg --logonly info "${MSG}"
+
+		# Remove comment and blank lines and lines for the command we are NOT using.
+		grep -v -E "^\$|^#|^${notCMD}" "${ALLSKY_REPO}/${B}.repo" > "${ALLSKY_RPi_SUPPORTED_CAMERAS}"
+	fi
+}
+
+
+# Copy certain "static" files from ALLSKY_REPO to ALLSKY_CONFIG.
+# The files in ALLSKY_CONFIG won't change so we can safely overwrite them.
+function copy_repo_files()
+{
+	cp  "${ALLSKY_REPO}/allskyvariables.json.repo" "${ALLSKY_CONFIG}/allskyvariables.json"
+	cp  "${ALLSKY_REPO}/backup.json.repo" "${ALLSKY_CONFIG}/backup.json"
+	cp  "${ALLSKY_REPO}/onewire.json.repo" "${ALLSKY_CONFIG}/onewire.json"
+	cp  "${ALLSKY_REPO}/devicemanager.json.repo" "${ALLSKY_CONFIG}/devicemanager.json"
+	cp  "${ALLSKY_REPO}/suggested_modules.json.repo" "${ALLSKY_CONFIG}/suggested_modules.json"
+	cp  "${ALLSKY_REPO}/monitorable_logs.json.repo" "${ALLSKY_CONFIG}/monitorable_logs.json"
+	cp  "${ALLSKY_REPO}/helpers.json.repo" "${ALLSKY_CONFIG}/helpers.json"
+	cp  "${ALLSKY_REPO}/helpers.md.repo" "${ALLSKY_CONFIG}/helpers.md"
+
+	cp "${ALLSKY_REPO}/editor_files.json.repo" "${ALLSKY_CONFIG}/editor_files.json"
+	cp "${ALLSKY_REPO}/editor_files.md.repo" "${ALLSKY_CONFIG}/editor_files.md"
+
+	cp -r "${ALLSKY_REPO}/schema" "${ALLSKY_CONFIG}/"
+
+}
+
+
+# Log an action the user needs to take.
+add_to_post_actions()
+{
+	local MSG="${1}"
+	mkdir -p "$( dirname "${ALLSKY_POST_INSTALL_ACTIONS}" )"
+	echo -e "\n\n========== ACTION NEEDED:\n${MSG}" >> "${ALLSKY_POST_INSTALL_ACTIONS}"
+}

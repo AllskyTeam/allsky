@@ -8,17 +8,19 @@
 ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck source-path=.
-source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 # allow user to select additional commands after 1st one?
 ALLOW_MORE_COMMANDS="true"
 
 TITLE="*** Allsky Configuration ***"
 
+# TODO: FIX: get rid of old whiptail code when we know this new code works
+USE_DIALOG="true"		# Use the "dialog" command or older whiptail code
 
 ####################################### Functions - one per command
 
@@ -30,7 +32,7 @@ function usage_and_exit()
 	[[ ${1} == "--commands-only" ]] && COMMANDS_ONLY="true" && shift
 
 	local RET=${1}
-	
+
 	exec 2>&1
 	echo
 
@@ -42,7 +44,7 @@ function usage_and_exit()
 			W_ "${MSG}"
 		fi
 		echo
-		echo "where:"
+		echo "Arguments:"
 		echo "   --help           Displays this message and exits."
 		echo "   --help command   Displays a help message for the specified command, then exits."
 		echo "   --debug          Displays debugging information."
@@ -51,24 +53,29 @@ function usage_and_exit()
 		echo "Valid commands are:"
 	fi
 
+	# Try to keep in same order as menu.
+	echo "      get_startrails_info"
+	echo "      show_start_times [--zero] [angle [latitude [longitude]]]"
 	echo "      show_supported_cameras  --RPi | --ZWO"
 	echo "      show_connected_cameras"
+	echo "      new_rpi_camera_info [--camera NUM]"
 	echo "      show_installed_locales"
 	echo "      prepare_logs [debug_level]"
 	echo "      config_timelapse"
 	echo "      change_swap"
 	echo "      change_tmp"
 	echo "      samba"
-	echo "      move_images"
-	echo "      bad_images_info"
-	echo "      new_rpi_camera_info [--camera NUM]"
-	echo "      show_start_times [--zero] [angle [latitude [longitude]]]"
-	echo "      compare_paths --website | --server"
-	echo "      get_brightness_info"
+
+	echo "      bad_images_info [--list_bad_images]"
 	echo "      check_post_data"
-	echo "      get_filesystems"
-	echo "      encoders"
-	echo "      pix_fmts"
+	echo "      compare_paths --website | --server"
+	echo "      test_upload --website | --server"
+
+	echo "      manage_modules [see --help for arguments]"
+	echo "      check_allsky [see --help for arguments]"
+	echo "      move_images"
+	echo "      prepare_logs [debug_level]"
+	echo "      recreate_files"
 
 	if [[ ${COMMANDS_ONLY} == "false" ]]; then
 		echo "  If no 'command' is specified you are prompted for one."
@@ -85,36 +92,38 @@ function usage_and_exit()
 # Show all the supported cameras.
 function show_supported_cameras()
 {
-	if [[ ${1} == "--help" ]]; then
-		echo
-		W_ "Usage: ${ME}  ${ME_F} --RPi | --ZWO"
-		echo
-		echo "Display all the cameras of the specified type that Allsky supports."
-		echo "Note that the ZWO list is very long."
-		return
+	local COMMAND_TO_EXECUTE="showSupportedCameras.sh"
+
+	if [[ $# -eq 0 && -n ${FUNCTION_TO_EXECUTE} ]]; then
+		# Command to run specified on command line but required options not given.
+		E_ "\n${ME} ${ME_F}: Need to specify all arguments on command line." >&2
+		E_ "     Need '--RPi' and / or '--ZWO'.\n" >&2
+		exit 2
 	fi
 
-	# shellcheck disable=SC2124
-	local ARGS="${@}"
+	local ARGS
 
-	#shellcheck disable=SC2086
-	if needs_arguments ${ARGS} ; then
-		if [[ ${ON_TTY} == "false" ]]; then
-			E_ "${ME} ${ME_F}: Need to specify all aruments on command line." >&2
-			return
-		fi
+	if [[ $# -eq 0 && -z ${FUNCTION_TO_EXECUTE} ]]; then
 		PROMPT="\nSelect the camera(s) to show:"
 		OPTS=()
 		OPTS+=("--RPi"			"RPi and compatible")
 		OPTS+=("--ZWO"			"ZWO (very long list)")
 		OPTS+=("--RPi --ZWO"	"both")
 
+		#XXX FIX: when using the dialog command the prompt below doesn't include
+		# the choices.
+		local SAVED_USE_DIALOG="${USE_DIALOG}"
+		USE_DIALOG="false"	
 		# If the user selects "Cancel" prompt() returns 1 and we exit the loop.
 		ARGS="$( prompt "${PROMPT}" "${OPTS[@]}" )"
+		USE_DIALOG="${SAVED_USE_DIALOG}"
+	else
+		# shellcheck disable=SC2124
+		ARGS="${@}"
 	fi
 
 	# shellcheck disable=SC2086
-	showSupportedCameras.sh ${ARGS}
+	"${COMMAND_TO_EXECUTE}" ${ARGS}
 }
 
 
@@ -132,7 +141,7 @@ function show_connected_cameras()
 		return
 	fi
 
-	get_connected_cameras_info "true" > "${CONNECTED_CAMERAS_INFO}"
+	get_connected_cameras_info "true" > "${ALLSKY_CONNECTED_CAMERAS_INFO}"
 
 	local CAMERAS="$( get_connected_camera_models --full "both" )"
 	if [[ -z ${CAMERAS} ]]; then
@@ -174,7 +183,7 @@ function show_installed_locales()
 		echo " see the 'Locale' setting on the WebUI's"
 		echo "'Settings -> Allsky' Documentation page for instructions on how to install it."
 	else
-		echo " <a href='/documentation/settings/allsky.html#locale'>click here</a>"
+		echo " <a href='/docs/allsky_guide/settings/allsky.html#locale'>click here</a>"
 		echo "for instructions on how to install it."
 		HTML="--html"
 	fi
@@ -209,26 +218,8 @@ function prepare_logs()
 # Request support for an RPi camera.
 function new_rpi_camera_info()
 {
-	if [[ ${1} == "--help" ]]; then
-		echo
-		W_ "Usage: ${ME}  ${ME_F}  [--camera NUM]"
-		echo
-		W_ "NOTE: This command only works if you have an RPi camera connected to the Pi."
-		echo
-		echo "Saves detailed information on the attached RPi camera to a file."
-		echo "This file MUST be attached to your GitHub Discussion requesting support for the camera."
-		echo
-		echo "If there is more than one RPi camera connected to the Pi,"
-		echo "by default, information on the first camera (number 0) is displayed."
-		echo "Use the '--camera NUM' argument to specify a different camera."
-		return
-	fi
-
-	# shellcheck disable=SC2124
-	local ARGS="${@}"		# optional
-
-	# shellcheck disable=SC2086
-	getRPiCameraInfo.sh ${ARGS}
+	# shellcheck disable=SC2068
+	getRPiCameraInfo.sh "${@}"
 }
 
 
@@ -236,23 +227,13 @@ function new_rpi_camera_info()
 # Install SAMBA.
 function samba()
 {
-	if [[ ${1} == "--help" ]]; then
-		echo
-		W_ "Usage: ${ME}  ${ME_F}"
-		echo
-		echo "Configure your Pi using the Samba protocol to allow easy file transfers to"
-		echo "and from PCs and MACs.  The HOME directory of the login you use on the Pi"
-		echo "will be available to connect to a PC or MAC,"
-		echo "where it will be treated like any other disk.  You can then drag and drop files."
-		return
-	fi
-
 	if [[ ${ON_TTY} == "false" ]]; then
-		W_ "${ME} ${ME_F} must run from a terminal." >&2
+		W_ "${ME} ${ME_F} must be run from a terminal." >&2
 		return
 	fi
 
-	installSamba.sh
+	# shellcheck disable=SC2068
+	installSamba.sh "${@}"
 }
 
 
@@ -260,45 +241,81 @@ function samba()
 # Move ALLSKY_IMAGES to a new location.
 function move_images()
 {
-	if [[ ${1} == "--help" ]]; then
-		echo
-		W_ "Usage: ${ME}  ${ME_F}"
-		echo
-		echo "Configure Allsky to save images in the location you specify,"
-		echo "rather than in ~/allsky/images.  You are prompted for the new location,"
-		echo "and if there are images in the current location, you'll be prompted for"
-		echo "what you want to do with them (typically move them to the new location)."
-		echo
-		echo "The new location is typically an SSD or other higher-capacity,"
-		echo "more reliable media than an SD card."
-		return
-	fi
-
 	if [[ ${ON_TTY} == "false" ]]; then
-		W_ "${ME} ${ME_F} must run from a terminal." >&2
+		W_ "${ME} ${ME_F} must be run from a terminal." >&2
 		return
 	fi
 
-	moveImages.sh
+	# shellcheck disable=SC2068
+	moveImages.sh "${@}"
 }
 
+
+#####
+# Check Allsky
+function check_allsky()
+{
+	# shellcheck disable=SC2068
+	"${ALLSKY_SCRIPTS}/checkAllsky.sh" "${@}"
+}
 
 #####
 # Move ALLSKY_IMAGES to a new location.
 function bad_images_info()
 {
-	if [[ ${1} == "--help" ]]; then
-		echo
-		W_ "Usage: ${ME}  ${ME_F}"
-		echo
-		echo "Display information on 'bad' images, which are ones that are too dark or too light,"
-		echo "and hence have been deleted."
-		echo "This information can be used to determine what the low and high 'Remove Bad Images Threshold'"
-		echo "settings should be."
-		return
+	# shellcheck disable=SC2068
+	badImagesInfo.sh "${@}"
+}
+
+
+#####
+# Generic command to test something about a remote Website or server.
+function website_server_cmd()
+{
+	local COMMAND_TO_EXECUTE="${1}"
+	local PROMPT="${2}"
+	local MSG1="${3}"
+	local MSG2="${4}"
+	shift 4
+
+	if [[ $# -eq 0 && -n ${FUNCTION_TO_EXECUTE} ]]; then
+		# Command to run specified on command line but required options not given.
+		E_ "\n${ME} ${ME_F}: Need to specify all arguments on command line." >&2
+		E_ "   Need either '--website' or '--server'.\n" >&2
+		exit 2
 	fi
 
-	badImagesInfo.sh
+	local ARGS  P
+
+	if [[ $# -eq 0 && -z ${FUNCTION_TO_EXECUTE} ]]; then
+		OPTS=()
+		OPTS+=("--website"	"${MSG1}")
+		OPTS+=("--server"	"${MSG2}")
+
+		#XXX FIX: when using the dialog command the prompt below doesn't include
+		# the choices.
+		local SAVED_USE_DIALOG="${USE_DIALOG}"
+		USE_DIALOG="false"	
+
+		# If the user selects "Cancel" prompt() returns 1 and we exit the loop.
+		ARGS="$( prompt "\n${PROMPT}" "${OPTS[@]}" )"
+		USE_DIALOG="${SAVED_USE_DIALOG}"
+
+# TODO: Remove this check once "remoteserverurl" is implemented.
+		if [[ ${ARGS} == "--server" ]]; then
+			P="\nEnter the URL of the server (must begin with 'http' or 'https'):"
+			while ! A="$( getInput "${P}" )" ; do
+				echo -e "\nYou must enter a URL."
+			done
+			ARGS+=" ${A}"
+		fi
+	else
+		# shellcheck disable=SC2124
+		local ARGS="${@}"
+	fi
+
+	# shellcheck disable=SC2086
+	"${COMMAND_TO_EXECUTE}" ${ARGS}
 }
 
 
@@ -307,101 +324,80 @@ function bad_images_info()
 # display the path on the server give a URL.
 function compare_paths()
 {
+	website_server_cmd "comparePaths.sh" \
+		"Select the machine you want to check:" \
+		"check the remote Allsky Website specified in its 'Website URL' setting" \
+		"check the remote server specified in its 'Website URL' setting" \
+		"${@}"
+}
+
+
+#####
+# Recreate files after a "git pull" or whenever any "parent" file changes.
+# It's very possible some of the files don't need updating, but it's quick to
+# update them and not always quick to check if they need updating.
+function recreate_files()
+{
+	# shellcheck disable=SC2068
+	"${ALLSKY_UTILITIES}/recreateFiles.sh" "${@}"
+}
+
+
+#####
+# Test a file upload.
+function test_upload()
+{
 	if [[ ${1} == "--help" ]]; then
 		echo
-		W_ "Usage: ${ME}  ${ME_F}  --website | --server"
+		W_ "Usage: ${ME}  ${ME_F} --website | --server"
 		echo
-		echo "Helps determine what to put in the 'Image Directory' and 'Website URL' settings"
-		echo "in the 'Remote Server' section of the WebUI."
-		echo "It does this by displaying information from a remote Website's server via FTP"
-		echo "and via a URL, such as the directory name (they should match) and"
-		echo "a list of files in those directories."
-		echo
-		echo "If you did not specify either '--website' or '--server',"
-		echo "you will be prompted for which to use."
+		echo "Test uploading a file to the remote Website or remote server."
+		echo "Any errors will be displayed and (usually) a fix specified."
 		return
 	fi
 
-	# shellcheck disable=SC2124
-	local ARGS="${@}"
-
-	#shellcheck disable=SC2086
-	if needs_arguments ${ARGS} ; then
-		if [[ ${ON_TTY} == "false" ]]; then
-			E_ "${ME} ${ME_F}: Need to specify all aruments on command line." >&2
-			return
-		fi
-
-		PROMPT="\nSelect the machine you want to check:"
-		OPTS=()
-		OPTS+=("--website"	\
-			"check the remote Allsky Website specified in its 'Website URL' setting.")
-		OPTS+=("--server"	\
-			"check the remote server specified in its 'Website URL' setting.")
-
-		# If the user selects "Cancel" prompt() returns 1 and we exit the loop.
-		ARGS="$( prompt "${PROMPT}" "${OPTS[@]}" )"
-
-# TODO: Remove this check once "remoteserverurl" is implemented.
-		if [[ ${ARGS} == "--server" ]]; then
-			PROMPT="\nEnter the URL of the server (must begin with 'http' or 'https'):"
-			while ! A="$( getInput "${PROMPT}" )" ; do
-				echo -e "\nYou must enter a URL."
-			done
-			ARGS+=" ${A}"
-		fi
-	fi
-
-	# shellcheck disable=SC2086
-	comparePaths.sh ${ARGS}
+	website_server_cmd "${ALLSKY_SCRIPTS}/testUpload.sh" \
+		"Select the machine you want to test an upload to:" \
+		"Remote Allsky Website" \
+		"Remote server" \
+		"${@}"
 }
 
 
 #####
 # Display brightness information from the startrails command.
-get_brightness_info()
+function get_startrails_info()
 {
-	if [[ ${1} == "--help" ]]; then
-		echo
-		W_ "Usage: ${ME}  ${ME_F}"
-		echo
-		echo "Displays brightness information used when updating the 'Threshold' startrails setting."
-		echo "Typically this is needed when startrails images don't show any trails."
-		return
-	fi
+	# shellcheck disable=SC2068
+	getStartrailsInfo.sh "${@}"
+}
 
-	getBrightnessInfo.sh
+
+#####
+# Create multiple startrails with different thresholds.
+function compare_startrails()
+{
+	# shellcheck disable=SC2068
+	compareStartrails.sh "${@}"
+}
+
+
+#####
+# Create multiple stretched images with different amounts and midpoints.
+function compare_stretches()
+{
+	# shellcheck disable=SC2068
+	compareStretches.sh "${@}"
 }
 
 
 #####
 # Help determine some timelapse settings.
-config_timelapse()
+function compare_timelapses()
 {
-	if [[ ${1} == "--help" ]]; then
-		echo
-		W_ "Usage: ${ME}  ${ME_F}"
-		echo
-		echo "Create multiple timelapse videos with different settings to help determine"
-		echo "what settings to ultimately use.  You are prompted for:"
-		echo "    - which day's images to use (default is yesterday's images)"
-		echo "    - how many images to include (default is 200 to minimize the processing time)"
-		echo "    - one or more 'Bitrate' values"
-		echo "    - one or more 'FPS' values"
-		echo
-		echo "A timelapse video is created for each combination of values you specified."
-		echo "The list of videos created is displayed for you to compare."
-		return
-	fi
-
-	if [[ ${ON_TTY} == "false" ]]; then
-		W_ "${ME} ${ME_F} must run from a terminal." >&2
-		return
-	fi
-
-	configTimelapse.sh
+	# shellcheck disable=SC2068
+	compareTimelapse.sh "${@}"
 }
-
 
 
 #####
@@ -422,7 +418,7 @@ function change_tmp()
 	fi
 
 	if [[ ${ON_TTY} == "false" ]]; then
-		W_ "${ME} ${ME_F} must run from a terminal." >&2
+		W_ "${ME} ${ME_F} must be run from a terminal." >&2
 		return
 	fi
 
@@ -458,7 +454,7 @@ function change_swap()
 	fi
 
 	if [[ ${ON_TTY} == "false" ]]; then
-		W_ "${ME} ${ME_F} must run from a terminal." >&2
+		W_ "${ME} ${ME_F} must be run from a terminal." >&2
 		return
 	fi
 
@@ -480,7 +476,9 @@ function encoders()
 		return
 	fi
 
+	[[ ${1} == "--html" ]] && echo "<pre>"
 	ffmpeg -loglevel error -encoders
+	[[ ${1} == "--html" ]] && echo "</pre>"
 }
 
 
@@ -498,7 +496,9 @@ function pix_fmts()
 		return
 	fi
 
+	[[ ${1} == "--html" ]] && echo "<pre>"
 	ffmpeg -loglevel error -pix_fmts
+	[[ ${1} == "--html" ]] && echo "</pre>"
 }
 
 
@@ -506,32 +506,8 @@ function pix_fmts()
 # Show the daytime and nighttime start times
 function show_start_times()
 {
-	if [[ ${1} == "--help" ]]; then
-		echo
-		W_ "Usage:"
-		W_ "    ${ME}  ${ME_F} [--zero] [--no-header] [angle [latitude [longitude]]]"
-		echo "OR"
-		W_ "    ${ME}  ${ME_F} [--zero] [--no-header] [--angle A] [--latitude LAT] [--longitude LONG]"
-		echo
-		echo "Show the daytime and nighttime start times for the specified"
-		echo "angle, latitude, and longitude."
-		echo "If you don't specify those values, your current values are used."
-		echo "'--zero' also displays information for an angle of 0."
-		echo "'--no-header' only displays the data, no header."
-		echo
-		echo "This information is useful to determine what to put in the 'Angle' setting in the WebUI."
-		echo "Typically you would adjust the angle until you got the start time you wanted."
-		echo
-		echo "This is also useful to troubleshoot why the daytime and nighttime start times"
-		echo "aren't what you expected."
-		return
-	fi
-
-	# shellcheck disable=SC2124
-	local ARGS="${@}"		# optional
-
-	# shellcheck disable=SC2086
-	showStartTimes.sh ${ARGS}
+	# shellcheck disable=SC2068
+	showStartTimes.sh "${@}"
 }
 
 
@@ -540,111 +516,115 @@ function show_start_times()
 #	data.json is X days old. Check ... postData.sh
 function check_post_data()
 {
-	if [[ ${1} == "--help" ]]; then
-		echo
-		W_ "Usage: ${ME}  ${ME_F}"
-		echo
-		echo "This command helps determine why you get the"
-		echo "    data.json is X days old"
-		echo "message.  If possible, a solution is proposed."
-		return
-	fi
-
-	checkPostData.sh
+	# shellcheck disable=SC2068
+	checkPostData.sh "${@}"
 }
 
 #####
 # Get a list of filesystems to help the user determine where a devices is mounted.
 function get_filesystems()
 {
-	if [[ ${1} == "--help" ]]; then
-		echo
-		W_ "Usage: ${ME}  ${ME_F}"
-		echo
-		echo "This command helps determine the path to a storage device like an SSD."
-		return
-	fi
+	# shellcheck disable=SC2068
+	getFilesystems.sh "${@}"
+}
 
-	getFilesystems.sh
+#####
+# Allow users to install and uninstall modules.
+function manage_modules()
+{
+	# shellcheck disable=SC2068
+	manageModules.sh "${@}"
 }
 
 
 ####################################### Helper functions
 
-# Check if the required argument(s) were given to this command.
-# If called via the command line it's an error if no arguments
-# were given, so exit since we can't prompt (we may be called by another program).
-# If called via a menu item there normally WON'T be an argument so
-# return 0 which tells the caller it needs to prompt for the arguments.
-function needs_arguments()
-{
-	if [[ $# -eq 0 ]]; then
-		if [[ -n ${CMD} ]]; then		# CMD is global
-			E_ "\n'${FUNCNAME[1]}' requires an argument." >&2
-			usage_and_exit 1
-		else
-			echo "${@}"
-		fi
-
-		return 0
-	else
-		return 1
-	fi
-}
-
-
 #####
 # Run a command / function, passing any arguments.
 function run_command()
 {
-	COMMAND="${1}"
+	local COMMAND="${1}"
 	shift
 
-	# shellcheck disable=SC2124
-	ARGUMENTS="${@}"
-	if ! type "${COMMAND}" > /dev/null 2>&1 ; then
+	local HTML
+	if [[ ${COMMAND:0:4} == "HTML" ]]; then
+		HTML="--html"
+		COMMAND="${COMMAND:4}"
+	else
+		HTML=""
+	fi
+
+	if [[ -z ${COMMAND} ]]; then
+		E_ "\n${ME}: No command specified." >&2
+		usage_and_exit --commands-only 2
+	fi
+
+	# Check if command is a function; if so, assume it's one of ours.
+	echo "CMDS=${CMDS[*]}" | grep -m 1 --silent "(${COMMAND})"
+	if [[ $? -ne 0 ]]; then
 		E_ "\n${ME}: Unknown command '${COMMAND}'." >&2
 		usage_and_exit --commands-only 2
 	fi
 
 	if [[ ${DEBUG} == "true" ]]; then
-		D_ "Executing: ${COMMAND} ${ARGUMENTS}\n"
+		# shellcheck disable=SC2145
+		D_ "Executing: ${COMMAND} ${@}\n"
 	fi
 
 	ME_F="${COMMAND}"		# global
-	#shellcheck disable=SC2086
-	"${COMMAND}" ${ARGUMENTS}
+	# shellcheck disable=SC2086
+	"${COMMAND}" ${HTML} "${@}"
 }
 
 
 #####
 # Prompt for a command or argument from a list.
 if [[ ${ON_TTY} == "true" ]]; then
-	WT_LINES=$( tput lines 2>/dev/null )
+	T_LINES=$( tput lines 2>/dev/null )
 fi
-WT_LINES="${WT_LINES:-24}"
+T_LINES="${T_LINES:-24}"
 
 function prompt()
 {
-	PROMPT="${1}"
+	local PROMPT="${1}"
 	shift
-	OPTIONS=("${@}")
-
+	local OPTIONS=("${@}")
 	local NUM_OPTIONS=$(( ${#OPTIONS[@]} / 2 ))
-# whiptail's menubox has:
-# 2 lines at top
-# then the menu (NUM_OPTIONS lines)
-# 2 blank lines
-# 1 "<Ok> / <Cancel>" line
-# 2 blank lines
-# If all that doesn't fit in the terminal windows, whiptail does NOT scroll.
-	local LINES=$(( 2 + NUM_OPTIONS + 2 + 1 + 2 ))
-	if [[ ${LINES} -ge ${WT_LINES} ]]; then
-		echo "Please resize you window to at least $(( LINES + 1 )) lines."
-		echo "It is only ${WT_LINES} lines now."
+
+if [[ ${USE_DIALOG} == "true" ]]; then
+	D_WIDTH="85"
+	D_MENU_HEIGHT="${NUM_OPTIONS}"
+	local OPT="$( dialog --no-tags --title "${TITLE}" \
+		--default-item "${DEFAULT_MENU_ITEM}" \
+		"--menu" "${PROMPT}" \
+		"${T_LINES}" "${D_WIDTH}" "${D_MENU_HEIGHT}" "${OPTIONS[@]}" 3>&1 1>&2 2>&3 )"
+	local RET=$?
+	if [[ ${RET} -ne 0 ]]; then
+		E_ "\n${ME}: 'dialog' failed." >&2
+		exit 2
+	else
+		echo "${OPT}"
+		return "${RET}"
+	fi
+
+else
+	# whiptail's menubox has:
+	# 4 lines at top
+	# then the menu (NUM_OPTIONS lines)
+	# 2 blank lines
+	# 1 "<Ok> / <Cancel>" line
+	# 2 blank lines
+	# If all that doesn't fit in the terminal windows, whiptail does NOT scroll.
+	local LINES=$(( 4 + NUM_OPTIONS + 2 + 1 + 2 ))
+
+	if [[ ${LINES} -ge ${T_LINES} ]]; then
+		echo "Please resize your window to at least $(( LINES + 1 )) lines."
+		echo "It is only ${T_LINES} lines now."
+		return 1
 	fi >&2
 
 	local OPT="$( whiptail --title "${TITLE}" --notags --menu "${PROMPT}" \
+		--default-item "${DEFAULT_MENU_ITEM}" \
 		"${LINES}" "${WT_WIDTH:-100}" "${NUM_OPTIONS}" -- "${OPTIONS[@]}" 3>&1 1>&2 2>&3 )"
 	local RET=$?
 	if [[ ${RET} -eq 255 ]]; then
@@ -654,6 +634,7 @@ function prompt()
 		echo "${OPT}"
 		return "${RET}"
 	fi
+fi
 }
 
 
@@ -677,13 +658,13 @@ function getInput()
 
 
 # Output a list item.
-# Uses global ${N}.
+# Uses globals ${N} and ${C}.
 function L()
 {
 	local NAME="${1}"
 
 	local NUM="$( printf "%2d" "${N}" )"
-	echo -e "${NUM}.  ${NAME}"
+	echo -e "  ${NUM}. ${NAME}"
 }
 
 
@@ -691,8 +672,7 @@ function L()
 
 OK="true"
 DO_HELP="false"
-CMD=""
-CMD_ARGS=""
+FUNCTION_TO_EXECUTE=""
 DEBUG="false"
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
@@ -711,20 +691,21 @@ while [[ $# -gt 0 ]]; do
 			;;
 
 		*)
-			CMD="${ARG}"
+			FUNCTION_TO_EXECUTE="${ARG}"
 			shift
-			# shellcheck disable=SC2124
-			CMD_ARGS="${@}"
+			# The remaining arguments are in ${@}.
 			break;
 			;;
 	esac
 	shift
 done
 
+PATH="${PATH}:${ALLSKY_UTILITIES}"
+
 if [[ ${DO_HELP} == "true" ]]; then
-	if [[ -n ${CMD} ]]; then
+	if [[ -n ${FUNCTION_TO_EXECUTE} ]]; then
 		echo
-		run_command "${CMD}" "--help"
+		run_command "${FUNCTION_TO_EXECUTE}" "--help"
 		echo
 		exit 0
 	else
@@ -733,58 +714,136 @@ if [[ ${DO_HELP} == "true" ]]; then
 fi
 [[ ${OK} == "false" ]] && usage_and_exit 1
 
-PATH="${PATH}:${ALLSKY_UTILITIES}"
-
-if [[ -z ${CMD} ]]; then
+if [[ -z ${FUNCTION_TO_EXECUTE} ]]; then
 	# No command given on command line so prompt for one.
 
 	if [[ ${ON_TTY} == "false" ]]; then
-		W_ "${ME} must run from a terminal or have all arguments included on the command line." >&2
+		W_ "${ME} must be run from a terminal or have all arguments included on the command line." >&2
 		exit 2
 	fi
 
 	PROMPT="\nSelect a command to run:"
-	CMDS=(); N=1
+fi
+	CMDS=()
+	N=0
 
-	C="show_supported_cameras"
-	CMDS+=("${C}"			"$( L "Show supported cameras                              (${C})" )"); ((N++))
-	C="show_connected_cameras"
-	CMDS+=("${C}"			"$( L "Show connected cameras                              (${C})" )"); ((N++))
-	C="prepare_logs"
-	CMDS+=("${C}"			"$( L "Prepare log files for troubleshooting               (${C})" )"); ((N++))
-	C="config_timelapse"
-	CMDS+=("${C}"			"$( L "Create timelapse videos with different settings     (${C})" )"); ((N++))
-	C="change_swap"
-	CMDS+=("${C}"			"$( L "Add swap space or change size                       (${C})" )"); ((N++))
-	C="change_tmp"
-	CMDS+=("${C}" 			"$( L "Move ~/allsky/tmp to memory or change size          (${C})") "); ((N++))
-	C="samba"
-	CMDS+=("${C}" 			"$( L "Simplify copying files to/from the Pi               (${C})" )"); ((N++))
-	C="move_images"
-	CMDS+=("${C}"			"$( L "Move ~/allsky/images to a different location        (${C})" )"); ((N++))
-	C="bad_images_info"
-	CMDS+=("${C}"			"$( L "Display information on 'bad' images                 (${C})" )"); ((N++))
-	C="new_rpi_camera_info"
-	CMDS+=("${C}"			"$( L "Collect information for new RPi camera              (${C})" )"); ((N++))
-	C="show_start_times"
-	CMDS+=("${C}"			"$( L "Show daytime and nighttime start times              (${C})" )"); ((N++))
-	C="compare_paths"
-	CMDS+=("${C}"			"$( L "Compare upload and Website paths                    (${C})" )"); ((N++))
-	C="get_brightness_info"
-	CMDS+=("${C}"			"$( L "Get information on image brightness                 (${C})" )"); ((N++))
-	C="check_post_data"
-	CMDS+=("${C}"			"$( L "Troubleshoot the 'data.json is X days old' message  (${C})" )"); ((N++))
-	C="get_filesystems"
-	CMDS+=("${C}"			"$( L "Determine where a secodary storage device is        (${C})" )"); ((N++))
-	C="encoders"
-	CMDS+=("${C}"			"$( L "Show list of timelapse encoders available           (${C})" )"); ((N++))
-	C="pix_fmts"
-	CMDS+=("${C}"			"$( L "Show list of timelapse pixel formats available      (${C})" )"); ((N++))
+#####
+	# The command names must be in () within CMDS so we can determine if
+	# a command passed to us is valid.
+	CMDS+=("header"	      "Commands to Display Information" )
 
+	((N++));	C="get_startrails_info"
+	CMDS+=("${C}"	"$( L "Get information on startrails image brightness (${C})" )")
+
+	DEFAULT_MENU_ITEM="${C}"		# Must be 1st item
+
+	((N++));	C="show_start_times"
+	CMDS+=("${C}"	"$( L "Show daytime and nighttime start times         (${C})" )")
+
+	((N++));	C="show_supported_cameras"
+	CMDS+=("${C}"	"$( L "Show supported cameras                         (${C})" )")
+
+	((N++));	C="show_connected_cameras"
+	CMDS+=("${C}"	"$( L "Show connected cameras                         (${C})" )")
+
+	((N++));	C="new_rpi_camera_info"
+	CMDS+=("${C}"	"$( L "Collect information for new RPi camera         (${C})" )")
+
+	((N++));	C="show_installed_locales"
+	CMDS+=("${C}"	"$( L "Show the locales installed on the Pi           (${C})" )")
+
+	((N++));	C="get_filesystems"
+	CMDS+=("${C}"	"$( L "Determine where a secodary storage device is   (${C})" )")
+
+	((N++));	C="encoders"
+	CMDS+=("${C}"	"$( L "Show available timelapse encoders              (${C})" )")
+
+	((N++));	C="pix_fmts"
+	CMDS+=("${C}"	"$( L "Show available of timelapse pixel formats      (${C})" )")
+
+
+#####
+	CMDS+=("header"	      "Commands to Create Test Images or Videos" )
+
+	((N++));	C="compare_timelapses"
+	CMDS+=("${C}"	"$( L "Create multiple timelapse videos               (${C})" )")
+
+	((N++));	C="compare_startrails"
+	CMDS+=("${C}"	"$( L "Create multiple startrails                     (${C})" )")
+
+	((N++));	C="compare_stretches"
+	CMDS+=("${C}"	"$( L "Create multiple stretched images               (${C})" )")
+
+
+#####
+	CMDS+=("header"	      "Commands to Change Pi Settings" )
+
+	((N++));	C="change_swap"
+	CMDS+=("${C}"	"$( L "Add swap space or change size                  (${C})" )")
+
+	((N++));	C="change_tmp"
+	CMDS+=("${C}" 	"$( L "Move ~/allsky/tmp to memory or change size     (${C})") ")
+
+	((N++));	C="samba"
+	CMDS+=("${C}" 	"$( L "Simplify copying files to/from the Pi          (${C})" )")
+
+
+#####
+	CMDS+=("header"	      "Troubleshooting Commands" )
+
+	((N++));	C="bad_images_info"
+	CMDS+=("${C}"	"$( L "Display information on 'bad' images            (${C})" )")
+
+	((N++));	C="check_post_data"
+	CMDS+=("${C}"	"$( L "Troubleshoot 'data.json' messages              (${C})" )")
+
+	((N++));	C="compare_paths"
+	CMDS+=("${C}"	"$( L "Compare upload and Website paths               (${C})" )")
+
+	((N++));	C="test_upload"
+	CMDS+=("${C}"	"$( L "Test uploading a file                          (${C})" )")
+
+
+
+#####
+	CMDS+=("header"	      "Misc. Commands" )
+
+	((N++));	C="manage_modules"
+	CMDS+=("${C}"	"$( L "Install or uninstall modules.                  (${C})" )")
+
+	((N++));	C="move_images"
+	((N++));	C="check_allsky"
+	CMDS+=("${C}"	"$( L "Check Allsky for setting errors and warnings   (${C})" )")
+
+	((N++));	C="move_images"
+	CMDS+=("${C}"	"$( L "Move ~/allsky/images to a different location   (${C})" )")
+
+	((N++));	C="prepare_logs"
+	CMDS+=("${C}"	"$( L "Prepare log files for troubleshooting          (${C})" )")
+
+	((N++));	C="recreate_files"
+	CMDS+=("${C}"	"$( L "Recreate various files after a 'git pull'      (${C})" )")
+
+
+if [[ -z ${FUNCTION_TO_EXECUTE} ]]; then
+	##### Prompt
 	# If the user selects "Cancel" prompt() returns 1 and we exit the loop.
-	while COMMAND="$( prompt "${PROMPT}" "${CMDS[@]}" )"
+	P="${PROMPT}"
+	while COMMAND="$( prompt "${P}" "${CMDS[@]}" )"
 	do
-		[[ -z ${COMMAND} ]] && exit 0
+		if [[ -z ${COMMAND} ]]; then
+			[[ ${ON_TTY} == "true" ]] && clear
+			exit 0
+		fi
+
+		if [[ ${COMMAND} == "header" ]]; then
+			# There isn't a way in whiptail to group items so we fake it.
+			P="\nYou selected a header.  Please select a command to run:"
+			continue
+		fi
+		P="${PROMPT}"	# restore prompt
+
+		[[ ${ON_TTY} == "true" ]] && clear
 
 		run_command "${COMMAND}"
 		RET=$?
@@ -792,7 +851,7 @@ if [[ -z ${CMD} ]]; then
 		[[ ${ALLOW_MORE_COMMANDS} == "false" ]] && exit "${RET}"
 		while true; do
 			echo -e "\n\n"
-			echo -e "${YELLOW}${BOLD}"
+			echo -e "${cYELLOW}${cBOLD}"
 			echo    "=========================================="
 			echo -n "Press RETURN to continue or 'q' to quit: "
 			read -r x
@@ -809,7 +868,7 @@ if [[ -z ${CMD} ]]; then
 
 else
 	#shellcheck disable=SC2086
-	run_command "${CMD}" ${CMD_ARGS}
+	run_command "${FUNCTION_TO_EXECUTE}" "${@}"
 	exit $?
 fi
 

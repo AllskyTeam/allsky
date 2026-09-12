@@ -581,7 +581,7 @@ function AppCtrl($scope, $timeout, $http, _) {
 						message += "<code>configuration.json</code>.";
 						message += "<br>For remote Websites, edit ";
 						message += "<code>remote_configuration.json</code>.";
-						// If it contains "current" say that's only for remote Websites
+						// If it contains "current" say that's only for local Websites
 						if ($scope.imageName.search("/current") >= 0) {
 							message += "<br><br>";
 							message += "If this is a <u>remote</u> Allsky Website,<br>";

@@ -9,80 +9,41 @@
  * @author     Lawrence Yau <sirlagz@gmail.comm>
  * @author     Bill Zimmerman <billzimmerman@gmail.com>
  * @author     Thomas Jacquin <jacquin.thomas@gmail.com>
+ * @author     Eric Claeys (AstroEric) https://github.com/AllskyTeam
+ * @author     Alex Greenland (alex-developer) https://github.com/AllskyTeam
  * @license    GNU General Public License, version 3 (GPL-3.0)
  * @version    0.0.1
  */
 
+global $inlineMessages;
 // Globals
 $lastChangedName = "lastchanged";	// json setting name
 $formReadonly = false;				// The WebUI isn't readonly
 $ME = htmlspecialchars($_SERVER["PHP_SELF"]);
 
+// TODO: Implement
+$useMeteors = false;
+
 // functions.php sets a bunch of constants and variables.
-// It needs to be at the top of this file since code below uses the items it sets.
 include_once('includes/functions.php');
+initialize_variables();		// sets some variables
+$csrf_token = useLogin();
+$page = getVariableOrDefault($_REQUEST, 'page', "live_view");
+include_once('includes/authenticate.php');
 include_once('includes/status_messages.php');
 $status = new StatusMessages();
-initialize_variables();		// sets some variables
 
-// Constants for configuration file paths.
-// These are typical for default RPi installs. Modify if needed.
-include_once('includes/authenticate.php');
-define('RASPI_WPA_SUPPLICANT_CONFIG', '/etc/wpa_supplicant/wpa_supplicant.conf');
-define('RASPI_WPA_CTRL_INTERFACE', '/var/run/wpa_supplicant');
+// TODO in major release after v2025.xx.xx:
+// We want to remove the "DHCP" page from Allsky but aren't sure if anyone's using it.
+// To be save, leave all the DHCP code but don't display the link to the page.
+// If no one complains we can remove everything DHCP related.
+define('DHCP_ENABLED', false);
 
-// Optional services, set to true to enable.
-define('DHCP_ENABLED', true);
-define('APD_ENABLED', false);
-define('RASPI_OPENVPN_ENABLED', false);
-define('RASPI_TORPROXY_ENABLED', false);
+checkClearingMessages();
 
-if (DHCP_ENABLED) {
-	define('RASPI_DNSMASQ_CONFIG', '/etc/dnsmasq.conf');
-	define('RASPI_DNSMASQ_LEASES', '/var/lib/misc/dnsmasq.leases');
-} else {
-	function DisplayDHCPConfig() {}
-}
-if (APD_ENABLED) {
-	define('RASPI_HOSTAPD_CONFIG', '/etc/hostapd/hostapd.conf');
-	define('RASPI_HOSTAPD_CTRL_INTERFACE', '/var/run/hostapd');
-} else {
-	function DisplayHostAPDConfig() {}
-}
-if (RASPI_OPENVPN_ENABLED || RASPI_TORPROXY_ENABLED) {
-	include_once('includes/torAndVPN.php');
-	define('RASPI_OPENVPN_CLIENT_CONFIG', '/etc/openvpn/client.conf');
-	define('RASPI_OPENVPN_SERVER_CONFIG', '/etc/openvpn/server.conf');
-	define('RASPI_TORPROXY_CONFIG', '/etc/tor/torrc');
-} else {
-	function SaveTORAndVPNConfig() {}
-	function DisplayOpenVPNConfig() {}
-	function DisplayTorProxyConfig() {}
-}
-
-$output = $return = 0;
-if (isset($_POST['page']))
-	$page = $_POST['page'];
-else if (isset($_GET['page']))
-	$page = $_GET['page'];
-else
-	$page = "";
-if (isset($_GET['day']))
-	$day = " - " . $_GET['day'];
-else
-	$day = "";
-
-if ($useLogin) {
-	session_start();
-	if (empty($_SESSION['csrf_token'])) {
-		if (function_exists('mcrypt_create_iv')) {
-			$_SESSION['csrf_token'] = bin2hex(mcrypt_create_iv(32, MCRYPT_DEV_URANDOM));
-		} else {
-			$_SESSION['csrf_token'] = bin2hex(openssl_random_pseudo_bytes(32));
-		}
-	}
-	$csrf_token = $_SESSION['csrf_token'];
-}
+function getRemoteWebsiteVersion()
+{
+	global $useRemoteWebsite, $status;
 
 // Get the version of the remote Allsky Website, if it exists.
 $remoteWebsiteVersion = "";
@@ -135,6 +96,9 @@ if ($useRemoteWebsite) {
 		case "list_videos":			$Title = "Timelapse$day";		break;
 		case "list_keograms":		$Title = "Keogram$day";			break;
 		case "list_startrails":		$Title = "Startrails$day";		break;
+		// CG name meteors list page
+		case "list_meteors":		$Title = "Meteors$day";			break;
+		// CG
 		case "editor":				$Title = "Editor";				break;
 		case "overlay":				$Title = "Overlay Editor";		break;
 		case "module":				$Title = "Module Manager";		break;
@@ -238,149 +202,95 @@ if ($useRemoteWebsite) {
 						}
 						$more .= "' style='background-color: red; color: white;'";
 
-						if ($changed) {
-							$x = "<br>&nbsp; &nbsp;";
-							$msg = "$x<strong>";
-							$msg .= "A new release of Allsky is available: $newestVersion";
-							$msg .= "</strong>";
-							if ($note !== "") {
-								$msg .= "$x$note";
-							}
-							$msg .= "<br><br>";
-							$cmd = ALLSKY_SCRIPTS . "/addMessage.sh";
-							$cmd .= " --no-date --type success --msg '${msg}'";
-							runCommand($cmd, "", "");
-						}
-					} else {
-						$more = "";
-					}
-					echo "<span class='nowrap'>";
-						echo "<span $more>Version: " . ALLSKY_VERSION . "</span>";
-						echo "&nbsp; on &nbsp;";
-						echo "<span style='font-weight: bold'>$hostname</span>";
-					echo "</span>";
-if ($useLocalWebsite) {
-					echo "<br>";
-					echo "<span class='nowrap'>";
-					echo "<a external='true' class='version-title-color' href='allsky/index.php'>";
-					echo "Local Website</a>";
-					echo "</span>";
+		if ($changed) {
+			$x = "<br>&nbsp; &nbsp;";
+			$msg = "$x<strong>";
+			$msg .= "A new release of Allsky is available: $newestVersion";
+			$msg .= "</strong>";
+			if ($note !== "") {
+				$msg .= "$x$note";
+			}
+			$msg .= "<br><br>";
+			$cmd = ALLSKY_SCRIPTS . "/addMessage.sh";
+			$cmd .= " --no-date --type success --msg '${msg}'";
+			runCommand($cmd, "", "");
+		}
+	} else {
+		$more = "";
+	}
+	return "<span $more>" . ALLSKY_VERSION . "</span>";
 }
-if ($useRemoteWebsite) {
-					echo "&nbsp;&nbsp;&nbsp;&nbsp; ";
-					echo "<span class='nowrap'>";
-					echo "<a external='true' class='version-title-color' href='$remoteWebsiteURL'>";
-					echo "Remote Website $remoteWebsiteVersion</a>";
-					echo "</span>";
-} ?>
-				</div>
-		</div> <!-- /.navbar-header -->
 
-		<!-- Navigation.  Add "id" to any page that needs to be refreshed. -->
-		<div class="navbar-default sidebar" role="navigation">
-			<div class="sidebar-nav navbar-collapse">
-				<ul class="nav" id="side-menu">
-					<li>
-						<a id="live_view" href="index.php?page=live_view"><i class="fa fa-eye fa-fw"></i> Live View</a>
-					</li>
-					<li>
-						<a id="list_days" href="index.php?page=list_days"><i class="fa fa-image fa-fw"></i> Images</a>
-					</li>
-					<li>
-						<a id="configuration" href="index.php?page=configuration"><i class="fa fa-camera fa-fw"></i> Allsky Settings</a>
-					</li>
-					<li>
-						<a id="editor" href="index.php?page=editor"><i class="fa fa-code fa-fw"></i> Editor</a>
-					</li>
-					<li>
-						<a id="overlay" href="index.php?page=overlay"><i class="fa fa-edit fa-fw"></i> Overlay Editor</a>
-					</li>
-					<li>
-						<a id="module" href="index.php?page=module"><i class="fa fa-bars fa-fw"></i> Module Manager</a>
-					</li>
-					<li>
-						<a id="LAN" href="index.php?page=LAN_info"><i class="fa fa-network-wired fa-fw"></i> <b>LAN</b> Dashboard</a>
-					</li>
-					<li>
-						<a id="WLAN" href="index.php?page=WLAN_info"><i class="fa fa-tachometer-alt fa-fw"></i> <b>WLAN</b> Dashboard</a>
-					</li>
-					<li>
-						<a id="wifi" href="index.php?page=wifi"><i class="fa fa-wifi fa-fw"></i> Configure Wi-Fi</a>
-					</li>
-					<?php if (DHCP_ENABLED) : ?>
-						<li>
-							<a id="vpn" href="index.php?page=dhcp_conf"><i class="fa fa-exchange fa-fw"></i> Configure DHCP</a>
-						</li>
-					<?php endif; ?>
-					<?php if (APD_ENABLED) : ?>
-						<li>
-							<a id="vpn" href="index.php?page=hostapd_conf"><i class="fa fa-dot-circle fa-fw"></i> Configure Hotspot</a>
-						</li>
-					<?php endif; ?>
-					<?php if (RASPI_OPENVPN_ENABLED) : ?>
-						<li>
-							<a id="vpn" href="index.php?page=openvpn_conf"><i class="fa fa-lock fa-fw"></i> Configure OpenVPN</a>
-						</li>
-					<?php endif; ?>
-					<?php if (RASPI_TORPROXY_ENABLED) : ?>
-						<li>
-							<a id="tor" href="index.php?page=torproxy_conf"><i class="fa fa-eye-slash fa-fw"></i> Configure TOR proxy</a>
-						</li>
-					<?php endif; ?>
-					<li>
-						<a id="auth_conf" href="index.php?page=auth_conf"><i class="fa fa-lock fa-fw"></i> Change Password</a>
-					</li>
-					<li>
-						<a id="system" href="index.php?page=system"><i class="fa fa-cube fa-fw"></i> System</a>
-					</li>
-					<li>
-						<a external="true" href="/documentation"><i class="fa fa-book fa-fw"></i> Allsky Documentation </a>
-					</li>
-					<li>
-						<a href="index.php?page=support"><i class="fa fa-question fa-fw"></i> Getting Support</a>
-					</li>
-					<li>
-						<span id="as-switch-theme"><i class="fa fa-moon fa-fw"></i> Light/Dark mode</span>
-					</li>
+function checkClearingMessages()
+{
+	global $status;
 
-				</ul>
-			</div><!-- /.navbar-collapse -->
-		</div><!-- /.navbar-default -->
-	</nav>
-
-	<div id="page-wrapper">
-		<div class="row right-panel">
-			<div class="col-lg-12">
-				<?php
-				check_if_configured($page, "main");	// It calls addMessage() on error.
-
-				if (isset($_POST['clear'])) {
-					$t = @filemtime(ALLSKY_MESSAGES);
-					// if it fails it's probably because something else deleted the file,
-					// in which case we don't care.
-					if ($t != false) {
-						$newT = getVariableOrDefault($_POST, "filetime", 0);
-						if ($t == $newT) {
-							exec("sudo rm -f " . ALLSKY_MESSAGES, $result, $retcode);
-							if ($retcode !== 0) {
-								$status->addMessage("Unable to clear messages: " . $result[0], 'danger');
-								$status->showMessages();
-							}
-						} else {
-							// If the messages changed after the user viewed the last page
-							// and before they clicked the "Clear" button,
-							// we'll have the old time in $filetime, but the timestamp of the file
-							// won't match so we'll get here, and then display the messages below.
-							$status->addMessage("System Messages changed.  New content is:", "warning");
-						}
-					}
+	if (isset($_POST['clear'])) {
+		$t = @filemtime(ALLSKY_MESSAGES);
+		// if it fails it's probably because something else deleted the file,
+		// in which case we don't care.
+		if ($t != false) {
+			$newT = getVariableOrDefault($_POST, "filetime", 0);
+			if ($t == $newT) {
+				$cmd = "sudo rm -f " . ALLSKY_MESSAGES;
+				exec($cmd, $result, $retcode);
+				if ($retcode !== 0) {
+					if (count($result) > 0)
+						$result = $result[0];
+					else
+						$result = "[unknown reason]";
+					echo "<script>console.log(`[$cmd] failed: $result`);</script>";
+					$status->addMessage("Unable to clear messages: $result", 'danger');
+					$status->showMessages();
 				}
-				clearstatcache();
-				$size = @filesize(ALLSKY_MESSAGES);
-				if ($size !== false && $size > 0) {
-					$contents_array = file(ALLSKY_MESSAGES, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-					echo "<div class='row'>"; echo "<div class='system-message'>";
-						echo "<div class='title'>System Messages</div>";
+			} else {
+				// If the messages changed after the user viewed the last page
+				// and before they clicked the "Clear" button,
+				// we'll have the old time in $filetime, but the timestamp of the file
+				// won't match so we'll get here, and then display the messages below.
+				$status->addMessage("System Messages changed.  New content is:", "warning");
+			}
+		}
+		$redirect = $_SERVER['HTTP_REFERER'] ?? '/';
+		redirect($redirect);
+	}
+}
+
+function haveMessages()
+{
+	clearstatcache();
+	$size = @filesize(ALLSKY_MESSAGES);
+	if ($size !== false && $size > 0) {
+		return true;
+	}
+	return false;
+}
+
+function displayStatusMessages($p)
+{
+	global $status, $ME;
+
+	check_if_configured($p, "main");	// It calls addMessage() on error.
+
+	clearstatcache();
+	$size = @filesize(ALLSKY_MESSAGES);
+	if ($size !== false && $size > 0) {
+		$contents_array = file(ALLSKY_MESSAGES, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+		?>
+		<div class="panel panel-danger" id="system-messages">
+			<div class="panel-heading">
+				<i class="fa-solid fa-message"></i> System Messages
+				<!-- Closing the message(s) doesn't make them go away.
+				<button type="button" class="close pull-right" aria-label="Close" id="closePanel">
+					<span aria-hidden="true">&times;</span>
+				</button>
+-->
+			</div>
+
+			<div class="panel-body">
+				<div class='row'>
+					<div class='system-message'>
+						<?php
 						foreach ($contents_array as $line) {
 							// Format: id, cmd_txt, level (i.e., CSS class), date, count, message [, url]
 							//         0   1        2                        3     4      5          6
@@ -402,7 +312,7 @@ if ($useRemoteWebsite) {
 								}
 
 								if ($id !== "") {
-									$m1 = "<br><a href='/execute.php?id=" . urlencode($id) . "'";
+									$m1 = "<br><a href='/execute.php?ID=" . urlencode($id) . "'";
 									$m1 .= " class='executeAction' title='Click to perform action' target='_actions'>";
 									$message .= "${m1}${cmd_txt}</a>";
 								}
@@ -426,15 +336,15 @@ if ($useRemoteWebsite) {
 							}
 						}
 						$status->showMessages();
-						echo "<br><div class='message-button'>";
-							$ts = time();
-							echo "<form action='$ME?_ts=$ts' method='POST'>";
-							echo "<input type='hidden' name='page' value='$page'>";
-							echo "<input type='hidden' name='clear' value='true'>";
-							$t = @filemtime(ALLSKY_MESSAGES);
-							echo "<input type='hidden' name='filetime' value='$t'>";
-							echo "<input type='submit' class='btn btn-primary' value='Clear messages' />";
-							echo "</form>";
+						echo "<div class='message-button'>";
+						$ts = time();
+						echo "<form action='$ME?_ts=$ts' method='POST'>";
+						echo "<input type='hidden' name='page' value='$p'>";
+						echo "<input type='hidden' name='clear' value='true'>";
+						$t = @filemtime(ALLSKY_MESSAGES);
+						echo "<input type='hidden' name='filetime' value='$t'>";
+						echo "<input type='submit' class='btn btn-primary btn-sm' value='Clear messages' />";
+						echo "</form>";
 						echo "</div>";
 					echo "</div>"; echo "</div>";// /.system-message and /.row
 				}
@@ -504,6 +414,18 @@ if ($useRemoteWebsite) {
 						// directory, file name prefix, formal name, type of file
 						ListFileType("startrails/", "startrails", "Startrails", "picture");
 						break;
+					// CG list meteors
+					case "list_meteors":
+						include_once('includes/days.php');
+						if (getVariableOrDefault($_GET, 'meteor_status', '') === 'deleted') {
+							echo "<div class='alert alert-success'>Meteor deleted.</div>";
+						} elseif (getVariableOrDefault($_GET, 'meteor_status', '') === 'error') {
+							echo "<div class='alert alert-danger'><b>Unable to delete meteor.</b></div>";
+						}
+						// directory, file name prefix, formal name
+						ListMeteors("meteors/", "meteors", "Meteors", "picture");
+						break;
+					// CG
 					case "editor":
 						include_once('includes/editor.php');
 						DisplayEditor();
@@ -531,5 +453,6 @@ if ($useRemoteWebsite) {
 	</div><!-- /#page-wrapper -->
 </div><!-- /#wrapper -->
 
-</body>
-</html>
+				</body>
+
+				</html>

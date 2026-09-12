@@ -7,5 +7,6 @@
     "addfieldopacity": 15,
     "selectfieldopacity": 30,
     "mousewheelzoom": false,
-    "backgroundopacity": 40
+    "backgroundopacity": 40,
+    "confirmDelete": true    
 }

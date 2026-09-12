@@ -4,9 +4,9 @@
 ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck source-path=.
-source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 if [[ ${1} != "" ]]; then
 	NEW_DEBUG="${1}"
@@ -15,14 +15,16 @@ else
 fi
 OLD_DEBUG=$( settings ".debuglevel" )
 
+debug_ "Stopping Allsky."
 stop_Allsky
+debug_ "Clearing out log files."
 sudo truncate -s 0 "${ALLSKY_LOG}"
 sudo truncate -s 0 "${ALLSKY_PERIODIC_LOG}"
 
 MSG="\nAllsky restarted with empty log files"
 if [[ ${OLD_DEBUG} -lt ${NEW_DEBUG} ]]; then
-	update_json_file ".debuglevel"  "${NEW_DEBUG}"  "${SETTINGS_FILE}"  "number"
-	MSG=" and Debug Level of ${NEW_DEBUG}."
+	update_json_file ".debuglevel"  "${NEW_DEBUG}"  "${ALLSKY_SETTINGS_FILE}"  "number"
+	MSG+=" and Debug Level of ${NEW_DEBUG}."
 	MSG+="\nWhen done troubleshooting, set the Debug Level back to ${OLD_DEBUG}."
 else
 	MSG+="."

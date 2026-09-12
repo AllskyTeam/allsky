@@ -8,9 +8,9 @@
 ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck disable=SC1091 source=variables.sh
-source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 ARGS=$*
 
@@ -54,7 +54,7 @@ usage_and_exit()
 		wE_ "${MSG}"
 	fi
 	echo
-	echo "where:"
+	echo "Arguments:"
 	echo "  --cmd c      displays 'c' as a link in the WebUI."
 	echo "  --delete     if specified, only '--id ID' is required."
 	echo "  --no-date    does not add the current date to the message."
@@ -74,6 +74,7 @@ TYPE=""
 MESSAGE=""
 ESCAPED_MESSAGE=""
 URL=""
+MSG_SPECIFIED="false"
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
 	case "${ARG,,}" in
@@ -100,6 +101,7 @@ while [[ $# -gt 0 ]]; do
 			shift
 			;;
 		"--msg")
+			MSG_SPECIFIED="true"
 			MESSAGE="$( convert_string "${2}" )"
 			# If ${MESSAGE} contains "*" or "[" it hoses up the grep and sed regular expression,
 			# so escape them.
@@ -126,10 +128,14 @@ done
 [[ ${OK} == "false" ]] && usage_and_exit 1
 if [[ ${DELETE} == "false" && (-z ${TYPE} || -z ${MESSAGE}) ]]; then
 	[[ -z ${TYPE} ]] && wE_ "--type not specified" >&2
-	[[ -z ${MESSAGE} ]] && wE_ "--msg not specified" >&2
+	[[ ${MSG_SPECIFIED} == "false" ]] && wE_ "--msg not specified" >&2
+	[[ -z ${MESSAGE} ]] && wE_ "Empty message" >&2
 	echo "Command line: ${ARGS}" >&2
 	usage_and_exit 1
 fi
+
+# In case it doesn't exist, like if Allsky isn't installed yet.
+mkdir -p "$( dirname "${ALLSKY_MESSAGES}" )"
 
 if [[ ${DELETE} == "true" ]]; then
 	[[ ! -f ${ALLSKY_MESSAGES} ]] && exit 0

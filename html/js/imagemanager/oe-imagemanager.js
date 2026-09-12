@@ -76,11 +76,18 @@
                 maxFilesize: 100,
                 acceptedFiles: 'image/png, image/jpeg',
                 init: function() {
-                    this.on('queuecomplete', () => {
+                    this.on('queuecomplete', (e) => {
                         loadThumbnails();
-                    });
+                    })
+   
+                    this.on("complete", function (file) {
+                        debugger
+                        if (file.status === "error") {
+                            console.warn("Completed with error:", file.name);
+                        }
+                    })
                 }                
-            });
+            })
 
             loadThumbnails();
 

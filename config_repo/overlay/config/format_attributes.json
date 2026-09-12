@@ -1,0 +1,108 @@
+{
+    "dp": {
+        "description": "Set number of decimal places (0 is integer)",
+        "example": "52.3",
+        "input": {
+            "field": "spinner",
+            "min": 0,
+            "max": 10
+        }
+    },
+    "deg": {
+        "description": "Add degrees symbol: &deg;",
+        "example": "52Â°",
+        "type": {
+            "field": "boolean"
+        }        
+    },
+    "per": {
+        "description": "Add percentage symbol: %",
+        "example": "52%",
+        "type": {
+            "field": "boolean"
+        }      
+    },
+    "volts": {
+        "description": "Add volts symbol: V",
+        "example": "12V",
+        "type": {
+            "field": "boolean"
+        }      
+    },
+    "amps": {
+        "description": "Add amps symbol: A",
+        "example": "0.20A",
+        "type": {
+            "field": "boolean"
+        }      
+    },           
+    "locale": {
+        "description": "Use locale formatting",
+        "example": "1.234,56 versus 1,234.56",
+        "type": {
+            "field": "boolean"
+        }  
+    },
+    "degctof": {
+        "description": "Convert C to F",
+        "example": "",
+        "type": {
+            "field": "boolean"
+        }  
+    },
+    "degftoc": {
+        "description": "Convert F to C",
+        "example": "",
+        "type": {
+            "field": "boolean"
+        }  
+    },
+    "temp_unit": {
+        "description": "Add unit (C or F)",
+        "example": "21.2 C",
+        "type": {
+            "field": "boolean"
+        }  
+    },
+    "fsunit": {
+        "description": "Add filesize units symbol",
+        "example": "12 GB",
+        "type": {
+            "field": "select",
+            "values": {
+                "": "None",
+                "B": "Bytes",
+                "KB": "KB",
+                "MB": "MB",
+                "GB": "GB",
+                "TB": "TB"
+            }
+        }  
+    },
+    "mtok": {
+        "description": "Miles to Kilometers",
+        "example": "",
+        "type": {
+            "field": "boolean"
+        }  
+    },
+    "ktom": {
+        "description": "Kilometers to Miles",
+        "example": "",
+        "type": {
+            "field": "boolean"
+        }  
+    },
+    "distunit": {
+        "description": "Distance Unit",
+        "example": "",
+        "type": {
+            "field": "select",
+            "values": {
+                "": "None",
+                "Mi": "Miles",
+                "Km": "Kilometeres"
+            }
+        }  
+    }      
+}

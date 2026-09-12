@@ -1,11 +1,13 @@
+#TODO: Fix events
 """ allsky_meteor.py
 
 Part of allsky postprocess.py modules.
 https://github.com/AllskyTeam/allsky
 
-This module will attempt to locate meteors in captured images
+This module attempts to locate meteors in a captured image.
 """
-import allsky_shared as s
+import allsky_shared as allsky_shared
+from allsky_base import ALLSKYMODULEBASE
 import os
 import json
 import cv2
@@ -184,17 +186,16 @@ def meteor(params, event):
         s.log(4, f"INFO: {result}")
         s.setEnvironmentVariable("AS_METEORCOUNT", "Disabled")
 
-    return result
+	return result
 
 def meteor_cleanup():
-    moduleData = {
-        "metaData": metaData,
-        "cleanup": {
-            "files": {},
-            "env": {
-                "AS_METEORLINECOUNT",
-                "AS_METEORCOUNT"
-            }
-        }
-    }
-    s.cleanupModule(moduleData)
+	moduleData = {
+		"metaData": ALLSKYMETEOR.meta_data,
+		"cleanup": {
+			"files": {
+				ALLSKYMETEOR.meta_data['extradatafilename']
+			},
+			"env": {}
+		}
+	}
+	allsky_shared.cleanupModule(moduleData)

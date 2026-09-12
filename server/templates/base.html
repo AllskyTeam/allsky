@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>{{ title or 'App' }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap/css/bootstrap.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='fontawesome/css/all.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='app/css/app.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='app/css/checkbox.css') }}">
+    {% if extra_external_css %}
+    {% for css in extra_external_css %}
+    <link rel="stylesheet" href="{{ css }}">
+    {% endfor %}
+    {% endif %}
+    {% if extra_css %}
+    {% for css in extra_css %}
+    <link rel="stylesheet" href="{{ url_for('static', filename=css) }}">
+    {% endfor %}
+    {% endif %}
+    <link rel="icon" href="/static/favicon.ico">
+</head>
+
+<body>
+    <div class="wrapper d-flex vh-100 overflow-hidden" id="as-main-content">
+        <nav id="sidebar" class="d-flex flex-column vh-100">
+            <div class="custom-menu">
+                <button type="button" id="sidebarCollapse" class="btn btn-primary">
+                    <i class="fa fa-bars"></i>
+                    <span class="visually-hidden">Toggle Menu</span>
+                </button>
+            </div>
+            <div class="p-4">
+                <a href="/">
+                    <img src="{{ url_for('static', filename='images/logo-l.png') }}" alt="Logo" width="150">
+                </a>
+                <div class="form-check form-switch mt-4">
+                    <input class="form-check-input" type="checkbox" id="theme-toggle">
+                    <label class="form-check-label" for="theme-toggle">Dark Mode</label>
+                </div>
+
+
+                {% if current_user.is_authenticated %}
+                <ul class="list-unstyled components mb-5 mt-3">
+                    <li class="">
+                        <a href="{{ url_for('dashboard.allsky_dashboard') }}" class="text-decoration-none"><i
+                                class="fa-solid fa-chart-line"></i> Dashboard</a>
+                    </li>
+                </ul>
+                {% endif %}
+
+                <div class="footer">
+                    <div class="text-right" style="margin-bottom:10px;">
+                        <a href="{{ url_for('webauth.logout') }}" class="btn btn-danger btn-sm">Logout</a>
+                    </div>
+
+                </div>
+            </div>
+        </nav>
+
+        <div id="content" class="ps-3 pe-4 overflow-auto flex-grow-1">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='jquery/js/jquery-3.7.1.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='app/js/app.js') }}"></script>
+    <script src="{{ url_for('static', filename='app/js/jquery-loading-overlay.js') }}"></script>
+    <script src="{{ url_for('static', filename='app/js/loading.js') }}"></script>
+
+    {% if extra_external_js %}
+    {% for js in extra_external_js %}
+    <script src="{{ js }}"></script>
+    {% endfor %}
+    {% endif %}
+
+    {% if extra_js %}
+    {% for js in extra_js %}
+    <script src="{{ url_for('static', filename=js) }}"></script>
+    {% endfor %}
+    {% endif %}
+</body>
+
+</html>

@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760">
+  <defs>
+    <style>
+      .bg { fill: #fffdf8; }
+      .title { font: 700 30px Arial, sans-serif; fill: #1f2937; }
+      .subtitle { font: 18px Arial, sans-serif; fill: #374151; }
+      .axis { stroke: #111827; stroke-width: 2.5; }
+      .grid { stroke: #e5e7eb; stroke-width: 1; }
+      .text { font: 16px Arial, sans-serif; fill: #374151; }
+      .small { font: 14px Arial, sans-serif; fill: #6b7280; }
+      .panelTitle { font: 700 22px Arial, sans-serif; fill: #1f2937; }
+      .linear { stroke: #2563eb; stroke-width: 5; fill: none; }
+      .quad { stroke: #d97706; stroke-width: 5; fill: none; }
+      .aggr { stroke: #dc2626; stroke-width: 5; fill: none; }
+      .marker { stroke: #6b7280; stroke-width: 2; stroke-dasharray: 6 6; }
+      .box { fill: #ffffff; stroke: #d1d5db; stroke-width: 1.5; rx: 10; }
+    </style>
+  </defs>
+
+  <rect class="bg" width="1200" height="760"/>
+  <text class="title" x="60" y="55">Dew Heater PWM Curves</text>
+  <text class="subtitle" x="60" y="90">All three examples use the same thresholds. The only thing that changes is how quickly output ramps down as conditions become safer.</text>
+
+  <rect class="box" x="60" y="120" width="1080" height="120"/>
+  <text class="text" x="85" y="160">Example thresholds used in all panels:</text>
+  <text class="text" x="85" y="195">Full Heat Margin = 0.5</text>
+  <text class="text" x="360" y="195">Turn Heater Off Above = 4.0</text>
+  <text class="text" x="705" y="195">Min PWM % = 20</text>
+  <text class="text" x="925" y="195">Max PWM % = 100</text>
+  <text class="small" x="85" y="224">Smaller dew margin means more dew risk, so heater output rises toward maximum.</text>
+
+  <g transform="translate(70,290)">
+    <text class="panelTitle" x="0" y="-20">Linear</text>
+    <line class="axis" x1="50" y1="180" x2="320" y2="180"/>
+    <line class="axis" x1="50" y1="180" x2="50" y2="10"/>
+    <line class="grid" x1="50" y1="40" x2="320" y2="40"/>
+    <line class="grid" x1="50" y1="110" x2="320" y2="110"/>
+    <line class="marker" x1="80" y1="10" x2="80" y2="180"/>
+    <line class="marker" x1="290" y1="10" x2="290" y2="180"/>
+    <path class="linear" d="M80,24 L290,146 L320,180"/>
+    <text class="small" x="15" y="20">100%</text>
+    <text class="small" x="23" y="115">50%</text>
+    <text class="small" x="28" y="185">0%</text>
+    <text class="small" x="72" y="205">0.5</text>
+    <text class="small" x="282" y="205">4.0</text>
+    <text class="text" x="185" y="235" text-anchor="middle">
+      <tspan x="185" dy="0">Output falls at a steady rate</tspan>
+      <tspan x="185" dy="22">across the range.</tspan>
+    </text>
+  </g>
+
+  <g transform="translate(430,290)">
+    <text class="panelTitle" x="0" y="-20">Quadratic</text>
+    <line class="axis" x1="50" y1="180" x2="320" y2="180"/>
+    <line class="axis" x1="50" y1="180" x2="50" y2="10"/>
+    <line class="grid" x1="50" y1="40" x2="320" y2="40"/>
+    <line class="grid" x1="50" y1="110" x2="320" y2="110"/>
+    <line class="marker" x1="80" y1="10" x2="80" y2="180"/>
+    <line class="marker" x1="290" y1="10" x2="290" y2="180"/>
+    <path class="quad" d="M80,24 C110,26 150,40 195,76 C235,110 265,132 290,146 L320,180"/>
+    <text class="small" x="15" y="20">100%</text>
+    <text class="small" x="23" y="115">50%</text>
+    <text class="small" x="28" y="185">0%</text>
+    <text class="small" x="72" y="205">0.5</text>
+    <text class="small" x="282" y="205">4.0</text>
+    <text class="text" x="185" y="235" text-anchor="middle">
+      <tspan x="185" dy="0">Keeps more heat near the</tspan>
+      <tspan x="185" dy="22">danger zone, then drops faster.</tspan>
+    </text>
+  </g>
+
+  <g transform="translate(790,290)">
+    <text class="panelTitle" x="0" y="-20">Aggressive</text>
+    <line class="axis" x1="50" y1="180" x2="320" y2="180"/>
+    <line class="axis" x1="50" y1="180" x2="50" y2="10"/>
+    <line class="grid" x1="50" y1="40" x2="320" y2="40"/>
+    <line class="grid" x1="50" y1="110" x2="320" y2="110"/>
+    <line class="marker" x1="80" y1="10" x2="80" y2="180"/>
+    <line class="marker" x1="290" y1="10" x2="290" y2="180"/>
+    <path class="aggr" d="M80,24 C120,24 190,34 245,68 C280,92 295,118 305,142 L320,180"/>
+    <text class="small" x="15" y="20">100%</text>
+    <text class="small" x="23" y="115">50%</text>
+    <text class="small" x="28" y="185">0%</text>
+    <text class="small" x="72" y="205">0.5</text>
+    <text class="small" x="282" y="205">4.0</text>
+    <text class="text" x="185" y="235" text-anchor="middle">
+      <tspan x="185" dy="0">Holds higher output for longer,</tspan>
+      <tspan x="185" dy="22">then drops sharply.</tspan>
+    </text>
+  </g>
+
+  <rect class="box" x="70" y="645" width="1060" height="70"/>
+  <text class="text" x="95" y="675">How to read these charts:</text>
+  <text class="text" x="95" y="700">The left side is closer to dew and therefore riskier. The right side is safer. As you move left, the heater output rises.</text>
+</svg>

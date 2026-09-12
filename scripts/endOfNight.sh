@@ -10,9 +10,9 @@ set -a
 ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck source-path=.
-source "${ALLSKY_HOME}/variables.sh"		|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"		|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 if [[ $# -eq 1 ]]; then
 	if [[ ${1} = "--help" ]]; then
@@ -188,5 +188,11 @@ fi
 activate_python_venv
 ${NICE} python3 "${ALLSKY_SCRIPTS}/flow-runner.py" --event nightday
 deactivate_python_venv
+
+#
+# Run database purge
+#
+echo -e "INFO: ===== Purging Allsky database."
+"${ALLSKY_UTILITIES}/db.py" --purge
 
 exit 0

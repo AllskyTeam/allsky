@@ -1,0 +1,83 @@
+{
+  "local": {
+    "order": 10,
+    "label": "${ALLSKY_WEBSITE_CONFIGURATION_NAME} (local Allsky Website)",
+    "path": "${ALLSKY_WEBSITE_CONFIGURATION_FILE}",
+    "includeWhen": {
+      "global": "hasLocalWebsite",
+      "equals": true
+    },
+    "validateJson": true,
+    "remote": false,
+    "messages": {
+      "unavailable": [
+        {
+          "when": {
+            "global": "hasLocalWebsite",
+            "equals": false
+          },
+          "severity": "info",
+          "message": "<div class='dropdown'><code>${label}</code> will appear in the list below if you enable <span class='WebUISetting'>Use Local Website</span>.</div>"
+        },
+        {
+          "when": {
+            "global": "hasLocalWebsite",
+            "equals": true
+          },
+          "severity": "warning",
+          "message": "${error}"
+        }
+      ],
+      "available": [
+        {
+          "when": {
+            "global": "useLocalWebsite",
+            "equals": false
+          },
+          "severity": "warning",
+          "message": "The <span class='WebUISetting'>Use Local Website</span> setting is not enabled.<br>Your changes won't take effect until you enable it."
+        }
+      ]
+    }
+  },
+  "remote": {
+    "order": 20,
+    "label": "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME} (remote Allsky Website)",
+    "path": "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}",
+    "includeWhen": {
+      "global": "hasRemoteWebsite",
+      "equals": true
+    },
+    "validateJson": true,
+    "remote": true,
+    "messages": {
+      "unavailable": [
+        {
+          "when": {
+            "global": "hasRemoteWebsite",
+            "equals": true
+          },
+          "severity": "warning",
+          "message": "${error}"
+        }
+      ],
+      "available": [
+        {
+          "when": {
+            "global": "useRemoteWebsite",
+            "equals": false
+          },
+          "severity": "warning",
+          "message": "The <span class='WebUISetting'>Use Remote Website</span> setting is not enabled. Your changes won't take effect until you enable it."
+        }
+      ]
+    }
+  },
+  "monitorable_logs": {
+    "order": 30,
+    "label": "monitorable_logs.json",
+    "path": "${ALLSKY_MYFILES_DIR}/monitorable_logs.json",
+    "validateJson": true,
+    "remote": false
+  }
+}

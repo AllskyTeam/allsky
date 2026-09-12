@@ -8,23 +8,26 @@
 #	It does NOT assume Allsky has been installed so only uses scripts and functions
 #	that do not require Allsky to be installed.  This is to prevent any issues
 #	with the Allsky installation from interfering with the data collection.
-
+#	Several variables used in the script are defined in variables.sh or installUpgradeFunctions.sh.
 
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )" )"
 ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck source-path=.
-source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 if [[ ! -d ${ALLSKY_SUPPORT_DIR} ]]; then
 	mkdir -p "${ALLSKY_SUPPORT_DIR}" || exit 2
-	sudo chown "${USER_NAME}:${WEBSERVER_OWNER}" "${ALLSKY_SUPPORT_DIR}"
-	sudo chmod 775 "${ALLSKY_SUPPORT_DIR}"
 fi
+# Always run these to make sure the permissions are correct.
+sudo chown "${ALLSKY_OWNER}:${ALLSKY_WEBSERVER_OWNER}" "${ALLSKY_SUPPORT_DIR}"
+sudo chmod 775 "${ALLSKY_SUPPORT_DIR}"
+
+DISPLAY_MSG_LOG="${ALLSKY_LOGS}/support.log"	# send log entries here
 
 ############################################## functions
 
@@ -55,7 +58,7 @@ function set_messages()
 	GITHUB_ERROR+="\n"
 	GITHUB_ERROR+="It can be found at the end of the Github URL, for example if the URL is:\n"
 	GITHUB_ERROR+="\n"
-	GITHUB_ERROR+="    ${DIALOG_BLUE}${GITHUB_ROOT}/${GITHUB_ALLSKY_REPO}/discussions/4119${DIALOG_NC}\n"
+	GITHUB_ERROR+="    ${DIALOG_BLUE}${ALLSKY_GITHUB_ROOT}/${ALLSKY_GITHUB_ALLSKY_REPO}/discussions/4119${DIALOG_NC}\n"
 	GITHUB_ERROR+="\n"
 	GITHUB_ERROR+="the post is a Discussion whose number is ${DIALOG_BLUE}4119${DIALOG_NC}."
 
@@ -65,7 +68,7 @@ function set_messages()
 	SUPPORT_TCS+="- Basic system information\n"
 	SUPPORT_TCS+="- Filesystem, memory, and network information\n"
 	SUPPORT_TCS+="- Installed system and python packages\n"
-	SUPPORT_TCS+="- Allsky and web logs\n"
+	SUPPORT_TCS+="- Allsky and web log files\n"
 	SUPPORT_TCS+="- Connected camera details\n"
 	SUPPORT_TCS+="- i2c bus details\n"
 	SUPPORT_TCS+="- Running processes\n"
@@ -73,12 +76,15 @@ function set_messages()
 	SUPPORT_TCS+="\n"
 }
 
+H_WIDTH="-20s"
+
 function print_info()
 {
 	local LABEL="${1}"
 	local VALUE="${2}"
 
-	printf "%-20s : %-20s\n" "${LABEL}" "${VALUE}"
+	# shellcheck disable=SC2059
+	printf "%${H_WIDTH} : %${H_WIDTH}\n" "${LABEL}" "${VALUE}"
 }
 
 function print()
@@ -92,50 +98,55 @@ function print_heading()
 {
 	local LABEL="${1}"
 
-	printf "\n\n%-20s\n" "${LABEL}  - $( date )"
-	printf "%-20s\n" "============================"
-}
-
-function print_sub_heading()
-{
-	local LABEL="${1}"
-
-	printf "\n%-20s\n" "${LABEL}"
-	printf "%-20s\n" "----------------------------"
+	# shellcheck disable=SC2059
+	printf "%${H_WIDTH}\n" "${LABEL}  - $( date )"
+	# shellcheck disable=SC2059
+	printf "%${H_WIDTH}\n" "============================"
+	echo	# Separate header from content
 }
 
 function collect_support_info()
 {
+	### OS Information
 	# shellcheck disable=SC1091
 	source /etc/os-release	|| true
-	### OS Information
 	OS_ID="${ID,,}"
 	OS_VERSION_ID="${VERSION_ID}"
 	OS_VERSION_CODENAME="${VERSION_CODENAME,,}"
-	###
 
 	### Misc information
 	UPTIME="$( uptime )"
-	###
 
 	### User information
 	USER_NAME="$( id -un )"
 	USER_ID="$( id -u )"
-	###
 
 	### Hardware Information
-	PI_REVISION="$( grep -m 1 'Revision' /proc/cpuinfo | gawk '{print $3}' )"
+	PI_REVISION="$( gawk '
+		{
+			if ($1 == "Revision") {
+				print $3;
+				exit 0;
+			}
+		}' /proc/cpuinfo
+	)"
 	CPU_ARCH="$( uname -m )"
 	CPU_BITS="$( getconf LONG_BIT )"
 	CPU_TOTAL="$( nproc )"
 	MEMORY_INFO="$( free -h )"
-	MEM_TOTAL="$( echo "${MEMORY_INFO}" | grep Mem | gawk '{print $2}' )"
-	if [[ -s ${PI_VERSION_FILE} ]]; then
-		PI_MODEL="$( < "${PI_VERSION_FILE}" )"
+	MEM_TOTAL="$( echo "${MEMORY_INFO}" | gawk '
+		{
+			if ($1 == "Mem:") {
+				print $2;
+				exit 0;
+			}
+		}'
+	)"
+	if [[ -s ${ALLSKY_PI_VERSION_FILE} ]]; then
+		PI_MODEL="$( < "${ALLSKY_PI_VERSION_FILE}" )"
 	else
 		PI_MODEL="unknown"
 	fi
-	###
 
 	### Network Info
 	# obfuscate IP, MAC and ipv6 addresses
@@ -147,36 +158,38 @@ function collect_support_info()
 
 	### File system information
 	FILE_SYSTEMS="$( df -h )"
-	# TODO: GET AS image dir sizes
-	###
 
 	activate_python_venv
 	PYTHON_VERSION="$( python3 -V )"
 	PYTHON_VERSION="${PYTHON_VERSION:-unknown}"
-	###
 
 	### Devices
-	DEV="$( sudo ls -alh  /dev )"
-	USB="$( sudo lsusb -v )"
+	DEV_DEVICES="$( sudo ls -alh  /dev )"
+	USB_DEVICES="$( sudo lsusb -v )"
 	I2C_ENABLED="$( sudo raspi-config nonint get_i2c )"
 	if [[ ${I2C_ENABLED} == "0" ]]; then
 		I2C_DEVICES="$( sudo i2cdetect -y -a 1 )"
 	else
 		I2C_DEVICES="i2c interface is disabled"
 	fi
-	###
 
 	### Process information
 	PS="$( ps -efw )"
-	###
 
-	### pi Camera stuff
-	RPI_CAMERAS="$( libcamera-still --list-cameras 2> /dev/null )"
-	###
+	### Pi Camera stuff
+	if which rpicam-still > /dev/null ; then
+		RPI_CAMERAS="$( rpicam-still --list-cameras 2> /dev/null )"
+	elif which libcamera-still > /dev/null ; then
+		RPI_CAMERAS="$( libcamera-still --list-cameras 2> /dev/null )"
+	else
+		RPI_CAMERAS=""
+	fi
 
-	### get installed package information
+	### Timezone
+	TZ_INFO="$( timedatectl )"
+
+	### Get installed package information
 	# REPOS="$( grep -r '^deb' /etc/apt/sources.list /etc/apt/sources.list.d/ )"
-	###
 }
 
 function generate_support_info()
@@ -228,6 +241,7 @@ function generate_support_info()
 		print_info "Total RAM:" "${MEM_TOTAL}"
 		print_info "User Name:" "${USER_NAME}"
 		print_info "User ID:" "${USER_ID}"
+		print_info "Timezone:" "${TZ_INFO}"
 	} > "${BASIC_FILE}"
 
 	if [[ ${GITHUB_NUMBER} != "none" ]]; then
@@ -265,20 +279,14 @@ function generate_support_info()
 	local DEVICES_FILE="${TEMP_DIR}/devices.txt"
 	{
 		print_heading "Devices"
-		print "${DEV}"
+		print "${DEV_DEVICES}"
 	} > "${DEVICES_FILE}"
 
 	local USB_FILE="${TEMP_DIR}/usb.txt"
 	{
 		print_heading "USB Devices"
-		print "${USB}"
+		print "${USB_DEVICES}"
 	} > "${USB_FILE}"
-
-	local LIBCAMERA_FILE="${TEMP_DIR}/libcamera.txt"
-	{
-		print_heading "Libcamera Cameras"
-		print "${RPI_CAMERAS}"
-	} > "${LIBCAMERA_FILE}"
 
 	local i2C_FILE="${TEMP_DIR}/i2c.txt"
 	{
@@ -302,6 +310,8 @@ function generate_support_info()
 		print_info "Python Version:" "${PYTHON_VERSION}"
 		# This produces too much output to hold in a variable.
 		pip list
+
+		echo -e "\n"
 		print_heading "Package Information"
 		# This produces too much output to hold in a variable.
 		dpkg -l | grep python
@@ -314,22 +324,20 @@ function generate_support_info()
 		sudo dpkg-query -l
 	} > "${APT_FILE}"
 
-	local LIGHTTPD_ERROR_LOG="/var/log/lighttpd/error.log"
 	local LIGHTTPD_ERROR_LOG_FILE="${TEMP_DIR}/lighttpd_error.txt"
-	if [[ -f ${LIGHTTPD_ERROR_LOG} ]]; then
+	if [[ -f ${LIGHTTPD_LOG_FILE} ]]; then
 		# Don't include these - they aren't errors.
 		grep -E -v " server started | server stopped | logfiles cycled " \
-			"${LIGHTTPD_ERROR_LOG}" > "${LIGHTTPD_ERROR_LOG_FILE}"
+			"${LIGHTTPD_LOG_FILE}" > "${LIGHTTPD_ERROR_LOG_FILE}"
 	fi
 
-	PRIOR_WEBSITE_DIR="${PRIOR_ALLSKY_DIR}${ALLSKY_WEBSITE/${ALLSKY_HOME}/}"
-	if [[ -d ${PRIOR_WEBSITE_DIR} ]]; then
-		PRIOR_WEBSITE_CONFIG_FILE="${PRIOR_WEBSITE_DIR}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
-		if [[ -s ${PRIOR_WEBSITE_CONFIG_FILE} ]]; then
-			cp "${PRIOR_WEBSITE_CONFIG_FILE}" "${TEMP_DIR}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}-OLD.json"
-		fi
+	if [[ -d ${PRIOR_WEBSITE_DIR} && -s ${PRIOR_WEBSITE_CONFIG_FILE} ]]; then
+		cp "${PRIOR_WEBSITE_CONFIG_FILE}" "${TEMP_DIR}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}-OLD.json"
 	fi
 
+	if [[ -f ${ALLSKY_WEBSITE_CONFIGURATION_FILE} ]]; then
+		cp "${ALLSKY_WEBSITE_CONFIGURATION_FILE}" "${TEMP_DIR}/local_$( basename "${ALLSKY_WEBSITE_CONFIGURATION_FILE}" )"
+	fi
 
 	local SUPPORTED_CAMERAS_FILE="${TEMP_DIR}/supported_cameras.txt"
 	{
@@ -337,54 +345,178 @@ function generate_support_info()
 		"${ALLSKY_UTILITIES}/showSupportedCameras.sh" --rpi --zwo
 	} > "${SUPPORTED_CAMERAS_FILE}"
 
-	local ALLSKY_LOG_FILE
- 	for L in "${ALLSKY_LOG}" "${ALLSKY_LOG}.1"; do
+	local LIBCAMERA_FILE="${TEMP_DIR}/pi_cameras.txt"
+	{
+		print_heading "Pi Cameras"
+		print "${RPI_CAMERAS}"
+	} > "${LIBCAMERA_FILE}"
+
+
+	if [[ -f ${LIGHTTPD_CONFIG_FILE} ]]; then
+		cp "${LIGHTTPD_CONFIG_FILE}" "${TEMP_DIR}/etc-$( basename "${LIGHTTPD_CONFIG_FILE}" ).txt"
+	fi
+
+	[[ -f ${ALLSKY_VARIABLES_JSON_FILE} ]] && cp "${ALLSKY_VARIABLES_JSON_FILE}" "${TEMP_DIR}"
+
+	# Copy most of ${ALLSKY_TMP} directory.
+	if [[ -d ${ALLSKY_TMP} ]]; then
+		mkdir "${TEMP_DIR}/tmp"
+		find "${ALLSKY_TMP}" -maxdepth 1 \
+			! \( -path "${ALLSKY_TMP}" -o -name "sequence-timelapse*" -o -name __pycache__ \) \
+			-exec cp -ar {} "${TEMP_DIR}/tmp" \;
+	fi
+	# The mini-timelapse can be several MB and we don't need it.
+	rm -f "${TEMP_DIR}/tmp/current_images/mini-timelapse.mp4"
+
+	# Copy ${ALLSKY_CONFIG} directory, then truncate and delete files we don't want.
+	# The directory should exists unless installation failed.
+	[[ -d ${ALLSKY_CONFIG} ]] && cp -ar "${ALLSKY_CONFIG}" "${TEMP_DIR}"
+
+	local TEMP_DIR_OVERLAY="${TEMP_DIR}/${ALLSKY_OVERLAY/${ALLSKY_HOME}}"
+	local TEMP_MY_MODULES="${TEMP_DIR}/${ALLSKY_MY_MODULES/${ALLSKY_HOME}}"
+	display_msg --logonly info "TEMP_DIR_OVERLAY=${TEMP_DIR_OVERLAY}, TEMP_MY_MODULES=${TEMP_MY_MODULES}"
+
+	# Truncate or delete large files not needed for support.
+	rm -fr \
+		"${TEMP_DIR_OVERLAY}/tmp" \
+		"${TEMP_DIR_OVERLAY}/config/tmp" \
+		"${TEMP_MY_MODULES}/moduledata/data/allsky_adsb/adsb_data" \
+		"${TEMP_MY_MODULES}/__pycache__"
+
+	for i in "${TEMP_DIR_OVERLAY}/system_fonts" \
+			 "${TEMP_DIR_OVERLAY}/fonts" ; do
+		[[ -d ${i} ]] && find "${i}" -type f -exec truncate -s 0 {} + 2> /dev/null
+	done
+	for i in "${TEMP_DIR}/config/myFiles/allsky.db" \
+			 "${TEMP_DIR}/config/myFiles/secrets.db" ; do
+		[[ -f ${i} ]] && truncate -s 0 "${i}"
+	done
+
+	cd "${TEMP_DIR}" || exit 1
+
+	# Handle the Allsky log files last, since they are usually the largest files and we need
+	# to make sure they don't make the support log too large to upload to GitHub.
+
+	function get_mb()
+	{
+		local C
+		if [[ ${1} == "--compression-ratio" ]]; then
+			C="${2}"
+			shift 2
+		else
+			C=1
+		fi
+
+		# Round up.
+		# shellcheck disable=SC2012
+		ls -l "${@}" 2>/dev/null | gawk -v C="${C}" 'BEGIN { TOTAL=0 }
+			{ TOTAL += $5; }
+			END { printf("%d", 0.5 + ((TOTAL / 1024 / 1024) * C)); }'
+	}
+	function get_actual_size()
+	{
+		local ZIP_FILE="${1}"
+		local SOURCE="${2}"
+		# shellcheck disable=SC2086
+		zip -r "${ZIP_FILE}" ${SOURCE} > /dev/null 2>&1
+		get_mb "${ZIP_FILE}"
+		rm -f "${ZIP_FILE}"
+	}
+
+	# GitHub supports uploads up to ${GIT_HUB_LIMIT} MB.
+	# It's not unusual for the allsky logs to be bigger than that; if so,
+	# first drop the ".1" log.  If it's STILL to large, do a "tail" on the files.
+
+	# We'd really like to know the actual zipped size of each log file, but that's somewhat time
+	# consuming to calculate, so initially just check if a somewhat compressed version of the files
+	# is over the limit.  If so, get the actual compressed size.
+
+	local GIT_HUB_LIMIT_MB=25
+	(( GIT_HUB_LIMIT_MB -= 3 ))		# Add a cushion in case our numbers are off a little
+	local COMPRESSION_RATIO=0.3		# Normally the logs compress to around 10%, but be very conservative
+	declare -a ALL_LOGS=()
+	local INDEX=-1
+	local ALLSKY_LOG1_INDEX=""		# If the ".1" log file exist this will be it's index in the array.
+	local ALLSKY_LOG1="${ALLSKY_LOG}.1"		# this should probably go in variables.sh...
+
+	# First determine the actual zipped size of what's currently going into the support log.
+	local TMP_ZIP="${TEMP_DIR}/OTHER_THAN.zip"
+	local TOTAL_SIZE_MB="$( get_actual_size "${TMP_ZIP}" "./*" )"
+	display_msg --logonly info "Zipped size of everything EXCEPT log files: ${TOTAL_SIZE_MB} MB."
+
+	local LOG_LINES_TEMP="${LOG_LINES}"
+	local ESTIMATED_SIZE_LOG_MB="$( get_mb --compression-ratio "${COMPRESSION_RATIO}" \
+			"${ALLSKY_LOG}" "${ALLSKY_LOG1}" "${ALLSKY_PERIODIC_LOG}" )"
+	ESTIMATED_SIZE_MB=$(( ESTIMATED_SIZE_LOG_MB + TOTAL_SIZE_MB ))
+	if [[ ${ESTIMATED_SIZE_MB} -le "${GIT_HUB_LIMIT_MB}" ]]; then
+		ALL_LOGS=( "${ALLSKY_LOG}" "${ALLSKY_LOG1}" "${ALLSKY_PERIODIC_LOG}" )
+		MSG="WORST CASE support log size: ${ESTIMATED_SIZE_MB} MB is UNDER limit of ${GIT_HUB_LIMIT_MB} MB."
+		display_msg --logonly info "${MSG}"
+
+	else
+		MSG="ESTIMATED support log size: ${ESTIMATED_SIZE_MB} MB is OVER limit of ${GIT_HUB_LIMIT_MB} MB."
+		display_msg --logonly info "${MSG}"
+		display_msg --logonly info "Will check each log file:"
+
+		# Create a list of logs that exist as well as their size.
+		if [[ -f ${ALLSKY_LOG} ]]; then
+			(( INDEX++ ))
+			ALL_LOGS[${INDEX}]="${ALLSKY_LOG}"
+			TMP_ZIP="${TEMP_DIR}/ALLSKY_LOG.zip"
+			X_MB="$( get_actual_size "${TMP_ZIP}" "${ALLSKY_LOG}" )"
+			(( TOTAL_SIZE_MB += X_MB ))
+			display_msg --logonly info "Zipped size of ${ALLSKY_LOG}: ${X_MB} MB."
+		fi
+		if [[ -f ${ALLSKY_LOG1} ]]; then
+			(( INDEX++ ))
+			ALL_LOGS[${INDEX}]="${ALLSKY_LOG1}"
+			TMP_ZIP="${TEMP_DIR}/ALLSKY_LOG1.zip"
+			X_MB="$( get_actual_size "${TMP_ZIP}" "${ALLSKY_LOG1}" )"
+			(( TOTAL_SIZE_MB += X_MB ))
+			display_msg --logonly info "Zipped size of ${ALLSKY_LOG1}: ${X_MB} MB."
+		fi
+		if [[ -f ${ALLSKY_PERIODIC_LOG} ]]; then
+			(( INDEX++ ))
+			ALLSKY_LOG1_INDEX="${INDEX}"
+			ALL_LOGS[${INDEX}]="${ALLSKY_PERIODIC_LOG}"
+			TMP_ZIP="${TEMP_DIR}/ALLSKY_PERIODIC_LOG.zip"
+			X_MB="$( get_actual_size "${TMP_ZIP}" "${ALLSKY_PERIODIC_LOG}" )"
+			(( TOTAL_SIZE_MB += X_MB ))
+			display_msg --logonly info "Zipped size of ${ALLSKY_PERIODIC_LOG}: ${X_MB} MB."
+		fi
+
+		local MSG="EXPECTED size of zipped support log: ${TOTAL_SIZE_MB} MB, GitHub limit: ${GIT_HUB_LIMIT_MB} MB."
+		display_msg --logonly info "${MSG}"
+
+		if [[ ${TOTAL_SIZE_MB} -gt ${GIT_HUB_LIMIT_MB} ]]; then
+			# If the ".1" log file is in the list, delete it, then recalculate the size.
+			if [[ -n ${ALLSKY_LOG1_INDEX} ]]; then
+				unset "ALL_LOGS[${ALLSKY_LOG1_INDEX}]"
+				(( TOTAL_SIZE_MB -= ALLSKY_LOG1_SIZE_MB ))
+				display_msg --logonly info "Not including ${ALLSKY_LOG1} gives a new size of ${TOTAL_SIZE_MB} MB."
+			fi
+
+			# If the new total size is STILL too big,
+			# only get the last ${LOG_LINES_TEMP} lines of the remaining logs.
+			if [[ ${TOTAL_SIZE_MB} -gt ${GIT_HUB_LIMIT_MB} ]]; then
+				LOG_LINES_TEMP=2000		# Seems reasonable
+				display_msg --logonly info "Still too large, only getting last ${LOG_LINES_TEMP} lines of the log files."
+			fi
+		fi
+	fi
+
+	local LOG_FILE
+ 	for L in "${ALL_LOGS[@]}" ; do
 		if [[ -f ${L} ]]; then
-  			ALLSKY_LOG_FILE="${TEMP_DIR}/$( basename "${L}" ).txt"
-			if [[ ${LOG_LINES} == "all" ]]; then
-				cp "${L}" "${ALLSKY_LOG_FILE}"
+  			LOG_FILE="${TEMP_DIR}/$( basename "${L}" ).txt"
+			if [[ ${LOG_LINES_TEMP} == "all" ]]; then
+				cp "${L}" "${LOG_FILE}"
 			else
-				tail -n "${LOG_LINES}" "${L}" > "${ALLSKY_LOG_FILE}"
+				tail -n "${LOG_LINES_TEMP}" "${L}" > "${LOG_FILE}"
 			fi
 		fi
   	done
 
-	local PERIODIC_LOG_FILE="${TEMP_DIR}/allskyperiodic_log.txt"
-	if [[ -f ${ALLSKY_PERIODIC_LOG} ]]; then
-		if [[ ${LOG_LINES} == "all" ]]; then
-			cp "${ALLSKY_PERIODIC_LOG}" "${PERIODIC_LOG_FILE}"
-		else
-			tail -n "${LOG_LINES}" "${ALLSKY_PERIODIC_LOG}" > "${PERIODIC_LOG_FILE}"
-		fi
-	fi
-
-	local CONF_FILE="/etc/lighttpd/lighttpd.conf"
-	if [[ -f ${CONF_FILE} ]]; then
-		cp "${CONF_FILE}" "${TEMP_DIR}/etc-$( basename "${CONF_FILE}" ).txt"
-	fi
-
-	local INC_FILE="${ALLSKY_WEBUI}/includes/${ALLSKY_DEFINES_INC}"
-	if [[ -f ${INC_FILE} ]]; then
-		cp "${INC_FILE}" "${TEMP_DIR}.txt"
-	fi
-	
-	[[ -d ${ALLSKY_CONFIG} ]] && cp -ar "${ALLSKY_CONFIG}" "${TEMP_DIR}"
-
-	if [[ -d ${ALLSKY_TMP} ]]; then
-		cp -ar "${ALLSKY_TMP}" "${TEMP_DIR}"
-		# The cache files aren't needed
-		rm -fr "${TEMP_DIR}/$( basename "${ALLSKY_CONFIG}" )/__pycache__"
-	fi
-
-	# Truncate large files not needed for support.
-	local X="${TEMP_DIR}/config/overlay/config/tmp/overlay/de421.bsp"
-	[[ -s ${X} ]] && truncate -s 0 "${X}"
-	X="${TEMP_DIR}/config/overlay/system_fonts"
-	[[ -d ${X} ]] && find "${TEMP_DIR}/config/overlay/system_fonts" -type f -exec truncate -s 0 {} +
-
-	# Truncate all of the module configs until we can obfuscate any sensitive data.
-	X="${TEMP_DIR}/config/modules"
-	[[ -d ${X} ]] && find "${TEMP_DIR}/config/modules" -type f -exec truncate -s 0 {} +
 
 	local ZIP_NAME="support"
 	ZIP_NAME+="-${GITHUB_REPO:-repo}"
@@ -395,10 +527,12 @@ function generate_support_info()
 	# We're in a subshell so we need to "echo" this to pass it back to our invoker.
 	echo "${DIALOG_COMPLETE_MESSAGE//XX_ZIPNAME_XX/${ZIP_NAME}}"
 
-	cd "${TEMP_DIR}" || exit 1
+	# Copy this last thing so we get the updated copy.
+	cp "${DISPLAY_MSG_LOG}" "${TEMP_DIR}/config/logs/"
+
 	zip -r "${TEMP_DIR}/${ZIP_NAME}" ./* > /dev/null 2>&1
 	sudo mv "${ZIP_NAME}" "${ALLSKY_SUPPORT_DIR}"
-	sudo chown "${USER_NAME}:${WEBSERVER_OWNER}" "${ALLSKY_SUPPORT_DIR}/${ZIP_NAME}"
+	sudo chown "${ALLSKY_OWNER}:${ALLSKY_WEBSERVER_OWNER}" "${ALLSKY_SUPPORT_DIR}/${ZIP_NAME}"
 	sudo chmod 664 "${ALLSKY_SUPPORT_DIR}/${ZIP_NAME}"
 
 	rm -rf "${TEMP_DIR}"
@@ -504,15 +638,16 @@ function usage_and_exit()
 {
 	local RET=${1}
 	exec 2>&1
-	local USAGE="\nUsage: ${ME} [--help] [--tree] [--type t] [--repo r] [--number n] [--fullusb] "
+	local USAGE="\nUsage: ${ME} [--help] [--tree] [--type t] [--repo r] [--number n] [--fullusb] [--debug]"
 	if [[ ${RET} -ne 0 ]]; then
 		E_ "${USAGE}"
 	else
 		echo -e "${USAGE}"
 	fi
 	echo
-	echo "Where:"
+	echo "Arguments:"
 	echo "	--help        Displays this message and exits."
+	echo "	--debug       Displays debugging information (developer use only)."
 	echo "	--text        Use text mode. Options must be specified on the command line."
 	echo "	--auto        Auto accept any prompts and produce no output except for errors."
 	echo "	--type t      'D' for Github Discussion, 'I' for Issue."
@@ -527,6 +662,7 @@ function usage_and_exit()
 ############################################## main body
 
 OK="true"
+DEBUG="false"
 TEXT_ONLY="false"		# Also used by display_box()
 GITHUB_NUMBER="none"
 GITHUB_REPO=""
@@ -539,6 +675,11 @@ while [[ $# -gt 0 ]]; do
 	case "${ARG,,}" in
 		--help)
 			DO_HELP="true"
+			;;
+
+		--debug)
+			DEBUG="true"
+			DEBUG="${DEBUG}"	# Keeps shellcheck quiet since we're not using DEBUG yet.
 			;;
 
 		--text)
@@ -584,6 +725,8 @@ done
 [[ ${DO_HELP} == "true" ]] && usage_and_exit 0
 [[ ${OK} == "false" ]] && usage_and_exit 1
 
+display_msg --logonly info "STARTING SUPPORT LOG."
+
 set_dialog_info
 set_messages
 display_start_dialog
@@ -596,7 +739,9 @@ RET=$?
 kill_running_dialog
 if [[ ${RET} -eq 0 ]]; then
 	display_complete_dialog
+	display_msg --logonly info "ENDING SUPPORT LOG."
 else
 	display_complete_dialog "Failure"
+	display_msg --logonly info "Support log creation failed"
 fi
 exit "${RET}"

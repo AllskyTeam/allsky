@@ -20,15 +20,19 @@ if [[ ${ON_TTY} == "true" ]]; then
 	export WSNe="'"
 	export WSVs="'"
 	export WSVe="'"
+	export WSFs="'"
+	export WSFe="'"
 else
 	export NL="<br>"
 	export SPACES="&nbsp; &nbsp; &nbsp;"
 	export STRONGs="<strong>"
 	export STRONGe="</strong>"
-	export WSNs="<span class='WebUISetting'>"		# Web Setting Name start
+	export WSNs="<span class='WebUISetting'>"	# Web Setting Name start
 	export WSNe="</span>"
 	export WSVs="<span class='WebUIValue'>"		# Web Setting Value start
 	export WSVe="</span>"
+	export WSFs="<span class='fileName'>"		# Web Setting Filename start
+	export WSFe="</span>"
 fi
 
 ##### output messages with appropriate color strings
@@ -116,17 +120,17 @@ function doExit()
 		OUTPUT_A_MSG="true"
 	fi
 
-	if [[ ${EXITCODE} -ge ${EXIT_ERROR_STOP} ]]; then
+	if [[ ${EXITCODE} -ge ${ALLSKY_EXIT_ERROR_STOP} ]]; then
 		# With fatal EXIT_ERROR_STOP errors, we can't continue so display a notification image
 		# even if the user has them turned off.
 		if [[ -n ${CUSTOM_MESSAGE} ]]; then
 			# Create a custom error message.
 			# If we error out before variables.sh is sourced in,
-			# ${FILENAME} and ${EXTENSION} won't be set so guess at what they are.
-			"${ALLSKY_SCRIPTS}/generateNotificationImages.sh" --directory "${ALLSKY_TMP}" \
-				"${FILENAME:-"image"}" \
+			# ${ALLSKY_FILENAME} and ${ALLSKY_EXTENSION} won't be set so guess what they are.
+			"${ALLSKY_SCRIPTS}/generateNotificationImages.sh" --directory "${ALLSKY_CURRENT_DIR}" \
+				"${ALLSKY_FILENAME:-"image"}" \
 				"${COLOR}" "" "85" "" "" \
-				"" "10" "${COLOR}" "${EXTENSION:-"jpg"}" "" "${CUSTOM_MESSAGE}"
+				"" "10" "${COLOR}" "${ALLSKY_EXTENSION:-"jpg"}" "" "${CUSTOM_MESSAGE}"
 			echo "Stopping Allsky: ${CUSTOM_MESSAGE}"
 
 		elif [[ ${TYPE} != "no-image" ]]; then
@@ -139,7 +143,7 @@ function doExit()
 
 	# Don't let the service restart us because we'll likely get the same error again.
 	# Stop here so the message above is output first.
-	[[ ${EXITCODE} -ge ${EXIT_ERROR_STOP} ]] && stop_Allsky
+	[[ ${EXITCODE} -ge ${ALLSKY_EXIT_ERROR_STOP} ]] && stop_Allsky
 
 	exit "${EXITCODE}"
 }
@@ -179,7 +183,7 @@ function verify_CAMERA_TYPE()
 		E_ "${FATAL_MSG} ${MSG}" >&2
 
 		if [[ ${IGNORE_ERRORS} != "true" ]]; then
-			doExit "${EXIT_NO_CAMERA}" "Error" "${IMAGE_MSG}" "${MSG}"
+			doExit "${ALLSKY_EXIT_NO_CAMERA}" "Error" "${IMAGE_MSG}" "${MSG}"
 		fi
 
 		return 1
@@ -197,8 +201,9 @@ function test_determineCommandToUse()
 }
 
 #####
-# RPi cameras can use either "raspistill" on Buster or "{rpicam|libcamera}-still" on newer
-# OS's to actually take pictures.
+# RPi cameras can use either libcamera-still or rpicam-still to actually take pictures.
+# (libcamera-still was removed from Pi OS mid-2025, but continue checking for
+# Pi's that haven't been updated.
 # Determine which to use.
 # On success, return 0 and the command to use.
 # On failure, return non-0 and an error message.
@@ -215,88 +220,59 @@ function determineCommandToUse()
 	local PREFIX="${2}"					# Only used if calling doExit().
 	local IGNORE_ERRORS="${3:-false}"	# True if just checking
 
-	local CRET  RET  MSG  EXIT_MSG   CMD_FOUND="false"
+	local RET  MSG  EXIT_MSG
+	local NO_CMD_FOUND="Can't determine what command to use for RPi camera;"
 
-	# If libcamera is installed and works, use it.
-	# If it's not installed, or IS installed but doesn't work (the user may not have it configured),
-	# use raspistill.
-
-	RET=1
 	CMD_TO_USE_="rpicam-still"
-	command -v "${CMD_TO_USE_}" > /dev/null
-	CRET=$?
-	if [[ ${CRET} -ne 0 ]]; then
+	if ! command -v "${CMD_TO_USE_}" > /dev/null ; then
 		CMD_TO_USE_="libcamera-still"
-		command -v "${CMD_TO_USE_}" > /dev/null
-		CRET=$?
-	fi
-	if [[ ${CRET} -eq 0 ]]; then
-		CMD_FOUND="true"	# one of the commands were found.
-
-		# Found a command - see if it works.
-		# If the cable is bad the camera might be found but not work,
-		# and the command can hang.
-		timeout 10 "${CMD_TO_USE_}" --timeout 1 --nopreview > /dev/null 2>&1
-		RET=$?
-		if [[ ${RET} -eq 124 ]]; then
-			# Time out.  Let invoker know
-			echo "'${CMD_TO_USE_}' timed out." >&2
-			return "${EXIT_ERROR_STOP}"
-
-		elif [[ ${RET} -eq 137 ]]; then
-			# If another of these commands is running ours will hang for
-			# about a minute then be killed with RET=137.
-			# If that happens, assume this is the command to use.
-			RET=0
-		fi
-	fi
-
-	if [[ ${RET} -ne 0 ]]; then
-		# Didn't find libcamera-based command, or it didn't work.
-		CMD_TO_USE_="raspistill"
-		if ! command -v "${CMD_TO_USE_}" > /dev/null; then
-			CMD_TO_USE_=""
-
+		if ! command -v "${CMD_TO_USE_}" > /dev/null ; then
 			if [[ ${IGNORE_ERRORS} == "false" ]]; then
-				MSG="Can't determine what command to use for RPi camera."
-				echo "${MSG}" >&2
-
+				MSG="'rpicam-still' and 'libcamera-still' were not found."
+				echo "${NO_CMD_FOUND} ${MSG}" >&2
 				if [[ ${USE_doExit} == "true" ]]; then
 					EXIT_MSG="${PREFIX}\nRPi camera command\nnot found!."
-					doExit "${EXIT_ERROR_STOP}" "Error" "${EXIT_MSG}" "${MSG}"
+					doExit "${ALLSKY_EXIT_ERROR_STOP}" "Error" "${EXIT_MSG}" "${MSG}"
 				fi
+			# else don't echo anything
 			fi
 
-			if [[ ${CMD_FOUND} == "true" ]]; then
-				return 1
-			else
-				return 2		# no command was found
-			fi
-		fi
-
-		CMD_FOUND="true"	# some command was found.
-
-		# On Buster, raspistill sometimes hangs if no camera is found,
-		# so work around that.
-		if ! timeout 4 "${CMD_TO_USE_}" --timeout 1 --nopreview > /dev/null 2>&1 ; then
-			CMD_TO_USE_=""
-
-			if [[ ${IGNORE_ERRORS} == "false" ]]; then
-				MSG="RPi camera not found.  Make sure it's enabled."
-				echo "${MSG}" >&2
-
-				if [[ ${USE_doExit} == "true" ]]; then
-					EXIT_MSG="${PREFIX}\nRPi camera\nnot found!\nMake sure it's enabled."
-					doExit "${EXIT_ERROR_STOP}" "Error" "${EXIT_MSG}" "${MSG}"
-				fi
-			fi
-
-			return "${EXIT_NO_CAMERA}"
+			# No command was found.  This is ok if the user doesn't have an RPi camera.
+			# Let the invoker determine what to do.
+			return 2
 		fi
 	fi
 
-	echo "${CMD_TO_USE_}"
-	return 0
+	# Found a command - see if it works.
+	# If the cable is bad the camera might be found but not work,
+	# and the command can hang.
+
+	local ERR="$( timeout 120 "${CMD_TO_USE_}" --timeout 1 --nopreview 2>&1 )"
+	RET=$?
+	if [[ ${RET} -eq 0 || ${RET} -eq 137 ]]; then
+		# If another of these commands is running ours will hang for
+		# about a minute then be killed with RET=137.
+		# If that happens, assume this is the command to use.
+		echo "${CMD_TO_USE_}"
+		return 0
+
+	elif [[ ${RET} -eq 124 ]]; then
+		# Time out.
+		# This usually means a camera exists but there's a problem connecting to it.
+		echo "'${CMD_TO_USE_}' timed out." >&2
+		return "${ALLSKY_EXIT_ERROR_STOP}"
+
+	else
+		if [[ ${IGNORE_ERRORS} == "false" ]]; then
+			echo "'${CMD_TO_USE_}' failed with return code ${RET}." >&2
+			[[ -n ${ERR} ]] && indent "${ERR}" >&2
+			if [[ ${USE_doExit} == "true" ]]; then
+				EXIT_MSG="${PREFIX}\n${CMD_TO_USE_} failed!"
+				doExit "${ALLSKY_EXIT_ERROR_STOP}" "Error" "${EXIT_MSG}" "${MSG}"
+			fi
+		fi
+		return 1
+	fi
 }
 
 #####
@@ -318,30 +294,22 @@ function get_connected_cameras_info()
 	# for each camera found.
 	# camera_sensor will be one word.
 	# Only run determineCommandToUse() if it wasn't already run.
+
 	if [[ -z ${CMD_TO_USE_} && ${RUN_dCTU} == "true" ]]; then
 		determineCommandToUse "false" "" "${IGNORE_ERRORS}" > /dev/null
 	fi
 	if [[ -n ${CMD_TO_USE_} ]]; then
-		if [[ ${CMD_TO_USE_} == "raspistill" ]]; then
-			# Only supported camera with raspistill
-			echo -e "RPi\t0\timx477\t[4056x3040]"
-
-		else
-			# Input:
-			#	camera_number  : sensor  [other stuff]
-			LIBCAMERA_LOG_LEVELS=FATAL "${CMD_TO_USE_}" --list-cameras 2>&1 |
-				gawk '/^[0-9]/ { printf("%s\t%d\t%s\n", "RPi", $1, $3); }'
-		fi
+		# Input:
+		#	camera_number  : sensor  [other stuff]
+		LIBCAMERA_LOG_LEVELS=FATAL "${CMD_TO_USE_}" --list-cameras 2>&1 |
+			gawk '/^[0-9]/ { printf("%s\t%d\t%s\n", "RPi", $1, $3); }'
 	fi
 
 	####### Check for ZWO
 	# Keep output similar to RPi:
 	#		ZWO  camera_number camera_model
 	# for each camera found.
-# TODO: Is the order they appear from lsusb the same as the camera number?
 	# lsusb output:
-	#	Bus 002 Device 002: ID 03c3:290b				(Buster)
-	#		iProduct 2 ASI290MM
 	#	Bus 002 Device 002: ID 03c3:290b ZWO ASI290MM	(newer OS)
 	#	1   2   3       4   5  6         7   8
 	# or, for really old cameras:
@@ -371,13 +339,6 @@ function get_connected_cameras_info()
 					printf("ZWO\t%d\t%s\n", num++, model);
 					model = "<found>";		# This camera was output
 				}
-			} else if ($1 == "iProduct" && $3 != "(error)") {
-				if (model != "<found>") {
-					model = $3;
-					for (i=4; i<= NF; i++) model = model " " $i
-					printf("ZWO\t%d\t%s\n", num++, model);
-				}
-				model = "";		# This camera was output
 			}
 		}'
 }
@@ -433,7 +394,7 @@ function get_connected_camera_models()
 					print model;
 				}
 			}
-		}' "${CONNECTED_CAMERAS_INFO}"
+		}' "${ALLSKY_CONNECTED_CAMERAS_INFO}"
 }
 
 
@@ -520,7 +481,7 @@ function validate_camera()
 			E_ "\n${MSG}\n"
 		else
 			MSG+="\n\nClick this message to ask that Allsky support this camera."
-			URL="/documentation/explanations/requestCameraSupport.html";
+			URL="/docs/allsky_guide/howtos/new_camera.html";
 			local CMD_MSG="Click here to see the supported ${CT} cameras."
 			[[ ${CT} == "ZWO" ]] && CMD_MSG+=" WARNING: the list is long!"
 			"${ALLSKY_SCRIPTS}/addMessage.sh" \
@@ -741,7 +702,7 @@ function checkAndGetNewerFile()
 		local BRANCH="${2}"
 		shift 2
 	else
-		local BRANCH="${GITHUB_MAIN_BRANCH}"
+		local BRANCH="${ALLSKY_GITHUB_MAIN_BRANCH}"
 	fi
 
 	if [[ $# -ne 3 ]]; then
@@ -750,7 +711,7 @@ function checkAndGetNewerFile()
 	fi
 
 	local CURRENT_FILE="${1}"
-	local GIT_FILE="${GITHUB_RAW_ROOT}/${GITHUB_ALLSKY_REPO}/${BRANCH}/${2}"
+	local GIT_FILE="${ALLSKY_GITHUB_RAW_ROOT}/${ALLSKY_GITHUB_ALLSKY_REPO}/${BRANCH}/${2}"
 	local DOWNLOADED_FILE="${3}"
 	# Download the file and put in DOWNLOADED_FILE
 	X="$( curl --show-error --silent "${GIT_FILE}" )"
@@ -812,37 +773,6 @@ function checkPixelValue()
 	return 0
 }
 
-
-#####
-# Make sure the specified width and height are valid.
-# Assume each number has already been checked, e.g., it's not a string.
-function checkWidthHeight()
-{
-	local NAME_PREFIX="${1}"
-	local ITEM="${2}"
-	local WIDTH="${3}"
-	local HEIGHT="${4}"
-	local SENSOR_WIDTH="${5}"
-	local SENSOR_HEIGHT="${6}"
-	local ERR
-
-	# Width and height must both be 0 or non-zero.
-	if [[ (${WIDTH} -gt 0 && ${HEIGHT} -eq 0) || (${WIDTH} -eq 0 && ${HEIGHT} -gt 0) ]]; then
-		ERR="${WSNs}${NAME_PREFIX} Width${WSNe} (${WSVs}${WIDTH}${WSVe})"
-		ERR+=" and ${WSNs}Height${WSNe} (${WSVs}${HEIGHT}${WSVe})"
-		ERR+=" must both be either 0 or non-zero.${wBR}"
-		ERR+="The ${ITEM} will NOT be resized since it would look unnatural."
-
-	elif [[ ${WIDTH} -gt 0 && ${HEIGHT} -gt 0 &&
-			${SENSOR_WIDTH} -eq ${WIDTH} && ${SENSOR_HEIGHT} -eq ${HEIGHT} ]]; then
-		ERR="Resizing a ${ITEM} to the same size as the sensor does nothing useful."
-	fi
-
-	[[ -z ${ERR} ]] && return 0
-
-	echo -e "${ERR}" >&2
-	return 1
-}
 
 
 #####
@@ -906,7 +836,7 @@ function settings()
 		return 1
 	fi
 
-	local FILE="${2:-${SETTINGS_FILE}}"
+	local FILE="${2:-${ALLSKY_SETTINGS_FILE}}"
 	if [[ ! -f ${FILE} ]]; then
 		echo "${M}: File '${FILE}' does not exist!  Cannot get '${FIELD}'." >&2
 		return 2
@@ -987,7 +917,7 @@ function check_settings_link()
 	FULL_FILE="${1}"
 	if [[ -z ${FULL_FILE} ]]; then
 		echo "${FUNCNAME[0]}(): Settings file not specified."
-		return "${EXIT_ERROR_STOP}"
+		return "${ALLSKY_EXIT_ERROR_STOP}"
 	fi
 	if [[ ! -f ${FULL_FILE} ]]; then
 		echo "${FUNCNAME[0]}(): File '${FULL_FILE}' not found."
@@ -995,11 +925,11 @@ function check_settings_link()
 	fi
 	if [[ -z ${CAMERA_TYPE} ]]; then
 		CAMERA_TYPE="$( settings ".${CT}"  "${FULL_FILE}" )"
-		[[ $? -ne 0 || -z ${CAMERA_TYPE} ]] && return "${EXIT_ERROR_STOP}"
+		[[ $? -ne 0 || -z ${CAMERA_TYPE} ]] && return "${ALLSKY_EXIT_ERROR_STOP}"
 	fi
 	if [[ -z ${CAMERA_MODEL} ]]; then
 		CAMERA_MODEL="$( settings ".${CM}"  "${FULL_FILE}" )"
-		[[ $? -ne 0 || -z ${CAMERA_TYPE} ]] && return "${EXIT_ERROR_STOP}"
+		[[ $? -ne 0 || -z ${CAMERA_TYPE} ]] && return "${ALLSKY_EXIT_ERROR_STOP}"
 	fi
 
 	DIRNAME="$( dirname "${FULL_FILE}" )"
@@ -1354,13 +1284,12 @@ function indent()
 }
 
 
-# Python virtual environment
+# Python virtual environments
 PYTHON_VENV_ACTIVATED="false"
 function activate_python_venv()
 {
-
-# TODO: will need to change when the OS after bookworm is released
-# If our next release is out, it won't support buster so may be check  != bullseye  ?
+	# TODO: will need to change when the OS after Bookworm is released.
+	# Maybe check for != bullseye  ?
 
 	local ACTIVATE="${ALLSKY_PYTHON_VENV}/bin/activate"
 
@@ -1377,6 +1306,28 @@ function deactivate_python_venv()
 {
 	[[ ${PYTHON_VENV_ACTIVATED} == "true" ]] && deactivate
 }
+
+
+PYTHON_SERVER_VENV_ACTIVATED="false"
+function activate_python_server_venv()
+{
+	# TODO: will need to change when the OS after Bookworm is released.
+	# Maybe check for != bullseye  ?
+
+	local ACTIVATE="${ALLSKY_PYTHON_SERVER_VENV}/bin/activate"
+
+	#shellcheck disable=SC1090,SC1091
+	source "${ACTIVATE}" || exit 1
+	PYTHON_SERVER_VENV_ACTIVATED="true"
+	return 0	# Successfully activated
+
+}
+
+function deactivate_python_server_venv()
+{
+	[[ ${PYTHON_SERVER_VENV_ACTIVATED} == "true" ]] && deactivate
+}
+
 
 
 # Determine if the specified value is a number.
@@ -1402,12 +1353,14 @@ function set_allsky_status()
 {
 	local STATUS="${1}"		# can be ""
 
-	local S=".status = \"${STATUS}\""
-	local T=".timestamp = \"$( date +'%Y-%m-%d %H:%M:%S' )\""
+	local TIMESTAMP="$( date +'%Y-%m-%d %H:%M:%S' )"
+
 	if which jq >/dev/null ; then
+		local S=".status = \"${STATUS}\""
+		local T=".timestamp = \"${TIMESTAMP}\""
 		echo "{ }" | jq --indent 4 "${S} | ${T}" > "${ALLSKY_STATUS}"
 	else
-		echo "{ \"status\" : \"${S}\", \"timestamp\" : \"${T}\" }" > "${ALLSKY_STATUS}"
+		echo "{ \"status\" : \"${STATUS}\", \"timestamp\" : \"${TIMESTAMP}\" }" > "${ALLSKY_STATUS}"
 	fi
 }
 function get_allsky_status()
@@ -1426,6 +1379,7 @@ function get_model_from_sensor()
 {
 	local SENSOR="${1}"
 
+	# shellcheck disable=SC2154
 	gawk --field-separator '\t' -v sensor="${SENSOR}" '
 		BEGIN {
 			if (sensor == "") {
@@ -1461,7 +1415,7 @@ function get_model_from_sensor()
 				printf("unknown_sensor_%s\n", sensor);
 				exit(1);
 			}
-		} ' "${RPi_SUPPORTED_CAMERAS}"
+		} ' "${ALLSKY_RPi_SUPPORTED_CAMERAS}"
 }
 
 
@@ -1534,3 +1488,197 @@ function getAllSettings()
 	return 0
 }
 
+####
+# If uploads are enabled, upload the specified file which will
+# likely be a notification image.
+function processAndUploadImage()
+{
+	local IMAGE_FILE="${1}"
+	local NOTIFICATION_FILE="${2}"
+
+	local M="${ME:-${FUNCNAME[0]}}"
+
+	# Get all settings we're going to use.  Their bash names are prefixed by "S_".
+	# shellcheck disable=SC2119
+	getAllSettings --var "imageuploadfrequency imageresizeuploadswidth \
+		imageresizeuploadsheight" || return 1
+
+	# shellcheck disable=SC2154
+	if [[ ${S_imageuploadfrequency} -eq 0 ]]; then
+		# Not uploading images so we're done.
+		return 0
+	fi
+
+	# Upload the image, resizing first if needed.
+
+	# shellcheck disable=SC2154
+	if [[ ${S_imageresizeuploadswidth} -gt 0 ]]; then
+		# Don't overwrite IMAGE_FILE since the web server(s) may be looking at it.
+		TEMP_FILE="${ALLSKY_CURRENT_DIR}/resize-${ALLSKY_FULL_FILENAME}"
+	
+		# create temporary copy to resize
+		if ! cp "${IMAGE_FILE}" "${TEMP_FILE}" ; then
+			E_ "*** ${M}: ERROR: Cannot copy to TEMP_FILE: '${IMAGE_FILE}' to '${TEMP_FILE}'."
+			return 1
+		fi
+		# shellcheck disable=SC2154
+		if ! convert "${TEMP_FILE}" \
+				-resize "${S_imageresizeuploadswidth}x${S_imageresizeuploadsheight}" \
+				-gravity East \
+				-chop 2x0 "${TEMP_FILE}" ; then
+			E_ "*** ${M}: ERROR: Unable to resize '${TEMP_FILE}' - file left for debugging."
+			return 2
+		fi
+		UPLOAD_FILE="${TEMP_FILE}"
+	else
+		UPLOAD_FILE="${IMAGE_FILE}"
+		TEMP_FILE=""
+	fi
+
+	if [[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]]; then
+		# We're actually uploading ${UPLOAD_FILE},
+		# but show ${NOTIFICATION_FILE} in the message since it's more descriptive.
+		echo -e "${M}: Uploading $( basename "${NOTIFICATION_FILE}" )"
+	fi
+
+	# If an existing notification is being uploaded,
+	# wait for it to finish then upload this one (--wait).
+	upload_all --remote-web --remote-server --wait --silent \
+		"${UPLOAD_FILE}" "" "${ALLSKY_FULL_FILENAME}" "NotificationImage"
+	RET=$?
+
+	# If we created a temporary copy, delete it.
+	[[ ${TEMP_FILE} != "" ]] && rm -f "${TEMP_FILE}"
+
+	return "${RET}"
+}
+
+#####
+# Strip out all color escape sequences.
+# The message may have an actual escape character or may have the
+# four characters "\033" which represent an escape character.
+
+# I don't know how to replace "\n" with an actual newline in sed,
+# and there HAS to be a better way to strip the escape sequences.
+# I simply replace actual escape characters in the input with "033" then
+# replace "033[" with "033X".
+# Feel free to improve...
+function remove_colors()
+{
+	local MSG="${1}"
+
+	local ESC="$( echo -en '\033' )"
+
+	# Ignore any initial "\" in the colors.
+	# In case a variable isn't defined, set it to a string that won't be found.
+	local B="${cBOLD/\\/}"		; B="${B:-abcxyz}"	; B="${B/033\[/033X}"
+	local G="${cGREEN/\\/}"		; G="${G:-abcxyz}"	; G="${G/033\[/033X}"
+	local Y="${cYELLOW/\\/}"	; Y="${Y:-abcxyz}"	; Y="${Y/033\[/033X}"
+	local R="${cRED/\\/}"		; R="${R:-abcxyz}"	; R="${R/033\[/033X}"
+	#shellcheck disable=SC2154
+	local D="${cDEBUG/\\/}"		; D="${D:-abcxyz}"	; D="${D/033\[/033X}"
+	local N="${cNC/\\/}"		; N="${N:-abcxyz}"	; N="${N/033\[/033X}"
+
+	# Outer "echo -e" handles "\n" (2 characters) in input.
+	# No "-e" needed on inner "echo".
+	# \Z. entries are dialog(1) colors.
+	echo -e "$( echo "${MSG}" |
+		sed -e "s/${ESC}/033/g" \
+			-e "s/033\[0m//g" \
+			-e "s/033\[31m//g" \
+			-e "s/033\[/033X/g" \
+			-e "s/${G}//g" \
+			-e "s/${Y}//g" \
+			-e "s/${R}//g" \
+			-e "s/${D}//g" \
+			-e "s/${N}//g" \
+			-e "s/\\\Z.//g" \
+	)"
+}
+
+
+#####
+# Add very basic text to an image.
+addTextToImage()
+{
+	local POINT_SIZE=""
+	local FONT="${ALLSKY_OVERLAY}/system_fonts/Courier_New_Bold.ttf"
+	local STROKE="black"
+	local STROKE_WIDTH="2"
+	local FILL="yellow"
+	local X="20"
+	local Y=""
+	local EXTRA_ARGS=""
+
+	while [[ $# -gt 0 ]]; do
+		ARG="${1}"
+		case "${ARG,,}" in
+			--point-size)
+				POINT_SIZE="${2}"
+				shift
+				;;
+			--font)
+				FONT="${2}"
+				shift
+				;;
+			--stroke)
+				STROKE="${2}"
+				shift
+				;;
+			--stroke-width)
+				STROKE_WIDTH="${2}"
+				shift
+				;;
+			--fill)
+				FILL="${2}"
+				shift
+				;;
+			--x)
+				X="${2}"
+				shift
+				;;
+			--y)
+				Y="${2}"
+				shift
+				;;
+			--extra-args)
+				# An additional step, like stretch an image, to perform at
+				# same time to avoid calling "convert" twice.
+				EXTRA_ARGS="${2}"
+				shift
+				;;
+			--*)
+				E_ "Unknown argument: ${ARG}" >&2
+				;;
+			*)
+				break;
+				;;
+		esac
+		shift
+	done
+
+	local IN_IMAGE="${1}"
+	local OUT_IMAGE="${2}"
+	local TEXT="${3}"
+
+	# "identify" output:
+	#	image.jpg JPEG 4056x3040 4056x3040+0+0 8-bit sRGB 1.8263MiB 0.000u 0:00.000
+	local RESOLUTION="$( identify "${IN_IMAGE}" | gawk '{ print $3; }' )"
+	local WIDTH="${RESOLUTION%x*}"
+	local HEIGHT="${RESOLUTION##*x}"
+
+	# If the location wasn't specified put text in bottom left.
+	[[ -z ${POINT_SIZE} ]] && POINT_SIZE="$( echo "${WIDTH} / 33" | bc )"
+	if [[ -z ${Y} ]]; then
+		Y=$(( HEIGHT - ( POINT_SIZE * 2) ))
+	elif [[ ${Y} -lt 0 ]]; then
+		# relative to the bottom of the image
+		Y=$(( HEIGHT + Y - ( POINT_SIZE * 2) ))
+	fi
+
+	#shellcheck disable=SC2086
+	convert ${EXTRA_ARGS} -font "${FONT}" -pointsize "${POINT_SIZE}" \
+		-fill "${FILL}" -stroke "${STROKE}" -strokewidth "${STROKE_WIDTH}" \
+		-annotate "+${X}+${Y}" "${TEXT}" \
+		"${IN_IMAGE}" "${OUT_IMAGE}" 2>&1
+}

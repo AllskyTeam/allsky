@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "title": "Custom log files to monitor",
+  "properties": {
+    "schematouse": {
+      "type": "string",
+      "x-hidden": true
+    },
+    "logs": {
+      "type": "array",
+      "x-format": "table-object",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "ID",
+            "x-containerAttributes": {
+              "class": "WebUISetting"
+            }
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "x-containerAttributes": {
+              "class": "WebUISetting"
+            }
+          },
+          "location": {
+            "type": "string",
+            "title": "Log Location",
+            "x-containerAttributes": {
+              "class": "WebUISetting"
+            }
+          },
+          "default": {
+            "type": "boolean",
+            "title": "Default",
+            "x-containerAttributes": {
+              "class": "WebUISetting"
+            },
+            "x-format": "radios-inline",
+            "x-enumTitles": [
+              "No",
+              "Yes"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "description",
+          "location",
+          "default"
+        ]
+      }
+    }
+  },
+  "required": [
+    "logs"
+  ]
+}

@@ -1,0 +1,24 @@
+{
+    "icon": "fas fa-lightbulb",
+    "group": "Analysis",
+    "title": "Clear Sky",
+    "type": "yesno",
+    "main": true,    
+    "table": "allsky_clearsky",
+    "hc": {
+      "yesNo": {
+        "trueText": "Clear",
+        "falseText": "Not Clear",
+        "trueColor": "#2ecc71",
+        "falseColor": "#e74c3c",
+        "fontSize": "72px"
+      }
+    },        
+    "series": [
+        {
+            "name": "Sky State",
+            "yAxis": 0,
+            "variable": "AS_CLEARSKYSTATEFLAG"
+        }
+    ]
+}

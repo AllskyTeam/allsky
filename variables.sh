@@ -126,7 +126,7 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" || ${1} == "--force" ]]; then
 
 	# Holds all the notification images.
 	ALLSKY_NOTIFICATION_IMAGES="${ALLSKY_HOME}/notificationImages"
-	USER_NOTIFICATION_IMAGES="${ALLSKY_MYFILES_DIR}/notificationImages"
+	ALLSKY_USER_NOTIFICATION_IMAGES="${ALLSKY_MYFILES_DIR}/notificationImages"
 	# Holds log of notifications displayed during this session.
 	ALLSKY_NOTIFICATION_LOG="${ALLSKY_TMP}/notification_log.txt"
 
@@ -137,20 +137,24 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" || ${1} == "--force" ]]; then
 	ALLSKY_BAD_IMAGE_COUNT="${ALLSKY_TMP}/bad_images.txt"
 
 	# Holds the number of images left until uploading.
-	FREQUENCY_FILE="${ALLSKY_TMP}/IMG_UPLOAD_FREQUENCY.txt"
+	ALLSKY_FREQUENCY_FILE="${ALLSKY_TMP}/IMG_UPLOAD_FREQUENCY.txt"
 
 	# Holds the PID of the process that called timelapse.sh.
 	ALLSKY_TIMELAPSE_PID_FILE="${ALLSKY_TMP}/timelapse-pid.txt"
 
 	# Camera information:
 	# List of ALL connected cameras.
-	CONNECTED_CAMERAS_INFO="${ALLSKY_CONFIG}/connected_cameras.txt"
+	ALLSKY_CONNECTED_CAMERAS_INFO="${ALLSKY_CONFIG}/connected_cameras.txt"
 	# Supported RPi cameras
-	RPi_SUPPORTED_CAMERAS="${ALLSKY_CONFIG}/RPi_cameraInfo.txt"
+	ALLSKY_RPi_SUPPORTED_CAMERAS="${ALLSKY_CONFIG}/RPi_cameraInfo.txt"
 
 	# Log-related information.
 	ALLSKY_LOGS="${ALLSKY_CONFIG}/logs"
-	ALLSKY_POST_INSTALL_ACTIONS="${ALLSKY_LOGS}/post-installation_actions.txt"
+	ALLSKY_WEB_LOGS="${ALLSKY_LOGS}/weblogs"	# logs the web browser can get to
+	ALLSKY_WEB_LOGS_URL="/$( basename "${ALLSKY_WEB_LOGS}" )"
+	P="post-installation_actions.txt"
+	ALLSKY_POST_INSTALL_ACTIONS="${ALLSKY_WEB_LOGS}/${P}"
+	ALLSKY_POST_INSTALL_ACTIONS_URL="${ALLSKY_WEB_LOGS_URL}/${P}"
 	ALLSKY_OLD_REMINDER="${ALLSKY_LOGS}/allsky-OLD_reminder.txt"
 	ALLSKY_CHECK_LOG="${ALLSKY_LOGS}/checkAllsky.html"
 
@@ -169,10 +173,22 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" || ${1} == "--force" ]]; then
 
 	# Base location of the overlay and module configuration and data files.
 	ALLSKY_OVERLAY="${ALLSKY_CONFIG}/overlay"
-	MY_OVERLAY_TEMPLATES="${ALLSKY_OVERLAY}/myTemplates"
+	ALLSKY_MY_OVERLAY_TEMPLATES="${ALLSKY_OVERLAY}/myTemplates"
 	ALLSKY_MODULES="${ALLSKY_CONFIG}/modules"
+	ALLSKY_MY_MODULES="${ALLSKY_MYFILES_DIR}/modules"
 	ALLSKY_MODULE_LOCATION="/opt/allsky"
-	ALLSKY_EXTRA="${ALLSKY_OVERLAY}/extra"
+	ALLSKY_EXTRA_LEGACY="${ALLSKY_OVERLAY}/extra"
+	ALLSKY_EXTRA="${ALLSKY_TMP}/extra"
+	ALLSKY_MODULE_INSTALLER="${ALLSKY_SCRIPTS}/modules/allskymodulemanager/moduleinstaller.py"
+	
+	# URL for the Allsky API.
+	ALLSKY_API_URL="http://localhost:8090"
+
+	# Database-related variables.
+	ALLSKY_DATABASE="${ALLSKY_MYFILES_DIR}/allsky.db"
+	ALLSKY_DATABASE_COMMAND="${ALLSKY_UTILITIES}/db.py"
+	ALLSKY_IMAGES_TABLE="allsky_image"
+	ALLSKY_STARTRAILS_TABLE="allsky_startrails"
 
 	# Directories and files for the flow timer function
 	ALLSKY_FLOWTIMINGS="${ALLSKY_TMP}/flowtimings"
@@ -195,10 +211,10 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" || ${1} == "--force" ]]; then
 	ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE="${ALLSKY_CONFIG}/${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME}"
 
 	# Holds all the Allsky documentation.
-	ALLSKY_DOCUMENTATION="${ALLSKY_WEBUI}/documentation"
-
-	# Holds the version of the Pi.
-	PI_VERSION_FILE="${ALLSKY_CONFIG}/piversion.txt"
+	ALLSKY_DOCUMENTATION="${ALLSKY_WEBUI}/docs"
+ 
+ 	# Holds the version of the Pi.
+	ALLSKY_PI_VERSION_FILE="${ALLSKY_CONFIG}/piversion.txt"
 
 	# When the Pi was last rebooted.  If the file exists a reboot is needed.
 	# Put in ALLSKY_TMP so it'll be removed upon reboot.
@@ -227,59 +243,66 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" || ${1} == "--force" ]]; then
 	ALLSKY_STATUS_NEEDS_REVIEW="Allsky settings need to be reviewed"
 
 	# GitHub information - package names, repository, and contents of a file.
-	GITHUB_ROOT="https://github.com/AllskyTeam"
-	GITHUB_RAW_ROOT="https://raw.githubusercontent.com/AllskyTeam"
-	GITHUB_MAIN_BRANCH="master"
-	GITHUB_ALLSKY_REPO="allsky"
-	GITHUB_ALLSKY_MODULES_REPO="allsky-modules"
+	ALLSKY_GITHUB_ROOT="https://github.com/AllskyTeam"
+	ALLSKY_GITHUB_RAW_ROOT="https://raw.githubusercontent.com/AllskyTeam"
+	ALLSKY_GITHUB_MAIN_BRANCH="master"
+	ALLSKY_GITHUB_ALLSKY_REPO="allsky"
+	ALLSKY_GITHUB_ALLSKY_MODULES_REPO="allsky-modules"
 
 	# NAMEs of some configuration files:
 	#	Camera Capabilities - specific to a camera type and model (cc.json)
 	#	Allsky WebUI options - created at installation and when camera type changes (options.json)
 	#	Allsky WebUI settings - specific to a camera type and model (settings.json)
-	CC_FILE="${ALLSKY_CONFIG}/cc.json"
-	OPTIONS_FILE="${ALLSKY_CONFIG}/options.json"
-	SETTINGS_FILE="${ALLSKY_CONFIG}/settings.json"
-	if [[ -s ${SETTINGS_FILE} ]]; then
+	ALLSKY_CC_FILE="${ALLSKY_CONFIG}/cc.json"
+	ALLSKY_OPTIONS_FILE="${ALLSKY_CONFIG}/options.json"
+	ALLSKY_SETTINGS_FILE="${ALLSKY_CONFIG}/settings.json"
+	if [[ -s ${ALLSKY_SETTINGS_FILE} ]]; then
 		# Get the name of the file the websites will look for, and split into name and extension.
-		FULL_FILENAME="$( jq -r ".filename" "${SETTINGS_FILE}" )"
-		FILENAME="${FULL_FILENAME%.*}"
-		EXTENSION="${FULL_FILENAME##*.}"
+		ALLSKY_FULL_FILENAME="$( jq -r ".filename" "${ALLSKY_SETTINGS_FILE}" )"
+		ALLSKY_FILENAME="${ALLSKY_FULL_FILENAME%.*}"
+		ALLSKY_EXTENSION="${ALLSKY_FULL_FILENAME##*.}"
 
-		CAMERA_TYPE="$( jq -r '.cameratype' "${SETTINGS_FILE}" )"
-		CAMERA_MODEL="$( jq -r '.cameramodel' "${SETTINGS_FILE}" )"
-		CAMERA_NUMBER="$( jq -r '.cameranumber' "${SETTINGS_FILE}" )"
+		CAMERA_TYPE="$( jq -r '.cameratype' "${ALLSKY_SETTINGS_FILE}" )"
+		CAMERA_MODEL="$( jq -r '.cameramodel' "${ALLSKY_SETTINGS_FILE}" )"
+		CAMERA_NUMBER="$( jq -r '.cameranumber' "${ALLSKY_SETTINGS_FILE}" )"
 		CAMERA_NUMBER="${CAMERA_NUMBER:-0}"
 
 		# So scripts can conditionally output messages.
-		ALLSKY_DEBUG_LEVEL="$( jq -r '.debuglevel' "${SETTINGS_FILE}" )"
+		ALLSKY_DEBUG_LEVEL="$( jq -r '.debuglevel' "${ALLSKY_SETTINGS_FILE}" )"
 	else
 		# Allsky probably not installed yet so provide defaults.
-		FILENAME="image"
-		EXTENSION="jpg"
-		FULL_FILENAME="${FILENAME}.${EXTENSION}"
+		ALLSKY_FILENAME="image"
+		ALLSKY_EXTENSION="jpg"
+		ALLSKY_FULL_FILENAME="${ALLSKY_FILENAME}.${ALLSKY_EXTENSION}"
 		ALLSKY_DEBUG_LEVEL=1
 	fi
 	ALLSKY_ENV="${ALLSKY_HOME}/env.json"	# holds private info like passwords
 
-	IMG_DIR="current/tmp"
-	CAPTURE_SAVE_DIR="${ALLSKY_TMP}"
+	# Where "current" image and mini-timelapse files are:
+	ALLSKY_IMG_DIR="current"							# URL alias for web server
+	ALLSKY_CURRENT_DIR="${ALLSKY_TMP}/current_images"	# Equivalent location on Pi
+	ALLSKY_MINITIMELAPSE_NAME="mini-timelapse.mp4"
+	ALLSKY_MINITIMELAPSE_FILE="/${ALLSKY_CURRENT_DIR}/${ALLSKY_MINITIMELAPSE_NAME}"
+	ALLSKY_MINITIMELAPSE_URL="/${ALLSKY_IMG_DIR}/${ALLSKY_MINITIMELAPSE_NAME}"
 
-	# Python virtual environment
+	# Python virtual environments
 	ALLSKY_PYTHON_VENV="${ALLSKY_HOME}/venv"
+	ALLSKY_PYTHON_SERVER_VENV="${ALLSKY_HOME}/venv_server"
 
 	# These EXIT codes from the capture programs must match what's in src/include/allsky_common.h
+	ALLSKY_EXIT_OK=0
+	ALLSKY_EXIT_PARTIAL_OK=90		# command partially worked
+	ALLSKY_EXIT_RESTARTING=98		# process is restarting, i.e., stop, then start
+	ALLSKY_EXIT_RESET_USB=99		# need to reset USB bus; cannot continue
 	# Anything at or above EXIT_ERROR_STOP is unrecoverable and the service must be stopped
-	EXIT_OK=0
-	EXIT_PARTIAL_OK=90		# command partially worked
-	EXIT_RESTARTING=98		# process is restarting, i.e., stop, then start
-	EXIT_RESET_USB=99		# need to reset USB bus; cannot continue
-	EXIT_ERROR_STOP=100		# unrecoverable error - need user action so stop service
-	EXIT_NO_CAMERA=101		# cannot find camera
+	ALLSKY_EXIT_ERROR_STOP=100		# unrecoverable error - need user action so stop service
+	ALLSKY_EXIT_NO_CAMERA=101		# cannot find camera
+	ALLSKY_EXIT_STOP=102			# Stop, but no error
 
 	# Name of the Pi's OS in lowercase.
-	PI_OS="$( grep VERSION_CODENAME /etc/os-release )"; PI_OS="${PI_OS/VERSION_CODENAME=/}"
-	PI_OS="${PI_OS,,}"
+	ALLSKY_PI_OS="$( grep VERSION_CODENAME /etc/os-release )"
+	ALLSKY_PI_OS="${ALLSKY_PI_OS/VERSION_CODENAME=/}"
+	ALLSKY_PI_OS="${ALLSKY_PI_OS,,}"
 
 	# If a user wants to define new variables or assign variables differently,
 	# then load their file if it exists.

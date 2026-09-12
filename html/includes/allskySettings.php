@@ -1,5 +1,10 @@
 <?php
 
+if (basename(__FILE__) === basename($_SERVER['SCRIPT_FILENAME'])) {
+    include_once('functions.php');
+    redirect("/index.php");
+}
+
 $debug = false;
 
 // Get the json for the given file if we haven't already and return a pointer to the data.
@@ -130,6 +135,26 @@ function setValue($name, $value, $type) {
 	}
 }
 
+// Return the file name after accounting for any ${} shell variables.
+// Since there will often only be one file used by multiple settings,
+// as an optimization save the last name.
+$lastFileName = null;
+function getFileName($file) {
+	global $lastFileName;
+
+	if ($lastFileName === $file) return $lastFileName;
+
+	if (strpos('${HOME}', $file) !== false) {
+		$lastFileName = str_replace('${HOME}', HOME, $file);
+	} else if (strpos('${ALLSKY_ENV}', $file) !== false) {
+		$lastFileName = str_replace('${ALLSKY_ENV}', ALLSKY_ENV, $file);
+	} else if (strpos('${ALLSKY_HOME}', $file) !== false) {
+		$lastFileName = str_replace('${ALLSKY_HOME}', ALLSKY_HOME, $lastFileName);
+	}
+	return $lastFileName;
+}
+
+
 // ============================================= The main function.
 function DisplayAllskyConfig() {
 	global $formReadonly, $settings_array;
@@ -144,6 +169,7 @@ function DisplayAllskyConfig() {
 	global $endSetting;
 	global $saveChangesLabel;
 	global $forceRestart;
+	global $pageHeaderTitle, $pageIcon, $pageHelp;
 
 	$cameraTypeName = "cameratype";			// json setting name
 	$cameraModelName = "cameramodel";		// json setting name
@@ -461,9 +487,9 @@ if ($remove0) {
 }
 							// updateFile() only returns error messages.
 							$msg = updateFile($settings_file, $content, "settings", true);
-							echo '<script>console.log("Updated ' . "$settings_file";
+							echo "<script>console.log(`Updated '$settings_file'";
 							if ($msg !== "") echo " msg=$msg";
-							echo '");</script>';
+							echo "`);</script>";
 							if ($msg === "") {
 								if ($numSettingsChanges > 0) {
 									$msg = "$numSettingsChanges setting";
@@ -533,7 +559,7 @@ if ($debug) {
 
 				if (! $changesMade && ! $fromConfiguration) {
 					$msg = "<div class='noChanges'>No settings changed.  Nothing updated.</div>";
-					$status->addMessage($msg, 'message');
+					$status->addMessage($msg, 'message', true);
 					$msg = "";
 				} else if ($changes !== "") {
 					$moreArgs = "";
@@ -551,8 +577,8 @@ if ($debug) {
 					$ok = runCommand($CMD, "", "success", false, "", $return_val);
 
 					$msg = "";
-					// EXIT_PARTIAL_OK means there were problem(s) and nothing changed.
-					if ($return_val === EXIT_PARTIAL_OK) {
+					// ALLSKY_EXIT_PARTIAL_OK means there were problem(s) and nothing changed.
+					if ($return_val === ALLSKY_EXIT_PARTIAL_OK) {
 						$ok = false;
 					} else {
 						// If Allsky needs to be configured again, e.g., a new camera type/model,
@@ -606,7 +632,7 @@ if ($debug) {
 							if (! $restartRequired && $changesMade) {
 								$consoleMsg .= " - no changes required it";
 							}
-							echo "<script>console.log('$consoleMsg');</script>";
+							echo "<script>console.log(`$consoleMsg`);</script>";
 						}
 
 						if ($restartRequired) {
@@ -630,14 +656,15 @@ if ($debug) {
 							$moreArgs .= " --allFiles";
 
 						// postData.sh will output necessary messages.
-						$cmd = "${CMD}/postData.sh --from WebUI $cmdDebugArg $moreArgs";
+						$cmd = "{$CMD}/postData.sh --from WebUI $cmdDebugArg $moreArgs";
 						$worked = runCommand($cmd, "", "success", false);
 
 						if ($fromConfiguration) {
-							$cmd = "${CMD}/checkAllsky.sh --fromWebUI";
-							echo '<script>console.log("Running: ' . $cmd . '");</script>';
+							$cmd = "{$CMD}/checkAllsky.sh --fromWebUI";
+							echo '<script>console.log(`Running: ' . $cmd . '`);</script>';
 							exec("$cmd 2>&1", $result, $return_val);
-							if ($result != null) {
+							// Only 1 line is just an "ok" line so don't record.
+							if ($result != null && count($result) > 1) {
 								$result = implode("<br>", $result);
 								// Not worth checking if the update worked.
 								updateFile(ALLSKY_CHECK_LOG, $result, "checkAllsky", true);
@@ -729,26 +756,29 @@ if ($debug) {
 	if ($formReadonly != "readonly") $settingsDescription = "";
 ?>
 
-<div class="row"> <div class="col-lg-12"> <div class="panel panel-primary">
+<div class="panel panel-allsky allow-select" id="settingsPanel">
 <?php
 	if ($formReadonly == "readonly") {
 		$x = "(READ ONLY) &nbsp; &nbsp; ";
 	} else {
-		$x = "<i class='fa fa-camera fa-fw'></i> ";
+		$x = "<i class='$pageIcon'></i> ";
 	}
-	echo "<div class='panel-heading'>$x Allsky Settings for &nbsp;<b>$cameraType $cameraModel</b></div>";
-	echo "<div class='panel-body' style='padding: 5px;'>";
+	echo "<div class='panel-heading clearfix'>";
+		echo "<span>$x $pageHeaderTitle for &nbsp;<b>$cameraType $cameraModel</b></span>";
+		if (!empty($pageHelp)) { doHelpLink(htmlspecialchars($pageHelp, ENT_QUOTES)); }
+	echo "</div>";
+	echo "<div class='panel-body'>";
 	if ($formReadonly != "readonly") {
-		echo "<p id='messages'>";
-			if ($status->isMessage()) echo $status->showMessages();
-		echo "</p>";
+		echo "<div id='messages'>";
+			$status->showMessages();
+		echo "</div>";
 		$t = time();
-		echo "<form method='POST' action='${ME}?_ts=${t}' name='conf_form'>";
+		echo "<form method='POST' action='{$ME}?_ts={$t}' name='conf_form'>";
 ?>
 		<div class="sticky settings-nav">
-			<div class="settings-buttons container-fluid">
+			<div class="settings-buttons container-fluid" style="padding-left: 0; padding-right: 0;">
 				<div class="row">
-					<div class="col-md-11 col-sm-11 col-xs-11 nowrap">
+					<div class="col-md-11 col-sm-11 col-xs-11 nowrap buttons">
 						<button type="submit" class="btn btn-primary"
 								id="save_settings" name="save_settings"
 								title="Save changes">
@@ -757,11 +787,11 @@ if ($debug) {
 						<button type="submit" class="btn ml-3 btn-warning"
 								id="settings-reset" name="reset_settings"
 								title="Reset to default values">
-							<i class="fa-solid fa-rotate-left"></i> Reset to default values
+							<i class="fa-solid fa-rotate-left"></i> Reset to defaults
 						</button>
 					</div>
 					
-					<div class="col-md-1 col-sm-1 col-xs-1">
+					<div class="col-md-1 col-sm-1 col-xs-1 expand-collapse-button">
 						<button type="button" class="<?php if (!$hideHeaderBodies) { echo("hidden ") ;}?>btn btn-primary ml-5 settings-expand pull-right"
 								id="settings-all-control" title="Expand/Collapse all settings">
 							<?php echo $showIcon ?>
@@ -769,7 +799,7 @@ if ($debug) {
 					</div>
 				</div>
 				<div class="row">
-					<div class="col-md-12">
+					<div class="col-md-12 save-settings-text">
 						<div title="Uncheck to only save settings without restarting Allsky" class="mt-4">
 							<input type="checkbox" name="restart" value="true" checked>
 							<span class="ml-2">Restart Allsky after saving changes, if needed?</span>
@@ -820,7 +850,7 @@ CSRFToken();
 
 			foreach($options_array as $option) {
 				$name = $option['name'];
-if (false && $debug) { echo "<br>Option $name"; }
+if ($debug) { echo "<br>Option <b>$name</b>"; }
 				if ($name === $endSetting) continue;
 
 				$type = getVariableOrDefault($option, 'type', null);
@@ -854,6 +884,7 @@ if (false && $debug) { echo "<br>Option $name"; }
 				if ($isHeader) {
 					$value = "";
 					$default = "";
+if ($debug) { echo "&nbsp; (<span style='color: blue;'>$logicalType</span>)"; }
 				} else {
 					$default = getVariableOrDefault($option, 'default', "");
 					if ($default !== "" && $logicalType === "text")
@@ -869,15 +900,16 @@ if (false && $debug) { echo "<br>Option $name"; }
 
 						$fileName = getFileName($s);
 						$source_array = &getSourceArray($fileName);
-if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; name=$name, fileName=$fileName"; }
+if ($debug) { echo ": &nbsp; from $fileName"; }
 						if ($source_array === null) {
 							continue;
 						}
 						$value = getVariableOrDefault($source_array, $name, null);
-if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; value=$value"; }
 					} else {
+if ($debug) { echo ": &nbsp; from settings file"; }
 						$value = getVariableOrDefault($settings_array, $name, null);
 					}
+if ($debug) { echo ": &nbsp; value=$value"; }
 
 					// In read-only mode, getVariableOrDefault() returns booleans differently.
 					// A 0 or 1 is returned.
@@ -912,7 +944,7 @@ if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; value=$value"; }
 					$shortMsg = getVariableOrDefault($error_array_short, $name, "");
 
 					if ($shortMsg == "" && $value !== "") {
-//x echo "<br>=== Checking $name: value=$value, type=${type_array[$name]}";
+//x echo "<br>=== Checking $name: value=$value, type={$type_array[$name]}";
 						$e = checkType($name,
 								$value,
 								$value,
@@ -1133,15 +1165,15 @@ if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; value=$value"; }
 							$type == "float" || $type == "percent") {
 								$type = "text";
 						}
-						echo "\n\t\t<input class='form-control boxShadow settingInput settingInputTextNumber'" .
+						echo "\n\t\t<input class='form-control settingInput settingInputTextNumber'" .
 							" type='$type' $readonly $readonlyForm name='$name' value='$value' >";
 
 					} else if ($type == "widetext"){
-						echo "\n\t\t<input class='form-control boxShadow settingInputWidetext'" .
+						echo "\n\t\t<input class='form-control settingInputWidetext'" .
 							" type='text' $readonlyForm name='$name' value='$value'>";
 
 					} else if ($type == "select"){
-						echo "\n\t\t<select class='form-control boxShadow settingInput settingInputSelect'" .
+						echo "\n\t\t<select class='form-control settingInput settingInputSelect'" .
 							" $readonlyForm name='$name'>";
 						foreach($option['options'] as $opt){
 							$val = getVariableOrDefault($opt, 'value', "?");
@@ -1155,7 +1187,7 @@ if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; value=$value"; }
 						echo "</select>";
 
 					} else if ($type == "boolean"){
-						echo "\n\t\t<div class='switch-field boxShadow settingInput settingInputBoolean'>";
+						echo "\n\t\t<div class='switch-field settingInput settingInputBoolean'>";
 							echo "\n\t\t<input id='switch_no_$name' class='form-control' type='radio' ".
 								"$readonlyForm name='$name' value='false' ".
 								($value == "false" ? " checked " : "").  ">";
@@ -1227,7 +1259,10 @@ if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; value=$value"; }
 				}
 			}
 			if ($numMissing > 0) {
-				$msg .= "<br><strong>$missingSettings</strong> is missing";
+				if ($numErrors > 0) {
+					$msg .= "<br>";
+				}
+				$msg .= "<strong>$missingSettings</strong> is missing";
 			}
 			if ($msg != "") {
 				// Combine invalid and missing fields since they are both errors.
@@ -1246,27 +1281,39 @@ if ($debug) { echo "<br>&nbsp; &nbsp; &nbsp; value=$value"; }
 			if ($status->isMessage()) {
 				$status->addMessage("<strong>See the highlighted entries below.</strong>", 'info');
 			}
+
+			//$status->reset();
+
 ?>
+
 			<script>
-				var messages = document.getElementById("messages");
-				var inner = messages.innerHTML;
+				var messages = $("#messages");
+				var messageHTML = messages.html();
 				// Call showMessages() with the 2nd (escape) argument of "true" so
 				// it escapes single quotes and deletes newlines.
 				// We then have to restore them so the html is correct.
-				messages.innerHTML += '<?php $status->showMessages(true, true, true); ?>'
+				messageHTML += `<?php $status->showMessages(true, true); ?>`
 					.replace(/&apos;/g, "'")
 					.replace(/&#10/g, "\n");
+				messages.html(messageHTML);
+
+				if ($('#messages div.noChanges').length !== 1) {
+					if ($('#messages > div').length > 1) {
+						$('#settingsPanel').removeClass('panel-success');
+						$('#settingsPanel').addClass('panel-danger');
+					}
+				}
+
 			</script>
 <?php	} ?>
 
 	</form>
 </div><!-- ./ Panel body -->
-</div><!-- /.panel-primary --> </div><!-- /.col-lg-12 --> </div><!-- /.row -->
+</div><!-- /.panel-primary -->
 
 
 <?php
 	if (! $formReadonly)
-		echo '<script src="js/settings.js"></script>';
-
+		echo addAsset('js/settings.js');
 }
 ?>

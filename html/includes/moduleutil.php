@@ -1,79 +1,141 @@
 <?php
+declare(strict_types=1);
 
 include_once('functions.php');
 initialize_variables();		// sets some variables
-
 include_once('authenticate.php');
+include_once('utilbase.php');
 
-class MODULEUTIL
-{
-    private $request;
-    private $method;
-    private $jsonResponse = false;
-    private $allskyModules;
-    private $userModules;
+class MODULEUTIL extends UTILBASE {
+    protected function getRoutes(): array
+    {
+        return [
+            'AllskyVariables' => ['get'],
+            'AllskyKameraStatus' => ['get'],
+            'CheckModuleDependencies' => ['post'],
+            'GetExtraDataFile' => ['post'],
+            'HassSensors' => ['post'],
+            'ModuleBaseData' => ['get'],
+            'ModuleTool' => ['post'],
+            'ModuleToolOutput' => ['get'],
+            'ModuleToolStart' => ['post'],
+            'Modules' => ['delete', 'get', 'post'],
+            'ModulesSettings' => ['get', 'post'],
+            'Onewire' => ['get'],
+            'Reset' => ['get'],
+            'Restore' => ['get'],
+            'SerialPorts' => ['get'],
+            'SuggestedModules' => ['get'],
+            'SunData' => ['get'],
+            'Template' => ['get'],
+            'TemplateList' => ['get'],
+            'TestModule' => ['post'],
+            'UrlCheck' => ['get'],
+            'ValidateMask' => ['post'],
+            'VariableList' => ['get'],
+            'WatchdogManageService' => ['get'],
+            'WatchdogStatus' => ['get'],
+            'ProxyLocalApi' => ['get'],
+            'ModuleFile' => ['get']            
+        ];
+    }
+
+    protected $allskyModules;
+    protected $userModules;
+	protected $myFiles;
+    protected $myFilesData;
+    protected $allsky_config = null;
+    protected $extra_data = null;
+    protected $extra_legacy_data = null;
+    protected $allskySettings = null;
+    protected $allsky_home = null;
+    protected $allsky_scripts = null;
+    protected $allskyMyFiles = null;
+    protected $myFilesBase = null;
+    protected $services = ['allsky', 'allskyperiodic', 'allskyserver'];
 
     function __construct() {
         $this->allskyModules = ALLSKY_SCRIPTS . '/modules';
         $this->userModules = ALLSKY_MODULE_LOCATION . '/modules';
+		$this->allskyMyFiles = ALLSKY_MYFILES_DIR;        
+		$this->myFilesBase = ALLSKY_MYFILES_DIR;
+        $this->myFiles = ALLSKY_MYFILES_DIR . '/modules';
+		$this->myFilesData = ALLSKY_MYFILES_DIR . '/modules/moduledata';        
+        $this->allsky_home = ALLSKY_HOME;
+        $this->allsky_scripts = ALLSKY_SCRIPTS;
+        $this->allsky_config = ALLSKY_CONFIG;
+        $this->extra_data = ALLSKY_EXTRA;
+        $this->extra_legacy_data = ALLSKY_EXTRA_LEGACY;
     }
 
-    public function run()
-    {
-        $this->checkXHRRequest();
-        $this->sanitizeRequest();
-        $this->runRequest();
-    }
+	private function stringContains(string $value, string $needle): bool {
+		return $needle === '' || strpos($value, $needle) !== false;
+	}
 
-    private function checkXHRRequest()
-    {
-        if (empty($_SERVER['HTTP_X_REQUESTED_WITH']) || strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) != 'xmlhttprequest') {
-            $this->send404();
+    private function getMetaDataFromFile($fileName) {
+		$metaData = $this->getMetaDataFromFileByName($fileName, 'meta_data');
+		if ($metaData === "") {
+			$metaData = $this->getMetaDataFromFileByName($fileName, 'metaData');
+		}
+
+		return $metaData;
+	}
+
+    private function getMetaDataFromFileByName($fileName, $metaName) {
+		$metaData = "";
+
+        if (file_exists($fileName)) {
+            $fileContents = file($fileName);
+            $found = False;
+
+            $level = 0;
+            foreach ($fileContents as $source_line) {
+        
+                if (rtrim($source_line) !== '' && $this->endsWith(rtrim($source_line), '{')) {
+                    $level++;
+                }
+            
+                if (ltrim($source_line) !== '' && $this->startsWith(ltrim($source_line), '}')) {
+                    $level--;
+                }
+            
+                if (ltrim($source_line) !== '' && $this->startsWith(ltrim($source_line), $metaName)) {
+                    $found = true;
+                    $source_line = str_replace([$metaName, "=", " "], "", $source_line);
+                }
+            
+                if ($found) {
+                    $metaData .= $source_line;
+                }
+            
+                if (trim($source_line) === '}' && $found && $level === 0) {
+                    break;
+                }
+            }
         }
+		
+
+        return $metaData;
     }
 
-    private function sanitizeRequest()
-    {
-        $this->request = $_GET['request'];
-        $this->method = strtolower($_SERVER['REQUEST_METHOD']);
+    private function getModuleMetaData($modulelName) {
+        $fileName = $this->myFiles . '/' . $modulelName;
 
-        $accepts = $_SERVER['HTTP_ACCEPT'];
-        if (stripos($accepts, 'application/json') !== false) {
-            $this->jsonResponse = true;
+        $metaData = $this->getMetaDataFromFile($fileName);
+        if ($metaData == "") {
+            $fileName = $this->userModules . '/' . $modulelName;
+            $metaData = $this->getMetaDataFromFile($fileName);
+            if ($metaData == "") {
+                $fileName = $this->allskyModules . '/' . $modulelName;
+                $metaData = $this->getMetaDataFromFile($fileName);
+                
+            }                
         }
+        return $metaData;
     }
 
-    private function send404()
-    {
-        header('HTTP/1.0 404 Not Found');
-        die();
-    }
-
-    private function send500($error = "Internal Server Error")
-    {
-        header('HTTP/1.0 500 ' . $error);
-        die();
-    }
-
-    private function sendResponse($response = 'ok')
-    {
-        echo ($response);
-        die();
-    }
-
-    private function runRequest() {
-        $action = $this->method . $this->request;
-
-        if (is_callable(array('MODULEUTIL', $action))) {
-            call_user_func(array($this, $action));
-        } else {
-            $this->send404();
-        }
-    }
-
-    private function readModuleData($moduleDirectory, $type, $event) {
+    public function readModuleData($moduleDirectory, $type, $event) {
         $arrFiles = array();
-        $handle = opendir($moduleDirectory);
 
         if ($handle) {
             while (($entry = readdir($handle)) !== FALSE) {
@@ -142,22 +204,48 @@ class MODULEUTIL
         return $arrFiles;
     }
 
-    private function startsWith ($string, $startString) {
-        $len = strlen($startString);
-        return (substr($string, 0, $len) === $startString);
+    private function isSafeExtraDataFilename(string $fileName): bool
+    {
+        return basename($fileName) === $fileName
+            && preg_match('/^[A-Za-z0-9][A-Za-z0-9._-]*\.json$/', $fileName) === 1;
     }
 
-    private function endsWith($string, $endString) {
-        $len = strlen($endString);
-        if ($len == 0) {
-            return true;
+    private function getKnownExtraDataFilenames(): array
+    {
+        $fileNames = [];
+
+        foreach ([$this->allskyModules, $this->userModules, $this->myFiles] as $moduleDirectory) {
+            foreach ($this->readModuleData($moduleDirectory, 'metadata', null) as $moduleData) {
+                if (!is_array($moduleData) || !isset($moduleData['metadata'])) {
+                    continue;
+                }
+
+                if (!isset($moduleData['metadata']->extradatafilename)) {
+                    continue;
+                }
+
+                $fileName = (string)$moduleData['metadata']->extradatafilename;
+                if ($this->isSafeExtraDataFilename($fileName)) {
+                    $fileNames[$fileName] = true;
+                }
+            }
         }
-        return (substr($string, -$len) === $endString);
+
+        return array_keys($fileNames);
     }
 
-    private function changeOwner($filename) {
-        $user = get_current_user();
-        exec("sudo chown " . $user . " " . $filename);
+    private function getAuthorisedExtraDataPath(string $fileName): ?string
+    {
+        $fileName = trim($fileName);
+        if (!$this->isSafeExtraDataFilename($fileName)) {
+            return null;
+        }
+
+        if (!in_array($fileName, $this->getKnownExtraDataFilenames(), true)) {
+            return null;
+        }
+
+        return rtrim($this->extra_data, '/') . '/' . $fileName;
     }
 
     public function getModulesSettings() {
@@ -173,7 +261,7 @@ class MODULEUTIL
         $configFileName = ALLSKY_MODULES . '/' . 'postprocessing_' . strtolower($flow) . '.json';
         $backupConfigFileName = $configFileName . '-last';
         # File are created 644 which means the web server can't change them after
-        # they are created.  To get around this, remove backupFileName before copy over it.
+        # they are created.  To get around this, remove backupFilename before copy over it.
         @unlink($configFileName);
         copy($backupConfigFileName, $configFileName);
         $this->changeOwner($configFileName);
@@ -199,9 +287,11 @@ class MODULEUTIL
         $lat = $settings_array['latitude'];
         $lon = $settings_array['longitude'];
 
+        $result = array();
         $result['lat'] = $lat;
         $result['lon'] = $lon;
-        $result['filename'] = IMG_DIR . '/' . $settings_array['filename'];
+        $result['filename'] = ALLSKY_IMG_DIR . '/' . $settings_array['filename'];
+        $result['fieldhelpdelay'] = getVariableOrDefault($settings_array, 'fieldhelpdelay', 500);
 
         exec("sunwait poll exit set angle $angle $lat $lon", $return, $retval);
         if ($retval == 2) {
@@ -217,22 +307,132 @@ class MODULEUTIL
         $configFileName = ALLSKY_MODULES . '/module-settings.json';
         $rawConfigData = file_get_contents($configFileName);
         $configData = json_decode($rawConfigData);
-
         $result['settings'] = $configData;
+
+        $configFileName = ALLSKY_CONFIG . '/devicemanager.json';
+        if (file_exists($configFileName)) {
+            $rawDeviceManagerData = @file_get_contents($configFileName);
+            $deviceManagerData = json_decode($rawDeviceManagerData);
+            $result['devicemanager'] = $deviceManagerData;
+        } else {
+            $result['devicemanager'] = null;
+        }
+
+        $result['haveDatabase'] = haveDatabase();
+                
         $formattedJSON = json_encode($result, JSON_PRETTY_PRINT);
         $this->sendResponse($formattedJSON);
     }
 
+    public function getAllskyKameraStatus() {
+        $owner = getenv('ALLSKY_OWNER');
+        if ($owner === false || $owner === '') {
+            $owner = get_current_user();
+        }
+
+        $homeDir = '';
+        if (function_exists('posix_getpwnam')) {
+            $userInfo = @posix_getpwnam($owner);
+            if ($userInfo !== false && isset($userInfo['dir'])) {
+                $homeDir = $userInfo['dir'];
+            }
+        }
+
+        if ($homeDir === '') {
+            $homeDir = rtrim((string)getenv('HOME'), '/');
+        }
+
+        if ($homeDir === '') {
+            $homeDir = '/home/' . $owner;
+        }
+
+        $secretFile = $homeDir . '/AllSkyKamera/askutils/ASKsecret.py';
+        $installed = file_exists($secretFile);
+
+        $result = [
+            'installed' => $installed,
+            'configured' => $installed,
+            'path' => $secretFile
+        ];
+
+        $this->sendResponse(json_encode($result, JSON_PRETTY_PRINT));
+    }
+
+    public function getSunData() {
+        global $settings_array;
+
+        $angle = (string)$settings_array['angle'];
+        $lat = (string)$settings_array['latitude'];
+        $lon = (string)$settings_array['longitude'];
+        $result = [
+            'angle' => $angle,
+            'lat' => $lat,
+            'lon' => $lon,
+            'sunrise' => '',
+            'sunset' => '',
+            'tod' => ''
+        ];
+
+        $listOutput = [];
+        $pollOutput = [];
+        $retval = 0;
+        $angleArg = escapeshellarg($angle);
+        $latArg = escapeshellarg($lat);
+        $lonArg = escapeshellarg($lon);
+
+        exec("sunwait list angle $angleArg $latArg $lonArg", $listOutput);
+        if (isset($listOutput[0])) {
+            $parts = array_map('trim', explode(',', $listOutput[0], 2));
+            if (isset($parts[0])) {
+                $result['sunrise'] = $parts[0];
+            }
+            if (isset($parts[1])) {
+                $result['sunset'] = $parts[1];
+            }
+        }
+
+        exec("sunwait poll exit set angle $angleArg $latArg $lonArg", $pollOutput, $retval);
+        if ($retval == 2) {
+            $result['tod'] = 'day';
+        } else if ($retval == 3) {
+            $result['tod'] = 'night';
+        }
+
+        $this->sendResponse(json_encode($result, JSON_PRETTY_PRINT));
+    }
+
     public function getModules() {
         $result = $this->readModules();
-        $result = json_encode($result, JSON_FORCE_OBJECT);
+        $result = json_encode($result);
         $this->sendResponse($result);
+    }
+
+    public function getSuggestedModules(): void
+    {
+        $fileName = rtrim($this->allsky_config, '/') . '/suggested_modules.json';
+        if (!is_file($fileName) || !is_readable($fileName)) {
+            $this->send404('The suggested module list could not be loaded.');
+        }
+
+        $contents = file_get_contents($fileName);
+        if ($contents === false || trim($contents) === '') {
+            $this->send500('The suggested module list is empty or unreadable.');
+        }
+
+        json_decode($contents);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            $this->send500('The suggested module list does not contain valid JSON.');
+        }
+
+        $this->sendResponse($contents);
     }
 
     private function readModules() {
         $configFileName = ALLSKY_MODULES . '/module-settings.json';
         $rawConfigData = file_get_contents($configFileName);
         $moduleConfig = json_decode($rawConfigData);
+
+		$secrets = json_decode(file_get_contents(ALLSKY_ENV));
 
         $event = $_GET['event'];
         $configFileName = ALLSKY_MODULES . '/' . 'postprocessing_' . strtolower($event) . '.json';
@@ -248,20 +448,38 @@ class MODULEUTIL
 
         $coreModules = $this->readModuleData($this->allskyModules, "system", $event);
         $userModules = $this->readModuleData($this->userModules, "user", $event);
-        $allModules = array_merge($coreModules, $userModules);
+        $myModules = $this->readModuleData($this->myFiles, "user", $event);
+
+        $allModules = array_merge($coreModules, $userModules, $myModules);
 
         $availableResult = [];
-        foreach ($allModules as $moduleData) {
-            $module = str_replace('allsky_', '', $moduleData["module"]);
+        foreach ($allModules as $key=>$moduleData) {
+			if (isset($moduleData["module"])) {
+				$moduleName = $moduleData["module"];
+			} else {
+				$moduleName = $key;
+			}
+            $module = str_replace('allsky_', '', $moduleName);
             $module = str_replace('.py', '', $module);
-
+			
             if (!isset($configData->{$module})) {
-                $moduleData["enabled"] = false;
+				if ($moduleData === null) { // Corrupt module metaData
+					$moduleData = [
+						"metadata" => [
+							"name" => "Reads Pi Status",
+							"description" => "Reads Pi Data",
+							"module" => "allsky_pistatus",    
+							"version" => "v1.0.0",							
+							"arguments" => []
+						],
+						"corrupt" => true
+					];
+				}
                 $availableResult[$module] = $moduleData;
             }
         }
 
-        $selectedResult = [];
+		$selectedResult = [];
         foreach($configData as $selectedName=>$data) {
             $moduleName = "allsky_" . $selectedName . ".py";
             if (!isset($allModules[$moduleName])) {
@@ -269,42 +487,60 @@ class MODULEUTIL
             }
             $moduleData = $allModules[$moduleName];
 
-            if (isset($data->metadata->arguments)) {
-                if (isset($moduleData['metadata']->arguments)) {
-                    foreach ((array)$moduleData['metadata']->arguments as $argument=>$value) {
-                        if (!isset($data->metadata->arguments->$argument)){
-                            $data->metadata->arguments->$argument = $value;
-                        }
-                    }
-                }
-                $moduleData["metadata"]->arguments = $data->metadata->arguments;
-            } else {
-                $moduleData["metadata"]->arguments = [];
-            }
-            if (isset($data->enabled)) {
-                $moduleData["enabled"] = $data->enabled;
-            } else {
-                $moduleData["enabled"] = false;
-            }
-            if ($selectedName == 'loadimage') {
-                $moduleData['position'] = 'first';
-            }
-            if ($selectedName == 'saveimage') {
-                $moduleData['position'] = 'last';
-            }
+			if ($moduleData === null) { // Corrupt module metaData
+				$moduleData = (array)$configData->$selectedName;
+				$moduleData["corrupt"] = true;
+			}
 
-            if (isset($data->lastexecutiontime)) {
-                $moduleData['lastexecutiontime'] = $data->lastexecutiontime;
-            } else {
-                $moduleData['lastexecutiontime'] = '0';
-            }
-            if (isset($data->lastexecutionresult)) {
-                $moduleData['lastexecutionresult'] = $data->lastexecutionresult;
-            } else {
-                $moduleData['lastexecutionresult'] = '';
-            }
+			if (isset($data->metadata->arguments)) {
+				if (isset($moduleData['metadata']->arguments)) {
+					foreach ((array)$moduleData['metadata']->arguments as $argument=>$value) {
 
-            $selectedResult[$selectedName] = $moduleData;
+						if (!isset($data->metadata->arguments->$argument)) {
+							$data->metadata->arguments->$argument = $value;
+						}
+						
+						# If field is a 'secret' field then get the value from the env file
+						if (isset($moduleData["metadata"]->argumentdetails->$argument->secret)) {
+							if ($moduleData["metadata"]->argumentdetails->$argument->secret !== null) {
+								if ($moduleData["metadata"]->argumentdetails->$argument->secret === 'true') {
+									$secretKey = strtoupper($data->metadata->module) . '_' . strtoupper($argument);
+									if (isset($secrets->$secretKey)) {
+										$data->metadata->arguments->$argument = $secrets->$secretKey;
+									}
+								}
+							}
+						}
+					}
+				}
+				$moduleData["metadata"]->arguments = $data->metadata->arguments;
+			} else {
+				$moduleData["metadata"]->arguments = [];
+			}
+			if (isset($data->enabled)) {
+				$moduleData["enabled"] = $data->enabled;
+			} else {
+				$moduleData["enabled"] = false;
+			}
+			if ($selectedName == 'loadimage') {
+				$moduleData['position'] = 'first';
+			}
+			if ($selectedName == 'saveimage') {
+				$moduleData['position'] = 'last';
+			}
+
+			if (isset($data->lastexecutiontime)) {
+				$moduleData['lastexecutiontime'] = $data->lastexecutiontime;
+			} else {
+				$moduleData['lastexecutiontime'] = '0';
+			}
+			if (isset($data->lastexecutionresult)) {
+				$moduleData['lastexecutionresult'] = $data->lastexecutionresult;
+			} else {
+				$moduleData['lastexecutionresult'] = '';
+			}
+
+			$selectedResult[$selectedName] = $moduleData;
         };
 
         $restore = false;
@@ -329,6 +565,69 @@ class MODULEUTIL
         return $result;
     }
 
+    private function getModuleHelpFromFolder($folder): array {
+        $result = array();
+        $types = ['txt', 'html', 'md'];
+        if (file_exists($folder)) {
+            $handle = opendir($folder);
+            if ($handle) {
+                while (($entry = readdir($handle)) !== FALSE) {
+                    if ($entry !== '.' && $entry !== '..') {
+                        //TODO: Add HTML help or markdown
+                        foreach ($types as $key=>$type) {
+                            $fileName = $folder . '/' . $entry . '/readme.' . $type;
+                            if (file_exists($fileName)) {
+                                $text = file_get_contents($fileName);
+                                $module = str_replace('allsky_', '', $entry);
+                                $module = str_replace('.py', '', $module);
+                                if (!isset($result[$module])) {
+                                    $result[$module] = [];
+                                }
+                                if ($type == 'txt') {
+                                    $text = nl2br($text);
+                                }
+                                $result[$module][$type] = $text;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return $result;
+    }
+
+    public function getModuleFile() {
+        $rawFilename = $_GET['file'] ?? '';
+        $filename = basename($rawFilename);
+
+        $rawModuleame = $_GET['module'] ?? '';
+        $modulename = basename($rawModuleame);
+
+        $filePath = $this->myFiles . '/moduledata/data/' . $modulename . '/' . $filename;
+
+        if (file_exists($filePath)) {
+            $fileContents = file_get_contents($filePath);
+        } else {
+            $fileContents = 'File ' . $filename . ' Not found';
+        }
+
+        $this->sendHTMLResponse($fileContents);
+    }
+
+    private function getModuleHelp() {
+        //TODO: Not sure about this location
+        $coreHelpFolder = ALLSKY_SCRIPTS . '/modules/info';
+        $extraHelpFolder = ALLSKY_MODULE_LOCATION . '/modules/info';
+
+        $help = $this->getModuleHelpFromFolder($coreHelpFolder);
+        $extraHelp = $this->getModuleHelpFromFolder($extraHelpFolder);
+
+        $help = array_merge($help, $extraHelp);
+        return '';
+        return $help;
+    }
+
     public function postModules() {
         $config = $_POST['config'];
         $configData = $_POST['configData'];
@@ -336,12 +635,33 @@ class MODULEUTIL
         $rawConfigData = file_get_contents($configFileName);
         $oldModules = json_decode($rawConfigData);
 
+		$configDataJson = json_decode($configData);
+		$envData = null;
+		foreach ($configDataJson as $module=>&$moduleConfig) {
+            if (isset($moduleConfig->metadata->argumentdetails)) {
+                foreach ($moduleConfig->metadata->argumentdetails as $argument=>$argumentSettings) {
+                    if (isset($argumentSettings->secret)) {
+                        if ($envData === null) {
+                            $envData = json_decode(file_get_contents(ALLSKY_ENV));
+                        }
+                        $secretKey = strtoupper($moduleConfig->metadata->module) . '_' . strtoupper($argument);
+                        $envData->$secretKey = $moduleConfig->metadata->arguments->$argument;
+                        $moduleConfig->metadata->arguments->$argument = '';
+                    }
+                }
+            }
+		}
+		$configData = json_encode($configDataJson, JSON_PRETTY_PRINT);
+		if ($envData !== null) {
+			file_put_contents(ALLSKY_ENV, json_encode($envData, JSON_PRETTY_PRINT));
+		}
+		
         $result = file_put_contents($configFileName, $configData);
         $this->changeOwner($configFileName);
-        $backupFileName = $configFileName . '-last';
-        @unlink($backupFileName);
-        copy($configFileName, $backupFileName);
-        $this->changeOwner($backupFileName);
+        $backupFilename = $configFileName . '-last';
+        @unlink($backupFilename);
+        copy($configFileName, $backupFilename);
+        $this->changeOwner($backupFilename);
         if ($result !== false) {
             $newModules = json_decode($configData);
             $this->CheckForDisabledModules($newModules, $oldModules);

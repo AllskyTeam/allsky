@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block content %}
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">Dashboard</a>     
+    </div>
+
+
+</nav>
+<div class="container pt-4">
+
+    <div class="row mt-4">
+        <div class="col-6">
+            <div id="main-panel" class="card shadow">
+                {% set allsky_background = 'bg-success' %}
+                {% if allsky_status.allsky.status|lower == 'starting'  %}
+                    {% set allsky_background = 'bg-warning' %}
+                {% endif %}
+                {% if allsky_status.allsky.status|lower == 'stopped'  %}
+                    {% set allsky_background = 'bg-danger' %}
+                {% endif %}
+                <div class="card-header {{ allsky_background }} text-white d-flex align-items-center">
+                    <h4>
+                        <i class="fa-solid fa-globe me-2"></i>Allsky Status
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-danger" role="alert">
+                        {{ allsky_status.allsky.status }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6">
+            <div id="main-panel" class="card shadow">
+                <div class="card-header bg-success text-white d-flex align-items-center">
+                    <h4>
+                        <i class="fa-solid fa-network-wired me-2"></i>GPIO Status
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        {% for pin, info in gpio_status.items() if info.mode != 'unused' %}
+                        <div class="col-12">
+                            <div class="card shadow-sm">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ pin }}</h5>
+                                <p class="card-text mb-1">
+                                <strong>Mode:</strong> {{ info.mode }}
+                                </p>
+
+                                {% if info.mode == 'digital-output' %}
+                                <p class="card-text"><strong>Value:</strong> {{ info.value }}</p>
+                                {% elif info.mode == 'pwm' %}
+                                <p class="card-text mb-0">
+                                    <strong>Frequency:</strong> {{ info.frequency }} Hz<br>
+                                    <strong>Duty:</strong> {{ info.duty }}
+                                </p>
+                                {% endif %}
+                            </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

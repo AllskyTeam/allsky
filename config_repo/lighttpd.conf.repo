@@ -1,15 +1,17 @@
 server.modules = ( "mod_expire", "mod_setenv", "mod_indexfile", "mod_access", "mod_alias", "mod_redirect", "mod_cgi", )
 
-server.document-root        = "XX_ALLSKY_WEBUI_XX"
-server.upload-dirs          = ( "/var/cache/lighttpd/uploads" )
-server.errorlog             = "/var/log/lighttpd/error.log"
-server.pid-file             = "/var/run/lighttpd.pid"
-server.username             = "XX_WEBSERVER_OWNER_XX"
-server.groupname            = "XX_WEBSERVER_GROUP_XX"
-server.port                 = 80
-server.tag                  = "Allsky"
+server.document-root           = "XX_ALLSKY_WEBUI_XX"
+server.upload-dirs             = ( "/var/cache/lighttpd/uploads" )
+server.errorlog                = "/var/log/lighttpd/error.log"
+server.pid-file                = "/var/run/lighttpd.pid"
+server.username                = "XX_ALLSKY_WEBSERVER_OWNER_XX"
+server.groupname               = "XX_ALLSKY_WEBSERVER_GROUP_XX"
+server.port                    = 80
+server.tag                     = "Allsky"
+server.max-keep-alive-requests = 3000
+server.max-fds                 = 6000
 
-dir-listing.activate = "enable"
+dir-listing.activate = "disable"
 setenv.add-response-header += ( "X-Content-Type-Options" => "nosniff" )
 
 setenv.add-environment = (
@@ -17,32 +19,34 @@ setenv.add-environment = (
   "ALLSKY_HOME" => "XX_ALLSKY_HOME_XX/"
 )
 
-alias.url		    = ("/current/" => "XX_ALLSKY_HOME_XX/")
+alias.url		    = ("/current/" => "XX_ALLSKY_CURRENT_DIR_XX/")
 alias.url		    += ("/images/" => "XX_ALLSKY_IMAGES_XX/")
-alias.url		    += ("/config/" => "XX_ALLSKY_CONFIG_XX/")
 alias.url		    += ("/website/" => "XX_ALLSKY_WEBSITE_XX/")
+alias.url		    += ("/weblogs/" => "XX_ALLSKY_WEB_LOGS_XX/")
 alias.url		    += ("/documentation" => "XX_ALLSKY_DOCUMENTATION_XX/")
-alias.url		    += ("/overlayTemplates" => "XX_MY_OVERLAY_TEMPLATES_XX/")
+alias.url		    += ("/overlayTemplates" => "XX_ALLSKY_MY_OVERLAY_TEMPLATES_XX/")
 alias.url		    += ("/overlay" => "XX_ALLSKY_OVERLAY_XX/")
 
 $HTTP["url"] =~ "^/cgi-bin/" {
 	cgi.assign = ( ".py" => "/usr/bin/python3" )
         alias.url += ( "/cgi-bin/" => "XX_ALLSKY_HOME_XX/html/cgi-bin/" )
+
 } else $HTTP["url"] =~ "^/overlay/config/" {
      url.access-deny = ("")
+
 } else $HTTP["url"] =~ "allsky/videos|allsky/startrails|allsky/keograms" {
 	# Output web pages with thumbnails as each thumbnail is read (or created) so the thumbnails appear quickly,
 	# rather than not outputing anything until the last thumbnail is created, which can be tens of seconds.
 	server.stream-response-body = 1
-}
 
-$HTTP["url"] =~ "^/current|.json$|videos/$|startrails/$|keograms/$" {
+} else $HTTP["url"] =~ "^/current|.json$|videos/$|startrails/$|keograms/$" {
 	# Don't cache the "current" image since it is constantly changing.
 	# Also don't cache .json files since they are configuration files that can change.
 	# And don't cache the videos, startrails, and keograms files since they will normally
 	# change every day by adding another thumbnail.
 	# This eliminates the need to add timestamps to URLs.
 	setenv.add-response-header += ( "Cache-Control" => "no-cache, proxy-revalidate" )
+
 } else {
 	# Cache pages
 	setenv.add-response-header += ( "Cache-Control" => "max-age=31536001, immutable" )

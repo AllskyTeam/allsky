@@ -2,10 +2,11 @@ platform = $(shell uname -m)
 
 HOMEDIR = $(shell dirname "$$PWD")
 CONFIGDIR = ${HOMEDIR}/config
+VENVDIR = ${HOMEDIR}/venv
 SCRIPTSDIR = ${HOMEDIR}/scripts
 UTILITIESDIR = ${SCRIPTSDIR}/utilities
 # TODO: get from variables.sh
-NORESTARTCODES = 100 101
+NORESTARTCODES = 100 101 102
 LIBSYSTEMDIR = /lib/systemd/system
 
 .DEFAULT_GOAL := all
@@ -13,7 +14,7 @@ LIBSYSTEMDIR = /lib/systemd/system
 ROOTCHECK=$(shell id -u)
 
 ENVFILE := env.json
-UNINSTALLFILES := /etc/logrotate.d/allsky /etc/rsyslog.d/allsky.conf /etc/systemd/system/allsky.service /etc/systemd/system/allskyperiodic.service
+UNINSTALLFILES := /etc/logrotate.d/allsky /etc/rsyslog.d/allsky.conf /etc/systemd/system/allsky.service /etc/systemd/system/allskyperiodic.service /etc/systemd/system/allskyserver.service
 
 %:
 	@echo "`date +%F\ %R:%S` nothing to do for $@"
@@ -72,11 +73,20 @@ install: createDirs
 	@install -m 0644 allskyperiodic.service /etc/systemd/system/
 	@rm -f allskyperiodic.service
 	@if [ -e $(LIBSYSTEMDIR)/allskyperiodic.service ]; then rm -f $(LIBSYSTEMDIR)/allskyperiodic.service; fi
+
+	@sed -e "s|XX_ALLSKY_OWNER_XX|$(SUDO_USER)|" \
+	     -e "s|XX_ALLSKY_HOME_XX|$(HOMEDIR)|" \
+	  allskyserver.service.repo > allskyserver.service
+	@install -m 0644 allskyserver.service /etc/systemd/system/
+	@rm -f allskyserver.service
+	@if [ -e $(LIBSYSTEMDIR)/allskyserver.service ]; then rm -f $(LIBSYSTEMDIR)/allskyserver.service; fi
+
 	@systemctl daemon-reload
 	@systemctl enable allsky
 	@systemctl enable allskyperiodic
+	@systemctl enable allskyserver
 	@echo "`date +%F\ %R:%S` Setting up ALLSKY_HOME environment variable..."
-	@echo "export ALLSKY_HOME=$(HOMEDIR)\nPATH=${PATH}:$(SCRIPTSDIR)" > /etc/profile.d/allsky.sh
+	@echo "export ALLSKY_HOME=$(HOMEDIR)\nexport ALLSKY_PYTHON_VENV=$(VENVDIR)\nPATH=${PATH}:$(SCRIPTSDIR)" > /etc/profile.d/allsky.sh
 
 .PHONY : install
 

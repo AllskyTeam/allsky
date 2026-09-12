@@ -1,0 +1,71 @@
+{
+    "pistatus": {
+        "name": "Pi Status Information",
+        "fields": {
+            "pistatus1": {
+                "col1": {
+                    "text": "Pi Model:"
+                },
+                "col2": {
+                    "text": "${AS_PIMODEL}"
+                }
+            } ,            
+            "pistatus2": {
+                "col1": {
+                    "text": "CPU Temperature:"
+                },
+                "col2": {
+                    "text": "${AS_CPUTEMP}"
+                }
+            },
+            "pistatus3": {
+                "col1": {
+                    "text": "Total RAM:"
+                },
+                "col2": {
+                    "text": "${AS_MEMORYTOTAL}"
+                }
+            },
+            "pistatus4": {
+                "col1": {
+                    "text": "Used RAM:"
+                },
+                "col2": {
+                    "text": "${AS_MEMORYUSED}"
+                }
+            },
+            "pistatus5": {
+                "col1": {
+                    "text": "Free RAM:"
+                },
+                "col2": {
+                    "text": "${AS_MEMORYAVAILABLE}"
+                }
+            },
+            "pistatus6": {
+                "col1": {
+                    "text": "Disk Size:"
+                },
+                "col2": {
+                    "text": "${AS_DISKSIZE}"
+                }
+            },
+            "pistatus7": {
+                "col1": {
+                    "text": "Disk Used:"
+                },
+                "col2": {
+                    "text": "${AS_DISKUSAGE}"
+                }
+            },
+            "pistatus8": {
+                "col1": {
+                    "text": "Disk Free:"
+                },
+                "col2": {
+                    "text": "${AS_DISKFREE}"
+                }
+            }                                                                       
+        }
+    }
+}

@@ -74,7 +74,7 @@ function _check_web_connectivity()
 
 		MSG="Got HTTP_STATUS ${HTTP_STATUS} from ${URL}; connectivity worked."
 		[[ ${FROM} == "install" ]] && display_msg --logonly info "${MSG}"
-		return "${EXIT_PARTIAL_OK}"		# partial because it has basic connectivity only
+		return "${ALLSKY_EXIT_PARTIAL_OK}"		# partial because it has basic connectivity only
 
 	else
 		case "${HTTP_STATUS}" in
@@ -130,5 +130,53 @@ function _check_locale()
 	echo -e "Installed locales are:\n$( indent "$( list_installed_locales )" )"
 	echo "${FIX}"
 	echo "See the 'Settings -> Allsky' Documentation page for how to install locales."
+	return 1
+}
+
+
+###
+# Check if the user specified --immediate; it's on by default.
+function _check_immediate()
+{
+	local SETTING_NAME="${1}"
+	local SETTING_LABEL="${2}"
+
+	if [[ -n ${SETTING_NAME} && ${SETTING_NAME} =~ --immediate ]]; then
+		echo -n "${WSVs}--immediate${WSVe} is no longer needed in the ${WSNs}${SETTING_LABEL}${WSNe}"
+		echo " setting since Allsky uses that option by default."
+		return 1
+	fi
+	return 0
+}
+
+
+#####
+# Make sure the specified width and height are valid.
+# Assume each number has already been checked, e.g., it's not a string.
+function _checkWidthHeight()
+{
+	local NAME_PREFIX="${1}"
+	local ITEM="${2}"
+	local WIDTH="${3}"
+	local HEIGHT="${4}"
+	local SENSOR_WIDTH="${5:-0}"
+	local SENSOR_HEIGHT="${6:-0}"
+	local ERR=""
+
+	# Width and height must both be 0 or non-zero.
+	if [[ (${WIDTH} -gt 0 && ${HEIGHT} -eq 0) || (${WIDTH} -eq 0 && ${HEIGHT} -gt 0) ]]; then
+		ERR="${WSNs}${NAME_PREFIX} Width${WSNe} (${WSVs}${WIDTH}${WSVe})"
+		ERR+=" and ${WSNs}Height${WSNe} (${WSVs}${HEIGHT}${WSVe})"
+		ERR+=" must both be either 0 or non-zero.${wBR}"
+		ERR+="The ${ITEM} will NOT be resized since it would look unnatural."
+
+	elif [[ ${WIDTH} -gt 0 && ${HEIGHT} -gt 0 &&
+			${SENSOR_WIDTH} -eq ${WIDTH} && ${SENSOR_HEIGHT} -eq ${HEIGHT} ]]; then
+		ERR="Resizing a ${ITEM} to the same size as the sensor does nothing useful so will not be done."
+	fi
+
+	[[ -z ${ERR} ]] && return 0
+
+	echo -e "${ERR}" >&2
 	return 1
 }

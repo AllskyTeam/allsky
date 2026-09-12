@@ -1,0 +1,183 @@
+/** Login css is kept separate to avoid conflicts with the main allsky pages **/
+
+/* Prevent dragging images/links */
+img, a, svg {
+  -webkit-user-drag: none;
+  user-drag: none;
+}
+
+html, body {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: var(--bs3-body-bg);
+}
+
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* All canvases share the same base geometry */
+[id$="Canvas"] {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Only these canvases ignore pointer events */
+#tailCanvas, #planeCanvas, #fxCanvas { pointer-events: none; }
+
+/* Layering */
+#bgCanvas   { z-index: 0; }
+#tailCanvas { z-index: 1; }
+#planeCanvas{ z-index: 2; }
+#fxCanvas   { z-index: 3; }
+
+.login-panel {
+  position: relative;
+  z-index: 4;
+  width: 100%;
+  max-width: 360px;
+}
+
+/* Panel */
+.panel {
+  background: var(--bs3-panel-bg);
+  color: var(--bs3-body-color);
+  border-color: var(--bs3-panel-border);
+  border-radius: 6px;
+  box-shadow: 0 0 15px rgba(0,0,0,.6);
+}
+
+.login-logo {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+}
+
+body.dark .login-logo {
+	filter: brightness(1);
+}
+
+/* Form controls */
+.form-control {
+  background: var(--bs3-input-bg);
+  border: 1px solid var(--bs3-input-border);
+  color: var(--bs3-input-text);
+}
+
+.form-control:focus {
+  background: var(--bs3-input-bg);
+  border-color: var(--bs3-input-focus-border);
+  color: var(--bs3-input-text);
+  outline: 2px solid color-mix(in oklab, var(--bs3-input-focus-border), transparent 60%);
+  outline-offset: 1px;
+  box-shadow: none;
+}
+
+input.form-control { font-size: 1.5em; }
+
+.checkbox label { color: var(--bs3-text-muted); }
+.login-panel .checkbox label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding-left: 0;
+  font-size: 1.05em;
+  cursor: pointer;
+}
+.login-panel .checkbox input[type="checkbox"] {
+  position: static;
+  width: 1.1em;
+  height: 1.1em;
+  margin: 0;
+  transform: scale(1.35);
+  transform-origin: center;
+}
+
+/* Buttons */
+.btn-primary {
+  background: var(--bs3-btn-primary-bg);
+  border-color: var(--bs3-btn-primary-border);
+}
+.btn-primary:hover,
+.btn-primary:focus {
+  background: var(--bs3-btn-primary-hover-bg);
+  border-color: var(--bs3-btn-primary-hover-border);
+  color: var(--bs3-btn-primary-hover-text);
+}
+
+/* Simple flex helper */
+.flex-right {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+/* Panel body offset to make room for avatar overlap */
+.panel-body { padding-top: calc(var(--login-avatar-size) * 0.5 + 8px); }
+
+/* ========== AVATAR ====================================================== */
+.login-avatar {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translate(-50%, -50%);
+  width: var(--login-avatar-size);
+  height: var(--login-avatar-size);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: var(--bs3-body-color);
+  font-size: clamp(28px, 10vw, 42px);
+  line-height: 1;
+  text-shadow: 0 2px 6px rgba(0,0,0,.45);
+
+  background: radial-gradient(100% 100% at 30% 30%,
+    var(--login-avatar-grad-a) 0%,
+    var(--login-avatar-grad-b) 50%,
+    var(--login-avatar-grad-c) 100%);
+
+  border: var(--login-avatar-ring-w) solid var(--login-avatar-ring);
+  box-shadow:
+    0 6px 18px rgba(0,0,0,.7),
+    inset 0 0 20px var(--login-avatar-glow-outer);
+  z-index: 5;
+}
+
+.login-avatar::after {
+  content: "";
+  position: absolute;
+  inset: calc(var(--login-avatar-ring-w) * -1.5);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 2px var(--login-avatar-glow-inner),
+    0 0 22px var(--login-avatar-glow-outer);
+  pointer-events: none;
+}
+
+/* Theme toggle */
+.theme-toggle {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 10;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--bs3-input-border);
+  background: var(--bs3-panel-bg);
+  color: var(--bs3-body-color);
+  cursor: pointer;
+  opacity: .85;
+}
+.theme-toggle:hover,
+.theme-toggle:focus { opacity: 1; }

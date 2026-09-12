@@ -9,200 +9,182 @@ This module attempts to locate meteors in a captured image.
 import allsky_shared as allsky_shared
 from allsky_base import ALLSKYMODULEBASE
 import os
+import json
+import cv2
+import numpy as np
+from scipy.spatial import distance as dist
 
-class ALLSKYMETEOR(ALLSKYMODULEBASE):
-
-	meta_data = {
-		"name": "Meteor Detection",
-		"description": "Detect and report on meteors (i.e., streaks) in an image.",
-		"events": [
-			"night"
-		],
-		"module": "allsky_meteor",
-		"version": "v1.0.0",  
-    "docs": "docs/allsky_modules/core/meteor_count.html",
-		"centersettings": "false",
-		"extradatafilename": "allsky_meteor.json",
-		"group": "Image Analysis",
-		"extradata": {
-			"database": {
-				"enabled": "True",
-				"table": "allsky_meteors",
-    			"pk": "id",
-    			"pk_source": "image_timestamp",
-    			"pk_type": "int",
-           		"include_all": "false"       
-			},
-			"values": {
-				"AS_METEORIMAGE": {
-					"name": "${METEORIMAGE}",
-					"format": "",
-					"sample": "",
-					"group": "Added Image Data",
-					"description": "Image with meteors",
-					"type": "string",
-					"database": {
-						"include" : "true"
-					}     
-				},
-				"AS_METEORIMAGEPATH": {
-					"name": "${METEORIMAGEPATH}",
-					"format": "",
-					"sample": "",
-					"group": "Added Image Data",
-					"description": "Image with meteors Path",
-					"type": "string"
-				},
-				"AS_METEORIMAGEURL": {
-					"name": "${METEORIMAGEURL}",
-					"format": "",
-					"sample": "",
-					"group": "Added Image Data",
-					"description": "Image with meteors URL",
-					"type": "string"
-				},
-				"AS_METEORCOUNT": {
-					"name": "${METEORCOUNT}",
-					"format": "",
-					"sample": "",
-					"group": "Added Image Data",
-					"description": "METEOR COUNT",
-					"type": "number",
-					"database": {
-						"include" : "true"
-					}     
-				}
-			}
-		},
-		"arguments": {
-			"mask": "",
-			"annotatemain": "false",
-			"enabledebug": "false",
-			"useclearsky": "false",
-			"minlength": "100"
-		},
-		"argumentdetails": {
-			"useclearsky": {
-				"required": "false",
-				"description": "Use Clear Sky",
-				"tab": "General",
-				"help": "If installed use the results of the <b>Clear Sky Indicator</b> module. Meteor detections is skipped if the sky is not clear.",
-				"type": {
-					"fieldtype": "checkbox"
-				}
-			},      
-			"mask": {
-				"required": "false",
-				"description": "Mask Path",
-				"tab": "General",
-				"help": "The name of the image mask used to 'hide' non-sky parts of the image (trees, etc.). This mask is not visible in the final image.",
-				"type": {
-					"fieldtype": "mask"
-				}
-			},
-			"minlength" : {
-				"required": "false",
-				"description": "Min Length",
-				"help": "Minimum length for a meteor",
-				"tab": "General",           
-				"type": {
-					"fieldtype": "spinner",
-					"min": 10,
-					"max": 5000,
-					"step": 1
-				}
-			},   
-			"enabledebug": {
-				"required": "false",
-				"description": "Enable debug mode",
-				"help": "Enables various options to assist in debugging meteor detection.",
-				"tab": "Debug",
-				"type": {
-					"fieldtype": "checkbox"
-				}
-			},
-			"annotatemain": {
-				"description": "Annotate Main",
-				"help": "Annotate the main captured image",
-				"tab": "Debug",    
-				"type": {
-					"fieldtype": "checkbox"             
-				},
-				"filters": {
-					"filter": "enabledebug",
-					"filtertype": "show",
-					"values": [
-						"enabledebug"
-					]
-				}                 
-			},    
-			"graph": {
-				"required": "false",
-				"tab": "History",
-				"type": {
-					"fieldtype": "graph"
-				}
-			}
-		},
-		"changelog": {
-			"v1.0.0" : [
-				{
-					"author": "Alex Greenland",
-					"authorurl": "https://github.com/allskyteam",
-					"changes": "Initial Release"
-				}
-			]   
-		}   
-	}
-
-	def run(self):
-		debug_mode = self.get_param('enabledebug', False, bool)
-		annotate_image = self.get_param('annotatemain', False, bool)
-		mask_file_name = self.get_param('mask', '', str)
-		min_length = self.get_param('minlength', 100, int)
-
-		source_image = allsky_shared.image
-		if mask_file_name:
-			image_copy = allsky_shared.mask_image(source_image, mask_file_name)
-			self.log(4, f"INFO: Applied mask {mask_file_name} to captured image")
-		else:
-			image_copy = source_image
-			self.log(4, "INFO: Using full captured image")
-   
-		source_image = allsky_shared.image
-		detections = allsky_shared.detect_meteors(image_copy, min_len_px=min_length)
-
-		if len(detections) > 0:
-			if debug_mode and annotate_image:
-				allsky_shared.image = allsky_shared.draw_detections(allsky_shared.image, detections)
-			extra_data = {}
-			filename = os.path.basename(allsky_shared.CURRENTIMAGEPATH)
-			date = filename[6:14]
-			url = f'/images/{date}/thumbnails/{filename}'
-		
-			extra_data = {}
-			extra_data['AS_METEORIMAGE'] = filename
-			extra_data['AS_METEORIMAGEPATH'] = allsky_shared.CURRENTIMAGEPATH
-			extra_data['AS_METEORIMAGEURL'] = url
-			extra_data['AS_METEORCOUNT'] = len(detections)
-			result = f"{len(detections)} Meteors detected"
-			self.log(4, f"INFO: {result}")
-		else:
-			extra_data = {}
-			extra_data['AS_METEORIMAGE'] = ''
-			extra_data['AS_METEORIMAGEPATH'] = ''
-			extra_data['AS_METEORIMAGEURL'] = ''
-			extra_data['AS_METEORCOUNT'] = 0
-			result = "No Meteors detected"
-			self.log(4, f"INFO: {result}")
-      		
-		allsky_shared.saveExtraData(self.meta_data["extradatafilename"], extra_data, self.meta_data['module'], self.meta_data['extradata'], event=self.event)
-
-		return result
+metaData = {
+    "name": "AllSKY Meteor Detection",
+    "description": "Detects meteors in images",
+    "events": [
+        "night"
+    ],
+    "experimental": "true",
+    "module": "allsky_meteor",
+    "arguments":{
+        "mask": "",
+        "length": "100",
+        "annotate": "false",
+        "debug": "false",
+        "useclearsky": "false"
+    },
+    "argumentdetails": {
+        "mask" : {
+            "required": "false",
+            "description": "Mask Path",
+            "help": "The name of the image mask. This mask is applied when detecting meteors bit not visible in the final image",
+            "type": {
+                "fieldtype": "image"
+            }
+        },
+        "length" : {
+            "required": "true",
+            "description": "Minimum Length",
+            "help": "The minimum length of a detected meteor trail in pixels",
+            "type": {
+                "fieldtype": "spinner",
+                "min": 0,
+                "max": 500,
+                "step": 1
+            }
+        },
+        "useclearsky" : {
+            "required": "false",
+            "description": "Use Clear Sky",
+            "help": "If available use the results of the clear sky module. If the sky is not clear meteor detection will be skipped",
+            "type": {
+                "fieldtype": "checkbox"
+            }
+        },
+        "annotate" : {
+            "required": "false",
+            "description": "Annotate Meteors",
+            "help": "If selected the identified meteors in the image will be highlighted",
+            "tab": "Debug",
+            "type": {
+                "fieldtype": "checkbox"
+            }
+        },
+        "debug" : {
+            "required": "false",
+            "description": "Enable debug mode",
+            "help": "If selected each stage of the detection will generate images in the allsky tmp debug folder",
+            "tab": "Debug",
+            "type": {
+                "fieldtype": "checkbox"
+            }
+        }
+    }
+}
 
 def meteor(params, event):
-	allsky_meteor = ALLSKYMETEOR(params, event)
-	result = allsky_meteor.run()
+
+    raining, rainFlag = s.raining()
+    skyState, skyClear = s.skyClear()
+
+    useclearsky = params["useclearsky"]
+    if not useclearsky:
+        skyClear = True
+
+    if not rainFlag:
+        if skyClear:
+            mask = params["mask"]
+            annotate = params["annotate"]
+            length = s.int(params["length"])
+            debug = params["debug"]
+
+            maskImage = None
+            maskPath = ""
+
+            if debug:
+                s.startModuleDebug(metaData["module"])
+
+            height, width = s.image.shape[:2]
+
+            if mask != "":
+                maskPath = os.path.join(s.ALLSKY_OVERLAY, "images", mask)
+                s.log(4,f"INFO: Loading mask {maskPath}")
+                maskImage = cv2.imread(maskPath,cv2.IMREAD_GRAYSCALE)
+                if maskImage is not None:
+                    if debug:
+                        s.writeDebugImage(metaData["module"], "meteor-mask.png", maskImage)
+
+            img_gray = cv2.cvtColor(s.image, cv2.COLOR_BGR2GRAY)
+            if debug:
+                s.writeDebugImage(metaData["module"], "greyscale-image.png", img_gray)
+
+            img_gray_canny = cv2.Canny(img_gray.astype(np.uint8),100,200,apertureSize=3)
+
+            img_gray_canny_crop = img_gray_canny
+            img_gray_canny_crop = img_gray_canny_crop.astype(np.uint8)
+
+            if debug:
+                s.writeDebugImage(metaData["module"], "greyscale-canny.png", img_gray)
+
+            kernel = np.ones((3,3), np.uint8)
+            dilation = cv2.dilate(img_gray_canny_crop, kernel, iterations = 2)
+            dilation = cv2.erode(dilation, kernel, iterations = 1)
+
+            if debug:
+                s.writeDebugImage(metaData["module"], "dilated-canny.png", img_gray)
+
+            cloud_mask = np.zeros(dilation.shape,np.uint8)
+            contour,hier = cv2.findContours(dilation,cv2.RETR_CCOMP,cv2.CHAIN_APPROX_SIMPLE)
+            contour_able = 0
+            try:
+                for cnt in contour:
+                    area = cv2.contourArea(cnt)
+                    if area > 1550:
+                        contour_able = 1
+                        cv2.drawContours(cloud_mask,[cnt],0,255,-1)
+            except:
+                contour_able = 0
+
+            if debug:
+                s.writeDebugImage(metaData["module"], "cloud-mask.png", cloud_mask)
+
+            if contour_able==1:
+                kernel_dilate = np.ones((7,7), np.uint8)
+                dilation_mask = dilation * cv2.dilate(cv2.bitwise_not(cloud_mask), kernel_dilate, iterations = 1)
+                dilation_mask = 255*dilation_mask
+            else:
+                dilation_mask = dilation
+
+            if maskImage is not None:
+                try:
+                    dilation_mask = cv2.bitwise_and(dilation_mask, dilation_mask, mask = maskImage)
+                except Exception as ex:
+                    s.log(0, f"ERROR: There is a problem with the meteor mask {maskPath}. Check the mask's dimensions and colour depth.", exitCode=1)
+
+                if debug:
+                    s.writeDebugImage(metaData["module"], "dilation-mask.png", dilation_mask)
+
+            lines = cv2.HoughLinesP(dilation_mask,3,np.pi/180,100,length,20)
+
+            meteorCount = 0
+            lineCount = 0
+            if lines is not None:
+                lines = lines.reshape(-1, 4)  # OpenCV 5.x returns (N,4); OpenCV <5 returns (N,1,4)
+                for x1,y1,x2,y2 in lines:
+                    lineCount += 1
+                    if dist.euclidean((x1, y1), (x2, y2)) > length:
+                        meteorCount += 1
+                        if annotate:
+                            cv2.line(s.image,(x1,y1),(x2,y2),(0,255,0),10)
+
+            s.setEnvironmentVariable("AS_METEORLINECOUNT", str(lineCount))
+            s.setEnvironmentVariable("AS_METEORCOUNT", str(meteorCount))
+            result = f"{meteorCount} Meteors found, {lineCount} Lines detected"
+            s.log(4, f"INFO: {result}")
+        else:
+            result = "Sky is not clear so ignoring meteor detection"
+            s.log(4, f"INFO: {result}")
+            s.setEnvironmentVariable("AS_METEORCOUNT", "Disabled")
+    else:
+        result = "Its raining so ignorning meteor detection"
+        s.log(4, f"INFO: {result}")
+        s.setEnvironmentVariable("AS_METEORCOUNT", "Disabled")
 
 	return result
 

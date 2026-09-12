@@ -49,26 +49,10 @@ if [[ ! -s ${CURRENT_IMAGE} ]] ; then
 	exit 2
 fi
 
-WORKING_DIR=$( dirname "${CURRENT_IMAGE}" )		# the directory the image is currently in
-WEBSITE_FILE="${WORKING_DIR}/${ALLSKY_FULL_FILENAME}"	# The file name the websites look for
-CURRENT_ALLSKY_STATUS="$( get_allsky_status )"
-# Only update if different so we don't loose original timestamp
-if [[ ${CURRENT_ALLSKY_STATUS} != "${ALLSKY_STATUS_RUNNING}" ]]; then
-	set_allsky_status "${ALLSKY_STATUS_RUNNING}" || echo "Unable to set Allsky Status"
-fi
-
-if [[ ${1} == "--focus-mode" ]]; then
-	# Add the metric to the image, rename it, and exit.
-	FOCUS_METRIC="${2}"
-	NUM_EXPOSURES="${3}"
-	TEXT="Focus Mode, metric = ${FOCUS_METRIC}"
-	TEXT+="\nFrame: ${NUM_EXPOSURES}"
-	# Use defaults for everything but Y location - put near top.
-	addTextToImage --y 100 "${CURRENT_IMAGE}" "${CURRENT_IMAGE}" "${TEXT}"
-	mv "${CURRENT_IMAGE}" "${WEBSITE_FILE}"
-	exit $?
-fi
-
+# This gets all settings and prefixes their names with "S_".
+# It's faster than calling "settings()" a bunch of times.
+#shellcheck disable=SC2119
+getAllSettings || exit 1
 
 # Make sure only one save happens at once.
 # Multiple concurrent saves (which can happen if the delay is short or post-processing
@@ -89,11 +73,6 @@ if ! one_instance --pid-file "${PID_FILE}" --sleep "3s" --max-checks 3 \
 	rm -f "${CURRENT_IMAGE}"
 	exit 1
 fi
-
-# This gets all settings and prefixes their names with "S_".
-# It's faster than calling "settings()" a bunch of times.
-#shellcheck disable=SC2119
-getAllSettings || exit 1
 
 # Get passed-in variables and export as AS_* so overlays can use them.
 while [[ $# -gt 0 ]]; do

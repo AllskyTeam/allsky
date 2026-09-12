@@ -636,6 +636,7 @@ ASI_ERROR_CODE takeOneExposure(config *cg, unsigned char *imageBuffer)
 		Log(3, "  >>> ");
 		Log(3, m, length_in_units(suggestedNextExposure_us, true));
 	}
+	Log(1, "\n");
 
 	long temp;
 	ret = ASIGetControlValue(cg->cameraNumber, ASI_TEMPERATURE, &temp, &bAuto);

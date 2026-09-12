@@ -940,320 +940,212 @@ function renderListFileTypeContent($dir, $imageFileName, $formalImageTypeName, $
 		}
 	}
 	echo "</div>";
-	$gridHtml = ob_get_clean();
-	if ($itemCount === 1) {
-		$gridHtml = str_replace("functions-listfiletype-grid'", "functions-listfiletype-grid functions-listfiletype-grid-single'", $gridHtml);
-	}
-	echo $gridHtml;
-	if (count($thumbnailWarnings) > 0) {
-		echo "<div class='as-wifi-placeholder as-wifi-placeholder-error functions-listfiletype-error'>";
-		echo "<div class='as-wifi-placeholder-icon'><i class='fa fa-triangle-exclamation'></i></div>";
-		echo "<div class='as-wifi-placeholder-title'>Video thumbnails could not be created</div>";
-		echo "<div class='as-wifi-placeholder-text'>" . implode('<br>', array_keys($thumbnailWarnings)) . "</div>";
-		echo "</div>";
-	}
-	echo "</div>";
-
-	return ob_get_clean();
 }
 
-function ListFileType($dir, $imageFileName, $formalImageTypeName, $type, $listNames=false, $options=[]) {
-	global $pageHeaderTitle, $pageIcon, $pageHelp;
-	$chosen_day = getVariableOrDefault($_REQUEST, 'day', null);
-	$options = normalizeListFileTypeOptions($options);
-	$useThumbnails = $options['useThumbnails'];
-	$loadingTitle = $useThumbnails ? 'Preparing previews...' : 'Loading files...';
-	$loadingText = $useThumbnails
-		? 'This page is loading in the background. If a video thumbnail is missing, a placeholder image will be shown.'
-		: 'This page is loading in the background without thumbnail generation.';
-	echo "<div class='panel panel-allsky'>";
-	echo "<div class='panel-heading clearfix'>";
-	echo "<span><i class='{$pageIcon}'></i> $formalImageTypeName - $chosen_day</span>";
-	if (!empty($pageHelp)) {
-		echo "<a class='pull-right' href='{$pageHelp}' target='_blank' rel='noopener noreferrer' data-toggle='tooltip' data-container='body' data-placement='left' title='Help'>";
-		echo "<i class='fa-solid fa-circle-question'></i> Help";
-		echo "</a>";
-	}
-	echo "</div>";
-	echo "<div class='panel-body'>";
-	echo "<div class='functions-listfiletype-back'>";
-	echo "<a href='javascript:history.back()' class='btn btn-default'>";
-	echo "<i class='fa fa-arrow-left'></i> Back";
-	echo "</a>";
-	echo "</div>";
-	echo "<div id='functions-listfiletype-content'>";
-	echo "<div class='as-wifi-placeholder functions-listfiletype-loading'>";
-	echo "<div class='as-wifi-placeholder-icon'><i class='fa fa-spinner fa-spin'></i></div>";
-	echo "<div class='as-wifi-placeholder-title as-wifi-placeholder-title-lg'>{$loadingTitle}</div>";
-	echo "<div class='as-wifi-placeholder-text'>{$loadingText}</div>";
-	echo "</div>";
-	echo "</div>";
-	echo "</div></div>";
-?>
-<link type="text/css" rel="stylesheet" href="/js/lightgallery/css/lightgallery-bundle.min.css" />
-<link type="text/css" rel="stylesheet" href="/js/lightgallery/css/lg-transitions.css" />
-<script src="/js/lightgallery/lightgallery.min.js"></script>
-<script src="/js/lightgallery/plugins/zoom/lg-zoom.min.js"></script>
-<script src="/js/lightgallery/plugins/thumbnail/lg-thumbnail.min.js"></script>
-<script src="/js/lightgallery/plugins/video/lg-video.min.js"></script>
-<script>
-$(document).ready(function () {
-	const contentElement = document.getElementById('functions-listfiletype-content');
-	const requestUrl = '/includes/uiutil.php?request=ListFileTypeContent&day=' + encodeURIComponent(<?php echo json_encode((string)$chosen_day, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>) +
-		'&dir=' + encodeURIComponent(<?php echo json_encode((string)$dir, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>) +
-		'&imageFileName=' + encodeURIComponent(<?php echo json_encode((string)$imageFileName, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>) +
-		'&formalImageTypeName=' + encodeURIComponent(<?php echo json_encode((string)$formalImageTypeName, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>) +
-		'&type=' + encodeURIComponent(<?php echo json_encode((string)$type, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>) +
-		'&listNames=' + encodeURIComponent(<?php echo json_encode($listNames ? '1' : '0'); ?>) +
-		'&useThumbnails=' + encodeURIComponent(<?php echo json_encode($useThumbnails ? '1' : '0'); ?>);
+// CG: variation of listFileType for Meteors
+function ListMeteors($dir, $imageFilePrefix, $formalImageTypeName, $type) {
+	global $page;
 
-	function initialiseGallery() {
-		const galleryElement = document.querySelector('.functions-listfiletype-grid');
-		if (!galleryElement || typeof lightGallery !== 'function') {
-			return;
-		}
-
-		const plugins = [lgZoom, lgThumbnail];
-		if (typeof lgVideo !== 'undefined') {
-			plugins.push(lgVideo);
-		}
-
-		const gallery = lightGallery(galleryElement, {
-			cssEasing: 'cubic-bezier(0.680, -0.550, 0.265, 1.550)',
-			selector: 'a',
-			plugins: plugins,
-			mode: 'lg-slide-circular',
-			speed: 400,
-			download: false,
-			thumbnail: true,
-			iframeMaxWidth: '90%',
-			iframeMaxHeight: '90%'
-		});
-		return gallery;
-	}
-
-		function initialiseLocaleDates() {
-			const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-			const formatDateFromParts = function (year, month, day) {
-				if (year < 1000 || month < 1 || month > 12 || day < 1 || day > 31) {
-					return '';
-				}
-
-				return day + ' ' + monthNames[month - 1] + ' ' + year;
-			};
-
-			document.querySelectorAll('.functions-listfiletype-date').forEach(function (element) {
-				const rawDate = element.getAttribute('data-listfiletype-date');
-				const rawDay = element.getAttribute('data-listfiletype-day');
-
-				if (rawDate) {
-					const matches = rawDate.match(/^(\d{4})-(\d{2})-(\d{2})/);
-					const displayDate = matches ? formatDateFromParts(
-						parseInt(matches[1], 10),
-						parseInt(matches[2], 10),
-						parseInt(matches[3], 10)
-					) : '';
-					if (displayDate) {
-						element.textContent = displayDate;
-					}
-					return;
-				}
-
-			if (!rawDay || !/^\d{8}$/.test(rawDay)) {
-				return;
-			}
-
-					const year = parseInt(rawDay.slice(0, 4), 10);
-					const month = parseInt(rawDay.slice(4, 6), 10);
-					const day = parseInt(rawDay.slice(6, 8), 10);
-					const displayDate = formatDateFromParts(year, month, day);
-					if (!displayDate) {
-						return;
-					}
-
-				element.textContent = displayDate;
-			});
-		}
-
-	$.ajax({
-		url: requestUrl,
-		method: 'GET',
-		cache: false,
-		dataType: 'html',
-		headers: {
-			Accept: 'text/html'
-		}
-	}).done(function (html) {
-		contentElement.innerHTML = html;
-		initialiseLocaleDates();
-		initialiseGallery();
-	}).fail(function () {
-		contentElement.innerHTML =
-			"<div class='as-wifi-placeholder as-wifi-placeholder-error functions-listfiletype-error'>" +
-				"<div class='as-wifi-placeholder-icon'><i class='fa fa-triangle-exclamation'></i></div>" +
-				"<div class='as-wifi-placeholder-title'>Unable to load previews</div>" +
-				"<div class='as-wifi-placeholder-text'>The preview list could not be loaded. Try refreshing the page.</div>" +
-			"</div>";
-	});
-});
-</script>
-<?php
-}
-
-function getListFileTypeVideoPlaceholderUrl() {
-	$svg = <<<SVG
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
-<rect width="400" height="300" fill="#16202a"/>
-<circle cx="200" cy="132" r="48" fill="#ffffff" fill-opacity="0.14"/>
-<polygon points="186,104 186,160 234,132" fill="#ffffff"/>
-<text x="200" y="228" text-anchor="middle" fill="#d7e1ea" font-family="Arial, sans-serif" font-size="26">Video</text>
-</svg>
-SVG;
-
-	return 'data:image/svg+xml,' . rawurlencode($svg);
-}
-
-function getVideoThumbnailInfo($day, $videoPath, $videoUrl, $useThumbnails=true) {
-	if (! $useThumbnails) {
-		return [
-			'thumbFile' => null,
-			'thumbUrl' => getListFileTypeVideoPlaceholderUrl(),
-			'warning' => null,
-		];
-	}
-
-	$videoName = pathinfo($videoPath, PATHINFO_FILENAME);
-	$thumbFile = ALLSKY_IMAGES . "/{$day}/videothumbnail/{$videoName}.jpg";
-	$thumbUrl = "/images/{$day}/videothumbnail/" . rawurlencode($videoName . '.jpg');
-
-	if (file_exists($thumbFile)) {
-		return [
-			'thumbFile' => $thumbFile,
-			'thumbUrl' => $thumbUrl,
-			'warning' => null,
-		];
-	}
-
-	return [
-		'thumbFile' => null,
-		'thumbUrl' => getListFileTypeVideoPlaceholderUrl(),
-		'warning' => null,
-	];
-}
-
-function setListFileTypePathOwnership($path, $isDirectory) {
-	$owner = defined('ALLSKY_OWNER') ? (string) ALLSKY_OWNER : '';
-	$group = defined('ALLSKY_WEBSERVER_GROUP') ? (string) ALLSKY_WEBSERVER_GROUP : '';
-	$mode = $isDirectory ? 02775 : 0664;
-
-	if ($path === '' || !file_exists($path)) {
+	$num = 0;	// Let the user know when there are no images for the specified day
+	// "/images" is an alias in the web server for ALLSKY_IMAGES
+	$images_dir = "/images";
+	$chosen_day = getVariableOrDefault($_GET, 'day', null);
+ 	if ($chosen_day === null) {
+		echo "<br><br><br>";
+		echo "<h2 class='alert-danger'>ERROR: No 'day' specified in URL.</h2>";
 		return;
 	}
 
-	@chmod($path, $mode);
-
-	if ($owner !== '') {
-		@chown($path, $owner);
+	if (! is_dir(ALLSKY_IMAGES)) {
+		echo "<br><div class='errorMsgBig'>";
+		echo "ERROR: '" . ALLSKY_IMAGES . "' directory is missing!";
+		echo "</div>";
+		return;
 	}
-	if ($group !== '') {
-		@chgrp($path, $group);
-	}
+	
+	echo "<h2>$formalImageTypeName - $chosen_day</h2>\n";
+	echo "<div class='row'>\n";
 
-	if (($owner !== '' || $group !== '') && function_exists('exec')) {
-		$commands = [];
-		if ($owner !== '' && $group !== '') {
-			$commands[] = 'sudo -n chown ' . escapeshellarg($owner . ':' . $group) . ' ' . escapeshellarg($path);
-		} else if ($owner !== '') {
-			$commands[] = 'sudo -n chown ' . escapeshellarg($owner) . ' ' . escapeshellarg($path);
-		} else if ($group !== '') {
-			$commands[] = 'sudo -n chgrp ' . escapeshellarg($group) . ' ' . escapeshellarg($path);
+	//$imageList = [];
+	
+	$cleanDir = rtrim($dir, "/");
+	//$pattern = ALLSKY_IMAGES . "/$chosen_day/" . rtrim($dir, "/") . "/*.json";
+	$pattern = ALLSKY_IMAGES . "/$chosen_day/$cleanDir/*.json";
+
+	foreach (glob($pattern) as $imageData) {
+		$imageList[] = $imageData;
+		$num += 1;
+	}
+	if ($num == 0) {
+		echo "<span class='alert-warning'>There are no $formalImageTypeName for this day ($chosen_day).</span>";
+		echo ALLSKY_IMAGES . "/$chosen_day/$dir*.json";
+	} else {
+		// table setup and header
+		?>
+		<style>
+			table th {
+				text-align:center;
+				padding: 0 10px;
+			}
+			table tr td {
+				padding: 10px 10px;
+			}
+		</style>
+		<div class="row">
+			<div class="col-lg-12">
+			<div class="panel panel-primary">
+			<div class="panel-body">
+			<div class="row">
+			<form action="?page=<?php echo urlencode($page); ?>&day=<?php echo urlencode($chosen_day); ?>" method="POST" onsubmit="return confirm('Are you sure you want to delete that meteor?');">
+			<table style='margin-top: 15px; text-align:center'>
+			<thead>
+					<tr style="border-bottom: 1px solid #888">
+						<th style="text-align:center">Time</th>
+						<th style="text-align:center">Image</th>
+						<th style="text-align:center">Marked</th>
+						<th style="text-align:center">Data</th>
+						<th style="text-align:center">Center</th>
+						<th style="text-align:center">Ends</th>
+						<th style="text-align:center">Frags</th>
+						<th style="text-align:center">Showers</th>
+						<th style="text-align:center">Radiant</th>
+						<th style="text-align:center">-</th>
+					</tr>
+			</thead>
+			<tbody>
+		<?php
+		if (!empty($imageList)) {
+			foreach ($imageList as $imageData) {
+				// $imageData_name = basename($imageData);
+				$json_file = file_get_contents($imageData);
+				$json_data = json_decode($json_file, true);
+
+				$meteor_number = count($json_data);
+				//decode json record
+				$datetime = $json_data[0]['time'];
+				$time = substr($datetime, -6);
+
+				$meteor = "$images_dir/$chosen_day/$cleanDir/meteors-$datetime.jpg";
+				$meteor_th = "$images_dir/$chosen_day/$cleanDir/thumbnails/meteors-$datetime.jpg";
+
+				$meteor_mark = "$images_dir/$chosen_day/$cleanDir/meteors-$datetime-marked.jpg";
+				$meteor_mark_th = "$images_dir/$chosen_day/$cleanDir/thumbnails/meteors-$datetime-marked.jpg";
+
+				$len = $json_data[0]['length'];
+				$ang = $json_data[0]['angle'];
+				$elong = $json_data[0]['elong'];
+				$peak = $json_data[0]['peak'];
+
+				$cx = $json_data[0]['cx'];
+				$cy = $json_data[0]['cy'];
+
+				$p1 = $json_data[0]['p1'];
+				$p2 = $json_data[0]['p2'];
+
+				$frag_n = $json_data[0]['frag_n'];
+				$frag_ext = $json_data[0]['frag_ext'];
+
+				$showers = $json_data[0]['showers'];
+
+				$radiant = $json_data[0]['radiant'];
+
+
+				echo"\t\t<tr>\n";
+				echo "\t\t\t<td rowspan=$meteor_number style='font-weight:bold'>$time</td>\n";			
+				
+				echo "\t\t\t<td rowspan=$meteor_number><a href='$meteor'><img src='$meteor_th' style='height:80px'></a></td>";
+				echo "\t\t\t<td rowspan=$meteor_number><a href='$meteor_mark'><img src='$meteor_mark_th' style='height:80px'></a></td>";
+				
+				echo "\t\t\t<td>Len: " . $len . "<br>Ang: " . $ang . "<br>Elong: " . $elong . "<br>Peak: " . $peak . "</td>\n";
+				echo "\t\t\t<td>X: " . $cx . "<br>Y: " . $cy . "</td>\n";
+				echo "\t\t\t<td>p1: " . $p1[0] . "," . $p1[1] . "<br>p2: " . $p2[0] . "," . $p2[1] . "</td>\n";
+				echo "\t\t\t<td>n: " . $frag_n . "<br>ext: " . $frag_ext . "</td>\n";
+				echo "\t\t\t<td>";
+				if (empty($showers)) {
+					echo "none";
+				} else {
+					$lastKey = array_key_last($showers);
+					foreach ($showers as $key => $shower) {
+						echo "$shower";
+						if ($key !== $lastKey) {
+							echo "<br>";
+						}
+					}
+				}
+				echo "\t\t\t</td>\n";
+				echo "\t\t\t<td>$radiant</td>\n";
+
+				echo "\t\t\t<td rowspan=$meteor_number style='padding: 5px'>
+							<button type='submit' data-toggle='confirmation'
+								class='btn btn-delete' 
+								name='delete_meteor' value='" . htmlspecialchars($datetime, ENT_QUOTES, 'UTF-8') . "'>
+								<i class='fa fa-trash'></i> <span class='hidden-xs'>Delete</span>
+							</button>
+						</td>";
+				
+				echo"\t\t</tr>";
+
+				if ($meteor_number > 1) {
+					echo"\t\t<tr>\n";
+					for ($i = 1; $i < $meteor_number; $i++) {
+						//decode json record
+						$datetime = $json_data[$i]['time'];
+						$time = substr($datetime, -6);
+
+						$len = $json_data[$i]['length'];
+						$ang = $json_data[$i]['angle'];
+						$elong = $json_data[$i]['elong'];
+						$peak = $json_data[$i]['peak'];
+
+						$cx = $json_data[$i]['cx'];
+						$cy = $json_data[$i]['cy'];
+
+						$p1 = $json_data[$i]['p1'];
+						$p2 = $json_data[$i]['p2'];
+
+						$frag_n = $json_data[$i]['frag_n'];
+						$frag_ext = $json_data[$i]['frag_ext'];
+
+						$showers = $json_data[$i]['showers'];
+
+						$radiant = $json_data[$i]['radiant'];
+
+						echo "\t\t\t<td>Len: " . $len . "<br>Ang: " . $ang . "<br>Elong: " . $elong . "<br>Peak: " . $peak . "</td>\n";
+						echo "\t\t\t<td>X: " . $cx . "<br>Y: " . $cy . "</td>\n";
+						echo "\t\t\t<td>p1: " . $p1[0] . "," . $p1[1] . "<br>p2: " . $p2[0] . "," . $p2[1] . "</td>\n";
+						echo "\t\t\t<td>n: " . $frag_n . "<br>ext: " . $frag_ext . "</td>\n";
+						echo "\t\t\t<td>";
+						if (empty($showers)) {
+							echo "none";
+						} else {
+							$lastKey = array_key_last($showers);
+							foreach ($showers as $key => $shower) {
+								echo "$shower";
+								if ($key !== $lastKey) {
+									echo "<br>";
+								}
+							}
+						}
+						echo "\t\t\t</td>\n";
+						echo "\t\t\t<td>$radiant</td>\n";
+
+					}
+					echo"\t\t</tr>";
+				}
+			}
 		}
-		$commands[] = 'sudo -n chmod ' . ($isDirectory ? '2775' : '0664') . ' ' . escapeshellarg($path);
-
-		foreach ($commands as $command) {
-			@exec($command . ' 2>/dev/null');
-		}
+		// table closing
+		?>
+			</tbody>
+			</table>
+			</form>
+			</div><!-- /.row -->
+			</div><!-- /.panel-body -->
+			</div><!-- /.panel-primary -->
+			</div><!-- /.col-lg-12 -->
+		</div><!-- /.row -->
+		<?php		
 	}
-}
-
-function getListFileTypeDisplayDateValue($fileName, $fallbackDay='') {
-	if (preg_match('/(\d{14})/', $fileName, $matches)) {
-		$timestamp = $matches[1];
-		return substr($timestamp, 0, 4) . '-' .
-			substr($timestamp, 4, 2) . '-' .
-			substr($timestamp, 6, 2) . 'T' .
-			substr($timestamp, 8, 2) . ':' .
-			substr($timestamp, 10, 2) . ':' .
-			substr($timestamp, 12, 2);
-	}
-
-	if ($fallbackDay !== '' && preg_match('/^\d{8}$/', $fallbackDay)) {
-		return substr($fallbackDay, 0, 4) . '-' .
-			substr($fallbackDay, 4, 2) . '-' .
-			substr($fallbackDay, 6, 2);
-	}
-
-	return '';
-}
-
-function getListFileTypeVideoMimeType($fileName) {
-	$extension = strtolower((string) pathinfo($fileName, PATHINFO_EXTENSION));
-
-	if ($extension === 'webm') {
-		return 'video/webm';
-	}
-	if ($extension === 'ogg' || $extension === 'ogv') {
-		return 'video/ogg';
-	}
-
-	return 'video/mp4';
-}
-
-/**
- * Check whether a file belongs in the requested ListFileType gallery.
- *
- * Some generated helpers write sidecar images next to videos, such as JPEG
- * thumbnails for test timelapses.  Filtering by extension prevents those files
- * from being rendered as playable video links.
- */
-function isListFileTypeSupportedFile($fileName, $type) {
-	$extension = strtolower((string) pathinfo($fileName, PATHINFO_EXTENSION));
-
-	if ($type === 'video') {
-		return in_array($extension, ['mp4', 'webm', 'ogg', 'ogv'], true);
-	}
-
-	if ($type === 'picture') {
-		return in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'], true);
-	}
-
-	return true;
-}
-
-function getListFileTypeVideoPlayerUrl($videoUrl, $mimeType) {
-	return '/includes/video_player.php?src=' . rawurlencode((string) $videoUrl) . '&type=' . rawurlencode((string) $mimeType);
-}
-
-function getListFileTypePictureThumbnailUrl($day, $dir, $fileName, $fallbackUrl) {
-	$dirName = trim((string)$dir, '/');
-	$thumbnailDirectory = null;
-
-	if ($dirName === 'keogram') {
-		$thumbnailDirectory = 'keogramthumbnail';
-	} else if ($dirName === 'startrails') {
-		$thumbnailDirectory = 'startrailsthumbnail';
-	}
-
-	if ($thumbnailDirectory === null || $day === '') {
-		return $fallbackUrl;
-	}
-
-	$thumbnailPath = ALLSKY_IMAGES . "/{$day}/{$thumbnailDirectory}/{$fileName}";
-	if (!file_exists($thumbnailPath)) {
-		return $fallbackUrl;
-	}
-
-	return "/images/{$day}/{$thumbnailDirectory}/" . rawurlencode($fileName);
 }
 
 // Run a command and display the appropriate status message.
@@ -1384,13 +1276,13 @@ function updateFile($file, $contents, $fileName, $toConsole, $silent=false) {
 		if (! $silent) {
 			// $toConsole tells us whether or not to use console.log() or just echo.
 			if ($toConsole) {
-				$cl1 = '<script>console.log(`';
-				$cl2 = '`);</script>';
+				$cl1 = '<script>console.log("';
+				$cl2 = '");</script>';
 			} else {
 				$cl1 = "<br>";
 				$cl2 = "";
 			}
-			echo "{$cl1}Note: Unable to update $file 1st time: {$e}{$cl2}\n";
+			echo "${cl1}Note: Unable to update $file 1st time: ${e}${cl2}\n";
 		}
 
 		// Assumed it failed due to lack of permissions,
@@ -1414,9 +1306,9 @@ function updateFile($file, $contents, $fileName, $toConsole, $silent=false) {
 			if (! $silent) {
 				$e = error_get_last()['message'];
 				$err = "Failed to save '$file': $e";
-				echo "{$cl1}Unable to update file for 2nd time: {$e}{$cl2}";
-				$x = str_replace("\n", "", shell_exec("ls -l $fileArg"));
-				echo "{$cl1}ls -l returned: {$x}{$cl2}";
+				echo "${cl1}Unable to update file for 2nd time: ${e}${cl2}";
+				$x = str_replace("\n", "", shell_exec("ls -l '$file'"));
+				echo "${cl1}ls -l returned: ${x}${cl2}";
 			}
 
 			// Save a temporary copy of the file in a place the webserver can write to,

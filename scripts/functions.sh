@@ -1293,10 +1293,13 @@ function activate_python_venv()
 
 	local ACTIVATE="${ALLSKY_PYTHON_VENV}/bin/activate"
 
-	#shellcheck disable=SC1090,SC1091
-	source "${ACTIVATE}" || exit 1
-	PYTHON_VENV_ACTIVATED="true"
-	return 0	# Successfully activated
+	if [[ ( ${PI_OS} == "bookworm" || ${PI_OS} == "trixie" ) && -s ${ACTIVATE} ]]; then
+		#shellcheck disable=SC1090,SC1091
+		source "${ACTIVATE}" || exit 1
+		PYTHON_VENV_ACTIVATED="true"
+		return 0	# Successfully activated
+	fi
+	return 1
 }
 
 function deactivate_python_venv()

@@ -106,38 +106,69 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 		self._OVERLAYTLEFOLDER = os.path.join(self._OVERLAYTMP , 'tle')
 		self._createTempDir(self._OVERLAYTLEFOLDER)
 
-		self._variables = ALLSKYVARIABLES()
-		self._fields = self._variables.get_variables()
- 
-		self._set_date_and_time()
-		self._debug = True
-		
-		try:
-			oeConfigFile = os.path.join(os.environ['ALLSKY_OVERLAY'], 'config', self._OVERLAYOECONFIG)
-			with open(oeConfigFile) as file:
-				self._overlay_editor_config = json.load(file)
-				
-				if 'overlayErrors' not in self._overlay_editor_config:
-					self._overlay_editor_config['overlayErrors'] = True
-				if 'overlayErrorsText' not in self._overlay_editor_config:
-					self._overlay_editor_config['overlayErrorsText'] = 'Error found; see the WebU'
-					
-		except Exception as e:
-			self.log(0,f'ERROR: Unable to read the overlay config file {oeConfigFile}')
-	        
-	def _log(self, level, text, preventNewline = False, exitCode=None, sendToAllsky=False, addErrorToOverlay=False):
-		self.log(level=level, message=text, preventNewline=preventNewline,exitCode=exitCode, sendToAllsky=sendToAllsky)
-		if sendToAllsky:
-			if self._overlay_editor_config is not None:
-				if self._overlay_editor_config['overlayErrors']:
-					self._errors = self._overlay_editor_config['overlayErrorsText']
+        with open(fieldsFile) as file:
+            try:
+                self._systemfields = json.load(file)['data']
+            except Exception as err:
+                # This will cause errors for each variable in the overlay since its 'type'
+                # will be unknown.  _checkVariableType=False indicates not to check.
+                self._checkVariableType = False
+                s.log(0, f"ERROR: Unable to read '{fieldsFile}' {err}", sendToAllsky=True)
+                self._systemfields = []
+        with open(userFieldsFile) as file:
+            try:
+                self._userfields = json.load(file)['data']
+            except Exception as err:
+                s.log(0, f"ERROR: Unable to read '{userFieldsFile}' {err}", sendToAllsky=True)
+                self._userfields = []
+                self._checkVariableType = False
 
-	def _load_overlay(self):
-		dayORNight = os.environ['DAY_OR_NIGHT']
-		if dayORNight == 'DAY':
-			overlayName = allsky_shared.getSetting('daytimeoverlay')
-		else:
-			overlayName = allsky_shared.getSetting('nighttimeoverlay')
+        self._fields = self._systemfields + self._userfields
+
+        s.log(4, f"INFO: Config file set to '{self._overlayConfigFile}'.")
+        self._enableSkyfield = True
+        de = "de421.bsp"
+        try:
+            load = Loader(self._OVERLAYTMP, verbose=False)
+            self._eph = load(de)
+        except Exception as err:
+            # The error message may contain "<" so convert to code to not hose up system messages.
+            e = str(err).replace("<", "&lt;");
+            s.log(0, f"ERROR: Unable to download {de}: {e}")
+            self._enableSkyfield = False
+        self._setDateandTime()
+        self._observerLat = s.getSetting('latitude')
+        self._observerLon = s.getSetting('longitude')
+        self._debug = True
+
+        self._formaterrortext = formaterrortext
+        
+        try:
+            oeConfigFile = os.path.join(os.environ['ALLSKY_OVERLAY'], 'config', self._OVERLAYOECONFIG)
+            with open(oeConfigFile) as file:
+                self._oeConfig = json.load(file)
+                
+                if 'overlayErrors' not in self._oeConfig:
+                    self._oeConfig['overlayErrors'] = True
+                if 'overlayErrorsText' not in self._oeConfig:
+                    self._oeConfig['overlayErrorsText'] = 'Error found; see the WebU'
+                    
+        except Exception as e:
+            s.log(0,f'ERROR: Unable to read the overlay config file {oeConfigFile}')
+            
+    def _log(self, level, text, preventNewline = False, exitCode=None, sendToAllsky=False, addErrorToOverlay=False):
+        s.log(level=level, text=text, preventNewline=preventNewline,exitCode=exitCode, sendToAllsky=sendToAllsky)
+        if sendToAllsky:
+            if self._oeConfig is not None:
+                if self._oeConfig['overlayErrors']:
+                    self._errors = self._oeConfig['overlayErrorsText']
+    
+    def _loadOverlay(self):
+        dayORNight = os.environ['DAY_OR_NIGHT']
+        if dayORNight == 'DAY':
+            overlayName = s.getSetting('daytimeoverlay')
+        else:
+            overlayName = s.getSetting('nighttimeoverlay')
 
 		if overlayName:
 			userPath = os.path.join(os.environ['ALLSKY_OVERLAY'], 'myTemplates', overlayName)
@@ -672,48 +703,369 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 		result = cv2.warpAffine(image, rot_mat, image.shape[1::-1], flags=cv2.INTER_LINEAR)
 		return result
 
-	def _get_layer_sort_value(self, item, layer_type_order, index):
-		try:
-			return float(item['zindex'])
-		except (KeyError, TypeError, ValueError):
-			return (layer_type_order * 1000000) + index
+    def _initialiseMoon(self):
+        try:
+            """ Setup all of the data for the Moon """
+            moonEnabled = self._overlayConfig["settings"]["defaultincludemoon"]
+            if moonEnabled:
+                if self._enableSkyfield:
+                    lat = radians(self._convertLatLon(self._observerLat))
+                    lon = radians(self._convertLatLon(self._observerLon))
 
-	def _add_overlay_layers(self):
-		layers = []
+                    ts = time.time()
+                    utcOffset = (datetime.fromtimestamp(ts) - datetime.utcfromtimestamp(ts)).total_seconds()
 
-		for index, rectData in enumerate(self._overlay_config.get('rects', [])):
-			layers.append({
-				'type': 'rect',
-				'data': rectData,
-				'zindex': self._get_layer_sort_value(rectData, 0, index)
-			})
+                    observer = ephem.Observer()
+                    observer.lat = lat
+                    observer.long = lon
+                    moon = ephem.Moon()
+                    observer.date = datetime.now() - timedelta(seconds=utcOffset)
+                    moon.compute(observer)
 
-		configFields = self._overlay_config.get('fields', [])
-		for index, fieldData in enumerate(self._overlay_fields):
-			if index < len(configFields):
-				fieldData['zindex'] = configFields[index].get('zindex', fieldData.get('zindex'))
-			layers.append({
-				'type': 'text',
-				'data': fieldData,
-				'zindex': self._get_layer_sort_value(fieldData, 1, index)
-			})
+                    nnm = ephem.next_new_moon(observer.date)
+                    pnm = ephem.previous_new_moon(observer.date)
 
-		for index, imageData in enumerate(self._overlay_config.get('images', [])):
-			layers.append({
-				'type': 'image',
-				'data': imageData,
-				'zindex': self._get_layer_sort_value(imageData, 2, index)
-			})
+                    lunation=(observer.date-pnm)/(nnm-pnm)
+                    symbol=lunation*26
+                    if symbol < 0.2 or symbol > 25.8 :
+                        symbol = '1'  # new moon
+                    else:
+                        symbol = chr(ord('A')+int(symbol+0.5)-1)
 
-		for layer in sorted(layers, key=lambda layer: layer['zindex']):
-			if layer['type'] == 'rect':
-				self._add_rect(layer['data'])
-			elif layer['type'] == 'text':
-				self._add_text([layer['data']])
-			elif layer['type'] == 'image':
-				self._add_images([layer['data']], include_extra=False)
+                    azTemp = str(moon.az).split(":")
+                    self._moonAzimuth = azTemp[0] + u"\N{DEGREE SIGN}"
+                    self._moonElevation = str(round(degrees(moon.alt),2)) + u"\N{DEGREE SIGN}"
+                    self._moonIllumination = str(round(moon.phase, 2))
+                    self._moonPhaseSymbol  = symbol
 
-		self._add_images([], include_extra=True)
+                    s.log(4, 'INFO: Adding Moon Azimuth {self._moonAzimuth} and Elevation {self._moonElevation}.')
+                    s.setEnvironmentVariable('AS_MOON_AZIMUTH', self._moonAzimuth)
+                    s.setEnvironmentVariable('AS_MOON_ELEVATION', self._moonElevation)
+                    s.log(4, 'INFO: Adding Moon Illumination {self._moonIllumination} and Symbol {self._moonPhaseSymbol}')
+                    s.setEnvironmentVariable('AS_MOON_ILLUMINATION', self._moonIllumination)
+                    s.setEnvironmentVariable('AS_MOON_SYMBOL', self._moonPhaseSymbol)
+
+                else:
+                    self._log(4,'INFO: Moon enabled but cannot use due to prior error.')
+            else:
+                self._notEnabled = self._notEnabled + "  Moon"
+        except Exception as e:
+            eType, eObject, eTraceback = sys.exc_info()
+            self._log(0, f'ERROR: _initialiseMoon failed on line {eTraceback.tb_lineno} - {e}')
+        return True
+
+    def _fileCreatedToday(self, fileName):
+        result = False
+        today = date.today()
+        today = today.strftime('%Y-%m-%d')
+        fileModifiedTime = ''
+
+        if os.path.exists(fileName):
+            fileModifiedTime = int(os.path.getmtime(fileName))
+            m_ti = time.ctime(fileModifiedTime)
+            fileDate = time.strptime(m_ti)
+            fileDate = time.strftime('%Y-%m-%d', fileDate)
+
+            if fileDate == today:
+                result = True
+
+        return result
+
+    def _getSunTimes(self, location, date):
+        sunData = sun(location, date=date)
+        az = azimuth(location, date)
+        el = elevation(location, date)
+        sunData['azimuth'] = az
+        sunData['elevation'] = el
+        return sunData
+
+    def _getTimeZone(self):
+        try:
+            file = open('/etc/timezone', 'r')
+            tz = file.readline()
+            tz = tz.strip()
+            file.close()
+        except:
+            tz = "Europe/London"
+
+        return tz, timezone(tz)
+
+    def _initialiseSun(self):
+        try:
+            sunEnabled = self._overlayConfig['settings']['defaultincludesun']
+            if sunEnabled:
+                lat = self._convertLatLon(self._observerLat)
+                lon = self._convertLatLon(self._observerLon)
+
+                tzName, tz = self._getTimeZone()
+                location = Observer(lat, lon, 0)
+
+                today = datetime.now(tz)
+                tomorrow = today + timedelta(days = 1)
+                yesterday = today + timedelta(days = -1)
+
+                yesterdaySunData = self._getSunTimes(location, yesterday)
+                todaySunData = self._getSunTimes(location, today)
+                tomorrowSunData = self._getSunTimes(location, tomorrow)
+
+                if s.TOD == 'day':
+                    dawn = todaySunData["dawn"]
+                    sunrise = todaySunData["sunrise"]
+                    noon = todaySunData["noon"]
+                    sunset = todaySunData["sunset"]
+                    dusk = todaySunData["dusk"]
+                else:
+                    now = datetime.now(tz)
+                    if now.hour > 0 and now < todaySunData["dawn"]:
+                        dawn = todaySunData["dawn"]
+                        sunrise = todaySunData["sunrise"]
+                        noon = todaySunData["noon"]
+                        sunset = yesterdaySunData["sunset"]
+                        dusk = yesterdaySunData["dusk"]
+                    else:
+                        dawn = tomorrowSunData["dawn"]
+                        sunrise = tomorrowSunData["sunrise"]
+                        noon = tomorrowSunData["noon"]
+                        sunset = todaySunData["sunset"]
+                        dusk = todaySunData["dusk"]
+
+                Format = s.getSetting("timeformat")
+                s.setEnvironmentVariable("AS_SUN_DAWN", dawn.strftime(Format))
+                s.setEnvironmentVariable("AS_SUN_SUNRISE", sunrise.strftime(Format))
+                s.setEnvironmentVariable("AS_SUN_NOON", noon.strftime(Format))
+                s.setEnvironmentVariable("AS_SUN_SUNSET", sunset.strftime(Format))
+                s.setEnvironmentVariable("AS_SUN_DUSK", dusk.strftime(Format))
+                s.setEnvironmentVariable("AS_SUN_AZIMUTH", str(int(todaySunData["azimuth"])))
+                s.setEnvironmentVariable("AS_SUN_ELEVATION", str(int(todaySunData["elevation"])))
+
+                self._log(4, f'INFO: Lat = {lat}, Lon = {lon}, tz = {tzName}, Sunrise = {sunrise}, Sunset = {sunset}')
+            else:
+                self._notEnabled = self._notEnabled + "  Sun"
+        except Exception as e:
+            eType, eObject, eTraceback = sys.exc_info()
+            self._log(0, f'ERROR: _initialiseSun failed on line {eTraceback.tb_lineno} - {e}')
+
+        return True
+
+    def _initialiseSunOld(self):
+        sunEnabled = self._overlayConfig['settings']['defaultincludesun']
+        if sunEnabled:
+            if self._enableSkyfield:
+                cacheData = {}
+                lat = self._convertLatLon(self._observerLat)
+                lon = self._convertLatLon(self._observerLon)
+
+                sunTmpFile = os.path.join(self._OVERLAYTMP,'sun')
+
+                if not self._fileCreatedToday(sunTmpFile):
+                    if not self._sunFast:
+                        notUsed, tz = self._getTimeZone()
+
+                        # Figure out local midnight.
+                        zone = timezone(tz)
+                        now = zone.localize(datetime.now())
+
+                        midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
+                        next_midnight = midnight + timedelta(days=1)
+
+                        ts = load.timescale()
+                        t0 = ts.from_datetime(midnight)
+                        t1 = ts.from_datetime(next_midnight)
+                        bluffton = wgs84.latlon(lat, lon)
+                        f = almanac.dark_twilight_day(self._eph, bluffton)
+                        times, events = almanac.find_discrete(t0, t1, f)
+
+                        previous_e = f(t0).item()
+                        for t, e in zip(times, events):
+                            eventTime = str(t.astimezone(zone).strftime('%H:%M'))
+                            if previous_e < e:
+                                name = str(almanac.TWILIGHTS[e]) +  'starts'
+                                name = name.upper().replace(' ', '')
+                            else:
+                                name = str(almanac.TWILIGHTS[e]) +  'ends'
+                                name = name.upper().replace(' ', '')
+                            cacheData['AS_' + name] = eventTime
+                            previous_e = e
+                    else:
+                        sun = Sun(lat, lon)
+                        sunRise = sun.get_local_sunrise_time()
+                        sunSet = sun.get_local_sunset_time()
+                        cacheData['AS_SUNRISE'] = sunRise.strftime('%H:%M')
+                        cacheData['AS_SUNSET'] = sunSet.strftime('%H:%M')
+                    jsonData = json.dumps(cacheData, indent = 4)
+                    umask = os.umask(0)
+                    with open(os.open(sunTmpFile, os.O_CREAT | os.O_WRONLY, 0o777), 'w') as outfile:
+                        outfile.write(jsonData)
+                    os.umask(umask)
+                else:
+                    with open(sunTmpFile) as inFile:
+                        cacheData = json.load(inFile)
+
+                for key, value in cacheData.items():
+                    os.environ[key] = value
+                    s.log(4, f'INFO: Adding {key}:{value}')
+            else:
+                s.log(4, 'INFO: Sun enabled but cannot use due to prior error.')
+        else:
+            self._notEnabled = self._notEnabled + "  sun"
+
+        return True
+
+    def _convertLatLon(self, input):
+        """ lat and lon can either be a positive or negative float, or end with N, S, E,or W. """
+        """ If in  N, S, E, W format, 0.2E becomes -0.2 """
+        nsew = False
+        if isinstance(input, str):
+            input = input.upper()
+            nsew = 1 if input[-1] in ['N', 'S', 'E', 'W'] else 0
+        if nsew:
+            multiplier = 1 if input[-1] in ['N', 'E'] else -1
+            ret = multiplier * sum(s.asfloat(x) / 60 ** n for n, x in enumerate(input[:-1].split('-')))
+        else:
+            ret = float(input)
+        return ret
+
+    def _fetchTleFromCelestrak(self, noradCatId, verify=True):
+        s.log(4, f'INFO: Loading Satellite {noradCatId}', preventNewline=True)
+        tleFileName = os.path.join(self._OVERLAYTLEFOLDER , noradCatId + '.tle')
+
+        self._createTempDir(self._OVERLAYTLEFOLDER)
+
+        if os.path.exists(tleFileName):
+            fileModifiedTime = int(os.path.getmtime(tleFileName))
+            fileAge = int(time.time()) - fileModifiedTime
+            fileAge = fileAge / 60 / 60 / 24
+        else:
+            fileAge = 9999
+
+        if fileAge > 2:
+            r = requests.get(f'https://celestrak.org/NORAD/elements/gp.php?CATNR={noradCatId}&FORMAT=TLE', verify=verify, timeout=5)
+            r.raise_for_status()
+
+            if r.text == 'No GP data found':
+                raise LookupError
+
+            tle = r.text.split('\r\n')
+
+            umask = os.umask(0)
+            with open(os.open(tleFileName, os.O_CREAT | os.O_WRONLY, 0o777), 'w') as outfile:
+                outfile.write(tle[0].strip() + os.linesep)
+                outfile.write(tle[1].strip() + os.linesep)
+                outfile.write(tle[2].strip() + os.linesep)
+            os.umask(umask)
+
+            s.log(4, ' TLE file over 2 days old so downloaded')
+        else:
+            tle = {}
+            with open(tleFileName) as f:
+                tle[0] = f.readline()
+                tle[1] = f.readline()
+                tle[2] = f.readline()
+            s.log(4, ' TLE loaded from cache')
+
+        return tle[0].strip(), tle[1].strip(), tle[2].strip()
+
+    def _initSatellites(self):
+        try:
+            satellites = self._overlayConfig["settings"]["defaultnoradids"]
+            satellites = satellites.strip()
+
+            if satellites != '':
+                if self._enableSkyfield:
+                    satelliteArray = list(map(str.strip, satellites.split(',')))
+                    for noradId in satelliteArray:
+                        try:
+                            tles = self._fetchTleFromCelestrak(noradId)
+                            ts = load.timescale()
+                            t = ts.now()
+
+                            satellite = EarthSatellite(tles[1], tles[2], tles[0], ts)
+                            geocentric = satellite.at(t)
+                            sunlit = satellite.at(t).is_sunlit(self._eph)
+                            satLat, satLon = wgs84.latlon_of(geocentric)
+
+                            lat = self._convertLatLon(self._observerLat)
+                            lon = self._convertLatLon(self._observerLon)
+                            bluffton = wgs84.latlon(lat, lon)
+                            difference = satellite - bluffton
+                            topocentric = difference.at(t)
+                            alt, az, distance = topocentric.altaz()
+                            s.setEnvironmentVariable('AS_' + noradId + 'ALT', str(alt))
+                            s.setEnvironmentVariable('AS_' + noradId + 'AZ', str(az))
+
+                            if alt.degrees > 5 and sunlit:
+                                s.setEnvironmentVariable('AS_' + noradId + 'VISIBLE', 'Yes')
+                            else:
+                                s.setEnvironmentVariable('AS_' + noradId + 'VISIBLE', 'No')
+                        except LookupError:
+                            s.log(0, f'ERROR: Norad ID {noradId} Not found.')
+                            
+                        # Skyfield breaks the locale so reset it        
+                        locale.setlocale(locale.LC_ALL, '')
+                            
+                else:
+                    self._log(4, 'INFO: Satellites enabled but cannot use due to prior error.')
+
+            else:
+                self._notEnabled = self._notEnabled + "  Satellites"
+
+        except Exception as e:
+            eType, eObject, eTraceback = sys.exc_info()
+            self._log(4, ' ')
+            self._log(0, f'ERROR: _initSatellites failed on line {eTraceback.tb_lineno} - {e}')
+        
+        return True
+
+    def _initPlanets(self):
+        try:
+            planetsEnabled = self._overlayConfig["settings"]["defaultincludeplanets"]
+            if planetsEnabled:
+                if self._enableSkyfield:
+                    planets = {
+                        'MERCURY BARYCENTER',
+                        'VENUS BARYCENTER',
+                        'MARS BARYCENTER',
+                        'JUPITER BARYCENTER',
+                        'SATURN BARYCENTER',
+                        'URANUS BARYCENTER',
+                        'NEPTUNE BARYCENTER',
+                        'PLUTO BARYCENTER'
+                    }
+
+                    timeNow = time.time()
+                    utcOffset = (datetime.fromtimestamp(timeNow) - datetime.utcfromtimestamp(timeNow)).total_seconds()
+
+                    ts = load.timescale()
+                    t = ts.now() #- timedelta(seconds=utcOffset)
+                    earth = self._eph['earth']
+
+                    home = earth + wgs84.latlon(self._convertLatLon(self._observerLat), self._convertLatLon(self._observerLon))
+
+                    for planetId in planets:
+                        planet = self._eph[planetId]
+                        astrometric = home.at(t).observe(planet)
+                        alt, az, d = astrometric.apparent().altaz()
+                        ra, dec, distance = astrometric.radec()
+                        #prs.int(planetId, alt, az)
+                        s.setEnvironmentVariable('AS_' + planetId.replace(' BARYCENTER','') + 'ALT', str(alt))
+                        s.setEnvironmentVariable('AS_' + planetId.replace(' BARYCENTER','') + 'AZ', str(az))
+                        s.setEnvironmentVariable('AS_' + planetId.replace(' BARYCENTER','') + 'RA', str(ra))
+                        s.setEnvironmentVariable('AS_' + planetId.replace(' BARYCENTER','') + 'DEC', str(dec))
+
+                        if alt.degrees > 5:
+                            s.setEnvironmentVariable('AS_' + planetId.replace(' BARYCENTER','') + 'VISIBLE', 'Yes')
+                        else:
+                            s.setEnvironmentVariable('AS_' + planetId.replace(' BARYCENTER','') + 'VISIBLE', 'No')
+                else:
+                    self._log(4, 'INFO: Planets enabled but unable to use due to prior error.')
+            else:
+                self._notEnabled = self._notEnabled + "  Planets"
+
+        except Exception as e:
+            eType, eObject, eTraceback = sys.exc_info()
+            self._log(0, f'ERROR: _initPlanets failed on line {eTraceback.tb_lineno}- {e}')
+
+        return True
 
 	def _addErrors(self):
 		print(f'Errors = "{self._errors}"')

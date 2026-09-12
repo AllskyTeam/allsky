@@ -366,12 +366,9 @@ int RPicapture(config cg, cv::Mat *image)
 		}
 
 		// Add errorOutput to the log file.
-		std::string m = showDebugFile(errorOutput).c_str();
-		if (m != "") {
-			Log(1, "********************\n");		// 1 so it doesn't go to WebUI.
-			Log(l, "%s\n", m.c_str());
-			Log(1, "********************\n");
-		}
+		Log(1, "********************\n");		// 1 so it doesn't go to WebUI.
+		Log(l, "%s\n", showDebugFile(errorOutput).c_str());
+		Log(1, "********************\n");
 	}
 
 	return(ret);
@@ -993,10 +990,7 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 				{
 					Log(0, "*** %s: ERROR: maximum number of consecutive errors of %d reached; capture program stopped. Total errors=%'d.\n", CG.ME, CG.maxErrors, numTotalErrors);
 					Log(0, "Make sure cable between camera and Pi is all the way in.\n");
-					std::string m = showDebugFile(errorOutput).c_str();
-					if (m != "") {
-						Log(0, "The last error was: %s", showDebugFile(errorOutput).c_str());
-					}
+					Log(0, "The last error was: %s", showDebugFile(errorOutput).c_str());
 					closeUp(EXIT_ERROR_STOP);
 				}
 	

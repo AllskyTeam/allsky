@@ -714,7 +714,12 @@ do_sudoers()
 	[[ ${SKIP} == "true" || ${SKIP2} == "true" ]] && return
 
 	display_msg --logonly info "Creating/updating sudoers file."
-	create_sudoers
+	sed \
+		-e "s;XX_ALLSKY_OWNER_XX;${ALLSKY_OWNER};" \
+		-e "s;XX_ALLSKY_SCRIPTS_XX;${ALLSKY_SCRIPTS};" \
+		-e "s;XX_ALLSKY_UTILITIES_XX;${ALLSKY_UTILITIES};" \
+		"${REPO_SUDOERS_FILE}"  >  "${TMP_FILE}"
+	sudo install -m 0644 "${TMP_FILE}" "${FINAL_SUDOERS_FILE}" && rm -f "${TMP_FILE}"
 
 	STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 }
@@ -876,7 +881,9 @@ install_webserver_et_al()
 	else
 		display_msg --log progress "Installing the web server."
 		TMP="${ALLSKY_LOGS}/lighttpd.install.log"
-		run_aptGet lighttpd > "${TMP}" 2>&1
+		run_aptGet \
+			lighttpd  php-fpm  php-gd  hostapd  dnsmasq  avahi-daemon  hwinfo tree i2c-tools \
+			> "${TMP}" 2>&1
 		check_success $? "lighttpd installation failed" "${TMP}" "${DEBUG}" \
 			|| exit_with_image 1 "${STATUS_ERROR}" "lighttpd installation failed"
 
@@ -2950,13 +2957,15 @@ install_Python()
 
 	# Doing all the python dependencies at once can run /tmp out of space, so do one at a time.
 	# This also allows us to display progress messages.
-	M=" for ${ALLSKY_PI_OS^}"
-	R="-${ALLSKY_PI_OS}"
-
-	if [[ ${ALLSKY_PI_OS} == "trixie" && ${SKIP2} != "true" ]]; then
-		display_msg --log progress "Trixie detected, installing python build packages."
-		TMP="${ALLSKY_LOGS}/trixie_build.log"
-		run_aptGet python-dev build-essential > "${TMP}" 2>&1
+	M=" for ${PI_OS^}"
+	R="-${PI_OS}"
+	if [[ ${PI_OS} == "buster" ]]; then
+		# Force pip upgrade, without this installations on Buster fail.
+		pip3 install --upgrade pip > /dev/null 2>&1
+	elif [[ ${PI_OS} != "bullseye" && ${PI_OS} != "bookworm" && ${PI_OS} != "trixie" ]]; then
+		display_msg --log warning "Unknown operating system: ${PI_OS}."
+		M=""
+		R=""
 	fi
 
 	display_msg --logonly info "Locating Python dependency file"
@@ -2982,8 +2991,8 @@ install_Python()
 
 	NUM_TO_INSTALL=$( wc -l < "${REQUIREMENTS_FILE}" )
 
-	if [[ ${SKIP} == "false" && ${SKIP2} == "false" ]]; then
-		PKGs="python3-pip python3-full libgfortran5 libopenblas0-pthread"
+	if [[ ${PI_OS} == "bookworm" || ${PI_OS} == "trixie" ]]; then
+		PKGs="python3-full libgfortran5 libopenblas0-pthread"
 		display_msg --logonly progress "Installing ${PKGs}."
 		TMP="${ALLSKY_LOGS}/python3-full.log"
 		# shellcheck disable=SC2086

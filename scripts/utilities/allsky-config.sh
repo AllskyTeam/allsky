@@ -60,14 +60,8 @@ function usage_and_exit()
 	echo "      show_connected_cameras"
 	echo "      new_rpi_camera_info [--camera NUM]"
 	echo "      show_installed_locales"
-	echo "      get_filesystems"
-	echo "      encoders"
-	echo "      pix_fmts"
-
-	echo "      compare_timelapses [see --help for arguments]"
-	echo "      compare_startrails [see --help for arguments]"
-	echo "      compare_stretches [see --help for arguments]"
-
+	echo "      prepare_logs [debug_level]"
+	echo "      config_timelapse"
 	echo "      change_swap"
 	echo "      change_tmp"
 	echo "      samba"
@@ -203,8 +197,20 @@ function show_installed_locales()
 # Stop it, then truncate the log files and restart Allsky.
 function prepare_logs()
 {
+	if [[ ${1} == "--help" ]]; then
+		echo
+		W_ "Usage: ${ME}  ${ME_F}"
+		echo
+		echo "Configure Allsky to collect the proper information for troubleshooting problems."
+		echo "Allsky is stopped, the Debug Level set to the appropriate value if needed,"
+		echo "the log files are truncated, and Allsky is restarted."
+		echo "After the problem appears, see the 'Getting Help' page in the WebUI for details"
+		echo "on how to report the problem."
+		return
+	fi
+
 	# shellcheck disable=SC2068
-	prepareLogs.sh "${@}"
+	prepareLogs.sh ${@}
 }
 
 

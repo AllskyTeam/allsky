@@ -45,478 +45,162 @@ function getRemoteWebsiteVersion()
 {
 	global $useRemoteWebsite, $status;
 
-	// Get the version of the remote Allsky Website, if it exists.
-	$remoteWebsiteVersion = "";
-	if ($useRemoteWebsite) {
-		$f = getRemoteWebsiteConfigFile();
-		$errorMsg = "WARNING: ";
-		$retMsg = "";
-		$a_array = get_decoded_json_file($f, true, $errorMsg, $retMsg);
-		if ($a_array === null) {
-			$status->addMessage($retMsg, 'warning');
-		} else {
-			$c = getVariableOrDefault($a_array, 'config', '');
-			if ($c !== "") {
-				$remoteWebsiteVersion = getVariableOrDefault($c, 'AllskyVersion', null);
-				if ($remoteWebsiteVersion === null) {
-					$remoteWebsiteVersion = '<span class="errorMsg">[version unknown]</span>';
-				} else if ($remoteWebsiteVersion == ALLSKY_VERSION) {
-					$remoteWebsiteVersion = "";		// don't display if same version as Allsky
-				} else {
-					$remoteWebsiteVersion = "&nbsp; (version $remoteWebsiteVersion)";
-				}
+// Get the version of the remote Allsky Website, if it exists.
+$remoteWebsiteVersion = "";
+if ($useRemoteWebsite) {
+	$f = getRemoteWebsiteConfigFile(); 
+	$errorMsg = "WARNING: ";
+	$retMsg = "";
+	$a_array = get_decoded_json_file($f, true, $errorMsg, $retMsg);
+	if ($a_array === null) {
+		$status->addMessage($retMsg, 'warning');
+	} else {
+		$c = getVariableOrDefault($a_array, 'config', '');
+		if ($c !== "") {
+			$remoteWebsiteVersion = getVariableOrDefault($c, 'AllskyVersion', null);
+			if ($remoteWebsiteVersion === null) {
+				$remoteWebsiteVersion = '<span class="errorMsg">[version unknown]</span>';
+			} else if ($remoteWebsiteVersion == ALLSKY_VERSION) {
+				$remoteWebsiteVersion = "";		// don't display if same version as Allsky
+			} else {
+				$remoteWebsiteVersion = "&nbsp; (version $remoteWebsiteVersion)";
 			}
 		}
 	}
-
-	return $remoteWebsiteVersion;
-
 }
+?>
 
-// What size Font Awesome icon to use on "list_days" page?
-$fa_size = "2x";	// "lg" or "2x"
-if ($fa_size == "lg") {
-	$fa_size_px = 22;	// the rough width of the font awesome icon
-} else {
-	$fa_size_px = 35;
-}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="description" content="Web User Interface (WebUI) for Allsky">
+	<meta name="author" content="Thomas Jacquin">
 
-$pageInfo = [
-	"messages" => [
-		"title" => "System Messages",
-		"icon" => "fa fa-triangle-exclamation fa-fw",
-		"jshandler" => "ALLSKYSHOWMESSAGES",
-		"extraiconcss" => "text-danger",
-		"extratextcss" => "text-danger"
-	],
-	"login" => [
-		"title" => "Login",
-		"icon" => "fa fa-right-to-bracketfa-fw"
-	],
-	"live_view" => [
-		"title" => "Live View",
-		"icon" => "fa fa-eye fa-fw",
-		"help" => "docs/allsky_guide/using/live_view.html"
-	],
-	"list_days" => [
-		"title" => "Images",
-		"icon" => "fa fa-image fa-fw",
-		"help" => "docs/allsky_guide/using/images.html"
-	],
-	"list_images" => [
-		"title" => "Images",
-		"icon" => "fa fa-image fa-" . $fa_size . " fa-fw",
-		"help" => "docs/allsky_guide/using/images.html"
-	],
-	"list_videos" => [
-		"title" => "Timelapse",
-		"icon" => "fa fa-film fa-" . $fa_size . " fa-fw",
-		"AllTitle" => "All Timelapse (CAN BE SLOW TO LOAD)",
-		"help" => "docs/allsky_guide/using/images.html"
-	],
-	"list_keograms" => [
-		"title" => "Keogram",
-		"icon" => "fa fa-barcode fa-" . $fa_size . " fa-fw",
-		"AllTitle" => "All Keograms",
-		"help" => "docs/allsky_guide/using/images.html"
-	],
-	"list_startrails" => [
-		"title" => "Startrails",
-		"icon" => "fa-regular fa-star fa-" . $fa_size . " fa-fw",
-		"AllTitle" => "All Startrails",
-		"help" => "docs/allsky_guide/using/images.html"
-	],
-	"list_meteors" => [
-		"title" => "Meteors",
-		"icon" => "fa fa-meteor fa-" . $fa_size . " fa-fw",
-		"AllTitle" => "All Meteors",
-	],
-	"configuration" => [
-		"title" => "Allsky Settings",
-		"icon" => "fa fa-camera fa-fw",
-		"help" => "docs/allsky_guide/settings/allsky.html"
-	],
-	"editor" => [
-		"title" => "Editor",
-		"icon" => "fa fa-code fa-fw",
-		"help" => "docs/allsky_guide/settings/website.html"
-	],
-	"overlay" => [
-		"title" => "Overlay Editor",
-		"icon" => "fa fa-edit fa-fw",
-		"help" => "docs/allsky_guide/overlays/overview.html"
-	],
-	"module" => [
-		"title" => "Module Manager",
-		"icon" => "fa fa-bars fa-fw",
-		"help" => "docs/allsky_modules/introduction.html"
-	],
-	"charts" => [
-		"title" => "Chart Manager",
-		"icon" => "fa-solid fa-chart-line",
-		"help" => "docs/allsky_guide/using/charts.html"
-	],
-	"LAN_info" => [
-		"title" => "<b>LAN</b> Dashboard",
-		"icon" => "fa fa-network-wired fa-fw",
-		"help" => "docs/allsky_guide/using/networking.html"
-	],
-	"WLAN_info" => [
-		"title" => "<b>WLAN</b> Dashboard",
-		"icon" => "fa fa-tachometer-alt fa-fw",
-		"help" => "docs/allsky_guide/using/networking.html"
-	],
-	"wifi" => [
-		"title" => "Configure Wi-Fi",
-		"icon" => "fa fa-wifi fa-fw",
-		"help" => "docs/allsky_guide/using/networking.html"
-	],
-	"dhcp_conf" => [
-		"title" => "Configure DHCP",
-		"icon" => "fa fa-exchange fa-fw",
-	],
-	"system" => [
-		"title" => "System",
-		"icon" => "fa fa-cube fa-fw",
-		"help" => "docs/allsky_guide/using/system/status.html"
-	],
-	"auth_conf" => [
-		"title" => "Change Password",
-		"icon" => "fa fa-lock fa-fw",
-		"headerTitle" => "Update WebUI User / Password",
-		"help" => "docs/allsky_guide/using/access_control.html"
-	],
-	"support" => [
-		"title" => "Getting Support",
-		"icon" => "fa fa-question fa-fw",
-		"help" => "docs/allsky_guide/using/support.html"
-	],
-	"documentation" => [
-		"title" => "Allsky Documentation",
-		"icon" => "fa fa-book fa-fw",
-		"external" => "true",
-		"href" => "/docs'",
-	],
-	"mini_timelapse" => [
-		"title" => "View Mini-Timelapse",
-		"icon" => "fa fa-file-video fa-fw",
-		"external" => "true",
-		"href" => ALLSKY_MINITIMELAPSE_URL
-	],
-	"notFound" => [
-		"headerTitle" => "Unknown page - contact Allsky support",
-		"title" => "Unknown page",
-		"icon" => "",
-		"href" => "",
-	],
-];
-
-function getPageTitle($p, $day)
-{
-	global $pageInfo;
-
-	$t = getVariableOrDefault($pageInfo, $p, null);
-	if ($t === null) {
-		return null;
+<?php	// Give each page its own <title> so they are easy to distinguish in the browser.
+	switch ($page) {
+		case "WLAN_info":			$Title = "WLAN Dashboard";		break;
+		case "LAN_info":			$Title = "LAN Dashboard";		break;
+		case "configuration":		$Title = "Allsky Settings";		break;
+		case "wifi":				$Title = "Configure Wi-Fi";		break;
+		case "dhcp_conf":			$Title = "Configure DHCP";		break;
+		case "hostapd_conf":		$Title = "Configure Hotspot";	break;
+		case "openvpn_conf":		$Title = "Configure OpenVPN";	break;
+		case "torproxy_conf":		$Title = "Configure TOR proxy";	break;
+		case "auth_conf":			$Title = "Change Password";		break;
+		case "system":				$Title = "System";				break;
+		case "list_days":			$Title = "Images";				break;
+		case "list_images":			$Title = "Images$day";			break;
+		case "list_videos":			$Title = "Timelapse$day";		break;
+		case "list_keograms":		$Title = "Keogram$day";			break;
+		case "list_startrails":		$Title = "Startrails$day";		break;
+		// CG name meteors list page
+		case "list_meteors":		$Title = "Meteors$day";			break;
+		// CG
+		case "editor":				$Title = "Editor";				break;
+		case "overlay":				$Title = "Overlay Editor";		break;
+		case "module":				$Title = "Module Manager";		break;
+		case "live_view":			$Title = "Live View";			break;
+		case "support": 			$Title = "Getting Support";		break;
+		default:					$Title = "Allsky WebUI";		break;
 	}
-	$title = $t['title'] ?? "Allsky";
+?>
+	<!-- allows <a external="true" ...> -->
+	<script src="documentation/js/documentation.js" type="application/javascript"></script>
 
-	if ($day !== "")
-		$title .= $day;
+	<title><?php echo "$Title - WebUI"; ?></title>
 
-	return str_replace("<b>", "", str_replace("</b>", "", $title));
-}
-function getPageHeaderTitle($p)
-{
-	global $pageInfo;
+	<!-- Bootstrap Core CSS -->
+	<link href="documentation/bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
 
-	$t = getVariableOrDefault($pageInfo, $p, null);
-	if ($t === null) {
-		return null;
-	}
-	return $t['headerTitle'] ?? getPageTitle($p, "");
-}
-function getPageIcon($p)
-{
-	global $pageInfo;
+	<!-- MetisMenu CSS -->
+	<link href="documentation/bower_components/metisMenu/dist/metisMenu.min.css" rel="stylesheet">
 
-	return $pageInfo[$p]['icon'] ?? "";
-}
-function getExternal($p)
-{
-	global $pageInfo;
+	<link href="documentation/css/sb-admin-2.css" rel="stylesheet">
 
-	return $pageInfo[$p]['external'] ?? "false";
-}
-function getPageHelp($p)
-{
-	global $pageInfo;
+	<!-- Font Awesome -->
+	<script defer src="documentation/js/all.min.js"></script>
 
-	return $pageInfo[$p]['help'] ?? "";
-}
+	<!-- Custom CSS -->
+	<link href="documentation/css/custom.css" rel="stylesheet">
 
-function getJSHandler($p)
-{
-	global $pageInfo;
+	<link rel="shortcut icon" type="image/png" href="documentation/img/allsky-favicon.png">
 
-	$t = getVariableOrDefault($pageInfo, $p, null);
-	if ($t === null) {
-		return null;
-	}
-	return $t['jshandler'] ?? null;
-}
+	<!-- RaspAP JavaScript -->
+	<script src="documentation/js/functions.js"></script>
 
-function getextraCss($p)
-{
-	global $pageInfo;
+	<!-- jQuery -->
+	<script src="documentation/bower_components/jquery/dist/jquery.min.js"></script>
 
-	$t = getVariableOrDefault($pageInfo, $p, null);
-	if ($t === null) {
-		return null;
-	}
+	<!-- Bootstrap Core JavaScript -->
+	<script src="documentation/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
 
-	$result = [
-		"extraiconcss" => $t['extraiconcss'] ?? "",
-		"extratextcss" => $t['extratextcss'] ?? ""
-	];
-	return $result;
-}
+	<!-- Metis Menu Plugin JavaScript -->
+	<script src="documentation/bower_components/metisMenu/dist/metisMenu.min.js"></script>
 
-// Insert just an "<a href=''..>" with an icon.
-function insertHref($p, $day, $displayTitle = false, $iconImage = "")
-{
-	global $pageInfo;
+	<script src="js/bigscreen.min.js"></script>
 
-	$t = getVariableOrDefault($pageInfo, $p, null);
-	if ($t === null) {
-		$p = "notFound";
-		$t = getVariableOrDefault($pageInfo, $p, null);
-	}
+	<script src="js/allsky.js"></script>
+	<script> var allskyPage='<?php echo $page ?>';  </script>
 
-	$title = getPageHeaderTitle($p, "");
-	if ($day == "All") {
-		$AllTitle = getVariableOrDefault($t, "AllTitle", null);
-		if ($AllTitle !== null)
-			$title = $AllTitle;
-	}
+	<!-- Custom Theme JavaScript -->
+	<script src="documentation/js/sb-admin-2.js"></script>
 
-	$external = getExternal($p);
-	$external_attr = "";
-	if ($external === "true") {
-		$external_attr = 'external="true"';
-	}
+	<!-- Code Mirror editor -->
+<?php if ($page === "editor") { ?>
+	<link rel="stylesheet" href="lib/codeMirror/codemirror.css">
+	<link rel="stylesheet" href="lib/codeMirror/monokai.min.css">
+	<link rel="stylesheet" href="lib/codeMirror/lint.css">
+	<script type="text/javascript" src="lib/codeMirror/codemirror.js"> </script>
+	<script type="text/javascript" src="lib/codeMirror/json.js"> </script>
+	<script type="text/javascript" src="lib/codeMirror/jsonlint.js"> </script>
+	<script type="text/javascript" src="lib/codeMirror/lint.js"> </script>
+	<script type="text/javascript" src="lib/codeMirror/json-lint.js"> </script>
 
-	$href = getVariableOrDefault($t, "href", "index.php?page=$p");
-	if ($day !== "")
-		$href .= "&day=$day";
-	if ($iconImage === "") {
-		$icon = getPageIcon($p);
-		$external = getExternal($p);
-	} else {
-		$icon = $iconImage;
-		$external = "false";
-	}
-	if ($icon === "") {
-		echo "<span style='color: red' title='$title'>???</span>";
-	} else {
-		if ($external === "true") {
-			$target = "target='_blank'";
-		} else {
-			$target = "";
-		}
-		echo "<a id='$p' $external_attr href='$href' title='$title' $target>";
-		if ($iconImage === "") {
-			echo "<i class='$icon'></i>";
-		} else {
-			echo $iconImage;
-		}
-		if ($displayTitle)
-			echo " $title";
-		echo "</a>";
-	}
-}
+	<script src="lib/codeMirror/matchesonscrollbar.js"></script>
+	<script src="lib/codeMirror/searchcursor.js"></script>
+	<script src="lib/codeMirror/match-highlighter.js"></script>
 
-function insertMenuItem($p, $day, $type = "", $href_only = false)
-{
-	global $pageInfo;
+	<script src="/js/jquery-loading-overlay/dist/loadingoverlay.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+	<script src="/js/bootbox/bootbox.all.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
+	<script src="/js/bootbox/bootbox.locales.min.js?c=<?php echo ALLSKY_VERSION; ?>"></script>
 
-	$t = getVariableOrDefault($pageInfo, $p, null);
-	if ($t === null) {
-		$p = "notFound";
-		$t = getVariableOrDefault($pageInfo, $p, null);
-	}
-
-	$title = getPageTitle($p, $day);
-	$icon = getPageIcon($p);
-	$external = getExternal($p);
-	$href = getVariableOrDefault($t, "href", "index.php?page=$p");
-	$jsHandler = getJSHandler($p);
-	$extraCSS = getextraCss($p);
-
-	$target = '';
-	if ($p == "documentation") {
-		$target = ' target="_blank" rel="noopener noreferrer"';
-	}
-
-	$external_attr = "";
-	if ($external === "true") {
-		$external_attr = 'external="true"';
-	}
-
-	if ($jsHandler === null) {
-		echo "<li>";
-		echo "<a id='$p' $external_attr href='$href' $target><i class='$icon'></i>";
-		if ($type !== "dropdown")
-			echo "<span class='menu-text'>";
-		echo " $title";
-		if ($type !== "dropdown")
-			echo "</span>";
-		echo "</a>";
-		echo "</li>\n";
-	} else {
-		$extraiconcss = $extraCSS["extraiconcss"];
-		$extratextcss = $extraCSS["extratextcss"];
-		echo "<li>";
-		echo "<a id='$p' $external_attr href='$href' class='allsky-js-handler' data-jsclass='$jsHandler'><i class='$icon $extraiconcss'></i>";
-		echo "<span class='menu-text $extratextcss'>$title</span>";
-
-		echo "</a>";
-		echo "</li>\n";
-	}
-}
-
-function insertHelperMenuItems()
-{
-	include_once('includes/helper.php');
-
-	foreach (HelperPageRenderer::configuredHelpers() as $helperId => $helperConfig) {
-		if (!is_array($helperConfig)) {
-			continue;
-		}
-
-		$title = (string) ($helperConfig['title'] ?? $helperId);
-		$icon = (string) ($helperConfig['icon'] ?? 'fa-solid fa-hammer');
-		$href = 'index.php?page=helper&helper=' . rawurlencode((string) $helperId);
-
-		echo "<li>";
-		echo "<a id='" . htmlspecialchars((string) $helperId, ENT_QUOTES) . "' href='" . htmlspecialchars($href, ENT_QUOTES) . "'>";
-		echo "<i class='" . htmlspecialchars($icon, ENT_QUOTES) . "'></i>";
-		echo ' ' . htmlspecialchars($title, ENT_QUOTES);
-		echo "</a>";
-		echo "</li>\n";
-	}
-}
-
-function insertPage($p)
-{
-	global $image_name, $pageHelp, $delay, $daydelay, $daydelay_postMsg, $nightdelay, $nightdelay_postMsg, $darkframe;
-
-	$pageHelp = getPageHelp($p);
-
-	switch ($p) {
-		case "list_days":
-			include_once("includes/days.php");
-			ListDays();
-			break;
-		case "list_images":
-			include_once("includes/images.php");
-			ListImages();
-			break;
-		case "list_videos":
-			// directory, file name prefix, formal name, type of file
-			ListFileType("", "allsky", "Timelapse", "video");
-			break;
-		case "list_keograms":
-			// directory, file name prefix, formal name, type of file
-			ListFileType("keogram/", "keogram", "Keogram", "picture");
-			break;
-		case "list_startrails":
-			// directory, file name prefix, formal name, type of file
-			ListFileType("startrails/", "startrails", "Startrails", "picture");
-			break;
-		case "list_meteors":
-			// directory, file name prefix, formal name, type of file
-			ListFileType("meteors/", "meteors", "Meteors", "picture");
-			break;
-		case "configuration":
-			include_once("includes/allskySettings.php");
-			DisplayAllskyConfig();
-			break;
-		case "editor":
-			include_once("includes/$p.php");
-			DisplayEditor();
-			break;
-		case "overlay":
-			include_once("includes/$p.php");
-			DisplayOverlay($image_name);
-			break;
-		case "module":
-			include_once("includes/$p.php");
-			DisplayModule();
-			break;
-		case "charts":
-			include_once("includes/$p.php");
-			DisplayCharts();
-			break;
-		case "LAN_info":
-			include_once("includes/dashboard_LAN.php");
-			DisplayDashboard_LAN();
-			break;
-		case "WLAN_info":
-			include_once("includes/dashboard_WLAN.php");
-			DisplayDashboard_WLAN();
-			break;
-		case "wifi":
-			include_once("includes/configureWiFi.php");
-			DisplayWPAConfig();
-			break;
-		case "dhcp_conf":
-			include_once("includes/dhcp.php");
-			DisplayDHCPConfig();
-			break;
-		case "system":
-			include_once("includes/$p.php");
-			DisplaySystem();
-			break;
-		case "auth_conf":
-			include_once("includes/admin.php");
-			break;
-		case "support":
-			include_once("includes/$p.php");
-			break;
-		case "helper":
-			include_once("includes/helper.php");
-			DisplayHelper();
-			break;
-		case "constellation_overlay":
-			include_once("helpers/$p.php");
-			break;
-
-		case "live_view":
-		default:
-			include_once('includes/liveview.php');
-			DisplayLiveView($image_name, $delay, $daydelay, $daydelay_postMsg, $nightdelay, $nightdelay_postMsg, $darkframe);
-	}
-
-}
-
-function insertVersions()
-{
-	global $hostname;
-
-	$versionInfo = getNewestAllskyVersion($changed);
-	if ($versionInfo !== null) {
-		$newestVersion = $versionInfo['version'];
-	} else {
-		$newestVersion = null;
-	}
-	if ($newestVersion !== null && $newestVersion > ALLSKY_VERSION) {
-		$note = getVariableOrDefault($versionInfo, "versionNote", "");
-		$more = "title='New Version $newestVersion Available";
-		if ($note !== "") {
-			$more .= ", $note";
-		}
-		$more .= "' style='background-color: red; color: white;'";
+<?php } ?>
+</head>
+<body>
+<div id="wrapper">
+	<!-- Navigation -->
+	<nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle as-nav-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			<div class="navbar-brand valign-center">
+				<a id="index" class="navbar-brand valign-center" href="index.php">
+					<img src="documentation/img/allsky-logo.png" title="Allsky logo">
+					<div class="navbar-title nowrap">Web User Interface (WebUI)</div>
+				</a>
+				<div class="version-title version-title-color">
+					<span id="allskyStatus"><?php echo output_allsky_status(); ?></span>
+<?php
+					$versionInfo = getNewestAllskyVersion($changed);
+					if ($versionInfo !== null) {
+						$newestVersion = $versionInfo['version'];
+					} else {
+						$newestVersion = null;
+					}
+					if ($newestVersion !== null && $newestVersion > ALLSKY_VERSION) {
+						$note = getVariableOrDefault($versionInfo, "versionNote", "");
+						$more = "title='New Version $newestVersion Available";
+						if ($note !== "") {
+							$more .= ", $note";
+						}
+						$more .= "' style='background-color: red; color: white;'";
 
 		if ($changed) {
 			$x = "<br>&nbsp; &nbsp;";
@@ -662,295 +346,112 @@ function displayStatusMessages($p)
 						echo "<input type='submit' class='btn btn-primary btn-sm' value='Clear messages' />";
 						echo "</form>";
 						echo "</div>";
-						echo "</div>";
-						echo "</div>";// /.system-message and /.row
-				
-						echo '</div></div>'; // panel
-	}
-}
+					echo "</div>"; echo "</div>";// /.system-message and /.row
+				}
 
-function insertEditorCode($p)
-{
-
-	if ($p === "editor") {
-		echo addAsset([
-			'lib/codeMirror/codemirror.css',
-			'lib/codeMirror/monokai.min.css',
-			'lib/codeMirror/lint.css',
-			'lib/codeMirror/codemirror.js',
-			'lib/codeMirror/json.js',
-			'lib/codeMirror/jsonlint.js',
-			'lib/codeMirror/lint.js',
-			'lib/codeMirror/json-lint.js',
-			'lib/codeMirror/matchesonscrollbar.js',
-			'lib/codeMirror/searchcursor.js',
-			'lib/codeMirror/match-highlighter.js',
-			'/js/jedison/dist/umd/jedison.umd.js',
-			'/js/jquery-loading-overlay/dist/loadingoverlay.min.js',
-			'/js/bootbox/bootbox.all.js',
-			'/js/bootbox/bootbox.locales.min.js',
-			'/js/editor.js'
-		]);
-	}
-}
-
-
-$day = getVariableOrDefault($_REQUEST, 'day', "");
-if ($day !== "")
-	$day = " - $day";
-$remoteWebsiteVersion = getRemoteWebsiteVersion();
-$pageTitle = getPageTitle($page, $day);
-$pageHeaderTitle = getPageHeaderTitle($page, $day);
-$pageIcon = getPageIcon($page);
-$versionInfoHtml = insertVersions();
-$dayNightStatus = getDayNightStatus();
-$dayNightState = $dayNightStatus['state'];
-$dayNightLabelClass = 'label-default';
-if ($dayNightState === 'day' || $dayNightState === 'night') {
-	$captureSetting = $dayNightState === 'day' ? 'takedaytimeimages' : 'takenighttimeimages';
-	$saveSetting = $dayNightState === 'day' ? 'savedaytimeimages' : 'savenighttimeimages';
-
-	$isCapturing = toBool((string) getVariableOrDefault($settings_array, $captureSetting, 'false'));
-	$isSaving = toBool((string) getVariableOrDefault($settings_array, $saveSetting, 'false'));
-
-	if ($isCapturing && $isSaving) {
-		$dayNightLabelClass = 'label-success';
-	} else if ($isCapturing && !$isSaving) {
-		$dayNightLabelClass = 'label-warning';
-	} else {
-		$dayNightLabelClass = 'label-danger';
-	}
-}
-$dayNightLabel = ucfirst($dayNightState === 'unknown' ? 'Unknown' : $dayNightState);
-$dayNightNextTransitionTime = htmlspecialchars($dayNightStatus['nextTransitionTime'] ?? '--:--', ENT_QUOTES);
-$dayNightDawn = htmlspecialchars($dayNightStatus['dawn'] ?? '--:--', ENT_QUOTES);
-$dayNightSunrise = htmlspecialchars($dayNightStatus['sunrise'] ?? '--:--', ENT_QUOTES);
-$dayNightMidday = htmlspecialchars($dayNightStatus['midday'] ?? '--:--', ENT_QUOTES);
-$dayNightSunset = htmlspecialchars($dayNightStatus['sunset'] ?? '--:--', ENT_QUOTES);
-$dayNightDusk = htmlspecialchars($dayNightStatus['dusk'] ?? '--:--', ENT_QUOTES);
-$dayNightNextState = htmlspecialchars(ucfirst($dayNightStatus['nextState'] ?? 'unknown'), ENT_QUOTES);
-$dayNightTransitionDuration = htmlspecialchars($dayNightStatus['transitionDuration'] ?? '--', ENT_QUOTES);
-$dayNightStatusHtml = "<div class='header-daynight-card dropdown'><div class='header-status-heading'><span class='header-status-title'>Capture Mode</span><button type='button' class='btn btn-default btn-xs header-daynight-toggle' data-toggle='dropdown' aria-expanded='false'><i class='fa-solid fa-chevron-down'></i></button></div><div class='header-status-row'><span class='header-status-row-label'>Mode:</span><span class='header-status-row-value'><span class='label {$dayNightLabelClass}'>{$dayNightLabel}</span></span></div><div class='header-status-row'><span class='header-status-row-label'>Transition in:</span><span class='header-status-row-value'>{$dayNightTransitionDuration}</span></div><ul class='dropdown-menu dropdown-menu-right header-daynight-menu'><li class='dropdown-header'>Transition Times</li><li><div class='header-daynight-menu-body'><div class='header-daynight-menu-row'><span>Dawn</span><strong>{$dayNightDawn}</strong></div><div class='header-daynight-menu-row'><span>Sunrise</span><strong>{$dayNightSunrise}</strong></div><div class='header-daynight-menu-row'><span>Midday</span><strong>{$dayNightMidday}</strong></div><div class='header-daynight-menu-row'><span>Sunset</span><strong>{$dayNightSunset}</strong></div><div class='header-daynight-menu-row'><span>Dusk</span><strong>{$dayNightDusk}</strong></div><div class='header-daynight-menu-divider'></div><div class='header-daynight-menu-row'><span>Next Transition</span><strong>{$dayNightNextTransitionTime}</strong></div></div></li></ul></div>";
-$localWebsiteBadgeClass = $useLocalWebsite ? "label-success" : "label-default";
-$localWebsiteBadgeText = $useLocalWebsite ? "Enabled" : "Disabled";
-$remoteWebsiteBadgeClass = $useRemoteWebsite ? "label-success" : "label-default";
-$remoteWebsiteBadgeText = $useRemoteWebsite ? "Enabled" : "Disabled";
-$localWebsiteLink = $useLocalWebsite ? "<a external='true' target='_blank' rel='noopener noreferrer' class='version-title-color' href='allsky/index.php'>View</a>" : "";
-$remoteWebsiteLink = $useRemoteWebsite ? "<a external='true' target='_blank' rel='noopener noreferrer' class='version-title-color' href='{$remoteWebsiteURL}'>View {$remoteWebsiteVersion}</a>" : "";
-$websiteLinksHtml = "<div class='header-status-row'><span class='header-status-row-label'>Local:</span><span class='header-status-row-value'><span class='label {$localWebsiteBadgeClass}'>{$localWebsiteBadgeText}</span> {$localWebsiteLink}</span></div><div class='header-status-row'><span class='header-status-row-label'>Remote:</span><span class='header-status-row-value'><span class='label {$remoteWebsiteBadgeClass}'>{$remoteWebsiteBadgeText}</span> {$remoteWebsiteLink}</span></div>";
-$allskyStatus = output_allsky_status($versionInfoHtml, $websiteLinksHtml);
-
-if ($page == "login") {
-	include_once("includes/login.php");
-	DisplayLoginPage();
-	die();
-}
-	if ($page == "logout") {
-		if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-			header('Allow: POST');
-			http_response_code(405);
-			exit;
-		}
-
-		if (! CSRFValidate()) {
-			http_response_code(403);
-			exit('Invalid CSRF token.');
-		}
-
-		$rememberUser = trim((string)($_SESSION['user'] ?? ''));
-		if (class_exists('RememberMe')) {
-			if ($rememberUser !== '') {
-				RememberMe::revokeAll($rememberUser);
-			} else if ($useLogin) {
-				RememberMe::revokeAll(null);
-			} else {
-				RememberMe::clearCookie();
-			}
-		}
-
-		if (session_status() === PHP_SESSION_ACTIVE) {
-			$_SESSION = [];
-			session_unset();
-
-			if (ini_get('session.use_cookies')) {
-				$params = session_get_cookie_params();
-				setcookie(session_name(), '', [
-					'expires' => time() - 3600,
-					'path' => $params['path'] ?? '/',
-					'domain' => $params['domain'] ?? '',
-					'secure' => (bool)($params['secure'] ?? false),
-					'httponly' => (bool)($params['httponly'] ?? true),
-					'samesite' => $params['samesite'] ?: 'Lax',
-				]);
-			}
-
-			session_destroy();
-		}
-    
-		redirect("index.php?page=login");
-	}
-	if ($page == "editor") {
-		header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
-		header('Pragma: no-cache');
-		header('Expires: 0');
-	}
-	?>
-
-				<!DOCTYPE html>
-				<html lang="en">
-
-				<head>
-					<title><?php echo "$pageTitle - WebUI"; ?></title>
-					<meta charset="utf-8">
-					<meta http-equiv="X-UA-Compatible" content="IE=edge">
-					<meta name="viewport" content="width=device-width, initial-scale=1">
-					<meta name="description" content="Web User Interface (WebUI) for Allsky">
-					<meta name="author" content="Thomas Jacquin, Eric Claey, Alex Greenland">
-					<meta name="csrf-token" content="<?= htmlspecialchars($csrf_token, ENT_QUOTES) ?>">
-
-					<link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
-					<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-					<link rel="shortcut icon" href="/favicon.ico" />
-					<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-					<link rel="manifest" href="/site.webmanifest" />
-
-					<?php
-					echo addAsset([
-						'/js/bootstrap/dist/css/bootstrap.min.css',
-						'allsky/font-awesome/css/all.min.css',
-						'/js/datatables/datatables.min.css',
-						'/css/allsky.css',
-						'/js/jquery/dist/jquery.min.js',
-						'/js/jquery-loading-overlay/dist/loadingoverlay.min.js',
-						'/js/bootstrap/dist/js/bootstrap.min.js',
-						'/js/datatables/datatables.js',
-						'/js/allsky-messages.js',
-						'/js/allsky.js'
-					]);
-
-					insertEditorCode($page);
-					?>
-
-					<script> var allskyPage = '<?php echo $page ?>';  </script>
-				</head>
-
-				<body>
-
-					<!-- Header -->
-					<div class="header">
-						<div class="navbar-brand valign-center">
-							<img id="toggleNav" src="/logo-alt.png" title="Click to minimize/maximize menu bar">
-							<div class="version-title version-title-color">
-								<div id="allskyStatus"><?php echo $allskyStatus; ?></div>
-							</div>
-							<div class="header-daynight version-title version-title-color">
-								<div id="as-daynight-status"><?php echo $dayNightStatusHtml; ?></div>
-							</div>
-						</div>
-					</div>
-
-					<!-- Navigation -->
-					<div class="sidebar" id="sidebar">
-						<ul class="nav nav-pills nav-stacked">
-							<?php
-							if (haveMessages() && !$inlineMessages) {
-								insertMenuItem('messages', "");
-							}
-							insertMenuItem('live_view', "");
-							insertMenuItem('list_days', "");
-							?>
-							<li class="sidebar-dropdown has-flyout">
-								<a href="index.php?page=configuration" class="submenu-toggle"><i class="fa-solid fa-gears"></i><span
-										class="menu-text"> Settings</span></a>
-								<ul class="dropdown-menu">
-									<?php
-									insertMenuItem('configuration', "", "dropdown");
-									insertMenuItem('editor', "", "dropdown");
-									?>
-								</ul>
-							</li>
-							<?php
-							insertMenuItem('overlay', "");
-							insertMenuItem('module', "");
-							insertMenuItem('charts', "");
-							?>
-							<li class="sidebar-dropdown has-flyout">
-								<a href="#" class="submenu-toggle"><i class="fa-solid fa-network-wired"></i><span class="menu-text">
-										Networking</span></a>
-								<ul class="dropdown-menu">
-									<?php
-									insertMenuItem('LAN_info', "", "dropdown");
-									insertMenuItem('WLAN_info', "", "dropdown");
-									insertMenuItem('wifi', "", "dropdown");
-									if (DHCP_ENABLED) {
-										insertMenuItem('dhcp_conf', "", "dropdown");
-									}
-									?>
-								</ul>
-							</li>
-							<li class="sidebar-dropdown has-flyout">
-								<a href="index.php?page=system" class="submenu-toggle"><i class="fa-brands fa-ubuntu"></i><span
-										class="menu-text"> System</span></a>
-								<ul class="dropdown-menu">
-									<?php
-									insertMenuItem('system', "", "dropdown");
-									insertMenuItem('auth_conf', "", "dropdown");
-									?>
-								</ul>
-							</li>
-							<?php
-							insertMenuItem('support', "");
-							?>
-							<li class="sidebar-dropdown has-flyout">
-								<a href="#" class="submenu-toggle"><i class="fa-solid fa-hammer"></i><span class="menu-text"> Helper
-										Tools</span></a>
-								<ul class="dropdown-menu">
-									<?php
-									insertHelperMenuItems();
-									?>
-								</ul>
-							</li>
-							<?php
-							insertMenuItem('documentation', "");
-							?>
-							<li>
-								<span id="as-switch-theme">
-									<i class="fa fa-moon fa-fw"></i>
-									<span class="menu-text"> Light/Dark mode</span>
-								</span>
-							</li>
-							<?php
-							if ($useLogin) {
-								?>
-								<li>
-									<form class="sidebar-logout-form" method="post" action="index.php?page=logout">
-										<input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrf_token, ENT_QUOTES) ?>">
-										<button id="logout" class="sidebar-logout-button" type="submit">
-											<i class="fa fa-right-from-bracket fa-fw"></i>
-											<span class="menu-text"> Logout</span>
-										</button>
-									</form>
-								</li>
-								<?php
-							}
-							?>
-						</ul>
-						<button type="button" id="sidebarCollapseHandle" class="sidebar-collapse-handle"
-							aria-label="Collapse or expand menu">
-							<i class="fa-solid fa-chevron-left"></i>
-						</button>
-					</div>
-
-					<!-- Main content -->
-					<div class="content">
-						<?php
-						if ($inlineMessages) {
-							displayStatusMessages($page);
+				switch ($page) {
+					case "WLAN_info":
+						include_once('includes/dashboard_WLAN.php');
+						DisplayDashboard_WLAN();
+						break;
+					case "LAN_info":
+						include_once('includes/dashboard_LAN.php');
+						DisplayDashboard_LAN();
+						break;
+					case "configuration":
+						include_once('includes/allskySettings.php');
+						DisplayAllskyConfig();
+						break;
+					case "wifi":
+						include_once('includes/configureWiFi.php');
+						DisplayWPAConfig();
+						break;
+					case "dhcp_conf":
+						include_once('includes/dhcp.php');
+						DisplayDHCPConfig();
+						break;
+					case "hostapd_conf":
+						include_once('includes/hostapd.php');
+						DisplayHostAPDConfig();
+						break;
+					case "openvpn_conf":
+						include_once('includes/torAndVPN.php');
+						DisplayTorProxyConfig();
+						DisplayOpenVPNConfig();
+						break;
+					case "torproxy_conf":
+						include_once('includes/torAndVPN.php');
+						DisplayTorProxyConfig();
+						break;
+					case "save_hostapd_conf":
+						SaveTORAndVPNConfig();
+						break;
+					case "auth_conf":
+						include_once('includes/admin.php');
+						DisplayAuthConfig($config['admin_user'], $config['admin_pass']);
+						break;
+					case "system":
+						include_once('includes/system.php');
+						DisplaySystem();
+						break;
+					case "list_days":
+						include_once('includes/days.php');
+						ListDays();
+						break;
+					case "list_images":
+						include_once('includes/images.php');
+						ListImages();
+						break;
+					case "list_videos":
+						// directory, file name prefix, formal name, type of file
+						ListFileType("", "allsky", "Timelapse", "video");
+						break;
+					case "list_keograms":
+						// directory, file name prefix, formal name, type of file
+						ListFileType("keogram/", "keogram", "Keogram", "picture");
+						break;
+					case "list_startrails":
+						// directory, file name prefix, formal name, type of file
+						ListFileType("startrails/", "startrails", "Startrails", "picture");
+						break;
+					// CG list meteors
+					case "list_meteors":
+						include_once('includes/days.php');
+						if (getVariableOrDefault($_GET, 'meteor_status', '') === 'deleted') {
+							echo "<div class='alert alert-success'>Meteor deleted.</div>";
+						} elseif (getVariableOrDefault($_GET, 'meteor_status', '') === 'error') {
+							echo "<div class='alert alert-danger'><b>Unable to delete meteor.</b></div>";
 						}
-						insertPage($page);
-						?>
-					</div>
-					<div id="oe-overlay-manager"></div>
+						// directory, file name prefix, formal name
+						ListMeteors("meteors/", "meteors", "Meteors", "picture");
+						break;
+					// CG
+					case "editor":
+						include_once('includes/editor.php');
+						DisplayEditor();
+						break;
+					case "overlay":
+						include_once('includes/overlay.php');
+						DisplayOverlay($image_name);
+						break;
+					case "module":
+						include_once('includes/module.php');
+						DisplayModule();
+						break;
+					case "support":
+						include_once('includes/support.php');
+						break;
+
+					case "live_view":
+					default:
+						include_once('includes/liveview.php');
+						DisplayLiveView($image_name, $delay, $daydelay, $daydelay_postMsg, $nightdelay, $nightdelay_postMsg, $darkframe);
+				}
+				?>
+			</div>
+		</div>
+	</div><!-- /#page-wrapper -->
+</div><!-- /#wrapper -->
 
 				</body>
 

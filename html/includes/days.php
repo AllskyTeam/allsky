@@ -23,6 +23,44 @@ function delete_directory($directory_name) {
 	return $output;
 }
 
+// CG 2024-06-05: Delete meteor files (thumbnails, images, json) for a given meteor timestamp
+// $meteor data is json file with full path
+function delete_meteor($meteor_json_data) {
+	global $page;
+
+	$datetime = $meteor_json_data;
+	if (! preg_match('/^\d{14}$/', $datetime)) {
+		return "Invalid meteor timestamp.";
+	}
+
+	$date = substr($datetime, 0, 8);
+	$meteor_dir = ALLSKY_IMAGES . "/$date/meteors/";
+	$filename = "meteors-$datetime";
+	$files = array(
+		"$meteor_dir/thumbnails/$filename.jpg",
+		"$meteor_dir/thumbnails/$filename-marked.jpg",
+		"$meteor_dir/$filename.jpg",
+		"$meteor_dir/$filename-marked.jpg",
+		"$meteor_dir/$datetime.json"
+	);
+
+	$output = array();
+	foreach ($files as $file) {
+		$command_output = array();
+		exec("sudo rm -f -- " . escapeshellarg($file) . " 2>&1", $command_output, $command_retval);
+		if ($command_retval !== 0) {
+			$output = array_merge($output, $command_output);
+		}
+	}
+
+	if (! file_exists("$meteor_dir/$datetime.json")) {
+		return empty($output) ? "" : implode("<br>", $output);
+	}
+
+	return "Meteor JSON file was not deleted." . (empty($output) ? "" : "<br>" . implode("<br>", $output));
+}
+// CG
+
 function ListDays(){
 	global $page;
 
@@ -127,6 +165,17 @@ foreach ($days as $day) {
 		echo "none";
 	}
 	echo "</td>\n";
+
+	// CG daily meteors link 
+	echo "\t\t\t<td>";
+	$d = ALLSKY_IMAGES . "/$day/meteors";
+	if (is_dir($d) && count(glob("$d/*.json")) > 0) {
+		echo "<a href='index.php?page=list_meteors&day=$day' title='Meteors'><i class='fa fa-meteor fa-lg fa-fw'></i></a>";
+	} else {
+		echo "none";
+	}
+	echo "</td>\n";
+	// CG
 
 	echo "\t\t\t<td style='padding: 5px'>
 				<button type='submit' data-toggle='confirmation'

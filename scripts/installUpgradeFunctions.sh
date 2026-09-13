@@ -651,7 +651,7 @@ function prepare_local_website()
 
 		# Set permissions on website configuration file
 		if [[ -f "${ALLSKY_WEBSITE_CONFIGURATION_FILE}" ]]; then
-			display_msg --log info "Setting permissions on website configuration file"
+			display_msg --log progress "Setting permissions on website configuration file"
 			sudo chown "${ALLSKY_OWNER}":"${ALLSKY_WEBSERVER_GROUP}" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
 			sudo chmod 664 "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
 		fi

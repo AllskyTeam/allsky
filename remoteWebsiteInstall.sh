@@ -647,7 +647,7 @@ function create_website_config()
 		cp "${REPO_WEBCONFIG_FILE}" "${DEST_FILE}"
 
 		if [[ -f "${DEST_FILE}" ]]; then
-			display_msg --log info "Setting permissions on remote website configuration file"
+			display_msg --log progress "Setting permissions on remote website configuration file"
 			sudo chown "${ALLSKY_OWNER}":"${ALLSKY_WEBSERVER_GROUP}" "${DEST_FILE}"	
 			sudo chmod 664 "${DEST_FILE}"
 		fi

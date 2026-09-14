@@ -259,12 +259,13 @@ function convertLatitude(sc, lat) {			// sc == scope
 		sc.s_latitude = lat;	// string version
 
 		len = lat.length;
+		// If there is an "N" or "S", assume it's the last character on the line.
 		direction = lat.substr(len-1, 1).toUpperCase();
-		if (direction == "N")
-			sc.latitude = lat.substr(0, len-2) * 1;
-		else if (direction == "S")
-			sc.latitude = lat.substr(0, len-2) * -1;
-		else {
+		if (direction == "N") {
+			sc.latitude = parseFloat(lat);
+		} else if (direction == "S") {
+			sc.latitude = -parseFloat(lat);
+		} else {
 			// a number with quotes around it which is treated as a string
 			sc.latitude = lat * 1;
 			convertToString = true;
@@ -275,10 +276,10 @@ function convertLatitude(sc, lat) {			// sc == scope
 	}
 
 	if (convertToString) {
-		if (lat >= 0)
-			sc.s_latitude = lat + "N";
+		if (sc.latitude >= 0)
+			sc.s_latitude = sc.latitude + "N";
 		else
-			sc.s_latitude = -lat + "S";
+			sc.s_latitude = -sc.latitude + "S";
 	}
 
 	return sc.latitude;
@@ -291,13 +292,13 @@ function convertLongitude(sc, lon) {
 	if (typeof lon === "string") {
 		sc.s_longitude = lon;
 
-		len = config.longitude.length;
+		len = lon.length;
 		direction = lon.substr(len-1, 1).toUpperCase();
-		if (direction == "E")
-			sc.longitude = lon.substr(0, len-2) * 1;
-		else if (direction == "W")
-			sc.longitude = lon.substr(0, len-2) * -1;
-		else {
+		if (direction == "E") {
+			sc.longitude = parseFloat(lon);
+		} else if (direction == "W") {
+			sc.longitude = -parseFloat(lon);
+		} else {
 			// a number with quotes around it which is treated as a string
 			sc.longitude = lon * 1;
 			convertToString = true;
@@ -308,10 +309,10 @@ function convertLongitude(sc, lon) {
 	}
 
 	if (convertToString) {
-		if (config.longitude >= 0)
-			sc.s_longitude = lon + "E";
+		if (sc.longitude >= 0)
+			sc.s_longitude = sc.longitude + "E";
 		else
-			sc.s_longitude = -lon + "W";
+			sc.s_longitude = -sc.longitude + "W";
 	}
 
 	return sc.longitude;

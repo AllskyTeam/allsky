@@ -15,6 +15,7 @@ function ListDays()
 	global $page;
 	global $pageHeaderTitle, $pageIcon, $pageHelp;
 	global $fa_size, $fa_size_px;
+	global $useMeteors;
 
 	if (! is_dir(ALLSKY_IMAGES)) {
 		echo "<br><div class='errorMsgBig'>";
@@ -84,6 +85,9 @@ function ListDays()
 						<div class="col-xs-3 text-center days-action-col"><span class="days-grid-label">Timelapse</span></div>
 						<div class="col-xs-2 text-center days-action-col"><span class="days-grid-label">Keogram</span></div>
 						<div class="col-xs-2 text-center days-action-col"><span class="days-grid-label">Startrails</span></div>
+<?php if ($useMeteors) { ?>
+						<div class="col-xs-2 text-center days-action-col"><span class="days-grid-label">Meteors</span></div>
+<?php } ?>
 						<div class="col-xs-2 text-right hidden-xs"></div>
 					</div>
 				</div>
@@ -101,7 +105,10 @@ function ListDays()
 						<div class="col-xs-3 text-center days-action-col"><span class="days-grid-value"><?php insertHref("list_videos", "All"); ?></span></div>
 						<div class="col-xs-2 text-center days-action-col"><span class="days-grid-value"><?php insertHref("list_keograms", "All"); ?></span></div>
 						<div class="col-xs-2 text-center days-action-col"><span class="days-grid-value"><?php insertHref("list_startrails", "All"); ?></span></div>
-						<div class="col-xs-2 text-right hidden-xs"><span class="days-grid-value"><span title="You cannot delete All files at once.">-</span></span></div>
+<?php if ($useMeteors) { ?>
+						<div class="col-xs-2 text-center days-action-col"><span class="days-grid-value"><?php insertHref("list_meteors", "All"); ?></span></div>
+<?php } ?>
+						<div class="col-xs-2 text-center hidden-xs"><span class="days-grid-value"><span title="You cannot delete All files at once.">-</span></span></div>
 					</div>
 				</div>
 			</div>
@@ -118,7 +125,14 @@ foreach ($days as $day) {
 	$has_keogram = is_dir(ALLSKY_IMAGES . "/$day/keogram");
 	$has_startrails = is_dir(ALLSKY_IMAGES . "/$day/startrails");
 
-	if (! $has_images && ! $has_timelapse && ! $has_keogram && ! $has_startrails) {
+	// It's very possible there will be no meteor files
+	$has_meteors = is_dir(ALLSKY_IMAGES . "/$day/meteors");
+	if ($has_meteors) {
+		$i = getValidImageNames(ALLSKY_IMAGES . "/$day/meteors", true);	// true == stop after 1
+		$has_meteors = (count($i) > 0);
+	}
+
+	if (! $has_images && ! $has_timelapse && ! $has_keogram && ! $has_startrails && ! $has_meteors) {
 		echo "<script>console.log('Directory \"$day\" has no images, timelapse, et.al.; ignoring.');</script>";
 		continue;
 	}
@@ -177,6 +191,15 @@ foreach ($days as $day) {
 	}
 	$startrailsHtml = ob_get_clean();
 
+	ob_start();
+	if ($has_meteors) {
+# TODO: create and use meteor thumbnails.
+		insertHref("list_meteors", $day);
+	} else {
+		echo "none";
+	}
+	$meteorsHtml = ob_get_clean();
+
 	$deleteHtml = "
 				<button type='submit' data-toggle='confirmation'
 					class='btn btn-danger btn-sm' name='delete_directory' value='$day'>
@@ -193,6 +216,9 @@ foreach ($days as $day) {
 	echo "        <div class='col-xs-3 text-center days-action-col'><span class='days-grid-value'>$timelapseHtml</span></div>\n";
 	echo "        <div class='col-xs-2 text-center days-action-col'><span class='days-grid-value'>$keogramHtml</span></div>\n";
 	echo "        <div class='col-xs-2 text-center days-action-col'><span class='days-grid-value'>$startrailsHtml</span></div>\n";
+	if ($useMeteors) {
+		echo "        <div class='col-xs-2 text-center days-action-col'><span class='days-grid-value'>$meteorsHtml</span></div>\n";
+	}
 	echo "        <div class='col-xs-2 text-right hidden-xs'><span class='days-grid-value'>$deleteHtml</span></div>\n";
 	echo "      </div>\n";
 	echo "    </div>\n";

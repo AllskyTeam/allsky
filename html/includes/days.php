@@ -5,6 +5,9 @@ if (basename(__FILE__) === basename($_SERVER['SCRIPT_FILENAME'])) {
     redirect("/index.php");
 }
 
+# List meteors for a given day.
+
+
 function ListDays()
 {
 
@@ -126,10 +129,18 @@ foreach ($days as $day) {
 	$has_startrails = is_dir(ALLSKY_IMAGES . "/$day/startrails");
 
 	// It's very possible there will be no meteor files
-	$has_meteors = is_dir(ALLSKY_IMAGES . "/$day/meteors");
-	if ($has_meteors) {
-		$i = getValidImageNames(ALLSKY_IMAGES . "/$day/meteors", true);	// true == stop after 1
-		$has_meteors = (count($i) > 0);
+	$meteorDir = ALLSKY_IMAGES . "/$day/meteors";
+	$has_meteors = false;
+	if (is_dir($meteorDir)) {
+		$meteorFiles = @scandir($meteorDir);
+		if ($meteorFiles !== false) {
+			foreach ($meteorFiles as $meteorFile) {
+				if (is_file($meteorDir . "/$meteorFile") && isListFileTypeSupportedFile($meteorFile, "picture")) {
+					$has_meteors = true;
+					break;
+				}
+			}
+		}
 	}
 
 	if (! $has_images && ! $has_timelapse && ! $has_keogram && ! $has_startrails && ! $has_meteors) {

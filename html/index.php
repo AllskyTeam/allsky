@@ -22,7 +22,9 @@ $formReadonly = false;				// The WebUI isn't readonly
 $ME = htmlspecialchars($_SERVER["PHP_SELF"]);
 
 // TODO: Implement
-$useMeteors = false;
+$useMeteors = true;
+$useMeteorMetadata = true;
+$useMeteorsMarked = true;
 
 // functions.php sets a bunch of constants and variables.
 include_once('includes/functions.php');
@@ -130,6 +132,8 @@ $pageInfo = [
 		"title" => "Meteors",
 		"icon" => "fa fa-meteor fa-" . $fa_size . " fa-fw",
 		"AllTitle" => "All Meteors",
+		// TODO: Add help documentation
+		"help" => "docs/allsky_guide/using/meteors.html"
 	],
 	"configuration" => [
 		"title" => "Allsky Settings",

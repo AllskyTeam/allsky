@@ -109,7 +109,7 @@ function ListDays()
 						<div class="col-xs-2 text-center days-action-col"><span class="days-grid-value"><?php insertHref("list_keograms", "All"); ?></span></div>
 						<div class="col-xs-2 text-center days-action-col"><span class="days-grid-value"><?php insertHref("list_startrails", "All"); ?></span></div>
 <?php if ($useMeteors) { ?>
-						<div class="col-xs-2 text-center days-action-col"><span class="days-grid-value"><?php insertHref("list_meteors", "All"); ?></span></div>
+						<div class="col-xs-2 text-center days-action-col"><span class="days-grid-value"><span title="View meteors one day at a time.">-</span></span></div>
 <?php } ?>
 						<div class="col-xs-2 text-center hidden-xs"><span class="days-grid-value"><span title="You cannot delete All files at once.">-</span></span></div>
 					</div>

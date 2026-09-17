@@ -103,7 +103,8 @@ function ListMeteors($aDay = null)
 		return;
 	}
 
-	echo "<div class='table-responsive'><table class='table table-striped table-hover'><thead><tr>";
+	echo "<style>.meteors-table td, .meteors-table th { vertical-align: middle; }.meteors-table img { max-width: 100px; height: auto; }</style>";
+	echo "<div class='table-responsive'><table class='table table-striped table-hover meteors-table'><thead><tr>";
 	echo "<th>Day</th><th>Time</th><th>Meteor(s)</th>";
 	if ($useMeteorsMarked) {
 		echo "<th>Marked</th>";
@@ -154,12 +155,12 @@ function ListMeteors($aDay = null)
 				echo '<td rowspan="' . $rowCount . '">' . htmlspecialchars($day, ENT_QUOTES) . '</td>';
 				echo '<td rowspan="' . $rowCount . '">' . htmlspecialchars(substr($meteor['time'], 0, 2) . ':' . substr($meteor['time'], 2, 2) . ':' . substr($meteor['time'], 4, 2), ENT_QUOTES) . '</td>';
 				echo '<td rowspan="' . $rowCount . '"><a href="' . htmlspecialchars($imageUrl, ENT_QUOTES) . '" data-lg-size="' . htmlspecialchars($lightboxSize, ENT_QUOTES) . '">';
-				echo '<img src="' . htmlspecialchars($thumbnailUrl, ENT_QUOTES) . '" alt="' . htmlspecialchars($name, ENT_QUOTES) . '" loading="lazy" width="100" height="100"></a></td>';
+				echo '<img src="' . htmlspecialchars($thumbnailUrl, ENT_QUOTES) . '" alt="' . htmlspecialchars($name, ENT_QUOTES) . '" loading="lazy" width="100"></a></td>';
 				if ($useMeteorsMarked) {
 					echo '<td rowspan="' . $rowCount . '">';
 					if ($markedExists) {
 						echo '<a href="' . htmlspecialchars($markedImageUrl, ENT_QUOTES) . '" data-lg-size="' . htmlspecialchars(getLightboxSizeAttribute($markedImagePath), ENT_QUOTES) . '">';
-						echo '<img src="' . htmlspecialchars($markedThumbnailUrl, ENT_QUOTES) . '" alt="' . htmlspecialchars($markedName, ENT_QUOTES) . '" loading="lazy" width="100" height="100"></a>';
+						echo '<img src="' . htmlspecialchars($markedThumbnailUrl, ENT_QUOTES) . '" alt="' . htmlspecialchars($markedName, ENT_QUOTES) . '" loading="lazy" width="100"></a>';
 					} else {
 						echo '-';
 					}
@@ -179,9 +180,13 @@ function ListMeteors($aDay = null)
 				$showersHtml = count($showers) > 0 ? implode('<br>', array_map(function ($shower) { return htmlspecialchars((string)$shower, ENT_QUOTES); }, $showers)) : '-';
 				$radiant = $metadataItem['radiant'] ?? '-';
 				$radiantText = is_array($radiant) ? implode(',', array_map('strval', $radiant)) : (string)$radiant;
-				echo "<td>L=$length<br>A=$angle<br>E=$elong<br>P=$peak</td>";
-				echo '<td>P1=' . htmlspecialchars($p1, ENT_QUOTES) . '<br>P2=' . htmlspecialchars($p2, ENT_QUOTES) . '</td>';
-				echo '<td>Fn=' . $fragN . '<br>Fe=' . $fragExt . '</td>';
+				$p1Parts = is_array($metadataItem['p1'] ?? null) ? array_map('strval', $metadataItem['p1']) : [];
+				$p2Parts = is_array($metadataItem['p2'] ?? null) ? array_map('strval', $metadataItem['p2']) : [];
+				$p1 = count($p1Parts) >= 2 ? $p1Parts[0] . ', ' . $p1Parts[1] : '-';
+				$p2 = count($p2Parts) >= 2 ? $p2Parts[0] . ', ' . $p2Parts[1] : '-';
+				echo "<td>Len = $length<br>Ang = $angle<br>Elong = $elong<br>Peak = $peak</td>";
+				echo '<td>P1 = (' . htmlspecialchars($p1, ENT_QUOTES) . ')<br>P2 = (' . htmlspecialchars($p2, ENT_QUOTES) . ')</td>';
+				echo '<td>Num = ' . $fragN . '<br>Ext = ' . $fragExt . '</td>';
 				echo '<td>' . $showersHtml . '</td><td>' . htmlspecialchars($radiantText === '' ? '-' : $radiantText, ENT_QUOTES) . '</td>';
 			}
 			if ($metadataIndex === 0) {

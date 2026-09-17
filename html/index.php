@@ -439,8 +439,8 @@ function insertPage($p)
 			ListFileType("startrails/", "startrails", "Startrails", "picture");
 			break;
 		case "list_meteors":
-			// directory, file name prefix, formal name, type of file
-			ListFileType("meteors/", "meteors", "Meteors", "picture");
+			include_once("includes/meteors.php");
+			ListMeteors(getVariableOrDefault($_REQUEST, 'day', ''));
 			break;
 		case "configuration":
 			include_once("includes/allskySettings.php");

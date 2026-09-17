@@ -7,7 +7,7 @@ if (basename(__FILE__) === basename($_SERVER['SCRIPT_FILENAME'])) {
 
 function ListMeteors($aDay = null)
 {
-	global $pageIcon, $pageHelp;
+	global $pageIcon, $pageHelp, $useMeteorsMarked;
 
 	$day = $aDay === null ? (string) getVariableOrDefault($_REQUEST, 'day', '') : (string) $aDay;
 	if (!preg_match('/^\d{8}$/', $day)) {
@@ -17,6 +17,41 @@ function ListMeteors($aDay = null)
 	}
 
 	$meteorDirectory = ALLSKY_IMAGES . "/$day/meteors";
+	$thumbnailDirectory = $meteorDirectory . "/thumbnails";
+	$deleteMessage = '';
+	$deleteType = 'success';
+	$deleteName = (string) getVariableOrDefault($_POST, 'delete_meteor', '');
+	if ($deleteName !== '') {
+		if (!CSRFValidate()) {
+			$deleteMessage = 'Unable to delete meteor: invalid CSRF token.';
+			$deleteType = 'danger';
+		} else if (!preg_match('/^meteors-' . $day . '\d{6}\.(jpg|png)$/i', $deleteName)) {
+			$deleteMessage = 'Unable to delete meteor: invalid file name.';
+			$deleteType = 'danger';
+		} else {
+			$baseName = pathinfo($deleteName, PATHINFO_FILENAME);
+			$extension = pathinfo($deleteName, PATHINFO_EXTENSION);
+			$markedName = $baseName . '-marked.' . $extension;
+			$filesToDelete = [
+				$meteorDirectory . '/' . $deleteName,
+				$thumbnailDirectory . '/' . $deleteName,
+				$meteorDirectory . '/' . $markedName,
+				$thumbnailDirectory . '/' . $markedName,
+				$meteorDirectory . '/' . $baseName . '.json',
+			];
+			$deletedFiles = 0;
+			foreach ($filesToDelete as $fileToDelete) {
+				if (is_file($fileToDelete) && @unlink($fileToDelete)) {
+					$deletedFiles++;
+				}
+			}
+			$deleteMessage = $deletedFiles > 0 ? "Deleted meteor $deleteName." : "Meteor $deleteName was not found.";
+			if ($deletedFiles === 0) {
+				$deleteType = 'warning';
+			}
+		}
+	}
+
 	$meteorFiles = [];
 	if (is_dir($meteorDirectory)) {
 		$files = scandir($meteorDirectory);
@@ -49,6 +84,9 @@ function ListMeteors($aDay = null)
 	}
 	echo "</div><div class='panel-body'>";
 	echo "<div class='functions-listfiletype-back'><a href='javascript:history.back()' class='btn btn-default'><i class='fa fa-arrow-left'></i> Back</a></div>";
+	if ($deleteMessage !== '') {
+		echo "<div class='alert alert-" . htmlspecialchars($deleteType, ENT_QUOTES) . "'>" . htmlspecialchars($deleteMessage, ENT_QUOTES) . "</div>";
+	}
 
 	if (count($meteorFiles) === 0) {
 		echo "<div class='as-wifi-placeholder as-wifi-placeholder-error functions-listfiletype-error'>";
@@ -61,11 +99,22 @@ function ListMeteors($aDay = null)
 
 	echo "<div class='table-responsive'><table class='table table-striped table-hover'><thead><tr>";
 	echo "<th>Day</th><th>Time</th><th>Thumbnail</th>";
+	if ($useMeteorsMarked) {
+		echo "<th>Marked</th>";
+	}
+	echo "<th>Delete</th>";
 	echo "</tr></thead><tbody>";
 	foreach ($meteorFiles as $meteor) {
 		$name = $meteor['name'];
+		$baseName = pathinfo($name, PATHINFO_FILENAME);
+		$extension = pathinfo($name, PATHINFO_EXTENSION);
+		$markedName = $baseName . '-marked.' . $extension;
 		$imageUrl = '/images/' . rawurlencode($day) . '/meteors/' . rawurlencode($name);
 		$thumbnailUrl = '/images/' . rawurlencode($day) . '/meteors/thumbnails/' . rawurlencode($name);
+		$markedImagePath = $meteorDirectory . '/' . $markedName;
+		$markedExists = is_file($markedImagePath);
+		$markedImageUrl = '/images/' . rawurlencode($day) . '/meteors/' . rawurlencode($markedName);
+		$markedThumbnailUrl = '/images/' . rawurlencode($day) . '/meteors/thumbnails/' . rawurlencode($markedName);
 		$lightboxSize = getLightboxSizeAttribute($meteorDirectory . '/' . $name);
 
 		echo '<tr>';
@@ -73,7 +122,22 @@ function ListMeteors($aDay = null)
 		echo '<td>' . htmlspecialchars(substr($meteor['time'], 0, 2) . ':' . substr($meteor['time'], 2, 2) . ':' . substr($meteor['time'], 4, 2), ENT_QUOTES) . '</td>';
 		echo '<td><a href="' . htmlspecialchars($imageUrl, ENT_QUOTES) . '" data-lg-size="' . htmlspecialchars($lightboxSize, ENT_QUOTES) . '">';
 		echo '<img src="' . htmlspecialchars($thumbnailUrl, ENT_QUOTES) . '" alt="' . htmlspecialchars($name, ENT_QUOTES) . '" loading="lazy" width="100" height="100">';
-		echo '</a></td></tr>';
+		echo '</a></td>';
+		if ($useMeteorsMarked) {
+			echo '<td>';
+			if ($markedExists) {
+				echo '<a href="' . htmlspecialchars($markedImageUrl, ENT_QUOTES) . '" data-lg-size="' . htmlspecialchars(getLightboxSizeAttribute($markedImagePath), ENT_QUOTES) . '">';
+				echo '<img src="' . htmlspecialchars($markedThumbnailUrl, ENT_QUOTES) . '" alt="' . htmlspecialchars($markedName, ENT_QUOTES) . '" loading="lazy" width="100" height="100">';
+				echo '</a>';
+			} else {
+				echo '-';
+			}
+			echo '</td>';
+		}
+		echo '<td><form method="post" action="index.php?page=list_meteors&amp;day=' . rawurlencode($day) . '" onsubmit="return confirm(\'Delete this meteor and its related files?\');">';
+		echo '<input type="hidden" name="delete_meteor" value="' . htmlspecialchars($name, ENT_QUOTES) . '">';
+		CSRFToken();
+		echo '<button type="submit" class="btn btn-danger btn-sm" title="Delete meteor"><i class="fa fa-trash"></i></button></form></td></tr>';
 	}
 	echo '</tbody></table></div></div></div>';
 

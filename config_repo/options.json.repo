@@ -2166,6 +2166,32 @@
 "carryforward" : true
 },
 {
+"name" : "usemeteors",
+"default" : false,
+"description" : "Enable the <span class='WebUIWebPage'>Meteors</span> listing in the day view.",
+"label" : "Use Meteors",
+"type" : "boolean",
+"carryforward" : true
+},
+{
+"name" : "usemeteorsmarked",
+"default" : false,
+"description" : "Show marked meteor images in the <span class='WebUIWebPage'>Meteors</span> listing.",
+"label" : "Use Marked Meteors",
+"type" : "boolean",
+"carryforward" : true,
+"booldependson" : "usemeteors"
+},
+{
+"name" : "usemetadatameteors",
+"default" : false,
+"description" : "Show meteor metadata columns from the associated JSON files in the <span class='WebUIWebPage'>Meteors</span> listing.",
+"label" : "Use Meteor Metadata",
+"type" : "boolean",
+"carryforward" : true,
+"booldependson" : "usemeteors"
+},
+{
 "name" : "fieldhelpdelay",
 "minimum" : 0,
 "maximum" : 60000,

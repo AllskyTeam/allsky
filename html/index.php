@@ -21,14 +21,17 @@ $lastChangedName = "lastchanged";	// json setting name
 $formReadonly = false;				// The WebUI isn't readonly
 $ME = htmlspecialchars($_SERVER["PHP_SELF"]);
 
-// TODO: Implement
-$useMeteors = true;
-$useMeteorMetadata = true;
-$useMeteorsMarked = true;
+// Meteor listing features are disabled by default for existing installations.
+//$useMeteors = false;
+//$useMeteorMetadata = false;
+//$useMeteorsMarked = false;
 
 // functions.php sets a bunch of constants and variables.
 include_once('includes/functions.php');
 initialize_variables();		// sets some variables
+$useMeteors = toBool((string) getVariableOrDefault($settings_array, 'usemeteors', 'false'));
+$useMeteorMetadata = toBool((string) getVariableOrDefault($settings_array, 'usemetadatameteors', 'false'));
+$useMeteorsMarked = toBool((string) getVariableOrDefault($settings_array, 'usemeteorsmarked', 'false'));
 $csrf_token = useLogin();
 $page = getVariableOrDefault($_REQUEST, 'page', "live_view");
 include_once('includes/authenticate.php');

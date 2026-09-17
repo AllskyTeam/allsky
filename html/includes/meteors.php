@@ -127,14 +127,20 @@ function ListMeteors($aDay = null)
 		$lightboxSize = getLightboxSizeAttribute($meteorDirectory . '/' . $name);
 		$metadata = [];
 		if ($useMeteorMetadata) {
-			$metadataPath = $meteorDirectory . '/' . $baseName . '.json';
-			if (is_file($metadataPath)) {
-				$metadataContents = file_get_contents($metadataPath);
-				if ($metadataContents !== false) {
-					$metadataContents = preg_replace('/^\xEF\xBB\xBF/', '', $metadataContents);
-					$decodedMetadata = json_decode($metadataContents, true);
-					if (is_array($decodedMetadata)) {
-						$metadata = array_values(array_filter($decodedMetadata, 'is_array'));
+			$metadataPaths = [
+				$meteorDirectory . '/' . $baseName . '.json',
+				$meteorDirectory . '/' . $day . $meteor['time'] . '.json',
+			];
+			foreach ($metadataPaths as $metadataPath) {
+				if (is_file($metadataPath)) {
+					$metadataContents = file_get_contents($metadataPath);
+					if ($metadataContents !== false) {
+						$metadataContents = preg_replace('/^\xEF\xBB\xBF/', '', $metadataContents);
+						$decodedMetadata = json_decode($metadataContents, true);
+						if (is_array($decodedMetadata)) {
+							$metadata = array_values(array_filter($decodedMetadata, 'is_array'));
+							break;
+						}
 					}
 				}
 			}

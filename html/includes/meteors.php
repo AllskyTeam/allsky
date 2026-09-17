@@ -130,9 +130,12 @@ function ListMeteors($aDay = null)
 			$metadataPath = $meteorDirectory . '/' . $baseName . '.json';
 			if (is_file($metadataPath)) {
 				$metadataContents = file_get_contents($metadataPath);
-				$decodedMetadata = json_decode($metadataContents, true);
-				if (is_array($decodedMetadata)) {
-					$metadata = array_values(array_filter($decodedMetadata, 'is_array'));
+				if ($metadataContents !== false) {
+					$metadataContents = preg_replace('/^\xEF\xBB\xBF/', '', $metadataContents);
+					$decodedMetadata = json_decode($metadataContents, true);
+					if (is_array($decodedMetadata)) {
+						$metadata = array_values(array_filter($decodedMetadata, 'is_array'));
+					}
 				}
 			}
 		}

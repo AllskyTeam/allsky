@@ -39,15 +39,21 @@ function ListMeteors($aDay = null)
 				$thumbnailDirectory . '/' . $markedName,
 				$meteorDirectory . '/' . $baseName . '.json',
 			];
-			$deletedFiles = 0;
-			foreach ($filesToDelete as $fileToDelete) {
-				if (is_file($fileToDelete) && @unlink($fileToDelete)) {
-					$deletedFiles++;
-				}
-			}
-			$deleteMessage = $deletedFiles > 0 ? "Deleted meteor $deleteName." : "Meteor $deleteName was not found.";
-			if ($deletedFiles === 0) {
+			$existingFiles = array_filter($filesToDelete, 'is_file');
+			if (count($existingFiles) === 0) {
+				$deleteMessage = "Meteor $deleteName was not found in $meteorDirectory.";
 				$deleteType = 'warning';
+			} else {
+				$command = 'sudo rm -f ' . implode(' ', array_map('escapeshellarg', $existingFiles));
+				$output = [];
+				$returnCode = 0;
+				exec($command . ' 2>&1', $output, $returnCode);
+				if ($returnCode === 0) {
+					$deleteMessage = "Deleted meteor $deleteName.";
+				} else {
+					$deleteMessage = 'Unable to delete meteor: ' . implode(' ', $output);
+					$deleteType = 'danger';
+				}
 			}
 		}
 	}

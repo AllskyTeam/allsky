@@ -103,7 +103,7 @@ function ListMeteors($aDay = null)
 		return;
 	}
 
-	echo "<style>.meteors-table td, .meteors-table th { vertical-align: middle; }.meteors-table img { max-width: 100px; height: auto; }</style>";
+	echo "<style>.meteors-table th, .meteors-table td, .meteors-table td form { vertical-align: middle; }.meteors-table td { vertical-align: middle !important; }.meteors-table img { max-width: 100px; height: auto; }</style>";
 	echo "<div class='table-responsive'><table class='table table-striped table-hover meteors-table'><thead><tr>";
 	echo "<th>Day</th><th>Time</th><th>Meteor(s)</th>";
 	if ($useMeteorsMarked) {

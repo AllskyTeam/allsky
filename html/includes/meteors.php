@@ -7,7 +7,7 @@ if (basename(__FILE__) === basename($_SERVER['SCRIPT_FILENAME'])) {
 
 function ListMeteors($aDay = null)
 {
-	global $pageIcon, $pageHelp, $useMeteorsMarked;
+	global $pageIcon, $pageHelp, $useMeteorsMarked, $useMeteorMetadata;
 
 	$day = $aDay === null ? (string) getVariableOrDefault($_REQUEST, 'day', '') : (string) $aDay;
 	if (!preg_match('/^\d{8}$/', $day)) {
@@ -104,9 +104,12 @@ function ListMeteors($aDay = null)
 	}
 
 	echo "<div class='table-responsive'><table class='table table-striped table-hover'><thead><tr>";
-	echo "<th>Day</th><th>Time</th><th>Thumbnail</th>";
+	echo "<th>Day</th><th>Time</th><th>Meteor(s)</th>";
 	if ($useMeteorsMarked) {
 		echo "<th>Marked</th>";
+	}
+	if ($useMeteorMetadata) {
+		echo "<th>Meteor</th><th>Position</th><th>Frag</th><th>Showers</th><th>Radiant</th>";
 	}
 	echo "<th>Delete</th>";
 	echo "</tr></thead><tbody>";
@@ -122,28 +125,64 @@ function ListMeteors($aDay = null)
 		$markedImageUrl = '/images/' . rawurlencode($day) . '/meteors/' . rawurlencode($markedName);
 		$markedThumbnailUrl = '/images/' . rawurlencode($day) . '/meteors/thumbnails/' . rawurlencode($markedName);
 		$lightboxSize = getLightboxSizeAttribute($meteorDirectory . '/' . $name);
-
-		echo '<tr>';
-		echo '<td>' . htmlspecialchars($day, ENT_QUOTES) . '</td>';
-		echo '<td>' . htmlspecialchars(substr($meteor['time'], 0, 2) . ':' . substr($meteor['time'], 2, 2) . ':' . substr($meteor['time'], 4, 2), ENT_QUOTES) . '</td>';
-		echo '<td><a href="' . htmlspecialchars($imageUrl, ENT_QUOTES) . '" data-lg-size="' . htmlspecialchars($lightboxSize, ENT_QUOTES) . '">';
-		echo '<img src="' . htmlspecialchars($thumbnailUrl, ENT_QUOTES) . '" alt="' . htmlspecialchars($name, ENT_QUOTES) . '" loading="lazy" width="100" height="100">';
-		echo '</a></td>';
-		if ($useMeteorsMarked) {
-			echo '<td>';
-			if ($markedExists) {
-				echo '<a href="' . htmlspecialchars($markedImageUrl, ENT_QUOTES) . '" data-lg-size="' . htmlspecialchars(getLightboxSizeAttribute($markedImagePath), ENT_QUOTES) . '">';
-				echo '<img src="' . htmlspecialchars($markedThumbnailUrl, ENT_QUOTES) . '" alt="' . htmlspecialchars($markedName, ENT_QUOTES) . '" loading="lazy" width="100" height="100">';
-				echo '</a>';
-			} else {
-				echo '-';
+		$metadata = [];
+		if ($useMeteorMetadata) {
+			$metadataPath = $meteorDirectory . '/' . $baseName . '.json';
+			if (is_file($metadataPath)) {
+				$metadataContents = file_get_contents($metadataPath);
+				$decodedMetadata = json_decode($metadataContents, true);
+				if (is_array($decodedMetadata)) {
+					$metadata = array_values(array_filter($decodedMetadata, 'is_array'));
+				}
 			}
-			echo '</td>';
 		}
-		echo '<td><form method="post" action="index.php?page=list_meteors&amp;day=' . rawurlencode($day) . '" onsubmit="return confirm(\'Delete this meteor and its related files?\');">';
-		echo '<input type="hidden" name="delete_meteor" value="' . htmlspecialchars($name, ENT_QUOTES) . '">';
-		CSRFToken();
-		echo '<button type="submit" class="btn btn-danger btn-sm" title="Delete meteor"><i class="fa fa-trash"></i></button></form></td></tr>';
+		$rowCount = max(1, count($metadata));
+
+		for ($metadataIndex = 0; $metadataIndex < $rowCount; $metadataIndex++) {
+			$metadataItem = $metadata[$metadataIndex] ?? [];
+			echo '<tr>';
+			if ($metadataIndex === 0) {
+				echo '<td rowspan="' . $rowCount . '">' . htmlspecialchars($day, ENT_QUOTES) . '</td>';
+				echo '<td rowspan="' . $rowCount . '">' . htmlspecialchars(substr($meteor['time'], 0, 2) . ':' . substr($meteor['time'], 2, 2) . ':' . substr($meteor['time'], 4, 2), ENT_QUOTES) . '</td>';
+				echo '<td rowspan="' . $rowCount . '"><a href="' . htmlspecialchars($imageUrl, ENT_QUOTES) . '" data-lg-size="' . htmlspecialchars($lightboxSize, ENT_QUOTES) . '">';
+				echo '<img src="' . htmlspecialchars($thumbnailUrl, ENT_QUOTES) . '" alt="' . htmlspecialchars($name, ENT_QUOTES) . '" loading="lazy" width="100" height="100"></a></td>';
+				if ($useMeteorsMarked) {
+					echo '<td rowspan="' . $rowCount . '">';
+					if ($markedExists) {
+						echo '<a href="' . htmlspecialchars($markedImageUrl, ENT_QUOTES) . '" data-lg-size="' . htmlspecialchars(getLightboxSizeAttribute($markedImagePath), ENT_QUOTES) . '">';
+						echo '<img src="' . htmlspecialchars($markedThumbnailUrl, ENT_QUOTES) . '" alt="' . htmlspecialchars($markedName, ENT_QUOTES) . '" loading="lazy" width="100" height="100"></a>';
+					} else {
+						echo '-';
+					}
+					echo '</td>';
+				}
+			}
+			if ($useMeteorMetadata) {
+				$length = htmlspecialchars((string)($metadataItem['length'] ?? '-'), ENT_QUOTES);
+				$angle = htmlspecialchars((string)($metadataItem['angle'] ?? '-'), ENT_QUOTES);
+				$elong = htmlspecialchars((string)($metadataItem['elong'] ?? '-'), ENT_QUOTES);
+				$peak = htmlspecialchars((string)($metadataItem['peak'] ?? '-'), ENT_QUOTES);
+				$p1 = is_array($metadataItem['p1'] ?? null) ? implode(',', array_map('strval', $metadataItem['p1'])) : '-';
+				$p2 = is_array($metadataItem['p2'] ?? null) ? implode(',', array_map('strval', $metadataItem['p2'])) : '-';
+				$fragN = htmlspecialchars((string)($metadataItem['frag_n'] ?? '-'), ENT_QUOTES);
+				$fragExt = htmlspecialchars((string)($metadataItem['frag_ext'] ?? '-'), ENT_QUOTES);
+				$showers = is_array($metadataItem['showers'] ?? null) ? $metadataItem['showers'] : [];
+				$showersHtml = count($showers) > 0 ? implode('<br>', array_map(function ($shower) { return htmlspecialchars((string)$shower, ENT_QUOTES); }, $showers)) : '-';
+				$radiant = $metadataItem['radiant'] ?? '-';
+				$radiantText = is_array($radiant) ? implode(',', array_map('strval', $radiant)) : (string)$radiant;
+				echo "<td>L=$length<br>A=$angle<br>E=$elong<br>P=$peak</td>";
+				echo '<td>P1=' . htmlspecialchars($p1, ENT_QUOTES) . '<br>P2=' . htmlspecialchars($p2, ENT_QUOTES) . '</td>';
+				echo '<td>Fn=' . $fragN . '<br>Fe=' . $fragExt . '</td>';
+				echo '<td>' . $showersHtml . '</td><td>' . htmlspecialchars($radiantText === '' ? '-' : $radiantText, ENT_QUOTES) . '</td>';
+			}
+			if ($metadataIndex === 0) {
+				echo '<td rowspan="' . $rowCount . '"><form method="post" action="index.php?page=list_meteors&amp;day=' . rawurlencode($day) . '" onsubmit="return confirm(\'Delete this meteor and its related files?\');">';
+				echo '<input type="hidden" name="delete_meteor" value="' . htmlspecialchars($name, ENT_QUOTES) . '">';
+				CSRFToken();
+				echo '<button type="submit" class="btn btn-danger btn-sm" title="Delete meteor"><i class="fa fa-trash"></i></button></form></td>';
+			}
+			echo '</tr>';
+		}
 	}
 	echo '</tbody></table></div></div></div>';
 

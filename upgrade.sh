@@ -245,57 +245,59 @@ if [[ ${ACTION} == "upgrade" ]]; then
 	fi
 	check_for_current
 
-	# Ask user how they want to upgrade.
-	MSG="\n"
-	MSG+="There are two ways to upgrade Allsky:"
-	MSG+="\n"
-	MSG+="\n1. ${METHOD_IN_PLACE}"
-	MSG+="\n   This overwrites existing Allsky files on your Pi that have been"
-	MSG+="\n   updated in GitHub, and is the preferred method for POINT RELEASES or"
-	MSG+="\n   unless the Allsky Team suggests the method below."
-	if [[ -d ${ALLSKY_PRIOR_DIR} ]]; then
-		MSG+="\n   It does not use or update ${ALLSKY_PRIOR_DIR}."
-	fi
-	MSG+="\n   NOTE: If you have changed any Allsky source files this method"
-	MSG+="\n   will not work."
-	MSG+="\n"
-	MSG+="\n2. ${METHOD_REPLACE_ALL}"
-	MSG+="\n   This moves '${ALLSKY_HOME}' to '${ALLSKY_PRIOR_DIR}' then"
-	MSG+="\n   recreates '${ALLSKY_HOME}' with the newest release from GitHub."
-	MSG+="\n   It is safer than the method above but takes longer, and"
-	MSG+="\n   is the preferred method for MAJOR updates or when you don't want"
-	MSG+="\n   to overwrite the current release."
-	MSG+="\n \nPick the upgrade method:"
+	if [[ -z ${CHOSEN_METHOD} ]]; then
+		# Ask user how they want to upgrade.
+		MSG="\n"
+		MSG+="There are two ways to upgrade Allsky:"
+		MSG+="\n"
+		MSG+="\n1. ${METHOD_IN_PLACE}"
+		MSG+="\n   This overwrites existing Allsky files on your Pi that have been"
+		MSG+="\n   updated in GitHub, and is the preferred method for POINT RELEASES or"
+		MSG+="\n   unless the Allsky Team suggests the method below."
+		if [[ -d ${ALLSKY_PRIOR_DIR} ]]; then
+			MSG+="\n   It does not use or update ${ALLSKY_PRIOR_DIR}."
+		fi
+		MSG+="\n   NOTE: If you have changed any Allsky source files this method"
+		MSG+="\n   will not work."
+		MSG+="\n"
+		MSG+="\n2. ${METHOD_REPLACE_ALL}"
+		MSG+="\n   This moves '${ALLSKY_HOME}' to '${ALLSKY_PRIOR_DIR}' then"
+		MSG+="\n   recreates '${ALLSKY_HOME}' with the newest release from GitHub."
+		MSG+="\n   It is safer than the method above but takes longer, and"
+		MSG+="\n   is the preferred method for MAJOR updates or when you don't want"
+		MSG+="\n   to overwrite the current release."
+		MSG+="\n \nPick the upgrade method:"
 
-	HEIGHT="$( echo -e "${MSG}" | wc -l )"
-	(( HEIGHT += 10 ))
+		HEIGHT="$( echo -e "${MSG}" | wc -l )"
+		(( HEIGHT += 10 ))
 
-	dialog \
-		--title "${SHORT_TITLE}" --msgbox "${MSG}" \
-		"${HEIGHT}" "${T_WIDTH}"   3>&1 1>&2 2>&3
-	if [[ $? -ne 0 ]]; then
+		dialog \
+			--title "${SHORT_TITLE}" --msgbox "${MSG}" \
+			"${HEIGHT}" "${T_WIDTH}"   3>&1 1>&2 2>&3
+		if [[ $? -ne 0 ]]; then
+			clear
+			display_msg --log progress "\nNo changes made.\n"
+			exit 0
+		fi
+
+		X="$( dialog \
+			--title "${SHORT_TITLE}" \
+			--menu "${MSG}" "${HEIGHT}" "${T_WIDTH}" 2 \
+				1 "${METHOD_IN_PLACE}" \
+				2 "${METHOD_REPLACE_ALL}" \
+			3>&1 1>&2 2>&3 )"
 		clear
-		display_msg --log progress "\nNo changes made.\n"
-		exit 0
-	fi
 
-	X="$( dialog \
-		--title "${SHORT_TITLE}" \
-		--menu "${MSG}" "${HEIGHT}" "${T_WIDTH}" 2 \
-			1 "${METHOD_IN_PLACE}" \
-			2 "${METHOD_REPLACE_ALL}" \
-		3>&1 1>&2 2>&3 )"
-	clear
-
-	if [[ ${X} -eq 1 ]]; then
-		CHOSEN_METHOD="${METHOD_IN_PLACE}"
-	elif [[ ${X} -eq 2 ]]; then
-		CHOSEN_METHOD="${METHOD_REPLACE_ALL}"
-	else
-		MSG="User elected to not continue while picking an upgrade method."
-		display_msg --logonly info "${MSG}"
-		display_msg --log progress "\nNo changes made - no upgrade method chosen.\n"
-		exit 0
+		if [[ ${X} -eq 1 ]]; then
+			CHOSEN_METHOD="${METHOD_IN_PLACE}"
+		elif [[ ${X} -eq 2 ]]; then
+			CHOSEN_METHOD="${METHOD_REPLACE_ALL}"
+		else
+			MSG="User elected to not continue while picking an upgrade method."
+			display_msg --logonly info "${MSG}"
+			display_msg --log progress "\nNo changes made - no upgrade method chosen.\n"
+			exit 0
+		fi
 	fi
 
 	if [[ ${CHOSEN_METHOD} == "${METHOD_IN_PLACE}" ]]; then

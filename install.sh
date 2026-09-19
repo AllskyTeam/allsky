@@ -1595,12 +1595,12 @@ install_dependencies_etc()
 
 	if [[ ${SKIP} != "true" ]]; then
 		TMP="${ALLSKY_LOGS}/allsky_dependencies.log"
-		run_aptGet ffmpeg lftp imagemagick sqlite3 bc > "${TMP}" 2>&1
+		run_aptGet ffmpeg lftp imagemagick sqlite3 bc swig > "${TMP}" 2>&1
 		check_success $? "Allsky dependency installation failed" "${TMP}" "${DEBUG}" ||
 			exit_with_image 1 "${STATUS_ERROR}" "dependency installation failed"
 
 		TMP="${ALLSKY_LOGS}/allsky_deps.log"
-		run_aptGet libopencv-dev libusb-dev libusb-1.0-0-dev > "${TMP}" 2>&1
+		run_aptGet libopencv-dev libusb-dev libusb-1.0-0-dev liblgpio-dev > "${TMP}" 2>&1
 		check_success $? "Allsky deps installation failed" "${TMP}" "${DEBUG}" ||
 			exit_with_image 1 "${STATUS_ERROR}" "dependency installation failed"
 	fi

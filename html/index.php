@@ -33,7 +33,7 @@ include_once('includes/authenticate.php');
 include_once('includes/status_messages.php');
 $status = new StatusMessages();
 
-// TODO in major release after v2025.xx.xx:
+// TODO in major release after v2026.10.01:
 // We want to remove the "DHCP" page from Allsky but aren't sure if anyone's using it.
 // To be save, leave all the DHCP code but don't display the link to the page.
 // If no one complains we can remove everything DHCP related.

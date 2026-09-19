@@ -694,7 +694,7 @@ function update_old_website_config_file()
 	#	Added "meteors/"
 	# Version: 4 from v2024.12.06_03
 	#	Added "equipmentinfo" setting
-	# Current version: 5 from v2025.xx.xx
+	# Current version: 5 from v2026.10.01
 	#	Changed "imageName" to "/current/image.jpg" in local config file.
 	#		imageName is updated in replace_website_placeholders() so not done here.
 	#	timelapse and mini-timelapse icons changed.

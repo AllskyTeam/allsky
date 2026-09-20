@@ -77,6 +77,18 @@ function ListMeteors($aDay = null)
 		return strcmp($left['name'], $right['name']);
 	});
 
+	$hasMarkedMeteors = false;
+	$hasMeteorMetadata = false;
+	foreach ($meteorFiles as $meteor) {
+		$baseName = pathinfo($meteor['name'], PATHINFO_FILENAME);
+		if (is_file($meteorDirectory . '/' . $baseName . '-marked.' . pathinfo($meteor['name'], PATHINFO_EXTENSION))) {
+			$hasMarkedMeteors = true;
+		}
+		if (is_file($meteorDirectory . '/' . $baseName . '.json') || is_file($meteorDirectory . '/' . $day . $meteor['time'] . '.json')) {
+			$hasMeteorMetadata = true;
+		}
+	}
+
 	$dateObject = DateTimeImmutable::createFromFormat('!Ymd', $day);
 	$displayDate = $dateObject !== false ? $dateObject->format('d-M-Y') : $day;
 	$title = "Meteors for $displayDate";
@@ -100,6 +112,11 @@ function ListMeteors($aDay = null)
 		echo "<div class='as-wifi-placeholder-title'>No meteors found</div>";
 		echo "<div class='as-wifi-placeholder-text'>There are no meteor images for " . htmlspecialchars($day, ENT_QUOTES) . ".</div></div>";
 		echo "</div></div>";
+		return;
+	}
+
+	if (! $hasMarkedMeteors && ! $hasMeteorMetadata) {
+		ListFileType('meteors/', 'meteors', 'Meteors', 'picture');
 		return;
 	}
 

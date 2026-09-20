@@ -61,3 +61,6 @@ bin/
 
 # Temporary files
 tmp/
+
+#some fonts annoying me
+config_repo/overlay/system_fonts/

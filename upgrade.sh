@@ -230,13 +230,18 @@ TITLE="${SHORT_TITLE} - ${ALLSKY_VERSION}"
 if [[ ${ACTION} == "upgrade" ]]; then
 
 	# First part of upgrade, executed by user in ${ALLSKY_HOME}.
-	if ! NEWEST_VERSION="$( "${ALLSKY_UTILITIES}/getNewestAllskyVersion.sh" --branch "${BRANCH}" --version-only 2>&1 )" ; then
-		MSG="Unable to determine newest version; cannot continue."
-		if [[ ${BRANCH} != "${ALLSKY_GITHUB_MAIN_BRANCH}" ]];
-		then
-			MSG2="Make sure '${BRANCH}' is a valid branch in GitHub."
+	NEWEST_VERSION="$( "${ALLSKY_UTILITIES}/getNewestAllskyVersion.sh" --branch "${BRANCH}" --version-only 2>&1 )"
+	RET=$?
+	if [[ ${RET} -ne 0 ]]; then
+		MSG2=""
+		if [[ ${RET} -eq ${ALLSKY_EXIT_PARTIAL_OK} && ${CHOSEN_METHOD} == "${METHOD_IN_PLACE}" ]]; then
+			MSG="The '${METHOD_IN_PLACE}' method cannot be used when upgrading Allsky releases."
 		else
-			MSG2=""
+			MSG="Unable to determine newest version; cannot continue."
+			if [[ ${BRANCH} != "${ALLSKY_GITHUB_MAIN_BRANCH}" ]];
+			then
+				MSG2="Make sure '${BRANCH}' is a valid branch in GitHub."
+			fi
 		fi
 		display_msg --log error "${MSG}" "${MSG2}"
 		display_msg --logonly info "${NEWEST_VERSION}"		# is the error message.
@@ -314,7 +319,7 @@ if [[ ${ACTION} == "upgrade" ]]; then
 		# Do the git pull and check for any issues
 		if ! git pull > "${GIT_PULL_LOG}" 2>&1 ; then
 			if grep -i --silent "would be overwritten" "${GIT_PULL_LOG}" ; then
-				FILES="$( echo -e "${GIT_PULL_LOG}" | grep "^	" )"	# TAB
+				FILES="$( grep "^	" "${GIT_PULL_LOG}" )"	# TAB
 				MSG="You have un-checked out files, cannot continue:\n${FILES}"
 				MSG+="\n\nThe full git output is in '${GIT_PULL_LOG}'."
 			else

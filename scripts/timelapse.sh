@@ -373,7 +373,7 @@ DATE=${DATE##*/}
 if [[ ${DO_THUMBNAIL} == "true" &&  ${DATE} != "$( basename "${ALLSKY_CURRENT_DIR}" )" ]]; then
 	RES="$( "${ALLSKY_UTILITIES}/thumbnail.sh" -t timelapse -d "${DATE}" --force 2>&1 )"
 	if [[ $? -ne 0 ]]; then
-		W_ "WARNING: unable to create startrails thumbnail: ${RES}."
+		W_ "WARNING: unable to create timelapse thumbnail: ${RES}."
 	fi
 fi
 

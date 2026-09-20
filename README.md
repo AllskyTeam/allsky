@@ -13,7 +13,6 @@ The web-based interface lets you monitor your system live, review captured event
 Built by enthusiasts for enthusiasts, Allsky is open, extensible, and endlessly curious - a fusion of astrophotography, automation, and discovery.
 
 
-
 > The Allsky Camera software was originally created by Thomas Jacquin, a developer and astrophotography  enthusiast based in Canada.
 >
 > Thomas released the first version of Allsky around 2018, designed to run on a Raspberry Pi with a ZWO ASI or Raspberry Pi HQ camera to capture images of the entire sky - automatically creating timelapses, keograms, and detecting meteors.

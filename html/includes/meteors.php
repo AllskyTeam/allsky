@@ -7,7 +7,7 @@ if (basename(__FILE__) === basename($_SERVER['SCRIPT_FILENAME'])) {
 
 function ListMeteors($aDay = null)
 {
-	global $pageIcon, $pageHelp, $useMeteorsMarked, $useMeteorMetadata;
+	global $pageIcon, $pageHelp;
 
 	$day = $aDay === null ? (string) getVariableOrDefault($_REQUEST, 'day', '') : (string) $aDay;
 	if (!preg_match('/^\d{8}$/', $day)) {
@@ -106,12 +106,8 @@ function ListMeteors($aDay = null)
 	echo "<style>.meteors-table th, .meteors-table td, .meteors-table td form { vertical-align: middle; }.meteors-table td { vertical-align: middle !important; }.meteors-table img { max-width: 100px; height: auto; }</style>";
 	echo "<div class='table-responsive'><table class='table table-striped table-hover meteors-table'><thead><tr>";
 	echo "<th>Day</th><th>Time</th><th>Meteor(s)</th>";
-	if ($useMeteorsMarked) {
-		echo "<th>Marked</th>";
-	}
-	if ($useMeteorMetadata) {
-		echo "<th>Meteor</th><th>Position</th><th>Frag</th><th>Showers</th><th>Radiant</th>";
-	}
+	echo "<th>Marked</th>";
+	echo "<th>Meteor</th><th>Metadata</th>";
 	echo "<th>Delete</th>";
 	echo "</tr></thead><tbody>";
 	foreach ($meteorFiles as $meteor) {
@@ -127,21 +123,21 @@ function ListMeteors($aDay = null)
 		$markedThumbnailUrl = '/images/' . rawurlencode($day) . '/meteors/thumbnails/' . rawurlencode($markedName);
 		$lightboxSize = getLightboxSizeAttribute($meteorDirectory . '/' . $name);
 		$metadata = [];
-		if ($useMeteorMetadata) {
-			$metadataPaths = [
-				$meteorDirectory . '/' . $baseName . '.json',
-				$meteorDirectory . '/' . $day . $meteor['time'] . '.json',
-			];
-			foreach ($metadataPaths as $metadataPath) {
-				if (is_file($metadataPath)) {
-					$metadataContents = file_get_contents($metadataPath);
-					if ($metadataContents !== false) {
-						$metadataContents = preg_replace('/^\xEF\xBB\xBF/', '', $metadataContents);
-						$decodedMetadata = json_decode($metadataContents, true);
-						if (is_array($decodedMetadata)) {
-							$metadata = array_values(array_filter($decodedMetadata, 'is_array'));
-							break;
-						}
+		$metadataFilePath = null;
+		$metadataPaths = [
+			$meteorDirectory . '/' . $baseName . '.json',
+			$meteorDirectory . '/' . $day . $meteor['time'] . '.json',
+		];
+		foreach ($metadataPaths as $metadataPath) {
+			if (is_file($metadataPath)) {
+				$metadataFilePath = $metadataPath;
+				$metadataContents = file_get_contents($metadataPath);
+				if ($metadataContents !== false) {
+					$metadataContents = preg_replace('/^\xEF\xBB\xBF/', '', $metadataContents);
+					$decodedMetadata = json_decode($metadataContents, true);
+					if (is_array($decodedMetadata)) {
+						$metadata = array_values(array_filter($decodedMetadata, 'is_array'));
+						break;
 					}
 				}
 			}
@@ -156,38 +152,32 @@ function ListMeteors($aDay = null)
 				echo '<td rowspan="' . $rowCount . '">' . htmlspecialchars(substr($meteor['time'], 0, 2) . ':' . substr($meteor['time'], 2, 2) . ':' . substr($meteor['time'], 4, 2), ENT_QUOTES) . '</td>';
 				echo '<td rowspan="' . $rowCount . '"><a href="' . htmlspecialchars($imageUrl, ENT_QUOTES) . '" data-lg-size="' . htmlspecialchars($lightboxSize, ENT_QUOTES) . '">';
 				echo '<img src="' . htmlspecialchars($thumbnailUrl, ENT_QUOTES) . '" alt="' . htmlspecialchars($name, ENT_QUOTES) . '" loading="lazy" width="100"></a></td>';
-				if ($useMeteorsMarked) {
-					echo '<td rowspan="' . $rowCount . '">';
-					if ($markedExists) {
-						echo '<a href="' . htmlspecialchars($markedImageUrl, ENT_QUOTES) . '" data-lg-size="' . htmlspecialchars(getLightboxSizeAttribute($markedImagePath), ENT_QUOTES) . '">';
-						echo '<img src="' . htmlspecialchars($markedThumbnailUrl, ENT_QUOTES) . '" alt="' . htmlspecialchars($markedName, ENT_QUOTES) . '" loading="lazy" width="100"></a>';
-					} else {
-						echo '-';
-					}
-					echo '</td>';
+				echo '<td rowspan="' . $rowCount . '">';
+				if ($markedExists) {
+					echo '<a href="' . htmlspecialchars($markedImageUrl, ENT_QUOTES) . '" data-lg-size="' . htmlspecialchars(getLightboxSizeAttribute($markedImagePath), ENT_QUOTES) . '">';
+					echo '<img src="' . htmlspecialchars($markedThumbnailUrl, ENT_QUOTES) . '" alt="' . htmlspecialchars($markedName, ENT_QUOTES) . '" loading="lazy" width="100"></a>';
+				} else {
+					echo '-';
 				}
+				echo '</td>';
 			}
-			if ($useMeteorMetadata) {
-				$length = htmlspecialchars((string)($metadataItem['length'] ?? '-'), ENT_QUOTES);
-				$angle = htmlspecialchars((string)($metadataItem['angle'] ?? '-'), ENT_QUOTES);
-				$elong = htmlspecialchars((string)($metadataItem['elong'] ?? '-'), ENT_QUOTES);
-				$peak = htmlspecialchars((string)($metadataItem['peak'] ?? '-'), ENT_QUOTES);
-				$p1 = is_array($metadataItem['p1'] ?? null) ? implode(',', array_map('strval', $metadataItem['p1'])) : '-';
-				$p2 = is_array($metadataItem['p2'] ?? null) ? implode(',', array_map('strval', $metadataItem['p2'])) : '-';
-				$fragN = htmlspecialchars((string)($metadataItem['frag_n'] ?? '-'), ENT_QUOTES);
-				$fragExt = htmlspecialchars((string)($metadataItem['frag_ext'] ?? '-'), ENT_QUOTES);
-				$showers = is_array($metadataItem['showers'] ?? null) ? $metadataItem['showers'] : [];
-				$showersHtml = count($showers) > 0 ? implode('<br>', array_map(function ($shower) { return htmlspecialchars((string)$shower, ENT_QUOTES); }, $showers)) : '-';
-				$radiant = $metadataItem['radiant'] ?? '-';
-				$radiantText = is_array($radiant) ? implode(',', array_map('strval', $radiant)) : (string)$radiant;
-				$p1Parts = is_array($metadataItem['p1'] ?? null) ? array_map('strval', $metadataItem['p1']) : [];
-				$p2Parts = is_array($metadataItem['p2'] ?? null) ? array_map('strval', $metadataItem['p2']) : [];
-				$p1 = count($p1Parts) >= 2 ? $p1Parts[0] . ', ' . $p1Parts[1] : '-';
-				$p2 = count($p2Parts) >= 2 ? $p2Parts[0] . ', ' . $p2Parts[1] : '-';
-				echo "<td>Len = $length<br>Ang = $angle<br>Elong = $elong<br>Peak = $peak</td>";
-				echo '<td>P1 = (' . htmlspecialchars($p1, ENT_QUOTES) . ')<br>P2 = (' . htmlspecialchars($p2, ENT_QUOTES) . ')</td>';
-				echo '<td>Num = ' . $fragN . '<br>Ext = ' . $fragExt . '</td>';
-				echo '<td>' . $showersHtml . '</td><td>' . htmlspecialchars($radiantText === '' ? '-' : $radiantText, ENT_QUOTES) . '</td>';
+			$length = htmlspecialchars((string)($metadataItem['length'] ?? '-'), ENT_QUOTES);
+			$angle = htmlspecialchars((string)($metadataItem['angle'] ?? '-'), ENT_QUOTES);
+			$peak = htmlspecialchars((string)($metadataItem['peak'] ?? '-'), ENT_QUOTES);
+			$p1Parts = is_array($metadataItem['p1'] ?? null) ? array_map('strval', $metadataItem['p1']) : [];
+			$p2Parts = is_array($metadataItem['p2'] ?? null) ? array_map('strval', $metadataItem['p2']) : [];
+			$p1 = count($p1Parts) >= 2 ? $p1Parts[0] . ', ' . $p1Parts[1] : '-';
+			$p2 = count($p2Parts) >= 2 ? $p2Parts[0] . ', ' . $p2Parts[1] : '-';
+			echo "<td>Len = $length<br>Ang = $angle<br>Peak = $peak<br><br>P1 = (" . htmlspecialchars($p1, ENT_QUOTES) . ")<br>P2 = (" . htmlspecialchars($p2, ENT_QUOTES) . ")</td>";
+			if ($metadataIndex === 0) {
+				echo '<td rowspan="' . $rowCount . '">';
+				if ($metadataFilePath !== null) {
+					$jsonUrl = '/images/' . rawurlencode($day) . '/meteors/' . rawurlencode(basename($metadataFilePath));
+					echo '<a href="' . htmlspecialchars($jsonUrl, ENT_QUOTES) . '" target="_blank" rel="noopener noreferrer" onclick="return openMeteorMetadata(this.href);" title="View meteor Metadata" aria-label="View meteor Metadata"><i class="fa fa-file-code"></i></a>';
+				} else {
+					echo '-';
+				}
+				echo '</td>';
 			}
 			if ($metadataIndex === 0) {
 				echo '<td rowspan="' . $rowCount . '"><form method="post" action="index.php?page=list_meteors&amp;day=' . rawurlencode($day) . '" onsubmit="return confirm(\'Delete this meteor and its related files?\');">';
@@ -209,6 +199,27 @@ function ListMeteors($aDay = null)
 	]);
 ?>
 <script>
+function openMeteorMetadata(url) {
+	const width = 800;
+	const height = 600;
+	const left = Math.max(0, Math.round((window.screenX || window.screenLeft || 0) + ((window.outerWidth || window.innerWidth) - width) / 2));
+	const top = Math.max(0, Math.round((window.screenY || window.screenTop || 0) + ((window.outerHeight || window.innerHeight) - height) / 2));
+	const features = `popup=yes,width=${width},height=${height},left=${left},top=${top},scrollbars=yes,resizable=yes`;
+	const popup = window.open(url, 'meteor-json', features);
+	if (!popup) {
+		return true;
+	}
+
+	try {
+		popup.moveTo(left, top);
+		popup.resizeTo(width, height);
+		popup.focus();
+	} catch (error) {
+		// Browsers may restrict moving or resizing windows.
+	}
+	return false;
+}
+
 $(document).ready(function () {
   const galleryElement = document.querySelector('.table tbody');
   if (!galleryElement) {

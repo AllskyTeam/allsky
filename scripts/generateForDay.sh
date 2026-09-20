@@ -504,10 +504,7 @@ fi
 
 if [[ ${DO_TIMELAPSE} == "true" ]]; then
 	VIDEO_FILE="allsky-${DATE}.mp4"
-
-	# Need a different name for the file so it's not mistaken for a regular image in the WebUI.
-	THUMBNAIL_FILE="thumbnail-${DATE}.jpg"
-
+	THUMBNAIL_FILE="videothumbnail/thumbnail-${DATE}.jpg"
 	UPLOAD_THUMBNAIL="${OUTPUT_DIR}/${THUMBNAIL_FILE}"
 	UPLOAD_FILE="${OUTPUT_DIR}/${VIDEO_FILE}"
 
@@ -518,6 +515,10 @@ if [[ ${DO_TIMELAPSE} == "true" ]]; then
 
 		if [[ ${THUMBNAIL_ONLY} == "true" ]]; then
 			if [[ -f ${UPLOAD_FILE} ]]; then
+				RES="$( "${ALLSKY_UTILITIES}/thumbnail.sh" -t timelapse -d "$( basename "${INPUT_DIR}" )" --force 2>&1 )"
+				if [[ $? -ne 0 ]]; then
+					W_ "WARNING: unable to create timelapse thumbnail: ${RES}."
+				fi
 				RET=0
 			else
 				ERR="${ME}: ERROR: video file '${UPLOAD_FILE}' not found!"
@@ -536,23 +537,12 @@ if [[ ${DO_TIMELAPSE} == "true" ]]; then
 			else
 				X="--output '${UPLOAD_FILE}' '${INPUT_DIR}'"
 			fi
+			# timelapse.sh calls thumbnail.sh to create the thumbnail.
 			CMD="${N} '${ALLSKY_SCRIPTS}/timelapse.sh' ${DEBUG_ARG} ${X}"
 			[[ -n ${TIMELAPSE_PARAMS} ]] && CMD+=" ${TIMELAPSE_PARAMS}"
 			generate "Timelapse" "" "${CMD}"	# it creates the necessary directory
 			RET=$?
 			[[ ${RET} -eq 0 ]] && ((NUM_SUCCESS++))
-		fi
-		if [[ ${RET} -eq 0 && ${TIMELAPSE_UPLOAD_THUMBNAIL} == "true" && -s ${UPLOAD_FILE} ]]; then
-			# Want the thumbnail to be near the start of the video, but not the first frame
-			# since that can be a lousy frame.
-			# If the video is less than 5 seconds, make_thumbnail won't work, so try again.
-			make_thumbnail "05" "${UPLOAD_FILE}" "${UPLOAD_THUMBNAIL}"
-			if [[ ! -f ${UPLOAD_THUMBNAIL} ]]; then
-				make_thumbnail "00" "${UPLOAD_FILE}" "${UPLOAD_THUMBNAIL}"
-			fi
-			if [[ ! -f ${UPLOAD_THUMBNAIL} ]]; then
-				E_ "${ME}: ERROR: video thumbnail not created!" >&2
-			fi
 		fi
 
 	elif [[ ! -f ${UPLOAD_FILE} ]]; then

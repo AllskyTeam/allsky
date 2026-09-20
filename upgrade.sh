@@ -276,15 +276,6 @@ if [[ ${ACTION} == "upgrade" ]]; then
 		HEIGHT="$( echo -e "${MSG}" | wc -l )"
 		(( HEIGHT += 10 ))
 
-		dialog \
-			--title "${SHORT_TITLE}" --msgbox "${MSG}" \
-			"${HEIGHT}" "${T_WIDTH}"   3>&1 1>&2 2>&3
-		if [[ $? -ne 0 ]]; then
-			clear
-			display_msg --log progress "\nNo changes made.\n"
-			exit 0
-		fi
-
 		X="$( dialog \
 			--title "${SHORT_TITLE}" \
 			--menu "${MSG}" "${HEIGHT}" "${T_WIDTH}" 2 \

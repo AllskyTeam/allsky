@@ -112,11 +112,10 @@ usage_and_exit()
 	local RET=${1}
 	exec >&2
 	local USAGE="Usage: ${ME} [--help] [--silent] [--debug] [--nice n] [--upload] \\ \n"
-	USAGE+="    [--thumbnail-only] [--keogram] [--startrails] [--timelapse] \\ \n"
-	USAGE+="    [--output-dir <OUTPUT_DIR>] {--images file | <INPUT_DIR>} \\ \n"
 	USAGE+="    [--keogram [--keogram-params 'params']] \\ \n"
 	USAGE+="    [--startrails] [--startrails-params 'params']] \\ \n"
-	USAGE+="    [--timelapse [--timelapse-params 'params']]"
+	USAGE+="    [--timelapse [--timelapse-params 'params']] \\ \n"
+	USAGE+="    [--thumbnail-only] [--output-dir <OUTPUT_DIR>] {--images file | <INPUT_DIR>}"
 	echo
 	if [[ ${RET} -ne 0 ]]; then
 		E_ "${USAGE}"
@@ -170,7 +169,11 @@ if [[ -n ${IMAGES_FILE} ]]; then
 		exit 1
 	fi
 
-elif [[ $# -eq 0 || $# -gt 1 ]]; then
+elif [[ $# -eq 0 ]]; then
+	E_ "${ME}: No input directory specified." >&2
+	usage_and_exit 2
+elif [[ $# -gt 1 ]]; then
+	E_ "${ME}: Too many arguments on command line." >&2
 	usage_and_exit 2
 fi
 

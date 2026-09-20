@@ -25,7 +25,7 @@ function ListMeteors($aDay = null)
 		if (!CSRFValidate()) {
 			$deleteMessage = 'Unable to delete meteor: invalid CSRF token.';
 			$deleteType = 'danger';
-		} else if (!preg_match('/^meteors-' . $day . '\d{6}\.(jpg|png)$/i', $deleteName)) {
+		} else if (!preg_match('/^meteors-\d{14}\.(jpg|png)$/i', $deleteName)) {
 			$deleteMessage = 'Unable to delete meteor: invalid file name.';
 			$deleteType = 'danger';
 		} else {
@@ -63,7 +63,7 @@ function ListMeteors($aDay = null)
 		$files = scandir($meteorDirectory);
 		if ($files !== false) {
 			foreach ($files as $file) {
-				if (preg_match('/^meteors-' . $day . '(\d{6})\.(jpg|png)$/i', $file, $matches)) {
+				if (preg_match('/^meteors-\d{8}(\d{6})\.(jpg|png)$/i', $file, $matches)) {
 					$meteorFiles[] = [
 						'name' => $file,
 						'time' => $matches[1],

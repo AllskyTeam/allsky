@@ -15,7 +15,6 @@ function ListDays()
 	global $page;
 	global $pageHeaderTitle, $pageIcon, $pageHelp;
 	global $fa_size, $fa_size_px;
-	global $useMeteors;
 
 	if (! is_dir(ALLSKY_IMAGES)) {
 		echo "<br><div class='errorMsgBig'>";
@@ -79,15 +78,13 @@ function ListDays()
 				<div class="col-sm-2 hidden-xs hidden-sm">
 					<span class="days-grid-label">Date</span>
 				</div>
-				<div class="col-sm-8 days-actions-col">
+				<div class="col-sm-10 days-actions-col">
 					<div class="row days-grid-actions">
-						<div class="col-xs-3 text-center days-action-col"><span class="days-grid-label">Images</span></div>
-						<div class="col-xs-3 text-center days-action-col"><span class="days-grid-label">Timelapse</span></div>
+						<div class="col-xs-2 text-center days-action-col"><span class="days-grid-label">Images</span></div>
+						<div class="col-xs-2 text-center days-action-col"><span class="days-grid-label">Timelapse</span></div>
 						<div class="col-xs-2 text-center days-action-col"><span class="days-grid-label">Keogram</span></div>
 						<div class="col-xs-2 text-center days-action-col"><span class="days-grid-label">Startrails</span></div>
-<?php if ($useMeteors) { ?>
 						<div class="col-xs-2 text-center days-action-col"><span class="days-grid-label">Meteors</span></div>
-<?php } ?>
 						<div class="col-xs-2 text-right hidden-xs"></div>
 					</div>
 				</div>
@@ -99,15 +96,13 @@ function ListDays()
 					<span class="days-grid-value days-table-day">All</span>
 				</div>
 				<div class="col-sm-2 hidden-xs hidden-sm"><span class="days-grid-value">-</span></div>
-				<div class="col-sm-8 days-actions-col">
+				<div class="col-sm-10 days-actions-col">
 					<div class="row days-grid-actions">
-						<div class="col-xs-3 text-center days-action-col"><span class="days-grid-value"><span title="There are too many total images to view on one page.">-</span></span></div>
-						<div class="col-xs-3 text-center days-action-col"><span class="days-grid-value"><?php insertHref("list_videos", "All"); ?></span></div>
+						<div class="col-xs-2 text-center days-action-col"><span class="days-grid-value"><span title="There are too many total images to view on one page.">-</span></span></div>
+						<div class="col-xs-2 text-center days-action-col"><span class="days-grid-value"><?php insertHref("list_videos", "All"); ?></span></div>
 						<div class="col-xs-2 text-center days-action-col"><span class="days-grid-value"><?php insertHref("list_keograms", "All"); ?></span></div>
 						<div class="col-xs-2 text-center days-action-col"><span class="days-grid-value"><?php insertHref("list_startrails", "All"); ?></span></div>
-<?php if ($useMeteors) { ?>
 						<div class="col-xs-2 text-center days-action-col"><span class="days-grid-value"><?php insertHref("list_meteors", "All"); ?></span></div>
-<?php } ?>
 						<div class="col-xs-2 text-center hidden-xs"><span class="days-grid-value"><span title="You cannot delete All files at once.">-</span></span></div>
 					</div>
 				</div>
@@ -210,15 +205,13 @@ foreach ($days as $day) {
 	echo "  <div class='row days-grid-row' data-sort-day='" . htmlspecialchars($day, ENT_QUOTES) . "'>\n";
 	echo "    <div class='col-sm-2 days-day-col'><span class='days-grid-value days-table-day'>$day</span></div>\n";
 	echo "    <div class='col-sm-2 hidden-xs hidden-sm'><span class='days-grid-value'>" . htmlspecialchars($displayDate) . "</span></div>\n";
-	echo "    <div class='col-sm-8 days-actions-col'>\n";
+	echo "    <div class='col-sm-10 days-actions-col'>\n";
 	echo "      <div class='row days-grid-actions'>\n";
-	echo "        <div class='col-xs-3 text-center days-action-col'><span class='days-grid-value'>$imagesHtml</span></div>\n";
-	echo "        <div class='col-xs-3 text-center days-action-col'><span class='days-grid-value'>$timelapseHtml</span></div>\n";
+	echo "        <div class='col-xs-2 text-center days-action-col'><span class='days-grid-value'>$imagesHtml</span></div>\n";
+	echo "        <div class='col-xs-2 text-center days-action-col'><span class='days-grid-value'>$timelapseHtml</span></div>\n";
 	echo "        <div class='col-xs-2 text-center days-action-col'><span class='days-grid-value'>$keogramHtml</span></div>\n";
 	echo "        <div class='col-xs-2 text-center days-action-col'><span class='days-grid-value'>$startrailsHtml</span></div>\n";
-	if ($useMeteors) {
-		echo "        <div class='col-xs-2 text-center days-action-col'><span class='days-grid-value'>$meteorsHtml</span></div>\n";
-	}
+	echo "        <div class='col-xs-2 text-center days-action-col'><span class='days-grid-value'>$meteorsHtml</span></div>\n";
 	echo "        <div class='col-xs-2 text-right hidden-xs'><span class='days-grid-value'>$deleteHtml</span></div>\n";
 	echo "      </div>\n";
 	echo "    </div>\n";

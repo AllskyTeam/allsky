@@ -21,9 +21,6 @@ $lastChangedName = "lastchanged";	// json setting name
 $formReadonly = false;				// The WebUI isn't readonly
 $ME = htmlspecialchars($_SERVER["PHP_SELF"]);
 
-// TODO: Implement
-$useMeteors = false;
-
 // functions.php sets a bunch of constants and variables.
 include_once('includes/functions.php');
 initialize_variables();		// sets some variables

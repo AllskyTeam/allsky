@@ -237,7 +237,7 @@ if [[ ${ACTION} == "upgrade" ]]; then
 		if [[ ${RET} -eq ${ALLSKY_EXIT_PARTIAL_OK} && ${CHOSEN_METHOD} == "${METHOD_IN_PLACE}" ]]; then
 			MSG="The '${METHOD_IN_PLACE}' method cannot be used when upgrading Allsky releases."
 		else
-			MSG="Unable to determine newest version; cannot continue."
+			MSG="Unable to determine newest version; cannot continue, RET=${RET}."
 			if [[ ${BRANCH} != "${ALLSKY_GITHUB_MAIN_BRANCH}" ]];
 			then
 				MSG2="Make sure '${BRANCH}' is a valid branch in GitHub."
@@ -303,14 +303,16 @@ if [[ ${ACTION} == "upgrade" ]]; then
 			display_msg --log progress "\nNo changes made - no upgrade method chosen.\n"
 			exit 0
 		fi
+	else
+		clear
 	fi
 
 	if [[ ${CHOSEN_METHOD} == "${METHOD_IN_PLACE}" ]]; then
 		cd "${ALLSKY_HOME}"	|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 		display_msg --log progress "Getting new files from GitHub"
-		# Get the current git revision, this is used laer to determine if any files have been updated by coparing
-		# the old and new head revisions
+		# Get the current git revision, this is used later to determine if any
+		# files have been updated by comparing the old and new head revisions.
 		if ! OLD_HEAD="$( git rev-parse HEAD 2>&1 )" ; then
 			MSG="Unable to determine the current git revision:\n${OLD_HEAD}"
 			display_msg --log error "${MSG}" "Contact the Allsky Team if needed."

@@ -121,10 +121,18 @@ foreach ($days as $day) {
 	$has_startrails = is_dir(ALLSKY_IMAGES . "/$day/startrails");
 
 	// It's very possible there will be no meteor files
-	$has_meteors = is_dir(ALLSKY_IMAGES . "/$day/meteors");
-	if ($has_meteors) {
-		$i = getValidImageNames(ALLSKY_IMAGES . "/$day/meteors", true);	// true == stop after 1
-		$has_meteors = (count($i) > 0);
+	$meteorDir = ALLSKY_IMAGES . "/$day/meteors";
+	$has_meteors = false;
+	if (is_dir($meteorDir)) {
+		$meteorFiles = @scandir($meteorDir);
+		if ($meteorFiles !== false) {
+			foreach ($meteorFiles as $meteorFile) {
+				if (is_file($meteorDir . "/$meteorFile") && isListFileTypeSupportedFile($meteorFile, "picture")) {
+					$has_meteors = true;
+					break;
+				}
+			}
+		}
 	}
 
 	if (! $has_images && ! $has_timelapse && ! $has_keogram && ! $has_startrails && ! $has_meteors) {
@@ -151,7 +159,7 @@ foreach ($days as $day) {
 	if ($has_timelapse) {
 		$icon = "";
 		if ($useThumbnailsIfExist) {
-			$t = ALLSKY_IMAGES . "/$day/thumbnail-$day.{jpg,png}";
+			$t = ALLSKY_IMAGES . "/$day/videothumbnail/allsky-$day.{jpg,png}";
 			$thumb = glob($t, GLOB_BRACE);
 			if ($thumb !== false) {
 				// "/images" is an alias in the web server for ALLSKY_IMAGES
@@ -169,7 +177,7 @@ foreach ($days as $day) {
 
 	ob_start();
 	if ($has_keogram) {
-# TODO: create and use keogram thumbnails (they should probably be about 400px high because
+# TODO: create and use keogram thumbnails. They should probably be about 400px high because
 # a "regular" thumbnail is only 100 px wide so you can't see any details.
 		insertHref("list_keograms", $day);
 	} else {

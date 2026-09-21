@@ -172,37 +172,44 @@ function ListMeteors($aDay = null)
 			}
 		}
 		$rowCount = max(1, count($metadata));
+		$rowSpan = "rowspan='$rowCount'";
+$rowSpan="";		// TODO: remove $rowSpan and the commented out lines.
 
-		for ($metadataIndex = 0; $metadataIndex < $rowCount; $metadataIndex++) {
-			$metadataItem = $metadata[$metadataIndex] ?? [];
+//x		for ($metadataIndex = 0; $metadataIndex < $rowCount; $metadataIndex++) {
+//x			$metadataItem = $metadata[$metadataIndex] ?? [];
 			echo '<tr>';
-			if ($metadataIndex === 0) {
+//x			if ($metadataIndex === 0) {
 				$imgDate = htmlspecialchars($meteor['date'], ENT_QUOTES);
 				$imgTime = htmlspecialchars(substr($meteor['time'], 0, 2) . ':' . substr($meteor['time'], 2, 2) . ':' . substr($meteor['time'], 4, 2), ENT_QUOTES);
 				if (! $timestampUnderImage) {
-					echo '<td rowspan="' . $rowCount . '">' . $imgDate . '</td>';
-					echo '<td rowspan="' . $rowCount . '">' . $imgTime . '</td>';
+					echo '<td ' . $rowSpan . '>' . $imgDate . '</td>';
+					echo '<td ' . $rowSpan . '">' . $imgTime . '</td>';
 				}
-				echo '<td rowspan="' . $rowCount . '" style="text-align: center">';
+				echo '<td ' . $rowSpan . '" style="text-align: center">';
 					echo '<a href="' . htmlspecialchars($imageUrl, ENT_QUOTES) . '" data-lg-size="' . htmlspecialchars($lightboxSize, ENT_QUOTES) . '">';
 					echo '<img align="center" src="' . htmlspecialchars($thumbnailUrl, ENT_QUOTES) . '" alt="' . htmlspecialchars($name, ENT_QUOTES) . '" loading="lazy" width="'. $thumbnailWidth . '"></a>';
 					if ($timestampUnderImage) {
-						echo '<br>' . $imgDate . ' ' . $imgTime;
+						echo '<br>' . $imgDate . '&nbsp; &nbsp;' . $imgTime;
 					}
 				echo '</td>';
 
-				echo '<td rowspan="' . $rowCount . '" style="text-align: center">';
+				echo '<td ' . $rowSpan . '" style="text-align: center">';
 				if ($markedExists) {
 					echo '<a href="' . htmlspecialchars($markedImageUrl, ENT_QUOTES) . '" data-lg-size="' . htmlspecialchars(getLightboxSizeAttribute($markedImagePath), ENT_QUOTES) . '">';
 					echo '<img align="center" src="' . htmlspecialchars($markedThumbnailUrl, ENT_QUOTES) . '" alt="' . htmlspecialchars($markedName, ENT_QUOTES) . '" loading="lazy" width="' . $thumbnailWidth . '"></a>';
 					if ($timestampUnderImage) {
-						echo '<br>&nbsp;';		// TODO: should the date/time go here also?
+						echo '<br>&nbsp;';
 					}
 				} else {
 					echo '-';
 				}
 				echo '</td>';
-			}
+//x			}
+
+			echo "<td>";
+		for ($metadataIndex = 0; $metadataIndex < $rowCount; $metadataIndex++) {
+			$metadataItem = $metadata[$metadataIndex] ?? [];
+
 			$length = htmlspecialchars((string)($metadataItem['length'] ?? '-'), ENT_QUOTES);
 			$angle = htmlspecialchars((string)($metadataItem['angle'] ?? '-'), ENT_QUOTES);
 			$peak = htmlspecialchars((string)($metadataItem['peak'] ?? '-'), ENT_QUOTES);
@@ -211,19 +218,20 @@ function ListMeteors($aDay = null)
 			$p1 = count($p1Parts) >= 2 ? $p1Parts[0] . ', ' . $p1Parts[1] : '-';
 			$p2 = count($p2Parts) >= 2 ? $p2Parts[0] . ', ' . $p2Parts[1] : '-';
 
-			echo "<td>";
+//x			echo "<td>";
 			if ($metadataIndex > 0) {
-				echo '<hr width="75%" style="margin-top: 0;>';		// make it obvious this is for a different meteor
+				echo '<hr width="75%" style="border-color: #aaa;">';		// make it obvious this is for a different meteor
 			}
 			if ($length !== "-" || $angle !== "-" || $peak !== "-" || $p1 !== "-" || $p2 !== "-") {
 				echo "Length = $length<br>Angle = $angle<br>Peak = $peak<br><br>P1 = (" . htmlspecialchars($p1, ENT_QUOTES) . ")<br>P2 = (" . htmlspecialchars($p2, ENT_QUOTES) . ")";
 			} else {
 				echo "-";
 			}
+		}
 			echo "</td>";
 
-			if ($metadataIndex === 0) {
-				echo '<td rowspan="' . $rowCount . '" style="text-align: center">';
+//x			if ($metadataIndex === 0) {
+				echo '<td ' . $rowSpan . '" style="text-align: center">';
 				if ($metadataFilePath !== null) {
 					$jsonUrl = '/images/' . rawurlencode($day) . '/meteors/' . rawurlencode(basename($metadataFilePath));
 					echo '<a href="' . htmlspecialchars($jsonUrl, ENT_QUOTES) . '" target="_blank" rel="noopener noreferrer" onclick="return openMeteorMetadata(this.href);" title="View meteor Metadata" aria-label="View meteor Metadata"><i class="fa fa-2x fa-file-code"></i></a>';
@@ -231,17 +239,16 @@ function ListMeteors($aDay = null)
 					echo '-';
 				}
 				echo '</td>';
-//X			}
-//X			if ($metadataIndex === 0) {
-				echo '<td rowspan="' . $rowCount . '" style="text-align: center">';
+
+				echo '<td ' . $rowSpan . '" style="text-align: center">';
 					echo '<form method="post" action="index.php?page=list_meteors&amp;day=' . rawurlencode($day) . '" onsubmit="return confirm(\'Delete this meteor and its related files?\');">';
 					echo '<input type="hidden" name="delete_meteor" value="' . htmlspecialchars($name, ENT_QUOTES) . '">';
 					CSRFToken();
 					echo '<button type="submit" class="btn btn-danger btn-sm" title="Delete meteor"><i class="fa fa-trash"></i></button></form>';
 				echo '</td>';
-			}
+//x			}
 			echo '</tr>';
-		}
+//x		}
 	}
 	echo '</tbody></table></div></div></div>';
 

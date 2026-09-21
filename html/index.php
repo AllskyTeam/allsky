@@ -127,6 +127,8 @@ $pageInfo = [
 		"title" => "Meteors",
 		"icon" => "fa fa-meteor fa-" . $fa_size . " fa-fw",
 		"AllTitle" => "All Meteors",
+		// TODO: Add help documentation
+		"help" => "docs/allsky_guide/using/meteors.html"
 	],
 	"configuration" => [
 		"title" => "Allsky Settings",
@@ -406,7 +408,7 @@ function insertHelperMenuItems()
 
 function insertPage($p)
 {
-	global $image_name, $pageHelp, $delay, $daydelay, $daydelay_postMsg, $nightdelay, $nightdelay_postMsg, $darkframe;
+	global $image_name, $pageHelp, $delay, $daydelay, $daydelay_postMsg, $nightdelay, $nightdelay_postMsg, $darkframe, $day;
 
 	$pageHelp = getPageHelp($p);
 
@@ -432,8 +434,8 @@ function insertPage($p)
 			ListFileType("startrails/", "startrails", "Startrails", "picture");
 			break;
 		case "list_meteors":
-			// directory, file name prefix, formal name, type of file
-			ListFileType("meteors/", "meteors", "Meteors", "picture");
+			include_once("includes/meteors.php");
+			ListMeteors($day);
 			break;
 		case "configuration":
 			include_once("includes/allskySettings.php");
@@ -693,11 +695,13 @@ function insertEditorCode($p)
 
 
 $day = getVariableOrDefault($_REQUEST, 'day', "");
-if ($day !== "")
-	$day = " - $day";
+if ($day === "")
+	$dayString = "";
+else
+	$dayString = " - $day";
 $remoteWebsiteVersion = getRemoteWebsiteVersion();
-$pageTitle = getPageTitle($page, $day);
-$pageHeaderTitle = getPageHeaderTitle($page, $day);
+$pageTitle = getPageTitle($page, $dayString);
+$pageHeaderTitle = getPageHeaderTitle($page, $dayString);
 $pageIcon = getPageIcon($page);
 $versionInfoHtml = insertVersions();
 $dayNightStatus = getDayNightStatus();

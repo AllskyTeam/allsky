@@ -126,8 +126,8 @@ function ListMeteors($aDay = null)
 		return;
 	}
 
-	$thumbnailWidth = 200;
-	echo "<style>.meteors-table th, .meteors-table td, .meteors-table td form { vertical-align: middle; }.meteors-table td { vertical-align: middle !important; }.meteors-table img { max-width: {$thumbnailWidth}px; height: auto; }</style>";
+	$thumbnailWidth = "200px";
+	echo "<style>.meteors-table th, .meteors-table td, .meteors-table td form { vertical-align: middle; }.meteors-table td { vertical-align: middle !important; }.meteors-table img { max-width: {$thumbnailWidth}; height: auto; }</style>";
 	echo "<div class='table-responsive'><table class='table table-striped table-hover meteors-table'><thead><tr>";
 	echo "<th style='text-align: center'>Meteor(s)</th>";
 	echo "<th style='text-align: center'>Marked</th>";
@@ -174,14 +174,14 @@ function ListMeteors($aDay = null)
 		$imgTime = htmlspecialchars(substr($meteor['time'], 0, 2) . ':' . substr($meteor['time'], 2, 2) . ':' . substr($meteor['time'], 4, 2), ENT_QUOTES);
 		echo '<td style="text-align: center">';
 			echo '<a href="' . htmlspecialchars($imageUrl, ENT_QUOTES) . '" data-lg-size="' . htmlspecialchars($lightboxSize, ENT_QUOTES) . '">';
-			echo '<img align="center" src="' . htmlspecialchars($thumbnailUrl, ENT_QUOTES) . '" alt="' . htmlspecialchars($name, ENT_QUOTES) . '" loading="lazy" width="'. $thumbnailWidth . '"></a>';
+			echo '<img align="center" src="' . htmlspecialchars($thumbnailUrl, ENT_QUOTES) . '" alt="' . htmlspecialchars($name, ENT_QUOTES) . '" loading="lazy"></a>';
 			echo '<br>' . $imgDate . '&nbsp; &nbsp;' . $imgTime;
 		echo '</td>';
 
 		echo '<td style="text-align: center">';
 		if ($markedExists) {
 			echo '<a href="' . htmlspecialchars($markedImageUrl, ENT_QUOTES) . '" data-lg-size="' . htmlspecialchars(getLightboxSizeAttribute($markedImagePath), ENT_QUOTES) . '">';
-			echo '<img align="center" src="' . htmlspecialchars($markedThumbnailUrl, ENT_QUOTES) . '" alt="' . htmlspecialchars($markedName, ENT_QUOTES) . '" loading="lazy" width="' . $thumbnailWidth . '"></a>';
+			echo '<img align="center" src="' . htmlspecialchars($markedThumbnailUrl, ENT_QUOTES) . '" alt="' . htmlspecialchars($markedName, ENT_QUOTES) . '" loading="lazy"></a>';
 			echo '<br>&nbsp;';
 		} else {
 			echo '-';

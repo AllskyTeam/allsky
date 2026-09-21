@@ -148,7 +148,7 @@ foreach ($days as $day) {
 
 	ob_start();
 	if ($has_images) {
-		$icon = "<i class='fa fa-image fa-fw fa-{$fa_size}'></i>";
+		$icon = "<i class='fa fa-image fa-fw $fa_size'></i>";
 		echo "<a href='index.php?page=list_images&day=$day' title='Images'>$icon</a>";
 	} else {
 		echo "none";
@@ -166,7 +166,7 @@ foreach ($days as $day) {
 				$images_dir = "/images";
 				$thumb = str_replace(ALLSKY_IMAGES, "/images", $thumb[0]);
 				// 22px is roughly the width of a "fa-lg fa-fw" icon.
-				$icon = "<img src='$thumb' width='{$fa_size_px}px'>";
+				$icon = "<img src='$thumb' width='$fa_size_px'>";
 			}
 		}
 		insertHref("list_videos", $day, false, $icon);
@@ -203,12 +203,10 @@ foreach ($days as $day) {
 	}
 	$meteorsHtml = ob_get_clean();
 
-	$deleteHtml = "
-				<button type='submit' data-toggle='confirmation'
+	$deleteHtml = "<button type='submit' data-toggle='confirmation'
 					class='btn btn-danger btn-sm' name='delete_directory' value='$day'>
 					<i class='fa fa-trash'></i> <span class='hidden-xs'>Delete</span>
-				</button>
-			";
+				</button>";
 
 	echo "  <div class='row days-grid-row' data-sort-day='" . htmlspecialchars($day, ENT_QUOTES) . "'>\n";
 	echo "    <div class='col-sm-2 days-day-col'><span class='days-grid-value days-table-day'>$day</span></div>\n";

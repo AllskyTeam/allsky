@@ -68,10 +68,11 @@ function ListMeteors($aDay = null)
 		$files = scandir($meteorDirectory);
 		if ($files !== false) {
 			foreach ($files as $file) {
-				if (preg_match('/^meteors-\d{8}(\d{6})\.(jpg|png)$/i', $file, $matches)) {
+				if (preg_match('/^meteors-(\d{8})(\d{6})\.(jpg|png)$/i', $file, $matches)) {
 					$meteorFiles[] = [
 						'name' => $file,
-						'time' => $matches[1],
+						'date' => $matches[1],
+						'time' => $matches[2],
 					];
 				}
 			}
@@ -128,7 +129,7 @@ function ListMeteors($aDay = null)
 	$thumbnailWidth = 200;
 	echo "<style>.meteors-table th, .meteors-table td, .meteors-table td form { vertical-align: middle; }.meteors-table td { vertical-align: middle !important; }.meteors-table img { max-width: {$thumbnailWidth}px; height: auto; }</style>";
 	echo "<div class='table-responsive'><table class='table table-striped table-hover meteors-table'><thead><tr>";
-	echo "<th>Day</th><th>Time</th>";
+	echo "<th>Date</th><th>Time</th>";
 	echo "<th style='text-align: center'>Meteor(s)</th>";
 	echo "<th style='text-align: center'>Marked</th>";
 	echo "<th>Meteor</th>";
@@ -173,7 +174,7 @@ function ListMeteors($aDay = null)
 			$metadataItem = $metadata[$metadataIndex] ?? [];
 			echo '<tr>';
 			if ($metadataIndex === 0) {
-				echo '<td rowspan="' . $rowCount . '">' . htmlspecialchars($day, ENT_QUOTES) . '</td>';
+				echo '<td rowspan="' . $rowCount . '">' . htmlspecialchars($meteor['date'], ENT_QUOTES) . '</td>';
 				echo '<td rowspan="' . $rowCount . '">' . htmlspecialchars(substr($meteor['time'], 0, 2) . ':' . substr($meteor['time'], 2, 2) . ':' . substr($meteor['time'], 4, 2), ENT_QUOTES) . '</td>';
 				echo '<td rowspan="' . $rowCount . '" style="text-align: center">';
 					echo '<a href="' . htmlspecialchars($imageUrl, ENT_QUOTES) . '" data-lg-size="' . htmlspecialchars($lightboxSize, ENT_QUOTES) . '">';

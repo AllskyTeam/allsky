@@ -70,12 +70,15 @@ function getRemoteWebsiteVersion()
 
 }
 
-// What size Font Awesome icon to use on "list_days" page?
-$fa_size = "2x";	// "lg" or "2x"
-if ($fa_size == "lg") {
-	$fa_size_px = 22;	// the rough width of the font awesome icon
+// What size Font Awesome icon to use on "list_days" page?  "lg" or "2x".
+// $fa_size and $fa_size_px are globals.
+if ($page === "list_days") {
+	$fa_size = "fa-2x";
+	$fa_size_px = "35px";
 } else {
-	$fa_size_px = 35;
+	$fa_size = "fa-lg";
+$fa_size = "";
+	$fa_size_px = "22px";	// the rough width of the font awesome icon
 }
 
 $pageInfo = [
@@ -102,33 +105,33 @@ $pageInfo = [
 	],
 	"list_images" => [
 		"title" => "Images",
-		"icon" => "fa fa-image fa-" . $fa_size . " fa-fw",
+		"icon" => "fa fa-image $fa_size fa-fw",
 		"help" => "docs/allsky_guide/using/images.html"
 	],
 	"list_videos" => [
 		"title" => "Timelapse",
-		"icon" => "fa fa-film fa-" . $fa_size . " fa-fw",
+		"icon" => "fa fa-film $fa_size fa-fw",
 		"AllTitle" => "All Timelapse (CAN BE SLOW TO LOAD)",
 		"help" => "docs/allsky_guide/using/images.html"
 	],
 	"list_keograms" => [
 		"title" => "Keogram",
-		"icon" => "fa fa-barcode fa-" . $fa_size . " fa-fw",
+		"icon" => "fa fa-barcode $fa_size fa-fw",
 		"AllTitle" => "All Keograms",
 		"help" => "docs/allsky_guide/using/images.html"
 	],
 	"list_startrails" => [
 		"title" => "Startrails",
-		"icon" => "fa-regular fa-star fa-" . $fa_size . " fa-fw",
+		"icon" => "fa-regular fa-star $fa_size fa-fw",
 		"AllTitle" => "All Startrails",
 		"help" => "docs/allsky_guide/using/images.html"
 	],
 	"list_meteors" => [
 		"title" => "Meteors",
-		"icon" => "fa fa-meteor fa-" . $fa_size . " fa-fw",
+		"icon" => "fa fa-meteor $fa_size fa-fw",
 		"AllTitle" => "All Meteors",
 		// TODO: Add help documentation
-		"help" => "docs/allsky_guide/using/meteors.html"
+		// "help" => "docs/allsky_guide/using/meteors.html"
 	],
 	"configuration" => [
 		"title" => "Allsky Settings",

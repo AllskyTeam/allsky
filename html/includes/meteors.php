@@ -183,9 +183,9 @@ $rowSpan="";		// TODO: remove $rowSpan and the commented out lines.
 				$imgTime = htmlspecialchars(substr($meteor['time'], 0, 2) . ':' . substr($meteor['time'], 2, 2) . ':' . substr($meteor['time'], 4, 2), ENT_QUOTES);
 				if (! $timestampUnderImage) {
 					echo '<td ' . $rowSpan . '>' . $imgDate . '</td>';
-					echo '<td ' . $rowSpan . '">' . $imgTime . '</td>';
+					echo '<td ' . $rowSpan . '>' . $imgTime . '</td>';
 				}
-				echo '<td ' . $rowSpan . '" style="text-align: center">';
+				echo '<td ' . $rowSpan . ' style="text-align: center">';
 					echo '<a href="' . htmlspecialchars($imageUrl, ENT_QUOTES) . '" data-lg-size="' . htmlspecialchars($lightboxSize, ENT_QUOTES) . '">';
 					echo '<img align="center" src="' . htmlspecialchars($thumbnailUrl, ENT_QUOTES) . '" alt="' . htmlspecialchars($name, ENT_QUOTES) . '" loading="lazy" width="'. $thumbnailWidth . '"></a>';
 					if ($timestampUnderImage) {
@@ -193,7 +193,7 @@ $rowSpan="";		// TODO: remove $rowSpan and the commented out lines.
 					}
 				echo '</td>';
 
-				echo '<td ' . $rowSpan . '" style="text-align: center">';
+				echo '<td ' . $rowSpan . ' style="text-align: center">';
 				if ($markedExists) {
 					echo '<a href="' . htmlspecialchars($markedImageUrl, ENT_QUOTES) . '" data-lg-size="' . htmlspecialchars(getLightboxSizeAttribute($markedImagePath), ENT_QUOTES) . '">';
 					echo '<img align="center" src="' . htmlspecialchars($markedThumbnailUrl, ENT_QUOTES) . '" alt="' . htmlspecialchars($markedName, ENT_QUOTES) . '" loading="lazy" width="' . $thumbnailWidth . '"></a>';
@@ -231,7 +231,7 @@ $rowSpan="";		// TODO: remove $rowSpan and the commented out lines.
 			echo "</td>";
 
 //x			if ($metadataIndex === 0) {
-				echo '<td ' . $rowSpan . '" style="text-align: center">';
+				echo '<td ' . $rowSpan . ' style="text-align: center">';
 				if ($metadataFilePath !== null) {
 					$jsonUrl = '/images/' . rawurlencode($day) . '/meteors/' . rawurlencode(basename($metadataFilePath));
 					echo '<a href="' . htmlspecialchars($jsonUrl, ENT_QUOTES) . '" target="_blank" rel="noopener noreferrer" onclick="return openMeteorMetadata(this.href);" title="View meteor Metadata" aria-label="View meteor Metadata"><i class="fa fa-2x fa-file-code"></i></a>';
@@ -240,7 +240,7 @@ $rowSpan="";		// TODO: remove $rowSpan and the commented out lines.
 				}
 				echo '</td>';
 
-				echo '<td ' . $rowSpan . '" style="text-align: center">';
+				echo '<td ' . $rowSpan . ' style="text-align: center">';
 					echo '<form method="post" action="index.php?page=list_meteors&amp;day=' . rawurlencode($day) . '" onsubmit="return confirm(\'Delete this meteor and its related files?\');">';
 					echo '<input type="hidden" name="delete_meteor" value="' . htmlspecialchars($name, ENT_QUOTES) . '">';
 					CSRFToken();

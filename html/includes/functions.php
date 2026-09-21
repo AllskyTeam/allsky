@@ -230,10 +230,11 @@ $test_directory = "test";	// directories that start with this are "non-standard"
 	// Either: 2YYYMMDD  or  $test_directory (which is used for non-standard images)
 	// Start with "2" for the 2000's.
 $re_image_directory = "/^(2\d{7}|{$test_directory}\w*)$/";
-	// An image:  "image-YYYYMMDDHHMMSS.jpg" or .jpe or .png
-$re_image_name = '/^\w+-.*\d{14}[.](jpe?g|png)$/i';
-	// An image in a "test*" directory:  "*.jpg" or .jpe or .png
-$re_test_image_name = '/^.*[.](jpe?g|png)$/';
+	// An example image:  "image-YYYYMMDDHHMMSS.jpg"
+	// Another example:   "meteors-YYYYMMDDHHMMSS.jpg"
+$re_image_name = '/^\w+-.*\d{14}[.](jpg|jpeg|png)$/i';
+	// An image in a "test*" directory:  "*.jpg"
+$re_test_image_name = '/^.*[.](jpg|jpeg|png)$/';
 
 function readSettingsFile() {
 	$settings_file = getSettingsFile();
@@ -845,10 +846,15 @@ function renderListFileTypeContent($dir, $imageFileName, $formalImageTypeName, $
 			$num = 0;
 			foreach ($days as $day) {
 				$imageTypes = array();
-				foreach (glob(ALLSKY_IMAGES . "/$day/$dir$imageFileName-$day.*") as $imageType) {
-					$imageTypes[] = $imageType;
+				$globString = ALLSKY_IMAGES . "/$day/$dir$imageFileName-$day";
+				if ($formalImageTypeName !== "Meteors") {
+					// Meteor files include the time in addition to the day.
+					$globString .= ".";
 				}
-				foreach ($imageTypes as $imageType) {
+				$globString .= "*";
+
+				foreach (glob($globString) as $imageType) {
+					$imageTypes[] = $imageType;
 					$imageType_name = basename($imageType);
 					if (! isListFileTypeSupportedFile($imageType_name, $type)) {
 						continue;

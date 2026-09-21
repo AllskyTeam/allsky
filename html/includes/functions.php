@@ -1242,12 +1242,15 @@ function getListFileTypeVideoPlayerUrl($videoUrl, $mimeType) {
 
 function getListFileTypePictureThumbnailUrl($day, $dir, $fileName, $fallbackUrl) {
 	$dirName = trim((string)$dir, '/');
-	$thumbnailDirectory = null;
 
 	if ($dirName === 'keogram') {
 		$thumbnailDirectory = 'keogramthumbnail';
 	} else if ($dirName === 'startrails') {
 		$thumbnailDirectory = 'startrailsthumbnail';
+	} else if ($dirName === 'meteors') {
+		$thumbnailDirectory = 'meteorsthumbnails';
+	} else {
+		$thumbnailDirectory = null;
 	}
 
 	if ($thumbnailDirectory === null || $day === '') {

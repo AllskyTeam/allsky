@@ -712,15 +712,11 @@ def run(args, out):
     images = os.environ.get("ALLSKY_IMAGES") or os.path.join(ALLSKY_HOME, "images")
     outdir = args.directory or os.path.join(images, "test_constellation_overlay")
     os.makedirs(outdir, exist_ok=True)
-    for old in ("overlay_grid.jpg", "overlay_stars.jpg", "overlay_check.jpg"):
-        try:
-            os.remove(os.path.join(outdir, old))    # show only this run's images
-        except OSError:
-            pass
     name = os.path.basename(args.image)
 
     if args.list_stars or not args.star:
         best = None if args.list_stars else _identify(gray, args.image, cat)
+        _clearImages(outdir)
         if best is not None and best[2] < 0:
             out.heading("Stars found automatically")
             out.para("The stars were identified without your help. Check the labelled image in the Images tab: "
@@ -753,6 +749,7 @@ def run(args, out):
     if best is None:
         raise Failure("No consistent fit. Check that the image is clear and dark, that the two names match "
                       "the stars you picked, and that each position is on the star (a few pixels off is fine).")
+    _clearImages(outdir)
     _report(out, img, gray, cat, name, best, outdir)
     _link(out, outdir)
     if not args.html:
@@ -804,6 +801,16 @@ def _report(out, img, gray, cat, name, best, outdir):
     out.para(f"With these settings the overlay should sit within about {fits[proj][2]:.1f} deg of the stars over "
              "most of the sky. Enter them in the Website's settings; nothing has been changed.")
     _checkImage(img.copy(), cat, p, flip, shown[0], shown[1], pairs, os.path.join(outdir, "overlay_check.jpg"))
+
+
+def _clearImages(outdir):
+    """Remove the previous run's images, so the Images tab shows only this run's.
+    Called only once this run is sure to write new ones."""
+    for old in ("overlay_grid.jpg", "overlay_stars.jpg", "overlay_check.jpg"):
+        try:
+            os.remove(os.path.join(outdir, old))
+        except OSError:
+            pass
 
 
 def _link(out, outdir):

@@ -417,13 +417,13 @@
       ],
       "messages": {
         "running": "Fitting the stars...",
-        "working": "Fitting the stars - this takes 10 to 30 seconds...",
+        "working": "Looking for the stars - this can take up to a minute...",
         "runningButton": "Running..."
       },
       "contentHtml": [
-        "<p>The Allsky Website can draw the constellations over your image. For them to line up with the stars, the Website needs to know where the image's zenith is, how big the sky is in the image, and how it is rotated. This page works that out from the stars themselves.</p>",
-        "<p class=\"morePadding\"><ol><li>Pick a clear, dark night image - no clouds, ideally no Moon.</li><li>Press <b>Run</b> with no stars entered: the <b>Output</b> tab lists the bright stars that were up at that time, and the <b>Images</b> tab has a copy of the image with a pixel grid.</li><li>Find two of those stars in the image, well apart and not too low. Enter their names and click each one with <b>Pick</b>.</li><li>Press <b>Run</b> again. The <b>Output</b> tab shows the overlay settings to use, next to the current ones; the <b>Images</b> tab shows where the overlay will draw each bright star.</li></ol>Nothing is changed: enter the suggested values in the Website's settings yourself.</p>"
-      ],
+      "<p>The Allsky Website can draw the constellations over your image. For them to line up with the stars, the Website needs to know where the image's zenith is, how big the sky is in the image, and how it is rotated. This page works that out from the stars themselves.</p>",
+      "<p class=\"morePadding\"><ol><li>Pick a clear, dark night image - no clouds, ideally no Moon.</li><li>Press <b>Run</b>. The tool tries to find the stars by itself. If it does, the <b>Images</b> tab shows the image with the bright stars labelled: check that the names sit on stars. The <b>Output</b> tab then shows the overlay settings to use, next to the current ones.</li><li>If the stars can't be found automatically, the <b>Output</b> tab lists the bright stars that were up, and the <b>Images</b> tab has a copy of the image with a pixel grid. Find two of those stars in the image, well apart and not too low, enter their names, click each one with <b>Pick</b>, and press <b>Run</b> again.</li></ol>Nothing is changed: enter the suggested values in the Website's settings yourself.</p>"
+    ],
       "fields": [
         {
           "name": "image",
@@ -446,7 +446,7 @@
           "label": "First star",
           "type": "text",
           "inputClass": "col-xs-8",
-          "helpHtml": "Its name, as listed in the <b>Output</b> tab, e.g. <code>vega</code>.",
+          "helpHtml": "Only needed if the stars weren't found automatically. Its name, as listed in the <b>Output</b> tab, e.g. <code>vega</code>.",
           "args": [
             {
               "flag": "--star1"

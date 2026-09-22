@@ -4,8 +4,11 @@
 Aligning the overlay by hand means guessing its size, nudging its offsets and rotation,
 reloading and repeating.  This does it from the stars instead:
 
-  1. The user names two bright stars in a clear night image and gives their pixel
-     positions.  That fixes the image's centre, scale and rotation.
+  1. Two bright stars in a clear night image fix the image's centre, scale and
+     rotation.  The script first tries to find them itself: it matches every pair of
+     bright points in the image against every pair of bright catalogue stars, and
+     accepts only a clear winner.  If that fails, the user names two stars and gives
+     their pixel positions.
   2. For every star brighter than magnitude 3 the script computes where it stood at the
      image's time and place, looks for it near that position and keeps it only when the
      brightest point there clearly outshines everything else, so a neighbour can't be
@@ -19,7 +22,8 @@ It only reads: the image, Allsky's settings (location) and the Website configura
 (current values, imageWidth).  It writes the check images and nothing else.
 
 Usage:
-    constellation_overlay.py --image IMAGE --list-stars
+    constellation_overlay.py --image IMAGE                 # identify the stars automatically
+    constellation_overlay.py --image IMAGE --list-stars    # only list the stars that were up
     constellation_overlay.py --image IMAGE --star "vega 2828 1213" --star "altair 2527 1976"
     constellation_overlay.py --image IMAGE --star1 vega --star1-at "2828 1213" --star2 altair --star2-at "2527 1976"
 Options:
@@ -50,6 +54,7 @@ try:
     import cv2
     import numpy as np
     from scipy.optimize import least_squares
+    from scipy.spatial import cKDTree
 except ImportError as _ex:                       # reported after --help has had its chance
     _MISSING = str(_ex)
 else:
@@ -216,11 +221,23 @@ def _unproject(x, y, p, flip):
     return 90.0 - 90.0 * t, az
 
 
+def _wideBlur(g, sigma):
+    """A large Gaussian blur, computed on a reduced copy: the same result for a
+    smooth background at a fraction of the time on a Pi."""
+    f = max(1, int(sigma // 4))
+    if f == 1:
+        return cv2.GaussianBlur(g, (0, 0), sigma)
+    h, w = g.shape
+    small = cv2.resize(g, (max(1, w // f), max(1, h // f)), interpolation=cv2.INTER_AREA)
+    small = cv2.GaussianBlur(small, (0, 0), sigma / f)
+    return cv2.resize(small, (w, h), interpolation=cv2.INTER_LINEAR)
+
+
 def _skyRegion(gray):
     """The part of the image that shows sky: the large bright disk, without the dark
     corners and the overlay text that usually sits on them."""
     h, w = gray.shape
-    smooth = cv2.GaussianBlur(gray, (0, 0), max(8, w / 150))
+    smooth = _wideBlur(gray.astype(np.float32), max(8, w / 150))
     level = 0.35 * float(np.median(smooth[h // 3:2 * h // 3, w // 3:2 * w // 3]))
     sky = (smooth > max(6.0, level)).astype(np.uint8)
     n, lab, stats, _ = cv2.connectedComponentsWithStats(sky, 8)
@@ -234,7 +251,7 @@ def _starMap(gray):
     """Band-pass the image to star-sized spots; saturated stars keep their halo."""
     g = gray.astype(np.float32)
     w = g.shape[1]
-    return cv2.GaussianBlur(g, (0, 0), max(2.0, w / 960)) - cv2.GaussianBlur(g, (0, 0), max(8.0, w / 240))
+    return cv2.GaussianBlur(g, (0, 0), max(2.0, w / 960)) - _wideBlur(g, max(8.0, w / 240))
 
 
 _NOISE = {}
@@ -357,6 +374,153 @@ def _calibrate(gray, cat, picked):
     return best
 
 
+# --- automatic identification --------------------------------------------------------
+
+def _detect(gray, max_n, static=None):
+    """Point sources as local brightness maxima, brightest first, as an (n, 2) array.
+    A star sits on glowing sky, so a maximum only counts where the wide background is
+    at least half the typical sky level.  Maxima at the same pixel in `static` (another
+    image, half an hour away) are overlay text or hot pixels, not stars."""
+    h, w = gray.shape
+    g = gray.astype(np.float32)
+    diff = cv2.GaussianBlur(g, (0, 0), 1.2) - cv2.GaussianBlur(g, (0, 0), max(3.0, w / 700))
+    wide = _wideBlur(g, max(10.0, w / 150))
+    sky = _skyRegion(gray)
+    sky_level = float(np.median(wide[sky])) if sky.any() else float(np.median(wide))
+    v = diff[sky][::7]
+    noise = 1.4826 * float(np.median(np.abs(v - np.median(v)))) if len(v) else 2.0
+    k = max(5, int(w / 550) | 1)
+    peaks = (diff == cv2.dilate(diff, np.ones((k, k), np.uint8))) & (diff > max(4.0, min(12.0, 6 * noise))) \
+        & sky & (wide > 0.5 * sky_level)
+    m = max(1, int(0.012 * w))                   # the frame's edge: cut-off stars and frame lines
+    peaks[:m, :] = peaks[-m:, :] = False
+    peaks[:, :m] = peaks[:, -m:] = False
+    ys, xs = np.nonzero(peaks)
+    pts = np.column_stack([xs, ys]).astype(float)
+    strength = _starMap(gray)[ys, xs]            # a bright star keeps a wider halo than a faint one
+    # A star is an isolated point; the letters of the image's overlay text have several
+    # similar maxima close together.  Drop points with 2 or more rivals nearby.
+    if len(pts):
+        tree = cKDTree(pts)
+        c = diff[ys, xs]
+        crowded = np.zeros(len(pts), bool)
+        for i, near in enumerate(tree.query_ball_point(pts, r=max(12.0, w / 80))):
+            crowded[i] = sum(1 for j in near if j != i and c[j] >= 0.4 * c[i]) >= 2
+        pts, strength = pts[~crowded], strength[~crowded]
+    if static is not None and len(static) and len(pts):
+        d, _ = cKDTree(static).query(pts)
+        keep = d > max(2.0, w / 1300)
+        pts, strength = pts[keep], strength[keep]
+    return pts[np.argsort(-strength)[:max_n]]
+
+
+def _companion(path, minutes=30, window=20):
+    """Another image of the same night, about `minutes` away, from the same folder."""
+    m = re.search(r"(\d{14})", os.path.basename(path))
+    folder = os.path.dirname(os.path.abspath(path))
+    t0 = time.mktime(time.strptime(m.group(1), "%Y%m%d%H%M%S"))
+    best = None
+    try:
+        names = os.listdir(folder)
+    except OSError:
+        return None
+    for name in names:
+        mm = re.fullmatch(r"[A-Za-z_-]*(\d{14})\.(jpg|jpeg|png)", name, re.I)
+        if not mm:
+            continue
+        dt = abs(abs(time.mktime(time.strptime(mm.group(1), "%Y%m%d%H%M%S")) - t0) / 60.0 - minutes)
+        if dt <= window and (best is None or dt < best[0]):
+            best = (dt, os.path.join(folder, name))
+    return best[1] if best else None
+
+
+def _hypotheses(cat, dets, W, H, n_blobs=22, n_stars=22, keep=12):
+    """Two star <-> point correspondences fix centre, scale and rotation exactly
+    (P = C + A*S, see _seed).  Every pair of bright points against every pair of
+    bright catalogue stars gives one guess; each is scored by how many other bright
+    stars then land on a point.  Returns the best distinct guesses as
+    (score, cx, cy, R, rot, flip)."""
+    alt, az, mag, _ = cat
+    score_sel = (mag <= 3.0) & (alt >= 12)
+    pick = np.nonzero((mag <= 3.0) & (alt >= 15))[0]
+    pick = pick[np.argsort(mag[pick])][:n_stars]
+    blobs = dets[:n_blobs]
+    tree = cKDTree(dets[:150])
+    thr = 0.008 * W
+    P = blobs[:, 0] + 1j * blobs[:, 1]
+    ii, jj = np.nonzero(~np.eye(len(P), dtype=bool))
+    dP = P[ii] - P[jj]
+    found = []
+    for flip in (1.0, -1.0):
+        S = (90.0 - alt[pick]) / 90.0 * np.exp(1j * np.radians(flip * az[pick]))
+        Sall = (90.0 - alt[score_sel]) / 90.0 * np.exp(1j * np.radians(flip * az[score_sel]))
+        for a in range(len(S)):
+            for b in range(a + 1, len(S)):
+                dS = S[a] - S[b]
+                if abs(dS) < 0.05:
+                    continue
+                A = dP / dS
+                R = np.abs(A)
+                C = P[ii] - A * S[a]
+                ok = (R > 0.15 * min(W, H)) & (R < 4.0 * max(W, H)) \
+                    & (C.real > -0.2 * W) & (C.real < 1.2 * W) & (C.imag > -0.2 * H) & (C.imag < 1.2 * H)
+                idx = np.nonzero(ok)[0]
+                if len(idx) == 0:
+                    continue
+                Q = C[idx, None] + A[idx, None] * Sall[None, :]          # every guess, every star
+                inside = (Q.real >= 0) & (Q.real < W) & (Q.imag >= 0) & (Q.imag < H)
+                d, _ = tree.query(np.column_stack([Q.real[inside], Q.imag[inside]]))
+                hits = np.zeros(Q.shape, bool)
+                hits[inside] = d < thr
+                score = hits.sum(axis=1)
+                for m in np.nonzero((score >= 6) & (inside.sum(axis=1) >= 6))[0]:
+                    n = idx[m]
+                    found.append((int(score[m]), C[n].real, C[n].imag, R[n],
+                                  (math.degrees(np.angle(A[n])) + 90.0) % 360.0, flip))
+    found.sort(reverse=True)
+    distinct = []
+    for h in found:
+        if all(abs(h[1] - d[1]) > 0.02 * W or abs(h[2] - d[2]) > 0.02 * W or abs(h[3] / d[3] - 1) > 0.05
+               or abs((h[4] - d[4] + 180) % 360 - 180) > 3 or h[5] != d[5] for d in distinct):
+            distinct.append(h)
+        if len(distinct) >= keep:
+            break
+    return distinct
+
+
+def _identify(gray, path, cat):
+    """Find the stars without help.  Accepts only a clear winner: many stars, a small
+    error, and no other solution that comes close.  Returns like _calibrate, or None."""
+    H, W = gray.shape
+    static = None
+    comp = _companion(path)
+    if comp is not None:
+        other = cv2.imread(comp, cv2.IMREAD_GRAYSCALE)
+        if other is not None and other.shape == gray.shape:
+            static = _detect(other, 3000)
+    dets = _detect(gray, 400, static)
+    if len(dets) < 12:
+        return None
+    stars, sky = _starMap(gray), _skyRegion(gray)
+    results = []
+    for _, cx, cy, R, rot, flip in _hypotheses(cat, dets, W, H):
+        p, pairs = _refine(cat, stars, sky, [cx, cy, R, 0.0, rot], flip, W)
+        if p is None:
+            continue
+        rms_px, rms_deg = _residuals(pairs, p, flip)
+        if rms_deg < 0.75:
+            results.append((len(pairs), p, pairs, flip, rms_px, rms_deg))
+    if not results:
+        return None
+    results.sort(key=lambda r: -r[0])
+    n, p, pairs, flip, rms_px, rms_deg = results[0]
+    rivals = [r for r in results[1:] if math.hypot(r[1][0] - p[0], r[1][1] - p[1]) > 0.02 * W
+              or abs((r[1][4] - p[4] + 180) % 360 - 180) > 3 or r[3] != flip]
+    if n < 12 or rms_deg > 0.6 or (rivals and rivals[0][0] >= 0.7 * n):
+        return None
+    return p, pairs, flip, rms_px, rms_deg
+
+
 # --- overlay -------------------------------------------------------------------------
 
 def _overlayFit(p, flip, sky, design_w):
@@ -449,6 +613,28 @@ def _checkImage(img, cat, p, flip, st, design_w, pairs, path):
     _save(img, path)
 
 
+def _labelImage(img, cat, p, flip, path):
+    """The image with each named bright star circled and labelled, for the user to check."""
+    H, W = img.shape[:2]
+    k = W / 3840.0
+    lw = max(2, int(round(3 * k)))
+    alt, az, _, names = cat
+    x, y = _project(alt, az, p, flip)
+    for i in range(len(alt)):
+        if not names[i] or not (0 <= x[i] < W and 0 <= y[i] < H):
+            continue
+        c = (int(x[i]), int(y[i]))
+        cv2.circle(img, c, int(34 * k), (0, 255, 255), lw)
+        label = names[i].title()
+        (tw, _), _ = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 1.5 * k, lw)
+        org = (c[0] + int(40 * k), c[1] - int(24 * k))
+        if org[0] + tw > W:                     # near the right edge: label on the left
+            org = (c[0] - int(40 * k) - tw, org[1])
+        cv2.putText(img, label, org, cv2.FONT_HERSHEY_SIMPLEX, 1.5 * k, (0, 0, 0), lw + 3)
+        cv2.putText(img, label, org, cv2.FONT_HERSHEY_SIMPLEX, 1.5 * k, (0, 255, 255), lw)
+    _save(img, path)
+
+
 def _gridImage(img, path):
     """The image with a labelled pixel grid, to read star positions from."""
     H, W = img.shape[:2]
@@ -491,7 +677,8 @@ def main():
     for n in ("1", "2"):                          # the same, as separate fields for the WebUI form
         ap.add_argument(f"--star{n}", metavar="NAME", help=f"name of star {n}")
         ap.add_argument(f"--star{n}-at", metavar="'X Y'", help=f"pixel position of star {n}")
-    ap.add_argument("--list-stars", action="store_true", help="list the bright stars that were up, and stop")
+    ap.add_argument("--list-stars", action="store_true",
+                    help="only list the bright stars that were up; don't try to identify them")
     ap.add_argument("--directory", help="where to put the check images")
     ap.add_argument("--html", action="store_true", help="HTML output for the WebUI")
     args = ap.parse_args()
@@ -525,12 +712,31 @@ def run(args, out):
     images = os.environ.get("ALLSKY_IMAGES") or os.path.join(ALLSKY_HOME, "images")
     outdir = args.directory or os.path.join(images, "test_constellation_overlay")
     os.makedirs(outdir, exist_ok=True)
+    for old in ("overlay_grid.jpg", "overlay_stars.jpg", "overlay_check.jpg"):
+        try:
+            os.remove(os.path.join(outdir, old))    # show only this run's images
+        except OSError:
+            pass
     name = os.path.basename(args.image)
 
     if args.list_stars or not args.star:
-        _listStars(out, cat, name, None)
-        _gridImage(img.copy(), os.path.join(outdir, "overlay_grid.jpg"))
+        best = None if args.list_stars else _identify(gray, args.image, cat)
+        if best is not None and best[2] < 0:
+            out.heading("Stars found automatically")
+            out.para("The stars were identified without your help. Check the labelled image in the Images tab: "
+                     "if the names sit on the right stars, the settings below are ready to use. If they don't, "
+                     "enter two stars yourself.")
+            _labelImage(img.copy(), cat, best[0], best[2], os.path.join(outdir, "overlay_stars.jpg"))
+            _report(out, img, gray, cat, name, best, outdir)
+        else:
+            if not args.list_stars:
+                out.para("The stars could not be identified automatically in this image, so please pick two "
+                         "yourself: enter their names and click each one.")
+            _listStars(out, cat, name, None)
+            _gridImage(img.copy(), os.path.join(outdir, "overlay_grid.jpg"))
         _link(out, outdir)
+        if not args.html:
+            print(f"Done in {time.time() - started:.0f} s.")
         return
 
     if getattr(args, "incomplete", None):
@@ -547,6 +753,15 @@ def run(args, out):
     if best is None:
         raise Failure("No consistent fit. Check that the image is clear and dark, that the two names match "
                       "the stars you picked, and that each position is on the star (a few pixels off is fine).")
+    _report(out, img, gray, cat, name, best, outdir)
+    _link(out, outdir)
+    if not args.html:
+        print(f"Done in {time.time() - started:.0f} s.")
+
+
+def _report(out, img, gray, cat, name, best, outdir):
+    """The fit, the overlay settings per Website, and the check image."""
+    H, W = gray.shape
     p, pairs, flip, rms_px, rms_deg = best
     out.heading("Fit to the stars")
     out.table(None, [
@@ -573,9 +788,10 @@ def run(args, out):
         else:
             configs.append([label, path, cfg, now])
     shown = None
+    sky = _skyRegion(gray)
     for label, path, cfg, _ in configs:
         design_w = float(cfg.get("imageWidth") or 900)
-        fits, zmax = _overlayFit(p, flip, _skyRegion(gray), design_w)
+        fits, zmax = _overlayFit(p, flip, sky, design_w)
         proj = min(fits, key=lambda k: fits[k][1])
         st = _overlaySettings(p, fits[proj][0], proj, design_w, W)
         out.heading(f"Overlay settings for the {label} (imageWidth {design_w:g})")
@@ -587,11 +803,7 @@ def run(args, out):
             shown = (st, design_w)
     out.para(f"With these settings the overlay should sit within about {fits[proj][2]:.1f} deg of the stars over "
              "most of the sky. Enter them in the Website's settings; nothing has been changed.")
-
     _checkImage(img.copy(), cat, p, flip, shown[0], shown[1], pairs, os.path.join(outdir, "overlay_check.jpg"))
-    _link(out, outdir)
-    if not args.html:
-        print(f"Done in {time.time() - started:.0f} s.")
 
 
 def _link(out, outdir):

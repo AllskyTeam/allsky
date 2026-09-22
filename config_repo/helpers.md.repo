@@ -494,6 +494,7 @@ Supported type names:
 - `imagepicker`
 - `directorybrowser`
 - `numberseries`
+- `imagepoint`
 
 Unknown types fall back to a text-style input so that small configuration
 mistakes do not break the whole helper page.
@@ -574,6 +575,34 @@ Supported options:
 
 Use this for helpers that accept several numeric values in one field, such as
 threshold lists, bitrate lists, or FPS lists.
+
+#### `imagepoint`
+
+Renders a text field plus a `Pick` button.
+
+The button opens the image chosen in another field of the same helper - normally
+an `imagepicker` - and the user clicks a point on it. The position is written into
+the field as `X Y`, in the image's own full-resolution pixels, whatever size the
+image is shown at. A `100%` button zooms in for precise clicks. The field stays
+editable, so a position can also be typed.
+
+Supported options:
+
+- `imageField`: the `name` of the field that holds the image's path (required).
+  The path must be under `ALLSKY_IMAGES`.
+- `snap`: optional radius in image pixels. The click moves to the centre of the
+  brightest spot within it, which makes it easy to pick a star exactly. If nothing
+  stands out there, the click is used as it is.
+- `title`: optional title for the dialogue.
+
+```json
+{
+  "name": "star1_at",
+  "label": "First star in the image",
+  "type": {"name": "imagepoint", "imageField": "image", "snap": 15},
+  "args": [{"flag": "--star1-at"}]
+}
+```
 
 ### `inputClass`
 

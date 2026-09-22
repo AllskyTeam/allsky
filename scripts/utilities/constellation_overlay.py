@@ -21,6 +21,7 @@ It only reads: the image, Allsky's settings (location) and the Website configura
 Usage:
     constellation_overlay.py --image IMAGE --list-stars
     constellation_overlay.py --image IMAGE --star "vega 2828 1213" --star "altair 2527 1976"
+    constellation_overlay.py --image IMAGE --star1 vega --star1-at "2828 1213" --star2 altair --star2-at "2527 1976"
 Options:
     --html             output for the WebUI helper page
     --directory DIR    where to put the check images
@@ -487,10 +488,20 @@ def main():
     ap.add_argument("--image", required=True, help="a clear night image as Allsky saved it")
     ap.add_argument("--star", action="append", default=[], metavar="'NAME X Y'",
                     help="an identified star and its pixel position; give two")
+    for n in ("1", "2"):                          # the same, as separate fields for the WebUI form
+        ap.add_argument(f"--star{n}", metavar="NAME", help=f"name of star {n}")
+        ap.add_argument(f"--star{n}-at", metavar="'X Y'", help=f"pixel position of star {n}")
     ap.add_argument("--list-stars", action="store_true", help="list the bright stars that were up, and stop")
     ap.add_argument("--directory", help="where to put the check images")
     ap.add_argument("--html", action="store_true", help="HTML output for the WebUI")
     args = ap.parse_args()
+    for n in ("1", "2"):
+        name, at = getattr(args, f"star{n}"), getattr(args, f"star{n}_at")
+        if name and at:
+            args.star.append(f"{name} {at}")
+        elif name or at:
+            args.star.append(None)
+            args.incomplete = f"Star {n} needs both its name and its position in the image."
     out = Out(args.html)
     try:
         if _MISSING:
@@ -522,6 +533,8 @@ def run(args, out):
         _link(out, outdir)
         return
 
+    if getattr(args, "incomplete", None):
+        raise Failure(args.incomplete)
     if len(args.star) != 2:
         raise Failure("Give exactly two stars.")
     picked = [_parseStar(s, cat) for s in args.star]

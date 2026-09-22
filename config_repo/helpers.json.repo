@@ -402,6 +402,107 @@
         "label": "Create Timelapse Videos",
         "warningHtml": "WARNING: It may be a minute or more the results appear."
       }
+    },
+    "constellation_overlay": {
+      "title": "Constellation Overlay",
+      "icon": "fa fa-star-half-stroke fa-fw",
+      "pageTitle": "Help Align the Website's Constellation Overlay",
+      "action": "HelperRun",
+      "method": "POST",
+      "outputFormat": "html",
+      "showResultsTabs": true,
+      "command": [
+        "constellation_overlay",
+        "--html"
+      ],
+      "messages": {
+        "running": "Fitting the stars...",
+        "working": "Fitting the stars - this takes 10 to 30 seconds...",
+        "runningButton": "Running..."
+      },
+      "contentHtml": [
+        "<p>The Allsky Website can draw the constellations over your image. For them to line up with the stars, the Website needs to know where the image's zenith is, how big the sky is in the image, and how it is rotated. This page works that out from the stars themselves.</p>",
+        "<p class=\"morePadding\"><ol><li>Pick a clear, dark night image - no clouds, ideally no Moon.</li><li>Press <b>Run</b> with no stars entered: the <b>Output</b> tab lists the bright stars that were up at that time, and the <b>Images</b> tab has a copy of the image with a pixel grid.</li><li>Find two of those stars in the image, well apart and not too low. Enter their names and click each one with <b>Pick</b>.</li><li>Press <b>Run</b> again. The <b>Output</b> tab shows the overlay settings to use, next to the current ones; the <b>Images</b> tab shows where the overlay will draw each bright star.</li></ol>Nothing is changed: enter the suggested values in the Website's settings yourself.</p>"
+      ],
+      "fields": [
+        {
+          "name": "image",
+          "label": "Night image",
+          "type": {
+            "name": "imagepicker",
+            "topLevelFoldersOnly": true,
+            "excludeTestFolders": true
+          },
+          "inputClass": "col-xs-8",
+          "helpHtml": "A clear night image, as Allsky saved it (the time in its name is used).",
+          "args": [
+            {
+              "flag": "--image"
+            }
+          ]
+        },
+        {
+          "name": "star1",
+          "label": "First star",
+          "type": "text",
+          "inputClass": "col-xs-8",
+          "helpHtml": "Its name, as listed in the <b>Output</b> tab, e.g. <code>vega</code>.",
+          "args": [
+            {
+              "flag": "--star1"
+            }
+          ]
+        },
+        {
+          "name": "star1_at",
+          "label": "First star in the image",
+          "type": {
+            "name": "imagepoint",
+            "imageField": "image",
+            "snap": 15,
+            "title": "Click the first star"
+          },
+          "inputClass": "col-xs-8",
+          "helpHtml": "Press <b>Pick</b> and click the star. A click a few pixels off is fine.",
+          "args": [
+            {
+              "flag": "--star1-at"
+            }
+          ]
+        },
+        {
+          "name": "star2",
+          "label": "Second star",
+          "type": "text",
+          "inputClass": "col-xs-8",
+          "helpHtml": "Another star from the list, well away from the first one.",
+          "args": [
+            {
+              "flag": "--star2"
+            }
+          ]
+        },
+        {
+          "name": "star2_at",
+          "label": "Second star in the image",
+          "type": {
+            "name": "imagepoint",
+            "imageField": "image",
+            "snap": 15,
+            "title": "Click the second star"
+          },
+          "inputClass": "col-xs-8",
+          "args": [
+            {
+              "flag": "--star2-at"
+            }
+          ]
+        }
+      ],
+      "submit": {
+        "name": "constellation_overlay",
+        "label": "Run"
+      }
     }
   }
 }

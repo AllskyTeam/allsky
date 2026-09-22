@@ -278,7 +278,8 @@ class HelperPageRenderer
 	/**
 	 * Render one configured field.
 	 *
-	 * Supported types are text, number, checkbox, and imagepicker.  Unknown types
+	 * Supported types are text, number, checkbox, imagepicker, directorybrowser,
+	 * numberseries and imagepoint.  Unknown types
 	 * intentionally fall back to text to keep the JSON tolerant of small mistakes.
 	 */
 	private function renderField(array $field): string
@@ -316,6 +317,9 @@ class HelperPageRenderer
 		}
 		if ($type === 'numberseries') {
 			return $this->renderNumberSeries($field);
+		}
+		if ($type === 'imagepoint') {
+			return $this->renderImagePoint($field);
 		}
 
 		return $this->renderTextInput($field);
@@ -471,6 +475,51 @@ class HelperPageRenderer
 			]) . '/>'
 			. "<span class='input-group-btn'>"
 			. "<button type='button' class='btn btn-default js-allsky-number-series-button'><i class='fa fa-list-ol'></i> Series</button>"
+			. '</span>'
+			. '</div>';
+	}
+
+	/**
+	 * Render an image point field.
+	 *
+	 * The user clicks a point on the image chosen in another field (an imagepicker
+	 * named by the `imageField` option); the plugin writes its position, in the
+	 * image's own full-resolution pixels, into the input as "X Y".  The input stays
+	 * editable, so a value can also be typed.  With the `snap` option the click moves
+	 * to the brightest pixel within that many image pixels, e.g. onto a star.
+	 */
+	private function renderImagePoint(array $field): string
+	{
+		$name = (string) $field['name'];
+		$value = (string) $this->defaultValue($field);
+		$inputClass = (string) ($field['inputClass'] ?? 'col-xs-8');
+		$pointAttrs = [
+			'class' => 'input-group ' . $inputClass . ' js-allsky-image-point',
+			'data-image-field' => (string) $this->fieldTypeOption($field, 'imageField', ''),
+			'data-images-path' => rtrim(str_replace('\\', '/', (string) (realpath(ALLSKY_IMAGES) ?: ALLSKY_IMAGES)), '/'),
+			'data-images-url' => '/images',
+		];
+		$snap = $this->fieldTypeOption($field, 'snap');
+		if ($snap !== null) {
+			$pointAttrs['data-snap'] = (string) max(0, (int) $snap);
+		}
+		$title = $this->fieldTypeOption($field, 'title');
+		if ($title !== null) {
+			$pointAttrs['data-title'] = (string) $title;
+		}
+
+		return ''
+			. '<div ' . $this->attrs($pointAttrs) . '>'
+			. '<input ' . $this->attrs([
+				'type' => 'text',
+				'class' => 'form-control js-allsky-image-point-input',
+				'name' => $name,
+				'id' => $name,
+				'value' => $value,
+				'placeholder' => 'x y',
+			]) . '/>'
+			. "<span class='input-group-btn'>"
+			. "<button type='button' class='btn btn-default js-allsky-image-point-button'><i class='fa fa-crosshairs'></i> Pick</button>"
 			. '</span>'
 			. '</div>';
 	}
@@ -744,6 +793,8 @@ class HelperPageRenderer
 			. '<script src="/js/jquery-allskyimagepicker/jquery-allskyimagepicker.js?c=' . $this->e(ALLSKY_VERSION) . '"></script>'
 			. '<script src="/js/jquery-allskydirectorybrowser/jquery-allskydirectorybrowser.js?c=' . $this->e(ALLSKY_VERSION) . '"></script>'
 			. '<script src="/js/jquery-allskynumberseries/jquery-allskynumberseries.js?c=' . $this->e(ALLSKY_VERSION) . '"></script>'
+			. '<link type="text/css" rel="stylesheet" href="/js/jquery-allskyimagepoint/jquery-allskyimagepoint.css?c=' . $this->e(ALLSKY_VERSION) . '" />'
+			. '<script src="/js/jquery-allskyimagepoint/jquery-allskyimagepoint.js?c=' . $this->e(ALLSKY_VERSION) . '"></script>'
 			. '<script src="/js/jquery-loading-overlay/dist/loadingoverlay.min.js?c=' . $this->e(ALLSKY_VERSION) . '"></script>'
 			. '<script src="/js/helpers_tool.js?c=' . $this->e(ALLSKY_VERSION) . '"></script>';
 	}

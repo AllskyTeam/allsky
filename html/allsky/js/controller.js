@@ -72,52 +72,24 @@ function layoutOverlay(c) {
 	// #starmap holds the starmap button, so it is sized with the overlay.
 	starmapWidth = overlayWidth;
 	starmapHeight = overlayHeight;
+	var marginLeft = Math.round(c.overlayOffsetLeft * scale, 0);
+	var marginTop = Math.round(c.overlayOffsetTop * scale, 0);
 	$("#starmap")
 		.css("width", starmapWidth + "px")
 		.css("height", starmapHeight + "px")
-		.css("margin-top", Math.round(c.overlayOffsetTop * scale, 0) + "px")
-		.css("margin-left", Math.round(c.overlayOffsetLeft * scale, 0) + "px");
+		.css("margin-top", marginTop + "px")
+		.css("margin-left", marginLeft + "px");
 	$("#starmap_inner")
 		.css("width", overlayWidth + "px")
 		.css("height", overlayHeight + "px");
 
-	// The "?" icon is in the "starmap" container,
-	// which is part of the (usually larger) "starmap_container".
-	// Since the optional border goes around the "starmap_container",
-	// put "?" icon on upper right of that container, 3 pixels inside the border.
-
-	// Determine how far apart the right sides of the
-	// "starmap" and "starmap_container" are.
-	var starmap_containerWidth = $("#starmap_container").width();
-	var diffWidth = Math.round((starmap_containerWidth - starmapWidth) * scale, 0) - c.overlayOffsetLeft;
-	let x = -diffWidth + 3;
-	var y = -c.overlayOffsetTop + 3;
-
-	if (scale < 1) {
-// This doesn't work very well - when the browser window is larger than the image,
-// the "?" icon is in the correct place, but when the browser window is smaller than the image,
-// the icon is slightly too far to the right when the image is slightly too narrow,
-// then as it gets narrower the icon moves farther and farther left.
-// The "scale" tries unsuccessfully to take that movement into account.
-		if (c.overlayOffsetLeft != 0) {
-			// TODO: I have no idea why this is needed.
-			// I got the number by trial and error but
-			// they aren't great.
-			var change = ((scale * 0.95 * x) - x) / 2;
-			x += change + 20;
-			x = Math.round(x, 0);
-		}
-
-		if (c.overlayOffsetTop > 0) {
-			y *= scale * 1.3;
-			y = Math.round(y, 0);
-		} else if (c.overlayOffsetTop < 0) {
-			y *= scale * 1.5;
-			y = Math.round(y, 0);
-		}
-	}
-	$(".starmap_btn_help").css("right", Math.round(x, 0) + "px");
-	$(".starmap_btn_help").css("top", Math.round(y, 0) + "px");
+	// The "?" icon belongs to "starmap", which sits at the overlay's offsets inside the
+	// (usually larger) "starmap_container".  The optional border goes around that
+	// container, so put the icon 3 pixels inside its top right corner.  virtualsky.js
+	// positions the icon relative to "starmap", hence the offsets below.
+	$(".starmap_btn_help")
+		.css("right", (marginLeft + starmapWidth - $("#starmap_container").width() + 3) + "px")
+		.css("top", (3 - marginTop) + "px");
 
 	// Keep track of the sizes.  virtualsky.js seems to change them,
 	// so we need to change them based on our last known sizes.

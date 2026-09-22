@@ -796,6 +796,13 @@ def _report(out, img, gray, cat, name, best, outdir):
         out.table(("Projection", "Error RMS", "95% of sky", "Worst"),
                   [(k + ("  <- best" if k == proj else ""), f"{v[1]:.2f} deg", f"{v[2]:.2f} deg", f"{v[3]:.2f} deg")
                    for k, v in sorted(fits.items(), key=lambda kv: kv[1][1])])
+        try:
+            unequal = float(cfg["overlayWidth"]) != float(cfg["overlayHeight"])
+        except (KeyError, TypeError, ValueError):
+            unequal = False
+        if unequal:
+            out.para("Note: overlayWidth and overlayHeight differ now. The overlay isn't made for that, "
+                     "so keep them equal, as suggested.")
         if shown is None:
             shown = (st, design_w)
     out.para(f"With these settings the overlay should sit within about {fits[proj][2]:.1f} deg of the stars over "

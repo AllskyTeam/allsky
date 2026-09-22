@@ -152,8 +152,10 @@ function buildOverlay(){
 					starmapWidth = w;
 					starmapHeight = h;
 
-					//  Offset of overlay + New Margins
-					var scalemargins = icWidth / overlayWidthMax;
+					//  Offset of overlay + New Margins.
+					// The offsets are in the same coordinates as imageWidth, so they
+					// shrink with the image, NOT with the overlay's own width.
+					var scalemargins = percentSmallerWidth;
 					$("#starmap")
 						.css("margin-top", c.overlayOffsetTop * scalemargins + "px")
 						.css("margin-left", c.overlayOffsetLeft * scalemargins + "px");

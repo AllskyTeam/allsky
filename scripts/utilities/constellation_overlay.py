@@ -18,8 +18,10 @@ reloading and repeating.  This does it from the stars instead:
      the visible sky and prints the overlay settings for the best one, with the error
      to expect, plus a check image.
 
-It only reads: the image, Allsky's settings (location) and the Website configuration
-(current values, imageWidth).  It writes the check images and nothing else.
+It reads the image, Allsky's settings (location, which Websites are enabled) and the
+Website configuration (current values, imageWidth), and writes the check images.  With
+--update it also writes the suggested settings into the configuration of each enabled
+Website, the way the WebUI does, and uploads the remote one.
 
 Usage:
     constellation_overlay.py --image IMAGE                 # identify the stars automatically
@@ -27,6 +29,8 @@ Usage:
     constellation_overlay.py --image IMAGE --star "vega 2828 1213" --star "altair 2527 1976"
     constellation_overlay.py --image IMAGE --star1 vega --star1-at "2828 1213" --star2 altair --star2-at "2527 1976"
 Options:
+    --update           write the settings into the enabled Websites' configuration
+                       (and upload the remote one)
     --html             output for the WebUI helper page
     --directory DIR    where to put the check images
                        (default: ${ALLSKY_IMAGES}/test_constellation_overlay)
@@ -48,6 +52,7 @@ import html
 import json
 import math
 import re
+import subprocess
 import time
 
 try:
@@ -123,12 +128,16 @@ def _parseLatLon(value):
     return -v if m.group(2).upper() in ("S", "W") else v
 
 
-def _location():
+def _settings():
     path = os.environ.get("ALLSKY_SETTINGS_FILE") or os.path.join(ALLSKY_HOME, "config", "settings.json")
     try:
-        st = json.load(open(path))
+        return json.load(open(path))
     except Exception as ex:
         raise Failure(f"Unable to read Allsky's settings '{path}': {ex}")
+
+
+def _location():
+    st = _settings()
     lat, lon = _parseLatLon(st.get("latitude")), _parseLatLon(st.get("longitude"))
     if lat is None or lon is None:
         raise Failure("Latitude and Longitude must be set in the WebUI's Allsky Settings.")
@@ -146,20 +155,59 @@ def _imageUtc(path):
 
 
 def _websiteConfigs():
-    """The Website configurations that exist: [(label, path, config dict)]."""
+    """The Website configurations that exist: [(kind, label, path, config dict)]."""
     found = []
-    for label, env, default in (
-            ("local Website", "ALLSKY_WEBSITE_CONFIGURATION_FILE",
+    for kind, env, default in (
+            ("local", "ALLSKY_WEBSITE_CONFIGURATION_FILE",
              os.path.join(ALLSKY_HOME, "html", "allsky", "configuration.json")),
-            ("remote Website", "ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE",
+            ("remote", "ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE",
              os.path.join(ALLSKY_HOME, "config", "remote_configuration.json"))):
         path = os.environ.get(env) or default
         try:
             doc = json.load(open(path))
         except Exception:
             continue
-        found.append((label, path, doc.get("config", doc)))
+        found.append((kind, f"{kind} Website", path, doc.get("config", doc)))
     return found
+
+
+def _enabled(value):
+    return value is True or str(value).strip().lower() == "true"
+
+
+def _updateWebsites(out, targets):
+    """Write the suggested settings into each enabled Website's configuration with Allsky's
+    own updateJsonFile.sh, and upload the remote one, as the WebUI does when a Website
+    setting changes.  targets: [(kind, label, path, settings)]."""
+    scripts = os.environ.get("ALLSKY_SCRIPTS") or os.path.join(ALLSKY_HOME, "scripts")
+    allsky = _settings()
+    rows = []
+    for kind, label, path, st in targets:
+        label = label[0].upper() + label[1:]
+        if not _enabled(allsky.get(f"use{kind}website")):
+            rows.append((label, "not changed: this Website isn't enabled"))
+            continue
+        argv = [os.path.join(scripts, "updateJsonFile.sh"), "--verbosity", "silent", f"--{kind}"]
+        for k in OVERLAY_KEYS:
+            argv += [f"config.{k}", k, str(st[k])]
+        r = subprocess.run(argv, capture_output=True, text=True)
+        if r.returncode != 0:
+            rows.append((label, "NOT updated: " + (r.stderr or r.stdout).strip()))
+            continue
+        if kind == "local":
+            rows.append((label, "updated"))
+            continue
+        name = os.environ.get("ALLSKY_WEBSITE_CONFIGURATION_NAME") or "configuration.json"
+        r = subprocess.run([os.path.join(scripts, "upload.sh"), "--silent", "--remote-web", path,
+                            str(allsky.get("remotewebsiteimagedir") or ""), name, "RemoteWebsite"],
+                           capture_output=True, text=True)
+        if r.returncode != 0:
+            rows.append((label, "updated here, but the upload FAILED: " + (r.stderr or r.stdout).strip()))
+        else:
+            rows.append((label, "updated and uploaded"))
+    out.heading("Website configuration")
+    out.table(None, rows)
+    return rows
 
 
 # --- sky -----------------------------------------------------------------------------
@@ -680,6 +728,8 @@ def main():
     ap.add_argument("--list-stars", action="store_true",
                     help="only list the bright stars that were up; don't try to identify them")
     ap.add_argument("--directory", help="where to put the check images")
+    ap.add_argument("--update", action="store_true",
+                    help="write the settings into the enabled Websites' configuration and upload the remote one")
     ap.add_argument("--html", action="store_true", help="HTML output for the WebUI")
     args = ap.parse_args()
     for n in ("1", "2"):
@@ -723,7 +773,7 @@ def run(args, out):
                      "if the names sit on the right stars, the settings below are ready to use. If they don't, "
                      "enter two stars yourself.")
             _labelImage(img.copy(), cat, best[0], best[2], os.path.join(outdir, "overlay_stars.jpg"))
-            _report(out, img, gray, cat, name, best, outdir)
+            _report(out, img, gray, cat, name, best, outdir, args.update)
         else:
             if not args.list_stars:
                 out.para("The stars could not be identified automatically in this image, so please pick two "
@@ -750,14 +800,15 @@ def run(args, out):
         raise Failure("No consistent fit. Check that the image is clear and dark, that the two names match "
                       "the stars you picked, and that each position is on the star (a few pixels off is fine).")
     _clearImages(outdir)
-    _report(out, img, gray, cat, name, best, outdir)
+    _report(out, img, gray, cat, name, best, outdir, args.update)
     _link(out, outdir)
     if not args.html:
         print(f"Done in {time.time() - started:.0f} s.")
 
 
-def _report(out, img, gray, cat, name, best, outdir):
-    """The fit, the overlay settings per Website, and the check image."""
+def _report(out, img, gray, cat, name, best, outdir, update=False):
+    """The fit, the overlay settings per Website, the check image and, with update,
+    the settings written into the Websites."""
     H, W = gray.shape
     p, pairs, flip, rms_px, rms_deg = best
     out.heading("Fit to the stars")
@@ -772,21 +823,24 @@ def _report(out, img, gray, cat, name, best, outdir):
         raise Failure("This image shows East on the RIGHT (mirror-imaged). The constellation overlay always "
                       "draws East on the left, so no overlay setting can match it. Flip the image in Allsky's "
                       "settings, take a new image, and try again.")
-    if rms_deg > 0.6 or len(pairs) < 15:
+    weak = rms_deg > 0.6 or len(pairs) < 15
+    if weak:
         out.para("Warning: the fit is weak (few stars or a large error). Try a clearer, darker image.")
 
     # One table per distinct Website set-up; local and remote usually share one.
     configs = []
-    for label, path, cfg in _websiteConfigs() or [("Website", None, {"imageWidth": 900})]:
+    for kind, label, path, cfg in _websiteConfigs() or [(None, "Website", None, {"imageWidth": 900})]:
         now = tuple(cfg.get(k) for k in OVERLAY_KEYS + ("imageWidth",))
         same = next((c for c in configs if c[3] == now), None)
         if same:
             same[0] = same[0].replace(" Website", "") + " and " + label
+            same[1].append((kind, label, path))
         else:
-            configs.append([label, path, cfg, now])
+            configs.append([label, [(kind, label, path)], cfg, now])
     shown = None
+    targets = []
     sky = _skyRegion(gray)
-    for label, path, cfg, _ in configs:
+    for label, sites, cfg, _ in configs:
         design_w = float(cfg.get("imageWidth") or 900)
         fits, zmax = _overlayFit(p, flip, sky, design_w)
         proj = min(fits, key=lambda k: fits[k][1])
@@ -805,8 +859,18 @@ def _report(out, img, gray, cat, name, best, outdir):
                      "so keep them equal, as suggested.")
         if shown is None:
             shown = (st, design_w)
+        targets += [(kind, site, path, st) for kind, site, path in sites if kind]
     out.para(f"With these settings the overlay should sit within about {fits[proj][2]:.1f} deg of the stars over "
-             "most of the sky. Enter them in the Website's settings; nothing has been changed.")
+             "most of the sky.")
+    if not update:
+        out.para("Nothing has been changed. Enter the settings in the Website's configuration, "
+                 "or run again with the Website update turned on.")
+    elif weak:
+        out.para("The Website configuration was NOT changed because the fit is weak.")
+    elif not targets:
+        out.para("There is no Website configuration to update.")
+    else:
+        _updateWebsites(out, targets)
     _checkImage(img.copy(), cat, p, flip, shown[0], shown[1], pairs, os.path.join(outdir, "overlay_check.jpg"))
 
 

@@ -8,6 +8,10 @@ It needs to know three things about your images: where the zenith (the point str
 
     Pick a clear, dark night image: no clouds, and ideally without the Moon, which washes out the fainter stars. Use an image as Allsky saved it, because the tool reads the time from the file name. Allsky's **Latitude** and **Longitude** settings must be correct.
 
+- **Update the Website**
+
+    Leave this on to have the tool write the new settings into the configuration of each enabled Website (local and/or remote) and upload the remote one, as the WebUI does when you change a Website setting. Turn it off to only see the suggested settings.
+
 - **Run**
 
     Press **Run**. The tool looks for the stars by itself, which can take up to a minute. It uses another image from the same night, about half an hour apart, to tell stars (which move) from the text on your image (which doesn't).
@@ -24,7 +28,7 @@ It needs to know three things about your images: where the zenith (the point str
 
     Remember that your image may be rotated: if north is at the bottom of your image, a star listed as being in the south is near the top. A star chart for the same time helps.
 
-The tool doesn't change anything. To use the settings, edit the Website's `configuration.json` in the WebUI's **Editor** page and enter the suggested `projection`, `overlayWidth`, `overlayHeight`, `overlayOffsetLeft`, `overlayOffsetTop` and `az`.
+With **Update the Website** on, the **Output** tab ends by saying which Websites were updated; reload the Website to see the new overlay. A weak fit is never written. With it off, nothing is changed: to use the settings, edit the Website's `configuration.json` in the WebUI's **Editor** page and enter the suggested `projection`, `overlayWidth`, `overlayHeight`, `overlayOffsetLeft`, `overlayOffsetTop` and `az`.
 
 ## If it doesn't work { data-toc-label="If it doesn't work" }
 

@@ -497,6 +497,19 @@
               "flag": "--star2-at"
             }
           ]
+        },
+        {
+          "name": "update",
+          "label": "Update the Website",
+          "type": "checkbox",
+          "default": true,
+          "helpHtml": "Write the new settings into the configuration of each enabled Website and upload the remote one. Nothing is changed if the fit is weak.",
+          "args": [
+            {
+              "flag": "--update",
+              "boolean": true
+            }
+          ]
         }
       ],
       "submit": {

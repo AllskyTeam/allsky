@@ -174,6 +174,8 @@ The subsections below describe the settings in the json files, their default val
 | `overlayOffsetLeft` | `0` | Positive values move the overlay right; negative values move it left. |
 | `overlayOffsetTop` | `0` | Positive values move the overlay down; negative values move it up. |
 | `az` | `0` | Azimuth rotation of the overlay.<br>`0` = north up, `90` = north right, etc. |
+| `overlayLean` | `0` | How many degrees the camera leans from straight up, so the overlay leans the same way.<br>`0` for a level camera. |
+| `overlayLeanAz` | `0` | The azimuth the camera leans toward: `0` = north, `90` = east, `180` = south, `270` = west. |
 | `imageWidth` | `900` | Width of the captured image in pixels.<br>Height is calculated automatically to preserve aspect ratio. |
 | `opacity` | `0.5` | Opacity of the overlay from `0.0` (invisible) to `1.0` (full brightness). |
 | `objectsComment` |  | Informational comment line; may be deleted if not needed. |

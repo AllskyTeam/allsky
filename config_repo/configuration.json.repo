@@ -20,6 +20,8 @@
         "overlayOffsetLeft": 0,
         "overlayOffsetTop": 0,
         "az": 0,
+        "overlayLean": 0,
+        "overlayLeanAz": 0,
         "imageWidth": 900,
         "opacity": 0.5,
         "objectsComment": "If you want the Messier objects on the overlay remove the 'XXX_' below.",
@@ -265,5 +267,5 @@
             }
         ]
     },
-    "ConfigVersion": "6"
+    "ConfigVersion": "7"
 }

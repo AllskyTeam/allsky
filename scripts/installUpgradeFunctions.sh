@@ -694,10 +694,14 @@ function update_old_website_config_file()
 	#	Added "meteors/"
 	# Version: 4 from v2024.12.06_03
 	#	Added "equipmentinfo" setting
-	# Current version: 5 from v2026.10.01
+	# Version: 5 from v2026.10.01
 	#	Changed "imageName" to "/current/image.jpg" in local config file.
 	#		imageName is updated in replace_website_placeholders() so not done here.
 	#	timelapse and mini-timelapse icons changed.
+	# Version: 6
+	#	Full set of overlay colours.
+	# Current version: 7
+	#	Added "overlayLean" and "overlayLeanAz" after "az", for a camera that isn't level.
 
 	if [[ ${PRIOR_VERSION} -eq 1 ]]; then
 		# These steps bring version 1 up to 2.
@@ -812,6 +816,23 @@ function update_old_website_config_file()
 		TEMP="/tmp/$$"
 		jq --indent 4 --slurpfile repo "${REPO_WEBSITE_CONFIGURATION_FILE}" \
 			'.config.colours = $repo[0].config.colours' "${FILE}" > "${TEMP}"
+		if [[ $? -eq 0 ]]; then
+			# cp so it keeps ${FILE}'s attributes
+			cp "${TEMP}" "${FILE}" && rm -f "${TEMP}"
+		else
+			rm -f "${TEMP}"
+		fi
+	fi
+
+	if [[ ${PRIOR_VERSION} -lt 7 ]] ; then
+		# Add "overlayLean" and "overlayLeanAz" after "az", unless already there.
+		TEMP="/tmp/$$"
+		jq --indent 4 '
+			if (.config | has("overlayLean")) then .
+			else .config |= (reduce to_entries[] as $e ({};
+				. + {($e.key): $e.value}
+				+ (if $e.key == "az" then {"overlayLean": 0, "overlayLeanAz": 0} else {} end)))
+			end' "${FILE}" > "${TEMP}"
 		if [[ $? -eq 0 ]]; then
 			# cp so it keeps ${FILE}'s attributes
 			cp "${TEMP}" "${FILE}" && rm -f "${TEMP}"

@@ -29,6 +29,9 @@ Usage:
     constellation_overlay.py --image IMAGE --star "vega 2828 1213" --star "altair 2527 1976"
     constellation_overlay.py --image IMAGE --star1 vega --star1-at "2828 1213" --star2 altair --star2-at "2527 1976"
 Options:
+    --timezone ZONE    the time zone the image's file name is in, e.g. America/Chicago.
+                       Default: this computer's, and if the stars don't fit that, the
+                       time zone nearest to the camera's location.
     --update           write the settings into the enabled Websites' configuration
                        (and upload the remote one)
     --html             output for the WebUI helper page
@@ -48,6 +51,8 @@ if os.path.isfile(os.path.join(_VENV, "bin", "python3")) and \
     os.execv(os.path.join(_VENV, "bin", "python3"), [os.path.join(_VENV, "bin", "python3")] + sys.argv)
 
 import argparse
+import calendar
+import datetime
 import html
 import json
 import math
@@ -144,14 +149,63 @@ def _location():
     return lat, lon
 
 
-def _imageUtc(path):
-    """The image's capture time from its name (image-YYYYMMDDHHMMSS.jpg, local time)."""
+def _nameTime(path):
+    """The capture time in the image's name (image-YYYYMMDDHHMMSS.jpg): the camera's local time."""
     m = re.search(r"(\d{14})", os.path.basename(path))
     if not m:
         raise Failure(f"'{os.path.basename(path)}' has no YYYYMMDDHHMMSS time in its name. "
                       "Use an image as Allsky saved it.")
-    g = time.gmtime(time.mktime(time.strptime(m.group(1), "%Y%m%d%H%M%S")))
+    return datetime.datetime.strptime(m.group(1), "%Y%m%d%H%M%S")
+
+
+def _toUtc(local, zone):
+    """UTC of a local time in a time zone (None: this computer's), as a tuple."""
+    if zone is None:
+        g = time.gmtime(time.mktime(local.timetuple()[:8] + (-1,)))
+    else:
+        from zoneinfo import ZoneInfo
+        try:
+            tz = ZoneInfo(zone)
+        except Exception:
+            raise Failure(f"Unknown time zone '{zone}'. Use a name like America/Chicago or Europe/Berlin.")
+        g = local.replace(tzinfo=tz).astimezone(datetime.timezone.utc).timetuple()
     return (g.tm_year, g.tm_mon, g.tm_mday, g.tm_hour, g.tm_min, g.tm_sec)
+
+
+def _zoneNear(lat, lon):
+    """The time zone whose main city is nearest to the camera, from the system's time
+    zone database, or None.  Right almost everywhere; near a zone border it may not be."""
+    best = None
+    for tab in ("/usr/share/zoneinfo/zone1970.tab", "/usr/share/zoneinfo/zone.tab"):
+        try:
+            lines = open(tab, encoding="utf-8").read().splitlines()
+        except OSError:
+            continue
+        for line in lines:
+            f = line.split("\t")
+            if line.startswith("#") or len(f) < 3:
+                continue
+            m = re.fullmatch(r"([+-])(\d{2})(\d{2})(\d{2})?([+-])(\d{3})(\d{2})(\d{2})?", f[1])
+            if not m:
+                continue
+            zlat = (int(m.group(2)) + int(m.group(3)) / 60 + int(m.group(4) or 0) / 3600) * (1 if m.group(1) == "+" else -1)
+            zlon = (int(m.group(6)) + int(m.group(7)) / 60 + int(m.group(8) or 0) / 3600) * (1 if m.group(5) == "+" else -1)
+            a, b = math.radians(lat), math.radians(zlat)
+            d = math.acos(max(-1.0, min(1.0, math.sin(a) * math.sin(b) +
+                                        math.cos(a) * math.cos(b) * math.cos(math.radians(lon - zlon)))))
+            if best is None or d < best[0]:
+                best = (d, f[2])
+        if best:
+            break
+    return best[1] if best else None
+
+
+def _zoneName(zone):
+    return zone or f"this computer's time zone ({time.strftime('%Z')})"
+
+
+def _shiftUtc(utc, hours):
+    return tuple(time.gmtime(calendar.timegm(tuple(utc) + (0, 0, 0)) + round(hours * 3600))[:6])
 
 
 def _websiteConfigs():
@@ -240,9 +294,30 @@ def _catalogue(utc, lat, lon, min_alt):
     dec = np.array([s[1] for s in stars])
     mag = np.array([s[2] for s in stars])
     names = np.array([s[3] if len(s) > 3 else "" for s in stars], dtype=object)
+    ra, dec, mag, names = _addPlanets(ra, dec, mag, names, utc)
     alt, az = _altAz(ra, dec, _siderealDeg(utc, lon), lat)
     keep = alt >= min_alt
     return alt[keep], az[keep], mag[keep], names[keep]
+
+
+def _addPlanets(ra, dec, mag, names, utc):
+    """The bright planets at this time: they are often the brightest points in the sky,
+    and a user may well click one.  Skipped if PyEphem isn't installed."""
+    try:
+        import ephem
+    except ImportError:
+        return ra, dec, mag, names
+    when = ephem.Date("%04d/%02d/%02d %02d:%02d:%02d" % tuple(utc))
+    extra = []
+    for planet in ("Venus", "Mars", "Jupiter", "Saturn"):
+        body = getattr(ephem, planet)(when)
+        if body.mag <= 3.0:
+            extra.append((math.degrees(body.ra), math.degrees(body.dec), body.mag, planet.lower()))
+    if not extra:
+        return ra, dec, mag, names
+    e = list(zip(*extra))
+    return (np.concatenate([ra, e[0]]), np.concatenate([dec, e[1]]), np.concatenate([mag, e[2]]),
+            np.concatenate([names, np.array(e[3], dtype=object)]))
 
 
 # --- lens model ----------------------------------------------------------------------
@@ -398,19 +473,18 @@ def _parseStar(text, cat):
     except ValueError:
         raise Failure(f"'{text}': the last two values must be the x and y pixel position.")
     name = " ".join(parts[:-2]).lower()
-    if name not in set(cat[3]):
-        allnames = sorted(s[3] for s in json.load(open(CATALOGUE))["stars"] if len(s) > 3)
-        if name in allnames:
-            raise Failure(f"{name.title()} was not at least 15 degrees above the horizon at this image's time. "
-                          "Run with --list-stars to see which stars were up.")
-        raise Failure(f"Unknown star '{name}'. Known stars: {', '.join(allnames)}.")
+    allnames = sorted(set(s[3] for s in json.load(open(CATALOGUE))["stars"] if len(s) > 3)
+                      | {"venus", "mars", "jupiter", "saturn"})
+    if name not in allnames:
+        raise Failure(f"Unknown star '{name}'. Known stars and planets: {', '.join(allnames)}.")
     return name, x, y
 
 
-def _calibrate(gray, cat, picked):
+def _calibrate(prep, cat, picked):
     """Fit the lens from two identified stars; try both handedness."""
-    H, W = gray.shape
-    stars, sky = _starMap(gray), _skyRegion(gray)
+    stars, sky, W = prep["stars"], prep["sky"], prep["W"]
+    if any(name not in set(cat[3]) for name, _, _ in picked):
+        return None                              # not up at this time
     best = None
     for flip in (-1.0, 1.0):
         p, pairs = _refine(cat, stars, sky, _seed(picked, cat, flip), flip, W)
@@ -493,8 +567,13 @@ def _hypotheses(cat, dets, W, H, n_blobs=22, n_stars=22, keep=12):
     pick = np.nonzero((mag <= 3.0) & (alt >= 15))[0]
     pick = pick[np.argsort(mag[pick])][:n_stars]
     blobs = dets[:n_blobs]
-    tree = cKDTree(dets[:150])
     thr = 0.008 * W
+    # Where a point counts as "on a detection": a mask with a disc around each of the
+    # 150 brightest points.  Looking a position up in it is far faster than a search.
+    hitmap = np.zeros((H, W), np.uint8)
+    for x, y in dets[:150]:
+        cv2.circle(hitmap, (int(round(x)), int(round(y))), int(thr), 1, -1)
+    hitmap = hitmap.astype(bool)
     P = blobs[:, 0] + 1j * blobs[:, 1]
     ii, jj = np.nonzero(~np.eye(len(P), dtype=bool))
     dP = P[ii] - P[jj]
@@ -516,10 +595,9 @@ def _hypotheses(cat, dets, W, H, n_blobs=22, n_stars=22, keep=12):
                 if len(idx) == 0:
                     continue
                 Q = C[idx, None] + A[idx, None] * Sall[None, :]          # every guess, every star
-                inside = (Q.real >= 0) & (Q.real < W) & (Q.imag >= 0) & (Q.imag < H)
-                d, _ = tree.query(np.column_stack([Q.real[inside], Q.imag[inside]]))
+                inside = (Q.real >= 0) & (Q.real < W - 0.5) & (Q.imag >= 0) & (Q.imag < H - 0.5)
                 hits = np.zeros(Q.shape, bool)
-                hits[inside] = d < thr
+                hits[inside] = hitmap[np.rint(Q.imag[inside]).astype(int), np.rint(Q.real[inside]).astype(int)]
                 score = hits.sum(axis=1)
                 for m in np.nonzero((score >= 6) & (inside.sum(axis=1) >= 6))[0]:
                     n = idx[m]
@@ -536,9 +614,8 @@ def _hypotheses(cat, dets, W, H, n_blobs=22, n_stars=22, keep=12):
     return distinct
 
 
-def _identify(gray, path, cat):
-    """Find the stars without help.  Accepts only a clear winner: many stars, a small
-    error, and no other solution that comes close.  Returns like _calibrate, or None."""
+def _prepare(gray, path):
+    """Everything about the image that doesn't depend on its time."""
     H, W = gray.shape
     static = None
     comp = _companion(path)
@@ -546,12 +623,19 @@ def _identify(gray, path, cat):
         other = cv2.imread(comp, cv2.IMREAD_GRAYSCALE)
         if other is not None and other.shape == gray.shape:
             static = _detect(other, 3000)
-    dets = _detect(gray, 400, static)
+    return {"W": W, "H": H, "dets": _detect(gray, 400, static), "stars": _starMap(gray), "sky": _skyRegion(gray)}
+
+
+def _identify(prep, cat, quick=False):
+    """Find the stars without help.  Accepts only a clear winner: many stars, a small
+    error, and no other solution that comes close.  Returns like _calibrate, or None.
+    quick: fewer guesses, for trying many times of night."""
+    W, H, dets, stars, sky = prep["W"], prep["H"], prep["dets"], prep["stars"], prep["sky"]
     if len(dets) < 12:
         return None
-    stars, sky = _starMap(gray), _skyRegion(gray)
     results = []
-    for _, cx, cy, R, rot, flip in _hypotheses(cat, dets, W, H):
+    guesses = _hypotheses(cat, dets, W, H, n_stars=14, keep=4) if quick else _hypotheses(cat, dets, W, H)
+    for _, cx, cy, R, rot, flip in guesses:
         p, pairs = _refine(cat, stars, sky, [cx, cy, R, 0.0, rot], flip, W)
         if p is None:
             continue
@@ -567,6 +651,45 @@ def _identify(gray, path, cat):
     if n < 12 or rms_deg > 0.6 or (rivals and rivals[0][0] >= 0.7 * n):
         return None
     return p, pairs, flip, rms_px, rms_deg
+
+
+# --- when the image's time doesn't fit ----------------------------------------------
+
+def _strong(best):
+    return best is not None and len(best[1]) >= 15 and best[4] <= 0.5
+
+
+def _timeHint(utc, lat, lon, fit):
+    """When nothing fits, see whether the stars would fit a few whole hours away.  A
+    shifted time can't be used for the settings: turning the sky about the pole is
+    almost the same as moving and turning the image, so the stars can't tell the
+    exact shift.  But a clear winner says the time zone is wrong.  Returns hours or None."""
+    tried = []
+    for h in range(-12, 13):
+        if h:
+            best = fit(_catalogue(_shiftUtc(utc, h), lat, lon, min_alt=15.0))
+            if best is not None:
+                tried.append((h, best))
+    if not tried:
+        return None
+    h, best = max(tried, key=lambda t: (len(t[1][1]), -t[1][4]))
+    n = len(best[1])
+    if not _strong(best) or any(abs(hh - h) >= 3 and len(b[1]) >= 0.75 * n for hh, b in tried):
+        return None
+    return h
+
+
+def _reportZone(out, zone, name):
+    out.para(f"Note: the time in the image's name ({name}) didn't fit the stars in {_zoneName(None)}, "
+             f"so it was read as {zone} time, the time zone nearest to the camera's location. "
+             "If that's wrong, run again with the right one (--timezone).")
+
+
+def _reportHint(out, hours, zone):
+    out.para(f"The stars would roughly fit if this image had been taken about {abs(hours)} hours "
+             f"{'later' if hours > 0 else 'earlier'} than its name says, read in {_zoneName(zone)}. So the time zone "
+             "is probably wrong: check the time zone set on the camera's Pi, or, for an image from another "
+             "camera, run again with that camera's time zone (--timezone, e.g. America/Chicago).")
 
 
 # --- overlay -------------------------------------------------------------------------
@@ -727,6 +850,8 @@ def main():
         ap.add_argument(f"--star{n}-at", metavar="'X Y'", help=f"pixel position of star {n}")
     ap.add_argument("--list-stars", action="store_true",
                     help="only list the bright stars that were up; don't try to identify them")
+    ap.add_argument("--timezone", metavar="ZONE",
+                    help="time zone of the image's file name, e.g. America/Chicago (default: this computer's)")
     ap.add_argument("--directory", help="where to put the check images")
     ap.add_argument("--update", action="store_true",
                     help="write the settings into the enabled Websites' configuration and upload the remote one")
@@ -757,18 +882,34 @@ def run(args, out):
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     H, W = gray.shape
     lat, lon = _location()
-    utc = _imageUtc(args.image)
+    local = _nameTime(args.image)
+    zones = [args.timezone or None]
+    near = None if args.timezone else _zoneNear(lat, lon)
+    if near and _toUtc(local, near) != _toUtc(local, None):
+        zones.append(near)
+    utc = _toUtc(local, zones[0])
     cat = _catalogue(utc, lat, lon, min_alt=15.0)
+    used = zones[0]
     images = os.environ.get("ALLSKY_IMAGES") or os.path.join(ALLSKY_HOME, "images")
     outdir = args.directory or os.path.join(images, "test_constellation_overlay")
     os.makedirs(outdir, exist_ok=True)
     name = os.path.basename(args.image)
 
     if args.list_stars or not args.star:
-        best = None if args.list_stars else _identify(gray, args.image, cat)
+        best = None
+        if not args.list_stars:
+            prep = _prepare(gray, args.image)
+            for zone in zones:
+                c = _catalogue(_toUtc(local, zone), lat, lon, min_alt=15.0)
+                best = _identify(prep, c)
+                if best is not None:
+                    cat, used = c, zone
+                    break
         _clearImages(outdir)
         if best is not None and best[2] < 0:
             out.heading("Stars found automatically")
+            if used != zones[0]:
+                _reportZone(out, used, name)
             out.para("The stars were identified without your help. Check the labelled image in the Images tab: "
                      "if the names sit on the right stars, the settings below are ready to use. If they don't, "
                      "enter two stars yourself.")
@@ -778,6 +919,9 @@ def run(args, out):
             if not args.list_stars:
                 out.para("The stars could not be identified automatically in this image, so please pick two "
                          "yourself: enter their names and click each one.")
+                hint = _timeHint(utc, lat, lon, lambda c: _identify(prep, c, quick=True))
+                if hint is not None:
+                    _reportHint(out, hint, zones[0])
             _listStars(out, cat, name, None)
             _gridImage(img.copy(), os.path.join(outdir, "overlay_grid.jpg"))
         _link(out, outdir)
@@ -795,11 +939,24 @@ def run(args, out):
     if math.hypot(picked[0][1] - picked[1][1], picked[0][2] - picked[1][2]) < 0.05 * W:
         raise Failure("The two stars are too close together in the image; pick two further apart.")
 
-    best = _calibrate(gray, cat, picked)
+    prep = {"W": W, "H": H, "stars": _starMap(gray), "sky": _skyRegion(gray)}
+    best = None
+    for zone in zones:                            # a weak fit in the first zone may be the wrong time
+        c = _catalogue(_toUtc(local, zone), lat, lon, min_alt=15.0)
+        b = _calibrate(prep, c, picked)
+        if b is not None and (best is None or _strong(b) and not _strong(best)):
+            best, cat, used = b, c, zone
+        if _strong(best):
+            break
     if best is None:
+        hint = _timeHint(utc, lat, lon, lambda c: _calibrate(prep, c, picked))
+        if hint is not None:
+            _reportHint(out, hint, zones[0])
         raise Failure("No consistent fit. Check that the image is clear and dark, that the two names match "
                       "the stars you picked, and that each position is on the star (a few pixels off is fine).")
     _clearImages(outdir)
+    if used != zones[0]:
+        _reportZone(out, used, name)
     _report(out, img, gray, cat, name, best, outdir, args.update)
     _link(out, outdir)
     if not args.html:

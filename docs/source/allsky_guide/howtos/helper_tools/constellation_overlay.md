@@ -30,11 +30,11 @@ It needs to know three things about your images: where the zenith (the point str
 
     The time in an image's name is the camera's local time. If the stars don't fit in the Pi's time zone, the tool tries the time zone nearest to the camera's location and says so. If you see that note for an image from your own camera, check the Pi's time zone.
 
-With **Update the Website** on, the box above the tabs says which Websites were updated; reload the Website to see the new overlay. With it off, nothing is changed: to use the settings, edit the Website's `configuration.json` in the WebUI's **Editor** page and enter the suggested `projection`, `overlayWidth`, `overlayHeight`, `overlayOffsetLeft`, `overlayOffsetTop` and `az`.
+With **Update the Website** on, the box above the tabs says which Websites were updated; reload the Website to see the new overlay. With it off, nothing is changed: to use the settings, edit the Website's `configuration.json` in the WebUI's **Editor** page and enter the suggested `projection`, `overlayWidth`, `overlayHeight`, `overlayOffsetLeft`, `overlayOffsetTop`, `az`, `overlayLean` and `overlayLeanAz`.
 
 !!! info  "A camera that isn't level"
 
-    The tool also works out how far the camera leans, and the **Output** tab shows it. The Website's overlay always assumes a level camera, so the more the camera leans, the less well the overlay can match: at 5 degrees it is off by about 1 to 2 degrees in places, at 10 degrees by several. If the tool says the camera leans noticeably, levelling it is the best fix.
+    The tool also works out how far the camera leans and which way, and sets the overlay to lean the same way (`overlayLean` and `overlayLeanAz`), so the constellations still sit on the stars. A camera leaning 11 degrees, for example, is matched to about 1 degree.
 
 ## If it doesn't work { data-toc-label="If it doesn't work" }
 

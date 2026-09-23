@@ -1187,7 +1187,9 @@ def _report(out, img, gray, cat, name, best, outdir, update=False, auto=False):
              "most of the sky.")
     tilt = math.hypot(*_tiltOf(p))
     if tilt >= 3.0:
-        out.summary(f"The camera leans about {tilt:.0f} degrees toward the {_compass(_tiltAz(p))}. The Website's "
+        words = {"N": "north", "NE": "north-east", "E": "east", "SE": "south-east", "S": "south",
+                 "SW": "south-west", "W": "west", "NW": "north-west"}
+        out.summary(f"The camera leans about {tilt:.0f} degrees toward the {words[_compass(_tiltAz(p))]}. The Website's "
                     "overlay assumes a level camera, so it can only match to about "
                     f"{fits[proj][5]:.1f} degrees over most of the sky; levelling the camera makes it fit better.",
                     "warning")

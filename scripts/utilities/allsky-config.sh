@@ -67,6 +67,7 @@ function usage_and_exit()
 	echo "      compare_timelapses [see --help for arguments]"
 	echo "      compare_startrails [see --help for arguments]"
 	echo "      compare_stretches [see --help for arguments]"
+	echo "      constellation_overlay [see --help for arguments]"
 
 	echo "      change_swap"
 	echo "      change_tmp"
@@ -382,6 +383,19 @@ function compare_stretches()
 {
 	# shellcheck disable=SC2068
 	compareStretches.sh "${@}"
+}
+
+
+#####
+# Work out the Website's constellation overlay settings from two stars in an image.
+function constellation_overlay()
+{
+	if [[ $# -eq 0 ]]; then
+		constellation_overlay.py --help
+		return
+	fi
+	# shellcheck disable=SC2068
+	constellation_overlay.py "${@}"
 }
 
 
@@ -767,6 +781,9 @@ fi
 
 	((N++));	C="compare_stretches"
 	CMDS+=("${C}"	"$( L "Create multiple stretched images               (${C})" )")
+
+	((N++));	C="constellation_overlay"
+	CMDS+=("${C}"	"$( L "Work out constellation overlay settings        (${C})" )")
 
 
 #####

@@ -198,6 +198,7 @@ class HelperPageRenderer
 		$id = $this->e($this->helperId);
 
 		return ''
+			. "<div class='helper-summary-area js-helper-summary' id='{$id}-summary'></div>"
 			. "<ul class='nav nav-tabs helper-results-tabs js-helper-results-tabs' id='{$id}-tabs' role='tablist'>"
 			. "<li role='presentation' class='active js-helper-settings-tab-item' id='{$id}-settings-tab-item'>"
 			. "<a href='#{$id}-settings-pane' class='js-helper-settings-tab' id='{$id}-settings-tab' aria-controls='{$id}-settings-pane' role='tab' data-toggle='tab'>Settings</a>"
@@ -266,19 +267,70 @@ class HelperPageRenderer
 				. '</div>';
 		}
 
+		// Consecutive fields with the same "group" share a collapsible section,
+		// described in the helper's "groups" object.
+		$group = null;
 		foreach ($fields as $field) {
-			if (is_array($field)) {
-				$html .= $this->renderField($field);
+			if (!is_array($field)) {
+				continue;
 			}
+			$fieldGroup = isset($field['group']) ? (string) $field['group'] : null;
+			if ($fieldGroup !== $group) {
+				if ($group !== null) {
+					$html .= $this->renderGroupEnd();
+				}
+				if ($fieldGroup !== null) {
+					$html .= $this->renderGroupStart($fieldGroup);
+				}
+				$group = $fieldGroup;
+			}
+			$html .= $this->renderField($field);
+		}
+		if ($group !== null) {
+			$html .= $this->renderGroupEnd();
 		}
 
 		return $html;
 	}
 
 	/**
+	 * Open a collapsible section for a group of fields.
+	 *
+	 * "groups": {"<name>": {"title": "...", "helpHtml": "...", "collapsed": true}}
+	 * A helper's output can open a collapsed group with an element that has
+	 * data-helper-open-group="<name>", e.g. when the fields in it are now needed.
+	 */
+	private function renderGroupStart(string $group): string
+	{
+		$config = $this->helper['groups'][$group] ?? [];
+		$config = is_array($config) ? $config : [];
+		$title = (string) ($config['title'] ?? $group);
+		$help = $this->replace((string) ($config['helpHtml'] ?? ''));
+		$collapsed = !array_key_exists('collapsed', $config) || !empty($config['collapsed']);
+		$id = $this->e($this->helperId . '-group-' . $group);
+
+		return ''
+			. "<div class='panel panel-default helper-field-group js-helper-field-group' data-group='" . $this->e($group) . "'>"
+			. "<div class='panel-heading'>"
+			. "<a class='helper-field-group-toggle" . ($collapsed ? ' collapsed' : '') . "' data-toggle='collapse' href='#{$id}'"
+			. " aria-expanded='" . ($collapsed ? 'false' : 'true') . "' aria-controls='{$id}'>"
+			. "<i class='fa fa-chevron-right helper-field-group-icon'></i> " . $this->e($title) . '</a>'
+			. '</div>'
+			. "<div id='{$id}' class='panel-collapse collapse" . ($collapsed ? '' : ' in') . "'>"
+			. "<div class='panel-body'>"
+			. ($help !== '' ? "<p class='helper-field-group-help'>{$help}</p>" : '');
+	}
+
+	private function renderGroupEnd(): string
+	{
+		return '</div></div></div>';
+	}
+
+	/**
 	 * Render one configured field.
 	 *
-	 * Supported types are text, number, checkbox, and imagepicker.  Unknown types
+	 * Supported types are text, number, checkbox, imagepicker, directorybrowser,
+	 * numberseries and imagepoint.  Unknown types
 	 * intentionally fall back to text to keep the JSON tolerant of small mistakes.
 	 */
 	private function renderField(array $field): string
@@ -288,7 +340,6 @@ class HelperPageRenderer
 			return '';
 		}
 
-		$type = (string) ($field['type'] ?? 'text');
 		$label = $field['labelHtml'] ?? $this->e((string) ($field['label'] ?? $name));
 		$help = $this->replace((string) ($field['helpHtml'] ?? ''));
 
@@ -316,6 +367,9 @@ class HelperPageRenderer
 		}
 		if ($type === 'numberseries') {
 			return $this->renderNumberSeries($field);
+		}
+		if ($type === 'imagepoint') {
+			return $this->renderImagePoint($field);
 		}
 
 		return $this->renderTextInput($field);
@@ -471,6 +525,51 @@ class HelperPageRenderer
 			]) . '/>'
 			. "<span class='input-group-btn'>"
 			. "<button type='button' class='btn btn-default js-allsky-number-series-button'><i class='fa fa-list-ol'></i> Series</button>"
+			. '</span>'
+			. '</div>';
+	}
+
+	/**
+	 * Render an image point field.
+	 *
+	 * The user clicks a point on the image chosen in another field (an imagepicker
+	 * named by the `imageField` option); the plugin writes its position, in the
+	 * image's own full-resolution pixels, into the input as "X Y".  The input stays
+	 * editable, so a value can also be typed.  With the `snap` option the click moves
+	 * to the brightest pixel within that many image pixels, e.g. onto a star.
+	 */
+	private function renderImagePoint(array $field): string
+	{
+		$name = (string) $field['name'];
+		$value = (string) $this->defaultValue($field);
+		$inputClass = (string) ($field['inputClass'] ?? 'col-xs-8');
+		$pointAttrs = [
+			'class' => 'input-group ' . $inputClass . ' js-allsky-image-point',
+			'data-image-field' => (string) $this->fieldTypeOption($field, 'imageField', ''),
+			'data-images-path' => rtrim(str_replace('\\', '/', (string) (realpath(ALLSKY_IMAGES) ?: ALLSKY_IMAGES)), '/'),
+			'data-images-url' => '/images',
+		];
+		$snap = $this->fieldTypeOption($field, 'snap');
+		if ($snap !== null) {
+			$pointAttrs['data-snap'] = (string) max(0, (int) $snap);
+		}
+		$title = $this->fieldTypeOption($field, 'title');
+		if ($title !== null) {
+			$pointAttrs['data-title'] = (string) $title;
+		}
+
+		return ''
+			. '<div ' . $this->attrs($pointAttrs) . '>'
+			. '<input ' . $this->attrs([
+				'type' => 'text',
+				'class' => 'form-control js-allsky-image-point-input',
+				'name' => $name,
+				'id' => $name,
+				'value' => $value,
+				'placeholder' => 'x y',
+			]) . '/>'
+			. "<span class='input-group-btn'>"
+			. "<button type='button' class='btn btn-default js-allsky-image-point-button'><i class='fa fa-crosshairs'></i> Pick</button>"
 			. '</span>'
 			. '</div>';
 	}
@@ -647,7 +746,8 @@ class HelperPageRenderer
 	private function renderResultContainers(): string
 	{
 		if (!$this->useTabbedToolPage()) {
-			return "<div class='helper-images-hidden js-helper-images'></div><div class='js-helper-output'></div>";
+			return "<div class='helper-summary-area js-helper-summary'></div>"
+				. "<div class='helper-images-hidden js-helper-images'></div><div class='js-helper-output'></div>";
 		}
 
 		return '';
@@ -744,6 +844,8 @@ class HelperPageRenderer
 			. '<script src="/js/jquery-allskyimagepicker/jquery-allskyimagepicker.js?c=' . $this->e(ALLSKY_VERSION) . '"></script>'
 			. '<script src="/js/jquery-allskydirectorybrowser/jquery-allskydirectorybrowser.js?c=' . $this->e(ALLSKY_VERSION) . '"></script>'
 			. '<script src="/js/jquery-allskynumberseries/jquery-allskynumberseries.js?c=' . $this->e(ALLSKY_VERSION) . '"></script>'
+			. '<link type="text/css" rel="stylesheet" href="/js/jquery-allskyimagepoint/jquery-allskyimagepoint.css?c=' . $this->e(ALLSKY_VERSION) . '" />'
+			. '<script src="/js/jquery-allskyimagepoint/jquery-allskyimagepoint.js?c=' . $this->e(ALLSKY_VERSION) . '"></script>'
 			. '<script src="/js/jquery-loading-overlay/dist/loadingoverlay.min.js?c=' . $this->e(ALLSKY_VERSION) . '"></script>'
 			. '<script src="/js/helpers_tool.js?c=' . $this->e(ALLSKY_VERSION) . '"></script>';
 	}

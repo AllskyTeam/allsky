@@ -179,6 +179,7 @@ nav:
         - Startrails Helper Tool: allsky_guide/howtos/helper_tools/startrails.md
         - Image Stretch Helper Tool: allsky_guide/howtos/helper_tools/image_stretch.md
         - Timelapse Helper Tool: allsky_guide/howtos/helper_tools/timelapse.md
+        - Constellation Overlay Helper Tool: allsky_guide/howtos/helper_tools/constellation_overlay.md
       - Constellation Overlay: allsky_guide/howtos/constellation_overlay.md
       - Dark Frames: allsky_guide/howtos/dark_frames.md
       - Keograms: allsky_guide/howtos/keograms.md

@@ -490,9 +490,6 @@ function insertPage($p)
 			include_once("includes/helper.php");
 			DisplayHelper();
 			break;
-		case "constellation_overlay":
-			include_once("helpers/$p.php");
-			break;
 
 		case "live_view":
 		default:

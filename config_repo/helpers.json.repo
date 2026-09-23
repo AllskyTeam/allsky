@@ -402,6 +402,131 @@
         "label": "Create Timelapse Videos",
         "warningHtml": "WARNING: It may be a minute or more the results appear."
       }
+    },
+    "constellation_overlay": {
+      "title": "Constellation Overlay",
+      "icon": "fa fa-star-half-stroke fa-fw",
+      "pageTitle": "Help Align the Website's Constellation Overlay",
+      "action": "HelperRun",
+      "method": "POST",
+      "outputFormat": "html",
+      "showResultsTabs": true,
+      "command": [
+        "constellation_overlay",
+        "--html"
+      ],
+      "messages": {
+        "running": "Fitting the stars...",
+        "working": "Looking for the stars - this can take a minute or two...",
+        "runningButton": "Running..."
+      },
+      "contentHtml": [
+        "<p>The Allsky Website can draw the constellations over your image. For them to line up with the stars, the Website needs to know where the image's zenith is, how big the sky is in the image, and how it is rotated. This page works that out from the stars themselves.</p>",
+        "<p>Pick a clear, dark night image - no clouds, ideally no Moon - and press <b>Run</b>. The box that appears above the tabs says what happened and what to do next.</p>"
+      ],
+      "fields": [
+        {
+          "name": "image",
+          "label": "Night image",
+          "type": {
+            "name": "imagepicker",
+            "topLevelFoldersOnly": true,
+            "excludeTestFolders": true
+          },
+          "inputClass": "col-xs-8",
+          "helpHtml": "A clear night image, as Allsky saved it (the time in its name is used).",
+          "args": [
+            {
+              "flag": "--image"
+            }
+          ]
+        },
+        {
+          "name": "update",
+          "label": "Update the Website",
+          "type": "checkbox",
+          "default": true,
+          "helpHtml": "Write the new settings into the configuration of each enabled Website and upload the remote one. Nothing is changed if the fit is weak.",
+          "args": [
+            {
+              "flag": "--update",
+              "boolean": true
+            }
+          ]
+        },
+        {
+          "name": "star1",
+          "label": "First star",
+          "type": "text",
+          "inputClass": "col-xs-8",
+          "helpHtml": "Its name, as listed in the <b>Output</b> tab, e.g. <code>vega</code>. Bright planets work too.",
+          "args": [
+            {
+              "flag": "--star1"
+            }
+          ],
+          "group": "stars"
+        },
+        {
+          "name": "star1_at",
+          "label": "First star in the image",
+          "type": {
+            "name": "imagepoint",
+            "imageField": "image",
+            "snap": 15,
+            "title": "Click the first star"
+          },
+          "inputClass": "col-xs-8",
+          "helpHtml": "Press <b>Pick</b> and click the star. A click a few pixels off is fine.",
+          "args": [
+            {
+              "flag": "--star1-at"
+            }
+          ],
+          "group": "stars"
+        },
+        {
+          "name": "star2",
+          "label": "Second star",
+          "type": "text",
+          "inputClass": "col-xs-8",
+          "helpHtml": "Another star from the list, well away from the first one.",
+          "args": [
+            {
+              "flag": "--star2"
+            }
+          ],
+          "group": "stars"
+        },
+        {
+          "name": "star2_at",
+          "label": "Second star in the image",
+          "type": {
+            "name": "imagepoint",
+            "imageField": "image",
+            "snap": 15,
+            "title": "Click the second star"
+          },
+          "inputClass": "col-xs-8",
+          "args": [
+            {
+              "flag": "--star2-at"
+            }
+          ],
+          "group": "stars"
+        }
+      ],
+      "groups": {
+        "stars": {
+          "title": "Only if the stars aren't found automatically",
+          "helpHtml": "Leave these empty at first. If the stars aren't found, the <b>Output</b> tab lists the bright stars that were up: enter two of them, well apart and not too low, and click each one in the image with <b>Pick</b>.",
+          "collapsed": true
+        }
+      },
+      "submit": {
+        "name": "constellation_overlay",
+        "label": "Run"
+      }
     }
   }
 }

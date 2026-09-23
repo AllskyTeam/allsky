@@ -116,8 +116,19 @@ class Out:
                     print("  " + "  ".join("-" * x for x in w))
             print()
 
+    def summary(self, text, kind="info", open_group=None):
+        """One of the few lines that matter most.  The WebUI shows them above its tabs,
+        so they are seen on every tab; open_group opens that group of form fields."""
+        if self.html:
+            print(f"<div class='helper-summary alert alert-{kind}'>{html.escape(text)}</div>")
+            if open_group:
+                print(f"<span data-helper-open-group='{html.escape(open_group)}'></span>")
+        else:
+            print(f"*** {text}\n")
+
     def error(self, text):
         if self.html:
+            print(f"<div class='helper-summary alert alert-danger'>{html.escape(text)}</div>")
             print(f"<p class='errorMsg'>{html.escape(text)}</p>")
         else:
             print(f"ERROR: {text}", file=sys.stderr)
@@ -680,16 +691,16 @@ def _timeHint(utc, lat, lon, fit):
 
 
 def _reportZone(out, zone, name):
-    out.para(f"Note: the time in the image's name ({name}) didn't fit the stars in {_zoneName(None)}, "
-             f"so it was read as {zone} time, the time zone nearest to the camera's location. "
-             "If that's wrong, run again with the right one (--timezone).")
+    out.summary(f"The time in the image's name ({name}) didn't fit the stars in {_zoneName(None)}, "
+                f"so it was read as {zone} time, the time zone nearest to the camera's location. If the image "
+                "comes from this Pi, check the Pi's time zone.", "warning")
 
 
 def _reportHint(out, hours, zone):
-    out.para(f"The stars would roughly fit if this image had been taken about {abs(hours)} hours "
+    out.summary(f"The stars would roughly fit if this image had been taken about {abs(hours)} hours "
              f"{'later' if hours > 0 else 'earlier'} than its name says, read in {_zoneName(zone)}. So the time zone "
              "is probably wrong: check the time zone set on the camera's Pi, or, for an image from another "
-             "camera, run again with that camera's time zone (--timezone, e.g. America/Chicago).")
+             "camera, run again with that camera's time zone (--timezone, e.g. America/Chicago).", "warning")
 
 
 # --- overlay -------------------------------------------------------------------------
@@ -914,11 +925,16 @@ def run(args, out):
                      "if the names sit on the right stars, the settings below are ready to use. If they don't, "
                      "enter two stars yourself.")
             _labelImage(img.copy(), cat, best[0], best[2], os.path.join(outdir, "overlay_stars.jpg"))
-            _report(out, img, gray, cat, name, best, outdir, args.update)
+            _report(out, img, gray, cat, name, best, outdir, args.update, auto=True)
         else:
             if not args.list_stars:
-                out.para("The stars could not be identified automatically in this image, so please pick two "
-                         "yourself: enter their names and click each one.")
+                if out.html:
+                    out.summary("The stars couldn't be found automatically. In Settings, open \"Only if the stars "
+                                "aren't found automatically\", enter two of the stars listed in the Output tab, click "
+                                "each one in the image with Pick, and press Run again.", "warning", open_group="stars")
+                else:
+                    out.summary("The stars couldn't be found automatically. Pick two of the stars listed below, "
+                                "find them in the grid image, and run again with --star twice.", "warning")
                 hint = _timeHint(utc, lat, lon, lambda c: _identify(prep, c, quick=True))
                 if hint is not None:
                     _reportHint(out, hint, zones[0])
@@ -963,7 +979,7 @@ def run(args, out):
         print(f"Done in {time.time() - started:.0f} s.")
 
 
-def _report(out, img, gray, cat, name, best, outdir, update=False):
+def _report(out, img, gray, cat, name, best, outdir, update=False, auto=False):
     """The fit, the overlay settings per Website, the check image and, with update,
     the settings written into the Websites."""
     H, W = gray.shape
@@ -981,8 +997,13 @@ def _report(out, img, gray, cat, name, best, outdir, update=False):
                       "draws East on the left, so no overlay setting can match it. Flip the image in Allsky's "
                       "settings, take a new image, and try again.")
     weak = rms_deg > 0.6 or len(pairs) < 15
+    found = f"{'Found' if auto else 'Fitted'} {len(pairs)} bright stars ({rms_deg:.2f} deg error)."
     if weak:
-        out.para("Warning: the fit is weak (few stars or a large error). Try a clearer, darker image.")
+        out.summary(f"{found} That is a weak fit: try a clearer, darker image.", "warning")
+    elif auto:
+        out.summary(f"{found} Check in the Images tab that the names sit on the right stars.", "success")
+    else:
+        out.summary(f"{found} Check in the Images tab that each green circle sits on a star.", "success")
 
     # One table per distinct Website set-up; local and remote usually share one.
     configs = []
@@ -1019,15 +1040,24 @@ def _report(out, img, gray, cat, name, best, outdir, update=False):
         targets += [(kind, site, path, st) for kind, site, path in sites if kind]
     out.para(f"With these settings the overlay should sit within about {fits[proj][2]:.1f} deg of the stars over "
              "most of the sky.")
+    how = "turn on Update the Website and press Run again" if out.html else "run again with --update"
     if not update:
-        out.para("Nothing has been changed. Enter the settings in the Website's configuration, "
-                 "or run again with the Website update turned on.")
+        out.summary(f"Nothing was changed. To use these settings, {how}, or enter them in the Website's "
+                    "configuration yourself.", "info")
     elif weak:
-        out.para("The Website configuration was NOT changed because the fit is weak.")
+        out.summary("The Website was NOT changed, because the fit is weak.", "warning")
     elif not targets:
-        out.para("There is no Website configuration to update.")
+        out.summary("The Website was NOT changed: there is no Website configuration.", "warning")
     else:
-        _updateWebsites(out, targets)
+        rows = _updateWebsites(out, targets)
+        failed = [label for label, result in rows if "NOT" in result or "FAILED" in result]
+        done = [f"{label}: {result}" for label, result in rows if result.startswith("updated") and "FAILED" not in result]
+        if failed:
+            out.summary(f"The Website update FAILED for: {', '.join(failed)}. See the Output tab.", "danger")
+        elif done:
+            out.summary(f"The Website was updated ({'; '.join(done)}). Reload it to see the new overlay.", "success")
+        else:
+            out.summary("The Website was NOT changed: no Website is enabled.", "warning")
     _checkImage(img.copy(), cat, p, flip, shown[0], shown[1], pairs, os.path.join(outdir, "overlay_check.jpg"))
 
 

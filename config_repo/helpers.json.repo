@@ -417,13 +417,13 @@
       ],
       "messages": {
         "running": "Fitting the stars...",
-        "working": "Looking for the stars - this can take up to a minute...",
+        "working": "Looking for the stars - this can take a minute or two...",
         "runningButton": "Running..."
       },
       "contentHtml": [
-      "<p>The Allsky Website can draw the constellations over your image. For them to line up with the stars, the Website needs to know where the image's zenith is, how big the sky is in the image, and how it is rotated. This page works that out from the stars themselves.</p>",
-      "<p class=\"morePadding\"><ol><li>Pick a clear, dark night image - no clouds, ideally no Moon.</li><li>Press <b>Run</b>. The tool tries to find the stars by itself. If it does, the <b>Images</b> tab shows the image with the bright stars labelled: check that the names sit on stars. The <b>Output</b> tab then shows the overlay settings to use, next to the current ones.</li><li>If the stars can't be found automatically, the <b>Output</b> tab lists the bright stars that were up, and the <b>Images</b> tab has a copy of the image with a pixel grid. Find two of those stars in the image, well apart and not too low, enter their names, click each one with <b>Pick</b>, and press <b>Run</b> again.</li></ol>With <b>Update the Website</b> on, the settings are written into each enabled Website's configuration and the remote one is uploaded. Turn it off to only see the suggested settings.</p>"
-    ],
+        "<p>The Allsky Website can draw the constellations over your image. For them to line up with the stars, the Website needs to know where the image's zenith is, how big the sky is in the image, and how it is rotated. This page works that out from the stars themselves.</p>",
+        "<p>Pick a clear, dark night image - no clouds, ideally no Moon - and press <b>Run</b>. The box that appears above the tabs says what happened and what to do next.</p>"
+      ],
       "fields": [
         {
           "name": "image",
@@ -442,16 +442,30 @@
           ]
         },
         {
+          "name": "update",
+          "label": "Update the Website",
+          "type": "checkbox",
+          "default": true,
+          "helpHtml": "Write the new settings into the configuration of each enabled Website and upload the remote one. Nothing is changed if the fit is weak.",
+          "args": [
+            {
+              "flag": "--update",
+              "boolean": true
+            }
+          ]
+        },
+        {
           "name": "star1",
           "label": "First star",
           "type": "text",
           "inputClass": "col-xs-8",
-          "helpHtml": "Only needed if the stars weren't found automatically. Its name, as listed in the <b>Output</b> tab, e.g. <code>vega</code>.",
+          "helpHtml": "Its name, as listed in the <b>Output</b> tab, e.g. <code>vega</code>. Bright planets work too.",
           "args": [
             {
               "flag": "--star1"
             }
-          ]
+          ],
+          "group": "stars"
         },
         {
           "name": "star1_at",
@@ -468,7 +482,8 @@
             {
               "flag": "--star1-at"
             }
-          ]
+          ],
+          "group": "stars"
         },
         {
           "name": "star2",
@@ -480,7 +495,8 @@
             {
               "flag": "--star2"
             }
-          ]
+          ],
+          "group": "stars"
         },
         {
           "name": "star2_at",
@@ -496,22 +512,17 @@
             {
               "flag": "--star2-at"
             }
-          ]
-        },
-        {
-          "name": "update",
-          "label": "Update the Website",
-          "type": "checkbox",
-          "default": true,
-          "helpHtml": "Write the new settings into the configuration of each enabled Website and upload the remote one. Nothing is changed if the fit is weak.",
-          "args": [
-            {
-              "flag": "--update",
-              "boolean": true
-            }
-          ]
+          ],
+          "group": "stars"
         }
       ],
+      "groups": {
+        "stars": {
+          "title": "Only if the stars aren't found automatically",
+          "helpHtml": "Leave these empty at first. If the stars aren't found, the <b>Output</b> tab lists the bright stars that were up: enter two of them, well apart and not too low, and click each one in the image with <b>Pick</b>.",
+          "collapsed": true
+        }
+      },
       "submit": {
         "name": "constellation_overlay",
         "label": "Run"

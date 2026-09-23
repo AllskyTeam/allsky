@@ -5835,6 +5835,47 @@ table.dataTable .selected .as-variable-has-value {
 	display: none;
 }
 
+/* Lines a helper marked as most important, shown above the tabs. */
+.helper-summary-area .helper-summary {
+	margin-bottom: 12px;
+}
+
+.helper-summary-area .helper-summary:last-child {
+	margin-bottom: 15px;
+}
+
+.helper-output .helper-summary {
+	display: none;
+}
+
+/* A collapsible group of helper fields. */
+.helper-field-group {
+	margin-bottom: 15px;
+}
+
+.helper-field-group-toggle,
+.helper-field-group-toggle:hover,
+.helper-field-group-toggle:focus {
+	display: block;
+	font-weight: 700;
+	text-decoration: none;
+}
+
+.helper-field-group-icon {
+	transition: transform 0.15s ease-in-out;
+	transform: rotate(90deg);
+	width: 1em;
+}
+
+.helper-field-group-toggle.collapsed .helper-field-group-icon {
+	transform: none;
+}
+
+.helper-field-group-help {
+	color: var(--bs3-text-muted);
+	margin-bottom: 15px;
+}
+
 .helper-notice-blockquote {
 	max-width: 100%;
 }

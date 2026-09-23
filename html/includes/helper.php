@@ -198,6 +198,7 @@ class HelperPageRenderer
 		$id = $this->e($this->helperId);
 
 		return ''
+			. "<div class='helper-summary-area js-helper-summary' id='{$id}-summary'></div>"
 			. "<ul class='nav nav-tabs helper-results-tabs js-helper-results-tabs' id='{$id}-tabs' role='tablist'>"
 			. "<li role='presentation' class='active js-helper-settings-tab-item' id='{$id}-settings-tab-item'>"
 			. "<a href='#{$id}-settings-pane' class='js-helper-settings-tab' id='{$id}-settings-tab' aria-controls='{$id}-settings-pane' role='tab' data-toggle='tab'>Settings</a>"
@@ -266,13 +267,63 @@ class HelperPageRenderer
 				. '</div>';
 		}
 
+		// Consecutive fields with the same "group" share a collapsible section,
+		// described in the helper's "groups" object.
+		$group = null;
 		foreach ($fields as $field) {
-			if (is_array($field)) {
-				$html .= $this->renderField($field);
+			if (!is_array($field)) {
+				continue;
 			}
+			$fieldGroup = isset($field['group']) ? (string) $field['group'] : null;
+			if ($fieldGroup !== $group) {
+				if ($group !== null) {
+					$html .= $this->renderGroupEnd();
+				}
+				if ($fieldGroup !== null) {
+					$html .= $this->renderGroupStart($fieldGroup);
+				}
+				$group = $fieldGroup;
+			}
+			$html .= $this->renderField($field);
+		}
+		if ($group !== null) {
+			$html .= $this->renderGroupEnd();
 		}
 
 		return $html;
+	}
+
+	/**
+	 * Open a collapsible section for a group of fields.
+	 *
+	 * "groups": {"<name>": {"title": "...", "helpHtml": "...", "collapsed": true}}
+	 * A helper's output can open a collapsed group with an element that has
+	 * data-helper-open-group="<name>", e.g. when the fields in it are now needed.
+	 */
+	private function renderGroupStart(string $group): string
+	{
+		$config = $this->helper['groups'][$group] ?? [];
+		$config = is_array($config) ? $config : [];
+		$title = (string) ($config['title'] ?? $group);
+		$help = $this->replace((string) ($config['helpHtml'] ?? ''));
+		$collapsed = !array_key_exists('collapsed', $config) || !empty($config['collapsed']);
+		$id = $this->e($this->helperId . '-group-' . $group);
+
+		return ''
+			. "<div class='panel panel-default helper-field-group js-helper-field-group' data-group='" . $this->e($group) . "'>"
+			. "<div class='panel-heading'>"
+			. "<a class='helper-field-group-toggle" . ($collapsed ? ' collapsed' : '') . "' data-toggle='collapse' href='#{$id}'"
+			. " aria-expanded='" . ($collapsed ? 'false' : 'true') . "' aria-controls='{$id}'>"
+			. "<i class='fa fa-chevron-right helper-field-group-icon'></i> " . $this->e($title) . '</a>'
+			. '</div>'
+			. "<div id='{$id}' class='panel-collapse collapse" . ($collapsed ? '' : ' in') . "'>"
+			. "<div class='panel-body'>"
+			. ($help !== '' ? "<p class='helper-field-group-help'>{$help}</p>" : '');
+	}
+
+	private function renderGroupEnd(): string
+	{
+		return '</div></div></div>';
 	}
 
 	/**
@@ -696,7 +747,8 @@ class HelperPageRenderer
 	private function renderResultContainers(): string
 	{
 		if (!$this->useTabbedToolPage()) {
-			return "<div class='helper-images-hidden js-helper-images'></div><div class='js-helper-output'></div>";
+			return "<div class='helper-summary-area js-helper-summary'></div>"
+				. "<div class='helper-images-hidden js-helper-images'></div><div class='js-helper-output'></div>";
 		}
 
 		return '';

@@ -10,17 +10,17 @@ It needs to know three things about your images: where the zenith (the point str
 
 - **Update the Website**
 
-    Leave this on to have the tool write the new settings into the configuration of each enabled Website (local and/or remote) and upload the remote one, as the WebUI does when you change a Website setting. Turn it off to only see the suggested settings.
+    Leave this on to have the tool write the new settings into the configuration of each enabled Website (local and/or remote) and upload the remote one, as the WebUI does when you change a Website setting. A weak fit is never written. Turn it off to only see the suggested settings.
 
 - **Run**
 
-    Press **Run**. The tool looks for the stars by itself, which can take up to a minute. It uses another image from the same night, about half an hour apart, to tell stars (which move) from the text on your image (which doesn't).
+    Press **Run**. The tool looks for the stars by itself, which can take a minute or two. It uses another image from the same night, about half an hour apart, to tell stars (which move) from the text on your image (which doesn't).
 
-    If it finds them, the **Images** tab shows your image with the bright stars circled and named. Check that the circles sit on stars. The **Output** tab shows how well the stars fit, then the suggested overlay settings next to the ones you have now, for your local and/or remote Website, and how far from the stars the overlay should be over most of the sky. A second image marks every bright star with a green circle where it is and a yellow cross where the overlay will draw it.
+    A box above the tabs then says what happened and what to do next. If the stars were found, the **Images** tab shows your image with the bright stars circled and named: check that the circles sit on stars. The **Output** tab shows how well the stars fit, the suggested overlay settings next to the ones you have now, and how far from the stars the overlay should be over most of the sky. A second image marks every bright star with a green circle where it is and a yellow cross where the overlay will draw it.
 
 - **If the stars aren't found automatically**
 
-    This can happen with few stars, clouds, or a lot of text on the image. The **Output** tab then lists the bright stars that were at least 20 degrees above the horizon, with their altitude and direction, and the **Images** tab has a copy of the image with a pixel grid.
+    This can happen with few stars, clouds, or a lot of text on the image. The section **Only if the stars aren't found automatically** then opens, the **Output** tab lists the bright stars (and planets) that were at least 20 degrees above the horizon, with their altitude and direction, and the **Images** tab has a copy of the image with a pixel grid.
 
     Pick two stars from the list that are well apart and not too low. Enter each name in **First star** and **Second star**, press **Pick** next to each and click the star in the image. Use **100%** to zoom in. The click moves to the brightest spot nearby, so it doesn't have to be exact. Then press **Run** again.
 
@@ -28,7 +28,9 @@ It needs to know three things about your images: where the zenith (the point str
 
     Remember that your image may be rotated: if north is at the bottom of your image, a star listed as being in the south is near the top. A star chart for the same time helps.
 
-With **Update the Website** on, the **Output** tab ends by saying which Websites were updated; reload the Website to see the new overlay. A weak fit is never written. With it off, nothing is changed: to use the settings, edit the Website's `configuration.json` in the WebUI's **Editor** page and enter the suggested `projection`, `overlayWidth`, `overlayHeight`, `overlayOffsetLeft`, `overlayOffsetTop` and `az`.
+    The time in an image's name is the camera's local time. If the stars don't fit in the Pi's time zone, the tool tries the time zone nearest to the camera's location and says so. If you see that note for an image from your own camera, check the Pi's time zone.
+
+With **Update the Website** on, the box above the tabs says which Websites were updated; reload the Website to see the new overlay. With it off, nothing is changed: to use the settings, edit the Website's `configuration.json` in the WebUI's **Editor** page and enter the suggested `projection`, `overlayWidth`, `overlayHeight`, `overlayOffsetLeft`, `overlayOffsetTop` and `az`.
 
 ## If it doesn't work { data-toc-label="If it doesn't work" }
 

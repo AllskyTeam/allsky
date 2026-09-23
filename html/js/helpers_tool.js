@@ -8,6 +8,7 @@ class HelperToolPage {
         this.outputElement = this.rootElement.find(".js-helper-output");
         this.resultsOutputElement = this.rootElement.find(".js-helper-results-output");
         this.imagesContainerElement = this.rootElement.find(".js-helper-images");
+        this.summaryElement = this.rootElement.find(".js-helper-summary");
         this.runButtonElement = this.rootElement.find(".js-helper-run");
         this.commandButtonElement = this.rootElement.find(".js-helper-show-command");
         this.runCommandButtonElement = this.rootElement.find(".js-helper-run-command");
@@ -79,6 +80,7 @@ class HelperToolPage {
     }
 
     run() {
+        this.summaryElement.empty();
         this.showOutput(this.runningMessage, false);
         this.clearImages();
         this.selectTab(this.resultsTabElement);
@@ -278,6 +280,23 @@ class HelperToolPage {
         if (this.outputTabLabelElement.length > 0) {
             this.outputTabLabelElement.text("Output");
         }
+    }
+
+    // A helper's HTML output can mark the few lines that matter most with the class
+    // "helper-summary" (e.g. what to do next).  They are shown above the tabs, so they
+    // are seen whichever tab is open.  An element with data-helper-open-group="<name>"
+    // opens that collapsed group of fields.
+    showSummary() {
+        this.summaryElement.empty();
+        this.outputElement.find(".helper-summary").each((index, element) => {
+            this.summaryElement.append($(element).clone());
+        });
+        this.outputElement.find("[data-helper-open-group]").each((index, element) => {
+            const group = String($(element).attr("data-helper-open-group") || "");
+            this.formElement.find(".js-helper-field-group").filter(function() {
+                return $(this).attr("data-group") === group;
+            }).find(".panel-collapse").collapse("show");
+        });
     }
 
     clearImages() {
@@ -502,6 +521,9 @@ class HelperToolPage {
         const imagesHtml = response && response.imagesHtml ? response.imagesHtml : "";
 
         this.showOutput(output, !(response && response.ok), renderHtml);
+        if (renderHtml) {
+            this.showSummary();
+        }
         return this.renderImagesHtml(imagesHtml).always(() => {
             this.selectTab($.trim(imagesHtml) !== "" ? this.imagesTabElement : this.resultsTabElement);
         });

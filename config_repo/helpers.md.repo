@@ -316,6 +316,33 @@ If omitted or empty:
 
 Field structure is documented below.
 
+### `groups`
+
+Optional.
+
+Describes collapsible sections of fields.  Consecutive fields with the same
+`group` value (see the field's `group` below) are shown together in one
+section, with this title and help text above them.
+
+```json
+"groups": {
+  "stars": {
+    "title": "Only if the stars aren't found automatically",
+    "helpHtml": "Leave these empty at first.",
+    "collapsed": true
+  }
+}
+```
+
+- `title`: the section's heading, which the user clicks to open or close it
+- `helpHtml`: optional text at the top of the section
+- `collapsed`: `true` (the default) starts the section closed
+
+Use a collapsed section for fields that are only needed in some cases, so the
+user isn't led to believe everything must be filled in.  The helper's output can
+open a section when its fields are needed, see
+[Summary Lines](#summary-lines-and-opening-a-group).
+
 ### `footerHtml`
 
 Optional.
@@ -778,6 +805,13 @@ This prefers the previous capture day if it exists, otherwise it falls back to
 the most recent image directory and updates the explanatory help placeholder
 accordingly.
 
+### `group`
+
+Optional.
+
+The name of the collapsible section this field belongs to, described in the
+helper's `groups`.  Put the fields of one group next to each other.
+
 ### `helpHtml`
 
 Optional.
@@ -1016,6 +1050,28 @@ gallery is returned as `imagesHtml`, which the browser then places into the
 
 `outputFormat` does not affect this behaviour. It only controls how the
 `Output` tab is rendered.
+
+## Summary Lines And Opening A Group
+
+With `"outputFormat": "html"`, a helper can mark the few lines that matter most
+- what happened, what to do next - with the class `helper-summary`.  They are
+shown above the tabs, so the user sees them whichever tab is open (after a run
+that produced images, the `Images` tab is the one shown).  Use Bootstrap's alert
+classes for the colour:
+
+```html
+<div class='helper-summary alert alert-success'>Found 39 stars. Check the Images tab.</div>
+<div class='helper-summary alert alert-warning'>The Website was NOT changed.</div>
+```
+
+In the `Output` tab these lines are hidden, since they are already shown above.
+
+An element with `data-helper-open-group` opens that collapsed group of fields,
+for example when the fields in it are now needed:
+
+```html
+<span data-helper-open-group='stars'></span>
+```
 
 ## Placeholders
 

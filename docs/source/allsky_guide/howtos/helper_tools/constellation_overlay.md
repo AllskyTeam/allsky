@@ -32,6 +32,10 @@ It needs to know three things about your images: where the zenith (the point str
 
 With **Update the Website** on, the box above the tabs says which Websites were updated; reload the Website to see the new overlay. With it off, nothing is changed: to use the settings, edit the Website's `configuration.json` in the WebUI's **Editor** page and enter the suggested `projection`, `overlayWidth`, `overlayHeight`, `overlayOffsetLeft`, `overlayOffsetTop` and `az`.
 
+!!! info  "A camera that isn't level"
+
+    The tool also works out how far the camera leans, and the **Output** tab shows it. The Website's overlay always assumes a level camera, so the more the camera leans, the less well the overlay can match: at 5 degrees it is off by about 1 to 2 degrees in places, at 10 degrees by several. If the tool says the camera leans noticeably, levelling it is the best fix.
+
 ## If it doesn't work { data-toc-label="If it doesn't work" }
 
 - **"No consistent fit"**: check that the names match the stars you clicked, that the image is clear, and try another pair of stars.

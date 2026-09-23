@@ -783,6 +783,9 @@ function normalizeListFileTypeOptions($options=[]) {
 
 	return [
 		'useThumbnails' => array_key_exists('useThumbnails', $options) ? (bool) $options['useThumbnails'] : true,
+		// Where the day folders are and the web path to them; ALLSKY_IMAGES by default.
+		'rootDir' => isset($options['rootDir']) ? (string) $options['rootDir'] : ALLSKY_IMAGES,
+		'rootUrl' => isset($options['rootUrl']) ? (string) $options['rootUrl'] : '/images',
 	];
 }
 
@@ -813,6 +816,11 @@ function renderListFileTypeContent($dir, $imageFileName, $formalImageTypeName, $
 	$chosen_day = $chosen_day ?? getVariableOrDefault($_REQUEST, 'day', null);
 	$options = normalizeListFileTypeOptions($options);
 	$useThumbnails = $options['useThumbnails'];
+	$rootDir = $options['rootDir'];
+	if ($rootDir !== ALLSKY_IMAGES) {
+		$images_dir = $options['rootUrl'];
+		$useThumbnails = false;		// thumbnails are only made under ALLSKY_IMAGES
+	}
 
 	ob_start();
 
@@ -894,7 +902,7 @@ function renderListFileTypeContent($dir, $imageFileName, $formalImageTypeName, $
 			}
 		}
 	} else {
-		$expr = ALLSKY_IMAGES . "/{$chosen_day}/{$dir}";
+		$expr = $rootDir . "/{$chosen_day}/{$dir}";
 		if (substr($imageFileName, 0, 1) == "X") {
 			$expr .= substr($imageFileName, 1) . "*";
 			$ts = "?_ts=" . time();

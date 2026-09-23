@@ -1051,6 +1051,16 @@ gallery is returned as `imagesHtml`, which the browser then places into the
 `outputFormat` does not affect this behaviour. It only controls how the
 `Output` tab is rendered.
 
+The link's `day` names a folder directly below `ALLSKY_IMAGES` and `pre` the start
+of the file names to show.  Add `root=current` to show a folder directly below
+`ALLSKY_CURRENT_DIR` instead (served as `/current`).  That folder is in
+`ALLSKY_TMP`, so it is removed at the next reboot and never appears on the WebUI's
+Images page, which suits check images a helper makes:
+
+```text
+/helpers/show_images.php?root=current&day=constellation_overlay&pre=overlay_&type=Constellation Overlay
+```
+
 ## Summary Lines And Opening A Group
 
 With `"outputFormat": "html"`, a helper can mark the few lines that matter most

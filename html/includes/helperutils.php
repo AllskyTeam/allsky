@@ -627,6 +627,16 @@ class HELPERSUTIL extends UTILBASE
 			return '';
 		}
 
+		// root=current: the folder is below ALLSKY_CURRENT_DIR (in ALLSKY_TMP, so it is
+		// gone after a reboot and not on the Images page), served as /current.
+		$options = ['useThumbnails' => true];
+		if (($params['root'] ?? '') === 'current') {
+			if (preg_match('/^[A-Za-z0-9_-]+$/', $day) !== 1) {
+				return '';
+			}
+			$options = ['rootDir' => ALLSKY_CURRENT_DIR, 'rootUrl' => '/current', 'useThumbnails' => false];
+		}
+
 		return renderListFileTypeContent(
 			'',
 			'X' . $pre,
@@ -634,7 +644,7 @@ class HELPERSUTIL extends UTILBASE
 			$fileType,
 			true,
 			$day,
-			['useThumbnails' => true]
+			$options
 		);
 	}
 

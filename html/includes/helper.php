@@ -340,7 +340,6 @@ class HelperPageRenderer
 			return '';
 		}
 
-		$type = (string) ($field['type'] ?? 'text');
 		$label = $field['labelHtml'] ?? $this->e((string) ($field['label'] ?? $name));
 		$help = $this->replace((string) ($field['helpHtml'] ?? ''));
 

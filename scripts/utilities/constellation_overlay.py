@@ -36,7 +36,8 @@ Options:
                        (and upload the remote one)
     --html             output for the WebUI helper page
     --directory DIR    where to put the check images
-                       (default: ${ALLSKY_IMAGES}/test_constellation_overlay)
+                       (default: ${ALLSKY_CURRENT_DIR}/constellation_overlay, in Allsky's
+                       tmp folder, so it's gone after a reboot)
 """
 
 import os
@@ -1040,8 +1041,9 @@ def run(args, out):
     utc = _toUtc(local, zones[0])
     cat = _catalogue(utc, lat, lon, min_alt=15.0)
     used = zones[0]
-    images = os.environ.get("ALLSKY_IMAGES") or os.path.join(ALLSKY_HOME, "images")
-    outdir = args.directory or os.path.join(images, "test_constellation_overlay")
+    current = os.environ.get("ALLSKY_CURRENT_DIR") or os.path.join(
+        os.environ.get("ALLSKY_TMP") or os.path.join(ALLSKY_HOME, "tmp"), "current_images")
+    outdir = args.directory or os.path.join(current, "constellation_overlay")
     os.makedirs(outdir, exist_ok=True)
     name = os.path.basename(args.image)
 
@@ -1230,9 +1232,15 @@ def _clearImages(outdir):
 
 
 def _link(out, outdir):
+    """The link the WebUI turns into the Images tab.  It shows a folder directly below
+    ALLSKY_IMAGES, or with root=current one below ALLSKY_CURRENT_DIR."""
     day = os.path.basename(outdir.rstrip("/"))
+    parent = os.path.realpath(os.path.dirname(outdir.rstrip("/")))
+    current = os.environ.get("ALLSKY_CURRENT_DIR") or os.path.join(
+        os.environ.get("ALLSKY_TMP") or os.path.join(ALLSKY_HOME, "tmp"), "current_images")
+    root = "&root=current" if parent == os.path.realpath(current) else ""
     if out.html:
-        print(f"<p>Click <a href='/helpers/show_images.php?_ts={int(time.time())}"
+        print(f"<p>Click <a href='/helpers/show_images.php?_ts={int(time.time())}{root}"
               f"&day={day}&pre=overlay_&type=Constellation Overlay' external='true'>here</a> "
               "to see the results.</p>")
     else:

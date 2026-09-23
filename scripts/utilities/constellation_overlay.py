@@ -333,8 +333,38 @@ def _addPlanets(ra, dec, mag, names, utc):
 
 # --- lens model ----------------------------------------------------------------------
 
+MAX_TILT = 20.0                                   # degrees the camera's axis may lean
+
+
+def _tilt(alt, az, tx, ty, inverse=False):
+    """Horizon (alt, az) -> (alt, az) in the frame of a camera whose axis leans tx
+    degrees toward the east and ty toward the north; inverse: back again."""
+    alt, az = np.asarray(alt, float), np.asarray(az, float)
+    tau = math.radians(math.hypot(tx, ty))
+    if tau < 1e-14:                               # small enough for the fit's finite differences
+        return alt, az
+    phi = math.atan2(tx, ty)
+    a, z = np.radians(alt).ravel(), np.radians(az).ravel()
+    v = np.stack([np.cos(a) * np.sin(z), np.cos(a) * np.cos(z), np.sin(a)])
+    axis = np.array([math.sin(tau) * math.sin(phi), math.sin(tau) * math.cos(phi), math.cos(tau)])
+    k = np.cross(axis, [0.0, 0.0, 1.0])
+    k /= np.linalg.norm(k)                        # turning about k by tau takes the axis to the zenith
+    ang = -tau if inverse else tau
+    w = v * math.cos(ang) + np.cross(k[:, None], v, axis=0) * math.sin(ang) \
+        + k[:, None] * (k @ v) * (1.0 - math.cos(ang))
+    return (np.degrees(np.arcsin(np.clip(w[2], -1.0, 1.0))).reshape(alt.shape),
+            (np.degrees(np.arctan2(w[0], w[1])) % 360.0).reshape(alt.shape))
+
+
+def _tiltOf(p):
+    return (p[5], p[6]) if len(p) > 5 else (0.0, 0.0)
+
+
 def _project(alt, az, p, flip):
-    cx, cy, a1, a3, rot = p
+    """(alt, az) -> pixel.  p = (cx, cy, a1, a3, rot[, tilt east, tilt north]): the
+    radial lens r = a1*t + a3*t^3 about the camera's axis at (cx, cy)."""
+    alt, az = _tilt(alt, az, *_tiltOf(p))
+    cx, cy, a1, a3, rot = p[:5]
     t = (90.0 - np.asarray(alt)) / 90.0
     r = a1 * t + a3 * t ** 3
     ang = np.radians(rot + flip * np.asarray(az))
@@ -343,7 +373,7 @@ def _project(alt, az, p, flip):
 
 def _unproject(x, y, p, flip):
     """Pixel -> (alt, az) for the fitted lens; Newton on r = a1*t + a3*t^3."""
-    cx, cy, a1, a3, rot = p
+    cx, cy, a1, a3, rot = p[:5]
     dx, dy = x - cx, cy - y
     r = np.hypot(dx, dy)
     az = ((np.degrees(np.arctan2(dx, dy)) - rot) * flip) % 360.0
@@ -352,7 +382,7 @@ def _unproject(x, y, p, flip):
         f = a1 * t + a3 * t ** 3 - r
         fp = np.maximum(a1 + 3 * a3 * t * t, 1e-6)
         t = np.clip(t - f / fp, 0.0, 1.5)
-    return 90.0 - 90.0 * t, az
+    return _tilt(90.0 - 90.0 * t, az, *_tiltOf(p), inverse=True)
 
 
 def _wideBlur(g, sigma):
@@ -427,28 +457,41 @@ def _brightPairs(cat, stars, sky, p, flip, radius, dominance=1.35):
     return np.array(out).reshape(-1, 4)
 
 
-def _fitPairs(pairs, p0, flip, free_a3):
+def _fitPairs(pairs, p0, flip, free_a3, free_tilt=False):
+    p0 = list(p0) + [0.0, 0.0] * (len(p0) == 5)
+    free = [0, 1, 2, 4] + [3] * free_a3 + [5, 6] * free_tilt
+
+    def full(q):
+        pp = list(p0)
+        for i, v in zip(free, q):
+            pp[i] = v
+        return pp
+
     def resid(q):
-        pp = (q[0], q[1], q[2], q[3] if free_a3 else p0[3], q[4])
-        x, y = _project(pairs[:, 0], pairs[:, 1], pp, flip)
+        x, y = _project(pairs[:, 0], pairs[:, 1], full(q), flip)
         return np.concatenate([x - pairs[:, 2], y - pairs[:, 3]])
-    q = list(least_squares(resid, np.asarray(p0, float), loss="soft_l1", f_scale=6.0).x)
-    if not free_a3:
-        q[3] = p0[3]
-    return q
+    lo = [-np.inf] * len(free)
+    hi = [np.inf] * len(free)
+    for j, i in enumerate(free):
+        if i >= 5:
+            lo[j], hi[j] = -MAX_TILT, MAX_TILT
+    x0 = np.clip([p0[i] for i in free], np.array(lo) + 1e-6, np.array(hi) - 1e-6)
+    return full(least_squares(resid, x0, bounds=(lo, hi), loss="soft_l1", f_scale=6.0).x)
 
 
 def _refine(cat, stars, sky, p, flip, W):
     """Shrink the search window step by step; the cubic term is freed once the linear
     part has settled.  Returns (params, pairs) or (None, pairs)."""
     s = W / 3840.0
-    p = list(p)
+    p = list(p) + [0.0, 0.0] * (len(p) == 5)
     pairs = np.empty((0, 4))
     for it, rad in enumerate((100, 80, 62, 48, 38, 30, 24, 20)):
         pairs = _brightPairs(cat, stars, sky, p, flip, rad * s)
         if len(pairs) < 8:
             return None, pairs
-        p = _fitPairs(pairs, p, flip, free_a3=(it >= 2))
+        # The tilt is freed last, and only with enough stars to pin it: it trades off
+        # against the centre, so it needs stars all over the sky.
+        p = _fitPairs(pairs, p, flip, free_a3=(it >= 2), free_tilt=(it >= 4 and len(pairs) >= 15))
     return p, pairs
 
 
@@ -491,14 +534,16 @@ def _parseStar(text, cat):
     return name, x, y
 
 
-def _calibrate(prep, cat, picked):
-    """Fit the lens from two identified stars; try both handedness."""
+def _calibrate(prep, cat, picked, tilt=(0.0, 0.0)):
+    """Fit the lens from two identified stars; try both handedness.  tilt: where to
+    start the camera's lean from."""
     stars, sky, W = prep["stars"], prep["sky"], prep["W"]
     if any(name not in set(cat[3]) for name, _, _ in picked):
         return None                              # not up at this time
     best = None
     for flip in (-1.0, 1.0):
-        p, pairs = _refine(cat, stars, sky, _seed(picked, cat, flip), flip, W)
+        seed = _seed(picked, _tiltedCat(cat, *tilt), flip) + list(tilt)
+        p, pairs = _refine(cat, stars, sky, seed, flip, W)
         if p is None:
             continue
         rms_px, rms_deg = _residuals(pairs, p, flip)
@@ -664,10 +709,70 @@ def _identify(prep, cat, quick=False):
     return p, pairs, flip, rms_px, rms_deg
 
 
+# --- a camera that leans ------------------------------------------------------------
+
+# Where to start from for a camera that leans a lot: 6, 12 and 18 degrees in 8 directions.
+TILT_SEEDS = [(tau * math.sin(math.radians(d)), tau * math.cos(math.radians(d)))
+              for tau in (6.0, 12.0, 18.0) for d in range(0, 360, 45)]
+
+
+def _tiltedCat(cat, tx, ty):
+    """The catalogue as a camera leaning (tx, ty) sees it."""
+    alt, az = _tilt(cat[0], cat[1], tx, ty)
+    return alt, az, cat[2], cat[3]
+
+
+def _leaning(prep, cat, fit):
+    """The search assumes the camera points roughly straight up.  If it leans by more
+    than a few degrees, that finds nothing: try the sky as seen by cameras leaning
+    various ways, refine each find with the lean free, and accept a clear winner.
+    fit(cat, tilt) returns like _calibrate, in the true sky.  Returns like _calibrate."""
+    found = []
+    for tilt in TILT_SEEDS:
+        best = fit(cat, tilt)
+        if _strong(best):
+            found.append(best)
+    if not found:
+        return None
+    found.sort(key=lambda b: (-len(b[1]), b[4]))
+    best = found[0]
+    zx, zy = _project(90.0, 0.0, best[0], best[2])
+    for other in found[1:]:
+        ox, oy = _project(90.0, 0.0, other[0], other[2])
+        same = math.hypot(ox - zx, oy - zy) < 0.02 * prep["W"] and \
+            abs((other[0][4] - best[0][4] + 180) % 360 - 180) < 3 and other[2] == best[2]
+        if not same and len(other[1]) >= 0.75 * len(best[1]):
+            return None                          # two different answers: don't guess
+    return best
+
+
+def _identifyLeaning(prep, cat, tilt):
+    """_identify for the sky as a camera leaning `tilt` sees it, refined in the true sky."""
+    best = _identify(prep, _tiltedCat(cat, *tilt), quick=True)
+    if best is None:
+        return None
+    p0 = list(best[0][:5]) + [a + b for a, b in zip(tilt, _tiltOf(best[0]))]
+    p, pairs = _refine(cat, prep["stars"], prep["sky"], p0, best[2], prep["W"])
+    if p is None:
+        return None
+    rms_px, rms_deg = _residuals(pairs, p, best[2])
+    return (p, pairs, best[2], rms_px, rms_deg) if rms_deg < 0.75 else None
+
+
 # --- when the image's time doesn't fit ----------------------------------------------
 
 def _strong(best):
     return best is not None and len(best[1]) >= 15 and best[4] <= 0.5
+
+
+def _pick(found):
+    """The best of fits made with different times: [(best, cat, zone)].  The camera's
+    lean can partly make up for a wrong time, so among fits with nearly as many stars
+    as the best one, take the one where the camera leans least."""
+    if not found:
+        return None
+    n = max(len(f[0][1]) for f in found)
+    return min((f for f in found if len(f[0][1]) >= 0.9 * n), key=lambda f: math.hypot(*_tiltOf(f[0][0])))
 
 
 def _timeHint(utc, lat, lon, fit):
@@ -691,9 +796,9 @@ def _timeHint(utc, lat, lon, fit):
 
 
 def _reportZone(out, zone, name):
-    out.summary(f"The time in the image's name ({name}) didn't fit the stars in {_zoneName(None)}, "
-                f"so it was read as {zone} time, the time zone nearest to the camera's location. If the image "
-                "comes from this Pi, check the Pi's time zone.", "warning")
+    out.summary(f"The stars fit best with the time in the image's name ({name}) read as {zone} time, the "
+                f"time zone nearest to the camera's location, not in {_zoneName(None)}. If the image comes from "
+                "this Pi, check the Pi's time zone.", "warning")
 
 
 def _reportHint(out, hours, zone):
@@ -706,8 +811,12 @@ def _reportHint(out, hours, zone):
 # --- overlay -------------------------------------------------------------------------
 
 def _overlayFit(p, flip, sky, design_w):
-    """Best radius per virtualsky projection over the visible sky.
-    Returns {name: (R, rms_deg, p95_deg, max_deg)} and the widest zenith angle used."""
+    """virtualsky draws a projection centred on the zenith, turned by az; it can't
+    lean.  For each projection, fit its centre, radius and rotation to the lens over
+    the visible sky, weighting every point by its own plate scale so the error is in
+    degrees.  Returns {name: (cx, cy, R, az, rms_deg, p95_deg, max_deg)}, with the centre
+    in image pixels and R in the Website's pixels (imageWidth), and the widest zenith
+    angle used."""
     H, W = sky.shape
     s = design_w / float(W)
     step = max(8, W // 160)
@@ -715,33 +824,42 @@ def _overlayFit(p, flip, sky, design_w):
     xs, ys = xs.ravel().astype(float), ys.ravel().astype(float)
     keep = sky[ys.astype(int), xs.astype(int)]
     xs, ys = xs[keep], ys[keep]
-    alt, _ = _unproject(xs, ys, p, flip)
+    alt, az = _unproject(xs, ys, p, flip)
     keep = alt > 2.0
-    xs, ys, alt = xs[keep], ys[keep], alt[keep]
+    xs, ys, alt, az = xs[keep], ys[keep], alt[keep], az[keep]
     if len(xs) < 50:
         raise Failure("Too little sky in the image to fit the overlay.")
     z = np.radians(90.0 - alt)
-    r_img = np.hypot(xs - p[0], ys - p[1])
-    t = z / (math.pi / 2)
+    t = (90.0 - _tilt(alt, az, *_tiltOf(p))[0]) / 90.0          # zenith angle in the camera's frame
     px_per_deg = (p[2] + 3 * p[3] * t ** 2) / 90.0
+    zx, zy = (float(v) for v in _project(90.0, 0.0, p, flip))
     fits = {}
     for name, f in PROJECTIONS.items():
         k = f(z)
-        R = float(np.dot(k, r_img * s) / np.dot(k, k))
-        err = np.abs((R * k / s - r_img) / px_per_deg)
-        fits[name] = (R, float(np.sqrt(np.mean(err ** 2))), float(np.percentile(err, 95)), float(err.max()))
+        R0 = float(np.dot(k, np.hypot(xs - zx, ys - zy)) / np.dot(k, k))
+
+        def resid(q):
+            a = np.radians(az - (q[3] - 180.0))
+            return np.concatenate([(q[0] - q[2] * k * np.sin(a) - xs) / px_per_deg,
+                                   (q[1] - q[2] * k * np.cos(a) - ys) / px_per_deg])
+        q = least_squares(resid, [zx, zy, R0, (p[4] + 180.0) % 360.0]).x
+        e = resid(q)
+        err = np.hypot(e[:len(xs)], e[len(xs):])
+        fits[name] = (float(q[0]), float(q[1]), float(q[2] * s), float(q[3] % 360.0),
+                      float(np.sqrt(np.mean(err ** 2))), float(np.percentile(err, 95)), float(err.max()))
     return fits, float(np.degrees(z).max())
 
 
-def _overlaySettings(p, R, projection, design_w, W):
+def _overlaySettings(fit, projection, design_w, W):
     s = design_w / float(W)
+    cx, cy, R, az = fit[:4]
     return {
         "projection": projection,
         "overlayWidth": int(round(2 * R)),
         "overlayHeight": int(round(2 * R)),
-        "overlayOffsetLeft": int(round(p[0] * s - R)),
-        "overlayOffsetTop": int(round(p[1] * s - R)),
-        "az": round((p[4] + 180.0) % 360.0, 1),
+        "overlayOffsetLeft": int(round(cx * s - R)),
+        "overlayOffsetTop": int(round(cy * s - R)),
+        "az": round(az, 1),
     }
 
 
@@ -785,7 +903,8 @@ def _checkImage(img, cat, p, flip, st, design_w, pairs, sky, path):
                         cv2.FONT_HERSHEY_SIMPLEX, fs, (0, 255, 0), lw)
     for a, z, x, y in pairs:
         cv2.circle(img, (int(x), int(y)), int(8 * k), (255, 0, 255), lw)
-    cv2.drawMarker(img, (int(p[0]), int(p[1])), (255, 0, 255), cv2.MARKER_CROSS, int(80 * k), lw)
+    zx, zy = _project(90.0, 0.0, p, flip)                      # the zenith
+    cv2.drawMarker(img, (int(zx), int(zy)), (255, 0, 255), cv2.MARKER_CROSS, int(80 * k), lw)
     legend = "green circle = where each bright star is (fit)   magenta = star found in the image"
     if st is not None:
         legend += "   yellow cross = where the overlay draws it"
@@ -930,12 +1049,13 @@ def run(args, out):
         best = None
         if not args.list_stars:
             prep = _prepare(gray, args.image)
-            for zone in zones:
-                c = _catalogue(_toUtc(local, zone), lat, lon, min_alt=15.0)
-                best = _identify(prep, c)
-                if best is not None:
-                    cat, used = c, zone
-                    break
+            cats = [(_catalogue(_toUtc(local, zone), lat, lon, min_alt=15.0), zone) for zone in zones]
+            found = [(b, c, zone) for c, zone in cats for b in [_identify(prep, c)] if b is not None]
+            if not found:
+                found = [(b, c, zone) for c, zone in cats
+                         for b in [_leaning(prep, c, lambda cc, tilt: _identifyLeaning(prep, cc, tilt))] if b is not None]
+            if found:
+                best, cat, used = _pick(found)
         _clearImages(outdir)
         if best is not None and best[2] < 0:
             out.heading("Stars found automatically")
@@ -977,14 +1097,15 @@ def run(args, out):
         raise Failure("The two stars are too close together in the image; pick two further apart.")
 
     prep = {"W": W, "H": H, "stars": _starMap(gray), "sky": _skyRegion(gray)}
+    cats = [(_catalogue(_toUtc(local, zone), lat, lon, min_alt=15.0), zone) for zone in zones]
+    found = [(b, c, zone) for c, zone in cats for b in [_calibrate(prep, c, picked)] if b is not None]
+    if not any(_strong(f[0]) for f in found):     # a weak fit may be the wrong time or a leaning camera
+        found += [(b, c, zone) for c, zone in cats
+                  for b in [_leaning(prep, c, lambda cc, tilt: _calibrate(prep, cc, picked, tilt))] if b is not None]
+    strong = [f for f in found if _strong(f[0])]
     best = None
-    for zone in zones:                            # a weak fit in the first zone may be the wrong time
-        c = _catalogue(_toUtc(local, zone), lat, lon, min_alt=15.0)
-        b = _calibrate(prep, c, picked)
-        if b is not None and (best is None or _strong(b) and not _strong(best)):
-            best, cat, used = b, c, zone
-        if _strong(best):
-            break
+    if strong or found:
+        best, cat, used = _pick(strong or found)
     if best is None:
         hint = _timeHint(utc, lat, lon, lambda c: _calibrate(prep, c, picked))
         if hint is not None:
@@ -1010,8 +1131,9 @@ def _report(out, img, gray, cat, name, best, outdir, update=False, auto=False):
         ("Image", f"{name} ({W} x {H})"),
         ("Bright stars used", len(pairs)),
         ("Remaining error", f"{rms_deg:.2f} deg ({rms_px:.1f} px)"),
-        ("Zenith at pixel", f"{p[0]:.0f}, {p[1]:.0f}"),
+        ("Zenith at pixel", "%.0f, %.0f" % tuple(float(v) for v in _project(90.0, 0.0, p, flip))),
         ("Rotation", f"{p[4] % 360:.1f} deg"),
+        ("Camera leans", f"{math.hypot(*_tiltOf(p)):.1f} deg toward {_compass(_tiltAz(p))}"),
     ])
     if flip > 0:
         raise Failure("This image shows East on the RIGHT (mirror-imaged). The constellation overlay always "
@@ -1042,13 +1164,13 @@ def _report(out, img, gray, cat, name, best, outdir, update=False, auto=False):
     for label, sites, cfg, _ in configs:
         design_w = float(cfg.get("imageWidth") or 900)
         fits, zmax = _overlayFit(p, flip, sky, design_w)
-        proj = min(fits, key=lambda k: fits[k][1])
-        st = _overlaySettings(p, fits[proj][0], proj, design_w, W)
+        proj = min(fits, key=lambda k: fits[k][4])
+        st = _overlaySettings(fits[proj], proj, design_w, W)
         out.heading(f"Overlay settings for the {label} (imageWidth {design_w:g})")
         out.table(("Setting", "Suggested", "Now"), [(k, st[k], cfg.get(k, "")) for k in OVERLAY_KEYS])
         out.table(("Projection", "Error RMS", "95% of sky", "Worst"),
-                  [(k + ("  <- best" if k == proj else ""), f"{v[1]:.2f} deg", f"{v[2]:.2f} deg", f"{v[3]:.2f} deg")
-                   for k, v in sorted(fits.items(), key=lambda kv: kv[1][1])])
+                  [(k + ("  <- best" if k == proj else ""), f"{v[4]:.2f} deg", f"{v[5]:.2f} deg", f"{v[6]:.2f} deg")
+                   for k, v in sorted(fits.items(), key=lambda kv: kv[1][4])])
         try:
             unequal = float(cfg["overlayWidth"]) != float(cfg["overlayHeight"])
         except (KeyError, TypeError, ValueError):
@@ -1059,8 +1181,14 @@ def _report(out, img, gray, cat, name, best, outdir, update=False, auto=False):
         if shown is None:
             shown = (st, design_w)
         targets += [(kind, site, path, st) for kind, site, path in sites if kind]
-    out.para(f"With these settings the overlay should sit within about {fits[proj][2]:.1f} deg of the stars over "
+    out.para(f"With these settings the overlay should sit within about {fits[proj][5]:.1f} deg of the stars over "
              "most of the sky.")
+    tilt = math.hypot(*_tiltOf(p))
+    if tilt >= 3.0:
+        out.summary(f"The camera leans about {tilt:.0f} degrees toward the {_compass(_tiltAz(p))}. The Website's "
+                    "overlay assumes a level camera, so it can only match to about "
+                    f"{fits[proj][5]:.1f} degrees over most of the sky; levelling the camera makes it fit better.",
+                    "warning")
     how = "turn on Update the Website and press Run again" if out.html else "run again with --update"
     if not update:
         out.summary(f"Nothing was changed. To use these settings, {how}, or enter them in the Website's "
@@ -1080,6 +1208,15 @@ def _report(out, img, gray, cat, name, best, outdir, update=False, auto=False):
         else:
             out.summary("The Website was NOT changed: no Website is enabled.", "warning")
     _checkImage(img.copy(), cat, p, flip, shown[0], shown[1], pairs, sky, os.path.join(outdir, "overlay_check.jpg"))
+
+
+def _tiltAz(p):
+    tx, ty = _tiltOf(p)
+    return math.degrees(math.atan2(tx, ty)) % 360.0
+
+
+def _compass(az):
+    return ("N", "NE", "E", "SE", "S", "SW", "W", "NW")[int((az + 22.5) % 360 // 45)]
 
 
 def _clearImages(outdir):

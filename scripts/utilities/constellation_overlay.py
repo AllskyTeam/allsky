@@ -764,7 +764,7 @@ def _save(img, path):
     cv2.imwrite(path, img, [cv2.IMWRITE_JPEG_QUALITY, 90])
 
 
-def _checkImage(img, cat, p, flip, st, design_w, pairs, path):
+def _checkImage(img, cat, p, flip, st, design_w, pairs, sky, path):
     H, W = img.shape[:2]
     k = W / 3840.0
     lw, fs = max(1, int(round(3 * k))), 1.3 * k
@@ -772,7 +772,7 @@ def _checkImage(img, cat, p, flip, st, design_w, pairs, path):
     x0, y0 = _project(alt, az, p, flip)
     xv, yv = _overlayXY(alt, az, st, design_w, W) if st else (None, None)
     for i in range(len(alt)):
-        if not (0 <= x0[i] < W and 0 <= y0[i] < H):
+        if not (0 <= x0[i] < W and 0 <= y0[i] < H) or not sky[int(y0[i]), int(x0[i])]:
             continue
         c = (int(x0[i]), int(y0[i]))
         cv2.circle(img, c, int(26 * k), (0, 255, 0), lw)
@@ -789,32 +789,52 @@ def _checkImage(img, cat, p, flip, st, design_w, pairs, path):
     legend = "green circle = where each bright star is (fit)   magenta = star found in the image"
     if st is not None:
         legend += "   yellow cross = where the overlay draws it"
-    (tw, th), _ = cv2.getTextSize(legend, cv2.FONT_HERSHEY_SIMPLEX, fs, lw)
-    cv2.rectangle(img, (0, H - th - int(60 * k)), (tw + int(80 * k), H), (0, 0, 0), -1)
-    cv2.putText(img, legend, (int(40 * k), H - int(30 * k)), cv2.FONT_HERSHEY_SIMPLEX, fs, (0, 255, 255), lw)
+    _legend(img, legend, k)
     _save(img, path)
 
 
-def _labelImage(img, cat, p, flip, path):
-    """The image with each named bright star circled and labelled, for the user to check."""
+def _used(cat, pairs):
+    """For each catalogue star: was it found in the image and used in the fit?"""
+    used = np.zeros(len(cat[0]), bool)
+    for a, z, _, _ in pairs:
+        used |= (np.abs(cat[0] - a) < 1e-6) & (np.abs(cat[1] - z) < 1e-6)
+    return used
+
+
+def _labelImage(img, cat, p, flip, pairs, sky, path):
+    """The image with each named bright star circled and labelled, for the user to check.
+    Yellow: found in the image and used in the fit.  Grey: where the fit puts a star
+    that wasn't found (too low, faint, in cloud or at the lens's edge).  Stars behind
+    buildings, trees or hills (outside the sky) are left out."""
     H, W = img.shape[:2]
     k = W / 3840.0
     lw = max(2, int(round(3 * k)))
     alt, az, _, names = cat
     x, y = _project(alt, az, p, flip)
+    used = _used(cat, pairs)
     for i in range(len(alt)):
-        if not names[i] or not (0 <= x[i] < W and 0 <= y[i] < H):
+        if not names[i] or not (0 <= x[i] < W and 0 <= y[i] < H) or not sky[int(y[i]), int(x[i])]:
             continue
+        colour = (0, 255, 255) if used[i] else (170, 170, 170)
         c = (int(x[i]), int(y[i]))
-        cv2.circle(img, c, int(34 * k), (0, 255, 255), lw)
+        cv2.circle(img, c, int(34 * k), colour, lw if used[i] else max(1, lw - 1))
         label = names[i].title()
         (tw, _), _ = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 1.5 * k, lw)
         org = (c[0] + int(40 * k), c[1] - int(24 * k))
         if org[0] + tw > W:                     # near the right edge: label on the left
             org = (c[0] - int(40 * k) - tw, org[1])
         cv2.putText(img, label, org, cv2.FONT_HERSHEY_SIMPLEX, 1.5 * k, (0, 0, 0), lw + 3)
-        cv2.putText(img, label, org, cv2.FONT_HERSHEY_SIMPLEX, 1.5 * k, (0, 255, 255), lw)
+        cv2.putText(img, label, org, cv2.FONT_HERSHEY_SIMPLEX, 1.5 * k, colour, lw)
+    _legend(img, "yellow = star found and used   grey = where a star should be, not found", k)
     _save(img, path)
+
+
+def _legend(img, text, k):
+    H = img.shape[0]
+    lw, fs = max(1, int(round(3 * k))), 1.3 * k
+    (tw, th), _ = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, fs, lw)
+    cv2.rectangle(img, (0, H - th - int(60 * k)), (tw + int(80 * k), H), (0, 0, 0), -1)
+    cv2.putText(img, text, (int(40 * k), H - int(30 * k)), cv2.FONT_HERSHEY_SIMPLEX, fs, (0, 255, 255), lw)
 
 
 def _gridImage(img, path):
@@ -924,7 +944,8 @@ def run(args, out):
             out.para("The stars were identified without your help. Check the labelled image in the Images tab: "
                      "if the names sit on the right stars, the settings below are ready to use. If they don't, "
                      "enter two stars yourself.")
-            _labelImage(img.copy(), cat, best[0], best[2], os.path.join(outdir, "overlay_stars.jpg"))
+            _labelImage(img.copy(), cat, best[0], best[2], best[1], _skyRegion(gray),
+                        os.path.join(outdir, "overlay_stars.jpg"))
             _report(out, img, gray, cat, name, best, outdir, args.update, auto=True)
         else:
             if not args.list_stars:
@@ -1058,7 +1079,7 @@ def _report(out, img, gray, cat, name, best, outdir, update=False, auto=False):
             out.summary(f"The Website was updated ({'; '.join(done)}). Reload it to see the new overlay.", "success")
         else:
             out.summary("The Website was NOT changed: no Website is enabled.", "warning")
-    _checkImage(img.copy(), cat, p, flip, shown[0], shown[1], pairs, os.path.join(outdir, "overlay_check.jpg"))
+    _checkImage(img.copy(), cat, p, flip, shown[0], shown[1], pairs, sky, os.path.join(outdir, "overlay_check.jpg"))
 
 
 def _clearImages(outdir):

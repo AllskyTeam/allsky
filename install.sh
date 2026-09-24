@@ -2566,7 +2566,7 @@ display_msg --logonly info "${ITEM} contents: $( ls "${D}"/* 2>/dev/null )"		# F
 	if [[ -f ${PRIOR_WEBSITE_CONFIG_FILE} ]]; then
 		# Copy the old file to the current location.
 
-		if [[ ${PRIOR_WEB_CONFIG_VERSION} < "${NEW_WEB_CONFIG_VERSION}" ]]; then
+		if website_config_needs_update "${PRIOR_WEB_CONFIG_VERSION}" "${NEW_WEB_CONFIG_VERSION}" "${BRANCH}"; then
 			MSG="${ITEM} (copying and updating for version ${NEW_WEB_CONFIG_VERSION})"
 		else
 			MSG="${ITEM} (copying)"
@@ -2576,7 +2576,7 @@ display_msg --logonly info "${ITEM} contents: $( ls "${D}"/* 2>/dev/null )"		# F
 		cp "${PRIOR_WEBSITE_CONFIG_FILE}" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
 
 		MSG="${SPACE}${SPACE}${SPACE}"
-		if [[ ${PRIOR_WEB_CONFIG_VERSION} < "${NEW_WEB_CONFIG_VERSION}" ]]; then
+		if website_config_needs_update "${PRIOR_WEB_CONFIG_VERSION}" "${NEW_WEB_CONFIG_VERSION}" "${BRANCH}"; then
 			# If different versions, then update the current one.
 			MSG+="Updating version from ${PRIOR_WEB_CONFIG_VERSION} to ${NEW_WEB_CONFIG_VERSION}."
 			display_msg --logonly info "${MSG}"

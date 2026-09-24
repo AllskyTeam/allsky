@@ -676,6 +676,22 @@ function prepare_local_website()
 
 ####
 # Update a Website configuration file from old to current version.
+####
+# Does a Website configuration file of version ${1} need update_old_website_config_file()
+# to bring it to version ${2}?  Yes if it's older.  Also if it's the same version but
+# Allsky isn't installed from the main branch (${3}, default: this installation's):
+# testers get changes made while the version stays the same, as the settings file does.
+# Each step in update_old_website_config_file() only changes what still needs changing,
+# so running it again is safe.
+function website_config_needs_update()
+{
+	local PRIOR="${1}"  NEW="${2}"  B="${3:-$( get_branch )}"
+
+	[[ ${PRIOR} < "${NEW}" ]] && return 0
+	[[ ${PRIOR} == "${NEW}" && ${B} != "${ALLSKY_GITHUB_MAIN_BRANCH}" ]] && return 0
+	return 1
+}
+
 function update_old_website_config_file()
 {
 	local FILE PRIOR_VERSION CURRENT_VERSION
@@ -810,7 +826,9 @@ function update_old_website_config_file()
 			"fa fa-2x fa-fw icon-mini-timelapse" "fa fa-2x fa-fw fa-file-video"
 	fi
 
-	if [[ ${PRIOR_VERSION} -le 6 ]] ; then
+	# Only while they are still the old kind, so running this again keeps a user's colours.
+	if [[ ${PRIOR_VERSION} -le 6 ]] &&
+		[[ "$( jq '[.config.colours | to_entries[] | select(.value | type == "object") | .value | has("constellation")] | all' "${FILE}" 2>/dev/null )" != "true" ]] ; then
 		# Replace the old XXX_cardinal-only colours with the current full colour set.
 		TEMP="/tmp/$$"
 		jq --indent 4 --slurpfile repo "${REPO_WEBSITE_CONFIGURATION_FILE}" \

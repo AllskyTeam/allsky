@@ -568,8 +568,8 @@ function update_old()
 
 	local PRIOR_VERSION="$( settings ".${WEBSITE_CONFIG_VERSION}" "${FILE}" )"
 	local NEW_VERSION="$( settings ".${WEBSITE_CONFIG_VERSION}" "${REPO_WEBCONFIG_FILE}" )"
-	if [[ ${PRIOR_VERSION} < "${NEW_VERSION}" ]]; then
-		# Old version, so update to format of the current version.
+	if website_config_needs_update "${PRIOR_VERSION}" "${NEW_VERSION}"; then
+		# Old version (or a test branch), so update to format of the current version.
 		update_old_website_config_file "${FILE}" "${PRIOR_VERSION}" "${NEW_VERSION}"
 		return 0
 	fi

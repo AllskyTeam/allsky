@@ -130,6 +130,17 @@ if [[ ${TEST_MODE} == "true" ]]; then
 fi
 
 # Update the current image - don't rename it.
+# darkSubtract.py also replaces each hot pixel with the average of its neighbours,
+# otherwise hot pixels become black dots.  If it fails, just subtract.
+DS_ARGS=( --quality "${S_quality:-95}" )
+[[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]] && DS_ARGS+=( --verbose )
+if ERR="$( "${ALLSKY_PYTHON_VENV}/bin/python3" "${ALLSKY_SCRIPTS}/darkSubtract.py" \
+		"${CURRENT_IMAGE}" "${DARK}" "${DS_ARGS[@]}" 2>&1 )" ; then
+	[[ -n ${ERR} ]] && echo "${ERR}"
+	return
+fi
+echo "*** ${ME2}: WARNING: hot pixel repair failed (${ERR}); only subtracting the dark frame." >&2
+
 if ! ERR="$( convert "${CURRENT_IMAGE}" "${DARK}" -compose minus_src -composite "${CURRENT_IMAGE}" 2>&1 )" ; then
 	# Exit since we don't know the state of ${CURRENT_IMAGE}.
 	echo "*** ${ME2}: ERROR: 'convert' of '${DARK}' failed: ${ERR}" >&2

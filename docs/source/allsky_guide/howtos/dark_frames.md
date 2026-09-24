@@ -76,3 +76,8 @@ When a dark image is taken a file called `dark.png` is saved in `~/allsky/tmp`, 
 When darks are being subtracted, the software looks in `~/allsky/darks` for the dark frame that is closest to the current sensor temperature. For example, if the current temperature is 21 and you have 3 darks, 17.png, 20.png, and 23.png, the software will pick 20.png because it's only 1 degree off from the current sensor temperature.
 
 The software does not actually look in the dark files - it simply looks at the names of the files. Unless something is really weird with your camera, or your darks are pretty old, the closest dark frame will give the best results.
+
+### Hot pixels { data-toc-label="Hot pixels" }
+A hot pixel is often as bright in the light frame as in the dark frame, or saturated in both, so subtracting the dark frame would leave a black dot. Allsky therefore replaces every pixel that is much brighter in the dark frame than the pixels around it with the average of its neighbours, so a grey sky isn't peppered with black dots.
+
+Cameras gain hot pixels as they age. Hot pixels that aren't in your dark frames are not removed, so take new darks when you see white or coloured dots that don't move from image to image.

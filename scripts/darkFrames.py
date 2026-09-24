@@ -52,8 +52,10 @@ LIGHT_SIGMAS = 6
 MAX_CANDIDATES = 0.01	# ignore an image with more candidates than this fraction of its pixels
 HOT_FRACTION = 0.75		# a hot pixel must be a candidate in this fraction of the night's images
 MIN_IMAGES = 30			# need this many images in a night to make a new hot pixel map
-SCALE_THRESHOLD = 0.04	# pixels used to scale the dark frame must be this much brighter
+SCALE_THRESHOLD = 0.15	# pixels used to scale the dark frame must be this much brighter
 SCALE_SIGMAS = 8		# than their neighbours in it, and at least SCALE_SIGMAS noise
+SCALE_MIN_PIXELS = 50	# fewer such hot pixels: don't scale (weaker spikes in a dark frame
+						# are mostly noise that isn't in the next image, which would give ~0)
 MAX_DARKS = 50			# see "add-dark"
 
 ALLSKY_DARKS = os.environ.get("ALLSKY_DARKS", os.path.expanduser("~/allsky/darks"))
@@ -185,12 +187,14 @@ def spike_scale(img, spikes, fs):
 	Each channel is compared on its own, since a hot pixel is usually hot in one."""
 	s = spikes if spikes.ndim == 3 else spikes[..., None]
 	im = img if img.ndim == 3 else img[..., None]
-	# Only pixels clearly brighter in the dark frame, well above its noise (weak
-	# ones give too small a scale), and not saturated in the image.
+	# Only strong hot pixels, and not saturated in the image.  Weaker spikes in a
+	# dark frame are mostly noise or JPG artefacts that are not in the image, so
+	# including them pulls the scale towards 0.  A camera with few strong hot
+	# pixels isn't scaled at all, just as before.
 	noise = 1.4826 * float(np.median(s[::4, ::4]))
 	use = (s > max(SCALE_THRESHOLD * fs, SCALE_SIGMAS * noise)) & (im < 0.95 * fs)
 	ys, xs, cs = np.nonzero(use)
-	if len(ys) < 50:
+	if len(ys) < SCALE_MIN_PIXELS:
 		return 1.0
 	if len(ys) > 20000:		# plenty; keep it quick
 		pick = np.random.default_rng(0).choice(len(ys), 20000, replace=False)
@@ -283,14 +287,18 @@ def cmd_subtract(a):
 
 	if a.dark:
 		dark = match_dark(read(a.dark), img)
-		smooth, brighter, darker = split_dark(dark)
+		_, brighter, _ = split_dark(dark)
 		hot |= brightest(brighter) > DARK_THRESHOLD * fs
 		# The smooth part and cold pixels are subtracted as they are,
 		# hot pixels scaled to fit the image.
 		k = spike_scale(img, brighter, fs) if a.scale else 1.0
-		result = cv2.subtract(img, smooth)
-		result = cv2.addWeighted(result, 1.0, brighter, -k, 0.0)
-		result = cv2.add(result, darker)
+		# image - smooth - k * hot + cold = image - dark + (1 - k) * hot,
+		# signed and clipped only once, so k = 1 gives exactly the old result.
+		signed = cv2.CV_16S if img.dtype == np.uint8 else cv2.CV_32F
+		result = cv2.subtract(img, dark, dtype=signed)
+		if k != 1.0:
+			result = cv2.addWeighted(result, 1.0, brighter.astype(result.dtype), 1.0 - k, 0.0, dtype=signed)
+		result = np.clip(result, 0, fs).astype(img.dtype)
 	else:
 		result = img.copy()
 

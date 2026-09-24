@@ -175,6 +175,7 @@ of the current release.
       helps tune **Remove Bad Images Threshold** values in the WebUI.
 
     - **Dark frames** (#640):
+        - Dark subtraction is significantly better and no longer adds dark pixels.
         - Hot pixels are replaced by the average of the pixels around them,
           so they no longer turn into black dots.
         - Hot pixels that appear after the dark frames were taken are learned

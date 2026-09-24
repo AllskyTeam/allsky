@@ -174,6 +174,17 @@ of the current release.
     - `allsky-config bad_images_info --show_bad_images`
       helps tune **Remove Bad Images Threshold** values in the WebUI.
 
+    - **Dark frames** (#640):
+        - Dark subtraction is significantly better and no longer adds dark pixels.
+        - Hot pixels are replaced by the average of the pixels around them,
+          so they no longer turn into black dots.
+        - Hot pixels that appear after the dark frames were taken are learned
+          from the night images and repaired too.
+        - The dark frame's hot pixels are scaled to fit each image's exposure,
+          temperature and file type.
+        - Dark frames at the same temperature are averaged into a master dark
+          frame, which has much less noise than a single one.
+
     - Updated to ZWO SDK v1.39 (new camera support, 366MC Pro removed)
     - Improved security for internet-connected Allsky cameras
 

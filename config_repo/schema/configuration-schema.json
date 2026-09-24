@@ -258,12 +258,34 @@
           }
         },
         "az": {
-          "type": "integer",
+          "type": "number",
           "title": "Overlay Azimuth",
           "description": "The azimuth in degrees to rotate the VirtualSky overlay to match the orientation of your camera. This is used in combination with the overlay offsets and dimensions to get the best fit for your camera's field of view.",
           "x-grid": {
             "columns": 3,
             "newRow": true
+          },
+          "x-containerAttributes": {
+            "class": "WebUISetting"
+          }
+        },
+        "overlayLean": {
+          "type": "number",
+          "title": "Overlay Lean",
+          "description": "How many degrees the camera's axis leans from straight up; 0 for a level camera. The overlay leans the same way, so it still matches the stars. The Constellation Overlay helper tool works this out.",
+          "x-grid": {
+            "columns": 3
+          },
+          "x-containerAttributes": {
+            "class": "WebUISetting"
+          }
+        },
+        "overlayLeanAz": {
+          "type": "number",
+          "title": "Overlay Lean Direction",
+          "description": "The azimuth, in degrees, the camera leans toward: 0 = north, 90 = east, 180 = south, 270 = west. Only used when Overlay Lean isn't 0.",
+          "x-grid": {
+            "columns": 3
           },
           "x-containerAttributes": {
             "class": "WebUISetting"

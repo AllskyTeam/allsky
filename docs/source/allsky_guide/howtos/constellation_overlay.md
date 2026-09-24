@@ -30,7 +30,7 @@ The default maximum size of the image that's displayed on the Website is 960 pix
 ## Aligning the overlay { data-toc-label="Aligning the overlay" }
 !!! tip  "Tip"
 
-    The [Constellation Overlay Helper Tool](/allsky_guide/howtos/helper_tools/constellation_overlay.html) works out `overlayWidth`, `overlayHeight`, `overlayOffsetLeft`, `overlayOffsetTop`, `az` and the best `projection` for you, from two stars you click in a night image. Try it before aligning by hand.
+    The [Constellation Overlay Helper Tool](/allsky_guide/howtos/helper_tools/constellation_overlay.html) works out `overlayWidth`, `overlayHeight`, `overlayOffsetLeft`, `overlayOffsetTop`, `az`, the best `projection` and, for a camera that isn't level, `overlayLean` and `overlayLeanAz` for you, from two stars you click in a night image. Try it before aligning by hand.
 
 !!! warning
 

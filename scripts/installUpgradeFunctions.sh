@@ -676,6 +676,25 @@ function prepare_local_website()
 
 ####
 # Update a Website configuration file from old to current version.
+####
+# Does a Website configuration file of version ${1} need update_old_website_config_file()
+# to bring it to version ${2}?  Yes if the versions differ, either way: a tester's file can
+# be newer than the repository's if the version was lowered again, and the update sets
+# it to the repository's.  Also if it's the same version but Allsky isn't installed from
+# the main branch (${3}, default: this installation's): testers get changes made while
+# the version stays the same, as the settings file does.
+# Each step in update_old_website_config_file() only changes what still needs changing,
+# so running it again is safe.  Versions are compared as numbers ("10" > "9").
+function website_config_needs_update()
+{
+	local PRIOR="${1}"  NEW="${2}"  B="${3:-$( get_branch )}"
+
+	[[ ${PRIOR} =~ ^[0-9]+$ && ${NEW} =~ ^[0-9]+$ ]] || return 0	# unknown: update
+	(( PRIOR != NEW )) && return 0
+	[[ ${B} != "${ALLSKY_GITHUB_MAIN_BRANCH}" ]] && return 0
+	return 1
+}
+
 function update_old_website_config_file()
 {
 	local FILE PRIOR_VERSION CURRENT_VERSION
@@ -698,6 +717,11 @@ function update_old_website_config_file()
 	#	Changed "imageName" to "/current/image.jpg" in local config file.
 	#		imageName is updated in replace_website_placeholders() so not done here.
 	#	timelapse and mini-timelapse icons changed.
+	#	Full set of overlay colours.
+	#	Added "overlayLean" and "overlayLeanAz" after "az", for a camera that isn't level.
+	# While v2026.10.01 was being tested the repository briefly said 6, so testers can
+	# have files at 6: the steps for version 5 run for those too ("-le 6"), and the file
+	# then ends at 5.  Every step only changes what still needs changing.
 
 	if [[ ${PRIOR_VERSION} -eq 1 ]]; then
 		# These steps bring version 1 up to 2.
@@ -799,7 +823,7 @@ function update_old_website_config_file()
 		fi
 	fi
 
-	if [[ ${PRIOR_VERSION} -le 5 ]] ; then	# use -le so testers get updated.
+	if [[ ${PRIOR_VERSION} -le 6 ]] ; then	# use -le so testers get updated.
 		# Update timelapse icons
 		update_array_field "${FILE}" "homePage.leftSidebar" "icon" \
 			"fa fa-2x fa-fw fa-play-circle" "fa fa-2x fa-fw fa-video"
@@ -807,11 +831,30 @@ function update_old_website_config_file()
 			"fa fa-2x fa-fw icon-mini-timelapse" "fa fa-2x fa-fw fa-file-video"
 	fi
 
-	if [[ ${PRIOR_VERSION} -le 6 ]] ; then
+	# Only while they are still the old kind, so running this again keeps a user's colours.
+	if [[ ${PRIOR_VERSION} -le 6 ]] &&
+		[[ "$( jq '[.config.colours | to_entries[] | select(.value | type == "object") | .value | has("constellation")] | all' "${FILE}" 2>/dev/null )" != "true" ]] ; then
 		# Replace the old XXX_cardinal-only colours with the current full colour set.
 		TEMP="/tmp/$$"
 		jq --indent 4 --slurpfile repo "${REPO_WEBSITE_CONFIGURATION_FILE}" \
 			'.config.colours = $repo[0].config.colours' "${FILE}" > "${TEMP}"
+		if [[ $? -eq 0 ]]; then
+			# cp so it keeps ${FILE}'s attributes
+			cp "${TEMP}" "${FILE}" && rm -f "${TEMP}"
+		else
+			rm -f "${TEMP}"
+		fi
+	fi
+
+	if [[ ${PRIOR_VERSION} -le 6 ]] ; then	# use -le so testers get updated.
+		# Add "overlayLean" and "overlayLeanAz" after "az", unless already there.
+		TEMP="/tmp/$$"
+		jq --indent 4 '
+			if (.config | has("overlayLean")) then .
+			else .config |= (reduce to_entries[] as $e ({};
+				. + {($e.key): $e.value}
+				+ (if $e.key == "az" then {"overlayLean": 0, "overlayLeanAz": 0} else {} end)))
+			end' "${FILE}" > "${TEMP}"
 		if [[ $? -eq 0 ]]; then
 			# cp so it keeps ${FILE}'s attributes
 			cp "${TEMP}" "${FILE}" && rm -f "${TEMP}"

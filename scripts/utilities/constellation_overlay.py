@@ -78,7 +78,8 @@ PROJECTIONS = {                                   # virtualsky's zenith-centred 
     "polar": lambda z: z / (math.pi / 2),                          # equidistant
     "ortho": lambda z: np.sin(z),
 }
-OVERLAY_KEYS = ("projection", "overlayWidth", "overlayHeight", "overlayOffsetLeft", "overlayOffsetTop", "az")
+OVERLAY_KEYS = ("projection", "overlayWidth", "overlayHeight", "overlayOffsetLeft", "overlayOffsetTop", "az",
+                "overlayLean", "overlayLeanAz")
 
 
 class Failure(Exception):
@@ -812,10 +813,10 @@ def _reportHint(out, hours, zone):
 # --- overlay -------------------------------------------------------------------------
 
 def _overlayFit(p, flip, sky, design_w):
-    """virtualsky draws a projection centred on the zenith, turned by az; it can't
-    lean.  For each projection, fit its centre, radius and rotation to the lens over
-    the visible sky, weighting every point by its own plate scale so the error is in
-    degrees.  Returns {name: (cx, cy, R, az, rms_deg, p95_deg, max_deg)}, with the centre
+    """virtualsky draws a projection turned by az, and leaned like the camera
+    (overlayLean, overlayLeanAz), so it is centred on the camera's axis.  For each
+    projection, fit its centre, radius and rotation to the lens over the visible sky,
+    weighting every point by its own plate scale so the error is in degrees.  Returns {name: (cx, cy, R, az, rms_deg, p95_deg, max_deg)}, with the centre
     in image pixels and R in the Website's pixels (imageWidth), and the widest zenith
     angle used."""
     H, W = sky.shape
@@ -830,17 +831,18 @@ def _overlayFit(p, flip, sky, design_w):
     xs, ys, alt, az = xs[keep], ys[keep], alt[keep], az[keep]
     if len(xs) < 50:
         raise Failure("Too little sky in the image to fit the overlay.")
-    z = np.radians(90.0 - alt)
-    t = (90.0 - _tilt(alt, az, *_tiltOf(p))[0]) / 90.0          # zenith angle in the camera's frame
+    calt, caz = _tilt(alt, az, *_tiltOf(p))                        # in the camera's frame
+    z = np.radians(90.0 - calt)
+    t = (90.0 - calt) / 90.0
     px_per_deg = (p[2] + 3 * p[3] * t ** 2) / 90.0
-    zx, zy = (float(v) for v in _project(90.0, 0.0, p, flip))
+    zx, zy = float(p[0]), float(p[1])                              # the camera's axis
     fits = {}
     for name, f in PROJECTIONS.items():
         k = f(z)
         R0 = float(np.dot(k, np.hypot(xs - zx, ys - zy)) / np.dot(k, k))
 
         def resid(q):
-            a = np.radians(az - (q[3] - 180.0))
+            a = np.radians(caz - (q[3] - 180.0))
             return np.concatenate([(q[0] - q[2] * k * np.sin(a) - xs) / px_per_deg,
                                    (q[1] - q[2] * k * np.cos(a) - ys) / px_per_deg])
         q = least_squares(resid, [zx, zy, R0, (p[4] + 180.0) % 360.0]).x
@@ -851,9 +853,10 @@ def _overlayFit(p, flip, sky, design_w):
     return fits, float(np.degrees(z).max())
 
 
-def _overlaySettings(fit, projection, design_w, W):
+def _overlaySettings(fit, projection, design_w, W, p):
     s = design_w / float(W)
     cx, cy, R, az = fit[:4]
+    lean = math.hypot(*_tiltOf(p))
     return {
         "projection": projection,
         "overlayWidth": int(round(2 * R)),
@@ -861,6 +864,8 @@ def _overlaySettings(fit, projection, design_w, W):
         "overlayOffsetLeft": int(round(cx * s - R)),
         "overlayOffsetTop": int(round(cy * s - R)),
         "az": round(az, 1),
+        "overlayLean": round(lean, 1),
+        "overlayLeanAz": round(_tiltAz(p), 1) if round(lean, 1) else 0,
     }
 
 
@@ -869,6 +874,8 @@ def _overlayXY(alt, az, st, design_w, W):
     s = design_w / float(W)
     R = st["overlayHeight"] / 2.0
     cx, cy = st["overlayOffsetLeft"] + st["overlayWidth"] / 2.0, st["overlayOffsetTop"] + R
+    lean, toward = float(st.get("overlayLean") or 0), math.radians(float(st.get("overlayLeanAz") or 0))
+    alt, az = _tilt(alt, az, lean * math.sin(toward), lean * math.cos(toward))
     a = np.radians(np.asarray(az) - (st["az"] - 180.0))
     r = R * PROJECTIONS[st["projection"]](np.radians(90.0 - np.asarray(alt)))
     return (cx - r * np.sin(a)) / s, (cy - r * np.cos(a)) / s
@@ -906,9 +913,10 @@ def _checkImage(img, cat, p, flip, st, design_w, pairs, sky, path):
         cv2.circle(img, (int(x), int(y)), int(8 * k), (255, 0, 255), lw)
     zx, zy = _project(90.0, 0.0, p, flip)                      # the zenith
     cv2.drawMarker(img, (int(zx), int(zy)), (255, 0, 255), cv2.MARKER_CROSS, int(80 * k), lw)
-    legend = "green circle = where each bright star is (fit)   magenta = star found in the image"
+    legend = [("green circle = where each bright star is (fit)", (0, 255, 0)),
+              ("magenta = star found in the image", (255, 0, 255))]
     if st is not None:
-        legend += "   yellow cross = where the overlay draws it"
+        legend.append(("yellow cross = where the overlay draws it", (0, 255, 255)))
     _legend(img, legend, k)
     _save(img, path)
 
@@ -945,16 +953,24 @@ def _labelImage(img, cat, p, flip, pairs, sky, path):
             org = (c[0] - int(40 * k) - tw, org[1])
         cv2.putText(img, label, org, cv2.FONT_HERSHEY_SIMPLEX, 1.5 * k, (0, 0, 0), lw + 3)
         cv2.putText(img, label, org, cv2.FONT_HERSHEY_SIMPLEX, 1.5 * k, colour, lw)
-    _legend(img, "yellow = star found and used   grey = where a star should be, not found", k)
+    _legend(img, [("yellow = star found and used", (0, 255, 255)),
+                  ("grey = where a star should be, not found", (170, 170, 170))], k)
     _save(img, path)
 
 
-def _legend(img, text, k):
+def _legend(img, parts, k):
+    """A legend at the bottom left: [(text, colour)], each part in the colour it explains."""
     H = img.shape[0]
     lw, fs = max(1, int(round(3 * k))), 1.3 * k
-    (tw, th), _ = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, fs, lw)
-    cv2.rectangle(img, (0, H - th - int(60 * k)), (tw + int(80 * k), H), (0, 0, 0), -1)
-    cv2.putText(img, text, (int(40 * k), H - int(30 * k)), cv2.FONT_HERSHEY_SIMPLEX, fs, (0, 255, 255), lw)
+    gap = cv2.getTextSize("   ", cv2.FONT_HERSHEY_SIMPLEX, fs, lw)[0][0]
+    sizes = [cv2.getTextSize(t, cv2.FONT_HERSHEY_SIMPLEX, fs, lw)[0] for t, _ in parts]
+    width = sum(w for w, _ in sizes) + gap * (len(parts) - 1)
+    th = max(h for _, h in sizes)
+    cv2.rectangle(img, (0, H - th - int(60 * k)), (width + int(80 * k), H), (0, 0, 0), -1)
+    x = int(40 * k)
+    for (text, colour), (w, _) in zip(parts, sizes):
+        cv2.putText(img, text, (x, H - int(30 * k)), cv2.FONT_HERSHEY_SIMPLEX, fs, colour, lw)
+        x += w + gap
 
 
 def _gridImage(img, path):
@@ -1167,7 +1183,7 @@ def _report(out, img, gray, cat, name, best, outdir, update=False, auto=False):
         design_w = float(cfg.get("imageWidth") or 900)
         fits, zmax = _overlayFit(p, flip, sky, design_w)
         proj = min(fits, key=lambda k: fits[k][4])
-        st = _overlaySettings(fits[proj], proj, design_w, W)
+        st = _overlaySettings(fits[proj], proj, design_w, W, p)
         out.heading(f"Overlay settings for the {label} (imageWidth {design_w:g})")
         out.table(("Setting", "Suggested", "Now"), [(k, st[k], cfg.get(k, "")) for k in OVERLAY_KEYS])
         out.table(("Projection", "Error RMS", "95% of sky", "Worst"),
@@ -1189,10 +1205,8 @@ def _report(out, img, gray, cat, name, best, outdir, update=False, auto=False):
     if tilt >= 3.0:
         words = {"N": "north", "NE": "north-east", "E": "east", "SE": "south-east", "S": "south",
                  "SW": "south-west", "W": "west", "NW": "north-west"}
-        out.summary(f"The camera leans about {tilt:.0f} degrees toward the {words[_compass(_tiltAz(p))]}. The Website's "
-                    "overlay assumes a level camera, so it can only match to about "
-                    f"{fits[proj][5]:.1f} degrees over most of the sky; levelling the camera makes it fit better.",
-                    "warning")
+        out.summary(f"The camera leans about {tilt:.0f} degrees toward the {words[_compass(_tiltAz(p))]}. The overlay "
+                    "settings include that (overlayLean and overlayLeanAz), so the overlay leans with it.", "info")
     how = "turn on Update the Website and press Run again" if out.html else "run again with --update"
     if not update:
         out.summary(f"Nothing was changed. To use these settings, {how}, or enter them in the Website's "

@@ -304,6 +304,8 @@ this.credit = false;	// ALLSKY set to false
 	this.base = "";
 	this.az_step = 0;
 	this.az_off = 0;
+	this.lean = 0;		// ALLSKY ADDED: degrees the camera's axis leans from straight up
+	this.leanaz = 0;	// ALLSKY ADDED: azimuth (degrees) it leans toward
 	this.ra_off = 0;
 	this.dc_off = 0;
 	this.fov = 30;
@@ -1077,6 +1079,8 @@ VirtualSky.prototype.init = function(d){
 	if(is(d.latitude,n)) this.setLatitude(d.latitude);
 	if(is(d.clock,s)) this.updateClock(new Date(d.clock.replace(/%20/g,' ')));
 	if(is(d.az,n)) this.az_off = (d.az%360)-180;
+	if(is(d.overlayLean,n)) this.lean = d.overlayLean;		// ALLSKY ADDED
+	if(is(d.overlayLeanAz,n)) this.leanaz = d.overlayLeanAz;	// ALLSKY ADDED
 	if(is(d.ra,n)) this.setRA(d.ra);
 	if(is(d.dec,n)) this.setDec(d.dec);
 	if(is(d.planets,s)) this.file.planets = d.planets;
@@ -1981,6 +1985,15 @@ VirtualSky.prototype.selectProjection = function(proj){
 			};
 		}
 
+		// ALLSKY ADDED: a camera that isn't level.  Turn each position into the
+		// camera's own frame before projecting it, so the projection is centred on
+		// the camera's axis instead of the zenith.
+		var projectAzEl = this.azel2xy;
+		this.azel2xy = function(az,el,w,h){
+			var c = this.leanAzEl(az,el,false);
+			return projectAzEl.call(this,c.az,c.el,w,h);
+		};
+
 		// Convert AZ,EL -> RA,Dec
 		// Inputs: az (rad), el (rad)
 		// Output: { ra: ra (deg), dec: dec (deg) }
@@ -2251,6 +2264,25 @@ VirtualSky.prototype.radec2xy = function(ra,dec){
 	return 0;
 };
 
+// ALLSKY ADDED
+// Turn (az, el) - in radians, az already turned by az_off - into the frame of a camera
+// whose axis leans this.lean degrees toward azimuth this.leanaz, or back (inverse).
+// The same turn as constellation_overlay.py's _tilt(): about the horizontal axis at
+// right angles to the lean, by the lean, so the camera's axis becomes "straight up".
+VirtualSky.prototype.leanAzEl = function(az, el, inverse){
+	if(!this.lean) return {az:az, el:el};
+	var tau = this.lean*this.d2r;
+	var phi = (this.leanaz - this.az_off)*this.d2r;
+	var v = [Math.cos(el)*Math.sin(az), Math.cos(el)*Math.cos(az), Math.sin(el)];
+	var k = [Math.cos(phi), -Math.sin(phi), 0];		// axis x up, normalised
+	var ang = inverse ? -tau : tau;
+	var c = Math.cos(ang), s = Math.sin(ang);
+	var kv = [k[1]*v[2] - k[2]*v[1], k[2]*v[0] - k[0]*v[2], k[0]*v[1] - k[1]*v[0]];
+	var kd = k[0]*v[0] + k[1]*v[1] + k[2]*v[2];
+	var w = [0,1,2].map(function(i){ return v[i]*c + kv[i]*s + k[i]*kd*(1-c); });
+	return {az: Math.atan2(w[0], w[1]), el: Math.asin(Math.max(-1, Math.min(1, w[2])))};
+};
+
 // Returns {ra (rad), dec (rad)}
 VirtualSky.prototype.xy2radec = function(x, y){
 	if (typeof this.projection.xy2radec==="function") return this.projection.xy2radec.call(this,x,y);
@@ -2260,7 +2292,8 @@ VirtualSky.prototype.xy2radec = function(x, y){
 			return undefined;
 		}
 
-		var coords = [azel[1], azel[0] + (this.az_off*this.d2r)];
+		var unleaned = this.leanAzEl(azel[0],azel[1],true);		// ALLSKY ADDED
+		var coords = [unleaned.el, unleaned.az + (this.az_off*this.d2r)];
 
 		return this.horizon2coord(coords);
 	} else {

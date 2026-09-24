@@ -698,9 +698,8 @@ function update_old_website_config_file()
 	#	Changed "imageName" to "/current/image.jpg" in local config file.
 	#		imageName is updated in replace_website_placeholders() so not done here.
 	#	timelapse and mini-timelapse icons changed.
-	# Version: 6
+	# Current version: 6
 	#	Full set of overlay colours.
-	# Current version: 7
 	#	Added "overlayLean" and "overlayLeanAz" after "az", for a camera that isn't level.
 
 	if [[ ${PRIOR_VERSION} -eq 1 ]]; then
@@ -824,7 +823,7 @@ function update_old_website_config_file()
 		fi
 	fi
 
-	if [[ ${PRIOR_VERSION} -lt 7 ]] ; then
+	if [[ ${PRIOR_VERSION} -le 6 ]] ; then	# use -le so testers get updated.
 		# Add "overlayLean" and "overlayLeanAz" after "az", unless already there.
 		TEMP="/tmp/$$"
 		jq --indent 4 '

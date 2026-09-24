@@ -504,15 +504,12 @@ fi
 
 if [[ ${DO_TIMELAPSE} == "true" ]]; then
 	VIDEO_FILE="allsky-${DATE}.mp4"
-	THUMBNAIL_FILE="videothumbnail/thumbnail-${DATE}.jpg"
+	THUMBNAIL_FILE="videothumbnail/allsky-${DATE}.jpg"
 	UPLOAD_THUMBNAIL="${OUTPUT_DIR}/${THUMBNAIL_FILE}"
 	UPLOAD_FILE="${OUTPUT_DIR}/${VIDEO_FILE}"
 
 	TIMELAPSE_UPLOAD_THUMBNAIL="${S_timelapseuploadthumbnail}"
 	if [[ ${TYPE} == "GENERATE" ]]; then
-		# If the thumbnail file exists it will used and produce errors, so delete it.
-		rm -f "${UPLOAD_THUMBNAIL}"
-
 		if [[ ${THUMBNAIL_ONLY} == "true" ]]; then
 			if [[ -f ${UPLOAD_FILE} ]]; then
 				RES="$( "${ALLSKY_UTILITIES}/thumbnail.sh" -t timelapse -d "$( basename "${INPUT_DIR}" )" --force 2>&1 )"

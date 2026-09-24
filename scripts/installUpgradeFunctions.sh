@@ -678,17 +678,20 @@ function prepare_local_website()
 # Update a Website configuration file from old to current version.
 ####
 # Does a Website configuration file of version ${1} need update_old_website_config_file()
-# to bring it to version ${2}?  Yes if it's older.  Also if it's the same version but
-# Allsky isn't installed from the main branch (${3}, default: this installation's):
-# testers get changes made while the version stays the same, as the settings file does.
+# to bring it to version ${2}?  Yes if the versions differ, either way: a tester's file can
+# be newer than the repository's if the version was lowered again, and the update sets
+# it to the repository's.  Also if it's the same version but Allsky isn't installed from
+# the main branch (${3}, default: this installation's): testers get changes made while
+# the version stays the same, as the settings file does.
 # Each step in update_old_website_config_file() only changes what still needs changing,
-# so running it again is safe.
+# so running it again is safe.  Versions are compared as numbers ("10" > "9").
 function website_config_needs_update()
 {
 	local PRIOR="${1}"  NEW="${2}"  B="${3:-$( get_branch )}"
 
-	[[ ${PRIOR} < "${NEW}" ]] && return 0
-	[[ ${PRIOR} == "${NEW}" && ${B} != "${ALLSKY_GITHUB_MAIN_BRANCH}" ]] && return 0
+	[[ ${PRIOR} =~ ^[0-9]+$ && ${NEW} =~ ^[0-9]+$ ]] || return 0	# unknown: update
+	(( PRIOR != NEW )) && return 0
+	[[ ${B} != "${ALLSKY_GITHUB_MAIN_BRANCH}" ]] && return 0
 	return 1
 }
 

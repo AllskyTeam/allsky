@@ -687,7 +687,7 @@ function prepare_local_website()
 # so running it again is safe.  Versions are compared as numbers ("10" > "9").
 function website_config_needs_update()
 {
-	local PRIOR="${1}"  NEW="${2}"  B="${3:-$( get_branch )}"
+	local PRIOR="${1}"  NEW="${2}"  B="${3:-$( get_branch "" )}"
 
 	[[ ${PRIOR} =~ ^[0-9]+$ && ${NEW} =~ ^[0-9]+$ ]] || return 0	# unknown: update
 	(( PRIOR != NEW )) && return 0

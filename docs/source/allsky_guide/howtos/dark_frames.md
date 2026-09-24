@@ -71,13 +71,21 @@ When you are taking dark frames, the software will turn off auto-exposure, auto-
 
     If you later change the `Gain` or `Binning`, you must discard the old darks and take new ones (noise, and hence dark frames, is impacted by these settings). If you think you'll go back to the original settings, save the old darks somewhere else instead of discarding them.
 
-When a dark image is taken a file called `dark.png` is saved in `~/allsky/tmp`, then moved to `~/allsky/darks` with a name like "XX.png", where "XX" is the temperature, for example, `21.png`.
+When a dark image is taken a file called `dark.png` is saved in `~/allsky/tmp`, then added to the master dark frame in `~/allsky/darks` with a name like "XX.png", where "XX" is the temperature, for example, `21.png` (see [Master dark frames](#master-dark-frames) below).
 
 When darks are being subtracted, the software looks in `~/allsky/darks` for the dark frame that is closest to the current sensor temperature. For example, if the current temperature is 21 and you have 3 darks, 17.png, 20.png, and 23.png, the software will pick 20.png because it's only 1 degree off from the current sensor temperature.
 
 The software does not actually look in the dark files - it simply looks at the names of the files. Unless something is really weird with your camera, or your darks are pretty old, the closest dark frame will give the best results.
 
-### Hot pixels { data-toc-label="Hot pixels" }
-A hot pixel is often as bright in the light frame as in the dark frame, or saturated in both, so subtracting the dark frame would leave a black dot. Allsky therefore replaces every pixel that is much brighter in the dark frame than the pixels around it with the average of its neighbours, so a grey sky isn't peppered with black dots.
+### Master dark frames { data-toc-label="Master dark frames" }
+A single dark frame has noise of its own, which would be added to every image. So while `Take Dark Frames` is on, all dark frames taken at the same temperature are averaged into one **master dark frame**, e.g., `21.png`; the average of 25 dark frames has only a fifth of the noise. After 50 dark frames, each new one replaces a fiftieth of the average, so taking darks again later brings the master dark frame up to date. The average is also kept with more precision in `~/allsky/darks/masters`.
 
-Cameras gain hot pixels as they age. Hot pixels that aren't in your dark frames are not removed, so take new darks when you see white or coloured dots that don't move from image to image.
+The longer you leave `Take Dark Frames` on at each temperature, the better. Dark frames taken before this version are used as the first frame of the average.
+
+### Scaling to fit each image { data-toc-label="Scaling" }
+Hot pixels are brighter the longer the exposure and the higher the temperature, and grow brighter as the sensor ages. They are also dimmer in a `.jpg` image than in the dark frame, since JPG compression blurs single pixels but dark frames are saved as `.png`. Subtracting them as they are in the dark frame would often leave black dots. Allsky therefore compares the dark frame's hot pixels with the same pixels in each image and scales them to fit. The rest of the dark frame, such as the camera's offset and amp glow, is subtracted as it is.
+
+### Hot pixels { data-toc-label="Hot pixels" }
+Even after scaling, a hot pixel can be saturated in both the image and the dark frame, so nothing would be left of the sky there. Allsky therefore replaces every pixel that is much brighter in the dark frame than the pixels around it with the average of its neighbours.
+
+Cameras gain hot pixels as they age, so Allsky also learns them from your night images: stars move from image to image but hot pixels don't. At the end of each night, pixels that were a single bright (or dark) spike in at least three quarters of the night's images are saved in `~/allsky/darks/hot_pixels.npz`, and they are repaired from then on, even when there is no dark frame for the current temperature. This needs at least 30 night images, so the first night only collects them.

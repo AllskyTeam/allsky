@@ -713,13 +713,15 @@ function update_old_website_config_file()
 	#	Added "meteors/"
 	# Version: 4 from v2024.12.06_03
 	#	Added "equipmentinfo" setting
-	# Version: 5 from v2026.10.01
+	# Current version: 5 from v2026.10.01
 	#	Changed "imageName" to "/current/image.jpg" in local config file.
 	#		imageName is updated in replace_website_placeholders() so not done here.
 	#	timelapse and mini-timelapse icons changed.
-	# Current version: 6
 	#	Full set of overlay colours.
 	#	Added "overlayLean" and "overlayLeanAz" after "az", for a camera that isn't level.
+	# While v2026.10.01 was being tested the repository briefly said 6, so testers can
+	# have files at 6: the steps for version 5 run for those too ("-le 6"), and the file
+	# then ends at 5.  Every step only changes what still needs changing.
 
 	if [[ ${PRIOR_VERSION} -eq 1 ]]; then
 		# These steps bring version 1 up to 2.
@@ -821,7 +823,7 @@ function update_old_website_config_file()
 		fi
 	fi
 
-	if [[ ${PRIOR_VERSION} -le 5 ]] ; then	# use -le so testers get updated.
+	if [[ ${PRIOR_VERSION} -le 6 ]] ; then	# use -le so testers get updated.
 		# Update timelapse icons
 		update_array_field "${FILE}" "homePage.leftSidebar" "icon" \
 			"fa fa-2x fa-fw fa-play-circle" "fa fa-2x fa-fw fa-video"

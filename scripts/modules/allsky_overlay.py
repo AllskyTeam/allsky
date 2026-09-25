@@ -154,7 +154,7 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 		else:
 			self.log(4, f'INFO: No overlay specified for time of day {dayORNight}, so no overlay will be applied.')
 			self._not_enabled = f"No overlay specified for time of day {dayORNight}"
-   
+
 	def _dump_debug_data(self):
 		debugFilePath = os.path.join(allsky_shared.ALLSKY_TMP, 'overlaydebug.txt')
 		env = {}
@@ -705,14 +705,24 @@ class ALLSKYOVERLAY(ALLSKYMODULEBASE):
 				'zindex': self._get_layer_sort_value(imageData, 2, index)
 			})
 
+		text_layers = []
+
+		def flush_text_layers():
+			if text_layers:
+				self._add_text(text_layers)
+				text_layers.clear()
+
 		for layer in sorted(layers, key=lambda layer: layer['zindex']):
 			if layer['type'] == 'rect':
+				flush_text_layers()
 				self._add_rect(layer['data'])
 			elif layer['type'] == 'text':
-				self._add_text([layer['data']])
+				text_layers.append(layer['data'])
 			elif layer['type'] == 'image':
+				flush_text_layers()
 				self._add_images([layer['data']], include_extra=False)
 
+		flush_text_layers()
 		self._add_images([], include_extra=True)
 
 	def _addErrors(self):

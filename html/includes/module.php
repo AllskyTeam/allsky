@@ -388,6 +388,14 @@ function DisplayModule()
     </div>
 </div>
 
+<script>
+    // Show chart times (the module History tab) in the Pi's time zone, as the Charts page does.
+    window.ALLSKY_CHART_TIMEZONE = <?php echo json_encode(getAllskyChartTimezone(), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT); ?>;
+    if (window.Highcharts && window.ALLSKY_CHART_TIMEZONE) {
+        Highcharts.setOptions({ time: { timezone: window.ALLSKY_CHART_TIMEZONE } });
+    }
+</script>
+
 <script type="module">
     var moduleEditor = new MODULESEDITOR();
     moduleEditor.run();

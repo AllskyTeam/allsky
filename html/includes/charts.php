@@ -5,29 +5,6 @@ if (basename(__FILE__) === basename($_SERVER['SCRIPT_FILENAME'])) {
     redirect("/index.php");
 }
 
-if (!function_exists('getAllskyChartTimezone')) {
-  function getAllskyChartTimezone(): string
-  {
-    $timezoneName = trim((string) @file_get_contents('/etc/timezone'));
-    if ($timezoneName === '') {
-      $timezoneName = date_default_timezone_get();
-    }
-
-    try {
-      new DateTimeZone($timezoneName);
-      return $timezoneName;
-    } catch (Exception $e) {
-      $fallback = date_default_timezone_get();
-      try {
-        new DateTimeZone($fallback);
-        return $fallback;
-      } catch (Exception $fallbackError) {
-        return 'UTC';
-      }
-    }
-  }
-}
-
 function DisplayCharts()
 {
   global $pageHeaderTitle, $pageIcon, $pageHelp;

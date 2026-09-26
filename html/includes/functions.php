@@ -2230,4 +2230,27 @@ function addAsset($url, $attributes = '', $addNewline = true) {
 	return $addNewline ? $tag . "\n" : $tag;
 }
 
+// The Pi's time zone, for charts: Highcharts shows times in UTC unless told otherwise.
+if (!function_exists('getAllskyChartTimezone')) {
+  function getAllskyChartTimezone(): string
+  {
+    $timezoneName = trim((string) @file_get_contents('/etc/timezone'));
+    if ($timezoneName === '') {
+      $timezoneName = date_default_timezone_get();
+    }
+
+    try {
+      new DateTimeZone($timezoneName);
+      return $timezoneName;
+    } catch (Exception $e) {
+      $fallback = date_default_timezone_get();
+      try {
+        new DateTimeZone($fallback);
+        return $fallback;
+      } catch (Exception $fallbackError) {
+        return 'UTC';
+      }
+    }
+  }
+}
 ?>

@@ -2415,6 +2415,22 @@ class MODULEINSTALLERUTIL extends UTILBASE
     }
 
     /**
+     * Compares numbers by value, not by JSON type. A module declares e.g. "max": 6.0,
+     * but PHP's json_encode() (used when a flow is migrated) and the browser's
+     * JSON.stringify() (used when a flow is saved) both write it back as 6, which
+     * json_decode() then reads as an int. Without this, such a module is reported
+     * as "Migration Required" forever, even straight after a migration.
+     *
+     * @param mixed $value Metadata value.
+     *
+     * @return mixed The value, with ints and floats as floats.
+     */
+    private function normaliseNumber($value)
+    {
+        return (is_int($value) || is_float($value)) ? (float)$value : $value;
+    }
+
+    /**
      * Normalises argument detail metadata so equivalent forms compare cleanly.
      *
      * @param array<string, mixed> $argDetails Argument details from metadata or flow JSON.
@@ -2441,12 +2457,12 @@ class MODULEINSTALLERUTIL extends UTILBASE
                     foreach ($value as $typeKey => $typeValue) {
                         $typeData[$typeKey] = is_string($typeValue) && str_contains($typeValue, ',')
                             ? array_map('trim', explode(',', $typeValue))
-                            : $typeValue;
+                            : $this->normaliseNumber($typeValue);
                     }
                     $normalised[$key][$detailKey] = $typeData;
                     continue;
                 }
-                $normalised[$key][$detailKey] = $value;
+                $normalised[$key][$detailKey] = $this->normaliseNumber($value);
             }
         }
 

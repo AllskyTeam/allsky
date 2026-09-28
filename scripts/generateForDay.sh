@@ -405,6 +405,17 @@ if [[ ${DO_STARTRAILS} == "true" ]]; then
 		CMD="'${ALLSKY_BIN}/startrails' ${N} ${SIZE_FILTER} -o '${UPLOAD_FILE}'"
 		if [[ -n ${IMAGES_FILE} ]]; then
 			CMD+=" --images '${IMAGES_FILE}'"
+		elif [[ ${S_startrailsnightonly} == "true" ]]; then
+			DAY="$( basename "${OUTPUT_DIR}" )"
+			FILE_NAMES="${OUTPUT_DIR}/startrails/images.txt"
+			SQL="SELECT AS_CAMERAIMAGE FROM allsky_image WHERE AS_DATE_NAME = '${DAY}' AND AS_DAY_OR_NIGHT = 'NIGHT'"
+			"${ALLSKY_DATABASE_COMMAND}" --run "${SQL}" | sed "s;^;${OUTPUT_DIR}/;" > "${FILE_NAMES}"
+			NUM="$( wc -l < "${FILE_NAMES}" )"
+			if [[ ${NUM} -eq 0 ]]; then
+				W_ "${ME}: There are no nighttime images for ${DAY}" >&2
+				exit 1
+			fi
+			CMD+=" --images '${FILE_NAMES}'"
 		else
 			CMD+=" -d '${INPUT_DIR}' -e ${ALLSKY_EXTENSION}"
 		fi

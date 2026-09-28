@@ -57,7 +57,7 @@ getAllSettings --var "keogramgenerate keogramupload \
 	daystokeep \
 	daystokeeplocalwebsite uselocalwebsite \
 	daystokeepremotewebsite useremotewebsite \
-	showonmap" || exit 1
+	showonmap usedarkframes" || exit 1
 
 
 # Generate keogram from collected images
@@ -187,6 +187,13 @@ fi
 
 activate_python_venv
 ${NICE} python3 "${ALLSKY_SCRIPTS}/flow-runner.py" --event nightday
+
+# Hot pixels learned from the night's images; see darkFrames.py.
+if [[ ${S_usedarkframes} == "true" ]]; then
+	echo -e "${ME}: ===== Updating the hot pixel map."
+	${NICE} python3 "${ALLSKY_SCRIPTS}/darkFrames.py" --verbose \
+		--darks-dir "${ALLSKY_DARKS}" --tmp-dir "${ALLSKY_TMP}" hot-pixels
+fi
 deactivate_python_venv
 
 #

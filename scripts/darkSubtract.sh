@@ -41,14 +41,38 @@ if [[ ! -f ${CURRENT_IMAGE} ]]; then
 	exit 2
 fi
 
+# Subtract the dark frame ${1}, if given, and repair hot pixels; see darkFrames.py.
+# darkFrames.py scales the dark frame to fit the image and replaces each hot pixel with
+# the average of its neighbours, otherwise hot pixels become black dots.
+# Hot pixels it learned from earlier images are repaired even without a dark frame.
+function dark_frames()
+{
+	local DARK_FILE="${1}"  ERR
+	local ARGS=( --darks-dir "${ALLSKY_DARKS}" --tmp-dir "${ALLSKY_TMP}" \
+		subtract "${CURRENT_IMAGE}" --quality "${S_quality:-95}" )
+	[[ -n ${DARK_FILE} ]] && ARGS+=( --dark "${DARK_FILE}" )
+	[[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]] && ARGS=( --verbose "${ARGS[@]}" )
+	if ERR="$( "${ALLSKY_PYTHON_VENV}/bin/python3" "${ALLSKY_SCRIPTS}/darkFrames.py" "${ARGS[@]}" 2>&1 )" ; then
+		[[ -n ${ERR} ]] && echo "${ERR}"
+		return 0
+	fi
+	echo "*** ${ME2}: WARNING: darkFrames.py failed: ${ERR}" >&2
+	return 1
+}
+
 # Make sure we know the current temperature.
 # If it doesn't exist, warn the user but continue.
 if [[ -z ${AS_TEMPERATURE_C} ]]; then
 	echo "*** ${ME2}: WARNING: 'AS_TEMPERATURE_C' not set; continuing without dark subtraction." >&2
+	dark_frames ""
 	return
 fi
-# Some cameras don't have a sensor temp, so don't attempt dark subtraction for them.
-[[ ${AS_TEMPERATURE_C} == "n/a" ]] && return
+# Some cameras don't have a sensor temp, so don't attempt dark subtraction for them,
+# but repair hot pixels.
+if [[ ${AS_TEMPERATURE_C} == "n/a" ]]; then
+	dark_frames ""
+	return
+fi
 
 # If the temp is a float, round and convert to int.
 # Don't update AS_TEMPERATURE_C since we want the float version to appear in overlays.
@@ -108,6 +132,7 @@ do
 		[[ -f ${DARK} ]] && break
 		
 		echo "*** ${ME2}: ERROR: DARK file '${DARK}' not found.  Huh?" >&2
+		dark_frames ""
 		return
 	fi
 
@@ -115,6 +140,7 @@ do
 		echo "*** ${ME2}: ERROR: No dark frame found for ${CURRENT_IMAGE} at temperature ${TEMPERATURE}."
 		echo "Either take dark frames or turn off 'Use Dark Frames' in the WebUI."
 		echo "Continuing without dark subtraction."
+		dark_frames ""
 		return
 	fi >&2
 done
@@ -130,6 +156,9 @@ if [[ ${TEST_MODE} == "true" ]]; then
 fi
 
 # Update the current image - don't rename it.
+dark_frames "${DARK}" && return
+echo "*** ${ME2}: Only subtracting the dark frame." >&2
+
 if ! ERR="$( convert "${CURRENT_IMAGE}" "${DARK}" -compose minus_src -composite "${CURRENT_IMAGE}" 2>&1 )" ; then
 	# Exit since we don't know the state of ${CURRENT_IMAGE}.
 	echo "*** ${ME2}: ERROR: 'convert' of '${DARK}' failed: ${ERR}" >&2

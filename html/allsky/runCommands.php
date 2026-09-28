@@ -89,8 +89,32 @@ foreach ($lines AS $line) {
 
 			$files = array_diff($files, array(".", ".."));
 			foreach ($files as $file) {
-				// TODO: do an "ls -l" equivalent showing owner, group, size, date, permissions
-				do_info($command, $file);
+				$f = "$dir/$file";
+				$type = "";
+				$perms = fileperms($f);
+				if ($perms === false) {
+					$perms = "-";
+				} else {
+					$p = $perms & 0xF000;
+					if ($p === 0x4000) $type = "dir";
+					else if ($p === 0x8000) $type = "file";
+					$perms = sprintf('%o', $perms);
+				}
+				if ($type === "") {
+					$type = filetype($f);
+					if ($type === false) $type = "-";
+				}
+				$size = filesize($f);
+				if ($size === false) $size = "-";
+				$time = filemtime($f);
+				if ($time === false) {
+					  $time = "-";
+				} else {
+					  $time = date("Y-m-d H:i:s", $time);
+				}
+
+				$str = "$file	$perms	$type	$size	$time";
+				do_info($command, $str);
 			}
 
 			break;
@@ -216,7 +240,7 @@ foreach ($lines AS $line) {
 			foreach ($args as $item) {
 				if (is_dir($item)) {
 						if (deleteDirectory($item)) {	// recursively deletes
-							do_return($command, "", "Deleted: $dir/");
+							do_return($command, "", "Deleted: $item/");
 						}
 				} else if (file_exists($item)) {
 					if (unlink($item)) {

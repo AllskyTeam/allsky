@@ -110,7 +110,7 @@ foreach ($lines AS $line) {
 				if ($time === false) {
 					  $time = "-";
 				} else {
-					  $time = date("Y-m-d H:i:s", $time);
+//					  $time = date("Y-m-d H:i:s", $time);
 				}
 
 				$str = "$file	$perms	$type	$size	$time";

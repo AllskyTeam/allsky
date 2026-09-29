@@ -854,16 +854,20 @@ function renderListFileTypeContent($dir, $imageFileName, $formalImageTypeName, $
 			$num = 0;
 			foreach ($days as $day) {
 				$imageTypes = array();
-				$globString = ALLSKY_IMAGES . "/$day/$dir$imageFileName-$day";
-				if ($formalImageTypeName !== "Meteors") {
-					// Meteor files include the time in addition to the day.
-					$globString .= ".";
+				if ($formalImageTypeName === "Meteors") {
+					// Meteor files are named by the time they were detected, so the ones after
+					// midnight have the next day's date in a folder named for the evening.
+					$globString = ALLSKY_IMAGES . "/$day/$dir$imageFileName-*";
+				} else {
+					$globString = ALLSKY_IMAGES . "/$day/$dir$imageFileName-$day.*";
 				}
-				$globString .= "*";
 
 				foreach (glob($globString) as $imageType) {
 					$imageTypes[] = $imageType;
 					$imageType_name = basename($imageType);
+					if ($formalImageTypeName === "Meteors" && strpos($imageType_name, '-marked.') !== false) {
+						continue;	// the marked copy of a meteor already listed
+					}
 					if (! isListFileTypeSupportedFile($imageType_name, $type)) {
 						continue;
 					}

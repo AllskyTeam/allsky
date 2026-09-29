@@ -1754,15 +1754,19 @@ function getDayNightStatus(): array {
 }
 
 // Get the newest Allsky version string.
-// For efficiency, only check every other day.
+// For efficiency, only check every 12 hours.  The check runs while a page loads,
+// so after a failed check (e.g., no network) wait an hour before trying again.
 function getNewestAllskyVersion(&$changed=null)
 {
 	$versionFile = ALLSKY_CONFIG . "/newestversion.json";
+	$failedFile = ALLSKY_CONFIG . "/newestversion.failed";
+	$checkEvery = 12 * 60 * 60;
+	$retryAfter = 60 * 60;
 	$version_array = null;
 	$priorVersion = null;
 	$changed = false;
-	$date = date_create("now");
-	$compareDate = date_timestamp_get($date) - (24 * 60 * 60 * 2);		// 2 days
+	$now = time();
+	$compareDate = $now - $checkEvery;
 	$exists = file_exists($versionFile);
 
 	if ($exists) {
@@ -1788,17 +1792,22 @@ function getNewestAllskyVersion(&$changed=null)
 	}
 
 	if ($version_array === null || ($exists && filemtime($versionFile) < $compareDate)) {
-		// Need to (re)get the data.
+		// Need to (re)get the data, unless the last try failed only a short while ago.
+		if (file_exists($failedFile) && filemtime($failedFile) > $now - $retryAfter) {
+			return($version_array);		// may be null...
+		}
 
 		$cmd = ALLSKY_UTILITIES . "/getNewestAllskyVersion.sh";
 		exec("$cmd 2>&1", $newestVersion, $return_val);
 
 		// 90 == newestVersion is newer than current.
 		if (($return_val !== 0 && $return_val !== 90) || $newestVersion === null) {
-			// some error
-			if ($exists) unlink($versionFile);
+			// Some error.  Keep what we know and try again later.
+			@touch($failedFile);
+			@chmod($failedFile, 0664);
 			return($version_array);		// may be null...
 		}
+		@unlink($failedFile);
 
 		$version_array = array();
 		$version_array['version'] = getVariableOrDefault($newestVersion, 0, "");

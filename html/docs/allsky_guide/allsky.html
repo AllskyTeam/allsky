@@ -18,7 +18,7 @@
       
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -26,7 +26,7 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -6301,6 +6301,10 @@
 <p>Before you install Allsky for the first time, make sure the Pi itself is in a sensible starting state.</p>
 <p>The Raspberry Pi should already be running Raspberry Pi OS. The Desktop version is recommended because it tends to make general setup and troubleshooting easier, especially while you are still getting the system working.</p>
 <p>The Pi should also have a working Internet connection. A wired network connection is preferable if you can use one, because it is generally faster and more reliable than Wi-Fi during installation. This matters more than it may first appear. The installer may need to fetch packages, update components, and compile software, and that is all easier when the connection is stable. If you are using Power over Ethernet, that can make deployment especially neat because you only need one cable to the Pi.</p>
+<p>Ensure your system is upto date</p>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>update
+sudo<span class="w"> </span>apt<span class="w"> </span>upgrade
+</code></pre></div>
 <p>You also need <code>git</code> installed:</p>
 <div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>git
 </code></pre></div>
@@ -6544,7 +6548,7 @@ sudo<span class="w"> </span>systemctl<span class="w"> </span>status<span class="
       <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.expand", "toc.integrate", "content.code.annotate", "header.autohide", "navigation.footer", "search.suggest"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": {"API Required": "api", "Data Capture": "data", "Experimental": "experimental", "Extra Module": "extra", "Hardware": "hw", "Hardware Required": "hardware", "Image Adjustments": "image", "MQTT": "mqtt", "Modules": "module", "Networking": "network", "Overlay Data": "overlay", "Overlays": "overlay", "Pipeline Day": "day", "Pipeline Night": "night", "Pipeline Periodic": "clock", "Power": "power", "Sensors": "sensor", "Software": "sw", "Weather": "weather"}, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

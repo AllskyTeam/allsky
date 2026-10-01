@@ -34,6 +34,13 @@ The Raspberry Pi should already be running Raspberry Pi OS. The Desktop version 
 
 The Pi should also have a working Internet connection. A wired network connection is preferable if you can use one, because it is generally faster and more reliable than Wi-Fi during installation. This matters more than it may first appear. The installer may need to fetch packages, update components, and compile software, and that is all easier when the connection is stable. If you are using Power over Ethernet, that can make deployment especially neat because you only need one cable to the Pi.
 
+Ensure your system is upto date
+
+```bash
+sudo apt update
+sudo apt upgrade
+```
+
 You also need `git` installed:
 
 ```bash

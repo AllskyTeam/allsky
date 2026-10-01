@@ -10,11 +10,11 @@
 ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck source-path=.
-source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 usage_and_exit()
 {
@@ -29,6 +29,18 @@ usage_and_exit()
 	else
 		echo -e "${USAGE}"
 	fi
+
+	echo
+	echo "Helps determine what to put in the 'Image Directory' and 'Website URL' settings"
+	echo "in the 'Remote Server' section of the WebUI."
+	echo "It does this by displaying information from a remote Website's server via FTP"
+	echo "and via a URL, such as the directory name (they should match) and"
+	echo "a list of files in those directories."
+	echo
+	echo "If you did not specify either '--website' or '--server',"
+	echo "you will be prompted for which to use."
+	echo
+
 	exit "${RET}"
 }
 

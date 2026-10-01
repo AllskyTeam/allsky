@@ -10,9 +10,9 @@ set -a
 ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck source-path=.
-source "${ALLSKY_HOME}/variables.sh"		|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"		|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 if [[ $# -eq 1 ]]; then
 	if [[ ${1} = "--help" ]]; then
@@ -57,7 +57,7 @@ getAllSettings --var "keogramgenerate keogramupload \
 	daystokeep \
 	daystokeeplocalwebsite uselocalwebsite \
 	daystokeepremotewebsite useremotewebsite \
-	showonmap" || exit 1
+	showonmap usedarkframes" || exit 1
 
 
 # Generate keogram from collected images
@@ -187,6 +187,19 @@ fi
 
 activate_python_venv
 ${NICE} python3 "${ALLSKY_SCRIPTS}/flow-runner.py" --event nightday
+
+# Hot pixels learned from the night's images; see darkFrames.py.
+if [[ ${S_usedarkframes} == "true" ]]; then
+	echo -e "${ME}: ===== Updating the hot pixel map."
+	${NICE} python3 "${ALLSKY_SCRIPTS}/darkFrames.py" --verbose \
+		--darks-dir "${ALLSKY_DARKS}" --tmp-dir "${ALLSKY_TMP}" hot-pixels
+fi
 deactivate_python_venv
+
+#
+# Run database purge
+#
+echo -e "INFO: ===== Purging Allsky database."
+"${ALLSKY_UTILITIES}/db.py" --purge
 
 exit 0

@@ -10,9 +10,9 @@
 ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck source-path=.
-source "${ALLSKY_HOME}/variables.sh"		|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"		|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 function usage_and_exit()
 {
@@ -26,12 +26,12 @@ function usage_and_exit()
 	else
 		E_ "${USAGE}"
 	fi
-	echo "where:"
-	echo "  --help          displays this message and exits"
-	echo "  --settingsOnly  only uploads the settings.json file"
-	echo "  --from f        specifies who called ${ME}:"
+	echo "Arguments:"
+	echo "  --help            Display this message and exit"
+	echo "  --settingsOnly    Only uploads the settings.json file"
+	echo "  --from f          Specifies who called ${ME}:"
 	echo "      WebUI | install | endOfNight"
-	echo "  --allfiles      causes all 'view settings' files to be uploaded"
+	echo "  --allfiles        Causes all 'view settings' files to be uploaded"
 
 	exit "${RET}"
 }
@@ -205,13 +205,13 @@ fi
 # This directory is in the root of the Allsky Website.
 # Assume if the first upload fails they all will, so exit.
 if [[ -n ${WEBS} ]]; then
-	upload_file "${WEBS}" "${SETTINGS_FILE}" "${ALLSKY_WEBSITE_VIEWSETTINGS_DIRECTORY_NAME}" || exit $?
+	upload_file "${WEBS}" "${ALLSKY_SETTINGS_FILE}" "${ALLSKY_WEBSITE_VIEWSETTINGS_DIRECTORY_NAME}" || exit $?
 
 	if [[ ${ALL_FILES} == "true" ]]; then
 		for file in \
-			"${OPTIONS_FILE}" \
+			"${ALLSKY_OPTIONS_FILE}" \
 			"${ALLSKY_WEBUI}/includes/allskySettings.php" \
-			"${ALLSKY_DOCUMENTATION}/css/custom.css" 
+			"${ALLSKY_WEBUI}/css/allsky.css" 
 		do
 			upload_file "${WEBS}" "${file}" "${ALLSKY_WEBSITE_VIEWSETTINGS_DIRECTORY_NAME}"
 		done
@@ -220,7 +220,7 @@ if [[ -n ${WEBS} ]]; then
 	if [[ ${FROM} == "webui" || ${FROM} == "install" ]]; then
 		MSG="Uploaded configuration files to: ${WHERE_TO}."
 		if [[ ${FROM} == "webui" ]]; then
-			echo "<script>console.log('${MSG}');</script>"
+			echo "<script>console.log(\`${MSG}\`);</script>"
 		else
 			echo "${MSG}"
 		fi

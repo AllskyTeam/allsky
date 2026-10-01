@@ -1,0 +1,22 @@
+{
+  "bitwise": true,
+  "camelcase": true,
+  "curly": true,
+  "es3": true,
+  "eqnull": true,
+  "freeze": true,
+  "globals": {
+    "console": false,
+    "define": false,
+    "document": false,
+    "MockContainer": false,
+    "QUnit": false,
+    "require": false,
+    "window": false
+  },
+  "indent": 2,
+  "noarg": true,
+  "nonew": true,
+  "quotmark": "single",
+  "undef": true
+}

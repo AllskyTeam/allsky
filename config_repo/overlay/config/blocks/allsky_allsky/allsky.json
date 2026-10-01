@@ -1,0 +1,49 @@
+{
+    "allskyblock": {
+        "name": "Basic Allsky Info",
+        "description": "Basic Information for Allsky",
+        "source": "allsky",
+        "fields": {
+            "asrow1": {
+                "col1": {
+                    "text": "${AS_DATE}"
+                },
+                "col2": {
+                    "text": "${AS_TIME}"
+                }
+            },
+            "asrow2": {
+                "col1": {
+                    "text": "Exposure"
+                },
+                "col2": {
+                    "text": "${AS_sEXPOSURE}"
+                }
+            },
+            "asrow3": {
+                "col1": {
+                    "text": "Gain"
+                },
+                "col2": {
+                    "text": "${AS_GAIN}"
+                }
+            },
+            "asrow4": {
+                "col1": {
+                    "text": "Camera"
+                },
+                "col2": {
+                    "text": "${AS_CAMERA_MODEL}"
+                }
+            },
+            "asrow5": {
+                "col1": {
+                    "text": "Sensor Temp"
+                },
+                "col2": {
+                    "text": "${AS_CAMERATEMPERATURE}"
+                }
+            }                                      
+        }
+    }
+}

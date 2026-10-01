@@ -41,20 +41,47 @@ if [[ ! -f ${CURRENT_IMAGE} ]]; then
 	exit 2
 fi
 
+# Subtract the dark frame ${1}, if given, and repair hot pixels; see darkFrames.py.
+# darkFrames.py scales the dark frame to fit the image and replaces each hot pixel with
+# the average of its neighbours, otherwise hot pixels become black dots.
+# Hot pixels it learned from earlier images are repaired even without a dark frame.
+function dark_frames()
+{
+	local DARK_FILE="${1}"  ERR
+	local ARGS=( --darks-dir "${ALLSKY_DARKS}" --tmp-dir "${ALLSKY_TMP}" \
+		subtract "${CURRENT_IMAGE}" --quality "${S_quality:-95}" )
+	[[ -n ${DARK_FILE} ]] && ARGS+=( --dark "${DARK_FILE}" )
+	[[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]] && ARGS=( --verbose "${ARGS[@]}" )
+	if ERR="$( "${ALLSKY_PYTHON_VENV}/bin/python3" "${ALLSKY_SCRIPTS}/darkFrames.py" "${ARGS[@]}" 2>&1 )" ; then
+		[[ -n ${ERR} ]] && echo "${ERR}"
+		return 0
+	fi
+	echo "*** ${ME2}: WARNING: darkFrames.py failed: ${ERR}" >&2
+	return 1
+}
+
 # Make sure we know the current temperature.
 # If it doesn't exist, warn the user but continue.
 if [[ -z ${AS_TEMPERATURE_C} ]]; then
 	echo "*** ${ME2}: WARNING: 'AS_TEMPERATURE_C' not set; continuing without dark subtraction." >&2
+	dark_frames ""
 	return
 fi
-# Some cameras don't have a sensor temp, so don't attempt dark subtraction for them.
-[[ ${AS_TEMPERATURE_C} == "n/a" ]] && return
+# Some cameras don't have a sensor temp, so don't attempt dark subtraction for them,
+# but repair hot pixels.
+if [[ ${AS_TEMPERATURE_C} == "n/a" ]]; then
+	dark_frames ""
+	return
+fi
 
-DARKS_DIR="${ALLSKY_DARKS}"
+# If the temp is a float, round and convert to int.
+# Don't update AS_TEMPERATURE_C since we want the float version to appear in overlays.
+TEMPERATURE="$( echo "${AS_TEMPERATURE_C}" | gawk '{ printf("%d", $1+0.5); }' )"
+
 for EXT in "png" "jpg"
 do
 	# First check if we have an exact match.
-	DARK="${DARKS_DIR}/${AS_TEMPERATURE_C}.${EXT}"
+	DARK="${ALLSKY_DARKS}/${TEMPERATURE}.${EXT}"
 	if [[ -s ${DARK} ]]; then
 		break
 	fi
@@ -62,63 +89,65 @@ do
 	# Find the closest dark frame temperature wise
 	typeset -i CLOSEST_TEMPERATURE	# don't set yet
 	typeset -i DIFF=100		# any sufficiently high number
-	typeset -i AS_TEMPERATURE_C=${AS_TEMPERATURE_C##*(0)}
-	typeset -i OVERDIFF		# DIFF when dark file temp > ${AS_TEMPERATURE_C}
+	typeset -i TEMPERATURE=${TEMPERATURE##*(0)}
+	typeset -i OVERDIFF		# DIFF when dark file temp > ${TEMPERATURE}
 	typeset -i DARK_TEMPERATURE
 
 	# Sort the files by temperature so once we find a file at a higher temperature
-	# than ${AS_TEMPERATURE_C}, stop, then compare it to the previous file to
-	# determine which is closer to ${AS_TEMPERATURE_C}.
+	# than ${TEMPERATURE}, stop, then compare it to the previous file to
+	# determine which is closer to ${TEMPERATURE}.
 	# Need "--general-numeric-sort" in case any files start with "-".
-	for FILE in $( find "${DARKS_DIR}" -maxdepth 1 -iname "*.${EXT}" |
+	for FILE in $( find "${ALLSKY_DARKS}" -maxdepth 1 -iname "*.${EXT}" |
 		sed 's;.*/;;' | sort --general-numeric-sort )
 	do
 		[[ ${TEST_MODE} == "true" ]] && echo "Looking at FILE='${FILE}'"
 		# Example file name for 21 degree dark: "21.png".
-		if [[ -s ${DARKS_DIR}/${FILE} ]]; then
+		if [[ -s ${ALLSKY_DARKS}/${FILE} ]]; then
 				FILE="$( basename -- "${FILE}" )"	# need "--" in case FILE starts with "-"
 			# Get name of FILE (which is the temp) without extension
 			DARK_TEMPERATURE=${FILE%.*}
-			if [[ ${DARK_TEMPERATURE} -gt ${AS_TEMPERATURE_C} ]]; then
-				OVERDIFF=$(( DARK_TEMPERATURE - AS_TEMPERATURE_C ))
+			if [[ ${DARK_TEMPERATURE} -gt ${TEMPERATURE} ]]; then
+				OVERDIFF=$(( DARK_TEMPERATURE - TEMPERATURE ))
 				if [[ ${OVERDIFF} -lt ${DIFF} ]]; then
 					CLOSEST_TEMPERATURE=${DARK_TEMPERATURE}
 				fi
 				break
 			fi
 			CLOSEST_TEMPERATURE=${DARK_TEMPERATURE}
-			DIFF=$(( AS_TEMPERATURE_C - CLOSEST_TEMPERATURE ))
+			DIFF=$(( TEMPERATURE - CLOSEST_TEMPERATURE ))
 		else
-			echo -n "${ME2}: INFORMATION: dark file '${DARKS_DIR}/${FILE}' " >&2
-			if [[ ! -f ${DARKS_DIR}/${FILE} ]]; then
+			echo -n "${ME2}: INFORMATION: dark file '${ALLSKY_DARKS}/${FILE}' " >&2
+			if [[ ! -f ${ALLSKY_DARKS}/${FILE} ]]; then
 				echo "${FILE} does not exist  Huh?."
 			else
 				echo "${FILE} zero-length; deleting."
-				ls -l "${DARKS_DIR}/${FILE}"
-				rm -f "${DARKS_DIR}/${FILE}"
+				ls -l "${ALLSKY_DARKS}/${FILE}"
+				rm -f "${ALLSKY_DARKS}/${FILE}"
 			fi >&2
 		fi
 	done
 
 	if [[ -n ${CLOSEST_TEMPERATURE} ]]; then
-		DARK="${DARKS_DIR}/${CLOSEST_TEMPERATURE}.${EXT}"
+		DARK="${ALLSKY_DARKS}/${CLOSEST_TEMPERATURE}.${EXT}"
 		[[ -f ${DARK} ]] && break
 		
 		echo "*** ${ME2}: ERROR: DARK file '${DARK}' not found.  Huh?" >&2
+		dark_frames ""
 		return
 	fi
 
 	if [[ ${EXT} == "jpg" ]]; then
-		echo "*** ${ME2}: ERROR: No dark frame found for ${CURRENT_IMAGE} at temperature ${AS_TEMPERATURE_C}."
+		echo "*** ${ME2}: ERROR: No dark frame found for ${CURRENT_IMAGE} at temperature ${TEMPERATURE}."
 		echo "Either take dark frames or turn off 'Use Dark Frames' in the WebUI."
 		echo "Continuing without dark subtraction."
+		dark_frames ""
 		return
 	fi >&2
 done
 
 if [[ ${ALLSKY_DEBUG_LEVEL} -ge 4 ]]; then
 	echo -n "${ME2}: Subtracting dark frame '$( basename -- "${DARK}" )'"
-	echo    " from ${CURRENT_IMAGE} with temperature=${AS_TEMPERATURE_C}"
+	echo    " from ${CURRENT_IMAGE} with temperature=${TEMPERATURE}"
 fi
 
 if [[ ${TEST_MODE} == "true" ]]; then
@@ -127,6 +156,9 @@ if [[ ${TEST_MODE} == "true" ]]; then
 fi
 
 # Update the current image - don't rename it.
+dark_frames "${DARK}" && return
+echo "*** ${ME2}: Only subtracting the dark frame." >&2
+
 if ! ERR="$( convert "${CURRENT_IMAGE}" "${DARK}" -compose minus_src -composite "${CURRENT_IMAGE}" 2>&1 )" ; then
 	# Exit since we don't know the state of ${CURRENT_IMAGE}.
 	echo "*** ${ME2}: ERROR: 'convert' of '${DARK}' failed: ${ERR}" >&2

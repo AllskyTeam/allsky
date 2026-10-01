@@ -133,12 +133,12 @@ class ALLSKYSETTINGSCONTROLLER {
          */
         $('#backToTopBtn').on('click', (event) => {
             event.preventDefault();
-            $('html,body').animate({
+            $('.content').animate({
                 scrollTop: 0
               }, 1000);
         });        
         
-        $(document).on( 'scroll', (event) => {
+        $('.content').on( 'scroll', (event) => {
             let top = $(event.currentTarget).scrollTop();
             if (top > 20) {
                 $('#backToTopBtn').show();

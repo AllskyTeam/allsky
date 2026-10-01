@@ -12,7 +12,7 @@ $initializeErrorMessage = null;				// Invoker can check this.
 $webSettings_array = null;
 if (! isset($configFilePrefix)) $configFilePrefix = "";
 
-define('CONFIG_UPDATE_STRING', 'XX_NEED_TO_UPDATE_XX');
+define('ALLSKY_NEED_TO_UPDATE', 'XX_NEED_TO_UPDATE_XX');
 
 function initialize() {
 	global $webSettings_array;
@@ -33,11 +33,11 @@ function initialize() {
 		return($retMsg);
 	}
 	$webSettings_str = file_get_contents($configuration_file, true);
-	if (strpos($webSettings_str, CONFIG_UPDATE_STRING) !== false) {
+	if (strpos($webSettings_str, ALLSKY_NEED_TO_UPDATE) !== false) {
 		$retMsg .= "<p class='warning-msg'>";
 			$retMsg .= "The '$configurationFileName' file needs to be updated via";
 			$retMsg .= " the 'Editor' page in the WebUI.";
-			$retMsg .= "<br><br>Update fields with '".CONFIG_UPDATE_STRING."'";
+			$retMsg .= "<br><br>Update fields with '" . ALLSKY_NEED_TO_UPDATE . "'";
 			$retMsg .= " and check all other entries.";
 			$retMsg .= "<br><br>This Allsky Website will not work until updated.";
 		$retMsg .= "</p>";
@@ -123,46 +123,6 @@ function disableBuffering() {
 		ob_end_clean();
 }
 
-/**
-*
-* Get a variable from a file and return its value; if not there, return the default.
-* NOTE: The variable's value is anything after the equal sign, so there shouldn't be a comment on the line.
-* NOTE: There may be something before $searchfor, e.g., "export X=1", where "X" is $searchfor.
-*/
-function get_variable($file, $searchfor, $default)
-{
-	// get the file contents
-	if (! file_exists($file)) return($default);
-
-	$contents = file_get_contents($file);
-	if ("$contents" == "") return($default);	// file not readable
-
-	// escape special characters in the query
-	$pattern = preg_quote($searchfor, '/');
-	// finalise the regular expression, matching the whole line
-	$pattern = "/^.*$pattern.*\$/m";
-
-	// search, and store all matching occurences in $matches, but only return the last one
-	$num_matches = preg_match_all($pattern, $contents, $matches);
-	if ($num_matches) {
-		$double_quote = '"';
-
-		// Format: [stuff]$searchfor=$value   or   [stuff]$searchfor="$value"
-		// Need to delete  [stuff]$searchfor=  and optional double quotes
-		$last = $matches[0][$num_matches - 1];		// get the last one
-		$both = explode( '=', $last);
-		if (isset($both[1])) {
-			$last = $both[1];						// everything after equal sign
-			$last = str_replace($double_quote, "", $last);
-		} else {
-			return($default);		// nothing after "="
-		}
-		return($last);
-	} else {
-		return($default);
-	}
-}
-
 $displayed_thumbnail_error_message = false;
 function make_thumb($src, $dest, $desired_width)
 {
@@ -183,7 +143,7 @@ function make_thumb($src, $dest, $desired_width)
 	} elseif ( preg_match("/\.png$/", $src ) ) {
 		$funcext='png';
 	}
-	if (function_exists("imagecreatefrom${funcext}") == false)
+	if (function_exists("imagecreatefrom{$funcext}") == false)
 	{
 		if ($displayed_thumbnail_error_message == false)
 		{

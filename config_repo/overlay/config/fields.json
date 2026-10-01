@@ -353,15 +353,6 @@
         },
         {
             "id": 39,
-            "name": "${eOVERLAY}",
-            "description": "Overlay Method number",
-            "format": "{:n}",
-            "sample": "1",
-            "type": "Number",
-            "source": "System"
-        },
-        {
-            "id": 40,
             "name": "${DAY_OR_NIGHT}",
             "description": "Day\/Night string",
             "format": "",
@@ -370,11 +361,11 @@
             "source": "System"
         },
         {
-            "id": 41,
+            "id": 40,
             "name": "${ALLSKY_VERSION}",
             "description": "Allsky version string",
             "format": "",
-            "sample": "v2024.11.15",
+            "sample": "v2024.12.06_06",
             "type": "Text",
             "source": "System"
         }

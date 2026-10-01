@@ -1,0 +1,72 @@
+.allsky-image-point-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.allsky-image-point-status {
+    font-family: monospace;
+}
+
+.allsky-image-point-viewport {
+    max-height: 70vh;
+    overflow: auto;
+    background: #000;
+}
+
+.allsky-image-point-stage {
+    position: relative;
+    display: inline-block;
+    line-height: 0;
+}
+
+.allsky-image-point-image {
+    display: block;
+    width: 100%;
+    max-width: none;
+    cursor: crosshair;
+}
+
+.allsky-image-point-viewport:not(.allsky-image-point-full) .allsky-image-point-stage {
+    display: block;
+}
+
+.allsky-image-point-full .allsky-image-point-image {
+    width: auto;
+}
+
+.allsky-image-point-marker {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    margin: -15px 0 0 -15px;
+    border: 2px solid #0f0;
+    border-radius: 50%;
+    pointer-events: none;
+    display: none;
+}
+
+.allsky-image-point-marker::before,
+.allsky-image-point-marker::after {
+    content: "";
+    position: absolute;
+    background: #0f0;
+}
+
+.allsky-image-point-marker::before {
+    left: 50%;
+    top: -10px;
+    bottom: -10px;
+    width: 2px;
+    margin-left: -1px;
+}
+
+.allsky-image-point-marker::after {
+    top: 50%;
+    left: -10px;
+    right: -10px;
+    height: 2px;
+    margin-top: -1px;
+}

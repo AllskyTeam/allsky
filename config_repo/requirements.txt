@@ -13,3 +13,15 @@ Adafruit-Blinka
 vcgencmd
 certifi
 requests
+mysql-connector-python
+photutils
+psutil
+gitpython
+whiptail-dialogs
+flask
+flask-login
+gunicorn
+flask-jwt-extended
+bcrypt
+RPi.GPIO
+gpiozero

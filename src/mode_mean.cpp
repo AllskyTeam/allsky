@@ -133,7 +133,7 @@ float aegCalcMean(cv::Mat image, bool useMask)
 		}
 	}
 
-	if (! maskCreated)
+	if (useMask && ! maskCreated)
 	{
 		maskCreated = true;
 
@@ -204,6 +204,7 @@ float aegCalcMean(cv::Mat image, bool useMask)
 			break;
 	}
 
+	if (mean < 0) mean = 0;
 	return(mean);	// return this image's mean
 }
 

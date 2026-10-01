@@ -1,0 +1,127 @@
+/*!
+ * jQuery JSON Viewer With Callback Support (JVC) v2.0.0
+ * @Link: https://github.com/andronick83/jquery.json-viewer-callback
+ * @License: Released under the MIT license
+ * @Author: andronick83 <andronick.mail@gmail.com>
+ */
+
+/* vars */
+:root{
+	--jvc-tab-size:4;
+	--jvc-tab-width:33.6px;
+	--jvc-char-width:8.4px;
+	--jvc-line-height:18px;
+	--jvc-font-size:14px;
+	--jvc-font-family:'Source Code Pro',monospace;
+}
+
+/* font */
+@font-face{font-family:'Source Code Pro';font-display:block;src:url(https://fonts.gstatic.com/s/sourcecodepro/v22/HI_diYsKILxRpg3hIP6sJ7fM7PqPMcMnZFqUwX28DMyQtMlrTA.woff2) format('woff2')}
+
+/* jvc */
+.jvc{display:block;width:100%;box-sizing:border-box;padding:8px;white-space:pre-wrap;line-height:var(--jvc-line-height);
+	tab-size:var(--jvc-tab-size);font-size:var(--jvc-font-size);font-family:var(--jvc-font-family);font-weight:normal;font-style:normal;
+	letter-spacing:normal;text-transform:none;position:relative;border-radius:4px}
+.jvc *,.jvc *::before,.jvc *::after{box-sizing:inherit}
+.jvc-root,.jvc-logs{display:block;width:100%;padding:8px 0 8px var(--jvc-tab-width);overflow:auto;white-space:pre}
+.jvc-tab-observer{display:inline-block;min-width:0;width:max-content;padding:0;position:fixed;z-index:-1;user-select:none;line-height:normal;visibility:hidden}
+.jvc-logs,.jvc-json{opacity:1.0!important;text-overflow:ellipsis;overflow:hidden}
+
+/* scrollbar */
+.jvc-scroll::-webkit-scrollbar{width:8px;height:8px}.jvc-scroll::-webkit-scrollbar-track{background:#7f7f7f10;border-radius:4px}
+.jvc-scroll::-webkit-scrollbar-thumb{background-color:#9991;border-radius:4px}.jvc-scroll:hover::-webkit-scrollbar-thumb{background-color:#9995}
+.jvc-scroll::-webkit-scrollbar-corner{background-color:#7f7f7f10}
+.jvc-scroll{scrollbar-width:thin;scrollbar-color:#9991 #7f7f7f10}/* firefox */
+.jvc-scroll:hover{scrollbar-color:#9995 #7f7f7f10}
+
+/* list */
+.jvc-list{display:inline-block;min-width:100%;padding-left:var(--jvc-tab-width);border-left:1px dotted #7f7f7f40;border-radius:4px}
+.jvc-list-part{display:inline-block;min-width:100%}
+.jvc-root{border-left:none}
+.jvc-toggle:hover>.jvc-list{border-color:#7f7f7f80}
+.jvc-toggle:hover:has(>.jvc-line:hover)>.jvc-list{border-color:#7f7f7f}
+@supports(-moz-appearance:none){.jvc-toggle:hover>.jvc-list{border-color:#7f7f7f}}/* firefox no ':has' */
+
+/* item */
+.jvc-item,
+.jvc-item-part{display:inline-block;min-width:100%;white-space:pre;border-radius:4px}
+.jvc-expand{white-space:pre-wrap}
+.jvc-item-ref>.jvc-line{cursor:pointer}
+.jvc-item-ref:hover>.jvc-line{background-color:#7f7f7f20}
+.jvc-item-ref>.jvc-prefix>.jvc-value{opacity:0.8}
+.jvc-item-ref-to>.jvc-line{background-color:#7f7f7f20}
+
+.jvc-nonenum>.jvc-prefix>.hljs-attr{opacity:0.6}
+
+/* line */
+.jvc-toggle>.jvc-line{cursor:pointer}
+.jvc-line{display:inline-block;white-space:pre}
+
+/* item-mark */
+.jvc-prefix{scroll-margin-left:var(--jvc-tab-width);scroll-margin-top:calc(2 * var(--jvc-line-height))}
+.jvc-toggle>.jvc-prefix::before,
+.jvc-item-ref>.jvc-prefix::before{display:inline-block;margin-left:calc(-1 * var(--jvc-line-height));width:var(--jvc-line-height);height:var(--jvc-line-height);text-align:center;color:#7f7f7f40;cursor:pointer}
+.jvc-toggle>.jvc-prefix::before{content:'\25BC'}
+.jvc-item-part>.jvc-prefix::before{content:'\2B0E'}
+.jvc-item-ref>.jvc-prefix::before{content:'\223E'}
+.jvc-callback>.jvc-prefix::before{content:'\21BB'}
+.jvc-toggle>.jvc-prefix::before{transition:transform 0.2s}
+.jvc-collapsed>.jvc-prefix::before{transform:rotate(-90deg)}
+.jvc-callback.jvc-collapsed>.jvc-prefix::before{transform:rotate(-360deg)}
+.jvc-loading>.jvc-prefix::before{animation:rotation 1s infinite linear}
+@keyframes rotation{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.jvc-toggle:hover>.jvc-prefix::before{color:#7f7f7f80}
+.jvc-toggle:hover:has(>.jvc-line:hover)>.jvc-prefix::before,
+.jvc-item-ref:hover>.jvc-prefix::before,
+.jvc-prefix:hover::before{color:#7f7f7f}
+@supports(-moz-appearance:none){.jvc-toggle:hover>.jvc-prefix::before{color:#7f7f7f}}/* firefox no ':has' */
+
+/* comment */
+.hljs-comment{opacity:0.3}
+.hljs-comment[data-ph]::after{content:attr(data-ph)}
+.hljs-comment:hover,
+.jvc-item-ref-to>.jvc-line>.hljs-comment,
+.jvc-collapsed:hover>.jvc-line>.hljs-comment,
+.jvc-item:hover:not(.jvc-toggle)>.jvc-line>.hljs-comment,
+.jvc-item-part:hover:not(.jvc-toggle)>.jvc-line>.hljs-comment,
+.jvc-toggle:hover:not(:has(>.jvc-list:hover))>.jvc-line>.hljs-comment{opacity:1.0}
+@supports(-moz-appearance:none){.jvc-line:hover>.hljs-comment{opacity:1.0}}/* firefox no ':has' */
+
+/* comma */
+.jvc-list>.jvc-item:last-of-type>.jvc-line>.jvc-comma,
+.jvc-list-part:last-of-type>.jvc-item:last-of-type>.jvc-line>.jvc-comma{display:none}
+
+/* menu */
+.jvc-menu{display:inline-block;padding:4px 8px;position:absolute;top:0;right:0;cursor:pointer;background-color:inherit;z-index:1;user-select:none;opacity:1.0;border-radius:4px}
+.jvc-menu::before{position:relative;z-index:2;content:'menu \25bc'}
+.jvc-menu:hover::before{content:'\25bc'}
+.jvc-menu-sub{display:none;padding:8px;position:absolute;top:0;right:0;z-index:1;background-color:#7f7f7f10;border-radius:4px}
+.jvc-menu:hover .jvc-menu-sub{display:inline-block;opacity:1.0}
+.jvc-menu label{display:block;opacity:0.6;white-space:pre;cursor:pointer}.jvc-menu label:hover{opacity:1.0}
+.jvc-menu input{vertical-align:middle}
+
+/* other */
+.jvc a{color:inherit}
+.jvc-colon::after{content:' '}
+.jvc-fail{background-size:auto auto;background-color:#fff0;box-shadow:inset 0 0 0 var(--jvc-line-height) #f002;
+	background-image:repeating-linear-gradient(135deg,#fff0,#fff0,16px,#f002 16px,#f002 32px)}
+.jvc-native>.jvc-prefix>.jvc-value{opacity:0.8}
+.jvc-hl{opacity:1.0;background-size:auto auto;background-color:#fff0;box-shadow:inset 0 0 0 var(--jvc-line-height) #7f7f7f10;
+	background-image:repeating-linear-gradient(135deg,#fff0,#fff0,16px,#7f7f7f10 16px,#7f7f7f10 32px);outline:1px solid #7f7f7f40}
+
+/* conf */
+.jvc-no-menu>.jvc-menu,
+.jvc-no-logs>.jvc-logs,
+.jvc-no-console>.jvc-console{display:none}
+.jvc-no-quotes .jvc-quote,
+.jvc-no-commas .jvc-comma{display:inline-block;width:0.1px;height:0.1px;overflow:hidden}
+
+/* console */
+.jvc-console{white-space:pre;margin:8px 0 2px 0}
+.jvc-console>div{outline:none;padding-left:var(--jvc-tab-width);user-select:none;white-space:pre-wrap}
+.jvc-input{opacity:1.0;background-color:rgba(0,0,0,.2)}
+.jvc-input::before{display:inline-block;color:#818e9680;content:'>';margin-left:calc(-1 * var(--jvc-char-width))}
+.jvc-input::after{color:#818e96}.jvc-input:empty::after{content:attr(pholder)}.jvc-input:empty:focus::after{content:''}
+.jvc-hist{margin-top:4px}
+.jvc-hist>span{display:inline-block;padding:4px calc(var(--jvc-tab-width) / var(--jvc-tab-size));border-radius:4px;cursor:pointer}
+.jvc-hist>span:hover{background-color:#7f7f7f10}

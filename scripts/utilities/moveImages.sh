@@ -4,11 +4,11 @@
 ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck source-path=.
-source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/functions.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh"	|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 # shellcheck disable=SC2034
 export DISPLAY_MSG_LOG="${ALLSKY_LOGS}/moveImages.log"		# display_msg() logs here
@@ -16,6 +16,48 @@ display_msg --logonly info "\nSTARTING moveImages"
 
 ALLSKY_IMAGES_ALREADY_MOVED="false"					# Did the user already move the images?
 OLD_ALLSKY_IMAGES="${ALLSKY_IMAGES}"				# Where images are currently kept.
+
+usage_and_exit()
+{
+	local RET=${1}
+	exec >&2
+	echo
+	local USAGE="Usage: ${ME} [--help]"
+	if [[ ${RET} -ne 0 ]]; then
+		E_ "${USAGE}"
+	else
+		echo -e "${USAGE}"
+	fi
+
+	echo
+	echo "Configure Allsky to save images in the location you specify,"
+	echo "rather than in ~/allsky/images.  You are prompted for the new location,"
+	echo "and if there are images in the current location, you'll be prompted for"
+	echo "what you want to do with them (typically move them to the new location)."
+	echo
+	echo "The new location is typically an SSD or other higher-capacity,"
+	echo "more reliable media than an SD card."
+	echo
+
+	exit "${RET}"
+}
+OK="true"
+DO_HELP="false"
+while [[ $# -gt 0 ]]; do
+	ARG="${1}"
+	case "${ARG,,}" in
+		--help)
+			DO_HELP="true"
+			;;
+		-*)
+			E_ "Unknown argument '${ARG}'." >&2
+			OK="false"
+			;;
+	esac
+	shift
+done
+[[ ${DO_HELP} == "true" ]] && usage_and_exit 0
+[[ ${OK} == "false" ]] && usage_and_exit 1
 
 function do_exit()
 {
@@ -91,7 +133,7 @@ if [[ ! -d ${NEW_ALLSKY_IMAGES} ]]; then
 	if ! E="$( sudo mkdir -p "${NEW_ALLSKY_IMAGES}" 2>&1 )" ; then
 		MSG="Unable to create '${NEW_ALLSKY_IMAGES}'"
 		display_msg --log error "${MSG}:" "${E}"
-		do_exit "${EXIT_ERROR_STOP}"
+		do_exit "${ALLSKY_EXIT_ERROR_STOP}"
 	fi
 	display_msg --logonly info "  > Created '${NEW_ALLSKY_IMAGES}'."
 else
@@ -104,7 +146,7 @@ chmod 775 "${NEW_ALLSKY_IMAGES}"
 
 # Make sure the web server can view the directory.
 DIR="${NEW_ALLSKY_IMAGES}"
-while ! sudo --user "${WEBSERVER_OWNER}" ls "${DIR}" > /dev/null 2>&1
+while ! sudo --user "${ALLSKY_WEBSERVER_OWNER}" ls "${DIR}" > /dev/null 2>&1
 do
 	display_msg --logonly info "  > Changing permissions of '${DIR}' so web server can view images."
 	sudo chmod o+rx "${DIR}"
@@ -159,7 +201,7 @@ fi
 # ${OLD_ALLSKY_IMAGES} are where they currently are.
 unset ALLSKY_VARIABLE_SET		# forces variables.sh to be re-read
 #shellcheck source-path=.
-source "${ALLSKY_HOME}/variables.sh"					|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 display_msg --logonly info "Making configuration changes."
 "${ALLSKY_HOME}/install.sh" --function do_change_images

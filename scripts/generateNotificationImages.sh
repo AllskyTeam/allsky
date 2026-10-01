@@ -10,9 +10,9 @@
 ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck disable=SC1091 source-path=.
-source "${ALLSKY_HOME}/variables.sh"	|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"		|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 readonly ALL_EXTS="jpg png"		# all the image filename extensions we support
 
@@ -27,21 +27,29 @@ function usage_and_exit()
 	local RET=${1}
 	exec >&2
 	local MSG="\nUsage: ${ME} [--help] [--directory dir] [--size XxY]"
-	MSG+="\n    [type TextColor Font FontSize StrokeColor StrokeWidth BgColor"
+	MSG+="\n    [Basename TextColor Font FontSize StrokeColor StrokeWidth BgColor"
 	MSG+="\n     BorderWidth BorderColor Extensions ImageSize Message]\n"
 	if [[ ${RET} -ne 0 ]]; then
 		E_ "${MSG}"
 	else
 		echo -e "${MSG}"
 	fi
-	echo -n "When run with no arguments, all notification types are created with extensions:"
-	echo    "  ${ALL_EXTS/ /, }."
-	echo    "Arguments:"
-	echo    "  --help            displays this message and exits."
-	echo    "  --directory dir   creates the file(s) in that directory, otherwise in \${PWD}."
-	echo -n "  --size XxY        creates images that are X by Y pixels."
-	echo    "  Default: ${DEFAULT_IMAGE_SIZE} pixels."
+	echo "When run without 'Basename' and the other arguments,"
+	echo "ALL notification types are created with extensions: ${ALL_EXTS/ /, }."
 	echo
+	echo "Arguments:"
+	echo "   --help              Displays this message and exits."
+	echo "   --directory dir     Creates the file(s) in that directory, otherwise in \${PWD}."
+	echo -n "   --size XxY          Creates images that are X by Y pixels."
+	echo " Default: ${DEFAULT_IMAGE_SIZE} pixels."
+	echo "   Basename            The name of the file to create, not including the extension."
+	echo "                       If '+' the current 'Filename' setting is used."
+	echo "   TextColor, et. al.  Attributes of the message (color, size, etc.)."
+	echo "   Extensions          One or more space-separated list of file extensions to create."
+	echo "                       If '+' the current 'Filename' setting is used."
+	echo "   Message             The message to add to the image."
+	echo
+
 	exit "${RET}"
 }
 
@@ -68,8 +76,8 @@ while [[ $# -gt 0 ]]; do
 			IMAGE_SIZE="${2}"
 			X="${IMAGE_SIZE%x*}"
 			Y="${IMAGE_SIZE##*x}"
-			[[ $((X % 2)) -eq 0 ]] && ((X--))
-			[[ $((Y % 2)) -eq 0 ]] && ((Y--))
+			[[ $((X % 2)) -ne 0 ]] && ((X--))
+			[[ $((Y % 2)) -ne 0 ]] && ((Y--))
 			IMAGE_SIZE="${X}x${Y}"
 			shift
 			;;
@@ -100,19 +108,20 @@ declare LAST_ARG="${MAX_ARGS}"
 if [[ $# -eq ${MAX_ARGS} ]]; then
 	OK="true"
 	if [[ -z ${1} ]]; then
-		E_ "ERROR: Basename must be specified." >&2
+		E_ "ERROR: The 'Basename' argument must be specified." >&2
 		OK="false"
 	fi
 	if [[ -z ${LAST_ARG} ]]; then
-		E_ "ERROR: message must be specified." >&2
+		E_ "ERROR: The 'Message' argument must be specified." >&2
 		OK="false"
 	fi
 	[[ ${OK} == "false" ]] && usage_and_exit 1
 fi
 
+IMAGE_NAME=""
 function make_image()
 {
-	BASENAME="$1"
+	BASENAME="${1}"
 	TEXTCOLOR="${2:-"white"}"
 	FONT="${3:-"Helvetica-Bold"}"
 	FONT_SIZE="${4:-128}"
@@ -126,10 +135,17 @@ function make_image()
 	IM_SIZE="${11:-${IMAGE_SIZE}}"
 	MSG="${12}"
 
-	echo "${BASENAME}" | grep -qEi "[.](${ALL_EXTS/ /|})"
-	if [[ $? -ne 1 ]]; then
-		E_ "ERROR: Do not add an extension to the basename." >&2
-		usage_and_exit 1
+	if [[ ${BASENAME} == "+" ]]; then
+		BASENAME="${ALLSKY_FILENAME}"
+	else
+		echo "${BASENAME}" | grep -qEi "[.](${ALL_EXTS/ /|})"
+		if [[ $? -ne 1 ]]; then
+			E_ "ERROR: Do not add an extension to the 'Basename' argument." >&2
+			usage_and_exit 1
+		fi
+	fi
+	if [[ ${EXTS} == "+" ]]; then
+		EXTS="${ALLSKY_EXTENSION}"
 	fi
 
 	if [[ ${BORDER_WIDTH} -ne 0 ]]; then
@@ -151,6 +167,9 @@ function make_image()
 		else
 			Q=9
 		fi
+
+		IMAGE_NAME="${BASENAME}.${EXT}"		# Global
+
 		# shellcheck disable=SC2086
 		convert \
 			-quality "${Q}" \
@@ -166,7 +185,7 @@ function make_image()
 			-depth 8 \
 			-size "${IM_SIZE}" \
 			label:"${MSG}" \
-			"${BASENAME}.${EXT}" || echo "${ME}: Unable to create image for '${MSG}'" >&2
+			"${IMAGE_NAME}" || echo "${ME}: Unable to create image for '${MSG}'" >&2
 	done
 
 	return 0
@@ -194,6 +213,9 @@ fi
 # If the arguments were specified on the command line, use them instead of the list below.
 if [[ $# -eq ${MAX_ARGS} ]]; then
 	make_image "${@}"
+	FILE_NAME="${PWD}/${IMAGE_NAME}"		# Need full pathname
+	export ME
+	processAndUploadImage "${FILE_NAME}" "${IMAGE_NAME}"
 	exit $?
 fi
 

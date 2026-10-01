@@ -1,0 +1,185 @@
+:root {
+  --red: #e53935;
+  --orange: #fb8c00;
+  --green: #43a047;
+  --blue: #1e88e5;
+
+  --settings-colour: #2f2f9e;
+}
+
+body[data-md-color-scheme="slate"] {
+  --red: #ff5250;  
+  --settings-colour: #6262ee;
+}
+
+.red {
+  color: var(--red);
+}
+
+.orange {
+  color: var(--orange);
+}
+
+.green {
+  color: var(--green);
+}
+
+.blue {
+  color: var(--blue);
+}
+
+img.center {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.settings-header {
+  background-color: #f5f5f5;
+  font-weight: bold;
+  text-align: center !important;
+}
+
+.settings-header-note {
+  background-color: #ccc;
+  font-weight: normal;
+}
+
+.web-ui-setting {
+  color: rgb(47, 47, 184);
+  font-weight: bold;
+}
+
+
+/* Width classes for tables */
+.w-5p {
+  width: 5% !important;
+}
+.w-10p {
+  width: 10% !important;
+}
+.w-15p {
+  width: 15% !important;
+}
+.w-20p {
+  width: 20% !important;
+}
+.w-25p {
+  width: 25% !important;
+}
+.w-30p {
+  width: 30% !important;
+}
+.w-100 {
+  width: 100px !important;
+}
+
+.w-150 {
+  width: 150px !important;
+}
+
+.w-200 {
+  width: 200px !important;
+}
+
+/* Allow table cells to wrap */
+td, th {
+  white-space: wrap !important;
+}
+
+/* Reduce cell padding */
+.md-typeset table:not([class]) td {
+    padding: .9em 1em !important;
+}
+
+/* Highjack markdown 'mark' for settings indicator */
+.md-typeset mark {
+  color: var(--settings-colour) !important;
+  font-weight: bold !important;
+  background-color: transparent !important;
+}
+
+/* Add external link icon to links marked with class "external" */
+a[external="true"]::after {
+    font-family: "Font Awesome 6 Free";
+    content: "\f35d";
+    font-weight: 900;
+    margin-left: 6px;
+    font-size: 0.85em;
+    vertical-align: middle;
+    opacity: 0.7;
+}
+
+/* Make the table wrapper full width */
+.md-typeset .md-typeset__table {
+  width: 100%;
+}
+
+/* Make Markdown tables behave like real tables and span 100% */
+.md-typeset table:not([class]) {
+  display: table;          /* override Material's display:block */
+  width: 100%;
+  table-layout: fixed;     /* or 'auto' if you prefer natural widths */
+  border-collapse: collapse;
+}
+
+/* Optional: make the first/second columns take specific proportions */
+.md-typeset table:not([class]) th:first-child,
+.md-typeset table:not([class]) td:first-child {
+  width: 18%;
+  white-space: nowrap;
+}
+
+.md-typeset table:not([class]) td:first-child {
+  font-style: italic;
+  font-weight: bolder;
+}
+
+.web-ui-setting {
+  font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+  color: #00009b;
+  font-weight: bold;
+  font-size: 95%;
+}
+
+/* Left sidebar: top-level section headers (Allsky Guide, Installation, etc) */
+.md-sidebar--primary 
+.md-nav--primary 
+.md-nav__list 
+> .md-nav__item--nested 
+> label.md-nav__link {
+  font-weight: 800 !important;
+}
+
+/* Left sidebar: top-level pages within the current section (FAQ, Known Issues, etc) */
+.md-sidebar--primary 
+.md-nav--primary 
+.md-nav[data-md-level="1"] 
+> .md-nav__list 
+> .md-nav__item 
+> a.md-nav__link {
+  font-weight: 800 !important;
+}
+
+/** Editor Setting styles */
+.shSetting, .editorShell, .editorShellComment, .editorSetting, .editorString, .editorNum, .editorSign, .editorBool, .editorSpecial, .editorBracketsJSON {
+  font-family: monospace;
+  background-color: #272822;
+  padding: 1px 2px;
+}
+
+.editorSetting {
+  color: #a6e22e;
+}
+.editorString {
+  color: #e6db74;
+}
+.editorNum, .editorBool {
+  color: #deb1ff;
+}
+.editorSpecial {
+  color: white;
+}
+.editorBracketsJSON {
+  color: rgb(253, 151, 31);
+}

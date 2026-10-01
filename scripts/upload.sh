@@ -2,15 +2,15 @@
 
 # Script to upload files.
 # This is a separate script so it can also be used manually to test uploads.
-
+#  
 # Allow this script to be executed manually, which requires ALLSKY_HOME to be set.
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )/.." )"
 ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck source-path=.
-source "${ALLSKY_HOME}/variables.sh"		|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"		|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 
 usage_and_exit() {
@@ -24,20 +24,20 @@ usage_and_exit() {
 	[[ ${RET} -ne 0 ]] && echo -e "${NC}"
 
 	echo
-	echo "Where:"
-	echo "   '--help'           displays this message and exits."
-	echo "   '--wait'           waits for any upload of the same type to finish."
-	echo "   '--silent'         doesn't display any status messages."
-	echo "   '--output f'       saves the upload output in the specified file."
-	echo "   '--local-web'      copy to local Website."
-	echo "   '--remote-web'     upload to the remote Website."
-	echo "   '--remote-server'  upload to the remote server."
-	echo "   'file_to_upload'   is the path name of the file to upload."
-	echo "   'directory'        is the directory ON THE SERVER the file should be uploaded to."
-	echo "   'destination_name' is the name the file should be called ON THE SERVER."
-	echo "   'file_type'        is an optional, temporary name to use when uploading the file."
+	echo "Arguments:"
+	echo "   --help            Display this message and exits."
+	echo "   --wait            Wait for any upload of the same type to finish."
+	echo "   --silent          Don't display any status messages."
+	echo "   --output f        Save the upload output in the specified file."
+	echo "   --local-web       Copy to local Website."
+	echo "   --remote-web      Upload to the remote Website."
+	echo "   --remote-server   Upload to the remote server."
+	echo "   file_to_upload    Is the path name of the file to upload."
+	echo "   directory         Is the directory ON THE SERVER the file should be uploaded to."
+	echo "   destination_name  Is the name the file should be called ON THE SERVER."
+	echo "   file_type         Is an optional, temporary name to use when uploading the file."
 	echo
-	echo "For example: ${ME}  keogram-20240710.jpg  /keograms  keogram.jpg"
+	echo "For example: ${ME}  keogram-20250710.jpg  /keograms  keogram.jpg"
 
 	exit "${RET}"
 }
@@ -72,11 +72,11 @@ while [[ $# -gt 0 ]]; do
 		--debug)
 			DEBUG="true"
 			;;
-		--local-web | --local-website)
+		--local-web)
 			LOCAL="true"
 			(( NUM++ ))
 			;;
-		--remote-web | --remote-website)
+		--remote-web)
 			REMOTE_WEB="true"
 			(( NUM++ ))
 			;;
@@ -367,7 +367,7 @@ else # sftp/ftp/ftps
 		# lftp doesn't open the connection until the first command is executed,
 		# and if it fails the error message isn't always clear.
 		# So, do a simple command first so we get a better error message.
-		echo "cd . || exit ${EXIT_ERROR_STOP}"
+		echo "cd . || exit ${ALLSKY_EXIT_ERROR_STOP}"
 
 		if [[ ${DEBUG} == "true" ]]; then
 			echo "debug 0"
@@ -388,28 +388,38 @@ else # sftp/ftp/ftps
 
 		# Unlikely, but just in case it's already there, remove it and log the action.
 		# Glob requires a regular expression, otherwise it always finds the file even if it's not there.
-		echo "glob --exist '[${TEMP_NAME:0:1}]${TEMP_NAME:1}' && echo '${TEMP_NAME} exists; removing...' && rm '${TEMP_NAME}'"
+		if [[ ${UPLOAD_WORKAROUND:-false} == "true" ]]; then
+			# Some web servers move the file just uploaded somewhere else so we can't rename it.
+			# So, upload the file with the final name.
+			# This means it may have problems overwritting the file if it's in use.
+			echo "put '${FILE_TO_UPLOAD}'
+				|| (echo 'put of ${FILE_TO_UPLOAD} failed!  Trying again...'; sleep 3;  put '${FILE_TO_UPLOAD}' && echo 'WORKED' && exit 0)
+				|| (echo '2nd put failed again, quitting'; exit 1)
+				|| exit 2"
+		else
+			echo "glob --exist '[${TEMP_NAME:0:1}]${TEMP_NAME:1}' && echo '${TEMP_NAME} exists; removing...' && rm '${TEMP_NAME}'"
 
-		echo "put '${FILE_TO_UPLOAD}' -o '${TEMP_NAME}'
-			|| (echo 'put of ${FILE_TO_UPLOAD} to ${TEMP_NAME} failed!  Trying again...'; sleep 3;  put '${FILE_TO_UPLOAD}' -o '${TEMP_NAME}' && echo 'WORKED' && exit 0)
-			|| (echo '2nd put failed again, quitting'; exit 1)
-			|| exit 2"
+			echo "put '${FILE_TO_UPLOAD}' -o '${TEMP_NAME}'
+				|| (echo 'put of ${FILE_TO_UPLOAD} to ${TEMP_NAME} failed!  Trying again...'; sleep 3;  put '${FILE_TO_UPLOAD}' -o '${TEMP_NAME}' && echo 'WORKED' && exit 0)
+				|| (echo '2nd put failed again, quitting'; exit 1)
+				|| exit 2"
 
-		# Try to remove ${DESTINATION_NAME}, which may or may not exist.
-		# If the "rm" fails, the file may be in use by the web server or another lftp,
-		# so wait a few seconds and try again, but without the "-f" option so we see any error msg.
-		echo "rm  -f '${DESTINATION_NAME}'"
-		echo "glob --exist '[${DESTINATION_NAME:0:1}]${DESTINATION_NAME:1}'
-			&& (echo 'rm of ${DESTINATION_NAME} failed!  Trying again...';  sleep 3;  rm '${DESTINATION_NAME}' && echo 'WORKED' && exit 1)
-			&& (echo '2nd rm failed, quiting.'; rm -f '${TEMP_NAME}'; exit 1)
-			&& exit 3"
+			# Try to remove ${DESTINATION_NAME}, which may or may not exist.
+			# If the "rm" fails, the file may be in use by the web server or another lftp,
+			# so wait a few seconds and try again, but without the "-f" option so we see any error msg.
+			echo "rm  -f '${DESTINATION_NAME}'"
+			echo "glob --exist '[${DESTINATION_NAME:0:1}]${DESTINATION_NAME:1}'
+				&& (echo 'rm of ${DESTINATION_NAME} failed!  Trying again...';  sleep 3;  rm '${DESTINATION_NAME}' && echo 'WORKED' && exit 1)
+				&& (echo '2nd rm failed, quiting.'; rm -f '${TEMP_NAME}'; exit 1)
+				&& exit 3"
 
-		# If the first "mv" fails, wait, then try again.  If that works, exit 0.
-		# If the 2nd "mv" also fails exit 4.  Either way, display a 2nd message.
-		echo "mv '${TEMP_NAME}' '${DESTINATION_NAME}'
-			|| (echo 'mv of ${TEMP_NAME} to ${DESTINATION_NAME} failed!  Trying again...'; sleep 3; mv '${TEMP_NAME}' '${DESTINATION_NAME}' && echo 'WORKED' && exit 0)
-			|| (echo '2nd mv failed, quitting.'; rm -f '${TEMP_NAME}'; exit 1)
-			|| exit 4"
+			# If the first "mv" fails, wait, then try again.  If that works, exit 0.
+			# If the 2nd "mv" also fails exit 4.  Either way, display a 2nd message.
+			echo "mv '${TEMP_NAME}' '${DESTINATION_NAME}'
+				|| (echo 'mv of ${TEMP_NAME} to ${DESTINATION_NAME} failed!  Trying again...'; sleep 3; mv '${TEMP_NAME}' '${DESTINATION_NAME}' && echo 'WORKED' && exit 0)
+				|| (echo '2nd mv failed, quitting.'; rm -f '${TEMP_NAME}'; exit 1)
+				|| exit 4"
+		fi
 
 		echo exit 0
 	} > "${LFTP_CMDS}"
@@ -424,7 +434,7 @@ else # sftp/ftp/ftps
 	fi
 	if [[ ${RET} -ne 0 ]]; then
 		HEADER="*** ${ME}: ERROR,"
-		if [[ ${RET} -eq ${EXIT_ERROR_STOP} ]]; then
+		if [[ ${RET} -eq ${ALLSKY_EXIT_ERROR_STOP} ]]; then
 			# shellcheck disable=SC2153
 			OUTPUT="$(
 				echo "${HEADER} unable to log in to ${REMOTE_USER} @ ${REMOTE_HOST}."

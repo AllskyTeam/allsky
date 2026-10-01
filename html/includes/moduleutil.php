@@ -1,163 +1,224 @@
 <?php
+declare(strict_types=1);
 
 include_once('functions.php');
 initialize_variables();		// sets some variables
-
 include_once('authenticate.php');
+include_once('utilbase.php');
 
-class MODULEUTIL
-{
-    private $request;
-    private $method;
-    private $jsonResponse = false;
-    private $allskyModules;
-    private $userModules;
+class MODULEUTIL extends UTILBASE {
+    protected function getRoutes(): array
+    {
+        return [
+            'AllskyVariables' => ['get'],
+            'AllskyKameraStatus' => ['get'],
+            'CheckModuleDependencies' => ['post'],
+            'GetExtraDataFile' => ['post'],
+            'HassSensors' => ['post'],
+            'ModuleBaseData' => ['get'],
+            'ModuleTool' => ['post'],
+            'ModuleToolOutput' => ['get'],
+            'ModuleToolStart' => ['post'],
+            'Modules' => ['delete', 'get', 'post'],
+            'ModulesSettings' => ['get', 'post'],
+            'Onewire' => ['get'],
+            'Reset' => ['get'],
+            'Restore' => ['get'],
+            'SerialPorts' => ['get'],
+            'SuggestedModules' => ['get'],
+            'SunData' => ['get'],
+            'Template' => ['get'],
+            'TemplateList' => ['get'],
+            'TestModule' => ['post'],
+            'UrlCheck' => ['get'],
+            'ValidateMask' => ['post'],
+            'VariableList' => ['get'],
+            'WatchdogManageService' => ['get'],
+            'WatchdogStatus' => ['get'],
+            'ProxyLocalApi' => ['get'],
+            'ModuleFile' => ['get']            
+        ];
+    }
+
+    protected $allskyModules;
+    protected $userModules;
+	protected $myFiles;
+    protected $myFilesData;
+    protected $allsky_config = null;
+    protected $extra_data = null;
+    protected $extra_legacy_data = null;
+    protected $allskySettings = null;
+    protected $allsky_home = null;
+    protected $allsky_scripts = null;
+    protected $allskyMyFiles = null;
+    protected $myFilesBase = null;
+    protected $services = ['allsky', 'allskyperiodic', 'allskyserver'];
 
     function __construct() {
         $this->allskyModules = ALLSKY_SCRIPTS . '/modules';
         $this->userModules = ALLSKY_MODULE_LOCATION . '/modules';
+		$this->allskyMyFiles = ALLSKY_MYFILES_DIR;        
+		$this->myFilesBase = ALLSKY_MYFILES_DIR;
+        $this->myFiles = ALLSKY_MYFILES_DIR . '/modules';
+		$this->myFilesData = ALLSKY_MYFILES_DIR . '/modules/moduledata';        
+        $this->allsky_home = ALLSKY_HOME;
+        $this->allsky_scripts = ALLSKY_SCRIPTS;
+        $this->allsky_config = ALLSKY_CONFIG;
+        $this->extra_data = ALLSKY_EXTRA;
+        $this->extra_legacy_data = ALLSKY_EXTRA_LEGACY;
     }
 
-    public function run()
-    {
-        $this->checkXHRRequest();
-        $this->sanitizeRequest();
-        $this->runRequest();
-    }
+	private function stringContains(string $value, string $needle): bool {
+		return $needle === '' || strpos($value, $needle) !== false;
+	}
 
-    private function checkXHRRequest()
-    {
-        if (empty($_SERVER['HTTP_X_REQUESTED_WITH']) || strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) != 'xmlhttprequest') {
-            $this->send404();
+    private function getMetaDataFromFile($fileName) {
+		$metaData = $this->getMetaDataFromFileByName($fileName, 'meta_data');
+		if ($metaData === "") {
+			$metaData = $this->getMetaDataFromFileByName($fileName, 'metaData');
+		}
+
+		return $metaData;
+	}
+
+    private function getMetaDataFromFileByName($fileName, $metaName) {
+		$metaData = "";
+
+        if (file_exists($fileName)) {
+            $fileContents = file($fileName);
+            $found = False;
+
+            $level = 0;
+            foreach ($fileContents as $source_line) {
+        
+                if (rtrim($source_line) !== '' && $this->endsWith(rtrim($source_line), '{')) {
+                    $level++;
+                }
+            
+                if (ltrim($source_line) !== '' && $this->startsWith(ltrim($source_line), '}')) {
+                    $level--;
+                }
+            
+                if (ltrim($source_line) !== '' && $this->startsWith(ltrim($source_line), $metaName)) {
+                    $found = true;
+                    $source_line = str_replace([$metaName, "=", " "], "", $source_line);
+                }
+            
+                if ($found) {
+                    $metaData .= $source_line;
+                }
+            
+                if (trim($source_line) === '}' && $found && $level === 0) {
+                    break;
+                }
+            }
         }
+		
+
+        return $metaData;
     }
 
-    private function sanitizeRequest()
-    {
-        $this->request = $_GET['request'];
-        $this->method = strtolower($_SERVER['REQUEST_METHOD']);
+    private function getModuleMetaData($modulelName) {
+        $fileName = $this->myFiles . '/' . $modulelName;
 
-        $accepts = $_SERVER['HTTP_ACCEPT'];
-        if (stripos($accepts, 'application/json') !== false) {
-            $this->jsonResponse = true;
+        $metaData = $this->getMetaDataFromFile($fileName);
+        if ($metaData == "") {
+            $fileName = $this->userModules . '/' . $modulelName;
+            $metaData = $this->getMetaDataFromFile($fileName);
+            if ($metaData == "") {
+                $fileName = $this->allskyModules . '/' . $modulelName;
+                $metaData = $this->getMetaDataFromFile($fileName);
+                
+            }                
         }
+        return $metaData;
     }
 
-    private function send404()
-    {
-        header('HTTP/1.0 404 Not Found');
-        die();
-    }
-
-    private function send500($error = "Internal Server Error")
-    {
-        header('HTTP/1.0 500 ' . $error);
-        die();
-    }
-
-    private function sendResponse($response = 'ok')
-    {
-        echo ($response);
-        die();
-    }
-
-    private function runRequest() {
-        $action = $this->method . $this->request;
-
-        if (is_callable(array('MODULEUTIL', $action))) {
-            call_user_func(array($this, $action));
-        } else {
-            $this->send404();
-        }
-    }
-
-    private function readModuleData($moduleDirectory, $type, $event) {
+    public function readModuleData($moduleDirectory, $type, $event) {
         $arrFiles = array();
-        $handle = opendir($moduleDirectory);
 
-        if ($handle) {
-            while (($entry = readdir($handle)) !== FALSE) {
-                if (preg_match('/^allsky_/', $entry)) {
-                    if ($entry !== 'allsky_shared.py') {
-                        $fileName = $moduleDirectory . '/' . $entry;
-                        $fileContents = file($fileName);
-                        $metaData = "";
-                        $found = False;
-
-                        foreach ($fileContents as $sourceLine) {
-                            $line = str_replace(" ", "", $sourceLine);
-                            $line = str_replace("\n", "", $line);
-                            $line = str_replace("\r", "", $line);
-                            $line = strtolower($line);
-                            if ($line == "metadata={") {
-                                $found = true;
-                                $sourceLine = str_ireplace("metadata","", $sourceLine);
-                                $sourceLine = str_ireplace("=","", $sourceLine);
-                                $sourceLine = str_ireplace(" ","", $sourceLine);
-                            }
-
-                            if ($found) {
-                                $metaData .= $sourceLine;
-                            }
-
-                            if (substr($sourceLine,0,1) == "}" && $found) {;
-                                break;
-                            }
-                        }
-
-                        $decoded = json_decode($metaData);
-                        if ($decoded !== null) {
-                            if (in_array($event, $decoded->events)) {
-                                if (isset($decoded->experimental)) {
-                                    $experimental = strtolower($decoded->experimental) == "true"? true: false;
-                                } else {
-                                    $experimental = false;
+        if (is_dir($moduleDirectory)) {
+            $handle = opendir($moduleDirectory);
+            if ($handle) {
+                while (($entry = readdir($handle)) !== FALSE) {
+                    if (preg_match('/^allsky_/', $entry)) {
+                        if ($entry !== 'allsky_shared.py' && $entry !== 'allsky_base.py') {
+                            $fileName = $moduleDirectory . '/' . $entry;
+                            $metaData = $this->getMetaDataFromFile($fileName);
+                            $decoded = json_decode($metaData, false);		
+                            if ($decoded !== Null) {
+                                if (in_array($event, $decoded->events) || $event == null) {
+                                    if (isset($decoded->experimental)) {
+                                        $experimental = strtolower($decoded->experimental) == "true"? true: false;
+                                    } else {
+                                        $experimental = false;
+                                    }
+                                    $arrFiles[$entry] = [
+                                        'module' => $entry,
+                                        'metadata' => $decoded,
+                                        'type' => $type
+                                    ];
+                                    $arrFiles[$entry]['metadata']->experimental = $experimental;
                                 }
-
+                            } else {
                                 $arrFiles[$entry] = [
                                     'module' => $entry,
-                                    'metadata' => $decoded,
+                                    'metadata' => (object)[],
                                     'type' => $type
                                 ];
-                                $arrFiles[$entry]['metadata']->experimental = $experimental;
+                                $arrFiles[$entry] = null;
                             }
-                        } else {
-                            $decoded = new stdClass();
-                            $decoded->name = "Module " . $entry . " is currupted";
-                            $decoded->description = "The metadata in the module file is invalid. Please contact Allsky support.";
-                            $decoded->events = ["day", "night", "periodic", "daynight", "nightday"];
-                            $arrFiles[$entry] = [
-                                'module' => $entry,
-                                'metadata' => $decoded,
-                                'type' => $type
-                            ];                         
                         }
                     }
                 }
             }
+            closedir($handle);
         }
-
-        closedir($handle);
-
         return $arrFiles;
     }
 
-    private function startsWith ($string, $startString) {
-        $len = strlen($startString);
-        return (substr($string, 0, $len) === $startString);
+    private function isSafeExtraDataFilename(string $fileName): bool
+    {
+        return basename($fileName) === $fileName
+            && preg_match('/^[A-Za-z0-9][A-Za-z0-9._-]*\.json$/', $fileName) === 1;
     }
 
-    private function endsWith($string, $endString) {
-        $len = strlen($endString);
-        if ($len == 0) {
-            return true;
+    private function getKnownExtraDataFilenames(): array
+    {
+        $fileNames = [];
+
+        foreach ([$this->allskyModules, $this->userModules, $this->myFiles] as $moduleDirectory) {
+            foreach ($this->readModuleData($moduleDirectory, 'metadata', null) as $moduleData) {
+                if (!is_array($moduleData) || !isset($moduleData['metadata'])) {
+                    continue;
+                }
+
+                if (!isset($moduleData['metadata']->extradatafilename)) {
+                    continue;
+                }
+
+                $fileName = (string)$moduleData['metadata']->extradatafilename;
+                if ($this->isSafeExtraDataFilename($fileName)) {
+                    $fileNames[$fileName] = true;
+                }
+            }
         }
-        return (substr($string, -$len) === $endString);
+
+        return array_keys($fileNames);
     }
 
-    private function changeOwner($filename) {
-        $user = get_current_user();
-        exec("sudo chown " . $user . " " . $filename);
+    private function getAuthorisedExtraDataPath(string $fileName): ?string
+    {
+        $fileName = trim($fileName);
+        if (!$this->isSafeExtraDataFilename($fileName)) {
+            return null;
+        }
+
+        if (!in_array($fileName, $this->getKnownExtraDataFilenames(), true)) {
+            return null;
+        }
+
+        return rtrim($this->extra_data, '/') . '/' . $fileName;
     }
 
     public function getModulesSettings() {
@@ -173,7 +234,7 @@ class MODULEUTIL
         $configFileName = ALLSKY_MODULES . '/' . 'postprocessing_' . strtolower($flow) . '.json';
         $backupConfigFileName = $configFileName . '-last';
         # File are created 644 which means the web server can't change them after
-        # they are created.  To get around this, remove backupFileName before copy over it.
+        # they are created.  To get around this, remove backupFilename before copy over it.
         @unlink($configFileName);
         copy($backupConfigFileName, $configFileName);
         $this->changeOwner($configFileName);
@@ -199,9 +260,11 @@ class MODULEUTIL
         $lat = $settings_array['latitude'];
         $lon = $settings_array['longitude'];
 
+        $result = array();
         $result['lat'] = $lat;
         $result['lon'] = $lon;
-        $result['filename'] = IMG_DIR . '/' . $settings_array['filename'];
+        $result['filename'] = ALLSKY_IMG_DIR . '/' . $settings_array['filename'];
+        $result['fieldhelpdelay'] = getVariableOrDefault($settings_array, 'fieldhelpdelay', 500);
 
         exec("sunwait poll exit set angle $angle $lat $lon", $return, $retval);
         if ($retval == 2) {
@@ -217,22 +280,132 @@ class MODULEUTIL
         $configFileName = ALLSKY_MODULES . '/module-settings.json';
         $rawConfigData = file_get_contents($configFileName);
         $configData = json_decode($rawConfigData);
-
         $result['settings'] = $configData;
+
+        $configFileName = ALLSKY_CONFIG . '/devicemanager.json';
+        if (file_exists($configFileName)) {
+            $rawDeviceManagerData = @file_get_contents($configFileName);
+            $deviceManagerData = json_decode($rawDeviceManagerData);
+            $result['devicemanager'] = $deviceManagerData;
+        } else {
+            $result['devicemanager'] = null;
+        }
+
+        $result['haveDatabase'] = haveDatabase();
+                
         $formattedJSON = json_encode($result, JSON_PRETTY_PRINT);
         $this->sendResponse($formattedJSON);
     }
 
+    public function getAllskyKameraStatus() {
+        $owner = getenv('ALLSKY_OWNER');
+        if ($owner === false || $owner === '') {
+            $owner = get_current_user();
+        }
+
+        $homeDir = '';
+        if (function_exists('posix_getpwnam')) {
+            $userInfo = @posix_getpwnam($owner);
+            if ($userInfo !== false && isset($userInfo['dir'])) {
+                $homeDir = $userInfo['dir'];
+            }
+        }
+
+        if ($homeDir === '') {
+            $homeDir = rtrim((string)getenv('HOME'), '/');
+        }
+
+        if ($homeDir === '') {
+            $homeDir = '/home/' . $owner;
+        }
+
+        $secretFile = $homeDir . '/AllSkyKamera/askutils/ASKsecret.py';
+        $installed = file_exists($secretFile);
+
+        $result = [
+            'installed' => $installed,
+            'configured' => $installed,
+            'path' => $secretFile
+        ];
+
+        $this->sendResponse(json_encode($result, JSON_PRETTY_PRINT));
+    }
+
+    public function getSunData() {
+        global $settings_array;
+
+        $angle = (string)$settings_array['angle'];
+        $lat = (string)$settings_array['latitude'];
+        $lon = (string)$settings_array['longitude'];
+        $result = [
+            'angle' => $angle,
+            'lat' => $lat,
+            'lon' => $lon,
+            'sunrise' => '',
+            'sunset' => '',
+            'tod' => ''
+        ];
+
+        $listOutput = [];
+        $pollOutput = [];
+        $retval = 0;
+        $angleArg = escapeshellarg($angle);
+        $latArg = escapeshellarg($lat);
+        $lonArg = escapeshellarg($lon);
+
+        exec("sunwait list angle $angleArg $latArg $lonArg", $listOutput);
+        if (isset($listOutput[0])) {
+            $parts = array_map('trim', explode(',', $listOutput[0], 2));
+            if (isset($parts[0])) {
+                $result['sunrise'] = $parts[0];
+            }
+            if (isset($parts[1])) {
+                $result['sunset'] = $parts[1];
+            }
+        }
+
+        exec("sunwait poll exit set angle $angleArg $latArg $lonArg", $pollOutput, $retval);
+        if ($retval == 2) {
+            $result['tod'] = 'day';
+        } else if ($retval == 3) {
+            $result['tod'] = 'night';
+        }
+
+        $this->sendResponse(json_encode($result, JSON_PRETTY_PRINT));
+    }
+
     public function getModules() {
         $result = $this->readModules();
-        $result = json_encode($result, JSON_FORCE_OBJECT);
+        $result = json_encode($result);
         $this->sendResponse($result);
+    }
+
+    public function getSuggestedModules(): void
+    {
+        $fileName = rtrim($this->allsky_config, '/') . '/suggested_modules.json';
+        if (!is_file($fileName) || !is_readable($fileName)) {
+            $this->send404('The suggested module list could not be loaded.');
+        }
+
+        $contents = file_get_contents($fileName);
+        if ($contents === false || trim($contents) === '') {
+            $this->send500('The suggested module list is empty or unreadable.');
+        }
+
+        json_decode($contents);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            $this->send500('The suggested module list does not contain valid JSON.');
+        }
+
+        $this->sendResponse($contents);
     }
 
     private function readModules() {
         $configFileName = ALLSKY_MODULES . '/module-settings.json';
         $rawConfigData = file_get_contents($configFileName);
         $moduleConfig = json_decode($rawConfigData);
+
+		$secrets = json_decode(file_get_contents(ALLSKY_ENV));
 
         $event = $_GET['event'];
         $configFileName = ALLSKY_MODULES . '/' . 'postprocessing_' . strtolower($event) . '.json';
@@ -248,63 +421,97 @@ class MODULEUTIL
 
         $coreModules = $this->readModuleData($this->allskyModules, "system", $event);
         $userModules = $this->readModuleData($this->userModules, "user", $event);
-        $allModules = array_merge($coreModules, $userModules);
+        $myModules = $this->readModuleData($this->myFiles, "user", $event);
+
+        $allModules = array_merge($coreModules, $userModules, $myModules);
 
         $availableResult = [];
-        foreach ($allModules as $moduleData) {
-            $module = str_replace('allsky_', '', $moduleData["module"]);
+        foreach ($allModules as $key=>$moduleData) {
+			if (isset($moduleData["module"])) {
+				$moduleName = $moduleData["module"];
+			} else {
+				$moduleName = $key;
+			}
+            $module = str_replace('allsky_', '', $moduleName);
             $module = str_replace('.py', '', $module);
-
+			
             if (!isset($configData->{$module})) {
-                $moduleData["enabled"] = false;
+				if ($moduleData === null) { // Corrupt module metaData
+					$moduleData = [
+						"metadata" => [
+							"name" => "Reads Pi Status",
+							"description" => "Reads Pi Data",
+							"module" => "allsky_pistatus",    
+							"version" => "v1.0.0",							
+							"arguments" => []
+						],
+						"corrupt" => true
+					];
+				}
                 $availableResult[$module] = $moduleData;
             }
         }
 
-        $selectedResult = [];
+		$selectedResult = [];
         foreach($configData as $selectedName=>$data) {
             $moduleName = "allsky_" . $selectedName . ".py";
-            if (!isset($allModules[$moduleName])) {
-                continue;
-            }
+            // TODO: check if  $allModules[$moduleName]  exists.
             $moduleData = $allModules[$moduleName];
 
-            if (isset($data->metadata->arguments)) {
-                if (isset($moduleData['metadata']->arguments)) {
-                    foreach ((array)$moduleData['metadata']->arguments as $argument=>$value) {
-                        if (!isset($data->metadata->arguments->$argument)){
-                            $data->metadata->arguments->$argument = $value;
-                        }
-                    }
-                }
-                $moduleData["metadata"]->arguments = $data->metadata->arguments;
-            } else {
-                $moduleData["metadata"]->arguments = [];
-            }
-            if (isset($data->enabled)) {
-                $moduleData["enabled"] = $data->enabled;
-            } else {
-                $moduleData["enabled"] = false;
-            }
-            if ($selectedName == 'loadimage') {
-                $moduleData['position'] = 'first';
-            }
-            if ($selectedName == 'saveimage') {
-                $moduleData['position'] = 'last';
-            }
+			if ($moduleData === null) { // Corrupt module metaData
+				$moduleData = (array)$configData->$selectedName;
+				$moduleData["corrupt"] = true;
+			}
 
-            if (isset($data->lastexecutiontime)) {
-                $moduleData['lastexecutiontime'] = $data->lastexecutiontime;
-            } else {
-                $moduleData['lastexecutiontime'] = '0';
-            }
-            if (isset($data->lastexecutionresult)) {
-                $moduleData['lastexecutionresult'] = $data->lastexecutionresult;
-            } else {
-                $moduleData['lastexecutionresult'] = '';
-            }
+			if (isset($data->metadata->arguments)) {
+				if (isset($moduleData['metadata']->arguments)) {
+					foreach ((array)$moduleData['metadata']->arguments as $argument=>$value) {
 
-            $selectedResult[$selectedName] = $moduleData;
+						if (!isset($data->metadata->arguments->$argument)) {
+							$data->metadata->arguments->$argument = $value;
+						}
+						
+						# If field is a 'secret' field then get the value from the env file
+						if (isset($moduleData["metadata"]->argumentdetails->$argument->secret)) {
+							if ($moduleData["metadata"]->argumentdetails->$argument->secret !== null) {
+								if ($moduleData["metadata"]->argumentdetails->$argument->secret === 'true') {
+									$secretKey = strtoupper($data->metadata->module) . '_' . strtoupper($argument);
+									if (isset($secrets->$secretKey)) {
+										$data->metadata->arguments->$argument = $secrets->$secretKey;
+									}
+								}
+							}
+						}
+					}
+				}
+				$moduleData["metadata"]->arguments = $data->metadata->arguments;
+			} else {
+				$moduleData["metadata"]->arguments = [];
+			}
+			if (isset($data->enabled)) {
+				$moduleData["enabled"] = $data->enabled;
+			} else {
+				$moduleData["enabled"] = false;
+			}
+			if ($selectedName == 'loadimage') {
+				$moduleData['position'] = 'first';
+			}
+			if ($selectedName == 'saveimage') {
+				$moduleData['position'] = 'last';
+			}
+
+			if (isset($data->lastexecutiontime)) {
+				$moduleData['lastexecutiontime'] = $data->lastexecutiontime;
+			} else {
+				$moduleData['lastexecutiontime'] = '0';
+			}
+			if (isset($data->lastexecutionresult)) {
+				$moduleData['lastexecutionresult'] = $data->lastexecutionresult;
+			} else {
+				$moduleData['lastexecutionresult'] = '';
+			}
+
+			$selectedResult[$selectedName] = $moduleData;
         };
 
         $restore = false;
@@ -329,6 +536,69 @@ class MODULEUTIL
         return $result;
     }
 
+    private function getModuleHelpFromFolder($folder): array {
+        $result = array();
+        $types = ['txt', 'html', 'md'];
+        if (file_exists($folder)) {
+            $handle = opendir($folder);
+            if ($handle) {
+                while (($entry = readdir($handle)) !== FALSE) {
+                    if ($entry !== '.' && $entry !== '..') {
+                        //TODO: Add HTML help or markdown
+                        foreach ($types as $key=>$type) {
+                            $fileName = $folder . '/' . $entry . '/readme.' . $type;
+                            if (file_exists($fileName)) {
+                                $text = file_get_contents($fileName);
+                                $module = str_replace('allsky_', '', $entry);
+                                $module = str_replace('.py', '', $module);
+                                if (!isset($result[$module])) {
+                                    $result[$module] = [];
+                                }
+                                if ($type == 'txt') {
+                                    $text = nl2br($text);
+                                }
+                                $result[$module][$type] = $text;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return $result;
+    }
+
+    public function getModuleFile() {
+        $rawFilename = $_GET['file'] ?? '';
+        $filename = basename($rawFilename);
+
+        $rawModuleame = $_GET['module'] ?? '';
+        $modulename = basename($rawModuleame);
+
+        $filePath = $this->myFiles . '/moduledata/data/' . $modulename . '/' . $filename;
+
+        if (file_exists($filePath)) {
+            $fileContents = file_get_contents($filePath);
+        } else {
+            $fileContents = 'File ' . $filename . ' Not found';
+        }
+
+        $this->sendHTMLResponse($fileContents);
+    }
+
+    private function getModuleHelp() {
+        //TODO: Not sure about this location
+        $coreHelpFolder = ALLSKY_SCRIPTS . '/modules/info';
+        $extraHelpFolder = ALLSKY_MODULE_LOCATION . '/modules/info';
+
+        $help = $this->getModuleHelpFromFolder($coreHelpFolder);
+        $extraHelp = $this->getModuleHelpFromFolder($extraHelpFolder);
+
+        $help = array_merge($help, $extraHelp);
+        return '';
+        return $help;
+    }
+
     public function postModules() {
         $config = $_POST['config'];
         $configData = $_POST['configData'];
@@ -336,12 +606,33 @@ class MODULEUTIL
         $rawConfigData = file_get_contents($configFileName);
         $oldModules = json_decode($rawConfigData);
 
+		$configDataJson = json_decode($configData);
+		$envData = null;
+		foreach ($configDataJson as $module=>&$moduleConfig) {
+            if (isset($moduleConfig->metadata->argumentdetails)) {
+                foreach ($moduleConfig->metadata->argumentdetails as $argument=>$argumentSettings) {
+                    if (isset($argumentSettings->secret)) {
+                        if ($envData === null) {
+                            $envData = json_decode(file_get_contents(ALLSKY_ENV));
+                        }
+                        $secretKey = strtoupper($moduleConfig->metadata->module) . '_' . strtoupper($argument);
+                        $envData->$secretKey = $moduleConfig->metadata->arguments->$argument;
+                        $moduleConfig->metadata->arguments->$argument = '';
+                    }
+                }
+            }
+		}
+		$configData = json_encode($configDataJson, JSON_PRETTY_PRINT);
+		if ($envData !== null) {
+			file_put_contents(ALLSKY_ENV, json_encode($envData, JSON_PRETTY_PRINT));
+		}
+		
         $result = file_put_contents($configFileName, $configData);
         $this->changeOwner($configFileName);
-        $backupFileName = $configFileName . '-last';
-        @unlink($backupFileName);
-        copy($configFileName, $backupFileName);
-        $this->changeOwner($backupFileName);
+        $backupFilename = $configFileName . '-last';
+        @unlink($backupFilename);
+        copy($configFileName, $backupFilename);
+        $this->changeOwner($backupFilename);
         if ($result !== false) {
             $newModules = json_decode($configData);
             $this->CheckForDisabledModules($newModules, $oldModules);
@@ -412,8 +703,1335 @@ class MODULEUTIL
 
         $this->sendResponse();
     }
+
+	private function addSecretsToFlow($configData) {
+		$configDataJson = json_decode($configData);
+		$envData = null;
+		foreach ($configDataJson as $module=>&$moduleConfig) {
+			foreach ($moduleConfig->metadata->argumentdetails as $argument=>$argumentSettings) {
+				if (isset($argumentSettings->secret)) {
+					if ($envData === null) {
+						$envData = json_decode(file_get_contents(ALLSKY_ENV));
+					}
+					$secretKey = strtoupper($moduleConfig->metadata->module) . '_' . strtoupper($argument);
+					if (isset($envData->$secretKey)) {
+						$moduleConfig->metadata->arguments->$argument = $envData->$secretKey;
+					} 
+				}
+			}
+		}
+		$configData = json_encode($configDataJson, JSON_PRETTY_PRINT);
+		return $configData;
+	}
+
+	private function sendModuleTestValidationResult(string $message): void
+	{
+		$payload = [
+			'message'   => $message,
+			'extradata' => (object)[],
+		];
+
+		$this->sendResponse(json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
+	}
+
+	private function validateRunScriptModuleTest(array $flowData): ?string
+	{
+		$myFilesDir = realpath((string)ALLSKY_MYFILES_DIR);
+		if ($myFilesDir === false || !is_dir($myFilesDir)) {
+			return "Allsky could not test this module because the configured scripts folder is not available.\n\nExpected scripts folder: " . (string)ALLSKY_MYFILES_DIR . "\n\nCheck the scripts folder setting in variables.json and make sure that folder exists.";
+		}
+
+		foreach ($flowData as $moduleData) {
+			if (!is_array($moduleData) || ($moduleData['module'] ?? '') !== 'allsky_script.py') {
+				continue;
+			}
+
+			$script = trim((string)($moduleData['metadata']['arguments']['scriptlocation'] ?? ''));
+			if ($script === '') {
+				return "Allsky could not test this module because no script has been selected.\n\nChoose a script from " . $myFilesDir . " and try the test again.";
+			}
+
+			if ($script[0] !== '/') {
+				return "Allsky could not test this module because the selected script is not a full file path.\n\nSelected script: " . $script . "\n\nChoose the script again from " . $myFilesDir . " so Allsky can save the full path.";
+			}
+
+			$realScript = realpath($script);
+			if ($realScript === false || !is_file($realScript)) {
+				return "Allsky could not test this module because it cannot find the selected script.\n\nSelected script: " . $script . "\n\nThe script may have been deleted, renamed, or moved. Put the script in " . $myFilesDir . " and select it again.";
+			}
+
+			if (!$this->isPathWithinDirectory($realScript, $myFilesDir)) {
+				return "Allsky could not test this module because the selected script is outside the allowed scripts folder.\n\nSelected script: " . $realScript . "\nAllowed scripts folder: " . $myFilesDir . "\n\nMove the script into the allowed folder, select it again in the module settings, and then run the test again.";
+			}
+
+			if (!is_readable($realScript)) {
+				return "Allsky could not test this module because it cannot read the selected script.\n\nSelected script: " . $realScript . "\n\nCheck the file permissions for the script. Allsky needs permission to read the script before it can run it.";
+			}
+
+			if (!is_executable($realScript)) {
+				return "Allsky could not test this module because the selected script is not marked as executable.\n\nSelected script: " . $realScript . "\n\nMark the script as executable, then run the test again. If you are not sure how to do this, ask whoever supplied the script to check its permissions.";
+			}
+		}
+
+		return null;
+	}
+
+	private function isPathWithinDirectory(string $path, string $directory): bool
+	{
+		$directory = rtrim($directory, '/');
+		return $path === $directory || strpos($path, $directory . '/') === 0;
+	}
+
+	public function postTestModule(): void
+	{
+        // Read and sanitize inputs
+        $module   = trim((string)filter_input(INPUT_POST, 'module', FILTER_UNSAFE_RAW));
+        $dayNight = trim((string)filter_input(INPUT_POST, 'dayNight', FILTER_UNSAFE_RAW));
+        $flow     = (string)($_POST['flow'] ?? '');
+
+        // Inject any required secrets into the flow
+        $flow = $this->addSecretsToFlow($flow);
+        $jsonFlow = json_decode($flow, true);
+        if (is_array($jsonFlow)) {
+            $validationMessage = $this->validateRunScriptModuleTest($jsonFlow);
+            if ($validationMessage !== null) {
+                $this->sendModuleTestValidationResult($validationMessage);
+            }
+        }
+
+        // Save the flow definition to a temp JSON file
+        $fileName = ALLSKY_MODULES . '/test_flow.json';
+        if (file_put_contents($fileName, $flow) === false) {
+            $this->send500('Failed to write test_flow.json');
+        }
+
+        // Build the command arguments safely for runProcess()
+        $argv = [
+            '/usr/bin/sudo',
+            $this->allsky_scripts . '/test_flow.sh',
+            '--allsky_home',    $this->allsky_home,
+            '--allsky_scripts', $this->allsky_scripts,
+            '--day_night',      $dayNight,
+        ];
+
+        // Execute via runProcess() to capture stdout/stderr safely
+        $result = $this->runProcess($argv);
+
+        // Try to load extradata if the flow references a file
+        $extraData = '';
+        $moduleKey = is_array($jsonFlow) ? array_key_first($jsonFlow) : null;
+
+        if ($moduleKey && isset($jsonFlow[$moduleKey]['metadata']['extradatafilename'])) {
+            $filePath = $this->getAuthorisedExtraDataPath((string)$jsonFlow[$moduleKey]['metadata']['extradatafilename']);
+            if ($filePath !== null && is_file($filePath) && is_readable($filePath)) {
+                $extraData = file_get_contents($filePath) ?: '';
+            }
+        }
+
+        // Handle process result
+        if ($result['error']) {
+            $this->send500('Module test failed: ' . trim($result['message']));
+        }
+
+        // Bundle both script output and any extra data into the response
+        $payload = [
+            'message'   => trim($result['message']),
+            'extradata' => json_decode($extraData ?: '{}'),
+        ];
+
+        @unlink($fileName);
+        $debugFileName = ALLSKY_MODULES . '/test_flow-debug.json';
+        @unlink($debugFileName);
+
+        $this->sendResponse(json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
+    }
+
+    public function postModuleTool(): void
+    {
+        $command = $this->resolveModuleToolCommand();
+        $this->streamModuleTool($command['argv'], $command['cwd']);
+    }
+
+    public function postModuleToolStart(): void
+    {
+        $command = $this->resolveModuleToolCommand();
+        $runId = bin2hex(random_bytes(16));
+        $runDir = $this->moduleToolRunDirectory();
+        $logFile = $runDir . '/' . $runId . '.log';
+        $statusFile = $runDir . '/' . $runId . '.status';
+        file_put_contents($logFile, "Starting tool...\n");
+
+        $escapedArgv = array_map('escapeshellarg', $command['argv']);
+        $toolCommand = 'cd ' . escapeshellarg($command['cwd']) . ' && ' . implode(' ', $escapedArgv);
+        $backgroundCommand = '(' . $toolCommand . ' >> ' . escapeshellarg($logFile) . ' 2>&1; code=$?; printf "%s" "$code" > ' . escapeshellarg($statusFile) . ') >/dev/null 2>&1 & echo $!';
+
+        $descriptors = [
+            1 => ['pipe', 'w'],
+            2 => ['pipe', 'w'],
+        ];
+        $process = @proc_open(['/bin/sh', '-c', $backgroundCommand], $descriptors, $pipes, null, []);
+        if (!is_resource($process)) {
+            $this->sendHTTPResponse('Unable to start tool.', 500);
+        }
+
+        $pid = trim((string)stream_get_contents($pipes[1]));
+        $error = trim((string)stream_get_contents($pipes[2]));
+        fclose($pipes[1]);
+        fclose($pipes[2]);
+        $exitCode = proc_close($process);
+
+        if ($exitCode !== 0 || $pid === '') {
+            $this->sendHTTPResponse($error !== '' ? $error : 'Unable to start tool.', 500);
+        }
+
+        $this->sendResponse([
+            'runId' => $runId,
+            'offset' => 0,
+        ]);
+    }
+
+    public function getModuleToolOutput(): void
+    {
+        $runId = trim((string)filter_input(INPUT_GET, 'runId', FILTER_UNSAFE_RAW));
+        $offset = max(0, (int)($_GET['offset'] ?? 0));
+
+        if (!preg_match('/^[a-f0-9]{32}$/', $runId)) {
+            $this->sendHTTPResponse('Invalid tool run.', 400);
+        }
+
+        $runDir = $this->moduleToolRunDirectory();
+        $logFile = $runDir . '/' . $runId . '.log';
+        $statusFile = $runDir . '/' . $runId . '.status';
+
+        if (!is_file($logFile)) {
+            $this->sendResponse([
+                'output' => '',
+                'offset' => 0,
+                'done' => false,
+                'exitCode' => null,
+            ]);
+        }
+
+        $size = filesize($logFile);
+        if ($size === false) {
+            $size = 0;
+        }
+        if ($offset > $size) {
+            $offset = 0;
+        }
+
+        $output = '';
+        if ($size > $offset) {
+            $handle = fopen($logFile, 'rb');
+            if ($handle !== false) {
+                fseek($handle, $offset);
+                $output = (string)stream_get_contents($handle);
+                fclose($handle);
+            }
+        }
+
+        $done = is_file($statusFile);
+        $exitCode = null;
+        if ($done) {
+            $exitCode = (int)trim((string)file_get_contents($statusFile));
+            if ($output === '') {
+                $output = "\nTool finished with exit code {$exitCode}.\n";
+            } elseif (!$this->endsWith($output, "\n")) {
+                $output .= "\n";
+            }
+            if (!$this->stringContains($output, 'Tool finished with exit code')) {
+                $output .= "\nTool finished with exit code {$exitCode}.\n";
+            }
+        }
+
+        $this->sendResponse([
+            'output' => $output,
+            'offset' => $size,
+            'done' => $done,
+            'exitCode' => $exitCode,
+        ]);
+    }
+
+    private function resolveModuleToolCommand(): array
+    {
+        $module = trim((string)filter_input(INPUT_POST, 'module', FILTER_UNSAFE_RAW));
+        $toolKey = trim((string)filter_input(INPUT_POST, 'tool', FILTER_UNSAFE_RAW));
+
+        if ($module === '' || $toolKey === '') {
+            $this->sendHTTPResponse('Missing module or tool.', 400);
+        }
+
+        $module = basename($module);
+        $moduleName = preg_replace('/\.py$/', '', $module);
+        if (!preg_match('/^[A-Za-z0-9_.-]+$/', $moduleName) || !preg_match('/^[A-Za-z0-9_.-]+$/', $toolKey)) {
+            $this->sendHTTPResponse('Invalid module or tool.', 400);
+        }
+
+        $metaRaw = $this->getModuleMetaData($module);
+        $metaData = json_decode($metaRaw ?: '{}', false);
+        if (!$metaData || !isset($metaData->tools) || !isset($metaData->tools->$toolKey)) {
+            $this->sendHTTPResponse('Tool is not defined for this module.', 404);
+        }
+
+        $toolData = $metaData->tools->$toolKey;
+        $toolFile = isset($toolData->tool) ? basename((string)$toolData->tool) : '';
+        if ($toolFile === '' || !preg_match('/^[A-Za-z0-9_.-]+$/', $toolFile)) {
+            $this->sendHTTPResponse('Invalid tool definition.', 400);
+        }
+
+        $moduleDataDir = realpath($this->myFilesData . '/data/' . $moduleName);
+        if ($moduleDataDir === false) {
+            $this->sendHTTPResponse('Module data directory not found.', 404);
+        }
+
+        $this->prepareModuleToolDataDirectory($moduleDataDir);
+
+        $toolsDir = realpath($moduleDataDir . '/tools');
+        if ($toolsDir === false) {
+            $this->sendHTTPResponse('Tool directory not found.', 404);
+        }
+
+        $toolPath = realpath($toolsDir . '/' . $toolFile);
+        if ($toolPath === false || !is_file($toolPath) || !is_readable($toolPath) || strpos($toolPath, $toolsDir . DIRECTORY_SEPARATOR) !== 0) {
+            $this->sendHTTPResponse('Tool file not found.', 404);
+        }
+
+        $extension = strtolower(pathinfo($toolPath, PATHINFO_EXTENSION));
+        $venvPython = $this->allsky_home . '/venv/bin/python3';
+        if ($extension === 'py') {
+            $argv = [is_file($venvPython) ? $venvPython : '/usr/bin/python3', '-u', $toolPath];
+        } elseif ($extension === 'sh') {
+            $argv = ['/bin/bash', $toolPath];
+        } elseif (is_executable($toolPath)) {
+            $argv = [$toolPath];
+        } else {
+            $this->sendHTTPResponse('Tool file is not executable.', 400);
+        }
+
+        return [
+            'argv' => $argv,
+            'cwd' => dirname($toolPath),
+        ];
+    }
+
+    private function moduleToolRunDirectory(): string
+    {
+        $runDir = sys_get_temp_dir() . '/allsky-module-tools';
+        if (!is_dir($runDir)) {
+            mkdir($runDir, 0775, true);
+        }
+        return $runDir;
+    }
+
+    private function prepareModuleToolDataDirectory(string $moduleDataDir): void
+    {
+        $baseDir = realpath($this->myFilesData . '/data');
+        if ($baseDir === false || strpos($moduleDataDir, $baseDir . DIRECTORY_SEPARATOR) !== 0) {
+            $this->sendHTTPResponse('Invalid module data directory.', 400);
+        }
+
+        $this->runQuietProcess(['/usr/bin/sudo', '/bin/chgrp', '-R', 'www-data', $moduleDataDir]);
+        $this->runQuietProcess(['/usr/bin/sudo', '/bin/chmod', '-R', 'g+rwX', $moduleDataDir]);
+    }
+
+    private function runQuietProcess(array $argv): void
+    {
+        $descriptors = [
+            1 => ['pipe', 'w'],
+            2 => ['pipe', 'w'],
+        ];
+
+        $process = @proc_open($argv, $descriptors, $pipes, null, []);
+        if (!is_resource($process)) {
+            return;
+        }
+
+        stream_get_contents($pipes[1]);
+        stream_get_contents($pipes[2]);
+        fclose($pipes[1]);
+        fclose($pipes[2]);
+        proc_close($process);
+    }
+
+    private function streamModuleTool(array $argv, string $cwd): void
+    {
+        @set_time_limit(0);
+        while (ob_get_level() > 0) {
+            @ob_end_flush();
+        }
+
+        http_response_code(200);
+        header('Content-Type: text/plain; charset=utf-8');
+        header('Cache-Control: no-cache, no-transform');
+        header('X-Accel-Buffering: no');
+
+        $descriptors = [
+            1 => ['pipe', 'w'],
+            2 => ['pipe', 'w'],
+        ];
+
+        $process = @proc_open($argv, $descriptors, $pipes, $cwd, []);
+        if (!is_resource($process)) {
+            echo "Unable to start tool.\n";
+            flush();
+            exit;
+        }
+
+        stream_set_blocking($pipes[1], false);
+        stream_set_blocking($pipes[2], false);
+
+        $running = true;
+        $exitCode = null;
+        while ($running) {
+            foreach ([1, 2] as $index) {
+                $chunk = stream_get_contents($pipes[$index]);
+                if ($chunk !== false && $chunk !== '') {
+                    echo $chunk;
+                    flush();
+                }
+            }
+
+            $status = proc_get_status($process);
+            $running = $status['running'];
+            if (!$running && isset($status['exitcode'])) {
+                $exitCode = $status['exitcode'];
+            }
+            if ($running) {
+                usleep(100000);
+            }
+        }
+
+        foreach ([1, 2] as $index) {
+            $chunk = stream_get_contents($pipes[$index]);
+            if ($chunk !== false && $chunk !== '') {
+                echo $chunk;
+                flush();
+            }
+            fclose($pipes[$index]);
+        }
+
+        $closeCode = proc_close($process);
+        if ($exitCode === null || $exitCode < 0) {
+            $exitCode = $closeCode;
+        }
+        echo "\nTool finished with exit code {$exitCode}.\n";
+        flush();
+        exit;
+    }
+
+    public function getAllskyVariables($return=false) {
+        $sourceDir = ALLSKY_OVERLAY . '/extra';
+        $variables = [];
+
+        $handle = opendir($sourceDir);
+
+        if ($handle) {
+            while (($entry = readdir($handle)) !== FALSE) {
+                if ($entry !== '.' && $entry !== '..') {
+                    $fileName = $sourceDir . '/' . $entry;
+                    $data = file_get_contents($fileName);
+
+                    $extension = pathinfo($entry, PATHINFO_EXTENSION);
+
+                    if ($extension == 'json') {
+                        $jsonData = json_decode($data);
+                        foreach ($jsonData as $key => $value) {
+                            $variables[] = [
+                                'variable' => $key,
+                                'lastvalue' => $value
+                            ];
+                        }
+                    }
+                    if ($extension == 'txt') {
+                        #TODO - Add code !
+                    }
+                }
+            }
+        }
+
+        if ($return) {
+            return $variables;
+        } else {
+            $this->sendResponse(json_encode($variables));
+        }
+    }
+	
+    private function getAllskyVariable($variable="AS_CPUTEMP") {
+
+        $variables = $this->getAllskyVariables(true);
+
+        $value = null;
+        foreach ($variables as $variableData) {
+            if ($variableData["variable"] == $variable) {
+                $value = $variableData["lastvalue"]->value;
+                break;
+            }
+        }
+
+        return $value;
+    }
+
+    public function postValidateMask() {
+        $error = false;
+        $message='';
+        $filename=trim(filter_input(INPUT_POST, 'filename', FILTER_SANITIZE_STRING));
+        $validFileTypes = array('png', 'jpg', 'jpeg');
+        $extension = pathinfo($filename, PATHINFO_EXTENSION);
+
+        if (in_array($extension, $validFileTypes)) {
+
+            $settings_array = readSettingsFile();
+            $captureImageFilename = ALLSKY_TMP . '/' . getVariableOrDefault($settings_array, 'filename', 'image.jpg');
+
+            $imageThumbnailFolder = ALLSKY_OVERLAY . '/imagethumbnails';
+            $filePath = ALLSKY_OVERLAY . '/images/' . $filename;
+            $imageInfo = getimagesize($filePath);
+            if ($imageInfo) {
+                $maskWidth = $imageInfo[0];
+                $maskHeight = $imageInfo[1];
+
+                $imageInfo = getimagesize($captureImageFilename);
+                if ($imageInfo) {
+                    $capturedWidth = $imageInfo[0];
+                    $capturedHeight = $imageInfo[1];
+                    
+                    if (($capturedWidth !== $maskWidth) && ($capturedHeight !== $maskHeight)) {
+                        $error = true;
+                        $message = "The mask does not match the captured images. Captured image is {$capturedWidth}x{$capturedHeight} but the mask is {$maskWidth}x{$maskHeight}";
+                    } else {
+                        $message = "The mask matches the captured images. Captured image is {$capturedWidth}x{$capturedHeight} but the mask is {$maskWidth}x{$maskHeight}";
+
+                    }
+                } else {
+                    $error = false;
+                    $message = "Unable to locate a captured image";                    
+                }
+            } else {
+                $error = true;
+                $message = "Unable to read the image file - {$filePath}";
+            }            
+
+        } else {
+            $error = true;
+            $message = "The filename {$filename} has an invalid extension";
+        }
+
+        $result = [
+            'error'=>$error,
+            'message'=>$message
+        ];
+
+        $this->sendResponse(json_encode($result));        
+    }
+
+	private function findModule($module) {
+		//TODO: add enabled status to result and warn in module manager if module is not enabled
+		$metaData = null;
+        $coreModuleDir = ALLSKY_SCRIPTS . '/modules';
+        $extraModulesDir = '/opt/allsky/modules';
+
+		$found = false;
+		$checkPath = $coreModuleDir . '/' . $module;      
+		if (file_exists($checkPath)) {
+			$found = true;
+		} else {
+			$checkPath = $this->myFiles . '/' . $module;
+			if (file_exists($checkPath)) {
+				$found = true;
+			} else {
+                $checkPath = $extraModulesDir . '/' . $module;
+                if (file_exists($checkPath)) {
+                    $found = true;
+                }
+            }
+		}
+
+		if ($found) {
+			$metaData = $this->getMetaDataFromFile($checkPath);
+			$metaData = json_decode($metaData, false);
+		}
+
+		return $metaData;
+	}
+
+	private function isModuleInAnyFlow($flows, $module) {
+		$result = false;
+
+		foreach ($flows as $flowName=>$flowData) {
+			foreach ($flowData as $flowModule=>$flowModuleData) {
+				if ($flowModule == $module) {
+					$result = true;
+					break 2;
+				}
+			}
+		}
+
+		return $result;
+	}
+
+	public function postCheckModuleDependencies() {
+		$results = array();
+		$check = $_POST['check'];
+		$checkFlow = trim(filter_input(INPUT_POST, 'flow', FILTER_SANITIZE_STRING));
+
+		$flows = array('day', 'night', 'periodic', 'daynight', 'nightday');
+
+		$flowInfo = array();
+		foreach($flows as $flow) {
+			$flowInfo[$flow] = array();
+			if ($flow == $checkFlow) {
+				$flowKeys = $check;
+			} else {
+				$flowFileName = ALLSKY_MODULES . "/postprocessing_$flow.json";
+				$flowData = file_get_contents($flowFileName);
+				$flowData = json_decode($flowData);
+				$flowKeys = array_keys(get_object_vars($flowData));
+				foreach($flowKeys as &$flowKey) {
+					$flowKey = "allsky_$flowKey.py";
+				}
+			}
+
+			foreach ($flowKeys as $moduleFile) {
+				$moduleMetaData = $this->findModule($moduleFile);
+				$flowInfo[$flow][$moduleFile] = $moduleMetaData;
+			}
+		}
+
+		foreach ($flowInfo as $flowName=>$flowData) {
+			foreach ($flowData as $flowModule=>$flowModuleData) {
+				if (isset($flowModuleData->dependency)) {
+					$result = $this->isModuleInAnyFlow($flowInfo, $flowModuleData->dependency);
+					if ($result === false) {
+						$moduleMetaData = $this->findModule($flowModuleData->dependency);
+
+						if ($moduleMetaData === null) {
+							$message = 'The "' . $flowModuleData->dependency . '" module is required by the "' . $flowModuleData->name . '" module ';
+							$message .= "This module is NOT installed. Please install the extra modules.";
+						} else {
+							$message = 'The "' . $moduleMetaData->name . '" module is required by the "' . $flowModuleData->name . '" module ';
+							$message .= "Please add this module to the relevant flow and configure it.";
+						}
+						$results[$flowModule][$flowName] = $message;
+					}
+					
+				}
+			}
+		}
+		$this->sendResponse(json_encode($results));
+	}
+
+	public function getOnewire() {
+		$folderPath = '/sys/bus/w1/devices/';
+		$files = glob($folderPath . '[0-9a-fA-F]*-*');
+
+		$results = array();
+		$results['results'] = array();
+		foreach ($files as $file) {
+			$results['results'][] = [
+				'id' => basename($file),
+				'text' => basename($file)
+			];
+		}
+		
+		$this->sendResponse(json_encode($results));
+	}
+
+	public function getSerialPorts() {
+		$files = glob('/dev/serial*');
+
+		$results = array();
+		$results['results'] = array();
+		foreach ($files as $file) {
+			$results['results'][] = [
+				'id' => basename($file),
+				'text' => basename($file)
+			];
+		}
+		
+		$this->sendResponse(json_encode($results));
+	}
+
+	public function postGetExtraDataFile() {
+		$extraDataFilename = (string)($_POST['extradatafilename'] ?? $_POST['extraDataFilename'] ?? '');
+		$filePath = $this->getAuthorisedExtraDataPath($extraDataFilename);
+		if ($filePath === null) {
+			$this->send403('The requested extra data file is not available.');
+		}
+
+		$result = [];
+		if (is_file($filePath) && is_readable($filePath)) {
+			$result = file_get_contents($filePath);
+		}
+
+		$this->sendResponse(json_encode($result));		
+	}
+
+	public function getUrlCheck() {
+		$url = trim((string) filter_input(INPUT_GET, 'url', FILTER_SANITIZE_URL));
+		$result = $this->isSafeReachableUrl($url);
+		$this->sendResponse(json_encode($result));
+	}
+
+	private function isSafeReachableUrl(string $url): bool {
+		$urlParts = parse_url($url);
+		if ($urlParts === false || !$this->isAllowedOutboundUrl($urlParts)) {
+			return false;
+		}
+
+		$host = $urlParts['host'];
+		$scheme = strtolower($urlParts['scheme']);
+		$port = (int) ($urlParts['port'] ?? ($scheme === 'https' ? 443 : 80));
+		$ipAddresses = $this->getResolvedIpAddresses($host);
+		if (count($ipAddresses) === 0) {
+			return false;
+		}
+
+		$ch = curl_init($url);
+		if ($ch === false) {
+			return false;
+		}
+
+		curl_setopt_array($ch, [
+			CURLOPT_CONNECTTIMEOUT => 2,
+			CURLOPT_FOLLOWLOCATION => false,
+			CURLOPT_HEADER => true,
+			CURLOPT_NOBODY => true,
+			CURLOPT_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
+			CURLOPT_REDIR_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
+			CURLOPT_RESOLVE => [$this->getCurlResolveEntry($host, $port, $ipAddresses[0])],
+			CURLOPT_RETURNTRANSFER => true,
+			CURLOPT_TIMEOUT => 5,
+			CURLOPT_USERAGENT => 'Allsky URL checker',
+		]);
+
+		curl_exec($ch);
+		$status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+		$result = !curl_errno($ch) && $status >= 200 && $status < 400;
+		curl_close($ch);
+
+		return $result;
+	}
+
+	private function isAllowedOutboundUrl(array $urlParts): bool {
+		if (!isset($urlParts['scheme'], $urlParts['host'])) {
+			return false;
+		}
+
+		$scheme = strtolower($urlParts['scheme']);
+		if ($scheme !== 'http' && $scheme !== 'https') {
+			return false;
+		}
+
+		if (isset($urlParts['port']) && ($urlParts['port'] < 1 || $urlParts['port'] > 65535)) {
+			return false;
+		}
+
+		$ipAddresses = $this->getResolvedIpAddresses($urlParts['host']);
+		if (count($ipAddresses) === 0) {
+			return false;
+		}
+
+		foreach ($ipAddresses as $ipAddress) {
+			if (!$this->isPublicIpAddress($ipAddress)) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	private function getResolvedIpAddresses(string $host): array {
+		$host = trim($host, '[]');
+		if (filter_var($host, FILTER_VALIDATE_IP) !== false) {
+			return [$host];
+		}
+
+		$ipAddresses = [];
+		$dnsRecords = dns_get_record($host, DNS_A + DNS_AAAA);
+		if ($dnsRecords === false) {
+			return [];
+		}
+
+		foreach ($dnsRecords as $record) {
+			if (isset($record['ip'])) {
+				$ipAddresses[] = $record['ip'];
+			}
+			if (isset($record['ipv6'])) {
+				$ipAddresses[] = $record['ipv6'];
+			}
+		}
+
+		return array_values(array_unique($ipAddresses));
+	}
+
+	private function isPublicIpAddress(string $ipAddress): bool {
+		return filter_var(
+			$ipAddress,
+			FILTER_VALIDATE_IP,
+			FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE
+		) !== false;
+	}
+
+	private function getCurlResolveEntry(string $host, int $port, string $ipAddress): string {
+		if (filter_var($ipAddress, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6) !== false) {
+			$ipAddress = "[{$ipAddress}]";
+		}
+
+		return "{$host}:{$port}:{$ipAddress}";
+	}
+
+    public function postHassSensors() {
+        $hassUrl = $_POST['hassurl'];
+        $token = $_POST['hassltt'];
+        $result = [[
+            'id'=> '',
+            'name' => "Error retreiving sensors"
+        ]];
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, "$hassUrl/api/states");
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            "Authorization: Bearer $token",
+            "Content-Type: application/json"
+        ]);
+
+        $response = curl_exec($ch);
+
+        if (!curl_errno($ch)) {
+            curl_close($ch);
+
+            $data = json_decode($response, true);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+            if ($httpCode == 200) {
+                $sensors = array_values(array_filter($data, function ($entity) {
+                    return strpos($entity['entity_id'], 'sensor.') === 0;
+                }));
+
+                $result = array_map(function ($sensor) {
+                    return [
+                        'id' => $sensor['entity_id'],
+                        'state' => $sensor['state'],
+                        'unit' => $sensor['attributes']['unit_of_measurement'] ?? null,
+                        'name' => $sensor['attributes']['friendly_name'] ?? $sensor['entity_id']
+                    ];
+                }, $sensors);
+            } else {
+                if ($httpCode == 401) {
+                    $result[0]['name'] = 'Unauthorised. Please check the HA token';
+                }
+            }
+        }
+
+        $this->sendResponse(json_encode($result));
+    }
+
+    public function getTemplateList() {
+        $result = array();        
+        $basePath = $this->myFilesData . DIRECTORY_SEPARATOR . 'blocks';
+        $corePath = $this->allsky_config . '/overlay/config/blocks';
+
+        $paths = [$corePath, $basePath];
+
+        foreach($paths as $path) {
+			// Make sure $path exists, ignore if not.
+			if (! is_dir($path)) {
+				continue;
+			}
+            $outer = new DirectoryIterator($path);
+
+            foreach ($outer as $folder) {
+                if ($folder->isDot() || !$folder->isDir()) {
+                    continue;
+                }
+
+                $innerPath = $folder->getPathname();
+                $inner = new DirectoryIterator($innerPath);
+
+                foreach ($inner as $file) {
+                    if ($file->isDot() || !$file->isFile()) {
+                        continue;
+                    }
+
+                    if ($file->getExtension() === 'json') {
+                        $json = file_get_contents($file->getPathname());
+                        $parsed = json_decode($json, true);
+
+                        if (json_last_error() === JSON_ERROR_NONE) {
+                            foreach ($parsed as $blockKey => $data) {
+                                $result[] = [
+                                    'name'        => $data['name'] ?? 'Unknown',
+                                    'group'       => $folder->getFilename(),
+                                    'blockname'   => $blockKey,
+                                    'filename'    => $file->getFilename(),
+                                    'description' => $data['description'] ?? '',
+                                ];
+                            }
+                        } else {
+                            // TODO: Log error
+                        }
+                    }
+                }
+            }
+        }
+        
+        $this->sendResponse(json_encode($result));        
+    }
+
+    private function getAllskySetting($setting) {
+        if ($this->allskySettings == null) {
+            $file = $this->allsky_config . '/settings.json';
+            $rawConfigData = file_get_contents($file);
+            $this->allskySettings = json_decode($rawConfigData, true);
+        }
+        $result = $setting;
+        if (isset($this->allskySettings[$setting])) {
+            $result = $this->allskySettings[$setting];
+        }
+
+        return $result;
+    }
+
+    private function findVariableInExtraDataFiles($files, $variable) {
+        foreach ($files as $file) {
+            $json = file_get_contents($file);
+            $data = json_decode($json, true);
+
+            if (!is_array($data)) {
+                continue; 
+            }
+
+            if (array_key_exists($variable, $data)) {
+                return $data[$variable];
+            }
+        }
+
+        return null;         
+    }
+
+    private function findVariableInExtraData($variable) {
+        $result = null;
+
+        $files = glob(rtrim($this->extra_data, '/') . '/*.json');
+        $result = $this->findVariableInExtraDataFiles($files, $variable);
+
+        if ($result === null) {
+            $files = glob(rtrim($this->extra_legacy_data, '/') .  '/*.json');
+            $result = $this->findVariableInExtraDataFiles($files, $variable);
+        }
+
+        return $result;
+    }
+
+    public function getTemplate() {
+        $fileName = $_GET['filename'];
+        $block = $_GET['block'];
+        $group = $_GET['group'];
+        
+        $blockFilename = $this->allsky_config . '/overlay/config/blocks/' . $group . "/" . $fileName;
+        $rawBlockData = @file_get_contents($blockFilename);
+        if ($rawBlockData === false) {
+            $blockFilename = $this->myFilesData . DIRECTORY_SEPARATOR . 'blocks' . DIRECTORY_SEPARATOR . $group . DIRECTORY_SEPARATOR . $fileName;
+            $rawBlockData = file_get_contents($blockFilename);
+        }
+
+        $result = json_decode($rawBlockData, true);
+        $result = $result[$block];
+
+        $moduleData = $this->findModule($group . '.py');
+        foreach ($result['fields'] as &$row) {
+            foreach ($row as &$rowData) {
+                if (isset($rowData["text"])) {
+                    $format = "";
+                    $font = "";                    
+                    if (preg_match('/\$\{([^}]+)\}/', $rowData["text"], $matches)) {
+                        $variable = $matches[1];
+                        if (isset($moduleData->extradata)) {
+                            if (isset($moduleData->extradata->values)) {
+                                $found = false;
+                                foreach ($moduleData->extradata->values as $key=>$value) {
+                                    $clean = preg_replace('/\d+$/', '', $variable);
+                                    if ($key == $clean || $key == $clean . "\${COUNT}" ) {
+                                        if (isset($value->format)) {
+                                            $format = $value->format;
+                                        }
+                                        if (isset($value->font)) {
+                                            $font = $value->font;
+                                        }
+                                        $found = true;
+                                        break;                                     
+                                    }
+                                }
+                                if (!$found) {
+                                    $extra_data = $this->findVariableInExtraData($variable);
+                                    if ($extra_data !== null) {
+                                        if (isset($extra_data["format"])) {
+                                            $format = $extra_data["format"];
+                                        }
+                                        if (isset($extra_data["font"])) {
+                                            $font = $extra_data["font"];
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    //$format = $this->getAllskySetting($format);
+                    $rowData['format'] = $format;
+                    $rowData['font'] = $font;                    
+                } else {                   
+                    foreach ($rowData as &$colData) {
+                        if (isset($colData["text"])) {
+                            $format = "";
+                            $font = "";                                              
+                            if (preg_match('/\$\{([^}]+)\}/', $colData["text"], $matches)) {
+                                $variable = $matches[1];
+                                if (isset($moduleData->extradata)) {
+                                    if (isset($moduleData->extradata->values)) {
+                                        foreach ($moduleData->extradata->values as $key=>$value) {
+                                            if ($key == $variable || $key == $variable . "\${COUNT}") {
+                                                if (isset($value->format)) {
+                                                    $format = $value->format;
+                                                }
+                                                if (isset($value->font)) {
+                                                    $font = $value->font;
+                                                }
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            //$format = $this->getAllskySetting($format);                            
+                            $colData['format'] = $format;
+                            $colData['font'] = $font;
+                        }                        
+                    }
+                }
+            }
+        }
+
+        //var_dump($result["fields"]); die();
+        $this->sendResponse(json_encode($result));          
+
+    }  
+    
+    public function getWatchdogStatus() {
+        $results = [];
+
+        foreach ($this->services as $service) {
+            $active = trim(shell_exec("systemctl is-active $service 2>/dev/null"));
+            $failed = trim(shell_exec("systemctl is-failed $service 2>/dev/null"));
+
+            // Extract PID from `systemctl show`
+            $pid = trim(shell_exec("systemctl show -p MainPID --value $service 2>/dev/null"));
+            if ($pid === '' || $pid === '0') {
+                $pid = null;
+            } else {
+                $pid = (int)$pid;
+            }
+
+            $results[] = [
+                'service' => $service,
+                'active'  => $active ?: 'unknown',
+                'failed'  => $failed ?: 'unknown',
+                'pid'     => $pid,
+            ];
+        }
+        $this->sendResponse(json_encode($results));  
+    }
+
+    public function getWatchdogManageService() {
+
+        $action        = isset($_REQUEST['action']) ? strtolower((string)$_REQUEST['action']) : 'status';
+        $serviceInput  = isset($_REQUEST['service']) ? trim((string)$_REQUEST['service']) : '';
+        $timeoutSec    = isset($_REQUEST['timeout']) ? max(1, (int)$_REQUEST['timeout']) : 12;
+        $journalLines  = isset($_REQUEST['journal_lines']) ? max(1, (int)$_REQUEST['journal_lines']) : 100;
+        $stabilitySec  = isset($_REQUEST['stability']) ? max(1, (int)$_REQUEST['stability']) : 4;
+
+        $res = ['ok' => false, 'action' => $action, 'service' => $serviceInput];
+
+        try {
+            if (!is_array($this->services)) {
+                throw new RuntimeException('$this->services must be an array of allowed systemd units (without ".service").');
+            }
+            if ($serviceInput === '' || !preg_match('/^[a-zA-Z0-9@._-]+$/', $serviceInput)) {
+                throw new RuntimeException('Invalid service name.');
+            }
+
+            $normalized = (substr($serviceInput, -8) === '.service') ? substr($serviceInput, 0, -8) : $serviceInput;
+
+            $allowed = array_fill_keys($this->services, true);
+            if (!isset($allowed[$normalized])) {
+                throw new RuntimeException('Service not allowed.');
+            }
+
+            $unit = $normalized . '.service';
+            $SYSTEMCTL = 'sudo /bin/systemctl'; 
+
+
+            $exec_cmd = function (string $cmd): array {
+                $out = []; $code = 0;
+                exec($cmd . ' 2>&1', $out, $code);
+                return [$code, implode("\n", $out)];
+            };
+
+            $is_active = function (string $unit) use ($SYSTEMCTL, $exec_cmd): string {
+                [$code, $out] = $exec_cmd($SYSTEMCTL . ' is-active ' . escapeshellarg($unit));
+                $s = trim($out);
+                return ($s !== '') ? $s : (($code === 0) ? 'active' : 'unknown');
+            };
+
+            $is_failed = function (string $unit) use ($SYSTEMCTL, $exec_cmd): string {
+                [$code, $out] = $exec_cmd($SYSTEMCTL . ' is-failed ' . escapeshellarg($unit));
+                $s = trim($out);
+                return ($s !== '') ? $s : (($code === 0) ? 'inactive' : 'unknown');
+            };
+
+            $get_pid = function (string $unit) use ($SYSTEMCTL, $exec_cmd): ?int {
+                [$code, $out] = $exec_cmd($SYSTEMCTL . ' show -p MainPID --value ' . escapeshellarg($unit));
+                $pid = (int)trim($out);
+                return ($code === 0 && $pid > 0) ? $pid : null;
+            };
+
+            $get_props = function (string $unit) use ($exec_cmd): array {
+                $props = [
+                    'ActiveState','SubState','Result',
+                    'ExecMainPID','ExecMainCode','ExecMainStatus',
+                    'MainPID','Restart','RestartSec','RestartUSec',
+                    'FragmentPath','ExecStart','ExecStartPre','ExecStartPost'
+                ];
+                [$code, $out] = $exec_cmd('sudo /bin/systemctl show ' . escapeshellarg($unit)
+                    . ' --no-pager --property=' . implode(',', $props));
+                $ret = ['exit' => $code];
+                foreach (explode("\n", trim($out)) as $line) {
+                    if ($line === '' || strpos($line, '=') === false) continue;
+                    [$k, $v] = explode('=', $line, 2);
+                    $ret[$k] = $v;
+                }
+                return $ret;
+            };
+
+            $collect_diag = function (string $unit, int $journalLines) use ($exec_cmd, $get_props): array {
+                [$sc_code, $sc_out] = $exec_cmd('sudo /bin/systemctl status --no-pager --full ' . escapeshellarg($unit));
+                [$jl_code, $jl_out] = $exec_cmd('sudo journalctl -q -u ' . escapeshellarg($unit)
+                    . ' -b -n ' . (int)$journalLines . ' --no-pager --no-hostname --output=short-monotonic');
+                $trim = function (string $s, int $max = 20000): string {
+                    return (strlen($s) > $max) ? (substr($s, 0, $max) . "\n…(truncated)…") : $s;
+                };
+                return [
+                    'properties'             => $get_props($unit),
+                    'systemctl_status_exit'  => $sc_code,
+                    'systemctl_status'       => $trim($sc_out),
+                    'journal_exit'           => $jl_code,
+                    'journal'                => $trim($jl_out),
+                ];
+            };
+
+            $get_state = function (string $unit) use ($get_props, $get_pid): array {
+                $props = $get_props($unit);
+                return [
+                    'ActiveState'   => $props['ActiveState']   ?? 'unknown',
+                    'SubState'      => $props['SubState']      ?? 'unknown',
+                    'Result'        => $props['Result']        ?? '',
+                    'ExecMainCode'  => $props['ExecMainCode']  ?? '',
+                    'ExecMainStatus'=> $props['ExecMainStatus']?? '',
+                    'MainPID'       => $props['MainPID']       ?? '',
+                    'pid'           => $get_pid($unit),
+                ];
+            };
+
+            $wait_for = function (string $unit, array $targets, float $timeoutSec, int $stepMs = 250) use ($is_active): string {
+                $deadline = microtime(true) + $timeoutSec;
+                do {
+                    $state = $is_active($unit);
+                    if (in_array($state, $targets, true)) return $state;
+                    usleep($stepMs * 1000);
+                } while (microtime(true) < $deadline);
+                return $is_active($unit);
+            };
+
+            $ensure_stable_active = function (string $unit, int $stabilitySec) use ($is_active, $get_state): bool {
+                $deadline = microtime(true) + $stabilitySec;
+                do {
+                    $act = $is_active($unit);
+                    if ($act !== 'active') {
+                        return false; 
+                    }
+                    $st = $get_state($unit);
+                    if (isset($st['SubState']) && stripos((string)$st['SubState'], 'auto-restart') !== false) {
+                        return false;
+                    }
+                    usleep(250 * 1000);
+                } while (microtime(true) < $deadline);
+                return true;
+            };
+
+            $final = null;
+            $failedAction = null;
+            $execOutput = null;
+
+            if ($action === 'start') {
+                [$code, $out] = $exec_cmd($SYSTEMCTL . ' start ' . escapeshellarg($unit));
+                if ($code !== 0) {
+                    $failedAction = 'start';
+                    $execOutput = $out;
+                } else {
+                    $final = $wait_for($unit, ['active'], (float)$timeoutSec);
+                    if ($final === 'active') {
+                        if (!$ensure_stable_active($unit, $stabilitySec)) {
+                            $failedAction = 'start';
+                        }
+                    } else {
+                        $failedAction = 'start';
+                    }
+                }
+            } elseif ($action === 'stop') {
+                [$code, $out] = $exec_cmd($SYSTEMCTL . ' stop ' . escapeshellarg($unit));
+                if ($code !== 0) {
+                    $failedAction = 'stop';
+                    $execOutput = $out;
+                } else {
+                    $final = $wait_for($unit, ['inactive', 'failed'], (float)$timeoutSec);
+                    if ($final !== 'inactive' && $final !== 'failed') {
+                        $failedAction = 'stop';
+                    }
+                }
+            } elseif ($action === 'restart') {
+                [$code, $out] = $exec_cmd($SYSTEMCTL . ' restart ' . escapeshellarg($unit));
+                if ($code !== 0) {
+                    $failedAction = 'restart';
+                    $execOutput = $out;
+                } else {
+                    $final = $wait_for($unit, ['active'], (float)$timeoutSec);
+                    if ($final === 'active') {
+                        if (!$ensure_stable_active($unit, $stabilitySec)) {
+                            $failedAction = 'restart';
+                        }
+                    } else {
+                        $failedAction = 'restart';
+                    }
+                }
+            } elseif ($action === 'status') {
+                $final = $is_active($unit);
+            } else {
+                throw new RuntimeException('Unknown action.');
+            }
+
+            if ($failedAction !== null) {
+                $res['ok']     = false;
+                $res['error']  = "Action '$failedAction' failed or timed out";
+                if ($execOutput) $res['exec_output'] = $execOutput;
+                $res['active'] = $is_active($unit);
+                $res['failed'] = $is_failed($unit);
+                $res['pid']    = $get_pid($unit);
+                $res['diagnostics'] = $collect_diag($unit, $journalLines);
+                echo json_encode($res, JSON_PRETTY_PRINT);
+                exit;
+            }
+
+            $res['ok']     = true;
+            $res['active'] = $final ?? $is_active($unit);
+            $res['failed'] = $is_failed($unit);
+            $res['pid']    = $get_pid($unit);
+            echo json_encode($res, JSON_PRETTY_PRINT);
+            exit;
+
+        } catch (Throwable $e) {
+            http_response_code(400);
+            $res['error'] = $e->getMessage();
+            echo json_encode($res, JSON_PRETTY_PRINT);
+            exit;
+        }
+
+    }
+    
+    
+/**
+ * Proxy a local API endpoint via PHP (SSRF-safe).
+ *
+ * Called like:
+ *   /includes/moduleutil.php?request=ProxyLocalApi&endpoint=/onewire/devices/html
+ *
+ * Proxies to:
+ *   http://localhost:8090/onewire/devices/html
+ *
+ * @return void Outputs response directly
+ */
+public function getProxyLocalApi(): void
+{
+    $endpoint = isset($_GET['endpoint']) ? trim((string)$_GET['endpoint']) : '';
+
+    // Must be a path starting with "/"
+    if ($endpoint === '' || strpos($endpoint, '/') !== 0) {
+        http_response_code(400);
+        echo "Invalid endpoint.";
+        return;
+    }
+
+    // SSRF protection: reject absolute or protocol-relative URLs
+    // Blocks: http://, https://, //example.com
+    if (preg_match('#^(https?:)?//#i', $endpoint)) {
+        http_response_code(400);
+        echo "Absolute URLs are not allowed.";
+        return;
+    }
+
+    // Hardening: block traversal attempts
+    if (strpos($endpoint, '..') !== false) {
+        http_response_code(400);
+        echo "Invalid endpoint.";
+        return;
+    }
+
+    $baseUrl = 'http://localhost:8090';
+    $url     = $baseUrl . $endpoint;
+
+    $ch = curl_init();
+    curl_setopt_array($ch, [
+        CURLOPT_URL            => $url,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_FOLLOWLOCATION => false,
+        CURLOPT_CONNECTTIMEOUT => 5,
+        CURLOPT_TIMEOUT        => 15,
+        CURLOPT_HTTPHEADER     => [
+            'Accept: text/html,application/json;q=0.9,*/*;q=0.8'
+        ],
+    ]);
+
+    $response = curl_exec($ch);
+
+    if ($response === false) {
+        $error = curl_error($ch);
+        curl_close($ch);
+
+        http_response_code(502);
+        echo "Upstream request failed: " . htmlspecialchars($error, ENT_QUOTES, 'UTF-8');
+        return;
+    }
+
+    $httpCode    = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $contentType = (string)curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+    curl_close($ch);
+
+    if ($contentType !== '') {
+        header('Content-Type: ' . $contentType);
+    }
+
+    http_response_code($httpCode);
+    echo $response;
 }
 
-$overlayUtil = new MODULEUTIL();
-$overlayUtil->run();
 
+}
+
+// Only run if this file is the entry point (not when included)
+$entry = PHP_SAPI === 'cli'
+    ? realpath($_SERVER['argv'][0] ?? '')
+    : realpath($_SERVER['SCRIPT_FILENAME'] ?? '');
+
+if ($entry === __FILE__) {
+    $moduleUtil = new MODULEUTIL();
+    $moduleUtil->run();
+}

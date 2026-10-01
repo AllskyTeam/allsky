@@ -1,12 +1,63 @@
 <?php
 
+if (basename(__FILE__) === basename($_SERVER['SCRIPT_FILENAME'])) {
+    include_once('functions.php');
+    redirect("/index.php");
+}
+
+define('RASPI_DNSMASQ_CONFIG', '/etc/dnsmasq.conf');
+define('RASPI_DNSMASQ_LEASES', '/var/lib/misc/dnsmasq.leases');
+
 /**
-*
 * Manage DHCP configuration
-*
 */
+
 function DisplayDHCPConfig() {
 	global $page;
+	global $pageHeaderTitle, $pageIcon;
+
+?>
+<div class="panel panel-warning">
+	<div class="panel-heading">
+		<h3 class="panel-title">
+			<i class="<?php echo $pageIcon ?>" aria-hidden="true"></i>
+			<?php echo $pageHeaderTitle ?>
+		</h3>
+	</div>
+	<div class="panel-body">
+		<div class="alert alert-warning" role="alert">
+			<h4>
+				<i class="fa fa-exclamation-triangle fa-fw" aria-hidden="true"></i>
+				DHCP server configuration has been deprecated
+			</h4>
+			<p>This page is no longer available in Allsky.</p>
+		</div>
+
+		<p>
+			If you still need DHCP server configuration support, please start a discussion
+			on the AllskyTeam GitHub page and include details about your setup and use case.
+		</p>
+		<p class="text-muted">
+			Useful details include your device model, operating system version, network
+			interface, and the DHCP configuration you need.
+		</p>
+		<p>
+			<a class="btn btn-primary" href="https://github.com/AllskyTeam/allsky/discussions" target="_blank" rel="noopener" external="true">
+				<i class="fa fa-comments fa-fw" aria-hidden="true"></i>
+				Open AllskyTeam Discussions
+			</a>
+		</p>
+	</div>
+</div>
+<?php
+}
+// Main function
+function DisplayDHCPConfig_old()
+{
+	/*
+	global $page;
+	global $pageHeaderTitle, $pageIcon;
+
 	$myStatus = new StatusMessages();
 
 	$interface = null;
@@ -118,60 +169,63 @@ function DisplayDHCPConfig() {
 		if (count($return) == 0) {
 			$return = null;
 			$myStatus->addMessage(RASPI_DNSMASQ_CONFIG . ' appears empty', 'warning');
-		}
-	}
-
-	if ($return !== null) {
-		$conf = ParseConfig($return);
-		$interface = getVariableOrDefault($conf, 'interface', null);
-		$range = getVariableOrDefault($conf, 'dhcp-range', null);
-		if ($interface === null) {
-			$return = null;
-			$myStatus->addMessage(RASPI_DNSMASQ_CONFIG . ' has no interface', 'warning');
-		}
-		if ($range === null) {
-			$return = null;
-			$myStatus->addMessage(RASPI_DNSMASQ_CONFIG . ' has no dhcp-range', 'warning');
-		}
-	}
-
-	if ($return !== null) {
-		// $range:	start_ip, end_ip, mask [, lease]
-		// index:	0				 1			 2				3
-		// count:	1				 2			 3				4
-		$arrRange = explode( ",", $range );
-		if (count($arrRange) < 3) {
-			$myStatus->addMessage("dhcp-range in '" . RASPI_DNSMASQ_CONFIG . " missing fields: $range", "danger");
 		} else {
-			$RangeStart = $arrRange[0];
-			$RangeEnd = $arrRange[1];
-			$RangeMask = $arrRange[2];
-			if (count($arrRange) == 4) {
-				preg_match( '/([0-9]*)([a-z])/i', $arrRange[3], $arrRangeLeaseTime );
-				$RangeLeaseTime = $arrRangeLeaseTime[1];
-				switch( $arrRangeLeaseTime[2] ) {
-				case "h":
-					$hselected = " selected";
-					break;
-				case "m":
-					$mselected = " selected";
-					break;
-				case "d":
-					$dselected = " selected";
-					break;
+			$conf = ParseConfig($return);
+			$interface = getVariableOrDefault($conf, 'interface', null);
+			$range = getVariableOrDefault($conf, 'dhcp-range', null);
+			$msg = "";
+			if ($interface === null) {
+				$msg = RASPI_DNSMASQ_CONFIG . ' has no interface';
+			}
+			if ($range === null) {
+				if ($msg !== "") $msg .= "<br>";
+				$msg .= RASPI_DNSMASQ_CONFIG . ' has no dhcp-range';
+			}
+			if ($msg !== "") {
+				$return = null;
+				$myStatus->addMessage($msg, 'warning');
+			}
+
+			if ($return !== null) {
+				// $range:	start_ip, end_ip, mask [, lease]
+				// index:	0				 1			 2				3
+				// count:	1				 2			 3				4
+				$arrRange = explode( ",", $range );
+				if (count($arrRange) < 3) {
+					$myStatus->addMessage("dhcp-range in '" . RASPI_DNSMASQ_CONFIG . " missing fields: $range", "danger");
+				} else {
+					$RangeStart = $arrRange[0];
+					$RangeEnd = $arrRange[1];
+					$RangeMask = $arrRange[2];
+					if (count($arrRange) == 4) {
+						preg_match( '/([0-9]*)([a-z])/i', $arrRange[3], $arrRangeLeaseTime );
+						$RangeLeaseTime = $arrRangeLeaseTime[1];
+						switch( $arrRangeLeaseTime[2] ) {
+						case "h":
+							$hselected = " selected";
+							break;
+						case "m":
+							$mselected = " selected";
+							break;
+						case "d":
+							$dselected = " selected";
+							break;
+						}
+					}
 				}
 			}
 		}
 	}
 	$interval = "$mselected$hselected$dselected";
+
 ?>
 
-<div class="row"> <div class="col-lg-12"> <div class="panel panel-primary">
-	<div class="panel-heading"><i class="fa fa-exchange fa-fw"></i> Configure DHCP</div>
+<div class="panel panel-success">
+	<div class="panel-heading"><i class="<?php echo $pageIcon ?>"></i> <?php echo $pageHeaderTitle ?></div>
 	<div class="panel-body">
 		<?php if ($myStatus->isMessage()) echo "<p>" . $myStatus->showMessages() . "</p>"; ?>
 
-		<!-- Nav tabs -->
+
 			<ul class="nav nav-tabs">
 				<li class="active"><a href="#server-settings" data-toggle="tab">DHCP server settings</a></li>
 				<li><a href="#client-list" data-toggle="tab">Client list</a></li>
@@ -288,8 +342,22 @@ function DisplayDHCPConfig() {
 			</div><!-- /.tab-pane -->
 		</div><!-- /.tab-content -->
 	</div><!-- ./ Panel body -->
-	<div class="panel-footer"> Information provided by dnsmasq</div>
-</div><!-- /.panel-primary --> </div><!-- /.col-lg-12 --> </div><!-- /.row -->
+</div><!-- /.panel-primary -->
 <?php
+	*/
 }
+
+/*
+function ParseConfig( $arrConfig ) {
+	$config = array();
+	foreach( $arrConfig as $line ) {
+		$line = trim($line);
+		if( $line != "" && $line[0] != "#" ) {
+			$arrLine = explode( "=", $line );
+			$config[$arrLine[0]] = ( count($arrLine) > 1 ? $arrLine[1] : true );
+		}
+	}
+	return $config;
+}
+*/
 ?>

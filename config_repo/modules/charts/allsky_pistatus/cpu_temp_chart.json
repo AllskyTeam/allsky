@@ -1,0 +1,21 @@
+{
+    "icon": "fas fa-chart-line",
+    "group": "Hardware",
+    "title": "CPU Temp Chart",
+    "type": "line",
+    "table": "allsky_hardware",
+    "main": true,
+    "yAxis": [
+        {
+            "title": {
+                "text": "CPU Temp"
+            }
+        }
+    ],
+    "series": [
+        {
+            "name": "CPU Temp",
+            "variable": "AS_CPUTEMP"
+        }
+    ]
+}

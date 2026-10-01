@@ -1,0 +1,400 @@
+{
+    "01": {
+        "devices": [
+            "DS1990A",
+            "DS1990R",
+            "DS2401",
+            "DS2411"
+        ],
+        "description": "Serial number"
+    },
+    "02": {
+        "devices": [
+            "DS1991"
+        ],
+        "description": "1152b Secure memory"
+    },
+    "04": {
+        "devices": [
+            "DS2404"
+        ],
+        "description": "EconoRAM time chip"
+    },
+    "05": {
+        "devices": [
+            "DS2405"
+        ],
+        "description": "Addressable switch"
+    },
+    "06": {
+        "devices": [
+            "DS1993"
+        ],
+        "description": "4Kb Memory button"
+    },
+    "08": {
+        "devices": [
+            "DS1992"
+        ],
+        "description": "1kb memory button"
+    },
+    "0A": {
+        "devices": [
+            "DS1995"
+        ],
+        "description": "16kb memory button"
+    },
+    "0B": {
+        "devices": [
+            "DS1985",
+            "DS2505"
+        ],
+        "description": "16kb add-only memory"
+    },
+    "0C": {
+        "devices": [
+            "DS1996"
+        ],
+        "description": "64kb memory button"
+    },
+    "0F": {
+        "devices": [
+            "DS1986",
+            "DS2506"
+        ],
+        "description": "64kb add-only memory"
+    },
+    "10": {
+        "devices": [
+            "DS18S20"
+        ],
+        "description": "temperature sensor"
+    },
+    "12": {
+        "devices": [
+            "DS2406",
+            "DS2407"
+        ],
+        "description": "dual addressable switch"
+    },
+    "14": {
+        "devices": [
+            "DS1971",
+            "DS2430A"
+        ],
+        "description": "256b EEPROM"
+    },
+    "16": {
+        "devices": [
+            "DS1954",
+            "DS1957"
+        ],
+        "description": "coprocessor ibutton"
+    },
+    "18": {
+        "devices": [
+            "DS1962",
+            "DS1963S"
+        ],
+        "description": "4kb monetary device with SHA"
+    },
+    "1A": {
+        "devices": [
+            "DS1963L"
+        ],
+        "description": "4kb monetary device"
+    },
+    "1B": {
+        "devices": [
+            "DS2436"
+        ],
+        "description": "battery ID/monitor"
+    },
+    "1C": {
+        "devices": [
+            "DS28E04-100"
+        ],
+        "description": "4kb EEPROM with PIO"
+    },
+    "1D": {
+        "devices": [
+            "DS2423"
+        ],
+        "description": "4kb 1Wire RAM with counter"
+    },
+    "1E": {
+        "devices": [
+            "DS2437"
+        ],
+        "description": "smart battery monitor IC"
+    },
+    "1F": {
+        "devices": [
+            "DS2409"
+        ],
+        "description": "microlan coupler"
+    },
+    "20": {
+        "devices": [
+            "DS2450"
+        ],
+        "description": "quad ADC"
+    },
+    "21": {
+        "devices": [
+            "DS1921G",
+            "DS1921H",
+            "DS1921Z"
+        ],
+        "description": "thermochron loggers"
+    },
+    "22": {
+        "devices": [
+            "DS1822"
+        ],
+        "description": "econo digital thermometer"
+    },
+    "23": {
+        "devices": [
+            "DS1973",
+            "DS2433"
+        ],
+        "description": "4kb EEPROM"
+    },
+    "24": {
+        "devices": [
+            "DS2415"
+        ],
+        "description": "time chip"
+    },
+    "26": {
+        "devices": [
+            "DS2438"
+        ],
+        "description": "smart battery monitor"
+    },
+    "27": {
+        "devices": [
+            "DS2417"
+        ],
+        "description": "time chip"
+    },
+    "28": {
+        "devices": [
+            "DS18B20"
+        ],
+        "description": "temperature sensor"
+    },
+    "29": {
+        "devices": [
+            "DS2408"
+        ],
+        "description": "8-channel switch"
+    },
+    "2C": {
+        "devices": [
+            "DS2890"
+        ],
+        "description": "digital potentiometer"
+    },
+    "2D": {
+        "devices": [
+            "DS1972",
+            "DS2431"
+        ],
+        "description": "1024b memory"
+    },
+    "2E": {
+        "devices": [
+            "DS2770"
+        ],
+        "description": "battery monitor/charge controller"
+    },
+    "30": {
+        "devices": [
+            "DS2760"
+        ],
+        "description": "precision li+ battery monitor"
+    },
+    "31": {
+        "devices": [
+            "DS2720"
+        ],
+        "description": "single cell li+ protection IC"
+    },
+    "32": {
+        "devices": [
+            "DS2780"
+        ],
+        "description": "fuel gauge IC"
+    },
+    "33": {
+        "devices": [
+            "DS1961S",
+            "DS2432"
+        ],
+        "description": "1kb memory with SHA"
+    },
+    "34": {
+        "devices": [
+            "DS2703"
+        ],
+        "description": "sha battery authentication"
+    },
+    "35": {
+        "devices": [
+            "DS2755"
+        ],
+        "description": "fuel gauge"
+    },
+    "36": {
+        "devices": [
+            "DS2740"
+        ],
+        "description": "coulomb counter"
+    },
+    "37": {
+        "devices": [
+            "DS1977"
+        ],
+        "description": "32kb memory"
+    },
+    "3A": {
+        "devices": [
+            "DS2413"
+        ],
+        "description": "two-channel switch"
+    },
+    "3B": {
+        "devices": [
+            "DS1825",
+            "MAX31826",
+            "MAX31850"
+        ],
+        "description": "temperature sensor, TC reader"
+    },
+    "3D": {
+        "devices": [
+            "DS2781"
+        ],
+        "description": "fuel gauge IC"
+    },
+    "41": {
+        "devices": [
+            "DS1922E",
+            "DS1922L",
+            "DS1923"
+        ],
+        "description": "hygrochrons"
+    },
+    "42": {
+        "devices": [
+            "DS28EA00"
+        ],
+        "description": "digital thermometer with sequence detect"
+    },
+    "43": {
+        "devices": [
+            "DS28EC20"
+        ],
+        "description": "20kb memory"
+    },
+    "44": {
+        "devices": [
+            "DS28E10"
+        ],
+        "description": "sha1 authenticator"
+    },
+    "51": {
+        "devices": [
+            "DS2751"
+        ],
+        "description": "battery fuel gauge"
+    },
+    "7E": {
+        "devices": [
+            "EDS00xx"
+        ],
+        "description": "EDS sensor adapter"
+    },
+    "81": {
+        "devices": [
+            "USBID",
+            "DS1420"
+        ],
+        "description": "ID"
+    },
+    "82": {
+        "devices": [
+            "DS1425"
+        ],
+        "description": "ID and pw protected RAM"
+    },
+    "A0": {
+        "devices": [
+            "mRS001"
+        ],
+        "description": ""
+    },
+    "A1": {
+        "devices": [
+            "mVM0011"
+        ],
+        "description": ""
+    },
+    "A2": {
+        "devices": [
+            "mCM001"
+        ],
+        "description": ""
+    },
+    "A6": {
+        "devices": [
+            "mTS017"
+        ],
+        "description": ""
+    },
+    "B1": {
+        "devices": [
+            "mTC001"
+        ],
+        "description": ""
+    },
+    "B2": {
+        "devices": [
+            "mAM001"
+        ],
+        "description": ""
+    },
+    "B3": {
+        "devices": [
+            "mTC002"
+        ],
+        "description": ""
+    },
+    "EE": {
+        "devices": [
+            "mTC002"
+        ],
+        "description": ""
+    },
+    "EF": {
+        "devices": [
+            "Moisture Hub"
+        ],
+        "description": ""
+    },
+    "FC": {
+        "devices": [
+            "BAE0910",
+            "BAE0911"
+        ],
+        "description": ""
+    },
+    "FF": {
+        "devices": [
+            "Swart LCD"
+        ],
+        "description": ""
+    }
+}

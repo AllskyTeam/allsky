@@ -1,0 +1,33 @@
+{
+    "icon": "fas fa-chart-line",
+    "group": "Camera",
+    "title": "Exposure vs Gain",
+    "type": "line",
+    "table": "allsky_image",
+    "main": true,
+    "yAxis": [
+        {
+            "title": {
+                "text": "Exposure"
+            }
+        },
+        {
+            "title": {
+                "text": "Gain"
+            },
+            "opposite": true
+        }
+    ],
+    "series": [
+        {
+            "name": "Exposure",
+            "yAxis": 0,
+            "variable": "AS_EXPOSURE_US|true"
+        },
+        {
+            "name": "Gain",
+            "yAxis": 1,
+            "variable": "AS_GAIN"
+        }
+    ]
+}

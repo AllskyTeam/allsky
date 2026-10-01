@@ -1,0 +1,20 @@
+.allsky-url-check-input-container {
+	position: relative;
+	display: inline-block;
+}
+
+.allsky-url-check-overlay {
+	position: absolute;
+	top: 0;
+	left: 15px;
+	width: 100%;
+	height: 100%;
+	background: rgba(0, 0, 0, 0.6);
+	color: white;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	pointer-events: none;
+	padding-right: 15px;
+	padding-left: 15px;
+}

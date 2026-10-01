@@ -1,0 +1,236 @@
+{
+	"AS_CAMERA_MODEL": {
+		"name": "${CAMERA_MODEL}",
+		"format": "",
+		"sample": "",
+		"source": "Allsky",
+		"type": "string",
+		"group": "Allsky",
+		"description": "Camera model"
+	},
+	"AS_CAMERA_NUMBER": {
+		"name": "${CAMERA_NUMBER}",
+		"format": "",
+		"sample": "",
+		"source": "Allsky",
+		"type": "number",
+		"group": "Allsky",
+		"description": "Camera number"
+	},
+	"AS_CAMERA_TYPE": {
+		"name": "${CAMERA_TYPE}",
+		"format": "",
+		"sample": "",
+		"source": "Allsky",
+		"type": "string",
+		"group": "Allsky",
+		"description": "Camera type"
+	},
+	"AS_DAY_OR_NIGHT": {
+		"name": "${DAY_OR_NIGHT}",
+		"format": "",
+		"sample": "",
+		"source": "Allsky",
+		"type": "string",
+		"group": "Image Data",
+		"description": "Time of Day"
+	},
+	"AS_EXPOSURE_US": {
+		"name": "${EXPOSURE_US}",
+		"format": "",
+		"sample": "",
+		"source": "Allsky",
+		"type": "number",
+		"group": "Image Data",
+		"description": "Exposure in microseconds"
+	},
+	"AS_sEXPOSURE": {
+		"name": "${sEXPOSURE}",
+		"format": "",
+		"sample": "",
+		"source": "Allsky",
+		"type": "string",
+		"group": "Image Data",
+		"description": "Exposure as a string"
+	},
+	"AS_AUTOEXPOSURE": {
+		"name": "${AUTOEXPOSURE}",
+		"format": "",
+		"sample": "",
+		"source": "Allsky",
+		"type": "bool",
+		"group": "Image Data",
+		"description": "Use auto exposure"
+	},
+	"AS_sAUTOEXPOSURE": {
+		"name": "${sAUTOEXPOSURE}",
+		"format": "",
+		"sample": "",
+		"source": "Allsky",
+		"type": "string",
+		"group": "Image Data",
+		"description": "Indicates if auto exposure is on"
+	},
+	"AS_GAIN": {
+		"name": "${GAIN}",
+		"format": "",
+		"sample": "",
+		"source": "Allsky",
+		"type": "number",
+		"group": "Image Data",
+		"description": "Gain value"
+	},
+	"AS_AUTOGAIN": {
+		"name": "${AUTOGAIN}",
+		"format": "",
+		"sample": "",
+		"source": "Allsky",
+		"type": "bool",
+		"group": "Image Data",
+		"description": "Use auto gain"
+	},
+	"AS_sAUTOGAIN": {
+		"name": "${sAUTOGAIN}",
+		"format": "",
+		"sample": "",
+		"source": "Allsky",
+		"type": "string",
+		"group": "Image Data",
+		"description": "Indicates if auto gain is on"
+	},
+	"AS_BIN": {
+		"name": "${BIN}",
+		"format": "",
+		"sample": "",
+		"source": "Allsky",
+		"type": "number",
+		"group": "Image Data",
+		"description": "Binning value"
+	},
+	"AS_BIT_DEPTH": {
+		"name": "${BIT_DEPTH}",
+		"format": "",
+		"sample": "",
+		"source": "Allsky",
+		"type": "number",
+		"group": "Image Data",
+		"description": "Image bit depth"
+	},
+	"AS_DARKFRAME": {
+		"name": "${DARKFRAME}",
+		"format": "",
+		"sample": "",
+		"source": "Allsky",
+		"type": "bool",
+		"group": "Image Data",
+		"description": "Taking dark frames"
+	},
+	"AS_DATE": {
+		"name": "${DATE}",
+		"format": "",
+		"sample": "",
+		"source": "Allsky",
+		"type": "date",
+		"group": "Image Data",
+		"description": "Date of last image"
+	},
+	"AS_TIME": {
+		"name": "${TIME}",
+		"format": "",
+		"sample": "",
+		"source": "Allsky",
+		"type": "date",
+		"group": "Image Data",
+		"description": "Time of last image"
+	},
+	"AS_MEAN": {
+		"name": "${MEAN}",
+		"format": "",
+		"sample": "",
+		"source": "Allsky",
+		"type": "number",
+		"group": "Image Data",
+		"description": "Mean value"
+	},
+	"AS_RESIZE_HEIGHT": {
+		"name": "${RESIZE_HEIGHT}",
+		"format": "",
+		"sample": "",
+		"source": "Allsky",
+		"type": "number",
+		"group": "Image Data",
+		"description": "Height of resized image"
+	},
+	"AS_RESIZE_WIDTH": {
+		"name": "${RESIZE_WIDTH}",
+		"format": "",
+		"sample": "",
+		"source": "Allsky",
+		"type": "number",
+		"group": "Image Data",
+		"description": "Height of resized image"
+	},
+	"AS_STRETCH_AMOUNT": {
+		"name": "${STRETCH_AMOUNT}",
+		"format": "",
+		"sample": "",
+		"source": "Allsky",
+		"type": "number",
+		"group": "Image Data",
+		"description": "Amount of stretch to apply"
+	},
+	"AS_STRETCH_MIDPOINT": {
+		"name": "${STRETCH_MIDPOINT}",
+		"format": "",
+		"sample": "",
+		"source": "Allsky",
+		"type": "number",
+		"group": "Image Data",
+		"description": "Mid point of stretch"
+	},
+	"AS_TIMESTAMP": {
+		"name": "${TIMESTAMP}",
+		"format": "{allsky}",
+		"sample": "",
+		"source": "Allsky",
+		"type": "date",
+		"group": "Image Data",
+		"description": "Timestamp of last image"
+	},
+	"AS_AUTOWB": {
+		"name": "${AUTOWB}",
+		"format": "",
+		"sample": "",
+		"source": "Allsky",
+		"type": "bool",
+		"group": "Image Data",
+		"description": "Use auto whitebalance"
+	},
+	"AS_sAUTOAWB": {
+		"name": "${sAUTOAWB}",
+		"format": "",
+		"sample": "",
+		"source": "Allsky",
+		"type": "string",
+		"group": "Image Data",
+		"description": "Indicates if auto whitebalance is on"
+	},
+	"AS_WBB": {
+		"name": "${WBB}",
+		"format": "",
+		"sample": "",
+		"source": "Allsky",
+		"type": "number",
+		"group": "Image Data",
+		"description": "Whitebalance Blue component"
+	},
+	"AS_WBR": {
+		"name": "${WBR}",
+		"format": "",
+		"sample": "",
+		"source": "Allsky",
+		"type": "number",
+		"group": "Image Data",
+		"description": "Whitebalance Red component"
+	}
+}

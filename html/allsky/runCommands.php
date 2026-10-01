@@ -23,23 +23,12 @@ if (isset($_SERVER['HTTP_USER_AGENT']) &&
 	setHTML();
 }
 
-$test_mode = false;
-if (isset($_GET["t"])) {
-	$test_mode = true;
-} else if (isset($_POST["t"])) {
-	$test_mode = true;
-}
-if ($test_mode) {
+if (isset($_REQUEST["t"])) {
 	do_return("test", "", "test");
 	exit(0);
 }
 
-
-if (isset($_GET["debug"])) {
-	$debug = true;
-} else {
-	$debug = false;
-}
+$debug = isset($_REQUEST["debug"]);
 $debug2 = false;
 
 if (! file_exists($commandFile)) {
@@ -85,17 +74,47 @@ foreach ($lines AS $line) {
 
 
 		case "ls":
-			// List the files/directories in the current directory.
-			$files = @scandir(".");
+			// List the files/directories in the specified directory or the current directory.
+			if ($numArgs == 1)
+				$dir = $args[0];
+			else
+				$dir = ".";
+			$files = @scandir($dir);
 			if ($files === false) {
 				$last_error = error_get_last();
 				$err = $last_error["message"];
 				do_error($command, "Unable to scandir($dir): $err.");
+				break;
 			}
 
 			$files = array_diff($files, array(".", ".."));
 			foreach ($files as $file) {
-				do_info($command, "$file");
+				$f = "$dir/$file";
+				$type = "";
+				$perms = fileperms($f);
+				if ($perms === false) {
+					$perms = "-";
+				} else {
+					$p = $perms & 0xF000;
+					if ($p === 0x4000) $type = "dir";
+					else if ($p === 0x8000) $type = "file";
+					$perms = sprintf('%o', $perms);
+				}
+				if ($type === "") {
+					$type = filetype($f);
+					if ($type === false) $type = "-";
+				}
+				$size = filesize($f);
+				if ($size === false) $size = "-";
+				$time = filemtime($f);
+				if ($time === false) {
+					  $time = "-";
+				} else {
+//					  $time = date("Y-m-d H:i:s", $time);
+				}
+
+				$str = "$file	$perms	$type	$size	$time";
+				do_info($command, $str);
 			}
 
 			break;
@@ -132,6 +151,7 @@ foreach ($lines AS $line) {
 				$msg = "success";
 			else
 				$msg = "Created: $dirsCreated";
+
 			do_return($command, $args, $msg);
 			break;
 
@@ -220,7 +240,7 @@ foreach ($lines AS $line) {
 			foreach ($args as $item) {
 				if (is_dir($item)) {
 						if (deleteDirectory($item)) {	// recursively deletes
-							do_return($command, "", "Deleted: $dir/");
+							do_return($command, "", "Deleted: $item/");
 						}
 				} else if (file_exists($item)) {
 					if (unlink($item)) {

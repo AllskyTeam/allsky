@@ -8,9 +8,9 @@
 ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck source-path=.
-source "${ALLSKY_HOME}/variables.sh"		|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh"		|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
-source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${EXIT_ERROR_STOP}"
+source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
 OK="true"
 DO_HELP="false"
@@ -44,9 +44,20 @@ usage_and_exit()
 	else
 		echo -e "${USAGE}"
 	fi
-	echo "where:"
+	echo "Arguments:"
 	echo "    --help         displays this message and exits."
 	echo "    --camera NUM   use camera number NUM."
+	echo
+
+	W_ "NOTE: This command only works if you have an RPi camera connected to the Pi."
+	echo
+	echo "Saves detailed information on the attached RPi camera to a file."
+	echo "This file MUST be attached to your GitHub Discussion requesting support for the camera."
+	echo
+	echo "If there is more than one RPi camera connected to the Pi,"
+	echo "by default, information on the first camera (number 0) is displayed."
+	echo "Use the '--camera NUM' argument to specify a different camera."
+
 	exit "${RET}"
 }
 
@@ -77,7 +88,7 @@ SENSOR="$( grep "${CAMERA_NUMBER} :" "${CAMERA_DATA}" | gawk '{ print $3; }' )"
 
 # Determine if this sensor is supported.
 MODEL="$( get_model_from_sensor "${SENSOR}" )"
-if grep --silent "^camera.*${MODEL}" "${RPi_SUPPORTED_CAMERAS}" ; then
+if grep --silent "^camera.*${MODEL}" "${ALLSKY_RPi_SUPPORTED_CAMERAS}" ; then
 	SUPPORTED="true"
 else
 	SUPPORTED="false"

@@ -3521,6 +3521,11 @@ install_installer_dependencies()
 	[[ ! -d ${ALLSKY_CURRENT_DIR} ]] && mkdir -p "${ALLSKY_CURRENT_DIR}"
 
 
+	TMP="${ALLSKY_LOGS}/installer.dependencies.log"
+	sudo apt-get update > "${TMP}" 2>&1
+	check_success $? "'apt-get update' failed" "${TMP}" "${DEBUG}" ||
+		exit_with_image 1 "${STATUS_ERROR}" "'apt-get update' failed."
+
 	local PACKAGES=""
 	# Any version is ok so if the command exists, don't reinstall it.
 	which dialog > /dev/null || PACKAGES+="dialog "
@@ -3528,12 +3533,10 @@ install_installer_dependencies()
 	which gawk > /dev/null || PACKAGES+="gawk "
 	if [[ -n ${PACKAGES} ]]; then
 		display_msg --log progress "Installing initial dependencies: ${PACKAGES}"
-
-		TMP="${ALLSKY_LOGS}/installer.dependencies.log"
 		{
 			#shellcheck disable=SC2086
-			sudo apt-get update && run_aptGet ${PACKAGES}
-		} > "${TMP}" 2>&1
+			run_aptGet ${PACKAGES}
+		} >> "${TMP}" 2>&1
 		check_success $? "${PACKAGES/ /,} installation failed" "${TMP}" "${DEBUG}" ||
 			exit_with_image 1 "${STATUS_ERROR}" "${PACKAGES/ /,} install failed."
 	else

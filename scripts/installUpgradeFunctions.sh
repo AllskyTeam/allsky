@@ -477,6 +477,31 @@ function update_array_field()
 
 
 ####
+# An existing Website configuration file keeps its Mini-timelapse URL, but Websites
+# upgraded from v2024 often have an empty one, so the sidebar icon links nowhere.
+# Set it if it's empty and mini-timelapses are made.
+function fill_empty_mini_timelapse_url()
+{
+	local TYPE="${1}"		# "local" or "remote" Website
+	local FILE="${2}"
+	local INDEX  FIELD  NEW_URL
+
+	[[ "$( settings ".minitimelapsenumimages" )" -gt 0 ]] 2>/dev/null || return 0
+	INDEX=$( getJSONarrayIndex "${FILE}" "homePage.leftSidebar" "Mini-timelapse" 2>/dev/null )
+	[[ ${INDEX} =~ ^[0-9]+$ ]] || return 0
+
+	FIELD=".homePage.leftSidebar[${INDEX}].url"
+	[[ -z "$( settings "${FIELD}" "${FILE}" )" ]] || return 0
+
+	if [[ ${TYPE} == "local" ]]; then
+		NEW_URL="${ALLSKY_MINITIMELAPSE_URL}"
+	else
+		NEW_URL="${ALLSKY_MINITIMELAPSE_NAME}"
+	fi
+	update_json_file "${FIELD}" "${NEW_URL}" "${FILE}"
+}
+
+####
 # Replace all the ${ALLSKY_NEED_TO_UPDATE} placeholders and
 # update mini-timelapse URL.
 function replace_website_placeholders()
@@ -510,7 +535,7 @@ function replace_website_placeholders()
 			MINI_TLAPSE_DISPLAY_VALUE="true"
 			if [[ ${TYPE} == "local" ]]; then
 				#shellcheck disable=SC2153
-				MINI_TLAPSE_URL_VALUE="/${ALLSKY_MINITIMELAPSE_URL}"
+				MINI_TLAPSE_URL_VALUE="${ALLSKY_MINITIMELAPSE_URL}"		# already starts with "/"
 			else
 				MINI_TLAPSE_URL_VALUE="${ALLSKY_MINITIMELAPSE_NAME}"
 			fi

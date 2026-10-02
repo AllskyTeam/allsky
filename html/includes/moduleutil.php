@@ -607,6 +607,10 @@ class MODULEUTIL extends UTILBASE {
         $oldModules = json_decode($rawConfigData);
 
 		$configDataJson = json_decode($configData);
+		if (!is_object($configDataJson)) {
+			// Never replace a flow with "null": the request was incomplete or cut off.
+			$this->sendHTTPResponse('The flow data was missing or incomplete, nothing was saved.', 400);
+		}
 		$envData = null;
 		foreach ($configDataJson as $module=>&$moduleConfig) {
             if (isset($moduleConfig->metadata->argumentdetails)) {

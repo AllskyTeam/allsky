@@ -25,10 +25,10 @@ Built by enthusiasts for enthusiasts, Allsky is open, extensible, and endlessly 
 >  * Eric Claeys - @EricClaeys 
 >  * Alex Greenland - @Alex-developer 
 
-
+<!--  Not sure what this is supposed to point to.
 ### Ready to capture the sky?
 Skip the details and **[head straight to the setup guide](#requirements)** to begin installing Allsky.
-
+-->
 ## Key Features Summary
 
 > <br>
@@ -198,7 +198,7 @@ In order to run the Allsky software you need:
 <!-- =============================================================================== --> 
 ## Software Installation
 
-See the [detailed installation instructions](./html/docs/allsky_guide/allsky.html).
+See the [detailed installation instructions](https://htmlpreview.github.io/?https://raw.githubusercontent.com/AllskyTeam/allsky/master/html/docs/allsky_guide/allsky.html).
 
 ---
 
@@ -315,7 +315,7 @@ See [Installation / Upgrading --> Website](https://htmlpreview.github.io/?https:
 ## Remote server
 Allsky images, keograms, startrails, and timelapse videos can optionally be uploaded to a remote server __not__ running an Allsky Website.  This is useful if you have a personal website and want to include the most recent Allsky images.
 
-See [Installation / Upgrading --> Remote server](https://htmlpreview.github.io/?https://raw.githubusercontent.com/AllskyTeam/allsky/master/html/docs/allsky_guide/installations/server.html) for information on how to configure a remote server.
+See [Installation / Upgrading --> Remote server](https://htmlpreview.github.io/?https://raw.githubusercontent.com/AllskyTeam/allsky/master/html/docs/allsky_guide/server.html) for information on how to configure a remote server.
 
 ---
 

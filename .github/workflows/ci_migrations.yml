@@ -1,0 +1,25 @@
+# Fails when a configuration version was raised without its migration.
+
+name: Migrations
+
+on:
+  push:
+    paths:
+      - 'config_repo/configuration.json.repo'
+      - 'scripts/migrations.sh'
+      - 'scripts/migrations/**'
+      - 'scripts/utilities/checkMigrations.sh'
+  pull_request:
+    paths:
+      - 'config_repo/configuration.json.repo'
+      - 'scripts/migrations.sh'
+      - 'scripts/migrations/**'
+      - 'scripts/utilities/checkMigrations.sh'
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Check that every configuration version has a migration
+        run: scripts/utilities/checkMigrations.sh

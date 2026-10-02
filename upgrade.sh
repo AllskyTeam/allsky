@@ -77,6 +77,32 @@ function check_for_current()
 	fi
 }
 
+# After an "In Place" upgrade, bring the configuration files up to the new version's format,
+# as install.sh does after "Replace All".  The steps are in ${ALLSKY_MIGRATIONS_DIR}.
+function migrate_config_files()
+{
+	local FILE="${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
+	local PRIOR  NEW  MSG
+
+	if [[ -f ${FILE} ]]; then
+		PRIOR="$( settings ".${WEBSITE_CONFIG_VERSION}" "${FILE}" )"
+		NEW="$( settings ".${WEBSITE_CONFIG_VERSION}" "${REPO_WEBCONFIG_FILE}" )"
+		if website_config_needs_update "${PRIOR}" "${NEW}" "${BRANCH}"; then
+			display_msg --log progress "Updating the Website configuration from version ${PRIOR} to ${NEW}."
+			update_old_website_config_file "${FILE}" "${PRIOR}" "${NEW}" || return 1
+		fi
+	fi
+
+	# remoteWebsiteInstall.sh updates the remote Website's files and configuration.
+	if [[ "$( settings ".useremotewebsite" )" == "true" ]]; then
+		MSG="Update your remote Website to ${ALLSKY_VERSION}:\n"
+		MSG+="    cd ~/allsky; ./remoteWebsiteInstall.sh"
+		add_to_post_actions "${MSG}"
+	fi
+
+	return 0
+}
+
 # Check if both the prior and the "oldest" directory exist.
 # If so, we can't continue since we can't rename the prior directory to the oldest.
 function check_for_oldest()
@@ -232,10 +258,13 @@ if [[ ${ACTION} == "upgrade" ]]; then
 	# First part of upgrade, executed by user in ${ALLSKY_HOME}.
 	NEWEST_VERSION="$( "${ALLSKY_UTILITIES}/getNewestAllskyVersion.sh" --branch "${BRANCH}" --version-only 2>&1 )"
 	RET=$?
-	# ${ALLSKY_EXIT_PARTIAL_OK} means a newer release is available, which is what an
-	# upgrade is for.  Only the "Replace All" method can do that.
+	# ${ALLSKY_EXIT_PARTIAL_OK} means a newer version is available, which is what an
+	# upgrade is for.  A new release needs the "Replace All" method.  A point release of
+	# the installed release (same base version) can also be installed "In Place":
+	# the migrations bring the configuration files up to date afterwards.
 	NEW_RELEASE="false"
-	if [[ ${RET} -eq ${ALLSKY_EXIT_PARTIAL_OK} ]]; then
+	if [[ ${RET} -eq ${ALLSKY_EXIT_PARTIAL_OK} &&
+			"$( remove_point_release "${NEWEST_VERSION}" )" != "$( remove_point_release "${ALLSKY_VERSION}" )" ]]; then
 		NEW_RELEASE="true"
 		if [[ ${CHOSEN_METHOD} == "${METHOD_IN_PLACE}" ]]; then
 			MSG="The '${METHOD_IN_PLACE}' method cannot be used when upgrading Allsky releases."
@@ -244,7 +273,7 @@ if [[ ${ACTION} == "upgrade" ]]; then
 			echo
 			exit 2
 		fi
-	elif [[ ${RET} -ne 0 ]]; then
+	elif [[ ${RET} -ne 0 && ${RET} -ne ${ALLSKY_EXIT_PARTIAL_OK} ]]; then
 		MSG="Unable to determine newest version; cannot continue, RET=${RET}."
 		MSG2=""
 		if [[ ${BRANCH} != "${ALLSKY_GITHUB_MAIN_BRANCH}" ]];
@@ -445,6 +474,10 @@ elif [[ ${ACTION} == "doUpgrade" ]]; then
 		if [[ $? -ne 0 ]]; then
 			MSG="Unable to recreate files: ${X}"
 			display_msg --log error "${MSG}" "Contact the Allsky Team"
+			exit 1
+		fi
+		if ! migrate_config_files ; then
+			display_msg --log error "Unable to update the configuration files." "Contact the Allsky Team"
 			exit 1
 		fi
 		if [[ ${RESTART_ALLSKY} == "true" ]]; then

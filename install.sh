@@ -3467,17 +3467,6 @@ exit_installation()
 
 
 ####
-# Remove the point release from the version
-# Format of a version (_PP is optional point release):
-#	12345678901234
-#	vYYYY.MM.DD_PP
-
-function remove_point_release()
-{
-	# Get just the base portion.
-	echo "${1:0:11}"
-}
-
 
 ####
 handle_interrupts()

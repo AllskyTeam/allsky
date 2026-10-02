@@ -3,6 +3,9 @@
 # Shell variables and functions used by the installation and upgrade scripts.
 # This file is "source"d into others, and must be done AFTER source'ing variables.sh.
 
+# shellcheck source-path=scripts
+source "${ALLSKY_SCRIPTS}/migrations.sh"	|| return 1
+
 ######################################### variables
 
 # export to keep shellcheck quiet
@@ -675,6 +678,17 @@ function prepare_local_website()
 
 
 ####
+# Remove the point release from the version
+# Format of a version (_PP is optional point release):
+#	12345678901234
+#	vYYYY.MM.DD_PP
+function remove_point_release()
+{
+	# Get just the base portion.
+	echo "${1:0:11}"
+}
+
+####
 # Update a Website configuration file from old to current version.
 ####
 # Does a Website configuration file of version ${1} need update_old_website_config_file()
@@ -683,7 +697,7 @@ function prepare_local_website()
 # it to the repository's.  Also if it's the same version but Allsky isn't installed from
 # the main branch (${3}, default: this installation's): testers get changes made while
 # the version stays the same, as the settings file does.
-# Each step in update_old_website_config_file() only changes what still needs changing,
+# Each migration (see migrations.sh) only changes what still needs changing,
 # so running it again is safe.  Versions are compared as numbers ("10" > "9").
 function website_config_needs_update()
 {
@@ -695,173 +709,13 @@ function website_config_needs_update()
 	return 1
 }
 
+# Bring Website configuration file ${1} from version ${2} to version ${3}.
+# The steps for each version are in ${ALLSKY_MIGRATIONS_DIR}/website/N.sh.
 function update_old_website_config_file()
 {
-	local FILE PRIOR_VERSION CURRENT_VERSION
+	local FILE="${1}"  PRIOR_VERSION="${2}"  CURRENT_VERSION="${3}"
 
-# TODO: create a .php file that reads the prior file into an array,
-# then reads the repo file into another array, then copies from prior array to repo array,
-# deleting / changing as needed.
-
-	FILE="${1}"
-	PRIOR_VERSION="${2}"
-	CURRENT_VERSION="${3}"
-
-	# Version: 1 from v2023.05.01*
-	# Version: 2 from v2024.12.06
-	# Version: 3 from v2024.12.06_01
-	#	Added "meteors/"
-	# Version: 4 from v2024.12.06_03
-	#	Added "equipmentinfo" setting
-	# Current version: 5 from v2026.10.01
-	#	Changed "imageName" to "/current/image.jpg" in local config file.
-	#		imageName is updated in replace_website_placeholders() so not done here.
-	#	timelapse and mini-timelapse icons changed.
-	#	Full set of overlay colours.
-	#	Added "overlayLean" and "overlayLeanAz" after "az", for a camera that isn't level.
-	# While v2026.10.01 was being tested the repository briefly said 6, so testers can
-	# have files at 6: the steps for version 5 run for those too ("-le 6"), and the file
-	# then ends at 5.  Every step only changes what still needs changing.
-
-	if [[ ${PRIOR_VERSION} -eq 1 ]]; then
-		# These steps bring version 1 up to 2.
-		# Deletions:
-		update_json_file -d ".config.AllskyWebsiteVersion" "" "${FILE}"
-		update_json_file -d ".homePage.onPi" "" "${FILE}"
-		update_array_field "${FILE}" "homePage.popoutIcons" "variable" "AllskyWebsiteVersion" "--delete"
-
-		# Additions:
-		# Add in same place as in repo file.
-		local NEW='      \"thumbnailsizex\": 100,\
-        \"thumbnailsizey\": 75,\
-        \"thumbnailsortorder\": \"ascending\",'
-		sed -i "/\"leftSidebar\"/i\ ${NEW}" "${FILE}"
-
-		# Changes:
-		for i in "videos" "keograms" "startrails"; do
-			update_array_field "${FILE}" "homePage.leftSidebar" "url" "${i}" "${i}/"
-		done
-	fi
-
-	# Try to determine what future changes are needed,
-	# rather than compare version numbers as above.
-	if [[ ${PRIOR_VERSION} -lt 3 ]] && ! grep --silent "meteors/" "${FILE}" ; then
-		# Add after "startrails/" entry.
-		TEMP="/tmp/$$"
-		gawk 'BEGIN { found_startrails = 0; }
-			{
-				print $0;
-
-				if (found_startrails == 1) {
-					if ($1 == "},") {
-						printf("%12s{\n", " ");
-						printf("%16s\"display\": false,\n", " ")
-						printf("%16s\"url\": \"meteors/\",\n", " ")
-						printf("%16s\"title\": \"Archived Meteors\",\n", " ")
-						printf("%16s\"icon\": \"fa fa-2x fa-fw fa-meteor\",\n", " ")
-						printf("%16s\"style\": \"\"\n", " ")
-						printf("%12s},\n", " ");
-	
-						while (getline) {
-							print $0;
-						}
-						exit(0);
-					}
-				} else if ($0 ~ /"startrails\/"/) {
-					found_startrails = 1;
-				}
-			}' "${FILE}" > "${TEMP}"
-		if [[ $? -eq 0 ]]; then
-			# cp so it keeps ${FILE}'s attributes
-			cp "${TEMP}" "${FILE}" && rm -f "${TEMP}"
-		fi
-	fi
-
-	if [[ ${PRIOR_VERSION} -lt 4 ]] && ! grep --silent '"equipmentinfo"' "${FILE}" ; then
-		# Add setting after "computer" entry.
-		# Add popoutIcons entry after "Computer" entry (with "fa-microchip").
-		TEMP="/tmp/$$"
-		local E="$( settings ".equipmentinfo" )"
-		gawk -v E="${E}" 'BEGIN {
-				found_computer = 0;
-				found_microchip = 0;
-			}
-			{
-				print $0;
-
-				if (found_computer == 1) {
-					printf("%16s\"equipmentinfo\": \"%s\",\n", " ", E)
-					found_computer = 0;
-					next;
-				}
-
-				if (found_microchip == 1) {
-					if ($1 == "},") {
-						printf("%12s{\n", " ");
-						printf("%16s\"display\": true,\n", " ")
-						printf("%16s\"label\": \"Equipment info\",\n", " ")
-						printf("%16s\"icon\": \"fa fa-fw fa-keyboard\",\n", " ")
-						printf("%16s\"variable\": \"equipmentinfo\",\n", " ")
-						printf("%16s\"value\": \"\",\n", " ")
-						printf("%16s\"style\": \"\"\n", " ")
-						printf("%12s},\n", " ");
-	
-						while (getline) {
-							print $0;
-						}
-						exit(0);
-					}
-				} else if ($0 ~ /"computer"/) {
-					found_computer = 1;
-				} else if ($0 ~ / fa-microchip"/) {
-					found_microchip = 1;
-				}
-			}' "${FILE}" > "${TEMP}"
-		if [[ $? -eq 0 ]]; then
-			# cp so it keeps ${FILE}'s attributes
-			cp "${TEMP}" "${FILE}" && rm -f "${TEMP}"
-		fi
-	fi
-
-	if [[ ${PRIOR_VERSION} -le 6 ]] ; then	# use -le so testers get updated.
-		# Update timelapse icons
-		update_array_field "${FILE}" "homePage.leftSidebar" "icon" \
-			"fa fa-2x fa-fw fa-play-circle" "fa fa-2x fa-fw fa-video"
-		update_array_field "${FILE}" "homePage.leftSidebar" "icon" \
-			"fa fa-2x fa-fw icon-mini-timelapse" "fa fa-2x fa-fw fa-file-video"
-	fi
-
-	# Only while they are still the old kind, so running this again keeps a user's colours.
-	if [[ ${PRIOR_VERSION} -le 6 ]] &&
-		[[ "$( jq '[.config.colours | to_entries[] | select(.value | type == "object") | .value | has("constellation")] | all' "${FILE}" 2>/dev/null )" != "true" ]] ; then
-		# Replace the old XXX_cardinal-only colours with the current full colour set.
-		TEMP="/tmp/$$"
-		jq --indent 4 --slurpfile repo "${REPO_WEBSITE_CONFIGURATION_FILE}" \
-			'.config.colours = $repo[0].config.colours' "${FILE}" > "${TEMP}"
-		if [[ $? -eq 0 ]]; then
-			# cp so it keeps ${FILE}'s attributes
-			cp "${TEMP}" "${FILE}" && rm -f "${TEMP}"
-		else
-			rm -f "${TEMP}"
-		fi
-	fi
-
-	if [[ ${PRIOR_VERSION} -le 6 ]] ; then	# use -le so testers get updated.
-		# Add "overlayLean" and "overlayLeanAz" after "az", unless already there.
-		TEMP="/tmp/$$"
-		jq --indent 4 '
-			if (.config | has("overlayLean")) then .
-			else .config |= (reduce to_entries[] as $e ({};
-				. + {($e.key): $e.value}
-				+ (if $e.key == "az" then {"overlayLean": 0, "overlayLeanAz": 0} else {} end)))
-			end' "${FILE}" > "${TEMP}"
-		if [[ $? -eq 0 ]]; then
-			# cp so it keeps ${FILE}'s attributes
-			cp "${TEMP}" "${FILE}" && rm -f "${TEMP}"
-		else
-			rm -f "${TEMP}"
-		fi
-	fi
+	run_migrations "website" "${FILE}" "${PRIOR_VERSION}" "${CURRENT_VERSION}" || return 1
 
 	# Set to current config and Allsky versions.
 	update_json_file ".${WEBSITE_CONFIG_VERSION}" "${CURRENT_VERSION}" "${FILE}"

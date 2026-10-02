@@ -924,6 +924,123 @@ def log(level, text, preventNewline = False, exitCode=None, sendToAllsky=False):
         sys.exit(exitCode)
 
 
+NETWORK_FAILURES_BEFORE_ERROR = 3
+
+# Query parameters whose values are hidden when a URL ends up in a message.
+_SECRET_URL_PARAMS = re.compile(
+    r"([?&](?:appid|api_?key|apikey|key|token|access_token|password|passwd|secret)=)[^&\s'\"]+",
+    re.IGNORECASE)
+
+
+def _network_failure_file(name):
+    safe_name = re.sub(r"[^A-Za-z0-9_.-]", "_", name)
+    return os.path.join(ALLSKY_TMP, f"network_failures_{safe_name}.json")
+
+
+def hide_secrets(text, secrets=None):
+    """
+    Hide secrets in a message before it is logged or shown in the WebUI.
+
+    Error texts from ``requests`` contain the full URL, including any API key.
+    Values of query parameters such as ``appid``, ``apikey`` or ``token`` are
+    always hidden; the values in ``secrets`` are hidden wherever they appear.
+
+    Args:
+        text: The message.
+        secrets: Optional string or list of strings to hide.
+
+    Returns:
+        The message with the secrets replaced by ``obfuscate_secret()``.
+    """
+    text = _SECRET_URL_PARAMS.sub(r"\1***", str(text))
+    if isinstance(secrets, str):
+        secrets = [secrets]
+    for secret in secrets or []:
+        if secret:
+            text = text.replace(secret, obfuscate_secret(secret))
+    return text
+
+
+def network_failure(name, message, secrets=None, report_after=NETWORK_FAILURES_BEFORE_ERROR):
+    """
+    Report a failed download without flooding the WebUI.
+
+    A short outage of the Pi's connection or of a provider is normal. Each
+    failure is logged as a warning; only ``report_after`` failures in a row
+    become a WebUI error message, once, until ``network_ok()`` is called
+    after the next successful download. Secrets are hidden (see
+    ``hide_secrets()``).
+
+    Example::
+
+        try:
+            response = requests.get(url, timeout=10)
+            response.raise_for_status()
+            s.network_ok("openweathermap")
+        except requests.exceptions.RequestException as e:
+            result = s.network_failure("openweathermap",
+                f"Unable to download the weather data: {e}", secrets=api_key)
+
+    Args:
+        name: Short name of the data source, usually the module name. Each
+            name has its own counter.
+        message: What failed.
+        secrets: Optional string or list of strings to hide in the message.
+        report_after: Failures in a row before the error message is sent.
+
+    Returns:
+        The logged message, with the secrets hidden.
+    """
+    file_path = _network_failure_file(name)
+    try:
+        with open(file_path) as fh:
+            failures = json.load(fh)
+    except (OSError, ValueError):
+        failures = {}
+    count = failures.get("count", 0) + 1
+    failures["count"] = count
+
+    result = hide_secrets(f"{message} ({count} failure{'' if count == 1 else 's'} in a row)", secrets)
+    if count >= report_after and not failures.get("reported"):
+        failures["reported"] = True
+        log(0, f"ERROR: {result}")
+    else:
+        log(1, f"WARNING: {result}")
+
+    try:
+        with open(file_path, "w") as fh:
+            json.dump(failures, fh)
+    except OSError:
+        pass
+    return result
+
+
+def network_ok(name):
+    """
+    Reset the failure counter of ``network_failure()`` after a successful
+    download, so the next outage is counted from zero and reported again.
+
+    Args:
+        name: The name passed to ``network_failure()``.
+    """
+    try:
+        os.remove(_network_failure_file(name))
+    except OSError:
+        pass
+
+
+def hideSecrets(text, secrets=None):
+    return hide_secrets(text, secrets)
+
+
+def networkFailure(name, message, secrets=None, report_after=NETWORK_FAILURES_BEFORE_ERROR):
+    return network_failure(name, message, secrets, report_after)
+
+
+def networkOk(name):
+    network_ok(name)
+
+
 def initDB():
     """
     Initialize the small on-disk "allskydb" database.

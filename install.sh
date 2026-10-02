@@ -3925,6 +3925,9 @@ update_modules
 
 ##### Perform any migrations required
 migrate_overlays
+if ! run_overlay_migrations ; then
+	display_msg --log warning "Unable to update the overlay templates." "See the messages above."
+fi
 
 ##### Setup Database (If required)
 setup_database

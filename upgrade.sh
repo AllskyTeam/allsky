@@ -93,6 +93,9 @@ function migrate_config_files()
 		fi
 	fi
 
+	display_msg --log progress "Updating the overlay templates if needed."
+	run_overlay_migrations || return 1
+
 	# remoteWebsiteInstall.sh updates the remote Website's files and configuration.
 	if [[ "$( settings ".useremotewebsite" )" == "true" ]]; then
 		MSG="Update your remote Website to ${ALLSKY_VERSION}:\n"

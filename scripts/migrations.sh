@@ -6,6 +6,9 @@
 # Each kind of file has a directory  ${ALLSKY_MIGRATIONS_DIR}/<kind>/  with one file per
 # version:  N.sh  brings a file from version N-1 to version N.  Version 1 has no file.
 #	website:	the local and remote Website configuration files ("ConfigVersion").
+#	overlay:	the user's overlay templates.  They have no version number of their own,
+#				so the version they are at is kept in ${ALLSKY_MIGRATIONS_STATE_FILE},
+#				and the newest version is the highest N.sh.
 #
 # A migration file defines one function,  migrate,  which gets the file to update as ${1}.
 # It is "source"d, so it can use the functions in installUpgradeFunctions.sh.
@@ -17,6 +20,7 @@
 # so a version can't be raised without its migration.
 
 export ALLSKY_MIGRATIONS_DIR="${ALLSKY_SCRIPTS}/migrations"
+export ALLSKY_MIGRATIONS_STATE_FILE="${ALLSKY_CONFIG}/migrations.json"
 
 # Run the "${1}" migrations on file "${2}", from version ${3} to version ${4}.
 # An unknown prior version is treated as version 1.
@@ -74,4 +78,49 @@ function check_migrations()
 	done
 
 	return "${RET}"
+}
+
+# The newest version of kind "${1}": the highest N.sh (1 if there are none).
+function latest_migration()
+{
+	local N=1
+
+	while [[ -f ${ALLSKY_MIGRATIONS_DIR}/${1}/$(( N + 1 )).sh ]]; do
+		(( N++ ))
+	done
+	echo "${N}"
+}
+
+# Bring the files "${2}"... of kind "${1}", which have no version number of their own,
+# to the newest version.  Their version is kept in ${ALLSKY_MIGRATIONS_STATE_FILE};
+# if it's unknown (e.g., after "Replace All"), all migrations run, which is safe
+# since each one only changes what still needs changing.
+function run_state_migrations()
+{
+	local KIND="${1}" ; shift
+	local PRIOR  NEW  FILE  TEMP
+
+	PRIOR="$( jq -r --arg k "${KIND}" '.[$k] // 1' "${ALLSKY_MIGRATIONS_STATE_FILE}" 2>/dev/null )"
+	[[ ${PRIOR} =~ ^[0-9]+$ ]] || PRIOR=1
+	NEW="$( latest_migration "${KIND}" )"
+	(( PRIOR >= NEW )) && return 0
+
+	for FILE in "$@"; do
+		[[ -f ${FILE} ]] || continue
+		run_migrations "${KIND}" "${FILE}" "${PRIOR}" "${NEW}" || return 1
+	done
+
+	TEMP="${ALLSKY_MIGRATIONS_STATE_FILE}.tmp"
+	if [[ -s ${ALLSKY_MIGRATIONS_STATE_FILE} ]]; then
+		jq --indent 4 --arg k "${KIND}" --argjson v "${NEW}" '.[$k] = $v' \
+			"${ALLSKY_MIGRATIONS_STATE_FILE}" > "${TEMP}"
+	else
+		jq --null-input --indent 4 --arg k "${KIND}" --argjson v "${NEW}" '{($k): $v}' > "${TEMP}"
+	fi && mv "${TEMP}" "${ALLSKY_MIGRATIONS_STATE_FILE}"
+}
+
+# The user's overlay templates.
+function run_overlay_migrations()
+{
+	run_state_migrations "overlay" "${ALLSKY_OVERLAY}"/myTemplates/overlay*.json
 }

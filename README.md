@@ -1,5 +1,11 @@
 # Allsky Camera ![Release](https://img.shields.io/badge/Version-v2026.10.01-green.svg) [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=MEBU2KN75G2NG&source=url)
 
+<br>
+
+## Before installing or upgrading Allsky, please view the [installation instructions](https://allskyteam.github.io/allsky/allsky_guide/allsky.html).
+
+## Also view the [upgrade notes](https://allskyteam.github.io/allsky/allsky_guide/upgrade/v2026.10.01.html) for information about some of the changes.
+<br><br>
 
 ![](./assets/allsky_camera.png)
 

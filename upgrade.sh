@@ -232,16 +232,24 @@ if [[ ${ACTION} == "upgrade" ]]; then
 	# First part of upgrade, executed by user in ${ALLSKY_HOME}.
 	NEWEST_VERSION="$( "${ALLSKY_UTILITIES}/getNewestAllskyVersion.sh" --branch "${BRANCH}" --version-only 2>&1 )"
 	RET=$?
-	if [[ ${RET} -ne 0 ]]; then
-		MSG2=""
-		if [[ ${RET} -eq ${ALLSKY_EXIT_PARTIAL_OK} && ${CHOSEN_METHOD} == "${METHOD_IN_PLACE}" ]]; then
+	# ${ALLSKY_EXIT_PARTIAL_OK} means a newer release is available, which is what an
+	# upgrade is for.  Only the "Replace All" method can do that.
+	NEW_RELEASE="false"
+	if [[ ${RET} -eq ${ALLSKY_EXIT_PARTIAL_OK} ]]; then
+		NEW_RELEASE="true"
+		if [[ ${CHOSEN_METHOD} == "${METHOD_IN_PLACE}" ]]; then
 			MSG="The '${METHOD_IN_PLACE}' method cannot be used when upgrading Allsky releases."
-		else
-			MSG="Unable to determine newest version; cannot continue, RET=${RET}."
-			if [[ ${BRANCH} != "${ALLSKY_GITHUB_MAIN_BRANCH}" ]];
-			then
-				MSG2="Make sure '${BRANCH}' is a valid branch in GitHub."
-			fi
+			MSG2="Run ${ME} without '--in-place' to upgrade to ${NEWEST_VERSION} with the '${METHOD_REPLACE_ALL}' method."
+			display_msg --log error "${MSG}" "${MSG2}"
+			echo
+			exit 2
+		fi
+	elif [[ ${RET} -ne 0 ]]; then
+		MSG="Unable to determine newest version; cannot continue, RET=${RET}."
+		MSG2=""
+		if [[ ${BRANCH} != "${ALLSKY_GITHUB_MAIN_BRANCH}" ]];
+		then
+			MSG2="Make sure '${BRANCH}' is a valid branch in GitHub."
 		fi
 		display_msg --log error "${MSG}" "${MSG2}"
 		display_msg --logonly info "${NEWEST_VERSION}"		# is the error message.
@@ -249,6 +257,12 @@ if [[ ${ACTION} == "upgrade" ]]; then
 		exit 2
 	fi
 	check_for_current
+
+	if [[ -z ${CHOSEN_METHOD} && ${NEW_RELEASE} == "true" ]]; then
+		# A new release: "In Place" can't be used, so there is nothing to choose.
+		CHOSEN_METHOD="${METHOD_REPLACE_ALL}"
+		display_msg --log progress "Upgrading to the new release ${NEWEST_VERSION} with the '${METHOD_REPLACE_ALL}' method."
+	fi
 
 	if [[ -z ${CHOSEN_METHOD} ]]; then
 		# Ask user how they want to upgrade.

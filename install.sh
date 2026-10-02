@@ -975,9 +975,13 @@ set_permissions()
 	# "sudo" allows them to run sudo on anything.
 	# "${ALLSKY_WEBSERVER_GROUP}" allows the web server to write files to Allsky directories.
 	# "video" allows the user to access video devices
+	# "gpio" and "i2c" allow the Allsky server and modules, which run as the user,
+	# to switch GPIO pins (e.g., dew heater, fans) and read I2C sensors.
 	local G="$( id "${ALLSKY_OWNER}" )"
-	for g in "sudo" "${ALLSKY_WEBSERVER_GROUP}" "video"
+	for g in "sudo" "${ALLSKY_WEBSERVER_GROUP}" "video" "gpio" "i2c"
 	do
+		# "gpio" and "i2c" only exist on some systems.
+		getent group "${g}" > /dev/null || continue
 		#shellcheck disable=SC2076
 		if ! [[ ${G} =~ "(${g})" ]]; then
 			display_msg --log progress "Adding ${ALLSKY_OWNER} to ${g} group."
@@ -3360,6 +3364,9 @@ update_overlays()
 update_modules()
 {
 	local TMP="${ALLSKY_LOGS}/modules.log"
+	# Errors the installer can't log (e.g., an exception at startup) only go to
+	# stdout and stderr, so keep those too.
+	local OUTPUT="${ALLSKY_LOGS}/modules.output.log"
 	display_msg --log progress "Updating modules using the ${BRANCH} branch."
 	args=(
 		--auto
@@ -3374,13 +3381,13 @@ update_modules()
 		args+=(--setbranch "${BRANCH}")
 	fi
 
-	# Ignore stdout since it's also written to a log file.
-	"${ALLSKY_MODULE_INSTALLER}" "${args[@]}" > /dev/null
+	"${ALLSKY_MODULE_INSTALLER}" "${args[@]}" > "${OUTPUT}" 2>&1
 
 	MODULES_DIR="${ALLSKY_MODULE_LOCATION}/modules"
 	if [[ -d "${MODULES_DIR}" ]]; then
 		display_msg --log progress "Removing remaining legacy modules."
-		rm -rf "${MODULES_DIR}" > "${TMP}" 2>&1
+		# Append: ${TMP} holds the module installer's log.
+		rm -rf "${MODULES_DIR}" >> "${TMP}" 2>&1
 	fi
 
 	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
@@ -3388,6 +3395,7 @@ update_modules()
 
 migrate_overlays()
 {
+	local TMP="${ALLSKY_LOGS}/modules.log"		# appended to
 	display_msg --log progress "Migrating overlays."
 	args=(
 		--migrateoverlayvariables
@@ -3521,6 +3529,11 @@ install_installer_dependencies()
 	[[ ! -d ${ALLSKY_CURRENT_DIR} ]] && mkdir -p "${ALLSKY_CURRENT_DIR}"
 
 
+	TMP="${ALLSKY_LOGS}/installer.dependencies.log"
+	sudo apt-get update > "${TMP}" 2>&1
+	check_success $? "'apt-get update' failed" "${TMP}" "${DEBUG}" ||
+		exit_with_image 1 "${STATUS_ERROR}" "'apt-get update' failed."
+
 	local PACKAGES=""
 	# Any version is ok so if the command exists, don't reinstall it.
 	which dialog > /dev/null || PACKAGES+="dialog "
@@ -3528,12 +3541,10 @@ install_installer_dependencies()
 	which gawk > /dev/null || PACKAGES+="gawk "
 	if [[ -n ${PACKAGES} ]]; then
 		display_msg --log progress "Installing initial dependencies: ${PACKAGES}"
-
-		TMP="${ALLSKY_LOGS}/installer.dependencies.log"
 		{
 			#shellcheck disable=SC2086
-			sudo apt-get update && run_aptGet ${PACKAGES}
-		} > "${TMP}" 2>&1
+			run_aptGet ${PACKAGES}
+		} >> "${TMP}" 2>&1
 		check_success $? "${PACKAGES/ /,} installation failed" "${TMP}" "${DEBUG}" ||
 			exit_with_image 1 "${STATUS_ERROR}" "${PACKAGES/ /,} install failed."
 	else

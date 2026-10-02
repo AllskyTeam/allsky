@@ -568,6 +568,8 @@ function update_old()
 
 	local PRIOR_VERSION="$( settings ".${WEBSITE_CONFIG_VERSION}" "${FILE}" )"
 	local NEW_VERSION="$( settings ".${WEBSITE_CONFIG_VERSION}" "${REPO_WEBCONFIG_FILE}" )"
+	fill_empty_mini_timelapse_url "remote" "${FILE}"
+
 	# This script has no BRANCH of its own, so use the installation's (from git).
 	if website_config_needs_update "${PRIOR_VERSION}" "${NEW_VERSION}" "$( get_branch )"; then
 		# Old version (or a test branch), so update to format of the current version.

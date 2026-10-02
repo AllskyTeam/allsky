@@ -2849,14 +2849,22 @@ class MODULESEDITOR {
 				cache: false,
 				context: this
 			}).done((result) => {
-
-
+				this.#dirty = false;
+				this.#updateToolbar();
+			}).fail((xhr) => {
+				// Keep the changes marked as unsaved and say why, rather than looking saved.
+				let message = xhr.responseJSON?.message || `HTTP ${xhr.status} ${xhr.statusText}`;
+				if (xhr.status === 403) {
+					message += '<br><br>Allsky does not send this error. Something between your browser and the Pi, '
+						+ 'such as a proxy, tunnel or web firewall, blocked the request. '
+						+ 'Try saving from the Pi\'s address on your local network.';
+				} else if (xhr.status === 0) {
+					message = 'The Pi could not be reached.';
+				}
+				bootbox.alert('<h4>The flow was not saved</h4>' + message);
 			}).always(() => {
 				$.LoadingOverlay('hide');
 			});
-
-			this.#dirty = false;
-			this.#updateToolbar();
 		}
 	}
 

@@ -133,7 +133,11 @@ class ALLSKYMODULEBASE:
 								allsky_shared.log(0, f'ERROR: Variable {param} not found in env file. Tried key {env_key}')
 
 		try:
-			result = target_type(result)
+			if target_type == bool and isinstance(result, str):
+				# bool("false") is True; flows store many checkboxes as strings
+				result = result.strip().lower() in ("true", "1", "yes", "y", "on")
+			else:
+				result = target_type(result)
 		except (ValueError, TypeError):
 			#have_debug_mode = hasattr(allsky_shared, 'LOGLEVEL')
 			#if have_debug_mode and allsky_shared.LOGLEVEL == 4:

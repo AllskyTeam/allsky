@@ -1515,7 +1515,11 @@ class UIUTIL extends UTILBASE {
             return '';
         }
 
-        $remoteWebsiteVersion = getVariableOrDefault($config, 'AllskyVersion', null);
+        $c = getVariableOrDefault($config, 'config', null);
+        if ($c === null) {
+            return '';
+        }
+        $remoteWebsiteVersion = getVariableOrDefault($c, 'AllskyVersion', null);
         if ($remoteWebsiteVersion === null) {
             return '';
         }

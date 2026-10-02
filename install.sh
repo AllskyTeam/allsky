@@ -975,9 +975,13 @@ set_permissions()
 	# "sudo" allows them to run sudo on anything.
 	# "${ALLSKY_WEBSERVER_GROUP}" allows the web server to write files to Allsky directories.
 	# "video" allows the user to access video devices
+	# "gpio" and "i2c" allow the Allsky server and modules, which run as the user,
+	# to switch GPIO pins (e.g., dew heater, fans) and read I2C sensors.
 	local G="$( id "${ALLSKY_OWNER}" )"
-	for g in "sudo" "${ALLSKY_WEBSERVER_GROUP}" "video"
+	for g in "sudo" "${ALLSKY_WEBSERVER_GROUP}" "video" "gpio" "i2c"
 	do
+		# "gpio" and "i2c" only exist on some systems.
+		getent group "${g}" > /dev/null || continue
 		#shellcheck disable=SC2076
 		if ! [[ ${G} =~ "(${g})" ]]; then
 			display_msg --log progress "Adding ${ALLSKY_OWNER} to ${g} group."

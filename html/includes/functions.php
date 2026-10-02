@@ -368,7 +368,7 @@ function output_allsky_status($versionHtml = "", $websiteHtml = "") {
 	$sinceHtml = "<li><div class='header-status-menu-card'><div class='header-status-menu-card-row'><span>Uptime</span><strong>$uptimeText</strong></div><div class='header-status-menu-card-row'><span>Last Restart</span><strong>$timestampText</strong></div></div></li><li role='separator' class='divider'></li>";
 	$statusDropdownHtml = "<div class='dropdown header-status-dropdown'><button type='button' class='btn btn-default btn-xs header-status-toggle' aria-expanded='false'><i class='fa-solid fa-chevron-down'></i></button><ul class='dropdown-menu dropdown-menu-right header-status-menu'>$sinceHtml<li class='dropdown-header'>Manage Allsky</li>$statusActionsHtml</ul></div>";
 
-	return("<div class='header-status-card' $title><div class='header-status-heading'><span class='header-status-title'>Status</span><span class='label $class'>$allsky_status</span><span class='header-status-inline'><span class='header-status-inline-value'>$versionHtml</span></span>$statusDropdownHtml</div>$websiteHtml</div>");
+	return("<div class='header-status-card'><div class='header-status-heading'><span class='header-status-title'>Status</span><span class='label $class' $title>$allsky_status</span><span class='header-status-inline'><span class='header-status-inline-value'>$versionHtml</span></span>$statusDropdownHtml</div>$websiteHtml</div>");
 }
 
 function initialize_variables($website_only=false) {

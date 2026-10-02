@@ -3360,6 +3360,9 @@ update_overlays()
 update_modules()
 {
 	local TMP="${ALLSKY_LOGS}/modules.log"
+	# Errors the installer can't log (e.g., an exception at startup) only go to
+	# stdout and stderr, so keep those too.
+	local OUTPUT="${ALLSKY_LOGS}/modules.output.log"
 	display_msg --log progress "Updating modules using the ${BRANCH} branch."
 	args=(
 		--auto
@@ -3374,13 +3377,13 @@ update_modules()
 		args+=(--setbranch "${BRANCH}")
 	fi
 
-	# Ignore stdout since it's also written to a log file.
-	"${ALLSKY_MODULE_INSTALLER}" "${args[@]}" > /dev/null
+	"${ALLSKY_MODULE_INSTALLER}" "${args[@]}" > "${OUTPUT}" 2>&1
 
 	MODULES_DIR="${ALLSKY_MODULE_LOCATION}/modules"
 	if [[ -d "${MODULES_DIR}" ]]; then
 		display_msg --log progress "Removing remaining legacy modules."
-		rm -rf "${MODULES_DIR}" > "${TMP}" 2>&1
+		# Append: ${TMP} holds the module installer's log.
+		rm -rf "${MODULES_DIR}" >> "${TMP}" 2>&1
 	fi
 
 	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
@@ -3388,6 +3391,7 @@ update_modules()
 
 migrate_overlays()
 {
+	local TMP="${ALLSKY_LOGS}/modules.log"		# appended to
 	display_msg --log progress "Migrating overlays."
 	args=(
 		--migrateoverlayvariables

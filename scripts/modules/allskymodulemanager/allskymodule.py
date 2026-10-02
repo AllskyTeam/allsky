@@ -665,6 +665,22 @@ class ALLSKYMODULE:
                             
         return result
     
+    def _install_migrate_overlay_variables(self) -> bool:
+        """
+        Apply the variable renames that modules declare in their extra-data
+        "migrations" to the user's overlay templates. install.sh does this too,
+        but a module installed later from the Package Manager (e.g. Solar System
+        after an upgrade from v2024) would otherwise never get its renames applied.
+        A failure here is logged but doesn't stop the installation.
+        """
+        try:
+            result = shared.migrate_overlay_template_variables()
+            if result.get('replacements', 0) > 0:
+                self._log(False, f"INFO: Updated {result['replacements']} variable name(s) in {result['templates_updated']} overlay template(s)")
+        except Exception as e:
+            self._log(False, f"WARNING: Unable to update the variable names in the overlay templates - {e}")
+        return True
+
     @ensure_valid     
     def _install_module(self) -> bool:
         self._setup_module_paths()
@@ -681,6 +697,7 @@ class ALLSKYMODULE:
             ("apt dependencies",      self._install_apt_dependencies),
             ("python dependencies",   self._install_python_dependencies),
             ("Post install",          self._post_install),
+            ("Overlay variables",     self._install_migrate_overlay_variables),
             ("Cleanup module",        self._cleanup_module)
         ]
 

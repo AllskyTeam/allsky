@@ -5470,15 +5470,22 @@ def count_starts_in_image(image, mask_file_name=None):
     # Estimate background stats
     mean, median, std = sigma_clipped_stats(image_data, sigma=3.0)
 
-    # Detect stars
+    # Detect stars. An image without stars (clouds, twilight) is a normal result here,
+    # not something to warn about in the log on every frame.
+    import warnings
     daofind = DAOStarFinder(fwhm=3.0, threshold=5.0 * std)
-    sources = daofind(image_data - median)
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", message="No sources were found")
+        sources = daofind(image_data - median)
 
-    # Convert to list of (x, y) tuples if sources were found
+    # Convert to list of (x, y) tuples if sources were found.
+    # photutils 3.0 renamed the columns to x_centroid/y_centroid; the old names still
+    # work there but log a deprecation warning, and will be removed in 4.0.
     coords = []
     if sources is not None and len(sources) > 0:
-        x = sources['xcentroid'].tolist()
-        y = sources['ycentroid'].tolist()
+        new_names = 'x_centroid' in sources.colnames
+        x = sources['x_centroid' if new_names else 'xcentroid'].tolist()
+        y = sources['y_centroid' if new_names else 'ycentroid'].tolist()
         coords = list(zip(x, y))
 
     return coords, image

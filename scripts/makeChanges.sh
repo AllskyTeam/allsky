@@ -1060,13 +1060,13 @@ do
 					if ERR="$( "${ALLSKY_SCRIPTS}/upload.sh" --remote-web --silent \
 							"${F}" "${REMOTE_DIR}" "${ALLSKY_REMOTE_WEBSITE_COMMANDS_NAME}" "${ME}" 2>&1 )" ; then
 						if COUNTS="$( execute_web_commands "${REMOTE_WEBSITE_URL}" 2>&1 )" ; then
-							echo "${COUNTS}" | while read -r RETURN CMD DIR NUM
+							echo "${COUNTS}" | while read -r RETURN_ CMD_ DIR_ NUM_
 								do
-									[[ ${CMD} != "get_numfiles" ]] && continue
+									[[ ${CMD_} != "get_numfiles" ]] && continue
 
-									DIFF=$(( ${NUM} - ${NEW_VALUE} ))
+									DIFF=$(( ${NUM_} - ${NEW_VALUE} ))
 									if [[ ${DIFF} -gt 0 ]]; then
-										dir="${DIR/\/*/}"
+										dir="${DIR_/\/*/}"
 										wI_ "NOTE: ${DIFF} days' ${dir} from the remote Website will be removed in the morning."
 									fi
 								done

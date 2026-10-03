@@ -2046,7 +2046,7 @@ class CHARTUTIL extends UTILBASE
 
                 // Only include variables of type int, float, number or bool
                 // TODO: Validate the above list
-                if (in_array($vmeta['type'] ?? null, ['int', 'float', 'number', 'temperature', 'bool'], true)) {
+                if (in_array($vmeta['type'] ?? null, ['int', 'float', 'number', 'temperature', 'pressure', 'bool'], true)) {
                     // Extract description and display group
                     $desc          = $vmeta['description'] ?? '';
                     $groupDisplay  = $meta['group'] ?? 'Unknown';

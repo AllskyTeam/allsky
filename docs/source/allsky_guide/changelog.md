@@ -15,6 +15,8 @@ of the current release.
 
         ## **Major New Features (described more below)**
         - **Moon-dependent stretch** - the nighttime stretch can follow the moonlight: a strong stretch on dark, moonless nights and a weaker one when a bright Moon is high in the sky.
+        - **Start and end times** for the timelapse, keogram, and startrails - for example only the night, or from 22:00 to 04:00. Times can also be `sunrise`, `sunset`, or the start or end of Allsky's daytime or nighttime.
+        - **Conditional overlay styles** - a text field in the **Overlay Editor** can change its colour (and optionally stroke, opacity, and font) depending on its value, e.g. a temperature in blue below freezing. Rules can be saved as rule sets and reused by other fields.
 
         ## **Enhancements / Changes**
 	    - **Days To Keep settings**
@@ -25,9 +27,13 @@ of the current release.
         ## **Bug Fixes**
 		- The `upgrade.sh` command no longer fails when using the "in-place" method and a new Allsky release is available.
 
+        ## **Deleted Settings**
+        - ==Night images only== (Startrails) - replaced by the new startrails ==Start Time== and ==End Time== set to `nighttime_start` and `nighttime_end`, which use the same day/night decision. Existing settings are converted automatically.
+
         ## **New Settings**
 	    - ==Days To Keep on Remote Website== - similar to ==Days To Keep on Pi Website==, but for remote Websites.
         - ==Moon-dependent stretch==, ==Full Moon Stretch Amount==, and ==Full Moon Stretch mid point== (Nighttime) - when ==Moon-dependent stretch== is on, the existing ==Stretch Amount== and ==Stretch mid point== are used when there's no moonlight and the two Full Moon settings when a full Moon is high in the sky. In between, Allsky interpolates by how bright and how high the Moon is. The overlay variable `${MOONLIGHT}` shows the current amount of moonlight.
+        - ==Start Time== and ==End Time== (Daily Timelapse, Keograms, and Startrails) - only use the images taken between these times. `generateForDay.sh` has matching `--start` and `--end` arguments.
 
 
 

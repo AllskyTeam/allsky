@@ -23,6 +23,7 @@ function DisplayOverlay($image_name)
         '/js/overlay/fields/oe-text.js',
         '/js/overlay/fields/oe-image.js',
         '/js/overlay/fields/oe-rect.js',
+        '/js/overlay/oe-conditions.js',
         '/js/overlay/oe-exposure.js',
         '/js/jquery-attributes/jquery-attributes.js',
         '/js/bootbox/bootbox.all.js',
@@ -323,6 +324,35 @@ function DisplayOverlay($image_name)
             </div>
         </div>
     </div>
+
+    <div class="modal fade" id="oe-conditions-dialog" tabindex="-1" role="dialog" aria-labelledby="oe-conditions-dialog-title">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="oe-conditions-dialog-title">Conditions</h4>
+                </div>
+                <div class="modal-body" id="oe-conditions-dialog-body"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default pull-left" id="oe-conditions-dialog-remove">Remove conditions</button>
+                    <button type="button" class="btn btn-danger" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="oe-conditions-dialog-apply">Apply</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <style>
+        #oe-conditions-dialog .oe-cond-row { padding: 6px 0; border-bottom: 1px solid rgba(128,128,128,0.25); }
+        #oe-conditions-dialog .oe-cond-when { min-width: 9em; font-weight: normal; }
+        #oe-conditions-dialog .oe-cond-row input[type=number] { width: 6em; }
+        #oe-conditions-dialog .oe-cond-row input[type=text] { width: 12em; }
+        #oe-conditions-dialog input[type=color] { width: 3em; height: 28px; padding: 0 2px; vertical-align: middle; }
+        #oe-conditions-dialog .oe-cond-more { margin: 6px 0 0 9.5em; }
+        #oe-conditions-dialog .oe-cond-more label { font-weight: normal; margin-left: 6px; }
+        #oe-conditions-dialog .oe-cond-row-buttons { float: right; }
+        #oe-conditions-dialog .oe-cond-preview { display: inline-block; min-width: 6em; padding: 2px 10px; margin-left: 8px; background: #222; font-size: 18px; border-radius: 3px; }
+        #oe-conditions-dialog .oe-cond-sets select { min-width: 12em; }
+    </style>
 
     <div class="modal" role="dialog" id="oe-field-errors-dialog">
         <div class="modal-dialog modal-lg" role="document">

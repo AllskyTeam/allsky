@@ -230,6 +230,7 @@ nav:
     - Extra Data: allsky_guide/overlays/extra.md
     - Interface: allsky_guide/overlays/interface.md
     - Formatting Variables: allsky_guide/overlays/formatting.md
+    - Conditional Styles: allsky_guide/overlays/conditions.md
     - Tips: allsky_guide/overlays/tips.md
     - Sun and Moon: allsky_guide/overlays/sunmoon.md    
   - Modules:

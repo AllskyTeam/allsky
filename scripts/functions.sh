@@ -714,7 +714,7 @@ function checkAndGetNewerFile()
 	local GIT_FILE="${ALLSKY_GITHUB_RAW_ROOT}/${ALLSKY_GITHUB_ALLSKY_REPO}/${BRANCH}/${2}"
 	local DOWNLOADED_FILE="${3}"
 	# Download the file and put in DOWNLOADED_FILE
-	X="$( curl --show-error --silent "${GIT_FILE}" )"
+	X="$( curl --show-error --silent --connect-timeout 5 --max-time 10 "${GIT_FILE}" )"
 	RET=$?
 	if [[ ${RET} -eq 0 && ${X} != "400: Invalid request" && ${X} != "404: Not Found" ]]; then
 		# We really just check if the files are different.
@@ -1375,17 +1375,15 @@ function get_allsky_status_timestamp()
 function get_model_from_sensor()
 {
 	local SENSOR="${1}"
+	if [[ -z ${SENSOR} ]]; then
+		echo "${ME:-${FUNCNAME[0]}}: ERROR: No sensor specified."
+		return 1
+	fi
 
 	# shellcheck disable=SC2154
 	gawk --field-separator '\t' -v sensor="${SENSOR}" '
 		BEGIN {
-			if (sensor == "") {
-				printf("ERROR: No sensor specified.\n");
-				ok = "false";
-				exit(1);
-			}
 			model = "";
-			ok = "true";
 		}
 		{
 			if ($1 == "camera") {
@@ -1401,10 +1399,6 @@ function get_model_from_sensor()
 				
 		}
 		END {
-			if (ok == "false") {
-				exit(1);
-			}
-
 			if (model != "") {
 				print model;
 				exit(0);
@@ -1417,12 +1411,12 @@ function get_model_from_sensor()
 
 
 ####
-# Get the RPi camera model given its sensor name.
+# Execute commands on the specified server (usually a remote Website).
 function execute_web_commands()
 {
 	local URL="${1}"
 
-	curl --user-agent Allsky --silent --location "${URL}/runCommands.php"
+	curl --user-agent Allsky --silent --show-error --connect-timeout 5 --max-time 10 --location "${URL}/runCommands.php"
 }
 
 ####

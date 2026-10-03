@@ -162,7 +162,7 @@ if [[ ${S_daystokeeplocalwebsite} -gt 0 && ${S_uselocalwebsite} == "true" ]]; th
 					if [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
 						((NUM_DELETED++))
 						if [[ ${NUM_DELETED} -eq 1 ]]; then
-							echo "${ME}: Deleting old Website files:"
+							echo "${ME}: Deleting old local Website files:"
 						fi
 						echo "    DELETED: ${i}"
 					fi
@@ -174,10 +174,73 @@ if [[ ${S_daystokeeplocalwebsite} -gt 0 && ${S_uselocalwebsite} == "true" ]]; th
 fi
 
 if [[ ${S_daystokeepremotewebsite} -gt 0 && ${S_useremotewebsite} == "true" ]]; then
-	# TODO: work on remote Websites.
-	# Possibly do a curl xxxx?keep=${S_daystokeepremotewebsite}
-	# and pass something so it knows this is a valid request.
-	:
+	F="${ALLSKY_TMP}/${ME}_${ALLSKY_REMOTE_WEBSITE_COMMANDS_NAME}"
+	REMOTE_DIR="$( settings ".remotewebsiteimagedir" "${ALLSKY_SETTINGS_FILE}" )"
+	REMOTE_WEBSITE_URL="$( settings ".remotewebsiteurl" "${ALLSKY_SETTINGS_FILE}" )"
+
+	(
+		# Assume if we're not uploading an image/video then there's no reason to try and remove old ones.
+		# "do_daystokeep" automatically deletes associated thumbnails.
+
+		echo -e "set\thtml\t0"		# want normal text output
+
+		RET=1		# Keeps track of whether or not we requested any deletions.
+
+		if [[ ${S_keogramupload} == "true" ]]; then
+			RET=0
+			echo -e "do_daystokeep\tkeograms/*.jpg\t${S_daystokeepremotewebsite}"
+		fi
+
+		if [[ ${S_startrailsupload} == "true" ]]; then
+			RET=0
+			echo -e "do_daystokeep\tstartrails/*.jpg\t${S_daystokeepremotewebsite}"
+		fi
+
+		# Check if meteors are displayed on the website.
+		PARENT="homePage.leftSidebar"
+		INDEX="$( getJSONarrayIndex "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" "${PARENT}" "meteors" )"
+		if [[ ${INDEX} -ge 0 ]]; then
+			DISPLAY="$( settings ".${PARENT}[${INDEX}].display" "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" )"
+			if [[ ${DISPLAY} == "true" ]]; then
+				RET=0
+				echo -e "do_daystokeep\tmeteors/*.jpg\t${S_daystokeepremotewebsite}"
+			fi
+		fi
+
+		if [[ ${S_timelapseupload} == "true" ]]; then
+			RET=0
+			echo -e "do_daystokeep\tvideos/*.mp4\t${S_daystokeepremotewebsite}"
+		fi
+
+		exit "${RET}"
+	) > "${F}"
+	if [[ $? -eq 0 ]]; then
+		# Upload the command file.
+		if ERR="$( "${ALLSKY_SCRIPTS}/upload.sh" --remote-web --silent \
+				"${F}" "${REMOTE_DIR}" "${ALLSKY_REMOTE_WEBSITE_COMMANDS_NAME}" "${ME}" 2>&1 )" ; then
+			if RESULT="$( execute_web_commands "${REMOTE_WEBSITE_URL}" )" ; then
+				COUNTS="$( echo "${RESULT}" | grep "DELETED: " | sed -e 's/.*\t/    /' )"
+				if [[ -z ${COUNTS} ]]; then
+					echo -e "${ME}: No remote Website files removed."
+				else
+					if [[ ${ALLSKY_DEBUG_LEVEL} -ge 5 ]]; then
+						MORE=": \n${RESULT}"
+					elif [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
+						MORE=": \n${COUNTS}"
+					else
+						MORE="."
+					fi
+					echo -e "${ME}: Deleting old remote Website files${MORE}"
+				fi
+			else
+				echo "${ME}: Unable to execute 'days' file on remote Website: ${RESULT}" >&2
+			fi
+		else
+			echo "${ME}: Unable to upload 'days' file to remote Website: ${ERR}" >&2
+		fi
+	else
+		rm -f "${F}"
+	fi
 fi
 
 if [[ ${S_showonmap} == "true" ]]; then

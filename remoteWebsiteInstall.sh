@@ -29,7 +29,7 @@ HAVE_LOCAL_REMOTE_CONFIG="false"			# Is there a remote Website config file on th
 HAVE_NEW_STYLE_REMOTE_CONFIG="false"		# Is there a new-style remote Website config file on the server?
 HAVE_REALLY_OLD_REMOTE_CONFIG="false"		# Is there a old-style remote Website config file on the server?
 CONFIG_TO_USE=""							# Which Website configuration file to use?
-TEST_FILE="commands.txt"					# Name of file we try to upload
+TEST_FILE="${ALLSKY_REMOTE_WEBSITE_COMMANDS_NAME}"		# Name of file we try to upload
 TEST_FILE_UPLOADED="false"					# Was the test upload successful?
 UPLOAD_IMAGE_FILES="false"
 GLOBAL_ERROR_MSG=""							# A global error message
@@ -568,6 +568,8 @@ function update_old()
 
 	local PRIOR_VERSION="$( settings ".${WEBSITE_CONFIG_VERSION}" "${FILE}" )"
 	local NEW_VERSION="$( settings ".${WEBSITE_CONFIG_VERSION}" "${REPO_WEBCONFIG_FILE}" )"
+	fill_empty_mini_timelapse_url "remote" "${FILE}"
+
 	# This script has no BRANCH of its own, so use the installation's (from git).
 	if website_config_needs_update "${PRIOR_VERSION}" "${NEW_VERSION}" "$( get_branch )"; then
 		# Old version (or a test branch), so update to format of the current version.

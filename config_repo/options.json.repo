@@ -1574,8 +1574,7 @@
 "type" : "integer",
 "carryforward" : true,
 "checkchanges" : true,
-"booldependson" : "useremotewebsite",
-"display" : false
+"booldependson" : "useremotewebsite"
 },
 {
 "name" : "REMOTEWEBSITE_HOST",

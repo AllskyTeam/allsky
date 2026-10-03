@@ -1018,12 +1018,66 @@ do
 			;;
 
 		"daystokeep" | "daystokeeplocalwebsite" | "daystokeepremotewebsite")
-			if [[ ${NEW_VALUE} -gt 0 ]]; then
-:	# TODO: Check how many days images there are of the specified type.
-	# Create a "getNumImages() ${KEY}" function to return the number.
-	#	(For remote Website, query the Website for the number.)
-	# If MORE than NEW_VALUE, warn the user since those images will be deleted
-	# at the next endOfNight.sh run.
+			# If the number of days decreased check if there are now any days
+			# that will be deleted, and if so, inform the user since those images will be deleted
+			# at the next endOfNight.sh run.
+			if [[ ${NEW_VALUE} -gt 0 && ${NEW_VALUE} -lt ${OLD_VALUE} ]]; then
+				YYYYMMDD="20[2-9][0-9][01][0-9][0123][0-9]"
+
+	 			if [[ ${KEY} == "daystokeep" ]]; then
+					NUM="$( find "${ALLSKY_IMAGES}/" -maxdepth 1 -type d -name "${YYYYMMDD}" | wc -l )"
+					DIFF=$(( ${NUM} - ${NEW_VALUE} ))
+					if [[ ${DIFF} -gt 0 ]]; then
+						wI_ "NOTE: ${DIFF} days' images/videos will be removed in the morning."
+					fi
+
+	 			elif [[ ${KEY} == "daystokeeplocalwebsite" ]]; then
+					for dir in startrails keograms meteors videos
+					do
+						RE="*-${YYYYMMDD}"
+						# The meteors images have YYYYMMDDHHMMSS.
+						[[ ${dir} == "meteors" ]] && RE+="[0-9][0-9][0-9][0-9][0-9][0-9]"
+						NUM="$( find "${ALLSKY_WEBSITE}/${dir}" -maxdepth 1 -type f \
+							\( -name "${RE}.jpg" -o -name "${RE}.png" -o -name "${RE}.mp4" \) | wc -l
+						)"
+						DIFF=$(( ${NUM} - ${NEW_VALUE} ))
+						if [[ ${DIFF} -gt 0 ]]; then
+							wI_ "NOTE: ${DIFF} days' ${dir} from the local Website will be removed in the morning."
+						fi
+					done
+
+				else	# remote Website
+					REMOTE_DIR="$( settings ".remotewebsiteimagedir" "${ALLSKY_SETTINGS_FILE}" )"
+					REMOTE_WEBSITE_URL="$( settings ".remotewebsiteurl" "${ALLSKY_SETTINGS_FILE}" )"
+					F="${ALLSKY_TMP}/${ME}_${ALLSKY_REMOTE_WEBSITE_COMMANDS_NAME}"
+					echo -e "set\thtml\t0" > "${F}"
+					for dir in startrails keograms meteors videos
+					do
+						RE="*-${YYYYMMDD}"
+						echo -e "get_numfiles\t${dir}/${RE}*"
+					done >> "${F}"
+
+					if ERR="$( "${ALLSKY_SCRIPTS}/upload.sh" --remote-web --silent \
+							"${F}" "${REMOTE_DIR}" "${ALLSKY_REMOTE_WEBSITE_COMMANDS_NAME}" "${ME}" 2>&1 )" ; then
+						if COUNTS="$( execute_web_commands "${REMOTE_WEBSITE_URL}" 2>&1 )" ; then
+							echo "${COUNTS}" | while read -r RETURN_ CMD_ DIR_ NUM_
+								do
+									[[ ${CMD_} != "get_numfiles" ]] && continue
+
+									DIFF=$(( ${NUM_} - ${NEW_VALUE} ))
+									if [[ ${DIFF} -gt 0 ]]; then
+										dir="${DIR_/\/*/}"
+										wI_ "NOTE: ${DIFF} days' ${dir} from the remote Website will be removed in the morning."
+									fi
+								done
+						else
+							echo "${ME}: Unable to execute 'days' file on remote Website: ${COUNTS}" >&2
+						fi
+					else
+						echo "${ME}: Unable to upload 'days' file to remote Website: ${ERR}" >&2
+					fi
+					rm -f "{$F}"
+				fi
 			fi
 			;;
 

@@ -526,7 +526,7 @@ function insertVersions()
 				$msg .= "$x$note";
 			}
 			$msg .= "<br><br>";
-			$cmd = ALLSKY_SCRIPTS . "/addMessage.sh";
+			$cmd = "sudo --user " . ALLSKY_OWNER . " " . ALLSKY_SCRIPTS . "/addMessage.sh";
 			$cmd .= " --no-date --type success --msg '${msg}'";
 			runCommand($cmd, "", "");
 		}

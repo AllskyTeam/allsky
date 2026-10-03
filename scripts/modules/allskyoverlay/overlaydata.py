@@ -34,6 +34,11 @@ try:
 except:
 	pass
 
+try:
+	from allskyoverlay import conditions as overlay_conditions
+except ImportError:
+	import conditions as overlay_conditions		# when run from this folder
+
 class ALLSKYOVERLAYDATA:
     
 	extra_expiry_time = 0
@@ -65,6 +70,7 @@ class ALLSKYOVERLAYDATA:
 		'strokewidth': None,
 	}
 	variable_class = None
+	condition_sets = {}
  
  
 	def __init__(self, from_command_line, values_only, debug_mode, overlay_file):
@@ -269,6 +275,7 @@ class ALLSKYOVERLAYDATA:
 		else:
 			self._debug(f'INFO: No formats found')
 
+		condition_value = None
 		for variable_pos, raw_variable in enumerate(variable_matches):
 			variable = 'AS_' + raw_variable.replace('${','').replace('}', '')
 			value = ''
@@ -293,6 +300,7 @@ class ALLSKYOVERLAYDATA:
       
 			self._debug(f'INFO: Using Value "{value}"')
 			pre_formatted_value = value
+			condition_value = value
 
 			variable_definition = self.variable_class.get_variable(self.variables, variable)
 			if variable_definition is not None:
@@ -389,6 +397,14 @@ class ALLSKYOVERLAYDATA:
 
 		field_data['label'] = field_label
 
+		# Conditional style: only for a label with a single variable, and after the
+		# module's own colour ("fill") above, so a matching rule overrides it.
+		if field_data.get('conditions') and len(variable_matches) == 1:
+			style = overlay_conditions.evaluate(field_data['conditions'], condition_value, self.condition_sets)
+			if style:
+				self._debug(f'INFO: Conditional style for value "{condition_value}": {style}')
+				field_data.update(style)
+
 		self._debug(f'INFO: Final formatted label "{field_label}"')
 		self._debug('')
 
@@ -403,6 +419,7 @@ class ALLSKYOVERLAYDATA:
 				#try:
 				with open(self.overlay_file) as file:
 					json_overlay = json.load(file)
+					self.condition_sets = json_overlay.get('conditionsets', {})
 					self.variables = self.variable_class.get_variables()
 					for index,field_data in enumerate(json_overlay['fields']):
 						self._debug(f"INFO: Formatting field {field_data['label']}")

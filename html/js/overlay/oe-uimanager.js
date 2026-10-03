@@ -181,6 +181,24 @@ class OEUIMANAGER {
         return params;
     }
 
+    /**
+     * The Conditions button: only enabled for a label with a single variable of a
+     * supported type, and highlighted when the field has conditions.
+     */
+    updateConditionsButton(label) {
+        const field = this.#selected;
+        const $button = $('#oe-conditions-field');
+        if (!field || $button.length === 0) return;
+        label = (label === undefined) ? field.label : label;
+        const usable = OECONDITIONS.variableCount(label) === 1 && OECONDITIONS.kindForType(field.type) !== null;
+        const has = !!(field.fieldData && field.fieldData.conditions);
+        $button.prop('disabled', !usable && !has)
+            .toggleClass('btn-success', has).toggleClass('btn-primary', !has)
+            .attr('title', has ? 'Conditions: this field changes its style depending on the value'
+                : (usable ? 'Conditions: change the style depending on the value'
+                          : 'Conditions need a label with exactly one yes/no, number or text variable'));
+    }
+
     get dirty() {
         let result = false;
         if (this.#fieldManager.dirty || this.#configManager.dirty) {
@@ -3256,6 +3274,7 @@ class OEUIMANAGER {
                     'strokewidth': this.#selected.strokewidth,
                     'stroke': strokeColour
                 });
+                this.updateConditionsButton();
             }
             if (this.#selected instanceof OEIMAGEFIELD) {
                 if (textVisible) {
@@ -3573,6 +3592,14 @@ class OEUIMANAGER {
             $('#oe-text-edit-dialog').modal('hide');
         });
 
+        $(document).off('click', '#oe-conditions-field');
+        $(document).on('click', '#oe-conditions-field', () => {
+            new OECONDITIONS().open(this.#selected, this.#fonts, () => {
+                this.updatePropertyEditor();
+                this.updateToolbar();
+            });
+        });
+
         $(document).off('click', '#oe-format-field');
         $(document).on('click', '#oe-format-field', (e) => {
 		    let selected = this.#selected
@@ -3622,7 +3649,8 @@ class OEUIMANAGER {
                     showInput: true,
                     showInitial: true,
                     showAlpha: false
-                }
+                },
+                postHTML: '<button type="button" id="oe-conditions-field" class="btn btn-primary btn-sm btn-oe-small" title="Conditions: change the style depending on the value"><i class="fa-solid fa-code-branch"></i></button>'
             },
             strokewidth: { group: 'Font', name: 'Stroke Size', type: 'number', options: { min: 0, max: 10, step: 1 } },
             stroke: {
@@ -3654,6 +3682,7 @@ class OEUIMANAGER {
                 }
             } else {
                 if (name == 'label') {
+                    uiManager.updateConditionsButton(value);
                     let x = field.x;
                     let oldSize = field.shape.measureSize(field.label); 
                     field[name] = value;

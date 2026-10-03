@@ -977,11 +977,13 @@ set_permissions()
 	# "video" allows the user to access video devices
 	# "gpio" and "i2c" allow the Allsky server and modules, which run as the user,
 	# to switch GPIO pins (e.g., dew heater, fans) and read I2C sensors.
+
 	local G="$( id "${ALLSKY_OWNER}" )"
 	for g in "sudo" "${ALLSKY_WEBSERVER_GROUP}" "video" "gpio" "i2c"
 	do
 		# "gpio" and "i2c" only exist on some systems.
 		getent group "${g}" > /dev/null || continue
+
 		#shellcheck disable=SC2076
 		if ! [[ ${G} =~ "(${g})" ]]; then
 			display_msg --log progress "Adding ${ALLSKY_OWNER} to ${g} group."
@@ -2349,10 +2351,21 @@ restore_prior_files()
 	ITEM="${SPACE}'config/modules' directory"
 	if [[ -d ${PRIOR_CONFIG_DIR}/modules ]]; then
 		display_msg --log progress "${ITEM} (merging)"
-
 		cp -ar "${PRIOR_CONFIG_DIR}/modules" "${ALLSKY_CONFIG}"
 	else
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
+	fi
+
+	ITEM="${SPACE}support files"
+	PRIOR_SUPPORT_DIR="${ALLSKY_SUPPORT_DIR/${ALLSKY_HOME}/${ALLSKY_PRIOR_DIR}}"
+	FILES="$( find "${PRIOR_SUPPORT_DIR}" -type f -name '*.zip' 2>/dev/null )"
+	if [[ -n ${FILES} ]]; then
+		display_msg --log progress "${ITEM} (moving)"
+		# shellcheck disable=SC2086
+		mv ${FILES} "${ALLSKY_SUPPORT_DIR}"
+	else
+		# Few people have these files, so don't show to user.
+		display_msg --logonly info "${ITEM}: ${NOT_RESTORED}"
 	fi
 
 	D="${PRIOR_CONFIG_DIR}"
@@ -2681,6 +2694,17 @@ do_restore()
 		mv "${ALLSKY_MYFILES_DIR}" "$( dirname "${PRIOR_MYFILES_DIR}" )"
 	else
 		# Few people have this directory, so don't show to user.
+		display_msg --logonly info "${ITEM}: ${NOT_RESTORED}"
+	fi
+	ITEM="${SPACE}support files"
+	PRIOR_SUPPORT_DIR="${ALLSKY_SUPPORT_DIR/${ALLSKY_HOME}/${ALLSKY_PRIOR_DIR}}"
+	FILES="$( find "${ALLSKY_SUPPORT_DIR}" -type f -name '*.zip' 2>/dev/null )"
+	if [[ -n ${FILES} ]]; then
+		display_msg --log progress "${ITEM} (moving back)"
+		# shellcheck disable=SC2086
+		mv ${FILES} "${PRIOR_SUPPORT_DIR}"
+	else
+		# Few people have these files, so don't show to user.
 		display_msg --logonly info "${ITEM}: ${NOT_RESTORED}"
 	fi
 
@@ -3364,9 +3388,11 @@ update_overlays()
 update_modules()
 {
 	local TMP="${ALLSKY_LOGS}/modules.log"
+
 	# Errors the installer can't log (e.g., an exception at startup) only go to
 	# stdout and stderr, so keep those too.
 	local OUTPUT="${ALLSKY_LOGS}/modules.output.log"
+
 	display_msg --log progress "Updating modules using the ${BRANCH} branch."
 	args=(
 		--auto

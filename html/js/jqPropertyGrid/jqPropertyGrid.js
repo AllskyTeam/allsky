@@ -329,7 +329,7 @@
 			}
 			// If color and we have the spectrum color picker use it
 		} else if (type === 'color' && typeof $.fn.spectrum === 'function') {
-			valueHTML = '<input type="text" id="' + elemId + '" />';
+			valueHTML = '<input type="text" id="' + elemId + '" />' + postHTML;
 			if (postCreateInitFuncs) {
 				postCreateInitFuncs.push(initColorPicker(elemId, value, meta.options, name, changedCallback, el));
 			}

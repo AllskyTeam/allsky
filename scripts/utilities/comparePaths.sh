@@ -148,7 +148,7 @@ URL="${SAVED_URL}"
 	DIR="${DIR:-null}"
 }
 
-# Send commands.txt to get the upload directory path on the server.
+# Send a file to get the upload directory path on the server.
 # Set global UPLOAD_DIR to the directory name.
 # Set global UPLOAD_LS to the name of a file that contains the "ls" output.
 UPLOAD_DIR=""
@@ -157,7 +157,7 @@ function sendCommandsFile()
 {
 	local COMMANDS_FILE  OUT  CMD  OUTPUT
 
-	COMMANDS_FILE="${OUTPUT_DIR}/commands.txt"
+	COMMANDS_FILE="${OUTPUT_DIR}/${ALLSKY_REMOTE_WEBSITE_COMMANDS_NAME}"
 	{
 		[[ ${DEBUG} == "true" ]] && echo -e "set${TAB}delete-commands${TAB}0"
 		echo "pwd"
@@ -198,7 +198,7 @@ function sendCommandsFile()
 }
 
 # Get the server location of the Website.
-# This uses the commands.txt file.
+# This uses the ${ALLSKY_REMOTE_WEBSITE_COMMANDS_FILE} file.
 # Set global WEB_DIR to the directory name.
 # Set global WEB_LS to the name of a file that contains the "ls" output.
 WEB_DIR=""

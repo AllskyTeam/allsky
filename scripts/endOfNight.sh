@@ -174,7 +174,7 @@ if [[ ${S_daystokeeplocalwebsite} -gt 0 && ${S_uselocalwebsite} == "true" ]]; th
 fi
 
 if [[ ${S_daystokeepremotewebsite} -gt 0 && ${S_useremotewebsite} == "true" ]]; then
-	F="${ALLSKY_TMP}/${ME}_commands.txt"
+	F="${ALLSKY_TMP}/${ME}_${ALLSKY_REMOTE_WEBSITE_COMMANDS_NAME}"
 	REMOTE_DIR="$( settings ".remotewebsiteimagedir" "${ALLSKY_SETTINGS_FILE}" )"
 	REMOTE_WEBSITE_URL="$( settings ".remotewebsiteurl" "${ALLSKY_SETTINGS_FILE}" )"
 
@@ -217,7 +217,7 @@ if [[ ${S_daystokeepremotewebsite} -gt 0 && ${S_useremotewebsite} == "true" ]]; 
 	if [[ $? -eq 0 ]]; then
 		# Upload the command file.
 		if ERR="$( "${ALLSKY_SCRIPTS}/upload.sh" --remote-web --silent \
-				"${F}" "${REMOTE_DIR}" "commands.txt" "${ME}" 2>&1 )" ; then
+				"${F}" "${REMOTE_DIR}" "${ALLSKY_REMOTE_WEBSITE_COMMANDS_NAME}" "${ME}" 2>&1 )" ; then
 			if RESULT="$( execute_web_commands "${REMOTE_WEBSITE_URL}" )" ; then
 				COUNTS="$( echo "${RESULT}" | grep "DELETED: " | sed -e 's/.*\t/    /' )"
 				if [[ -z ${COUNTS} ]]; then

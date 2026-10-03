@@ -12,7 +12,9 @@
 				"median" : "float",
 				"numImagesUsed" : "int",
 				"numImagesNotUsed" : "int",
-				"threshold" : "float"
+				"threshold" : "float",
+				"starttime" : "int",
+				"endtime" : "int"
             },
             "indexes": {
 

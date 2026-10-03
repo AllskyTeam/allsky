@@ -55,10 +55,19 @@ if [[ "$( settings ".startrailsgenerate" )" != "true" ]]; then
 	wW_ "\nWARNING: The startrails 'Generate' setting is not enabled."
 fi
 
+COLUMNS="timestamp, minimum, maximum, mean, median, numImagesUsed, numImagesNotUsed, threshold"
+# "starttime" and "endtime" (the first and last image) are only added to the table
+# when the first startrails after an upgrade is saved, so fall back to the other columns.
 DB_DATA="$( "${ALLSKY_DATABASE_COMMAND}" --format tab --run \
-	"SELECT timestamp, minimum, maximum, mean, median, numImagesUsed, numImagesNotUsed, threshold from ${ALLSKY_STARTRAILS_TABLE} order by timestamp" 2>&1
+	"SELECT ${COLUMNS}, starttime, endtime from ${ALLSKY_STARTRAILS_TABLE} order by timestamp" 2>&1
 )"
 RET=$?
+if [[ ${RET} -ne 0 ]]; then
+	DB_DATA="$( "${ALLSKY_DATABASE_COMMAND}" --format tab --run \
+		"SELECT ${COLUMNS} from ${ALLSKY_STARTRAILS_TABLE} order by timestamp" 2>&1
+	)"
+	RET=$?
+fi
 if [[ ${RET} -ne 0 ]]; then
 	wW_ "\nWARNING: Unable to get startrails data from database: ${DB_DATA} $RET"
 fi
@@ -71,7 +80,11 @@ fi
 		echo "${DB_DATA}" | gawk '{
 			# Convert time since epoch to date/time.
 			"date +%Y-%m-%dT%H:%M:%S --date=@" $1 | getline timestamp
-			print(timestamp, "Minimum", $2, "maximum", $3, "mean", $4, "median", $5, "numImagesUseed", $6, "numImagesNotUsed", $7, "threshold", $8);
+			# The first and last image, as HH:MM; "-" if not known (older startrails).
+			start = "-"; end = "-";
+			if ($9 ~ /^[0-9]+$/) { cmd = "date +%H:%M --date=@" $9; cmd | getline start; close(cmd); }
+			if ($10 ~ /^[0-9]+$/) { cmd = "date +%H:%M --date=@" $10; cmd | getline end; close(cmd); }
+			print(timestamp, "Minimum", $2, "maximum", $3, "mean", $4, "median", $5, "numImagesUseed", $6, "numImagesNotUsed", $7, "threshold", $8, "start", start, "end", end);
 		}'
 	else
 		# Input format:
@@ -88,10 +101,10 @@ fi
 			t_min=0; t_max=0; t_mean=0; t_median=0; t_used=0; t_notUsed=0;
 			entries_not_used = 0;
 			num = 0;
-			headerFmt		= "%-20s   %-5s   %-5s   %-5s     %-5s     %-5s   %-9s  %-s\n";
+			headerFmt		= "%-20s   %-5s   %-5s   %-5s     %-5s     %-5s   %-9s  %-9s  %-5s  %-s\n";
 			numFmt			= "%-20s   %.3f     %.3f     %.3f     %.3f     %5d         %5d";
 			numFmtAverage	= numFmt "       -\n";			# theshold not averaged
-			numFmtData   	= numFmt "       %-4s\n";		# threshold
+			numFmtData   	= numFmt "       %-9s  %-5s  %-5s\n";	# threshold, first and last image
 		}
 		{
 			date = substr($1, 0, 10) "  "  substr($1, 12, 8);
@@ -106,6 +119,8 @@ fi
 			used = $11;
 			notUsed = $13;
 			threshold = $15;
+			first = ($17 == "") ? "-" : $17;
+			last = ($19 == "") ? "-" : $19;
 			t_min += min;
 			t_max += max;
 			t_mean += mean;
@@ -117,7 +132,7 @@ fi
 			if (++num == 1) {
 				header = sprintf(headerFmt,
 					"Startrails date", "Minimum", "Maximum", "Mean", "Median",
-					"Images used", "Not used", "Threshold");
+					"Images used", "Not used", "Threshold", "First", "Last");
 				printf(header);
 				dashes = "-";
 				l = length(header) - 2;
@@ -131,7 +146,7 @@ fi
 				t = "-";
 			else
 				t  = sprintf("%-.4f", threshold)
-			printf(numFmtData, date, min, max, mean, median, used, notUsed, t);
+			printf(numFmtData, date, min, max, mean, median, used, notUsed, t, first, last);
 		}
 		END {
 			if (entries_not_used > 0) {

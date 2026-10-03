@@ -328,6 +328,21 @@ fi
 
 DAYNIGHT_FILE=""		# global
 WINDOW_FILE=""			# global
+
+# Print the times of the first and last image in the names on stdin, as "start end"
+# in seconds since 1970.  Image names contain the date and time, e.g., image-20261002183005.jpg.
+first_last_image_times()
+{
+	local FIRST  LAST
+	read -r FIRST LAST <<< "$( gawk '{ if (match($0, /[0-9]{14}/)) print substr($0, RSTART, 14); }' |
+		sort | sed -n '1p;$p' | tr '\n' ' ' )"
+	[[ -z ${FIRST} ]] && return 1
+	[[ -z ${LAST} ]] && LAST="${FIRST}"
+	local T
+	for T in "${FIRST}" "${LAST}"; do
+		date --date="${T:0:4}-${T:4:2}-${T:6:2} ${T:8:2}:${T:10:2}:${T:12:2}" '+%s' 2>/dev/null || return 1
+	done | tr '\n' ' '
+}
 # Create a file with the names of the images between the start and end times for ${1}
 # and set WINDOW_FILE to it.  WINDOW_FILE is "" if all images should be used.
 # Return 1 if there are no images to use.
@@ -490,11 +505,14 @@ if [[ ${DO_STARTRAILS} == "true" ]]; then
 		BRIGHTNESS_THRESHOLD="${S_startrailsbrightnessthreshold}"
 		STARTRAILS_EXTRA_PARAMETERS="${S_startrailsextraparameters}"
 		CMD="'${ALLSKY_BIN}/startrails' ${N} ${SIZE_FILTER} -o '${UPLOAD_FILE}'"
+		STARTRAILS_LIST=""		# the images used, for their times in the database
 		if [[ -n ${IMAGES_FILE} ]]; then
 			CMD+=" --images '${IMAGES_FILE}'"
+			STARTRAILS_LIST="${IMAGES_FILE}"
 		elif get_window_images "startrails" "${S_startrailsstart}" "${S_startrailsend}" ; then
 			if [[ -n ${WINDOW_FILE} ]]; then
 				CMD+=" --images '${WINDOW_FILE}'"
+				STARTRAILS_LIST="${WINDOW_FILE}"
 			else
 				CMD+=" -d '${INPUT_DIR}' -e ${ALLSKY_EXTENSION}"
 			fi
@@ -535,6 +553,18 @@ if [[ ${DO_STARTRAILS} == "true" ]]; then
 			D="${DATE}"
 			! is_number "${D}" && D="$( date '+%Y%m%d' )"
 			VALUES="'date,${D}' 'directory,${DATE}' ${V}"
+
+			# The times of the first and last image looked at, i.e., the startrails' time window.
+			if [[ -n ${STARTRAILS_LIST} ]]; then
+				TIMES="$( first_last_image_times < "${STARTRAILS_LIST}" )"
+			else
+				TIMES="$( find "${INPUT_DIR}" -maxdepth 1 -name "*.${ALLSKY_EXTENSION}" -printf '%f\n' |
+					first_last_image_times )"
+			fi
+			read -r START_SECONDS END_SECONDS <<< "${TIMES}"
+			if [[ -n ${START_SECONDS} && -n ${END_SECONDS} ]]; then
+				VALUES+=" 'starttime,${START_SECONDS}' 'endtime,${END_SECONDS}'"
+			fi
 
 			# Insert the stats into the DB.
 			# shellcheck disable=SC2086

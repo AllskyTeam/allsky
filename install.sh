@@ -3545,17 +3545,6 @@ exit_installation()
 
 
 ####
-# Remove the point release from the version
-# Format of a version (_PP is optional point release):
-#	12345678901234
-#	vYYYY.MM.DD_PP
-
-function remove_point_release()
-{
-	# Get just the base portion.
-	echo "${1:0:11}"
-}
-
 
 ####
 handle_interrupts()
@@ -4014,6 +4003,15 @@ update_modules
 
 ##### Perform any migrations required
 migrate_overlays
+if ! run_overlay_migrations ; then
+	display_msg --log warning "Unable to update the overlay templates." "See the messages above."
+fi
+if ! run_settings_migrations ; then
+	display_msg --log warning "Unable to update the settings." "See the messages above."
+fi
+if ! run_system_migrations ; then
+	display_msg --log warning "Unable to make the one-time system changes." "See the messages above."
+fi
 
 ##### Setup Database (If required)
 setup_database

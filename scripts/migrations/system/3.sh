@@ -34,9 +34,11 @@ function migrate()
 		if [[ -f ${PERIODIC} ]]; then
 			if ! jq -e --arg m "${MODULE}" 'has($m)' "${PERIODIC}" > /dev/null 2>&1 ; then
 				TEMP="${PERIODIC}.migrating"
-				jq --indent 4 --arg m "${MODULE}" --argjson e "${ENTRY}" '.[$m] = $e' \
-					"${PERIODIC}" > "${TEMP}" &&
-				cp "${TEMP}" "${PERIODIC}" || { rm -f "${TEMP}"; return 1; }
+				if ! jq --indent 4 --arg m "${MODULE}" --argjson e "${ENTRY}" '.[$m] = $e' \
+						"${PERIODIC}" > "${TEMP}" || ! cp "${TEMP}" "${PERIODIC}" ; then
+					rm -f "${TEMP}"
+					return 1
+				fi
 				rm -f "${TEMP}"
 			fi
 		elif [[ -z ${SUFFIX} ]]; then
@@ -48,8 +50,11 @@ function migrate()
 		for F in "${DAY}" "${NIGHT}"; do
 			jq -e --arg m "${MODULE}" 'has($m)' "${F}" > /dev/null 2>&1 || continue
 			TEMP="${F}.migrating"
-			jq --indent 4 --arg m "${MODULE}" 'del(.[$m])' "${F}" > "${TEMP}" &&
-			cp "${TEMP}" "${F}" || { rm -f "${TEMP}"; return 1; }
+			if ! jq --indent 4 --arg m "${MODULE}" 'del(.[$m])' "${F}" > "${TEMP}" ||
+					! cp "${TEMP}" "${F}" ; then
+				rm -f "${TEMP}"
+				return 1
+			fi
 			rm -f "${TEMP}"
 		done
 	done

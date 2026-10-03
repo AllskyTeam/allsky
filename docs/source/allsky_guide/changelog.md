@@ -13,6 +13,9 @@ of the current release.
 
     ???+ "v2026.10.01_01 - Point Release # 1"
 
+        ## **Changes that may require action (upgrades only)**
+        - The **Solar System** module now only runs in the **Periodic** flow. Running it for every image as well did the same work several times. Upgrading moves it from the Daytime and Nighttime flows to the Periodic flow with its settings. Its values, e.g. satellite positions, are now updated as often as the Periodic flow runs (every 60 seconds by default); lower the ==Periodic Timer== in the **Module Manager** settings if you need them more often.
+
         ## **Major New Features (described more below)**
         - **Moon-dependent stretch** - the nighttime stretch can follow the moonlight: a strong stretch on dark, moonless nights and a weaker one when a bright Moon is high in the sky.
         - **Start and end times** for the timelapse, keogram, and startrails - for example only the night, or from 22:00 to 04:00. Times can also be `sunrise`, `sunset`, or the start or end of Allsky's daytime or nighttime.

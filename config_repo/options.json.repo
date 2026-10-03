@@ -1102,6 +1102,28 @@
 "booldependson" : "savedaytimeimages OR savenighttimeimages"
 },
 {
+"name" : "timelapsestart",
+"default" : "",
+"description" : "Only use images taken at or after this time in the timelapse.<br>Leave empty to use the first image of the day.  Enter a time like <code>18:00</code> or one of <code>sunrise</code>, <code>sunset</code>, <code>daytime_start</code>, <code>daytime_end</code>, <code>nighttime_start</code>, or <code>nighttime_end</code>.",
+"label" : "Start Time",
+"label_prefix" : "Daily Timelapse",
+"type" : "text",
+"carryforward" : true,
+"optional" : true,
+"booldependson" : "timelapsegenerate"
+},
+{
+"name" : "timelapseend",
+"default" : "",
+"description" : "Only use images taken at or before this time in the timelapse.<br>Leave empty to use the last image of the day.  Enter a time like <code>06:00</code> or one of <code>sunrise</code>, <code>sunset</code>, <code>daytime_start</code>, <code>daytime_end</code>, <code>nighttime_start</code>, or <code>nighttime_end</code>.<br>An end time earlier than the start time is on the next day, so <code>18:00</code> to <code>06:00</code> works.",
+"label" : "End Time",
+"label_prefix" : "Daily Timelapse",
+"type" : "text",
+"carryforward" : true,
+"optional" : true,
+"booldependson" : "timelapsegenerate"
+},
+{
 "name" : "timelapsewidth",
 "minimum" : 0,
 "maximum" : "_max",
@@ -1328,6 +1350,28 @@
 "booldependson" : "savedaytimeimages OR savenighttimeimages"
 },
 {
+"name" : "keogramstart",
+"default" : "",
+"description" : "Only use images taken at or after this time in the keogram.<br>Leave empty to use the first image of the day.  Enter a time like <code>18:00</code> or one of <code>sunrise</code>, <code>sunset</code>, <code>daytime_start</code>, <code>daytime_end</code>, <code>nighttime_start</code>, or <code>nighttime_end</code>.",
+"label" : "Start Time",
+"label_prefix" : "Keograms",
+"type" : "text",
+"carryforward" : true,
+"optional" : true,
+"booldependson" : "keogramgenerate"
+},
+{
+"name" : "keogramend",
+"default" : "",
+"description" : "Only use images taken at or before this time in the keogram.<br>Leave empty to use the last image of the day.  Enter a time like <code>06:00</code> or one of <code>sunrise</code>, <code>sunset</code>, <code>daytime_start</code>, <code>daytime_end</code>, <code>nighttime_start</code>, or <code>nighttime_end</code>.<br>An end time earlier than the start time is on the next day, so <code>18:00</code> to <code>06:00</code> works.",
+"label" : "End Time",
+"label_prefix" : "Keograms",
+"type" : "text",
+"carryforward" : true,
+"optional" : true,
+"booldependson" : "keogramgenerate"
+},
+{
 "name" : "keogramexpand",
 "default" : true,
 "description" : "Enable to expand keograms to the image width.",
@@ -1415,13 +1459,25 @@
 "booldependson" : "savedaytimeimages OR savenighttimeimages"
 },
 {
-"name" : "startrailsnightonly",
-"default" : false,
-"description" : "Only include nighttime images in startrails?",
-"label" : "Night images only",
+"name" : "startrailsstart",
+"default" : "",
+"description" : "Only use images taken at or after this time in the startrails.<br>Leave empty to use the first image of the day.  Enter a time like <code>18:00</code> or one of <code>sunrise</code>, <code>sunset</code>, <code>daytime_start</code>, <code>daytime_end</code>, <code>nighttime_start</code>, or <code>nighttime_end</code>.",
+"label" : "Start Time",
 "label_prefix" : "Startrails",
-"type" : "boolean",
+"type" : "text",
 "carryforward" : true,
+"optional" : true,
+"booldependson" : "startrailsgenerate"
+},
+{
+"name" : "startrailsend",
+"default" : "",
+"description" : "Only use images taken at or before this time in the startrails.<br>Leave empty to use the last image of the day.  Enter a time like <code>06:00</code> or one of <code>sunrise</code>, <code>sunset</code>, <code>daytime_start</code>, <code>daytime_end</code>, <code>nighttime_start</code>, or <code>nighttime_end</code>.<br>An end time earlier than the start time is on the next day, so <code>18:00</code> to <code>06:00</code> works.",
+"label" : "End Time",
+"label_prefix" : "Startrails",
+"type" : "text",
+"carryforward" : true,
+"optional" : true,
 "booldependson" : "startrailsgenerate"
 },
 {

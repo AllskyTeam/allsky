@@ -18,6 +18,7 @@ using namespace std;
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <cstdlib>
+#include <fstream>
 #include <iostream>
 #include <mutex>
 #include <string>
@@ -48,6 +49,7 @@ using namespace cv;
 
 struct config_t {
 	std::string img_src_dir, img_src_ext, dst_keogram;
+	std::string images;				// File with the images to process ("-" for stdin), instead of a directory.
 	bool labels_enabled, date_enabled, keogram_enabled;
 	bool parse_filename, junk, img_expand, channel_info;
 	int img_width;
@@ -518,6 +520,7 @@ void parse_args(int argc, char** argv, struct config_t* cf)
 {
 	int c, tmp, ncpu = std::thread::hardware_concurrency();
 
+	cf->images = "";
 	cf->labels_enabled = true;
 	cf->date_enabled = true;
 	cf->parse_filename = false;
@@ -540,6 +543,7 @@ void parse_args(int argc, char** argv, struct config_t* cf)
 	int option_index = 0;
 	static struct option long_options[] = {
 		{"directory", required_argument, 0, 'd'},
+		{"images", required_argument, 0, 'i'},
 		{"image-size", required_argument, 0, 's'},
 		{"extension", required_argument, 0, 'e'},
 		{"output", required_argument, 0, 'o'},
@@ -561,7 +565,7 @@ void parse_args(int argc, char** argv, struct config_t* cf)
 		{"fixed-channel-number", required_argument, 0, 'f'},
 		{0, 0, 0, 0}};
 
-		c = getopt_long(argc, argv, "d:e:o:r:s:L:C:N:S:T:Q:q:f:nDpvhxc", long_options, &option_index);
+		c = getopt_long(argc, argv, "d:i:e:o:r:s:L:C:N:S:T:Q:q:f:nDpvhxc", long_options, &option_index);
 		if (c == -1)
 			break;
 
@@ -572,6 +576,9 @@ void parse_args(int argc, char** argv, struct config_t* cf)
 			case 'h':
 				usage_and_exit(0, true);
 				// NOTREACHED
+			case 'i':
+				cf->images = optarg;
+				break;
 			case 'd':
 				cf->img_src_dir = optarg;
 				break;
@@ -727,7 +734,9 @@ void usage_and_exit(int x, bool showAll) {
 
 	std::cerr << KNRM << std::endl;
 	std::cerr << "Arguments:" << std::endl;
-	std::cerr << "-d | --directory <str> : directory from which to load images (required)" << std::endl;
+	std::cerr << "-d | --directory <str> : directory from which to load images (required unless --images is used)" << std::endl;
+	std::cerr << "-i | --images <file>   : file with the images to use, one per line, instead of all images in --directory;" << std::endl;
+	std::cerr << "                         names that aren't full pathnames are in --directory.  \"-\" reads stdin." << std::endl;
 	std::cerr << "-e | --extension <str> : image extension to process (required)" << std::endl;
 	std::cerr << "-o | --output-file <str> : name of output file (required)" << std::endl;
 	std::cerr << "-r | --rotate <float> : number of degrees to rotate image, counterclockwise (0)" << std::endl;
@@ -795,7 +804,9 @@ int main(int argc, char* argv[])
 
 	parse_args(argc, argv, &config);
 
-	if (config.img_src_dir.empty() || config.img_src_ext.empty() || config.dst_keogram.empty())
+	// Either a directory and extension, or a file with the images.
+	if (config.dst_keogram.empty() ||
+			(config.images.empty() && (config.img_src_dir.empty() || config.img_src_ext.empty())))
 		usage_and_exit(3, true);
 
 	r = setpriority(PRIO_PROCESS, 0, config.nice_level);
@@ -806,14 +817,61 @@ int main(int argc, char* argv[])
 
 	// Find files
 	glob_t files;
-	std::string wildcard = config.img_src_dir + "/*." + config.img_src_ext;
-	glob(wildcard.c_str(), 0, NULL, &files);
-	nfiles = files.gl_pathc;
-	if (nfiles == 0) {
-		globfree(&files);
-		std::cerr << ME << ": ERROR: No images found in " << config.img_src_dir;
-		std::cerr << ", exiting." << std::endl;
-		exit(NO_IMAGES);
+	if (! config.images.empty()) {
+		// The images are listed in a file, or stdin if "-", one per line, in the order
+		// to use.  Lines that begin with "#" are ignored.  As in startrails, "files" is
+		// set to point to the image names so the rest of the code stays the same.
+		std::vector<std::string> images;
+		std::string line;
+		if (config.images == "-") {
+			while (std::getline(std::cin, line)) {
+				if (! line.empty() && line[0] != '#')
+					images.push_back(line);
+			}
+		} else {
+			std::ifstream image_file(config.images);
+			if (! image_file.is_open()) {
+				std::cerr << KRED << ME << ": ERROR: Could not open image file '" << config.images << "'"
+					<< ", exiting." << KNRM << std::endl;
+				exit(NO_IMAGES);
+			}
+			while (std::getline(image_file, line)) {
+				if (! line.empty() && line[0] != '#')
+					images.push_back(line);
+			}
+			image_file.close();
+		}
+		nfiles = files.gl_pathc = images.size();
+		if (nfiles == 0) {
+			std::cerr << KRED << ME << ": ERROR: No images listed in '" << config.images << "'";
+			std::cerr << ", exiting." << KNRM << std::endl;
+			exit(NO_IMAGES);
+		}
+		files.gl_pathv = new char*[nfiles];
+		for (size_t i = 0; i < nfiles; i++) {
+			std::string image = images[i];
+			// A name that isn't a full pathname is in the input directory.
+			if (image[0] != '/') {
+				if (config.img_src_dir.empty()) {
+					std::cerr << KRED << ME << ": ERROR: image source directory not specified and"
+						<< " at least one image name is not a full pathname." << KNRM << std::endl << std::endl;
+					usage_and_exit(3, false);
+				}
+				image = config.img_src_dir + "/" + image;
+			}
+			files.gl_pathv[i] = new char[image.length() + 1];
+			strcpy(files.gl_pathv[i], image.c_str());
+		}
+	} else {
+		std::string wildcard = config.img_src_dir + "/*." + config.img_src_ext;
+		glob(wildcard.c_str(), 0, NULL, &files);
+		nfiles = files.gl_pathc;
+		if (nfiles == 0) {
+			globfree(&files);
+			std::cerr << ME << ": ERROR: No images found in " << config.img_src_dir;
+			std::cerr << ", exiting." << std::endl;
+			exit(NO_IMAGES);
+		}
 	}
 	// Determine width of the number of files, e.g., "1234" is 4 characters wide.
 	sprintf(s_, "%d", (int)nfiles);
@@ -873,7 +931,8 @@ int main(int argc, char* argv[])
 
 	if (config.labels_enabled)
 		annotate_image(&annotations, &accumulated, &config);
-	globfree(&files);
+	if (config.images.empty())
+		globfree(&files);
 
 	// If the destination doesn't have an extension, use config.img_src_ext.
 	// We assume that anything after the "." is an extension.
@@ -884,6 +943,11 @@ int main(int argc, char* argv[])
 		ext = ++e;
 	} else {
 		ext = config.img_src_ext;
+		if (ext.empty() && nfiles > 0) {
+			// With --images and no --extension, use the extension of the images.
+			const char* image_ext = strrchr(files.gl_pathv[0], '.');
+			if (image_ext != NULL) ext = image_ext + 1;
+		}
 		config.dst_keogram += "." + ext;
 	}
 

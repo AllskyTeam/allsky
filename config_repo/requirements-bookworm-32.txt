@@ -15,6 +15,7 @@ certifi
 requests
 mysql-connector-python
 photutils
+matplotlib>=3.9
 psutil
 gitpython
 whiptail-dialogs

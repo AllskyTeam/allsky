@@ -21,12 +21,16 @@ if [[ ! ${WEBSITE_VERSION} =~ ^[0-9]+$ ]]; then
 fi
 check_migrations "website" "${WEBSITE_VERSION}" || RET=1
 
-# Overlay templates have no version number of their own: no gaps up to the highest N.sh.
-HIGHEST="$( find "${ALLSKY_MIGRATIONS_DIR}/overlay" -maxdepth 1 -name '[0-9]*.sh' -printf '%f\n' |
-	sed 's/\.sh$//' | sort -n | tail -1 )"
-check_migrations "overlay" "${HIGHEST:-1}" || RET=1
+# Overlay templates and system changes have no version number of their own:
+# no gaps up to the highest N.sh.
+OVERLAY_VERSION="$( latest_migration "overlay" )"
+check_migrations "overlay" "${OVERLAY_VERSION}" || RET=1
+SYSTEM_VERSION="$( latest_migration "system" )"
+check_migrations "system" "${SYSTEM_VERSION}" || RET=1
 
 if [[ ${RET} -eq 0 ]]; then
-	echo "${ME}: All migrations are there (website: version ${WEBSITE_VERSION}, overlay: version ${HIGHEST})."
+	MSG="All migrations are there (website: version ${WEBSITE_VERSION}"
+	MSG+=", overlay: version ${OVERLAY_VERSION}, system: version ${SYSTEM_VERSION})."
+	echo "${ME}: ${MSG}"
 fi
 exit "${RET}"

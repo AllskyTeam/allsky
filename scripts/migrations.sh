@@ -11,6 +11,9 @@
 #	overlay:	the user's overlay templates.  They have no version number of their own,
 #				so the version they are at is kept in ${ALLSKY_MIGRATIONS_STATE_FILE},
 #				and the newest version is the highest N.sh.
+#	system:		one-time changes outside configuration files, e.g., copying a file to /etc
+#				and restarting a service.  Like "overlay", the version is kept in
+#				${ALLSKY_MIGRATIONS_STATE_FILE}.  ${1} is empty.
 #
 # A migration file defines one function,  migrate,  which gets the file to update as ${1}.
 # It is "source"d, so it can use the functions in installUpgradeFunctions.sh.
@@ -31,7 +34,7 @@ export ALLSKY_MIGRATIONS_STATE_FILE="${ALLSKY_CONFIG}/migrations.json"
 function run_migrations()
 {
 	local KIND="${1}"  FILE="${2}"  PRIOR="${3}"  NEW="${4}"
-	local FIRST  N  M
+	local FIRST  N  M  ON
 
 	if [[ ! ${NEW} =~ ^[0-9]+$ ]]; then
 		echo "run_migrations(): invalid new version '${NEW}' for '${KIND}'." >&2
@@ -62,7 +65,9 @@ function run_migrations()
 		unset -f migrate
 		# shellcheck disable=SC1090
 		if ! source "${M}" || ! migrate "${FILE}" ; then
-			echo "run_migrations(): '${KIND}/${N}.sh' failed on '${FILE}'." >&2
+			ON=""
+			[[ -n ${FILE} ]] && ON=" on '${FILE}'"
+			echo "run_migrations(): '${KIND}/${N}.sh' failed${ON}." >&2
 			unset -f migrate
 			return 1
 		fi
@@ -113,6 +118,7 @@ function latest_migration()
 # to the newest version.  Their version is kept in ${ALLSKY_MIGRATIONS_STATE_FILE};
 # if it's unknown (e.g., after "Replace All"), all migrations run, which is safe
 # since each one only changes what still needs changing.
+# With "--no-files" instead of file names, each migration runs once with an empty ${1}.
 function run_state_migrations()
 {
 	local KIND="${1}" ; shift
@@ -123,10 +129,14 @@ function run_state_migrations()
 	NEW="$( latest_migration "${KIND}" )"
 	(( PRIOR >= NEW )) && return 0
 
-	for FILE in "$@"; do
-		[[ -f ${FILE} ]] || continue
-		run_migrations "${KIND}" "${FILE}" "${PRIOR}" "${NEW}" || return 1
-	done
+	if [[ ${1} == "--no-files" ]]; then
+		run_migrations "${KIND}" "" "${PRIOR}" "${NEW}" || return 1
+	else
+		for FILE in "$@"; do
+			[[ -f ${FILE} ]] || continue
+			run_migrations "${KIND}" "${FILE}" "${PRIOR}" "${NEW}" || return 1
+		done
+	fi
 
 	TEMP="${ALLSKY_MIGRATIONS_STATE_FILE}.tmp"
 	if [[ -s ${ALLSKY_MIGRATIONS_STATE_FILE} ]]; then
@@ -141,4 +151,10 @@ function run_state_migrations()
 function run_overlay_migrations()
 {
 	run_state_migrations "overlay" "${ALLSKY_OVERLAY}"/myTemplates/overlay*.json
+}
+
+# One-time changes outside the configuration files.
+function run_system_migrations()
+{
+	run_state_migrations "system" --no-files
 }

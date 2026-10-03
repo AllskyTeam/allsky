@@ -3962,6 +3962,9 @@ migrate_overlays
 if ! run_overlay_migrations ; then
 	display_msg --log warning "Unable to update the overlay templates." "See the messages above."
 fi
+if ! run_settings_migrations ; then
+	display_msg --log warning "Unable to update the settings." "See the messages above."
+fi
 if ! run_system_migrations ; then
 	display_msg --log warning "Unable to make the one-time system changes." "See the messages above."
 fi

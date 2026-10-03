@@ -25,12 +25,15 @@ check_migrations "website" "${WEBSITE_VERSION}" || RET=1
 # no gaps up to the highest N.sh.
 OVERLAY_VERSION="$( latest_migration "overlay" )"
 check_migrations "overlay" "${OVERLAY_VERSION}" || RET=1
+SETTINGS_VERSION="$( latest_migration "settings" )"
+check_migrations "settings" "${SETTINGS_VERSION}" || RET=1
 SYSTEM_VERSION="$( latest_migration "system" )"
 check_migrations "system" "${SYSTEM_VERSION}" || RET=1
 
 if [[ ${RET} -eq 0 ]]; then
 	MSG="All migrations are there (website: version ${WEBSITE_VERSION}"
-	MSG+=", overlay: version ${OVERLAY_VERSION}, system: version ${SYSTEM_VERSION})."
+	MSG+=", overlay: version ${OVERLAY_VERSION}, settings: version ${SETTINGS_VERSION}"
+	MSG+=", system: version ${SYSTEM_VERSION})."
 	echo "${ME}: ${MSG}"
 fi
 exit "${RET}"

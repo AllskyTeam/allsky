@@ -11,6 +11,10 @@
 #	overlay:	the user's overlay templates.  They have no version number of their own,
 #				so the version they are at is kept in ${ALLSKY_MIGRATIONS_STATE_FILE},
 #				and the newest version is the highest N.sh.
+#	settings:	the settings files of all cameras (settings.json is a hard link to one of
+#				them).  install.sh converts them when it's run, but "In Place" upgrades
+#				don't, so renamed or replaced settings are converted here.
+#				Like "overlay", the version is kept in ${ALLSKY_MIGRATIONS_STATE_FILE}.
 #	system:		one-time changes outside configuration files, e.g., copying a file to /etc
 #				and restarting a service.  Like "overlay", the version is kept in
 #				${ALLSKY_MIGRATIONS_STATE_FILE}.  ${1} is empty.
@@ -157,4 +161,11 @@ function run_overlay_migrations()
 function run_system_migrations()
 {
 	run_state_migrations "system" --no-files
+}
+
+# The settings files of all cameras.  settings.json is a hard link to the current camera's
+# file, so migrations must update a file in place (e.g., with "cp", not "mv").
+function run_settings_migrations()
+{
+	run_state_migrations "settings" "${ALLSKY_CONFIG}"/settings_*.json "${ALLSKY_SETTINGS_FILE}"
 }

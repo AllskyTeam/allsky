@@ -96,6 +96,9 @@ function migrate_config_files()
 	display_msg --log progress "Updating the overlay templates if needed."
 	run_overlay_migrations || return 1
 
+	display_msg --log progress "Updating the settings if needed."
+	run_settings_migrations || return 1
+
 	display_msg --log progress "Making one-time system changes if needed."
 	run_system_migrations || return 1
 

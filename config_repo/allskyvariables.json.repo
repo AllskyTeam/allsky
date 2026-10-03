@@ -170,6 +170,15 @@
 		"group": "Image Data",
 		"description": "Height of resized image"
 	},
+	"AS_MOONLIGHT": {
+		"name": "${MOONLIGHT}",
+		"format": "",
+		"sample": "",
+		"source": "Allsky",
+		"type": "number",
+		"group": "Image Data",
+		"description": "Moonlight from 0 (none) to 1 (full Moon at the zenith), when Moon-dependent stretch is on"
+	},
 	"AS_STRETCH_AMOUNT": {
 		"name": "${STRETCH_AMOUNT}",
 		"format": "",

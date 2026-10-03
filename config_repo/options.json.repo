@@ -442,6 +442,37 @@
 "booldependson" : "takenighttimeimages"
 },
 {
+"name" : "imagestretchmoon",
+"default" : false,
+"description" : "Change the nighttime stretch with the moonlight.<br>When on, the <span class='WebUISetting'>Stretch Amount</span> and <span class='WebUISetting'>Stretch mid point</span> above are used when there's no moonlight (new Moon, or the Moon below the horizon), and the two <span class='WebUISetting'>Full Moon</span> settings below when a full Moon is high in the sky. In between, the values are interpolated by how bright the Moon is and how high it is.",
+"label" : "Moon-dependent stretch",
+"label_prefix" : "Nighttime",
+"type" : "boolean",
+"booldependson" : "takenighttimeimages"
+},
+{
+"name" : "imagestretchamountfullmoon",
+"minimum" : 0,
+"maximum" : 100,
+"default" : 0,
+"description" : "Amount to stretch nighttime images when a full Moon is high in the sky.  <span class='WebUIValue'>0</span> means don't stretch.<br>Usually lower than the <span class='WebUISetting'>Stretch Amount</span> above, since moonlight already brightens the sky.",
+"label" : "Full Moon Stretch Amount",
+"label_prefix" : "Nighttime",
+"type" : "integer",
+"booldependson" : "takenighttimeimages AND imagestretchmoon"
+},
+{
+"name" : "imagestretchmidpointfullmoon",
+"minimum" : 1,
+"maximum" : 100,
+"default" : 10,
+"description" : "Mid point of the image stretch when a full Moon is high in the sky.<br>Lower numbers brighten darker parts of image; higher numbers brighten lighter parts.",
+"label" : "Full Moon Stretch mid point",
+"label_prefix" : "Nighttime",
+"type" : "percent",
+"booldependson" : "takenighttimeimages AND imagestretchmoon"
+},
+{
 "name" : "nightbin",
 "default" : 1,
 "description" : "Binning level. <span class='WebUIValue'>1x1</span> = OFF.",

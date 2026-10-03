@@ -1375,17 +1375,15 @@ function get_allsky_status_timestamp()
 function get_model_from_sensor()
 {
 	local SENSOR="${1}"
+	if [[ -z ${SENSOR} ]]; then
+		echo "${ME:-${FUNCNAME[0]}}: ERROR: No sensor specified."
+		return 1
+	fi
 
 	# shellcheck disable=SC2154
 	gawk --field-separator '\t' -v sensor="${SENSOR}" '
 		BEGIN {
-			if (sensor == "") {
-				printf("ERROR: No sensor specified.\n");
-				ok = "false";
-				exit(1);
-			}
 			model = "";
-			ok = "true";
 		}
 		{
 			if ($1 == "camera") {
@@ -1401,10 +1399,6 @@ function get_model_from_sensor()
 				
 		}
 		END {
-			if (ok == "false") {
-				exit(1);
-			}
-
 			if (model != "") {
 				print model;
 				exit(0);
@@ -1417,7 +1411,7 @@ function get_model_from_sensor()
 
 
 ####
-# Get the RPi camera model given its sensor name.
+# Execute commands on the specified server (usually a remote Website).
 function execute_web_commands()
 {
 	local URL="${1}"

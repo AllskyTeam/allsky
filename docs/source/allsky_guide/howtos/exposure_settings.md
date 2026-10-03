@@ -38,6 +38,15 @@ Stretching an image changes its contrast (difference between light and dark) and
 
 You may find that you can decrease the gain, and hence the noise, by increasing the stretch. Experiment with the settings to get the results you want.
 
+### Moon-dependent stretch { data-toc-label="Moon-dependent stretch" }
+Moonlight brightens the sky, so a stretch that brings out faint stars on a moonless night can wash out the image under a bright Moon. With the nighttime setting **Moon-dependent stretch** on, Allsky changes the stretch with the moonlight:
+
+- The regular **Stretch Amount** and **Stretch mid point** are used when there is no moonlight: around new Moon, or while the Moon is below the horizon.
+- **Full Moon Stretch Amount** and **Full Moon Stretch mid point** are used when a full Moon is high in the sky.
+- In between, Allsky blends the two by how much of the Moon is lit and how high it is. The value it uses for each image is available to the overlay as `${MOONLIGHT}`, from 0 (none) to 1 (full Moon at the zenith), together with the stretch actually applied, `${STRETCH_AMOUNT}` and `${STRETCH_MIDPOINT}`.
+
+To find good values, use the **Image Stretch Settings** helper tool twice: with a moonless night image for the regular settings, and with an image taken under a full Moon for the Full Moon settings. The Full Moon amount is usually lower.
+
 ### Sample Stretch Images { data-toc-label="Sample Stretch Images" }
 Stretch Amount: `0`
 

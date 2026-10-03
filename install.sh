@@ -2349,7 +2349,6 @@ restore_prior_files()
 	fi
 
 	ITEM="${SPACE}'config/modules' directory"
-	RESTORED="false"
 	if [[ -d ${PRIOR_CONFIG_DIR}/modules ]]; then
 		display_msg --log progress "${ITEM} (merging)"
 		cp -ar "${PRIOR_CONFIG_DIR}/modules" "${ALLSKY_CONFIG}"

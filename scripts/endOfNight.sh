@@ -124,41 +124,40 @@ fi
 
 # Automatically delete old images and videos.
 if [[ ${S_daystokeep} -gt 0 ]]; then
-	del=$( date --date="${S_daystokeep} days ago" +%Y%m%d )
+	TMP="${ALLSKY_TMP}/days.txt"
+	# Create a list of all directories, sorted oldest last.
 	# "20" for years >= 2000.   Format:  YYYYMMDD
 	#                                                   YY  Y    Y   M    M   D      D
-	find "${ALLSKY_IMAGES}/" -maxdepth 1 -type d -name "20[2-9][0-9][01][0-9][0123][0-9]" |
-		while read -r i
-		do
-			if (( del > $( basename "${i}" ) )); then
+	find "${ALLSKY_IMAGES}/" -maxdepth 1 -type d -name "20[2-9][0-9][01][0-9][0123][0-9]" | sort --reverse > "${TMP}"
+	COUNT="$( wc -l < "${TMP}" )"
+	NUM_TO_DELETE=$(( COUNT - S_daystokeep ))
+	if [[ ${NUM_TO_DELETE} -gt 0 ]]; then
+		tail "-${NUM_TO_DELETE}" "${TMP}" |
+			while read -r i
+			do
 				echo "${ME}: Deleting old directory ${i}"
 				rm -rf "${i}"
-			fi
-		done
+			done
+	fi
+	rm -f "${TMP}"
 fi
 
 # Automatically delete old Website images and videos.
 if [[ ${S_daystokeeplocalwebsite} -gt 0 && ${S_uselocalwebsite} == "true" ]]; then
-	if [[ ! -d ${ALLSKY_WEBSITE} ]]; then
-		echo -e "${ME}: ${YELLOW}WARNING: 'Days to Keep on Pi Website' set but no Local Website found in '${ALLSKY_WEBSITE}!${NC}"
-		echo -e 'Set "Days to Keep on Pi Website" to ""'
-	else
-		del=$( date --date="${S_daystokeeplocalwebsite} days ago" +%Y%m%d )
-		(
-			cd "${ALLSKY_WEBSITE}" || exit 1
-			NUM_DELETED=0
-			# "*-20" for years >= 2000.   Format:  image_type-YYYYMMDD.${EXT}
-			# Examples: keogram-20230710.jpg keogram-20230710.png
-			#                                                YY  Y    Y   M    M   D      D
-			find startrails keograms videos -type f -name "*-20[2-9][0-9][01][0-9][0123][0-9].[a-zA-Z]*" | \
+	(
+		TMP="${ALLSKY_TMP}/days_local.txt"
+		cd "${ALLSKY_WEBSITE}" || exit 1
+		NUM_DELETED=0
+		for dir in startrails keograms meteors videos
+		do
+			find "${dir}" -maxdepth 1 -type f -name "*-20[2-9][0-9][01][0-9][0123][0-9].[a-zA-Z]*" | sort --reverse > "${TMP}"
+			COUNT="$( wc -l < "${TMP}" )"
+			NUM_TO_DELETE=$(( COUNT - S_daystokeeplocalwebsite ))
+			[[ ${NUM_TO_DELETE} -le 0 ]] && continue
+
+			tail "-${NUM_TO_DELETE}" "${TMP}" |
 				while read -r i
-			do
-				
-				# Remove everything but the date from the name of the file.
-				DATE="${i##*-}"
-				DATE="${DATE%.*}"
-				# Thumbnails will typically be owned and grouped to www-data so use "rm -f".
-				if ((del > DATE)) ; then
+				do
 					if [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
 						((NUM_DELETED++))
 						if [[ ${NUM_DELETED} -eq 1 ]]; then
@@ -167,10 +166,16 @@ if [[ ${S_daystokeeplocalwebsite} -gt 0 && ${S_uselocalwebsite} == "true" ]]; th
 						echo "    DELETED: ${i}"
 					fi
 					rm -f "${i}"
-				fi
-			done
-		)
-	fi
+
+					THUMB="${dir}/thumbnails/$( basename "${i/mp4/jpg}" )"
+					if [[ -f ${THUMB} ]]; then
+						[[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]] && echo "    DELETED: ${THUMB}"
+						rm -f "${THUMB}"
+					fi
+				done
+		done
+	)
+	rm -f "${TMP}"
 fi
 
 if [[ ${S_daystokeepremotewebsite} -gt 0 && ${S_useremotewebsite} == "true" ]]; then

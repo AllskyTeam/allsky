@@ -242,6 +242,22 @@ if [[ ${DAY_OR_NIGHT} == "DAY" ]]; then
 else
 	export AS_STRETCH_AMOUNT="${S_imagestretchamountnighttime}"
 	export AS_STRETCH_MIDPOINT="${S_imagestretchmidpointnighttime}"
+	if [[ ${S_imagestretchmoon} == "true" ]]; then
+		# The values above are for no moonlight; interpolate towards the full Moon
+		# values by how bright and how high the Moon is (0 to 1).
+		if X="$( "${ALLSKY_PYTHON_VENV}/bin/python3" "${ALLSKY_UTILITIES}/moonlight.py" \
+				--latitude "${S_latitude}" --longitude "${S_longitude}" \
+				--from "${AS_STRETCH_AMOUNT}" "${AS_STRETCH_MIDPOINT}" \
+				--to "${S_imagestretchamountfullmoon}" "${S_imagestretchmidpointfullmoon}" 2>&1 )" ; then
+			read -r AS_MOONLIGHT AS_STRETCH_AMOUNT AS_STRETCH_MIDPOINT <<< "${X}"
+			export AS_MOONLIGHT AS_STRETCH_AMOUNT AS_STRETCH_MIDPOINT
+			if [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
+				echo "${ME}: Moonlight ${AS_MOONLIGHT}: stretch ${AS_STRETCH_AMOUNT} @ ${AS_STRETCH_MIDPOINT}%"
+			fi
+		else
+			W_ "${ME}: WARNING: Unable to compute the moonlight; using the nighttime stretch. ${X}" >&2
+		fi
+	fi
 fi
 if [[ ${AS_STRETCH_AMOUNT} -gt 0 ]]; then
 	if [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then

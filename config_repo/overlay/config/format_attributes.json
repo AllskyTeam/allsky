@@ -64,6 +64,25 @@
             "field": "boolean"
         }  
     },
+    "punit": {
+        "description": "Pressure unit (Allsky's pressures are in hPa)",
+        "example": "29.92 for 1013 hPa in inHg",
+        "type": {
+            "field": "select",
+            "values": {
+                "hpa": "hPa",
+                "inhg": "inHg (inches of mercury)",
+                "mmhg": "mmHg (millimetres of mercury)"
+            }
+        }
+    },
+    "pressure_unit": {
+        "description": "Add unit (hPa, inHg or mmHg)",
+        "example": "29.92 inHg",
+        "type": {
+            "field": "boolean"
+        }
+    },
     "fsunit": {
         "description": "Add filesize units symbol",
         "example": "12 GB",

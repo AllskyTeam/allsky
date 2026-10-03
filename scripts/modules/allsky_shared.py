@@ -2437,7 +2437,7 @@ def infer_sql_type(entry: dict) -> str:
         return "FLOAT"
     if t in ("bool", "boolean"):
         return "TINYINT(1)"
-    if t in ("temperature",):
+    if t in ("temperature", "pressure"):
         return "FLOAT"
     return "VARCHAR(1024)"
 

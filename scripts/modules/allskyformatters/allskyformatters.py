@@ -438,6 +438,71 @@ class AllskyFormatters:
 		return value
 
 
+	# 1 hPa in other units.
+	PRESSURE_FROM_HPA = { 'hpa': 1.0, 'inhg': 0.0295299830714, 'mmhg': 0.750061683 }
+	PRESSURE_LABELS = { 'hpa': 'hPa', 'inhg': 'inHg', 'mmhg': 'mmHg' }
+
+	def as_pressure(self, value, variable_name, format, variable_type, debug=False):
+		""" Formats a pressure.  Most of Allsky's pressures (e.g., from a BME280 or OpenWeatherMap)
+		are in hPa, which the conversions assume.
+
+		Formatters:
+			default		- 0 decimal places with " hPa".
+			custom		- Let the user pick the unit, precision and label.
+
+		Attributes:
+			punit=x		- Convert hPa to "hpa" (no change), "inhg" or "mmhg".
+			dp=x		- Display "x" decimal places (dp=0 is default).
+			pressure_unit - Add the unit (hPa, inHg or mmHg).
+			locale		- Use the locale's number format.
+
+		Args:
+			value (any): The input value
+			variable_name 	(string):	The name of the variable
+			format 			(string):	The format to be applied
+			variable_type 	(object):	The variable type object
+
+		Returns:
+			(string): The formatted value
+		"""
+		# Without a format, show the value as it is: some sources (e.g., Home Assistant or an
+		# Ecowitt gateway) may already give it in inHg or mmHg.
+		if str(format or '').strip() == '':
+			return str(value)
+
+		try:
+			formats = self._split_format(format)
+			value = float(value)
+
+			unit = 'hpa'
+			dp = 0
+			do_unit = False
+
+			if any('default' in s.lower() for s in formats):
+				do_unit = True
+
+			requested = self._parse_format(formats, 'punit', str).strip().lower()
+			if requested in self.PRESSURE_FROM_HPA:
+				unit = requested
+				value = value * self.PRESSURE_FROM_HPA[unit]
+				self._debug(f'INFO: Converting pressure from hPa to {self.PRESSURE_LABELS[unit]}')
+
+			if re.search(r'\bdp=(\d+)\b', format):
+				dp = self._parse_format(formats, 'dp', int)
+
+			use_locale = 'locale' in formats
+			value = self._format_number(value, dp, use_locale)
+
+			if 'pressure_unit' in formats or do_unit:
+				value = f'{value} {self.PRESSURE_LABELS[unit]}'
+
+			value = str(value)
+		except ValueError:
+			pass
+
+		return value
+
+
 	def as_filesize(self, value, variable_name, format, variable_type, debug=False):
 		""" Converts a file size in bytes to a human readable format
 

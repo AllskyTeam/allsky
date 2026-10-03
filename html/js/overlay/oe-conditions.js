@@ -17,7 +17,7 @@
 class OECONDITIONS {
 
 	static BOOLEAN_TYPES = ['bool', 'boolean', 'gpio'];
-	static NUMBER_TYPES = ['number', 'int', 'float', 'temperature', 'azimuth', 'elevation',
+	static NUMBER_TYPES = ['number', 'int', 'float', 'temperature', 'pressure', 'azimuth', 'elevation',
 		'altitude', 'distance', 'per', 'percent', 'deg', 'filesize'];
 	static TEXT_TYPES = ['string', 'text'];
 

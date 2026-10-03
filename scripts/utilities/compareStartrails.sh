@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2154		# referenced but not assigned - from convertJSON.php
 
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$(dirname "${BASH_ARGV0}")/../.." )"
 ME="$( basename "${BASH_ARGV0}" )"
@@ -217,36 +218,37 @@ sudo chown "${ALLSKY_OWNER}:${WEBSERVER_GROUP}" "${OUT_DIRECTORY}"
 
 IMAGES="${OUT_DIRECTORY}/images.txt"
 
-NIGHT_ONLY="$( settings ".startrailsnightonly" )"
-[[ -z ${NIGHT_ONLY} ]] && NIGHT_ONLY="false"
-
-NUM_IMAGES=0
-if [[ ${NIGHT_ONLY} == "true" ]]; then
-	NIGHT="nighttime "
-	SQL="SELECT AS_CAMERAIMAGE FROM ${ALLSKY_IMAGES_TABLE} WHERE \
-		AS_DATE_NAME = '$( basename "${IN_DIRECTORY}" )' AND AS_DAY_OR_NIGHT = 'NIGHT' \
-		ORDER BY AS_CAMERAIMAGE LIMIT ${COUNT}"
-	LIST="$( "${ALLSKY_DATABASE_COMMAND}" --run "${SQL}" 2>&1 )"
-	RET=$?
-	## echo -e "SQL=\n${SQL}, records=$( wc -l "${IMAGES}" )"
-	if [[ ${RET} -ne 0 ]]; then
-		wE_ "ERROR: Unable to get list of ${NIGHT} images from database: $( cat "${IMAGES}" )"
-		exit "${ALLSKY_EXIT_ERROR_STOP}"
-	fi
-	if [[ -z ${LIST} ]]; then
-		wW_ "NOTICE: No ${NIGHT}images found in database; using ALL images instead.\n"
-	else
-		# Need full pathnames.
-		# shellcheck disable=SC2001	# Old, inefficient way:
-		## echo "${LIST}" | sed "s;^;${IN_DIRECTORY}/;" > "${IMAGES}"
-
-		echo "${LIST/#/${IN_DIRECTORY}/}" > "${IMAGES}"
-	fi
+# Use the same images as the startrails: those between its start and end times.
+#shellcheck disable=SC2119
+getAllSettings --var "startrailsstart startrailsend startrailsnightonly latitude longitude angle" || exit 1
+if [[ -z ${S_startrailsstart} && -z ${S_startrailsend} && ${S_startrailsnightonly} == "true" ]]; then
+	# Settings files that haven't been converted from "Startrails Night images only" yet.
+	S_startrailsstart="nighttime_start"
+	S_startrailsend="nighttime_end"
 fi
-if [[ ${NUM_IMAGES} -eq 0 ]]; then
-	NIGHT=""
-	find "${IN_DIRECTORY}" -type f -name "*.${ALLSKY_EXTENSION}" -maxdepth 1 2>/dev/null |
-		head -"${COUNT}" > "${IMAGES}"
+
+NIGHT=""
+if [[ -n ${S_startrailsstart} || -n ${S_startrailsend} ]]; then
+	NIGHT="${S_startrailsstart:-first image} to ${S_startrailsend:-last image} "
+	DAYNIGHT="${OUT_DIRECTORY}/daynight.txt"
+	SQL="SELECT AS_CAMERAIMAGE, AS_DAY_OR_NIGHT FROM ${ALLSKY_IMAGES_TABLE} WHERE \
+		AS_DATE_NAME = '$( basename "${IN_DIRECTORY}" )'"
+	"${ALLSKY_DATABASE_COMMAND}" --run "${SQL}" > "${DAYNIGHT}" 2>/dev/null
+	if ! RES="$( "${ALLSKY_PYTHON_VENV}/bin/python3" "${ALLSKY_UTILITIES}/selectImages.py" \
+			--dir "${IN_DIRECTORY}" --ext "${ALLSKY_EXTENSION}" \
+			--start "${S_startrailsstart}" --end "${S_startrailsend}" --daynight "${DAYNIGHT}" \
+			--latitude "${S_latitude}" --longitude "${S_longitude}" --angle "${S_angle}" \
+			--output "${IMAGES}.all" 2>&1 )" ; then
+		wW_ "NOTICE: ${RES}\nUsing ALL images instead.\n"
+		NIGHT=""
+	else
+		head -"${COUNT}" "${IMAGES}.all" > "${IMAGES}"
+	fi
+	rm -f "${DAYNIGHT}" "${IMAGES}.all"
+fi
+if [[ -z ${NIGHT} ]]; then
+	find "${IN_DIRECTORY}" -maxdepth 1 -type f -name "*.${ALLSKY_EXTENSION}" 2>/dev/null |
+		sort | head -"${COUNT}" > "${IMAGES}"
 fi
 
 if [[ ! -s ${IMAGES} ]]; then

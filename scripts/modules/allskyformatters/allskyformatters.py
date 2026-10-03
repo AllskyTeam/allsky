@@ -626,6 +626,10 @@ class AllskyFormatters:
 			(string): The formatted value
 		"""     
 
+		if value is None:
+			return ''
+		value = str(value)
+
 		if format == 'capitalize':
 			value = value.capitalize()
       

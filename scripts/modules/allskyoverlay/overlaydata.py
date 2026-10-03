@@ -335,6 +335,10 @@ class ALLSKYOVERLAYDATA:
 							value = getattr(allskyformatters.allsky_formatters, format_function)(value, variable, format, '', self.debug_mode)
 						except AllskyFormatError as e:
 							self._log(e.log_level, e.message, send_to_allsky=e.send_to_allsky)
+						except Exception as e:
+							# A value the formatter can't handle must not stop the whole overlay;
+							# show the unformatted value instead.
+							self._log(1, f'WARNING: Cannot use format "{format}" on {variable} (value "{value}"): {e}')
 					else:
 						self._log(4, f'Formatter {format_function} NOT found')	     
 	

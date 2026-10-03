@@ -41,9 +41,12 @@ class OECONDITIONS {
 		return null;
 	}
 
-	/** Conditions only work on a label with exactly one variable. */
-	static variableCount(label) {
-		return (String(label || '').match(/\$\{[^}]*\}/g) || []).length;
+	/**
+	 * Conditions style the whole field, so it must contain only the variable:
+	 * with "Heater: ${DEWCONTROLHEATER}" the "Heater:" would change colour too.
+	 */
+	static isSingleVariable(label) {
+		return /^\s*\$\{[^}]*\}\s*$/.test(String(label || ''));
 	}
 
 	/** Shown or hidden by our own toggles (not ':visible', which depends on layout). */
@@ -117,8 +120,8 @@ class OECONDITIONS {
 		this.#onChange = onChange;
 
 		const label = field.label;
-		if (OECONDITIONS.variableCount(label) !== 1) {
-			bootbox.alert('Conditions need a label with exactly one variable, e.g. <code>${TEMPERATURE_C}</code>. To style several values differently, put them in separate fields.');
+		if (!OECONDITIONS.isSingleVariable(label) && !(field.fieldData && field.fieldData.conditions)) {
+			bootbox.alert('Conditions need a field that contains only one variable, e.g. <code>${TEMPERATURE_C}</code>, and no other text, since the style applies to the whole field. Put any other text in its own field.');
 			return;
 		}
 		this.#kind = OECONDITIONS.kindForType(field.type);

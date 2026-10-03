@@ -182,21 +182,22 @@ class OEUIMANAGER {
     }
 
     /**
-     * The Conditions button: only enabled for a label with a single variable of a
-     * supported type, and highlighted when the field has conditions.
+     * The Conditions button: only enabled for a field that contains only one variable
+     * of a supported type, and highlighted when the field has conditions.  A field that
+     * already has conditions keeps it enabled, so they can be removed.
      */
     updateConditionsButton(label) {
         const field = this.#selected;
         const $button = $('#oe-conditions-field');
         if (!field || $button.length === 0) return;
         label = (label === undefined) ? field.label : label;
-        const usable = OECONDITIONS.variableCount(label) === 1 && OECONDITIONS.kindForType(field.type) !== null;
+        const usable = OECONDITIONS.isSingleVariable(label) && OECONDITIONS.kindForType(field.type) !== null;
         const has = !!(field.fieldData && field.fieldData.conditions);
         $button.prop('disabled', !usable && !has)
             .toggleClass('btn-success', has).toggleClass('btn-primary', !has)
             .attr('title', has ? 'Conditions: this field changes its style depending on the value'
                 : (usable ? 'Conditions: change the style depending on the value'
-                          : 'Conditions need a label with exactly one yes/no, number or text variable'));
+                          : 'Conditions need a field that contains only one yes/no, number or text variable, and no other text'));
     }
 
     get dirty() {

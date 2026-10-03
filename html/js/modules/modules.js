@@ -685,9 +685,14 @@ class MODULESEDITOR {
 
 	#hexToRgb(hex) {
 		let result = '0,0,0'
-		hex = hex.replace(/^#/, '')
+		hex = hex.trim().replace(/^#/, '')
 
-		if (hex.length === 6) {
+		// The colour picker uses the short form when it can, e.g. "#fff" for white.
+		if (/^[0-9a-fA-F]{3}$/.test(hex)) {
+			hex = hex.split('').map(c => c + c).join('')
+		}
+
+		if (/^[0-9a-fA-F]{6}$/.test(hex)) {
 			const r = parseInt(hex.slice(0, 2), 16)
 			const g = parseInt(hex.slice(2, 4), 16)
 			const b = parseInt(hex.slice(4, 6), 16)

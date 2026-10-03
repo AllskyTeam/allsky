@@ -15,6 +15,7 @@ of the current release.
 
         ## **Major New Features (described more below)**
         - **Moon-dependent stretch** - the nighttime stretch can follow the moonlight: a strong stretch on dark, moonless nights and a weaker one when a bright Moon is high in the sky.
+        - **Conditional overlay styles** - a text field in the **Overlay Editor** can change its colour (and optionally stroke, opacity, and font) depending on its value, e.g. a temperature in blue below freezing. Rules can be saved as rule sets and reused by other fields.
 
         ## **Enhancements / Changes**
 	    - **Days To Keep settings**

@@ -164,57 +164,75 @@ class OECONDITIONS {
 	}
 
 	#render(conditions, setName) {
-		const variable = (this.#field.label.match(/\$\{[^}]*\}/) || [''])[0];
 		const kindText = { boolean: 'Yes / No', number: 'Number', text: 'Text' }[this.#kind];
-		const sets = Object.entries(this.#sets()).filter(([name, set]) => set.type === this.#kind);
+		const hint = {
+			boolean: 'Yes, on, true and 1 count as yes; no, off, false and 0 as no.',
+			number: 'The first rule that matches is used.',
+			text: 'Upper and lower case don\'t matter. The first rule that matches is used.',
+		}[this.#kind];
 
-		let html = '<p class="oe-cond-intro">Change how <code>' + OECONDITIONS.#esc(variable) + '</code> looks depending on its value (' + kindText + '). ';
-		if (this.#kind === 'boolean') {
-			html += 'Yes/on/true/1 and no/off/false/0 are recognised.';
-		} else if (this.#kind === 'number') {
-			html += 'The first row that matches is used.';
-		} else {
-			html += 'Upper and lower case don\'t matter; the first row that matches is used.';
-		}
-		html += '</p>';
-
-		html += '<div class="form-inline oe-cond-sets">'
-			+ '<label>Rule set&nbsp;</label><select class="form-control input-sm" id="oe-cond-set">'
-			+ '<option value="">This field only</option>';
-		for (const [name] of sets) {
-			html += '<option value="' + OECONDITIONS.#esc(name) + '"' + (name === setName ? ' selected' : '') + '>' + OECONDITIONS.#esc(name) + '</option>';
-		}
-		html += '</select> '
-			+ '<button type="button" class="btn btn-default btn-sm" id="oe-cond-save-set" title="Save these rules under a name to use them in other fields of this overlay">Save as rule set…</button> '
-			+ '<button type="button" class="btn btn-default btn-sm" id="oe-cond-copy" title="Copy rule sets from another overlay into this one">Copy from another overlay…</button>'
-			+ '</div><hr>';
+		let html = '<div class="oe-cond-top">'
+			+ '<span class="label label-default oe-cond-kind">' + kindText + '</span> '
+			+ '<span class="text-muted small">' + hint + '</span>'
+			+ this.#setsMenuHTML(setName)
+			+ '</div>';
 
 		html += '<div id="oe-cond-rows">' + this.#rowsHTML(conditions) + '</div>';
 		if (this.#kind !== 'boolean') {
-			html += '<button type="button" class="btn btn-default btn-sm" id="oe-cond-add"><i class="fa-solid fa-plus"></i> Add row</button>';
+			html += '<button type="button" class="btn btn-default btn-block oe-cond-add" id="oe-cond-add"><i class="fa-solid fa-plus"></i> Add rule</button>';
 		}
+		html += '<div class="oe-cond-else text-muted small"><i class="fa-solid fa-arrow-turn-down fa-rotate-90"></i> Otherwise: the field\'s own style</div>';
 
-		html += '<hr><div class="form-inline"><label>Try a value&nbsp;</label>'
+		html += '<div class="form-inline oe-cond-try"><label for="oe-cond-test">Try a value</label> '
 			+ '<input type="text" class="form-control input-sm" id="oe-cond-test" placeholder="' + (this.#kind === 'boolean' ? 'on' : (this.#kind === 'number' ? '12.5' : 'rain')) + '"> '
-			+ '<span id="oe-cond-preview" class="oe-cond-preview"></span></div>';
+			+ '<span id="oe-cond-preview" class="oe-cond-sample oe-cond-preview"></span> '
+			+ '<span id="oe-cond-which" class="text-muted small"></span></div>';
 
 		$('#oe-conditions-dialog-body').html(html);
 		this.#bind();
 		this.#updatePreview();
 	}
 
+	/** One menu for everything about rule sets: pick one, save these rules, copy one in. */
+	#setsMenuHTML(setName) {
+		const sets = Object.entries(this.#sets()).filter(([name, set]) => set.type === this.#kind);
+		const item = (name, text) => '<li' + (name === setName ? ' class="active"' : '') + '><a href="#" class="oe-cond-pick-set" data-set="' + OECONDITIONS.#esc(name) + '">'
+			+ '<i class="fa-fw ' + (name === setName ? 'fa-solid fa-check' : (name === '' ? 'fa-regular fa-file' : 'fa-regular fa-bookmark')) + '"></i> ' + text + '</a></li>';
+		let html = '<input type="hidden" id="oe-cond-set" value="' + OECONDITIONS.#esc(setName) + '">'
+			+ '<div class="btn-group oe-cond-sets">'
+			+ '<button type="button" class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" title="Rule sets: reuse rules in other fields">'
+			+ '<i class="fa-regular fa-bookmark"></i> ' + (setName ? 'Rule set: ' + OECONDITIONS.#esc(setName) : 'This field only') + ' <span class="caret"></span></button>'
+			+ '<ul class="dropdown-menu dropdown-menu-right">'
+			+ item('', 'This field only');
+		for (const [name] of sets) {
+			html += item(name, OECONDITIONS.#esc(name));
+		}
+		html += '<li role="separator" class="divider"></li>'
+			+ '<li><a href="#" id="oe-cond-save-set"><i class="fa-fw fa-regular fa-floppy-disk"></i> Save these rules as a rule set…</a></li>'
+			+ '<li><a href="#" id="oe-cond-copy"><i class="fa-fw fa-regular fa-copy"></i> Copy a rule set from another overlay…</a></li>'
+			+ '</ul></div>';
+		return html;
+	}
+
+	/** Colour swatch, a sample in that style, and the extra styles behind the sliders button. */
 	#styleHTML(style) {
+		style = style || {};
+		return '<span class="oe-cond-style">'
+			+ '<i class="fa-solid fa-arrow-right text-muted"></i> '
+			+ '<input type="color" class="oe-cond-fill" value="' + OECONDITIONS.#esc(style.fill || '#ffffff') + '" title="Colour"> '
+			+ '<span class="oe-cond-sample oe-cond-row-sample"></span></span>';
+	}
+
+	#moreHTML(style) {
 		style = style || {};
 		const more = OECONDITIONS.STYLE_KEYS.some(k => k !== 'fill' && style[k] !== undefined && style[k] !== '');
 		let fonts = '<option value="">(field font)</option>';
 		for (const font of this.#fonts) {
 			fonts += '<option' + (style.font === font ? ' selected' : '') + '>' + OECONDITIONS.#esc(font) + '</option>';
 		}
-		return '<input type="color" class="oe-cond-fill" value="' + OECONDITIONS.#esc(style.fill || '#ffffff') + '" title="Colour"> '
-			+ '<a href="#" class="oe-cond-more-toggle">' + (more ? 'Less' : 'More') + '</a>'
-			+ '<div class="oe-cond-more form-inline"' + (more ? '' : ' style="display:none"') + '>'
-			+ '<label>Stroke</label> <input type="color" class="oe-cond-stroke" value="' + OECONDITIONS.#esc(style.stroke || '#000000') + '">'
-			+ '<input type="checkbox" class="oe-cond-stroke-on" title="Change the stroke colour"' + (style.stroke ? ' checked' : '') + '> '
+		return '<div class="oe-cond-more form-inline"' + (more ? '' : ' style="display:none"') + '>'
+			+ '<label><input type="checkbox" class="oe-cond-stroke-on" title="Change the stroke colour"' + (style.stroke ? ' checked' : '') + '> Stroke</label> '
+			+ '<input type="color" class="oe-cond-stroke" value="' + OECONDITIONS.#esc(style.stroke || '#000000') + '"> '
 			+ '<label>Width</label> <input type="number" class="form-control input-sm oe-cond-strokewidth" min="0" max="10" step="1" value="' + OECONDITIONS.#esc(style.strokewidth ?? '') + '" placeholder="–"> '
 			+ '<label>Opacity</label> <input type="number" class="form-control input-sm oe-cond-opacity" min="0" max="1" step="0.1" value="' + OECONDITIONS.#esc(style.opacity ?? '') + '" placeholder="–"> '
 			+ '<label>Font</label> <select class="form-control input-sm oe-cond-font">' + fonts + '</select> '
@@ -222,13 +240,21 @@ class OECONDITIONS {
 			+ '</div>';
 	}
 
+	#moreButtonHTML(style) {
+		style = style || {};
+		const more = OECONDITIONS.STYLE_KEYS.some(k => k !== 'fill' && style[k] !== undefined && style[k] !== '');
+		return '<button type="button" class="btn btn-link btn-sm oe-cond-icon oe-cond-more-toggle' + (more ? ' active' : '') + '" title="Stroke, opacity, font and size"><i class="fa-solid fa-sliders"></i></button>';
+	}
+
 	#rowsHTML(conditions) {
 		let html = '';
 		if (this.#kind === 'boolean') {
 			for (const [key, text] of [['true', 'When yes / on / true'], ['false', 'When no / off / false']]) {
-				html += '<div class="oe-cond-row" data-key="' + key + '"><label class="oe-cond-when">' + text + '</label> '
-					+ '<input type="checkbox" class="oe-cond-enabled" title="Use a style for this case"' + (conditions[key] ? ' checked' : '') + '> '
-					+ this.#styleHTML(conditions[key]) + '</div>';
+				html += '<div class="oe-cond-row" data-key="' + key + '"><div class="oe-cond-line">'
+					+ '<label class="oe-cond-when"><input type="checkbox" class="oe-cond-enabled" title="Use a style for this case"' + (conditions[key] ? ' checked' : '') + '> ' + text + '</label>'
+					+ this.#styleHTML(conditions[key])
+					+ '<span class="oe-cond-row-buttons">' + this.#moreButtonHTML(conditions[key]) + '</span>'
+					+ '</div>' + this.#moreHTML(conditions[key]) + '</div>';
 			}
 			return html;
 		}
@@ -247,11 +273,12 @@ class OECONDITIONS {
 	}
 
 	#ruleHTML(rule) {
-		const buttons = ' <span class="oe-cond-row-buttons">'
-			+ '<button type="button" class="btn btn-default btn-xs oe-cond-up" title="Move up"><i class="fa-solid fa-arrow-up"></i></button>'
-			+ '<button type="button" class="btn btn-default btn-xs oe-cond-down" title="Move down"><i class="fa-solid fa-arrow-down"></i></button>'
-			+ '<button type="button" class="btn btn-danger btn-xs oe-cond-delete" title="Delete row"><i class="fa-solid fa-xmark"></i></button></span>';
-		let html = '<div class="oe-cond-row form-inline">';
+		const buttons = '<span class="oe-cond-row-buttons">'
+			+ this.#moreButtonHTML(rule.style)
+			+ '<button type="button" class="btn btn-link btn-sm oe-cond-icon oe-cond-up" title="Move up"><i class="fa-solid fa-arrow-up"></i></button>'
+			+ '<button type="button" class="btn btn-link btn-sm oe-cond-icon oe-cond-down" title="Move down"><i class="fa-solid fa-arrow-down"></i></button>'
+			+ '<button type="button" class="btn btn-link btn-sm oe-cond-icon oe-cond-delete" title="Delete rule"><i class="fa-regular fa-trash-can"></i></button></span>';
+		let html = '<div class="oe-cond-row"><div class="oe-cond-line form-inline"><span class="oe-cond-cond">';
 		if (this.#kind === 'number') {
 			const ops = Object.fromEntries(OECONDITIONS.NUMBER_OPS.map(o => [o, o.replace('<=', '≤').replace('>=', '≥')]));
 			const first = (rule.when || [])[0] || { op: '>', value: '' };
@@ -261,13 +288,14 @@ class OECONDITIONS {
 				+ '<input type="number" step="any" class="form-control input-sm oe-cond-val1" value="' + OECONDITIONS.#esc(first.value) + '"> '
 				+ '<span class="oe-cond-and"' + (second ? '' : ' style="display:none"') + '>and ' + this.#opSelect('oe-cond-op2', ops, second ? second.op : '<=') + ' '
 				+ '<input type="number" step="any" class="form-control input-sm oe-cond-val2" value="' + OECONDITIONS.#esc(second ? second.value : '') + '"></span> '
-				+ '<a href="#" class="oe-cond-and-toggle" title="Add or remove a second condition, e.g. &gt; 11 and ≤ 12">' + (second ? '− and' : '+ and') + '</a> ';
+				+ '<button type="button" class="btn btn-link btn-sm oe-cond-icon oe-cond-and-toggle" title="' + (second ? 'Remove the second condition' : 'Add a second condition, e.g. &gt; 11 and ≤ 12') + '">'
+				+ '<i class="fa-solid ' + (second ? 'fa-minus' : 'fa-plus') + '"></i></button>';
 		} else {
 			html += '<label class="oe-cond-when">When value</label> '
 				+ this.#opSelect('oe-cond-op1', OECONDITIONS.TEXT_OPS, rule.op || 'contains') + ' '
-				+ '<input type="text" class="form-control input-sm oe-cond-val1" value="' + OECONDITIONS.#esc(rule.value) + '"> ';
+				+ '<input type="text" class="form-control input-sm oe-cond-val1" value="' + OECONDITIONS.#esc(rule.value) + '">';
 		}
-		html += this.#styleHTML(rule.style) + buttons + '</div>';
+		html += '</span>' + this.#styleHTML(rule.style) + buttons + '</div>' + this.#moreHTML(rule.style) + '</div>';
 		return html;
 	}
 
@@ -285,6 +313,21 @@ class OECONDITIONS {
 		return style;
 	}
 
+	/** One number or text row as a rule, or null if it's incomplete. */
+	#readRow($row) {
+		const value = String($row.find('.oe-cond-val1').val()).trim();
+		if (value === '') return null;
+		if (this.#kind === 'number') {
+			const when = [{ op: $row.find('.oe-cond-op1').val(), value: Number(value) }];
+			const value2 = String($row.find('.oe-cond-val2').val()).trim();
+			if (OECONDITIONS.#shown($row.find('.oe-cond-and')) && value2 !== '') {
+				when.push({ op: $row.find('.oe-cond-op2').val(), value: Number(value2) });
+			}
+			return { when: when, style: this.#readStyle($row) };
+		}
+		return { op: $row.find('.oe-cond-op1').val(), value: value, style: this.#readStyle($row) };
+	}
+
 	/** The rules as entered (incomplete rows are left out). */
 	#read() {
 		const conditions = { type: this.#kind };
@@ -299,19 +342,8 @@ class OECONDITIONS {
 		}
 		conditions.rules = [];
 		$('#oe-cond-rows .oe-cond-row').each((i, row) => {
-			const $row = $(row);
-			const value = String($row.find('.oe-cond-val1').val()).trim();
-			if (value === '') return;
-			if (this.#kind === 'number') {
-				const when = [{ op: $row.find('.oe-cond-op1').val(), value: Number(value) }];
-				const value2 = String($row.find('.oe-cond-val2').val()).trim();
-				if (OECONDITIONS.#shown($row.find('.oe-cond-and')) && value2 !== '') {
-					when.push({ op: $row.find('.oe-cond-op2').val(), value: Number(value2) });
-				}
-				conditions.rules.push({ when: when, style: this.#readStyle($row) });
-			} else {
-				conditions.rules.push({ op: $row.find('.oe-cond-op1').val(), value: value, style: this.#readStyle($row) });
-			}
+			const rule = this.#readRow($(row));
+			if (rule !== null) conditions.rules.push(rule);
 		});
 		return conditions;
 	}
@@ -320,21 +352,64 @@ class OECONDITIONS {
 		return this.#kind === 'boolean' ? (!conditions.true && !conditions.false) : conditions.rules.length === 0;
 	}
 
-	#updatePreview() {
-		const value = $('#oe-cond-test').val();
-		const $preview = $('#oe-cond-preview');
-		if (value === undefined || String(value).trim() === '') {
-			$preview.html('').removeAttr('style');
-			return;
-		}
-		const style = OECONDITIONS.evaluate(this.#read(), value, {});
-		const fallback = this.#field.fill || '#ffffff';
-		$preview.text(value).css({
-			color: (style && style.fill) || fallback,
+	/** Show a style on an element the way the overlay draws it. */
+	#applyStyle($element, style) {
+		$element.css({
+			color: (style && style.fill) || this.#field.fill || '#ffffff',
 			opacity: style && style.opacity !== undefined ? style.opacity : 1,
 			'-webkit-text-stroke': style && style.stroke ? ((style.strokewidth || 1) + 'px ' + style.stroke) : '',
 			'font-family': style && style.font ? style.font : '',
 		});
+	}
+
+	/** The row that a value uses, or null. */
+	#matchingRow(value) {
+		if (value === undefined || String(value).trim() === '') return null;
+		const $rows = $('#oe-cond-rows .oe-cond-row');
+		if (this.#kind === 'boolean') {
+			const state = OECONDITIONS.#toBool(value);
+			if (state === null) return null;
+			const $row = $rows.filter('[data-key="' + state + '"]');
+			return $row.find('.oe-cond-enabled').is(':checked') ? $row : null;
+		}
+		for (const row of $rows.toArray()) {
+			const rule = this.#readRow($(row));
+			if (rule !== null && OECONDITIONS.evaluate({ type: this.#kind, rules: [rule] }, value, {}) !== null) {
+				return $(row);
+			}
+		}
+		return null;
+	}
+
+	#updatePreview() {
+		// Each row's sample shows its own value (or "Aa") in its style.
+		$('#oe-cond-rows .oe-cond-row').each((i, row) => {
+			const $row = $(row);
+			const text = this.#kind === 'boolean' ? ($row.data('key') === true || $row.data('key') === 'true' ? 'ON' : 'OFF')
+				: (String($row.find('.oe-cond-val1').val() || '').trim() || 'Aa');
+			const $sample = $row.find('.oe-cond-row-sample').text(text);
+			this.#applyStyle($sample, this.#readStyle($row));
+		});
+
+		const value = $('#oe-cond-test').val();
+		const $preview = $('#oe-cond-preview');
+		const $which = $('#oe-cond-which');
+		$('#oe-cond-rows .oe-cond-row').removeClass('oe-cond-match');
+		if (value === undefined || String(value).trim() === '') {
+			$preview.html('').removeAttr('style').hide();
+			$which.text('');
+			return;
+		}
+		const style = OECONDITIONS.evaluate(this.#read(), value, {});
+		$preview.text(value).show();
+		this.#applyStyle($preview, style);
+		const $match = this.#matchingRow(value);
+		if ($match !== null) {
+			$match.addClass('oe-cond-match');
+			$which.text(this.#kind === 'boolean' ? '' : 'uses rule ' + ($('#oe-cond-rows .oe-cond-row').index($match) + 1));
+		} else {
+			$which.text('no rule matches: the field keeps its own style');
+		}
 		$preview.attr('title', style ? 'A rule matches' : 'No rule matches: the field keeps its own style');
 	}
 
@@ -344,29 +419,33 @@ class OECONDITIONS {
 		$body.on('input change', 'input, select', () => this.#updatePreview());
 		$body.on('click', '.oe-cond-more-toggle', (e) => {
 			e.preventDefault();
-			const $more = $(e.target).siblings('.oe-cond-more');
+			const $button = $(e.currentTarget);
+			const $more = $button.closest('.oe-cond-row').find('.oe-cond-more');
 			$more.css('display', OECONDITIONS.#shown($more) ? 'none' : '');
-			$(e.target).text(OECONDITIONS.#shown($more) ? 'Less' : 'More');
+			$button.toggleClass('active', OECONDITIONS.#shown($more));
 		});
 		$body.on('click', '.oe-cond-and-toggle', (e) => {
 			e.preventDefault();
-			const $and = $(e.target).siblings('.oe-cond-and');
+			const $button = $(e.currentTarget);
+			const $and = $button.closest('.oe-cond-row').find('.oe-cond-and');
 			$and.css('display', OECONDITIONS.#shown($and) ? 'none' : '');
-			$(e.target).text(OECONDITIONS.#shown($and) ? '− and' : '+ and');
+			const shown = OECONDITIONS.#shown($and);
+			$button.attr('title', shown ? 'Remove the second condition' : 'Add a second condition, e.g. > 11 and ≤ 12')
+				.find('i').toggleClass('fa-plus', !shown).toggleClass('fa-minus', shown);
 			this.#updatePreview();
 		});
 		$body.on('click', '.oe-cond-up', (e) => {
-			const $row = $(e.target).closest('.oe-cond-row');
+			const $row = $(e.currentTarget).closest('.oe-cond-row');
 			$row.prev('.oe-cond-row').before($row);
 			this.#updatePreview();
 		});
 		$body.on('click', '.oe-cond-down', (e) => {
-			const $row = $(e.target).closest('.oe-cond-row');
+			const $row = $(e.currentTarget).closest('.oe-cond-row');
 			$row.next('.oe-cond-row').after($row);
 			this.#updatePreview();
 		});
 		$body.on('click', '.oe-cond-delete', (e) => {
-			$(e.target).closest('.oe-cond-row').remove();
+			$(e.currentTarget).closest('.oe-cond-row').remove();
 			this.#updatePreview();
 		});
 		$body.on('click', '#oe-cond-add', () => {
@@ -374,6 +453,12 @@ class OECONDITIONS {
 				? { when: [{ op: '>', value: '' }], style: { fill: '#ffffff' } }
 				: { op: 'contains', value: '', style: { fill: '#ffffff' } };
 			$('#oe-cond-rows').append(this.#ruleHTML(rule));
+			$('#oe-cond-rows .oe-cond-row').last().find('.oe-cond-val1').trigger('focus');
+			this.#updatePreview();
+		});
+		$body.on('click', '.oe-cond-pick-set', (e) => {
+			e.preventDefault();
+			$('#oe-cond-set').val(String($(e.currentTarget).data('set') ?? '')).trigger('change');
 		});
 		$body.on('change', '#oe-cond-set', () => {
 			const name = $('#oe-cond-set').val();
@@ -383,8 +468,8 @@ class OECONDITIONS {
 			$('#oe-cond-test').val(test);
 			this.#updatePreview();
 		});
-		$body.on('click', '#oe-cond-save-set', () => this.#saveAsSet());
-		$body.on('click', '#oe-cond-copy', () => this.#copyFromOverlay());
+		$body.on('click', '#oe-cond-save-set', (e) => { e.preventDefault(); this.#saveAsSet(); });
+		$body.on('click', '#oe-cond-copy', (e) => { e.preventDefault(); this.#copyFromOverlay(); });
 
 		$('#oe-conditions-dialog-apply').off('click').on('click', () => this.#apply());
 		$('#oe-conditions-dialog-remove').off('click').on('click', () => this.#remove());

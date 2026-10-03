@@ -525,6 +525,11 @@ function insertVersions()
 			if ($note !== "") {
 				$msg .= "$x$note";
 			}
+			// The local documentation is for the installed release, so link to the new one's notes.
+			// Double quotes in the link since the message is passed in single quotes.
+			$notes = "https://github.com/AllskyTeam/allsky/releases/tag/" . rawurlencode($newestVersion);
+			$msg .= "$x" . 'Please read the <a external="true" href="' . $notes . '">release notes</a>';
+			$msg .= " before upgrading, since some changes may require action on your part.";
 			$msg .= "<br><br>";
 			$cmd = "sudo --user " . ALLSKY_OWNER . " " . ALLSKY_SCRIPTS . "/addMessage.sh";
 			$cmd .= " --no-date --type success --msg '${msg}'";

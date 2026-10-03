@@ -1060,6 +1060,7 @@ do
 					if ERR="$( "${ALLSKY_SCRIPTS}/upload.sh" --remote-web --silent \
 							"${F}" "${REMOTE_DIR}" "${ALLSKY_REMOTE_WEBSITE_COMMANDS_NAME}" "${ME}" 2>&1 )" ; then
 						if COUNTS="$( execute_web_commands "${REMOTE_WEBSITE_URL}" 2>&1 )" ; then
+							# shellcheck disable=SC2034
 							echo "${COUNTS}" | while read -r RETURN_ CMD_ DIR_ NUM_
 								do
 									[[ ${CMD_} != "get_numfiles" ]] && continue

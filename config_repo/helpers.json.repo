@@ -195,7 +195,8 @@
       ],
       "contentHtml": [
         "<p>Stretching an image is typically done to lighten parts of an image, such as the stars, while keeping the rest of the image (mostly) unchanged. There are two settings to stretch an image:<ol><li><span class=\"WebUISetting\">Stretch Amount</span> - This determines how much stretch to apply.<li><span class=\"WebUISetting\">Stretch Mid Point</span> - This determines what parts of the image are stretched (dark parts, middle-grey parts, light parts, etc.).</ol>See the <a external=\"true\" href=\"/docs/allsky_guide/howtos/exposure_settings.html#stretch\">stretch settings</a> page for an explanation of these settings.</p>",
-        "<p class=\"morePadding\">This page helps you determine what stretch settings to use to bring out the details you want.<br>The image you select below will be stretched multiple times using different settings. You can then compare the images to find the best one.<br>You may then want to run the test again but with finer granularity.</p>"
+        "<p class=\"morePadding\">This page helps you determine what stretch settings to use to bring out the details you want.<br>The image you select below will be stretched multiple times using different settings. You can then compare the images to find the best one.<br>You may then want to run the test again but with finer granularity.</p>",
+        "<p class=\"morePadding\">If <span class=\"WebUISetting\">Moon-dependent stretch</span> is on, run this twice: once with a moonless night image for the regular nighttime settings, and once with an image taken under a full Moon high in the sky for the two <span class=\"WebUISetting\">Full Moon</span> settings. Allsky blends between them by the moonlight.</p>"
       ],
       "fields": [
         {

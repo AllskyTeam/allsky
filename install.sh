@@ -3366,6 +3366,38 @@ remind_old_version()
 
 
 ####
+# Point the user to the documentation with a WebUI message (its link opens the page):
+# after a new installation the installation guide, after an upgrade from a different
+# release that release's Upgrade Notes.  Nothing when re-installing the same release.
+# The local copy of the documentation is used, so the pages match this version.
+show_documentation_message()
+{
+	local DOCS="/documentation/allsky_guide"
+	local DOCS_DIR="${ALLSKY_WEBUI}/docs/allsky_guide"
+	local MSG  URL  BASE
+
+	BASE="$( remove_point_release "${ALLSKY_VERSION}" )"
+	if [[ ${USE_PRIOR_ALLSKY} == "true" ]]; then
+		[[ "$( remove_point_release "${PRIOR_ALLSKY_VERSION}" )" == "${BASE}" ]] && return
+		if [[ -f ${DOCS_DIR}/upgrade/${BASE}.html ]]; then
+			URL="${DOCS}/upgrade/${BASE}.html"
+		else
+			URL="${DOCS}/upgrade/introduction.html"
+		fi
+		MSG="Allsky was upgraded from ${PRIOR_ALLSKY_VERSION} to ${ALLSKY_VERSION}."
+		MSG+=" Click here for the Upgrade Notes: what changed and what to check."
+	else
+		URL="${DOCS}/allsky.html"
+		MSG="Welcome to Allsky ${ALLSKY_VERSION}!"
+		MSG+=" Click here for the documentation on setting it up."
+	fi
+
+	"${ALLSKY_SCRIPTS}/addMessage.sh" --type info --msg "${MSG}" --url "${URL}"
+	display_msg --logonly info "Added a WebUI message pointing to '${URL}'."
+}
+
+
+####
 # Manage installation and setup of the Allsky database
 setup_database()
 {
@@ -3989,6 +4021,9 @@ setup_database
 ##### If needed, remind the user to remove any old Allsky version
 # Re-run every time to remind the user again.
 remind_old_version
+
+##### Point the user to the installation guide or the release's Upgrade Notes.
+show_documentation_message
 
 ##### See if we should reboot when installation is done.
 # Call reboot_needed() in case an external function said we need to reboot.

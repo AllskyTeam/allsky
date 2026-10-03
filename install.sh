@@ -1802,6 +1802,18 @@ convert_settings_file()			# prior_file, new_file
 					fi
 					;;
 
+				# ===== Replaced by startrailsstart and startrailsend after v2026.10.01.
+				"startrailsnightonly")
+					echo "${FIELD} ${FIELD} --delete" >> "${DELETED_SETTINGS}"
+					if [[ ${VALUE} == "true" || ${VALUE} == "1" ]]; then
+						# nighttime_start/end use the same day/night decision as before.
+						VALUE="nighttime_start"
+						doV "${FIELD}" "VALUE" "startrailsstart" "text" "${NEW_FILE}"
+						VALUE="nighttime_end"
+						doV "${FIELD}" "VALUE" "startrailsend" "text" "${NEW_FILE}"
+					fi
+					;;
+
 				# ===== Names changed in ${COMBINED_BASE_VERSION}
 				"darkframe")
 					doV "${FIELD}" "VALUE" "takedarkframes" "boolean" "${NEW_FILE}"

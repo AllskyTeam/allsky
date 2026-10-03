@@ -104,6 +104,8 @@ This allows a pressure to be displayed in hPa, inches of mercury or millimetres 
 
 For example, *Custom pressure* with the unit **inHg**, **2** decimal places and **Add unit** shows 1013 hPa as `29.92 inHg`.
 
+The conversion assumes the value is in hPa. If your pressure already comes in another unit, e.g. from Home Assistant or an Ecowitt gateway set to inHg, keep the unit at **hPa** and only use the decimal places; without a format the value is shown as it is.
+
 #### GPIO Formats { data-toc-label="GPIO Formats" }
 This allows the state of a GPIO pin to be displayed in a more Human Readable format
 

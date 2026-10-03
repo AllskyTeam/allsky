@@ -443,7 +443,8 @@ class AllskyFormatters:
 	PRESSURE_LABELS = { 'hpa': 'hPa', 'inhg': 'inHg', 'mmhg': 'mmHg' }
 
 	def as_pressure(self, value, variable_name, format, variable_type, debug=False):
-		""" Formats a pressure.  Allsky's pressures (e.g., from a BME280 or OpenWeatherMap) are in hPa.
+		""" Formats a pressure.  Most of Allsky's pressures (e.g., from a BME280 or OpenWeatherMap)
+		are in hPa, which the conversions assume.
 
 		Formatters:
 			default		- 0 decimal places with " hPa".
@@ -464,6 +465,11 @@ class AllskyFormatters:
 		Returns:
 			(string): The formatted value
 		"""
+		# Without a format, show the value as it is: some sources (e.g., Home Assistant or an
+		# Ecowitt gateway) may already give it in inHg or mmHg.
+		if str(format or '').strip() == '':
+			return str(value)
+
 		try:
 			formats = self._split_format(format)
 			value = float(value)

@@ -212,7 +212,7 @@ if [[ ${S_daystokeepremotewebsite} -gt 0 && ${S_useremotewebsite} == "true" ]]; 
 			echo -e "do_daystokeep\tvideos/*.mp4\t${S_daystokeepremotewebsite}"
 		fi
 
-		exit ${RET}
+		exit "${RET}"
 	) > "${F}"
 	if [[ $? -eq 0 ]]; then
 		# Upload the command file.

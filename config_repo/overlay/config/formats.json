@@ -217,6 +217,26 @@
             "type": "filesize"
         },
         {
+            "format": "Default pressure",
+            "description": "Pressure in hPa without decimal places",
+            "example": "1013 hPa",
+            "stackable": false,
+            "type": "pressure"
+        },
+        {
+            "format": "Custom pressure",
+            "description": "Pick the unit (hPa, inHg, mmHg), decimal places and label",
+            "example": "29.92 inHg",
+            "attribute": [
+                "punit",
+                "dp",
+                "pressure_unit",
+                "locale"
+            ],
+            "stackable": false,
+            "type": "pressure"
+        },
+        {
             "format": "Default temperature",
             "description": "Use default temperature attributes - see Sample -->",
             "example": "23.5&deg; C",

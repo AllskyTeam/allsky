@@ -145,17 +145,17 @@ fi
 # Automatically delete old Website images and videos.
 if [[ ${S_daystokeeplocalwebsite} -gt 0 && ${S_uselocalwebsite} == "true" ]]; then
 	(
-		TMP="${ALLSKY_TMP}/days_local.txt"
+		TMP2="${ALLSKY_TMP}/days_local.txt"
 		cd "${ALLSKY_WEBSITE}" || exit 1
 		NUM_DELETED=0
 		for dir in startrails keograms meteors videos
 		do
-			find "${dir}" -maxdepth 1 -type f -name "*-20[2-9][0-9][01][0-9][0123][0-9].[a-zA-Z]*" | sort --reverse > "${TMP}"
-			COUNT="$( wc -l < "${TMP}" )"
+			find "${dir}" -maxdepth 1 -type f -name "*-20[2-9][0-9][01][0-9][0123][0-9].[a-zA-Z]*" | sort --reverse > "${TMP2}"
+			COUNT="$( wc -l < "${TMP2}" )"
 			NUM_TO_DELETE=$(( COUNT - S_daystokeeplocalwebsite ))
 			[[ ${NUM_TO_DELETE} -le 0 ]] && continue
 
-			tail "-${NUM_TO_DELETE}" "${TMP}" |
+			tail "-${NUM_TO_DELETE}" "${TMP2}" |
 				while read -r i
 				do
 					if [[ ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
@@ -174,8 +174,8 @@ if [[ ${S_daystokeeplocalwebsite} -gt 0 && ${S_uselocalwebsite} == "true" ]]; th
 					fi
 				done
 		done
+		rm -f "${TMP2}"
 	)
-	rm -f "${TMP}"
 fi
 
 if [[ ${S_daystokeepremotewebsite} -gt 0 && ${S_useremotewebsite} == "true" ]]; then

@@ -2393,12 +2393,11 @@ def get_primary_key_value(structure: dict):
 
     The default is taken from ``AS_TIMESTAMP`` (environment or debug
     data), with a final fallback to the current time. If the structure
-    defines a ``pk_source``, that name is treated as an environment (or
+    defines ``database['pk_source']``, that name is treated as an environment (or
     debug) variable containing the primary key.
 
     Args:
-        structure: Database configuration section from the module
-            structure.
+        structure: Module extra-data structure containing database configuration.
 
     Returns:
         The primary key value as a string or integer.
@@ -2415,13 +2414,13 @@ def get_primary_key_value(structure: dict):
         primary_key_value = builtins.int(time.time()) 
 
     # Get the primary key.        
-    if 'pk_source' in structure:
-        primary_key =  structure['pk_source']
+    if 'pk_source' in structure.get('database', {}):
+        primary_key = structure['database']['pk_source']
         temp_primary_key = get_environment_variable(primary_key)  
         if temp_primary_key == None:
             temp_primary_key = get_value_from_debug_data(primary_key)
-            if temp_primary_key is not None:
-                primary_key_value = primary_key
+        if temp_primary_key is not None:
+            primary_key_value = temp_primary_key
                 
     return primary_key_value
         

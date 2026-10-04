@@ -132,7 +132,7 @@ This example;
   - Uses a table called `allsky_example3`
   - Uses 'id' as the name of the primary key for the table
   - Defines the primary key type as an integer
-  - Uses the last captured images time stamp as the primary key, by setting `pk_source` to the Allsky variable `image_timestamp`
+  - Uses the last captured image's timestamp as the primary key. Set `pk_source` to `AS_TIMESTAMP` to select that environment variable explicitly. An unresolved source falls back to `AS_TIMESTAMP` from the environment or overlay debug data, then to the current time.
   - Only saves data at night
 
 ### Example 4 - Limiting Variables { data-toc-label="Example 4 - Limiting" }
@@ -289,4 +289,3 @@ In this example the purging is based off of the `Days To Keep` Allsky setting.
 ```
 
 In this example the purging will be set to 14 days.
-

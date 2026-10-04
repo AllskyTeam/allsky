@@ -213,7 +213,7 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 		extra_data['AS_EXPOSURE_S'] = int(allsky_shared.get_environment_variable('AS_EXPOSURE_US')) / 1000.0 / 1000.0
 		extra_data['AS_GAIN'] = allsky_shared.get_camera_gain()
 		extra_data['AS_TEMPERATURE_C'] = allsky_shared.get_sensor_temperature()
-		extra_data['AS_MEAN'] = float(allsky_shared.get_environment_variable('AS_MEAN'))
+		extra_data['AS_MEAN'] = allsky_shared.asfloat(allsky_shared.get_environment_variable('AS_MEAN'))
 
 		allsky_shared.save_extra_data(self.meta_data['extradatafilename'], extra_data, self.meta_data['module'], self.meta_data['extradata'], event=self.event)
 

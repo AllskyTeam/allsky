@@ -33,9 +33,12 @@ Each rule sets the **colour**. Click :fontawesome-solid-sliders: in its row to a
 
 - the **stroke** colour (tick the box next to it) and stroke **width**,
 - the **opacity** (0 to 1),
-- the **font** and its **size**.
+- the **font** and its **size**,
+- the text: **Show instead** replaces the value with your own text, e.g. `DANGER` for a temperature above 90, or `Clear` / `Cloudy` instead of a number.
 
 Anything you leave empty keeps the field's own setting.
+
+**Show instead** only changes what the overlay shows. The variable keeps its real value, so modules, the database, charts and anything that exports the value still get the number.
 
 Some modules colour their values themselves, e.g. the Space Weather module shows the Kp index in green, yellow or red. Conditions are applied **after** that, so a matching rule overrides the module's colour.
 

@@ -125,6 +125,15 @@ class TestGeneral(unittest.TestCase):
 		self.assertEqual(c.evaluate(rules, 'yes'), {'fill': '#fff', 'opacity': 0.5})
 		self.assertIsNone(c.evaluate({'type': 'boolean', 'true': {'x': 1}}, 'yes'))
 
+	def test_replacement_text(self):
+		conditions = {'type': 'number', 'rules': [
+			{'when': [{'op': '>', 'value': 90}], 'style': {'fill': '#ff0000', 'text': 'DANGER'}},
+			{'when': [{'op': '<', 'value': 0}], 'style': {'fill': '#0000ff', 'text': ''}}]}
+		self.assertEqual(c.evaluate(conditions, 95), {'fill': '#ff0000', 'text': 'DANGER'})
+		# An empty text is left out, so the value is shown.
+		self.assertEqual(c.evaluate(conditions, -1), {'fill': '#0000ff'})
+		self.assertIsNone(c.evaluate(conditions, 50))
+
 	def test_wrapped_value(self):
 		self.assertEqual(c.evaluate(TRAFFIC, {'value': 11.83, 'expires': 240}), GREEN)
 

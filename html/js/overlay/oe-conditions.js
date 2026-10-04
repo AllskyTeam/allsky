@@ -25,7 +25,7 @@ class OECONDITIONS {
 	static TEXT_OPS = { 'equals': 'equals', 'contains': 'contains', 'startswith': 'starts with' };
 	static TRUTHY = ['true', 'yes', 'on', '1'];
 	static FALSY = ['false', 'no', 'off', '0'];
-	static STYLE_KEYS = ['fill', 'stroke', 'strokewidth', 'opacity', 'font', 'fontsize'];
+	static STYLE_KEYS = ['fill', 'stroke', 'strokewidth', 'opacity', 'font', 'fontsize', 'text'];
 
 	#field = null;
 	#kind = null;
@@ -231,6 +231,7 @@ class OECONDITIONS {
 			fonts += '<option' + (style.font === font ? ' selected' : '') + '>' + OECONDITIONS.#esc(font) + '</option>';
 		}
 		return '<div class="oe-cond-more form-inline"' + (more ? '' : ' style="display:none"') + '>'
+			+ '<div class="oe-cond-text-row"><label>Show instead</label> <input type="text" class="form-control input-sm oe-cond-text" maxlength="100" value="' + OECONDITIONS.#esc(style.text ?? '') + '" placeholder="the value" title="Text shown instead of the value, e.g. DANGER. Exported values are not changed."></div>'
 			+ '<label><input type="checkbox" class="oe-cond-stroke-on" title="Change the stroke colour"' + (style.stroke ? ' checked' : '') + '> Stroke</label> '
 			+ '<input type="color" class="oe-cond-stroke" value="' + OECONDITIONS.#esc(style.stroke || '#000000') + '"> '
 			+ '<label>Width</label> <input type="number" class="form-control input-sm oe-cond-strokewidth" min="0" max="10" step="1" value="' + OECONDITIONS.#esc(style.strokewidth ?? '') + '" placeholder="–"> '
@@ -310,6 +311,8 @@ class OECONDITIONS {
 		if (font) style.font = font;
 		const size = $row.find('.oe-cond-fontsize').val();
 		if (size !== '') style.fontsize = Number(size);
+		const text = String($row.find('.oe-cond-text').val() ?? '');
+		if (text.trim() !== '') style.text = text;
 		return style;
 	}
 
@@ -387,8 +390,9 @@ class OECONDITIONS {
 			const $row = $(row);
 			const text = this.#kind === 'boolean' ? ($row.data('key') === true || $row.data('key') === 'true' ? 'ON' : 'OFF')
 				: (String($row.find('.oe-cond-val1').val() || '').trim() || 'Aa');
-			const $sample = $row.find('.oe-cond-row-sample').text(text);
-			this.#applyStyle($sample, this.#readStyle($row));
+			const rowStyle = this.#readStyle($row);
+			const $sample = $row.find('.oe-cond-row-sample').text(rowStyle.text ?? text);
+			this.#applyStyle($sample, rowStyle);
 		});
 
 		const value = $('#oe-cond-test').val();
@@ -401,7 +405,7 @@ class OECONDITIONS {
 			return;
 		}
 		const style = OECONDITIONS.evaluate(this.#read(), value, {});
-		$preview.text(value).show();
+		$preview.text(style && style.text !== undefined ? style.text : value).show();
 		this.#applyStyle($preview, style);
 		const $match = this.#matchingRow(value);
 		if ($match !== null) {

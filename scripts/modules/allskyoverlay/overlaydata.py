@@ -403,6 +403,14 @@ class ALLSKYOVERLAYDATA:
 			style = overlay_conditions.evaluate(field_data['conditions'], condition_value, self.condition_sets)
 			if style:
 				self._debug(f'INFO: Conditional style for value "{condition_value}": {style}')
+				style = dict(style)
+				text = style.pop('text', None)
+				if text is not None:
+					# Show this text instead of the value.  Fields with conditions normally
+					# contain only the variable; for older ones with other text, only the
+					# value is replaced.
+					shown = str(value)
+					field_label = field_label.replace(shown, str(text), 1) if shown and shown in field_label else str(text)
 				field_data.update(style)
 
 		self._debug(f'INFO: Final formatted label "{field_label}"')

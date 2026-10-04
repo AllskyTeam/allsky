@@ -27,7 +27,9 @@ Types:
 A missing or empty value, or a value that doesn't fit the type, matches nothing.
 """
 
-STYLE_KEYS = ('fill', 'stroke', 'strokewidth', 'opacity', 'font', 'fontsize')
+# "text" isn't a style: it replaces the shown value, e.g. "DANGER" for a temperature above 90.
+# Only the overlay shows it; the variable itself keeps its value.
+STYLE_KEYS = ('fill', 'stroke', 'strokewidth', 'opacity', 'font', 'fontsize', 'text')
 
 NUMBER_OPERATORS = {
 	'<':  lambda a, b: a < b,

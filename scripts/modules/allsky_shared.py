@@ -111,7 +111,7 @@ __all__ = [
     "mask_image",
     "fast_star_count",
     "count_starts_in_image",
-    "detect_meteors"
+    "detect_meteors",
     "draw_detections"
     ]
 

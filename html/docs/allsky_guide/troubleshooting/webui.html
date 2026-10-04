@@ -6153,8 +6153,14 @@
   <h1>WebUI</h1>
 
 <h2 id="username-and-password-issues">Username and password issues<a class="headerlink" href="#username-and-password-issues" title="Permanent link">¶</a></h2>
-<p>If you previously changed the username or password they are stored in encrypted format in a file. Deleting the file will restore the default values:</p>
-<p><code>sudo rm -f ~/allsky/config/raspap.auth</code></p>
+<p><strong>Forgot the username or password?</strong> Set new ones on the Pi with:</p>
+<div class="highlight"><pre><span></span><code>~/allsky/scripts/utilities/setWebuiPassword.sh
+</code></pre></div>
+<p>The username and the encrypted password are stored in <code>~/allsky/config/env.json</code>. Since v2026.10.01, deleting <code>~/allsky/config/raspap.auth</code> no longer resets them.</p>
+<p><strong>"Too many failed attempts"</strong>: to protect the WebUI, wrong logins lock it for a while. After 3 wrong logins within 10 minutes, that username can't log in from that address for 5 minutes; more failures lock the local network, and after 12 the username everywhere. Each further lock doubles, up to 1 hour. During a lock even the correct password is refused, so wait for the time shown on the login page before trying again. For a short lock, logging in from another device or through a tunnel may still work.</p>
+<p>To end a lock right away, delete the file that records the failed logins, on the Pi:</p>
+<div class="highlight"><pre><span></span><code>sudo rm -f ~/allsky/config/myFiles/allsky_login_throttle.json
+</code></pre></div>
 <p>If you never changed the username or password, do you get a dialog box asking for them when you go to the WebUI? If not, see below.</p>
 <h2 id="cant-access-the-webui-from-a-browser">Can't access the WebUI from a browser<a class="headerlink" href="#cant-access-the-webui-from-a-browser" title="Permanent link">¶</a></h2>
 <p>For example, you aren't prompted for username and password. This is usually a settings issue. Look in <code>/var/log/lighttpd/error.log</code> for clues to the problem.</p>

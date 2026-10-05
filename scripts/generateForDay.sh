@@ -508,13 +508,16 @@ if [[ ${DO_STARTRAILS} == "true" ]]; then
 		STARTRAILS_LIST=""		# the images used, for their times in the database
 		if [[ -n ${IMAGES_FILE} ]]; then
 			CMD+=" --images '${IMAGES_FILE}'"
-			STARTRAILS_LIST="${IMAGES_FILE}"
-		elif get_window_images "startrails" "${S_startrailsstart}" "${S_startrailsend}" ; then
-			if [[ -n ${WINDOW_FILE} ]]; then
-				CMD+=" --images '${WINDOW_FILE}'"
-				STARTRAILS_LIST="${WINDOW_FILE}"
-			else
-				CMD+=" -d '${INPUT_DIR}' -e ${ALLSKY_EXTENSION}"
+		elif [[ ${S_startrailsnightonly} == "true" ]]; then
+			DAY="$( basename "${OUTPUT_DIR}" )"
+			FILE_NAMES="${OUTPUT_DIR}/startrails/images.txt"
+			mkdir -p "$( dirname "${FILE_NAMES}" )"
+			SQL="SELECT AS_CAMERAIMAGE FROM allsky_image WHERE AS_DATE_NAME = '${DAY}' AND AS_DAY_OR_NIGHT = 'NIGHT'"
+			"${ALLSKY_DATABASE_COMMAND}" --run "${SQL}" | sed "s;^;${OUTPUT_DIR}/;" > "${FILE_NAMES}"
+			NUM="$( wc -l < "${FILE_NAMES}" )"
+			if [[ ${NUM} -eq 0 ]]; then
+				W_ "${ME}: There are no nighttime images for ${DAY}" >&2
+				exit 1
 			fi
 		else
 			CMD=""

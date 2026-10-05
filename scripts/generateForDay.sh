@@ -408,6 +408,7 @@ if [[ ${DO_STARTRAILS} == "true" ]]; then
 		elif [[ ${S_startrailsnightonly} == "true" ]]; then
 			DAY="$( basename "${OUTPUT_DIR}" )"
 			FILE_NAMES="${OUTPUT_DIR}/startrails/images.txt"
+			mkdir -p "$( dirname "${FILE_NAMES}" )"
 			SQL="SELECT AS_CAMERAIMAGE FROM allsky_image WHERE AS_DATE_NAME = '${DAY}' AND AS_DAY_OR_NIGHT = 'NIGHT'"
 			"${ALLSKY_DATABASE_COMMAND}" --run "${SQL}" | sed "s;^;${OUTPUT_DIR}/;" > "${FILE_NAMES}"
 			NUM="$( wc -l < "${FILE_NAMES}" )"

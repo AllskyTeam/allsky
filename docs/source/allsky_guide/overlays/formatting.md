@@ -86,13 +86,25 @@ This allows an filesize value to be displayed in a Human Readable format
 |Auto filesize	|The most appropriate unit will be displayed (GB, etc.)	|12 GB	|
 |Custom filesize	|Filesize with decimal places and units (GB, MB, etc.)	|12 TB|
 
-#### Filesize Formats { data-toc-label="Filesize Formats" }
-This allows an filesize value to be displayed in a Human Readable format, converting between units if required
+#### Temperature Formats { data-toc-label="Temperature Formats" }
+This allows a temperature to be displayed in a Human Readable format, converting between units if required
 
 | Format | Description | Example |
 |--------|-------------|---------|
 |Default temperature	|Use default temperature attributes - see Sample -->	|23.5° C	|
 |Custom temperature	|Customize variable attributes	|23,54° C|
+
+#### Pressure Formats { data-toc-label="Pressure Formats" }
+This allows a pressure to be displayed in hPa, inches of mercury or millimetres of mercury. Allsky's pressures, e.g. from a BME280 sensor or OpenWeatherMap, are in hPa.
+
+| Format | Description | Example |
+|--------|-------------|---------|
+|Default pressure	|Pressure in hPa without decimal places	|1013 hPa	|
+|Custom pressure	|Pick the unit (hPa, inHg, mmHg), the decimal places and whether to add the unit	|29.92 inHg|
+
+For example, *Custom pressure* with the unit **inHg**, **2** decimal places and **Add unit** shows 1013 hPa as `29.92 inHg`.
+
+The conversion assumes the value is in hPa. If your pressure already comes in another unit, e.g. from Home Assistant or an Ecowitt gateway set to inHg, keep the unit at **hPa** and only use the decimal places; without a format the value is shown as it is.
 
 #### GPIO Formats { data-toc-label="GPIO Formats" }
 This allows the state of a GPIO pin to be displayed in a more Human Readable format

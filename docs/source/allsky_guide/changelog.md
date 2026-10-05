@@ -9,190 +9,222 @@ of the current release.
 
 ???+ "v2026.10.01"
 
-    ## **Changes that may require action (upgrades only)**
+    ### v2026.10.01
 
-        The changes in this section may require settings changes; after upgrading, check that your settings and images look right.
+    ???+ "v2026.10.01_01 - Point Release # 1"
 
-	- The Buster operating system is no longer supported.  Install Trixie if possible.
-	- The "legacy" overlay method and the **Image Overlay Settings** section of the WebUI no longer exist. All overlays are now done via the **Overlay Editor** in the WebUI.
-	- If your camera is very noisy it may create dark frames that are brighter than the new ==Dark Frame Upper Threshold== value, which is `0.05`. This threshold was `0.10` in the prior release.
-	- The AS_TEMPERATURE_C and AS_TEMPERATURE_F values (sensor temperature) now have 1 digit after the decimal point. This may require you to change the format of those variables in the Overlay Editor.
-	- Modules are no longer stored in `/opt/allsky/modules`. They are migrated to the main Allsky directory tree upon installation of this version
+        ## **Major New Features (described more below)**
+        - **Moon-dependent stretch** - the nighttime stretch can follow the moonlight: a strong stretch on dark, moonless nights and a weaker one when a bright Moon is high in the sky.
+        - **Start and end times** for the timelapse, keogram, and startrails - for example only the night, or from 22:00 to 04:00. Times can also be `sunrise`, `sunset`, or the start or end of Allsky's daytime or nighttime.
+        - **Conditional overlay styles** - a text field in the **Overlay Editor** can change its colour (and optionally stroke, opacity, and font) depending on its value, e.g. a temperature in blue below freezing. A rule can also show a text instead of the value, e.g. `DANGER` above 90°. Rules can be saved as rule sets and reused by other fields.
 
-    ## **Major New Features (described more below)**
-	- **Constellation Overlay** helper tool - determines what the overlay-related settings should be in the Website configuration file so the constellation overlay matches your images.
-	- Support for **meteor detection** and display of meteor images.
-    - Significantly improved dark frame creating and subtraction - gone are the black artifacts.
-	- **Focus Mode** - temporarily optimizes capture speed for focusing.
-	- The new `upgrade.sh` command can be used for upgrades.
+        ## **Enhancements / Changes**
+	    - **Days To Keep settings**
+			- The specified number of days' images are kept, regardless of their date.  The prior behaviour deleted anything older than the specified number of days.
+			- If you decrease the number of days' images to keep (either in the WebUI, a local Website, or a remoteWebsite) and there are more days' images than the new days to keep value, a notice will display in the WebUI.
+		- The WebUI checks for new Allsky releases every 12 hours instead of every 2 days.
 
-    ## **Enhancements / Changes**
+        ## **Bug Fixes**
+		- The `upgrade.sh` command no longer fails when using the "in-place" method and a new Allsky release is available.
 
-	- **Install and Update System**
-        - Upgrades to Allsky can now be done via the `upgrade.sh` command.  No need to manually run `git clone` or anything else.  The `install.sh` command is only needed for new installations.
+        ## **Deleted Settings**
+        - ==Night images only== (Startrails) - replaced by the new startrails ==Start Time== and ==End Time== set to `nighttime_start` and `nighttime_end`, which use the same day/night decision. Existing settings are converted automatically.
 
-	- **WebUI changes:**
-        - Now displays meteor images if they exist (requires the "Meteor Detection (temporal)" module.
+        ## **New Settings**
+	    - ==Days To Keep on Remote Website== - similar to ==Days To Keep on Pi Website==, but for remote Websites.
+        - ==Moon-dependent stretch==, ==Full Moon Stretch Amount==, and ==Full Moon Stretch mid point== (Nighttime) - when ==Moon-dependent stretch== is on, the existing ==Stretch Amount== and ==Stretch mid point== are used when there's no moonlight and the two Full Moon settings when a full Moon is high in the sky. In between, Allsky interpolates by how bright and how high the Moon is. The overlay variable `${MOONLIGHT}` shows the current amount of moonlight.
+        - ==Start Time== and ==End Time== (Daily Timelapse, Keograms, and Startrails) - only use the images taken between these times. `generateForDay.sh` has matching `--start` and `--end` arguments.
 
-        - Several menu items are now grouped together; putting your cursor over them or clicking on them shows a list of choices.  
-          For example, the **Settings** group contains **Allsky Settings** and **Editor**.
 
-        - Improved Login System:
-            - The old login system has been removed and a new version implemented
-            - Existing login details are not affected
-            - Only used if the WebUI ==Require WebUI Login== setting is enabled
-            - Provides stronger passwords if the Pi will be exposed to the internet
 
-        - New Database:
-            - Stores information on every image taken (exposure, day/night, etc.) and every startrails created
-            - Modules can add derived data such as star and meteor counts
-            - Makes it easier to filter images (e.g. only nighttime startrails)
-            - Choice of zero-configuration internal DB (default) or advanced configuration
+    ### v2026.10.01 - Base Release
 
-        - "Images" page:
-            - Has an icon to display images with meteors, if they exist for the day
-            - Shows the image icon only if at least one image exists for the day
-            - Timelapse and mini-timelapse icons have been updated
-            - Days with no images, startrails, keograms, meteors, or timelapses are no longer shown
-            - Directories in the `images` directory starting with `test` are now displayed
+    ??? "v2026.10.01 - Base Release"
 
-        - Improved light and Dark Mode:
-            - The light and dark modes have been overhauled 
+        ## **Changes that may require action (upgrades only)**
 
-        - You can now view the mini-timelapse (if it exists) from the top of the **Live View** page
+            The changes in this section may require settings changes; after upgrading, check that your settings and images look right.
 
-        - Image pages (that display a day's image):
-            - Improved layout
-            - Improved performance
+	    - The Buster operating system is no longer supported.  Install Trixie if possible.
+	    - The "legacy" overlay method and the **Image Overlay Settings** section of the WebUI no longer exist. All overlays are now done via the **Overlay Editor** in the WebUI.
+	    - If your camera is very noisy it may create dark frames that are brighter than the new ==Dark Frame Upper Threshold== value, which is `0.05`. This threshold was `0.10` in the prior release.
+	    - The AS_TEMPERATURE_C and AS_TEMPERATURE_F values (sensor temperature) now have 1 digit after the decimal point. This may require you to change the format of those variables in the Overlay Editor.
+	    - Modules are no longer stored in `/opt/allsky/modules`. They are migrated to the main Allsky directory tree upon installation of this version
 
-        - Overlay Editor:
-            - Enhanced Variable Manager for easier variable handling
-            - Introduced **Blocks** for adding related fields in one step
-            - New, more flexible variable formatting system
-            - Fields can be grouped and moved together
-            - New alignment tools:
-                - Left alignment
-                - Equal vertical spacing
-                - Equal horizontal alignment
-            - Rectangles can now be drawn with configurable border and background colours
-            - Solar calculations moved to the new **Solar System** module
-            - The toolbar can now be dragged around the screen; this is useful if you are adding fields and have to scroll the page
-            - Mask Editor:
-                - Create and edit masks directly in the WebUI
-                - Accessible from the Image Manager
-                - Masks can be reused by other modules (e.g. star count, meteor detection)
+        ## **Major New Features (described more below)**
+	    - **Constellation Overlay** helper tool - determines what the overlay-related settings should be in the Website configuration file so the constellation overlay matches your images.
+	    - Support for **meteor detection** and display of meteor images.
+        - Significantly improved dark frame creating and subtraction - gone are the black artifacts.
+	    - **Focus Mode** - temporarily optimizes capture speed for focusing.
+	    - The new `upgrade.sh` command can be used for upgrades.
 
-        - Module Manager:
-            - New Package Manager used to manage modules, no more commnd line needed
-            - New module installer (no git clone required)
-            - UI now dynamically adapts to selected devices
-            - Search and filter modules by type
-            - New configuration field types:
-                - Secret
-                - I²C Input
-                - 1-Wire Input
-                - AJAX Select
-                - GPIO
-                - Image
-                - Variable
-                - Position
-                - URL
-                - Host
-                - Graph
-            - Refactored module system for easier development
-            - New **Device Manager** for connected hardware
-            - Module options layout improvements
-            - New / Updated Modules:
-                - ADSB
-                - AI (deprecated)
-                - Dew Heater (PWM support; sensor data moving to Environment module)
-                - Fans
-                - GPIO (fixed)
-                - Boilerplate
-                - INA3221 (deprecated)
-                - Keogram
-                - LTR390 (deprecated)
-                - PMSX003
-                - Power
-                - Rain Detector (YOLO-based, by Muchen Han)
-                - Solar System
-                - Environment
-                - TPHBME680 (deprecated)
-                - S3 Upload (Titan Astro)
+        ## **Enhancements / Changes**
 
-            - For Developers:
-                - Class-based module architecture (backward compatible)
-                - Reusable blocks and charts
-                - Overlay and chart helper functions
-                - Expanded metadata support:
-                    - Conditional fields, support multiple conditions
-                    - Advanced DB control
-                    - Overlay data exposure
-                    - Install/uninstall hooks
+	    - **Install and Update System**
+            - Upgrades to Allsky can now be done via the `upgrade.sh` command.  No need to manually run `git clone` or anything else.  The `install.sh` command is only needed for new installations.
 
-        - Charts:
-            - Create and manage charts for camera, hardware, and analysis data
-            - Supports predefined and custom charts
-            - Tab grouping and date-range selection
-            - Auto-refresh support
-            - Chart types:
-                - Line, Spline, Area
-                - Column, Bar
-                - 3D Column, 3D Area
-                - Gauge
-                - Yes/No
+	    - **WebUI changes:**
+            - Now displays meteor images if they exist (requires the "Meteor Detection (temporal)" module.
 
-        - System page:
-            - Editor for System Page Additions eliminates need to manually edit a file
-            - Ability to view Allsky log files
-            - Auto refresh
-            - Watchdog service control
+            - Several menu items are now grouped together; putting your cursor over them or clicking on them shows a list of choices.  
+              For example, the **Settings** group contains **Allsky Settings** and **Editor**.
 
-        - Backup and Restore System:
-            - Allows backups of configuration and/or captured images
-            - Allows for backups to be restored, including selective restores
+            - Improved Login System:
+                - The old login system has been removed and a new version implemented
+                - Existing login details are not affected
+                - Only used if the WebUI ==Require WebUI Login== setting is enabled
+                - Provides stronger passwords if the Pi will be exposed to the internet
 
-        - Helper Tools:
-            - **Check Allsky** - runs `checkAllsky.sh` to display potential problems in your setup
-            - **Bad Images info** - tune settings for "bad" images
-            - **Startrails Settings** - brightness threshold tuning
-            - **Image Stretch Settings** - stretch comparison
-            - **Timelapse Settings** - bitrate and FPS tuning
-            - **Constellation Overlay** - tune the Website's constellation overlay location
+            - New Database:
+                - Stores information on every image taken (exposure, day/night, etc.) and every startrails created
+                - Modules can add derived data such as star and meteor counts
+                - Makes it easier to filter images (e.g. only nighttime startrails)
+                - Choice of zero-configuration internal DB (default) or advanced configuration
 
-        - Left-hand menu can now collapse to icon-only mode
+            - "Images" page:
+                - Has an icon to display images with meteors, if they exist for the day
+                - Shows the image icon only if at least one image exists for the day
+                - Timelapse and mini-timelapse icons have been updated
+                - Days with no images, startrails, keograms, meteors, or timelapses are no longer shown
+                - Directories in the `images` directory starting with `test` are now displayed
 
-        - New help system
+            - Improved light and Dark Mode:
+                - The light and dark modes have been overhauled 
 
-	- **Startrails**
-        - Can optionally use only nighttime images - see the ==Night images only== setting in the WebUI
+            - You can now view the mini-timelapse (if it exists) from the top of the **Live View** page
 
-	- Camera images now save to `~/allsky/tmp/current_images`.
-      The local Website `imageName` field is now `/current/image.jpg`.
+            - Image pages (that display a day's image):
+                - Improved layout
+                - Improved performance
 
-	- `generateForDay.sh` accepts additional arguments for keogram, startrails, and timelapse creation.
+            - Overlay Editor:
+                - Enhanced Variable Manager for easier variable handling
+                - Introduced **Blocks** for adding related fields in one step
+                - New, more flexible variable formatting system
+                - Fields can be grouped and moved together
+                - New alignment tools:
+                    - Left alignment
+                    - Equal vertical spacing
+                    - Equal horizontal alignment
+                - Rectangles can now be drawn with configurable border and background colours
+                - Solar calculations moved to the new **Solar System** module
+                - The toolbar can now be dragged around the screen; this is useful if you are adding fields and have to scroll the page
+                - Mask Editor:
+                    - Create and edit masks directly in the WebUI
+                    - Accessible from the Image Manager
+                    - Masks can be reused by other modules (e.g. star count, meteor detection)
 
-	- Updated to ZWO SDK v1.39 (new camera support, 366MC Pro removed)
+            - Module Manager:
+                - New Package Manager used to manage modules, no more commnd line needed
+                - New module installer (no git clone required)
+                - UI now dynamically adapts to selected devices
+                - Search and filter modules by type
+                - New configuration field types:
+                    - Secret
+                    - I²C Input
+                    - 1-Wire Input
+                    - AJAX Select
+                    - GPIO
+                    - Image
+                    - Variable
+                    - Position
+                    - URL
+                    - Host
+                    - Graph
+                - Refactored module system for easier development
+                - New **Device Manager** for connected hardware
+                - Module options layout improvements
+                - New / Updated Modules:
+                    - ADSB
+                    - AI (deprecated)
+                    - Dew Heater (PWM support; sensor data moving to Environment module)
+                    - Fans
+                    - GPIO (fixed)
+                    - Boilerplate
+                    - INA3221 (deprecated)
+                    - Keogram
+                    - LTR390 (deprecated)
+                    - PMSX003
+                    - Power
+                    - Rain Detector (YOLO-based, by Muchen Han)
+                    - Solar System
+                    - Environment
+                    - TPHBME680 (deprecated)
+                    - S3 Upload (Titan Astro)
 
-	- Improved security for internet-connected Allsky cameras
+                - For Developers:
+                    - Class-based module architecture (backward compatible)
+                    - Reusable blocks and charts
+                    - Overlay and chart helper functions
+                    - Expanded metadata support:
+                        - Conditional fields, support multiple conditions
+                        - Advanced DB control
+                        - Overlay data exposure
+                        - Install/uninstall hooks
 
-    ## **Bug Fixes**
+            - Charts:
+                - Create and manage charts for camera, hardware, and analysis data
+                - Supports predefined and custom charts
+                - Tab grouping and date-range selection
+                - Auto-refresh support
+                - Chart types:
+                    - Line, Spline, Area
+                    - Column, Bar
+                    - 3D Column, 3D Area
+                    - Gauge
+                    - Yes/No
 
-	- Fixed missing thumbnails on days with thousands of images
-	- Fixed notification images not uploading to remote servers
-	- Fixed Allsky Map update failures with improved error reporting
-	- Plus many more...
+            - System page:
+                - Editor for System Page Additions eliminates need to manually edit a file
+                - Ability to view Allsky log files
+                - Auto refresh
+                - Watchdog service control
 
-    ## **Deleted Settings**
+            - Backup and Restore System:
+                - Allows backups of configuration and/or captured images
+                - Allows for backups to be restored, including selective restores
 
-	- ==Image Overlay Settings== removed from **Allsky Settings**
-	- For ZWO cameras, ==Show Histogram Box== is now handled by the **ZWO Exposure Box** module.
+            - Helper Tools:
+                - **Check Allsky** - runs `checkAllsky.sh` to display potential problems in your setup
+                - **Bad Images info** - tune settings for "bad" images
+                - **Startrails Settings** - brightness threshold tuning
+                - **Image Stretch Settings** - stretch comparison
+                - **Timelapse Settings** - bitrate and FPS tuning
+                - **Constellation Overlay** - tune the Website's constellation overlay location
 
-    ## **New Settings**
+            - Left-hand menu can now collapse to icon-only mode
 
-	- ==Focus Mode==
-	- ==Dark Frame Upper Threshold==
-	- ==Remove Bad Images Threshold Count==
+            - New help system
+
+	    - **Startrails**
+            - Can optionally use only nighttime images - see the ==Night images only== setting in the WebUI
+
+	    - Camera images now save to `~/allsky/tmp/current_images`.
+          The local Website `imageName` field is now `/current/image.jpg`.
+
+	    - `generateForDay.sh` accepts additional arguments for keogram, startrails, and timelapse creation.
+
+	    - Updated to ZWO SDK v1.39 (new camera support, 366MC Pro removed)
+
+	    - Improved security for internet-connected Allsky cameras
+
+        ## **Bug Fixes**
+
+	    - Fixed missing thumbnails on days with thousands of images
+	    - Fixed notification images not uploading to remote servers
+	    - Fixed Allsky Map update failures with improved error reporting
+	    - Plus many more...
+
+        ## **Deleted Settings**
+
+	    - ==Image Overlay Settings== removed from **Allsky Settings**
+	    - For ZWO cameras, ==Show Histogram Box== is now handled by the **ZWO Exposure Box** module.
+
+        ## **New Settings**
+
+	    - ==Focus Mode==
+	    - ==Dark Frame Upper Threshold==
+	    - ==Remove Bad Images Threshold Count==
 
 	---
 
@@ -887,4 +919,11 @@ of the current release.
 
 ??? "0.2"
 
-	- Separated c
+	- Separated camera settings from code logic.
+
+
+## 0.1 { data-toc-label="0.1" }
+
+??? "0.1"
+
+	- Initial release.

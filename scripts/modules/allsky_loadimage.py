@@ -204,8 +204,8 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 		extra_data['AS_CAMERAIMAGE'] = filename
 		extra_data['AS_DATE_NAME'] = allsky_shared.get_environment_variable('AS_DATE_NAME')
 		extra_data['AS_DAY_OR_NIGHT'] = allsky_shared.get_environment_variable('AS_DAY_OR_NIGHT')
-		extra_data['AS_AUTOEXPOSURE'] = bool(allsky_shared.get_environment_variable('AS_AUTOEXPOSURE'))
-		extra_data['AS_AUTOGAIN'] = bool(allsky_shared.get_environment_variable('AS_AUTOGAIN'))
+		extra_data['AS_AUTOEXPOSURE'] = allsky_shared.to_bool(allsky_shared.get_environment_variable('AS_AUTOEXPOSURE'))
+		extra_data['AS_AUTOGAIN'] = allsky_shared.to_bool(allsky_shared.get_environment_variable('AS_AUTOGAIN'))
 		extra_data['AS_RESOLUTION_X'] = int(allsky_shared.get_environment_variable('AS_RESOLUTION_X'))
 		extra_data['AS_RESOLUTION_Y'] = int(allsky_shared.get_environment_variable('AS_RESOLUTION_Y'))
 		extra_data['AS_EXPOSURE_US'] = int(allsky_shared.get_environment_variable('AS_EXPOSURE_US'))

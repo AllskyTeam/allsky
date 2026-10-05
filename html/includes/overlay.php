@@ -23,6 +23,7 @@ function DisplayOverlay($image_name)
         '/js/overlay/fields/oe-text.js',
         '/js/overlay/fields/oe-image.js',
         '/js/overlay/fields/oe-rect.js',
+        '/js/overlay/oe-conditions.js',
         '/js/overlay/oe-exposure.js',
         '/js/jquery-attributes/jquery-attributes.js',
         '/js/bootbox/bootbox.all.js',
@@ -323,6 +324,55 @@ function DisplayOverlay($image_name)
             </div>
         </div>
     </div>
+
+    <div class="modal fade" id="oe-conditions-dialog" tabindex="-1" role="dialog" aria-labelledby="oe-conditions-dialog-title">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="oe-conditions-dialog-title">Conditions</h4>
+                </div>
+                <div class="modal-body" id="oe-conditions-dialog-body"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-link pull-left oe-cond-remove" id="oe-conditions-dialog-remove"><i class="fa-regular fa-trash-can"></i> Remove conditions</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="oe-conditions-dialog-apply"><i class="fa-solid fa-check"></i> Apply</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <style>
+        /* Conditions dialog: one card per rule, the colour is the main control. */
+        #oe-conditions-dialog .oe-cond-top { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+        #oe-conditions-dialog .oe-cond-top .oe-cond-sets { margin-left: auto; }
+        #oe-conditions-dialog .oe-cond-kind { font-size: 12px; font-weight: normal; }
+        #oe-conditions-dialog .oe-cond-row { border: 1px solid rgba(128,128,128,0.35); border-radius: 6px; padding: 6px 8px; margin-bottom: 8px; }
+        #oe-conditions-dialog .oe-cond-row.oe-cond-match { border-color: #2da44e; box-shadow: inset 0 0 0 1px #2da44e; }
+        #oe-conditions-dialog .oe-cond-line { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        #oe-conditions-dialog .oe-cond-cond { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        #oe-conditions-dialog .oe-cond-when { font-weight: normal; margin: 0; }
+        #oe-conditions-dialog .oe-cond-row input[type=number] { width: 6em; }
+        #oe-conditions-dialog .oe-cond-row input[type=text] { width: 12em; }
+        #oe-conditions-dialog .oe-cond-style { display: inline-flex; align-items: center; gap: 10px; }
+        #oe-conditions-dialog input.oe-cond-fill { width: 48px; height: 32px; padding: 1px; border-radius: 6px; cursor: pointer; vertical-align: middle; }
+        #oe-conditions-dialog input.oe-cond-stroke { width: 32px; height: 24px; padding: 0 2px; vertical-align: middle; }
+        #oe-conditions-dialog .oe-cond-sample { display: inline-block; min-width: 4.5em; padding: 1px 10px; background: #05070a; border-radius: 4px; font-size: 18px; font-weight: bold; text-align: center; font-family: monospace; paint-order: stroke fill; }
+        /* The overlay draws the stroke around the text; paint-order keeps the colour visible the same way. */
+        #oe-conditions-dialog .oe-cond-row-buttons { margin-left: auto; white-space: nowrap; }
+        #oe-conditions-dialog .oe-cond-icon { color: inherit; opacity: 0.6; padding: 4px 7px; }
+        #oe-conditions-dialog .oe-cond-icon:hover, #oe-conditions-dialog .oe-cond-icon.active { opacity: 1; }
+        #oe-conditions-dialog .oe-cond-delete:hover { color: #cf222e; }
+        #oe-conditions-dialog .oe-cond-more { margin: 8px 0 2px 0; padding-top: 8px; border-top: 1px dashed rgba(128,128,128,0.35); }
+        #oe-conditions-dialog .oe-cond-more label { font-weight: normal; margin: 0 4px 0 8px; }
+        #oe-conditions-dialog .oe-cond-add { border-style: dashed; opacity: 0.8; }
+        #oe-conditions-dialog .oe-cond-else { margin: 8px 0 0 12px; }
+        #oe-conditions-dialog .oe-cond-try { margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(128,128,128,0.35); }
+        #oe-conditions-dialog .oe-cond-try label { margin-right: 6px; }
+        #oe-conditions-dialog .oe-cond-try input { width: 8em; }
+        #oe-conditions-dialog .oe-cond-preview { margin: 0 8px; }
+        #oe-conditions-dialog .oe-cond-remove { color: inherit; opacity: 0.7; }
+        #oe-conditions-dialog .oe-cond-remove:hover { opacity: 1; color: #cf222e; }
+    </style>
 
     <div class="modal" role="dialog" id="oe-field-errors-dialog">
         <div class="modal-dialog modal-lg" role="document">

@@ -33,6 +33,9 @@ THUMBNAIL_ONLY_ARG=""
 IMAGES_FILE=""
 OUTPUT_DIR=""
 OUTPUT_DIR_ENTERED=""
+START_TIME=""
+END_TIME=""
+GOT_TIME="false"
 
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
@@ -64,6 +67,16 @@ while [[ $# -gt 0 ]]; do
 				;;
 			--images)
 				IMAGES_FILE="${2}"
+				shift
+				;;
+			--start)
+				START_TIME="${2}"
+				GOT_TIME="true"
+				shift
+				;;
+			--end)
+				END_TIME="${2}"
+				GOT_TIME="true"
 				shift
 				;;
 			--output-dir)
@@ -115,6 +128,7 @@ usage_and_exit()
 	USAGE+="    [--keogram [--keogram-params 'params']] \\ \n"
 	USAGE+="    [--startrails] [--startrails-params 'params']] \\ \n"
 	USAGE+="    [--timelapse [--timelapse-params 'params']] \\ \n"
+	USAGE+="    [--start time] [--end time] \\ \n"
 	USAGE+="    [--thumbnail-only] [--output-dir <OUTPUT_DIR>] {--images file | <INPUT_DIR>}"
 	echo
 	if [[ ${RET} -ne 0 ]]; then
@@ -134,6 +148,11 @@ usage_and_exit()
 	echo "   --startrails-params 'params'    Passes parameters 'params' to the startrails program."
 	echo "   --timelapse                     Will ${MSG1} a timelapse."
 	echo "   --timelapse-params 'params'     Passes parameters 'params' to the timelapse program."
+	echo "   --start time                    Only use images taken at or after 'time'."
+	echo "   --end time                      Only use images taken at or before 'time'."
+	echo "                                   'time' is HH:MM, HH:MM:SS, sunrise, sunset, daytime_start,"
+	echo "                                   daytime_end, nighttime_start, or nighttime_end."
+	echo "                                   These override the start and end time settings."
 	echo "   --output-dir dir                Put the output file in 'dir'."
 	echo "   INPUT_DIR                       Is the day in '${ALLSKY_IMAGES}' to process."
 	echo
@@ -164,8 +183,8 @@ if [[ -n ${IMAGES_FILE} ]]; then
 	# If IMAGES_FILE is specified there should be no other arguments.
 	[[ $# -ne 0 ]] && usage_and_exit 1
 
-	if [[ ${DO_KEOGRAM} == "true" ]]; then
-		E_ "${ME}: The '--images' argument does not (yet) work with keograms." >&2
+	if [[ ${GOT_TIME} == "true" ]]; then
+		E_ "${ME}: '--start' and '--end' can't be used with '--images'." >&2
 		exit 1
 	fi
 
@@ -185,7 +204,9 @@ getAllSettings --var "uselocalwebsite \
 	remoteserverkeogramdestinationname remoteserverstartrailsdestinationname remoteservervideodestinationname \
 	keogramextraparameters keogramexpand keogramfontname keogramfontcolor keogramfontsize keogramlinethickness \
 	startrailsbrightnessthreshold startrailsextraparameters startrailsnightonly \
-	timelapseuploadthumbnail" || exit 1
+	timelapseuploadthumbnail \
+	keogramstart keogramend startrailsstart startrailsend timelapsestart timelapseend \
+	latitude longitude angle" || exit 1
 
 if [[ -n ${IMAGES_FILE} ]]; then
 	if [[ ! -s ${IMAGES_FILE} ]]; then
@@ -296,6 +317,71 @@ fi
 EXIT_CODE=0
 NUM_SUCCESS=0
 
+# Images are only used between a start and an end time if either is set.
+# The command-line arguments override the settings.
+if [[ ${GOT_TIME} == "false" && -z ${S_startrailsstart} && -z ${S_startrailsend} &&
+		${S_startrailsnightonly} == "true" ]]; then
+	# Settings files that haven't been converted from "Startrails Night images only" yet.
+	S_startrailsstart="nighttime_start"
+	S_startrailsend="nighttime_end"
+fi
+
+DAYNIGHT_FILE=""		# global
+WINDOW_FILE=""			# global
+
+# Print the times of the first and last image in the names on stdin, as "start end"
+# in seconds since 1970.  Image names contain the date and time, e.g., image-20261002183005.jpg.
+first_last_image_times()
+{
+	local FIRST  LAST
+	read -r FIRST LAST <<< "$( gawk '{ if (match($0, /[0-9]{14}/)) print substr($0, RSTART, 14); }' |
+		sort | sed -n '1p;$p' | tr '\n' ' ' )"
+	[[ -z ${FIRST} ]] && return 1
+	[[ -z ${LAST} ]] && LAST="${FIRST}"
+	local T
+	for T in "${FIRST}" "${LAST}"; do
+		date --date="${T:0:4}-${T:4:2}-${T:6:2} ${T:8:2}:${T:10:2}:${T:12:2}" '+%s' 2>/dev/null || return 1
+	done | tr '\n' ' '
+}
+# Create a file with the names of the images between the start and end times for ${1}
+# and set WINDOW_FILE to it.  WINDOW_FILE is "" if all images should be used.
+# Return 1 if there are no images to use.
+get_window_images()
+{
+	local WHAT="${1}"
+	local START="${2}"
+	local END="${3}"
+
+	WINDOW_FILE=""
+	if [[ ${GOT_TIME} == "true" ]]; then
+		START="${START_TIME}"
+		END="${END_TIME}"
+	fi
+	[[ -n ${IMAGES_FILE} || ( -z ${START} && -z ${END} ) ]] && return 0
+
+	if [[ -z ${DAYNIGHT_FILE} ]]; then
+		# Allsky's own day/night decision for each image, for daytime_* and nighttime_*.
+		DAYNIGHT_FILE="${ALLSKY_TMP}/daynight-${DATE}.txt"
+		local SQL="SELECT AS_CAMERAIMAGE, AS_DAY_OR_NIGHT FROM allsky_image WHERE AS_DATE_NAME = '${DATE}'"
+		"${ALLSKY_DATABASE_COMMAND}" --run "${SQL}" > "${DAYNIGHT_FILE}" 2>/dev/null
+	fi
+
+	WINDOW_FILE="${ALLSKY_TMP}/${WHAT}-${DATE}-images.txt"
+	local RES
+	RES="$( "${ALLSKY_PYTHON_VENV}/bin/python3" "${ALLSKY_UTILITIES}/selectImages.py" \
+		--dir "${INPUT_DIR}" --ext "${ALLSKY_EXTENSION}" \
+		--start "${START}" --end "${END}" --daynight "${DAYNIGHT_FILE}" \
+		--latitude "${S_latitude}" --longitude "${S_longitude}" --angle "${S_angle}" \
+		--output "${WINDOW_FILE}" 2>&1 )"
+	local RET=$?
+	if [[ ${RET} -ne 0 ]]; then
+		W_ "${ME}: Not creating the ${WHAT} for ${DATE}: ${RES}" >&2
+		return 1
+	fi
+	[[ ${SILENT} == "false" ]] && echo "===== ${WHAT^}: using ${RES}"
+	return 0
+}
+
 if [[ ${DO_KEOGRAM} == "true" || ${DO_STARTRAILS} == "true" ]]; then
 	# Nasty JQ trick to compose a widthxheight string if both width and height
 	# are defined in the config file and are non-zero. If this check fails, then
@@ -334,12 +420,28 @@ if [[ ${DO_KEOGRAM} == "true" ]]; then
 			[[ ${SIZE} != "" ]] && MORE+=" --font-size ${SIZE}"
 		THICKNESS="${S_keogramlinethickness}"
 			[[ ${THICKNESS} != "" ]] && MORE+=" --font-type ${THICKNESS}"
-		CMD="'${ALLSKY_BIN}/keogram' ${N} ${SIZE_FILTER} -d '${INPUT_DIR}'"
-		CMD+=" -e ${ALLSKY_EXTENSION} -o '${UPLOAD_FILE}' ${MORE} ${KEOGRAM_EXTRA_PARAMETERS}"
-		[[ -n ${KEOGRAM_PARAMS} ]] && CMD+=" ${KEOGRAM_PARAMS}"
-		generate "Keogram" "keogram" "${CMD}"
-		RET=$?
-		[[ ${RET} -eq 0 ]] && ((NUM_SUCCESS++))
+		CMD="'${ALLSKY_BIN}/keogram' ${N} ${SIZE_FILTER}"
+		if [[ -n ${IMAGES_FILE} ]]; then
+			CMD+=" --images '${IMAGES_FILE}'"
+		elif get_window_images "keogram" "${S_keogramstart}" "${S_keogramend}" ; then
+			if [[ -n ${WINDOW_FILE} ]]; then
+				CMD+=" --images '${WINDOW_FILE}'"
+			else
+				CMD+=" -d '${INPUT_DIR}' -e ${ALLSKY_EXTENSION}"
+			fi
+		else
+			CMD=""
+		fi
+		if [[ -n ${CMD} ]]; then
+			CMD+=" -o '${UPLOAD_FILE}' ${MORE} ${KEOGRAM_EXTRA_PARAMETERS}"
+			[[ -n ${KEOGRAM_PARAMS} ]] && CMD+=" ${KEOGRAM_PARAMS}"
+			generate "Keogram" "keogram" "${CMD}"
+			RET=$?
+			[[ ${RET} -eq 0 ]] && ((NUM_SUCCESS++))
+		else
+			RET=1
+			((EXIT_CODE++))
+		fi
 
 		if [[ $? -gt 90 && (${DO_STARTRAILS} == "true" || ${DO_TIMELAPSE} == "true") ]]; then
 			DO_STARTRAILS="false"
@@ -403,6 +505,7 @@ if [[ ${DO_STARTRAILS} == "true" ]]; then
 		BRIGHTNESS_THRESHOLD="${S_startrailsbrightnessthreshold}"
 		STARTRAILS_EXTRA_PARAMETERS="${S_startrailsextraparameters}"
 		CMD="'${ALLSKY_BIN}/startrails' ${N} ${SIZE_FILTER} -o '${UPLOAD_FILE}'"
+		STARTRAILS_LIST=""		# the images used, for their times in the database
 		if [[ -n ${IMAGES_FILE} ]]; then
 			CMD+=" --images '${IMAGES_FILE}'"
 		elif [[ ${S_startrailsnightonly} == "true" ]]; then
@@ -416,16 +519,21 @@ if [[ ${DO_STARTRAILS} == "true" ]]; then
 				W_ "${ME}: There are no nighttime images for ${DAY}" >&2
 				exit 1
 			fi
-			CMD+=" --images '${FILE_NAMES}'"
 		else
-			CMD+=" -d '${INPUT_DIR}' -e ${ALLSKY_EXTENSION}"
+			CMD=""
 		fi
-		CMD+=" -b ${BRIGHTNESS_THRESHOLD}"
-		CMD+=" ${STARTRAILS_EXTRA_PARAMETERS}"
-		[[ -n ${STARTRAILS_PARAMS} ]] && CMD+=" ${STARTRAILS_PARAMS}"
-		generate "Startrails, threshold=${BRIGHTNESS_THRESHOLD}" "startrails" "${CMD}"
-		RET=$?
-		[[ ${RET} -eq 0 || ${RET} -eq ${ALLSKY_EXIT_PARTIAL_OK} ]] && ((NUM_SUCCESS++))
+		if [[ -n ${CMD} ]]; then
+			CMD+=" -b ${BRIGHTNESS_THRESHOLD}"
+			CMD+=" ${STARTRAILS_EXTRA_PARAMETERS}"
+			[[ -n ${STARTRAILS_PARAMS} ]] && CMD+=" ${STARTRAILS_PARAMS}"
+			generate "Startrails, threshold=${BRIGHTNESS_THRESHOLD}" "startrails" "${CMD}"
+			RET=$?
+			[[ ${RET} -eq 0 || ${RET} -eq ${ALLSKY_EXIT_PARTIAL_OK} ]] && ((NUM_SUCCESS++))
+		else
+			RET=1
+			GENERATE_OUTPUT=""
+			((EXIT_CODE++))
+		fi
 
 		# ${GENERATE_OUTPUT} contains the output of the startrails command.
 		# startrails: Minimum: .05 maximum: 0.584629 mean: 0.494671 median: 0.526751 \
@@ -448,6 +556,18 @@ if [[ ${DO_STARTRAILS} == "true" ]]; then
 			D="${DATE}"
 			! is_number "${D}" && D="$( date '+%Y%m%d' )"
 			VALUES="'date,${D}' 'directory,${DATE}' ${V}"
+
+			# The times of the first and last image looked at, i.e., the startrails' time window.
+			if [[ -n ${STARTRAILS_LIST} ]]; then
+				TIMES="$( first_last_image_times < "${STARTRAILS_LIST}" )"
+			else
+				TIMES="$( find "${INPUT_DIR}" -maxdepth 1 -name "*.${ALLSKY_EXTENSION}" -printf '%f\n' |
+					first_last_image_times )"
+			fi
+			read -r START_SECONDS END_SECONDS <<< "${TIMES}"
+			if [[ -n ${START_SECONDS} && -n ${END_SECONDS} ]]; then
+				VALUES+=" 'starttime,${START_SECONDS}' 'endtime,${END_SECONDS}'"
+			fi
 
 			# Insert the stats into the DB.
 			# shellcheck disable=SC2086
@@ -543,15 +663,26 @@ if [[ ${DO_TIMELAPSE} == "true" ]]; then
 			fi
 			if [[ -n ${IMAGES_FILE} ]]; then
 				X="--images '${IMAGES_FILE}'"
+			elif get_window_images "timelapse" "${S_timelapsestart}" "${S_timelapseend}" ; then
+				if [[ -n ${WINDOW_FILE} ]]; then
+					X="--images '${WINDOW_FILE}' --output '${UPLOAD_FILE}'"
+				else
+					X="--output '${UPLOAD_FILE}' '${INPUT_DIR}'"
+				fi
 			else
-				X="--output '${UPLOAD_FILE}' '${INPUT_DIR}'"
+				X=""
 			fi
-			# timelapse.sh calls thumbnail.sh to create the thumbnail.
-			CMD="${N} '${ALLSKY_SCRIPTS}/timelapse.sh' ${DEBUG_ARG} ${X}"
-			[[ -n ${TIMELAPSE_PARAMS} ]] && CMD+=" ${TIMELAPSE_PARAMS}"
-			generate "Timelapse" "" "${CMD}"	# it creates the necessary directory
-			RET=$?
-			[[ ${RET} -eq 0 ]] && ((NUM_SUCCESS++))
+			if [[ -n ${X} ]]; then
+				# timelapse.sh calls thumbnail.sh to create the thumbnail.
+				CMD="${N} '${ALLSKY_SCRIPTS}/timelapse.sh' ${DEBUG_ARG} ${X}"
+				[[ -n ${TIMELAPSE_PARAMS} ]] && CMD+=" ${TIMELAPSE_PARAMS}"
+				generate "Timelapse" "" "${CMD}"	# it creates the necessary directory
+				RET=$?
+				[[ ${RET} -eq 0 ]] && ((NUM_SUCCESS++))
+			else
+				RET=1
+				((EXIT_CODE++))
+			fi
 		fi
 
 	elif [[ ! -f ${UPLOAD_FILE} ]]; then

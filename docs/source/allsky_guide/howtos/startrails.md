@@ -13,7 +13,7 @@ In an Allsky context, startrails are used to:
 Startrail images provide both scientific and aesthetic value, turning many hours of sky monitoring into a single, easily interpreted visual record.
 
 !!! info
-	Be default, daytime and nighttime images are looked at when creating a startrails.  Typically the daytime images are too bright and are rejected, but it takes time to do that.  The startrails `Night images only` setting can be used to only look at night images.  Typically you'll want to enable that setting.
+	By default, daytime and nighttime images are looked at when creating a startrails.  Typically the daytime images are too bright and are rejected, but it takes time to do that.  Set the startrails ==Start Time== to `nighttime_start` and ==End Time== to `nighttime_end` to only look at night images (this replaces the former `Night images only` setting).  You can also use clock times like `22:00` to `04:00`, or `sunset` and `sunrise`.
 
 !!! warning  "Warning"
 

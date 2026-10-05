@@ -111,7 +111,7 @@ __all__ = [
     "mask_image",
     "fast_star_count",
     "count_starts_in_image",
-    "detect_meteors"
+    "detect_meteors",
     "draw_detections"
     ]
 
@@ -138,7 +138,7 @@ def get_environment_variable(name, fatal=False, debug=False, try_allsky_debug_fi
         The resolved value as a string, or None if not found (and ``fatal``
         is False).
     """
-    return getEnvironmentVariable(name, fatal, debug)
+    return getEnvironmentVariable(name, fatal, debug, try_allsky_debug_file)
 
 def getEnvironmentVariable(name, fatal=False, debug=False, try_allsky_debug_file=False):
     """Legacy camelCase environment variable accessor.
@@ -2437,7 +2437,7 @@ def infer_sql_type(entry: dict) -> str:
         return "FLOAT"
     if t in ("bool", "boolean"):
         return "TINYINT(1)"
-    if t in ("temperature",):
+    if t in ("temperature", "pressure"):
         return "FLOAT"
     return "VARCHAR(1024)"
 

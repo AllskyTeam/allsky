@@ -51,6 +51,16 @@ echo "* Updating config_repo files."
 update_repo_files
 
 
+# The Overlay Editor's list of formats comes from these files.  Users don't edit them,
+# so bring in new formats (e.g., for pressure) on "In Place" upgrades too.
+echo "* Updating the Overlay Editor's format lists."
+for F in formats.json format_attributes.json; do
+	if [[ -d ${ALLSKY_OVERLAY}/config ]] && ! cmp --silent "${ALLSKY_REPO}/overlay/config/${F}" "${ALLSKY_OVERLAY}/config/${F}" ; then
+		cp "${ALLSKY_REPO}/overlay/config/${F}" "${ALLSKY_OVERLAY}/config/${F}"
+	fi
+done
+
+
 echo "* Recreating links."
 create_links "allsky-config"
 

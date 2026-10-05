@@ -80,6 +80,30 @@ This uses the HTML5 spinner control to allow a number to be entered. You can set
 
 ```
 
+## Colour field { data-toc-label="Colour field" }
+This displays a colour picker, so users don't have to type colour codes. The value is passed to the module as a string of three comma-separated numbers from 0 to 255 in **red, green, blue** order, e.g. `255,0,0` for red. Use the same format for the default in `arguments`.
+
+```
+"bordercolour" : {
+    "required": "false",
+    "description": "Border Colour",
+    "help": "The colour of the border.",
+    "tab": "Field Types",
+    "type": {
+        "fieldtype": "colour"
+    }
+}
+```
+
+OpenCV uses blue, green, red order, so reverse the numbers before drawing:
+
+```python
+red, green, blue = (int(c) for c in self.get_param('bordercolour', '0,0,0', str, True).split(','))
+cv2.rectangle(image, (x1, y1), (x2, y2), (blue, green, red), 2)
+```
+
+Pillow uses red, green, blue order, so the numbers can be used as they are.
+
 ## I²C Field { data-toc-label="I²C Field" }
 This displays a dialog allowing the user to select an I²C address. The dialog will display all detected devices on bus zero. A library, courtesy of Adafruit, is also available.
 

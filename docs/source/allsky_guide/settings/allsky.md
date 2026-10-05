@@ -327,6 +327,8 @@ AllskySettings
         | WebUI Setting { .w-20p } | Default { .w-10p }  | Description |
         |---|---:|---|
         | ==Generate== | Yes | Enable to generate a timelapse video at the end of the night. |
+        | ==Start Time== |  | Only use images taken at or after this time in the timelapse. Empty uses the first image of the day. Can be `HH:MM` (24-hour), `sunrise`, `sunset`, `daytime_start`, `daytime_end`, `nighttime_start`, or `nighttime_end`. The `daytime_*` and `nighttime_*` times use Allsky's own day/night decision for that day's images, the same one used to name images day or night. An ==End Time== earlier than the ==Start Time== is on the next day, so `18:00` to `06:00` works. Only the day's images folder is used, so the result never covers more than one Allsky day. |
+        | ==End Time== |  | Only use images taken at or before this time in the timelapse. Empty uses the last image of the day. |
         | ==Width== | 0 | Changes the width of the generated timelapse; must be an even number. `0` uses the image's full size. Large sensor cameras like the RPi HQ often need the timelapse to be shrunk in order for timelapses to work (or the individual images need to be shrunk). |
         | ==Height== | 0 | Changes the height of the generated timelapse; must be an even number. `0` uses the image's full size. If you change the width and height you'll probably want the resulting aspect ratio to match the original images. |
         | ==Bitrate== | 5000 | Bitrate the timelapse video will be created with, in kilobytes. Higher values produce better quality video but larger files. Do ==NOT== add a trailing `k`. |
@@ -365,6 +367,8 @@ AllskySettings
         | WebUI Setting { .w-20p } | Default { .w-10p }  | Description |
         |---|---:|---|
         | ==Generate== | Yes | Enable to generate a keogram image at the end of the night. |
+        | ==Start Time== |  | Only use images taken at or after this time in the keogram. Empty uses the first image of the day. Can be `HH:MM` (24-hour), `sunrise`, `sunset`, `daytime_start`, `daytime_end`, `nighttime_start`, or `nighttime_end`. The `daytime_*` and `nighttime_*` times use Allsky's own day/night decision for that day's images, the same one used to name images day or night. An ==End Time== earlier than the ==Start Time== is on the next day, so `18:00` to `06:00` works. Only the day's images folder is used, so the result never covers more than one Allsky day. |
+        | ==End Time== |  | Only use images taken at or before this time in the keogram. Empty uses the last image of the day. |
         | ==Expand== | Yes | Enable to expand keograms to the image width. Same as the `--image-expand` and `-x` options. |
         | ==Font Name== | Simplex | Font name. |
         | ==Font Color== | #ffffff (white) | Color of the date/time label on the keogram. Same as the `--font-color` and `-C` options.  <br><br>The color can be specified using one of the following:  <br>1. Three comma- or space-separated numbers between `0` and `255` in RGB order. Example: `0,255,0` (green), `255 0 1` (red with a tiny bit of blue).  <br>2. `#` followed by ==six== hex digits `00` to `ff` in RGB order. Example: `#00ff00` (green), `#ff0001` (red with a tiny bit of blue).  <br>3. `#` followed by ==three== hex digits `0` to `f` in RGB order. Example: `#0f0` == `#00ff00` (green), `#f00` == `#ff0011` (red with a little bit of blue).  <br><br>Hex digits include 0–9 and a–f, where hex `a` = decimal `10`, … hex `f` = decimal `15`. Hex `10` = decimal `16` and hex `ff` = decimal `255`.  <br><br>Larger values mean more of that color: `#000000` is black, `255 255 255` is white, `128,128,128` is middle gray. |
@@ -377,6 +381,8 @@ AllskySettings
         | WebUI Setting { .w-20p } | Default { .w-10p }  | Description |
         |---|---:|---|
         | ==Generate== | Yes | Enable to generate a startrails image at the end of night. |
+        | ==Start Time== |  | Only use images taken at or after this time in the startrails. Empty uses the first image of the day. Can be `HH:MM` (24-hour), `sunrise`, `sunset`, `daytime_start`, `daytime_end`, `nighttime_start`, or `nighttime_end`. The `daytime_*` and `nighttime_*` times use Allsky's own day/night decision for that day's images, the same one used to name images day or night. An ==End Time== earlier than the ==Start Time== is on the next day, so `18:00` to `06:00` works. Only the day's images folder is used, so the result never covers more than one Allsky day. |
+        | ==End Time== |  | Only use images taken at or before this time in the startrails. Empty uses the last image of the day. |
         | ==Brightness Threshold== | 0.1 | Average brightness level above which images are discarded (moon, headlights, aurora, etc.). If you are only getting very short trails, or none at all, adjust this number. Values are 0.0 (pure black, filters out nothing) to 1.0 (pure white, uses every image). |
         | ==Extra Parameters== |  | Optional additional startrails creation parameters. Execute `~/allsky/bin/startrails --help` for a list of options. |
 

@@ -977,11 +977,13 @@ set_permissions()
 	# "video" allows the user to access video devices
 	# "gpio" and "i2c" allow the Allsky server and modules, which run as the user,
 	# to switch GPIO pins (e.g., dew heater, fans) and read I2C sensors.
+
 	local G="$( id "${ALLSKY_OWNER}" )"
 	for g in "sudo" "${ALLSKY_WEBSERVER_GROUP}" "video" "gpio" "i2c"
 	do
 		# "gpio" and "i2c" only exist on some systems.
 		getent group "${g}" > /dev/null || continue
+
 		#shellcheck disable=SC2076
 		if ! [[ ${G} =~ "(${g})" ]]; then
 			display_msg --log progress "Adding ${ALLSKY_OWNER} to ${g} group."
@@ -1800,6 +1802,18 @@ convert_settings_file()			# prior_file, new_file
 					fi
 					;;
 
+				# ===== Replaced by startrailsstart and startrailsend after v2026.10.01.
+				"startrailsnightonly")
+					echo "${FIELD} ${FIELD} --delete" >> "${DELETED_SETTINGS}"
+					if [[ ${VALUE} == "true" || ${VALUE} == "1" ]]; then
+						# nighttime_start/end use the same day/night decision as before.
+						VALUE="nighttime_start"
+						doV "${FIELD}" "VALUE" "startrailsstart" "text" "${NEW_FILE}"
+						VALUE="nighttime_end"
+						doV "${FIELD}" "VALUE" "startrailsend" "text" "${NEW_FILE}"
+					fi
+					;;
+
 				# ===== Names changed in ${COMBINED_BASE_VERSION}
 				"darkframe")
 					doV "${FIELD}" "VALUE" "takedarkframes" "boolean" "${NEW_FILE}"
@@ -2349,10 +2363,21 @@ restore_prior_files()
 	ITEM="${SPACE}'config/modules' directory"
 	if [[ -d ${PRIOR_CONFIG_DIR}/modules ]]; then
 		display_msg --log progress "${ITEM} (merging)"
-
 		cp -ar "${PRIOR_CONFIG_DIR}/modules" "${ALLSKY_CONFIG}"
 	else
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
+	fi
+
+	ITEM="${SPACE}support files"
+	PRIOR_SUPPORT_DIR="${ALLSKY_SUPPORT_DIR/${ALLSKY_HOME}/${ALLSKY_PRIOR_DIR}}"
+	FILES="$( find "${PRIOR_SUPPORT_DIR}" -type f -name '*.zip' 2>/dev/null )"
+	if [[ -n ${FILES} ]]; then
+		display_msg --log progress "${ITEM} (moving)"
+		# shellcheck disable=SC2086
+		mv ${FILES} "${ALLSKY_SUPPORT_DIR}"
+	else
+		# Few people have these files, so don't show to user.
+		display_msg --logonly info "${ITEM}: ${NOT_RESTORED}"
 	fi
 
 	D="${PRIOR_CONFIG_DIR}"
@@ -2681,6 +2706,17 @@ do_restore()
 		mv "${ALLSKY_MYFILES_DIR}" "$( dirname "${PRIOR_MYFILES_DIR}" )"
 	else
 		# Few people have this directory, so don't show to user.
+		display_msg --logonly info "${ITEM}: ${NOT_RESTORED}"
+	fi
+	ITEM="${SPACE}support files"
+	PRIOR_SUPPORT_DIR="${ALLSKY_SUPPORT_DIR/${ALLSKY_HOME}/${ALLSKY_PRIOR_DIR}}"
+	FILES="$( find "${ALLSKY_SUPPORT_DIR}" -type f -name '*.zip' 2>/dev/null )"
+	if [[ -n ${FILES} ]]; then
+		display_msg --log progress "${ITEM} (moving back)"
+		# shellcheck disable=SC2086
+		mv ${FILES} "${PRIOR_SUPPORT_DIR}"
+	else
+		# Few people have these files, so don't show to user.
 		display_msg --logonly info "${ITEM}: ${NOT_RESTORED}"
 	fi
 
@@ -3330,6 +3366,38 @@ remind_old_version()
 
 
 ####
+# Point the user to the documentation with a WebUI message (its link opens the page):
+# after a new installation the installation guide, after an upgrade from a different
+# release that release's Upgrade Notes.  Nothing when re-installing the same release.
+# The local copy of the documentation is used, so the pages match this version.
+show_documentation_message()
+{
+	local DOCS="/documentation/allsky_guide"
+	local DOCS_DIR="${ALLSKY_WEBUI}/docs/allsky_guide"
+	local MSG  URL  BASE
+
+	BASE="$( remove_point_release "${ALLSKY_VERSION}" )"
+	if [[ ${USE_PRIOR_ALLSKY} == "true" ]]; then
+		[[ "$( remove_point_release "${PRIOR_ALLSKY_VERSION}" )" == "${BASE}" ]] && return
+		if [[ -f ${DOCS_DIR}/upgrade/${BASE}.html ]]; then
+			URL="${DOCS}/upgrade/${BASE}.html"
+		else
+			URL="${DOCS}/upgrade/introduction.html"
+		fi
+		MSG="Allsky was upgraded from ${PRIOR_ALLSKY_VERSION} to ${ALLSKY_VERSION}."
+		MSG+=" Click here for the Upgrade Notes: what changed and what to check."
+	else
+		URL="${DOCS}/allsky.html"
+		MSG="Welcome to Allsky ${ALLSKY_VERSION}!"
+		MSG+=" Click here for the documentation on setting it up."
+	fi
+
+	"${ALLSKY_SCRIPTS}/addMessage.sh" --type info --msg "${MSG}" --url "${URL}"
+	display_msg --logonly info "Added a WebUI message pointing to '${URL}'."
+}
+
+
+####
 # Manage installation and setup of the Allsky database
 setup_database()
 {
@@ -3364,9 +3432,11 @@ update_overlays()
 update_modules()
 {
 	local TMP="${ALLSKY_LOGS}/modules.log"
+
 	# Errors the installer can't log (e.g., an exception at startup) only go to
 	# stdout and stderr, so keep those too.
 	local OUTPUT="${ALLSKY_LOGS}/modules.output.log"
+
 	display_msg --log progress "Updating modules using the ${BRANCH} branch."
 	args=(
 		--auto
@@ -3951,6 +4021,9 @@ setup_database
 ##### If needed, remind the user to remove any old Allsky version
 # Re-run every time to remind the user again.
 remind_old_version
+
+##### Point the user to the installation guide or the release's Upgrade Notes.
+show_documentation_message
 
 ##### See if we should reboot when installation is done.
 # Call reboot_needed() in case an external function said we need to reboot.

@@ -8,10 +8,6 @@ if (basename(__FILE__) === basename($_SERVER['SCRIPT_FILENAME'])) {
 function ListDays()
 {
 
-	// TODO: We're not sure if we like the font awesome icons or thumbnails of
-	// the video/startrails/keograms so for now, disable it.
-	$useThumbnailsIfExist = false;
-
 	global $page;
 	global $pageHeaderTitle, $pageIcon, $pageHelp;
 	global $fa_size, $fa_size_px;
@@ -158,17 +154,6 @@ foreach ($days as $day) {
 	ob_start();
 	if ($has_timelapse) {
 		$icon = "";
-		if ($useThumbnailsIfExist) {
-			$t = ALLSKY_IMAGES . "/$day/videothumbnail/allsky-$day.{jpg,png}";
-			$thumb = glob($t, GLOB_BRACE);
-			if ($thumb !== false) {
-				// "/images" is an alias in the web server for ALLSKY_IMAGES
-				$images_dir = "/images";
-				$thumb = str_replace(ALLSKY_IMAGES, "/images", $thumb[0]);
-				// 22px is roughly the width of a "fa-lg fa-fw" icon.
-				$icon = "<img src='$thumb' width='$fa_size_px'>";
-			}
-		}
 		insertHref("list_videos", $day, false, $icon);
 	} else {
 		echo "none";

@@ -4254,7 +4254,7 @@ def get_sensor_temperature():
     if temperature == None:
         temperature = 0
 
-    return float(temperature)
+    return asfloat(temperature)
 
 
 def get_camera_gain():
@@ -4282,7 +4282,7 @@ def get_camera_gain():
     if gain == None:
         gain = 0
 
-    return float(gain)
+    return asfloat(gain)
 
 
 def get_camera_type():

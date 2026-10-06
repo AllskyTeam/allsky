@@ -138,7 +138,7 @@ def get_environment_variable(name, fatal=False, debug=False, try_allsky_debug_fi
         The resolved value as a string, or None if not found (and ``fatal``
         is False).
     """
-    return getEnvironmentVariable(name, fatal, debug, try_allsky_debug_file)
+    return getEnvironmentVariable(name, fatal, debug)
 
 def getEnvironmentVariable(name, fatal=False, debug=False, try_allsky_debug_file=False):
     """Legacy camelCase environment variable accessor.
@@ -2437,7 +2437,7 @@ def infer_sql_type(entry: dict) -> str:
         return "FLOAT"
     if t in ("bool", "boolean"):
         return "TINYINT(1)"
-    if t in ("temperature", "pressure"):
+    if t in ("temperature",):
         return "FLOAT"
     return "VARCHAR(1024)"
 
@@ -5950,7 +5950,7 @@ def get_clean_image_path():
 def send_camera_to_allsky_sensor_server():
     allsky_sensor_server_enabled = get_setting("enableallskysensorserver")
 
-    if allsky_sensor_server_enabled:
+    if to_bool(allsky_sensor_server_enabled):
         allsky_sensor_server_url = get_setting("allskysensorserverurl")
         allsky_sensor_server_token = get_setting("allskysensorservertoken")        
         allsky_sensor_server_camera_name = get_setting("allskysensorservercameraname")

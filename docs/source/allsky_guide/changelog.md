@@ -23,6 +23,7 @@ of the current release.
 			- The specified number of days' images are kept, regardless of their date.  The prior behaviour deleted anything older than the specified number of days.
 			- If you decrease the number of days' images to keep (either in the WebUI, a local Website, or a remoteWebsite) and there are more days' images than the new days to keep value, a notice will display in the WebUI.
 		- The WebUI checks for new Allsky releases every 12 hours instead of every 2 days.
+		- `generateForDay.sh --keolapse` creates or uploads the keolapse of the **Keolapse** module for a given day, with the module's settings.
 
         ## **Bug Fixes**
 		- The `upgrade.sh` command no longer fails when using the "in-place" method and a new Allsky release is available.

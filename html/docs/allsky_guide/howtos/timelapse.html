@@ -3560,6 +3560,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../overlays/conditions.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Conditional Styles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../overlays/tips.html" class="md-nav__link">
         
   
@@ -6249,6 +6277,16 @@ generateForDay.sh --upload --timelapse 20260710
 <p class="admonition-title">Note</p>
 <p>You may wish to manually create a timelapse if you changed the settings (e.g., FPS), or if a timelapse wasn't automatically created, possibly due to Allsky not running at the night-to-day transition time.</p>
 </div>
+<p>To only use part of the day, set the timelapse <strong>Start Time</strong> and <strong>End Time</strong> settings, or override them on the command line, for example for just the night or from 22:00 to 04:00:</p>
+<div class="highlight"><pre><span></span><code>generateForDay.sh --timelapse --start nighttime_start --end nighttime_end 20260710
+generateForDay.sh --timelapse --start 22:00 --end 04:00 20260710
+</code></pre></div>
+<p><code>--start</code> and <code>--end</code> also work with <code>--keogram</code> and <code>--startrails</code>.</p>
+<p>If the <strong>Keolapse</strong> module is installed and in the <strong>Night to Day</strong> flow, <code>--keolapse</code> creates or uploads its keolapse the same way, with the module's settings:</p>
+<div class="highlight"><pre><span></span><code>generateForDay.sh --keolapse 20260710
+generateForDay.sh --upload --keolapse 20260710
+</code></pre></div>
+<p><code>--keolapse</code> isn't part of the default set, so <code>generateForDay.sh 20260710</code> still only creates the keogram, startrails, and timelapse. The keolapse ignores <code>--start</code>, <code>--end</code>, and <code>--output-dir</code>.</p>
 <p>If your camera has a lot of pixels you may need to resize the timelapse in order to decrease the processing power needed to create it and to reduce the file size. If so, update the timelapse <strong>Width</strong> and <strong>Height</strong> settings. Cutting each size in half is a good starting point.</p>
 <h2 id="mini-timelapse">Mini Timelapse<a class="headerlink" href="#mini-timelapse" title="Permanent link">¶</a></h2>
 <p>A mini timelapse contains a limited number of images and is constantly recreated throughout the day. For example, you can have a mini timelapse that shows the last 50 images, and is recreated every 5 images. Note that every new mini timelapse <strong>replaces</strong> the prior one, so there is ever only one mini timelapse.</p>

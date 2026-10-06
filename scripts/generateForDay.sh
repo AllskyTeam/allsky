@@ -1,7 +1,8 @@
 #!/bin/bash
 # shellcheck disable=SC2154		# referenced but not assigned - from convertJSON.php
 
-# This script allows users to manually generate or upload keograms, startrails, and timelapses.
+# This script allows users to manually generate or upload keograms, startrails, and timelapses,
+# and keolapses if the "Keolapse" module is installed.
 
 # Allow this script to be executed manually, which requires several variables to be set.
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )/.." )"
@@ -28,6 +29,7 @@ DO_STARTRAILS="false"
 STARTRAILS_PARAMS=""
 DO_TIMELAPSE="false"
 TIMELAPSE_PARAMS=""
+DO_KEOLAPSE="false"
 THUMBNAIL_ONLY="false"
 THUMBNAIL_ONLY_ARG=""
 IMAGES_FILE=""
@@ -108,6 +110,10 @@ while [[ $# -gt 0 ]]; do
 				TIMELAPSE_PARAMS="${2}"
 				shift
 				;;
+			--keolapse)
+				DO_KEOLAPSE="true"
+				((GOT++))
+				;;
 
 			-*)
 				E_ "${ME}: Unknown argument '${ARG}'." >&2
@@ -127,7 +133,7 @@ usage_and_exit()
 	local USAGE="Usage: ${ME} [--help] [--silent] [--debug] [--nice n] [--upload] \\ \n"
 	USAGE+="    [--keogram [--keogram-params 'params']] \\ \n"
 	USAGE+="    [--startrails] [--startrails-params 'params']] \\ \n"
-	USAGE+="    [--timelapse [--timelapse-params 'params']] \\ \n"
+	USAGE+="    [--timelapse [--timelapse-params 'params']] [--keolapse] \\ \n"
 	USAGE+="    [--start time] [--end time] \\ \n"
 	USAGE+="    [--thumbnail-only] [--output-dir <OUTPUT_DIR>] {--images file | <INPUT_DIR>}"
 	echo
@@ -148,6 +154,8 @@ usage_and_exit()
 	echo "   --startrails-params 'params'    Passes parameters 'params' to the startrails program."
 	echo "   --timelapse                     Will ${MSG1} a timelapse."
 	echo "   --timelapse-params 'params'     Passes parameters 'params' to the timelapse program."
+	echo "   --keolapse                      Will ${MSG1} a keolapse using the Keolapse module's settings."
+	echo "                                   The module must be installed and in the Night to Day flow."
 	echo "   --start time                    Only use images taken at or after 'time'."
 	echo "   --end time                      Only use images taken at or before 'time'."
 	echo "                                   'time' is HH:MM, HH:MM:SS, sunrise, sunset, daytime_start,"
@@ -156,7 +164,8 @@ usage_and_exit()
 	echo "   --output-dir dir                Put the output file in 'dir'."
 	echo "   INPUT_DIR                       Is the day in '${ALLSKY_IMAGES}' to process."
 	echo
-	echo "If you don't specify --keogram, --startrails, or --timelapse, all three will be ${MSG2}."
+	echo "If you don't specify --keogram, --startrails, --timelapse, or --keolapse,"
+	echo "a keogram, startrails, and timelapse will be ${MSG2}."
 	echo
 	echo "The list of images to process is determined in one of two ways:"
 	echo
@@ -750,12 +759,57 @@ if [[ ${DO_TIMELAPSE} == "true" ]]; then
 	fi
 fi
 
+if [[ ${DO_KEOLAPSE} == "true" ]]; then
+	# The Keolapse module does the work, with the settings it has in the Night to Day flow.
+	KEOLAPSE_MODULE=""
+	for M in "${ALLSKY_MY_MODULES}" "${ALLSKY_MODULE_LOCATION}/modules"; do
+		if [[ -f ${M}/allsky_keotimelapse.py ]]; then
+			KEOLAPSE_MODULE="${M}/allsky_keotimelapse.py"
+			break
+		fi
+	done
+	if [[ -z ${KEOLAPSE_MODULE} ]]; then
+		E_ "*** ${ME} ERROR: '--keolapse' specified but the Keolapse module is not installed." >&2
+		((EXIT_CODE++))
+	elif [[ -n ${IMAGES_FILE} ]]; then
+		E_ "*** ${ME} ERROR: '--keolapse' can't be used with '--images'." >&2
+		((EXIT_CODE++))
+	else
+		if [[ ${GOT_TIME} == "true" || -n ${OUTPUT_DIR_ENTERED} || ${THUMBNAIL_ONLY} == "true" ]]; then
+			W_ "${ME}: '--start', '--end', '--output-dir', and '--thumbnail-only' are ignored for the keolapse;" >&2
+			W_ "the module uses its own settings." >&2
+		fi
+		CMD="PYTHONPATH='${ALLSKY_MY_MODULES}:${ALLSKY_MODULE_LOCATION}/modules:${ALLSKY_SCRIPTS}/modules'"
+		[[ -n ${NICE} ]] && CMD+=" nice -n ${NICE}"
+		CMD+=" '${ALLSKY_PYTHON_VENV}/bin/python3' '${KEOLAPSE_MODULE}' '$( realpath "${INPUT_DIR}" )'"
+		if [[ ${TYPE} == "GENERATE" ]]; then
+			if generate "Keolapse" "" "${CMD}"; then
+				((NUM_SUCCESS++))
+			else
+				((EXIT_CODE++))
+			fi
+		else
+			CMD+=" --upload-only"
+			[[ ${SILENT} == "false" ]] && echo "===== Uploading Keolapse"
+			[[ -n ${DEBUG_ARG} ]] && echo "${ME}: Executing: ${CMD}"
+			# shellcheck disable=SC2086
+			if ! OUT="$( eval ${CMD} 2>&1 )"; then
+				E_ "${ME}: Keolapse upload failed: $( echo "${OUT}" | grep -E "ERROR|failed" | tail -5 )" >&2
+				((EXIT_CODE++))
+			elif [[ ${SILENT} == "false" ]]; then
+				echo -e "\tDone"
+			fi
+		fi
+	fi
+fi
+
 # Only display this message if at least one "generate" succeeded.
 if [[ ${TYPE} == "GENERATE" && ${SILENT} == "false" && ${NUM_SUCCESS} -gt 0 ]]; then
 	ARGS="${THUMBNAIL_ONLY_ARG}"
 	[[ ${DO_KEOGRAM} == "true" ]] && ARGS="${ARGS} --keogram"
 	[[ ${DO_STARTRAILS} == "true" ]] && ARGS="${ARGS} --startrails"
 	[[ ${DO_TIMELAPSE} == "true" ]] && ARGS="${ARGS} --timelapse"
+	[[ ${DO_KEOLAPSE} == "true" ]] && ARGS="${ARGS} --keolapse"
 	echo -e "\n================"
 	echo "If you want to upload the file(s) you just created,"
 	echo -en "\texecute '${ME} --upload"

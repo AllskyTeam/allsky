@@ -3901,7 +3901,8 @@ def normalise_on_off(value):
         str:
             ``"on"`` if the input looks like an enabled value, otherwise ``"off"``.
     """
-    if str(value).strip().lower() == 'on' or str(value).strip() == '1':
+    value = str(value).strip().lower()
+    if value in ('on', '1', 'true', 'yes'):    
         return 'on'
     return 'off'
 

@@ -68,6 +68,7 @@ class ALLSKYOVERLAYDATA:
 		'opacity': None,
 		'stroke': None,
 		'strokewidth': None,
+		'type': None,
 	}
 	variable_class = None
 	condition_sets = {}
@@ -141,6 +142,10 @@ class ALLSKYOVERLAYDATA:
 			field_data = copy.copy(self.extra_field_definition)
 
 		try:          
+			if not isinstance(raw_field_data, dict):
+				field_data['value'] = raw_field_data
+				return field_data
+
 			for field_key, field_value in field_data.items():
 				if field_key in raw_field_data:
 					field_data[field_key] = raw_field_data[field_key]
@@ -153,9 +158,6 @@ class ALLSKYOVERLAYDATA:
 
 				if 'value' in field_data['value']:
 					field_data['value'] = field_data['value']['value']
-			else:
-				if not isinstance(raw_field_data, dict):
-					field_data['value'] = raw_field_data
 		except Exception as e:
 			eType, eObject, eTraceback = sys.exc_info()
 			self._log(0, f'ERROR: _parse_extra_data_field failed on line {eTraceback.tb_lineno} - {e}')
@@ -321,7 +323,10 @@ class ALLSKYOVERLAYDATA:
 					if variable_definition is not None:
 						variable_group = variable_definition['type']
 
-					if 'type' in field_data:
+					if variable in self.extra_fields and self.extra_fields[variable].get('type'):
+						variable_group = self.extra_fields[variable]['type']
+
+					if 'type' in field_data and field_data['type']:
 						variable_group = field_data['type']
           
 					#self._debug(f'INFO: Formatting variable {variable}, value {self.extra_fields[variable]["value"]}, using format "{formats}"')

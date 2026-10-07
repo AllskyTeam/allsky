@@ -165,7 +165,8 @@ usage_and_exit()
 	echo "   INPUT_DIR                       Is the day in '${ALLSKY_IMAGES}' to process."
 	echo
 	echo "If you don't specify --keogram, --startrails, --timelapse, or --keolapse,"
-	echo "a keogram, startrails, and timelapse will be ${MSG2}."
+	echo "a keogram, startrails, and timelapse will be ${MSG2}, and a keolapse"
+	echo "if the Keolapse module is enabled in the Night to Day flow."
 	echo
 	echo "The list of images to process is determined in one of two ways:"
 	echo
@@ -255,10 +256,38 @@ else
 	[[ -z ${OUTPUT_DIR} ]] && OUTPUT_DIR="${INPUT_DIR}"	# Put output file(s) in same location as input files.
 fi
 
+# The Keolapse module, if installed.
+KEOLAPSE_MODULE=""
+for M in "${ALLSKY_MY_MODULES}" "${ALLSKY_MODULE_LOCATION}/modules"; do
+	if [[ -f ${M}/allsky_keotimelapse.py ]]; then
+		KEOLAPSE_MODULE="${M}/allsky_keotimelapse.py"
+		break
+	fi
+done
+
+# Return 0 if the Keolapse module is installed and enabled in the Night to Day flow.
+keolapse_in_flow()
+{
+	[[ -z ${KEOLAPSE_MODULE} ]] && return 1
+	local FLOW="${ALLSKY_MODULES}/postprocessing_nightday.json"
+	[[ ! -s ${FLOW} ]] && return 1
+	jq -e '[ .[] | objects | select(.module == "allsky_keotimelapse.py" and
+		(.enabled == true or .enabled == "true")) ] | length > 0' "${FLOW}" > /dev/null 2>&1
+}
+
+KEOLAPSE_BY_DEFAULT="false"
 if [[ ${GOT} -eq 0 ]]; then
 	DO_KEOGRAM="true"
 	DO_STARTRAILS="true"
 	DO_TIMELAPSE="true"
+	# Keolapses are part of the default set when the module is used every night.
+	# The module uses its own settings for the whole day, so leave it out when the
+	# command line asks for something it can't do.
+	if [[ -z ${IMAGES_FILE} && -z ${OUTPUT_DIR_ENTERED} && ${GOT_TIME} == "false" &&
+			${THUMBNAIL_ONLY} == "false" ]] && keolapse_in_flow ; then
+		DO_KEOLAPSE="true"
+		KEOLAPSE_BY_DEFAULT="true"
+	fi
 fi
 
 if [[ ${TYPE} == "GENERATE" ]]; then
@@ -761,13 +790,6 @@ fi
 
 if [[ ${DO_KEOLAPSE} == "true" ]]; then
 	# The Keolapse module does the work, with the settings it has in the Night to Day flow.
-	KEOLAPSE_MODULE=""
-	for M in "${ALLSKY_MY_MODULES}" "${ALLSKY_MODULE_LOCATION}/modules"; do
-		if [[ -f ${M}/allsky_keotimelapse.py ]]; then
-			KEOLAPSE_MODULE="${M}/allsky_keotimelapse.py"
-			break
-		fi
-	done
 	if [[ -z ${KEOLAPSE_MODULE} ]]; then
 		E_ "*** ${ME} ERROR: '--keolapse' specified but the Keolapse module is not installed." >&2
 		((EXIT_CODE++))
@@ -775,7 +797,8 @@ if [[ ${DO_KEOLAPSE} == "true" ]]; then
 		E_ "*** ${ME} ERROR: '--keolapse' can't be used with '--images'." >&2
 		((EXIT_CODE++))
 	else
-		if [[ ${GOT_TIME} == "true" || -n ${OUTPUT_DIR_ENTERED} || ${THUMBNAIL_ONLY} == "true" ]]; then
+		if [[ ${KEOLAPSE_BY_DEFAULT} == "false" &&
+				( ${GOT_TIME} == "true" || -n ${OUTPUT_DIR_ENTERED} || ${THUMBNAIL_ONLY} == "true" ) ]]; then
 			W_ "${ME}: '--start', '--end', '--output-dir', and '--thumbnail-only' are ignored for the keolapse;" >&2
 			W_ "the module uses its own settings." >&2
 		fi

@@ -63,7 +63,7 @@ endif
 
 CFLAGS += $(DEFS) $(ZWOSDK)
 
-all: check_deps capture_ZWO capture_RPi startrails keogram sunwait uhubctl
+all: check_deps capture_ZWO capture_RPi startrails startrailslapse keogram sunwait uhubctl
 .PHONY : all
 
 check_deps:
@@ -124,6 +124,11 @@ startrails: startrails.cpp
 	@$(CC) $@.cpp -o $@ $(CFLAGS) $(OPENCV)
 	@echo `date +%F\ %R:%S` Done.
 
+startrailslapse: startrailslapse.cpp
+	@echo `date +%F\ %R:%S` Building $@ program...
+	@$(CC) $@.cpp -o $@ $(CFLAGS) $(OPENCV)
+	@echo `date +%F\ %R:%S` Done.
+
 uhubctl: uhubctl.c
 	@echo `date +%F\ %R:%S` Building $@ program...
 # This comes from the uhubctl Makefile:
@@ -147,6 +152,7 @@ install:
 	@install -o $(SUDO_USER) -g $(SUDO_USER) capture_RPi $(ALLSKYBIN)/
 	@install -o $(SUDO_USER) -g $(SUDO_USER) keogram $(ALLSKYBIN)/
 	@install -o $(SUDO_USER) -g $(SUDO_USER) startrails $(ALLSKYBIN)/
+	@install -o $(SUDO_USER) -g $(SUDO_USER) startrailslapse $(ALLSKYBIN)/
 	@install -o $(SUDO_USER) -g $(SUDO_USER) uhubctl $(ALLSKYBIN)/
 	@install sunwait $(bindir)
 
@@ -156,13 +162,14 @@ uninstall:
 	@rm -f $(ALLSKYBIN)/capture_RPi
 	@rm -f $(ALLSKYBIN)/keogram
 	@rm -f $(ALLSKYBIN)/startrails
+	@rm -f $(ALLSKYBIN)/startrailslapse
 	@rm -f $(ALLSKYBIN)/uhubctl
 
 endif # sudo / root check
 .PHONY : deps install uninstall
 
 clean:
-	rm -f capture_ZWO capture_RPi startrails keogram sunwait uhubctl *.o *.a
+	rm -f capture_ZWO capture_RPi startrails startrailslapse keogram sunwait uhubctl *.o *.a
 .PHONY : clean
 
 %:

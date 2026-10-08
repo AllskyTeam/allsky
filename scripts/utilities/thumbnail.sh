@@ -59,10 +59,13 @@ case "${TYPE}" in
 	*) error_exit "Type must be startrails, keogram, timelapse, or all" ;;
 esac
 
-case "${DATE}" in
-	[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9] | test* | all) ;;
-	*) error_exit "Date must be in format YYYYMMDD, or 'all', or start with 'test'; it is '${DATE}'." ;;
-esac
+# Back door to let scripts skip this check.
+if [[ ${DO_DATE_CHECK:-true} == "true" ]]; then
+	case "${DATE}" in
+		[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9] | test* | all) ;;
+		*) error_exit "Date must be in format YYYYMMDD, or 'all', or start with 'test'; it is '${DATE}'." ;;
+	esac
+fi
 
 THUMBX="$(settings ".thumbnailsizex")" || error_exit "Failed to get thumbnailsizex"
 THUMBY="$(settings ".thumbnailsizey")" || error_exit "Failed to get thumbnailsizey"
@@ -130,6 +133,7 @@ function process_thumbnail() {
 					"${DEST}"
 				RC=$?
 				[[ ${RC} -ne 0 ]] && error_exit "ffmpeg failed (${RC}) for ${SOURCE}"
+				[[ ! -f ${DEST} ]] && error_exit "ffmpeg failed to create thumbnail for ${SOURCE}"
 				;;
 		esac
 	else

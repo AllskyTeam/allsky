@@ -113,8 +113,42 @@ class LgpioBackend:
     def stop_pwm(self, pin_num):
         self.lgpio.tx_pwm(self._handle(), pin_num, 0, 0)
 
-    def claim_input(self, pin_num):
-        self.lgpio.gpio_claim_input(self._handle(), pin_num)
+    def _line_flags(self, pull=None):
+        if pull == "up":
+            return self.lgpio.SET_PULL_UP
+        if pull == "down":
+            return self.lgpio.SET_PULL_DOWN
+        if pull == "none":
+            return self.lgpio.SET_PULL_NONE
+        return 0
+
+    def _edge_flags(self, edge):
+        if edge == "rising":
+            return self.lgpio.RISING_EDGE
+        if edge == "falling":
+            return self.lgpio.FALLING_EDGE
+        if edge == "both":
+            return self.lgpio.BOTH_EDGES
+        raise ValueError(f"Unsupported edge '{edge}'")
+
+    def claim_input(self, pin_num, pull=None):
+        self.lgpio.gpio_claim_input(self._handle(), pin_num, self._line_flags(pull))
+
+    def add_edge_detect(self, pin_num, edge="falling", callback=None, pull=None, debounce_ms=None):
+        edge_flags = self._edge_flags(edge)
+        self.lgpio.gpio_claim_alert(self._handle(), pin_num, edge_flags, self._line_flags(pull))
+
+        if debounce_ms is not None and int(debounce_ms) > 0:
+            self.lgpio.gpio_set_debounce_micros(self._handle(), pin_num, int(debounce_ms) * 1000)
+
+        def _callback(chip, gpio, level, timestamp):
+            if callback is not None:
+                callback(gpio)
+
+        return self.lgpio.callback(self._handle(), pin_num, edge_flags, _callback)
+
+    def remove_edge_detect(self, callback_ref):
+        callback_ref.cancel()
 
     def claim_output(self, pin_num, level=0):
         self.lgpio.gpio_claim_output(self._handle(), pin_num, level=level)

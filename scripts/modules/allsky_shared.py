@@ -94,6 +94,10 @@ __all__ = [
     "set_gpio_pin",
     "set_pwm",
     "stop_pwm",
+    "configure_tacho",
+    "read_tacho",
+    "get_tacho_speed",
+    "stop_tacho",
     "create_device",
     "get_all_allsky_variables",
     "get_allsky_variable",
@@ -3901,7 +3905,8 @@ def normalise_on_off(value):
         str:
             ``"on"`` if the input looks like an enabled value, otherwise ``"off"``.
     """
-    if str(value).strip().lower() == 'on' or str(value).strip() == '1':
+    value = str(value).strip().lower()
+    if value in ('on', '1', 'true', 'yes'):    
         return 'on'
     return 'off'
 
@@ -4092,6 +4097,152 @@ def stop_pwm(gpio_pin):
             'duty': duty_cycle,
             'frequency': frequency
         },
+        timeout=2
+    )
+    response.raise_for_status()
+    return response.json()
+
+
+def configure_tacho(
+    tacho_id,
+    gpio_pin,
+    pulses_per_revolution=2,
+    sample_seconds=10,
+    stale_seconds=5,
+    debounce_ms=0,
+    name="",
+    enabled=True,
+):
+    """
+    Configure a server-side tachometer monitor via the Allsky HTTP API.
+
+    The server owns the GPIO interrupt and keeps it running between module
+    executions. This helper is idempotent: calling it repeatedly with the same
+    ``tacho_id`` and settings will not restart the interrupt.
+
+    Args:
+        tacho_id (str):
+            Unique monitor identifier. Use a stable value such as
+            ``"allsky_fans-1"`` so multiple modules can use separate monitors.
+        gpio_pin (int | str):
+            BCM GPIO number connected to the tacho signal.
+        pulses_per_revolution (int | float):
+            Number of tacho pulses per fan revolution, usually ``2``.
+        sample_seconds (int | float):
+            Rolling sample window used for RPM calculation.
+        stale_seconds (int | float):
+            Return ``0`` RPM after no pulses are seen for this long.
+        debounce_ms (int):
+            GPIO edge debounce time in milliseconds.
+        name (str):
+            Optional display name for GPIO status screens.
+        enabled (bool):
+            If false, the server stops the named tacho monitor.
+
+    Returns:
+        dict:
+            Parsed server status, including ``rpm`` and ``changed``.
+
+    Raises:
+        requests.HTTPError:
+            If the HTTP request fails (via ``raise_for_status``).
+    """
+    api_url = get_api_url()
+    response = requests.put(
+        f'{api_url}/gpio/tacho',
+        json={
+            'tacho_id': str(tacho_id),
+            'pin': str(gpio_pin),
+            'pulses_per_revolution': pulses_per_revolution,
+            'sample_seconds': sample_seconds,
+            'stale_seconds': stale_seconds,
+            'debounce_ms': debounce_ms,
+            'name': name,
+            'enabled': enabled,
+        },
+        timeout=2
+    )
+    response.raise_for_status()
+    return response.json()
+
+
+def read_tacho(tacho_id):
+    """
+    Read a configured server-side tachometer monitor.
+
+    Args:
+        tacho_id (str):
+            Unique monitor identifier used when configuring the tacho.
+
+    Returns:
+        dict:
+            Parsed server status, including ``rpm``.
+
+    Raises:
+        requests.HTTPError:
+            If the HTTP request fails (via ``raise_for_status``).
+    """
+    api_url = get_api_url()
+    response = requests.get(
+        f'{api_url}/gpio/tacho/{tacho_id}',
+        timeout=2
+    )
+    response.raise_for_status()
+    return response.json()
+
+
+def get_tacho_speed(
+    tacho_id,
+    gpio_pin=None,
+    pulses_per_revolution=2,
+    sample_seconds=10,
+    stale_seconds=5,
+    debounce_ms=0,
+    name="",
+):
+    """
+    Return the current RPM for a tacho monitor.
+
+    If ``gpio_pin`` is supplied, the monitor is first configured/ensured. This
+    is the usual path for periodic modules: they can call this every run and the
+    server will only reconfigure the GPIO interrupt if the settings changed.
+    """
+    if gpio_pin is None:
+        data = read_tacho(tacho_id)
+    else:
+        data = configure_tacho(
+            tacho_id,
+            gpio_pin,
+            pulses_per_revolution=pulses_per_revolution,
+            sample_seconds=sample_seconds,
+            stale_seconds=stale_seconds,
+            debounce_ms=debounce_ms,
+            name=name,
+            enabled=True,
+        )
+
+    return float(data.get('rpm', 0))
+
+
+def stop_tacho(tacho_id):
+    """
+    Stop and release a server-side tachometer monitor.
+
+    Args:
+        tacho_id (str):
+            Unique monitor identifier used when configuring the tacho.
+
+    Returns:
+        dict:
+            Parsed server status.
+
+    Raises:
+        requests.HTTPError:
+            If the HTTP request fails (via ``raise_for_status``).
+    """
+    api_url = get_api_url()
+    response = requests.delete(
+        f'{api_url}/gpio/tacho/{tacho_id}',
         timeout=2
     )
     response.raise_for_status()

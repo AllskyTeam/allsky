@@ -4,6 +4,10 @@ List the images of one day folder between a start and an end time.
 
     selectImages.py --dir IMAGES/YYYYMMDD --ext jpg --start S --end E \
         [--daynight FILE] [--latitude L --longitude L --angle A] --output FILE
+    selectImages.py --check S
+
+--check only says whether S is a valid start/end time (exit code 0 or 1), e.g. for
+makeChanges.sh when a user changes one of the settings in the WebUI.
 
 Used by generateForDay.sh for the start/end time settings of the timelapse,
 keogram and startrails.  Only images in the given folder are used, so the output
@@ -32,6 +36,8 @@ ALIASES_DAYNIGHT = ('daytime_start', 'daytime_end', 'nighttime_start', 'nighttim
 ALIASES_SUN = ('sunrise', 'sunset')
 TIME_RE = re.compile(r'^([01]?\d|2[0-3]):([0-5]\d)(?::([0-5]\d))?$')
 NAME_RE = re.compile(r'image-(\d{14})\.')
+INVALID = ('Invalid time "{}": use HH:MM, HH:MM:SS, sunrise, sunset, '
+		   'daytime_start, daytime_end, nighttime_start or nighttime_end.')
 
 
 def parse_coordinate(text, positive, negative):
@@ -131,7 +137,8 @@ class Selector:
 
 def main():
 	parser = argparse.ArgumentParser(description='List the images of a day folder between two times.')
-	parser.add_argument('--dir', required=True)
+	parser.add_argument('--check', metavar='TIME', help='only check that TIME is valid')
+	parser.add_argument('--dir')
 	parser.add_argument('--ext', default='jpg')
 	parser.add_argument('--start', default='')
 	parser.add_argument('--end', default='')
@@ -139,13 +146,20 @@ def main():
 	parser.add_argument('--latitude', default='')
 	parser.add_argument('--longitude', default='')
 	parser.add_argument('--angle', type=float, default=-6.0)
-	parser.add_argument('--output', required=True)
+	parser.add_argument('--output')
 	args = parser.parse_args()
+
+	if args.check is not None:
+		if valid_spec(args.check):
+			return 0
+		print(INVALID.format(args.check), file=sys.stderr)
+		return 1
+	if not args.dir or not args.output:
+		parser.error('--dir and --output are required')
 
 	for spec in (args.start, args.end):
 		if not valid_spec(spec):
-			print(f'Invalid time "{spec}": use HH:MM, HH:MM:SS, sunrise, sunset, '
-				  'daytime_start, daytime_end, nighttime_start or nighttime_end.', file=sys.stderr)
+			print(INVALID.format(spec), file=sys.stderr)
 			return 1
 
 	images = []

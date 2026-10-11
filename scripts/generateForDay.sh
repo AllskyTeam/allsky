@@ -326,6 +326,7 @@ fi
 EXIT_CODE=0
 NUM_SUCCESS=0
 
+# TODO: Remove this check in major release after v2026.10.01.  Ditto for scripts/utilities/compareStartrails.sh.
 # Images are only used between a start and an end time if either is set.
 # The command-line arguments override the settings.
 if [[ ${GOT_TIME} == "false" && -z ${S_startrailsstart} && -z ${S_startrailsend} &&
@@ -430,6 +431,7 @@ if [[ ${DO_KEOGRAM} == "true" ]]; then
 		THICKNESS="${S_keogramlinethickness}"
 			[[ ${THICKNESS} != "" ]] && MORE+=" --font-type ${THICKNESS}"
 		CMD="'${ALLSKY_BIN}/keogram' ${N} ${SIZE_FILTER}"
+
 		if [[ -n ${IMAGES_FILE} ]]; then
 			CMD+=" --images '${IMAGES_FILE}'"
 		elif get_window_images "keogram" "${S_keogramstart}" "${S_keogramend}" ; then
@@ -515,18 +517,14 @@ if [[ ${DO_STARTRAILS} == "true" ]]; then
 		STARTRAILS_EXTRA_PARAMETERS="${S_startrailsextraparameters}"
 		CMD="'${ALLSKY_BIN}/startrails' ${N} ${SIZE_FILTER} -o '${UPLOAD_FILE}'"
 		STARTRAILS_LIST=""		# the images used, for their times in the database
+
 		if [[ -n ${IMAGES_FILE} ]]; then
 			CMD+=" --images '${IMAGES_FILE}'"
-		elif [[ ${S_startrailsnightonly} == "true" ]]; then
-			DAY="$( basename "${OUTPUT_DIR}" )"
-			FILE_NAMES="${OUTPUT_DIR}/startrails/images.txt"
-			mkdir -p "$( dirname "${FILE_NAMES}" )"
-			SQL="SELECT AS_CAMERAIMAGE FROM allsky_image WHERE AS_DATE_NAME = '${DAY}' AND AS_DAY_OR_NIGHT = 'NIGHT'"
-			"${ALLSKY_DATABASE_COMMAND}" --run "${SQL}" | sed "s;^;${OUTPUT_DIR}/;" > "${FILE_NAMES}"
-			NUM="$( wc -l < "${FILE_NAMES}" )"
-			if [[ ${NUM} -eq 0 ]]; then
-				W_ "${ME}: There are no nighttime images for ${DAY}" >&2
-				exit 1
+		elif get_window_images "startrails" "${S_startrailsstart}" "${S_startrailsend}" ; then
+			if [[ -n ${WINDOW_FILE} ]]; then
+				CMD+=" --images '${WINDOW_FILE}'"
+			else
+				CMD+=" -d '${INPUT_DIR}' -e ${ALLSKY_EXTENSION}"
 			fi
 		else
 			CMD=""

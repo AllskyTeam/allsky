@@ -304,6 +304,8 @@ if [[ ${CAMERA_TYPE} == "ZWO" ]]; then
 else	# RPi
 	# "true" means use doExit() on error
 	RPi_COMMAND_TO_USE="$( determineCommandToUse "true" "${ERROR_MSG_PREFIX}" "false" )"
+	RET=$?
+	[[ ${RET} -ne 0 ]] && exit "${RET}"		# assume determineCommandToUse printed error message
 	[[ -n ${RPi_COMMAND_TO_USE} ]] && RPi_COMMAND_TO_USE="-cmd ${RPi_COMMAND_TO_USE}"
 	reset_usb() { return 0; }
 fi

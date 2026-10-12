@@ -10,6 +10,7 @@ NOT_STARTED_MSG="Can't start Allsky!"
 STOPPED_MSG="Allsky Stopped!"
 ERROR_MSG_PREFIX="*** ERROR ***\n${STOPPED_MSG}\n"
 FATAL_MSG="FATAL ERROR:"
+export LIBCAMERA_LOG_LEVELS='ERROR,FATAL'
 
 if [[ ${ON_TTY} == "true" ]]; then
 	export NL="\n"
@@ -247,10 +248,7 @@ function determineCommandToUse()
 	# If the cable is bad the camera might be found but not work,
 	# and the command can hang.
 
-	local ERR="$(
-		export LIBCAMERA_LOG_LEVELS='ERROR,FATAL'
-		timeout 120 "${CMD_TO_USE_}" --timeout 1 --nopreview 2>&1
-	)"
+	local ERR="$( timeout 120 "${CMD_TO_USE_}" --timeout 1 --nopreview 2>&1 )"
 	RET=$?
 	# "timeout" doesn't always return 124 when CMD_TO_USE_ takes too long,
 	# for example, if the camera isn't detected it keeps trying forever.
@@ -303,7 +301,6 @@ function get_connected_cameras_info()
 		shift 2
 	fi
 	local IGNORE_ERRORS="${1:-false}"
-	export LIBCAMERA_LOG_LEVELS=FATAL
 
 	####### Check for RPi
 	# Tab-separated output will be:

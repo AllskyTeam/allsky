@@ -247,9 +247,20 @@ function determineCommandToUse()
 	# If the cable is bad the camera might be found but not work,
 	# and the command can hang.
 
-	local ERR="$( timeout 120 "${CMD_TO_USE_}" --timeout 1 --nopreview 2>&1 )"
+	local ERR="$(
+		export LIBCAMERA_LOG_LEVELS='ERROR,FATAL'
+		timeout 120 "${CMD_TO_USE_}" --timeout 1 --nopreview 2>&1
+	)"
 	RET=$?
-	if [[ ${RET} -eq 0 || ${RET} -eq 137 ]]; then
+	# "timeout" doesn't always return 124 when CMD_TO_USE_ takes too long,
+	# for example, if the camera isn't detected it keeps trying forever.
+	local TIMEOUT
+	if [[ ${ERR} =~ "Device timeout detected" ]]; then
+		TIMEOUT="true"
+	else
+		TIMEOUT="false"
+	fi
+	if [[ ( ${RET} -eq 0 || ${RET} -eq 137 ) && ${TIMEOUT} == "false" ]]; then
 		# If another of these commands is running ours will hang for
 		# about a minute then be killed with RET=137.
 		# If that happens, assume this is the command to use.
@@ -268,6 +279,11 @@ function determineCommandToUse()
 			[[ -n ${ERR} ]] && indent "${ERR}" >&2
 			if [[ ${USE_doExit} == "true" ]]; then
 				EXIT_MSG="${PREFIX}\n${CMD_TO_USE_} failed!"
+				if [[ ${TIMEOUT} == "true" ]]; then
+					MSG="$( echo "${ERR}" | grep -m 1 "Device timeout detected" )"
+				else
+					MSG=""
+				fi
 				doExit "${ALLSKY_EXIT_ERROR_STOP}" "Error" "${EXIT_MSG}" "${MSG}"
 			fi
 		fi
@@ -287,6 +303,7 @@ function get_connected_cameras_info()
 		shift 2
 	fi
 	local IGNORE_ERRORS="${1:-false}"
+	export LIBCAMERA_LOG_LEVELS=FATAL
 
 	####### Check for RPi
 	# Tab-separated output will be:
@@ -301,7 +318,7 @@ function get_connected_cameras_info()
 	if [[ -n ${CMD_TO_USE_} ]]; then
 		# Input:
 		#	camera_number  : sensor  [other stuff]
-		LIBCAMERA_LOG_LEVELS=FATAL "${CMD_TO_USE_}" --list-cameras 2>&1 |
+		"${CMD_TO_USE_}" --list-cameras 2>&1 |
 			gawk '/^[0-9]/ { printf("%s\t%d\t%s\n", "RPi", $1, $3); }'
 	fi
 

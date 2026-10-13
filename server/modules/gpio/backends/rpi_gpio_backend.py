@@ -27,8 +27,43 @@ class RPiGPIOBackend:
         if pwm is not None:
             pwm.stop()
 
-    def claim_input(self, pin_num):
-        self.GPIO.setup(pin_num, self.GPIO.IN)
+    def _pull_mode(self, pull=None):
+        if pull == "up":
+            return self.GPIO.PUD_UP
+        if pull == "down":
+            return self.GPIO.PUD_DOWN
+        return self.GPIO.PUD_OFF
+
+    def _edge_mode(self, edge):
+        if edge == "rising":
+            return self.GPIO.RISING
+        if edge == "falling":
+            return self.GPIO.FALLING
+        if edge == "both":
+            return self.GPIO.BOTH
+        raise ValueError(f"Unsupported edge '{edge}'")
+
+    def claim_input(self, pin_num, pull=None):
+        self.GPIO.setup(pin_num, self.GPIO.IN, pull_up_down=self._pull_mode(pull))
+
+    def add_edge_detect(self, pin_num, edge="falling", callback=None, pull=None, debounce_ms=None):
+        self.claim_input(pin_num, pull=pull)
+
+        def _callback(channel):
+            if callback is not None:
+                callback(channel)
+
+        kwargs = {
+            "callback": _callback,
+        }
+        if debounce_ms is not None and int(debounce_ms) > 0:
+            kwargs["bouncetime"] = int(debounce_ms)
+
+        self.GPIO.add_event_detect(pin_num, self._edge_mode(edge), **kwargs)
+        return {"pin": pin_num}
+
+    def remove_edge_detect(self, callback_ref):
+        self.GPIO.remove_event_detect(int(callback_ref["pin"]))
 
     def claim_output(self, pin_num, level=0):
         self.GPIO.setup(pin_num, self.GPIO.OUT, initial=self.GPIO.HIGH if level else self.GPIO.LOW)

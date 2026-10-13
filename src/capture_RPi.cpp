@@ -421,8 +421,9 @@ bool readMetadataFile(string file)
 			{
 Log(5, "  ExposureTime (%d) !=  myRaspistillSetting.shutter_us (%d), percent_diff=%f\n", ET, myRaspistillSetting.shutter_us, percent_diff);
 // CG.lastExposure_us = myRaspistillSetting.shutter_us;		SHOULD be == auto/manual exposure algormithm value
-			}
+			} else {
 Log(5, "  ExposureTime = %d ('%s'), myRaspistillSetting.shutter_us = %d, percent_diff=%f\n", ET, value, myRaspistillSetting.shutter_us, percent_diff);
+			}
 		}
 		else if (strcmp(name, "ColourGains") == 0)
 		{

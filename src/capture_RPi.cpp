@@ -414,13 +414,15 @@ bool readMetadataFile(string file)
 		if (strcmp(name, "ExposureTime") == 0)
 		{
 			// integer
-			int x = atoi(value);
-			if (x != myRaspistillSetting.shutter_us)
+			int ET = atoi(value);
+			// Times are almost never exactly the same, so go for "close enough".
+			float percent_diff = (float) abs(ET - myRaspistillSetting.shutter_us) / (float) ET;
+			if (percent_diff > 1.0)			// is 1% the right number?
 			{
-Log(5, "  ExposureTime %d !=  myRaspistillSetting.shutter_us (%d)\n", x, myRaspistillSetting.shutter_us);
+Log(5, "  ExposureTime (%d) !=  myRaspistillSetting.shutter_us (%d), percent_diff=%f\n", ET, myRaspistillSetting.shutter_us, percent_diff);
 // CG.lastExposure_us = myRaspistillSetting.shutter_us;		SHOULD be == auto/manual exposure algormithm value
 			}
-else Log(5, "  ExposureTime = %f ('%s')\n", x, value);
+Log(5, "  ExposureTime = %d ('%s'), myRaspistillSetting.shutter_us = %d, percent_diff=%f\n", ET, value, myRaspistillSetting.shutter_us, percent_diff);
 		}
 		else if (strcmp(name, "ColourGains") == 0)
 		{

@@ -162,10 +162,9 @@ function compile($compile) {
 				// assign it into the current DOM
 				element.html(value);
 
-				// compile the new DOM and link it to the current
-				// scope.
+				// Compile the new DOM and link it to the current scope.
 				// NOTE: we only compile .childNodes so that
-				// we don't get into infinite loop compiling ourselves
+				// we don't get into infinite loop compiling ourselves.
 				$compile(element.contents())(scope);
 			}
 		);
@@ -250,7 +249,6 @@ function AppCtrl($scope, $timeout, $http, _) {
 	$scope.longitude = convertLongitude($scope, config.longitude);
 	myLongitude = $scope.longitude;
 
-	$scope.imageURL = config.loadingImage;
 	imageBorder = config.imageBorder;
 	$scope.showInfo = false;
 	$scope.showOverlay = config.showOverlayAtStartup;
@@ -398,7 +396,7 @@ function AppCtrl($scope, $timeout, $http, _) {
 					loggedTimes = false;
 					rereadSunriseSunset = true;
 				}
-				url = config.imageName;
+				url = $scope.imageName;
 				imageClass = 'current';
 				intervalTimer = defaultInterval;
 
@@ -409,7 +407,7 @@ function AppCtrl($scope, $timeout, $http, _) {
 					loggedTimes = false;
 					rereadSunriseSunset = true;
 				}
-				url = config.imageName;
+				url = $scope.imageName;
 				imageClass = 'current';
 				intervalTimer = defaultInterval;
 
@@ -465,7 +463,7 @@ function AppCtrl($scope, $timeout, $http, _) {
 						intervalTimer = auroraIntervalTimer;
 					}
 				} else {
-					url = config.imageName;
+					url = $scope.imageName;
 					imageClass = 'current';
 					intervalTimer = nonAuroraIntervalTimer;
 				}
@@ -482,13 +480,19 @@ function AppCtrl($scope, $timeout, $http, _) {
 				console.log("  afterSunsetTime = " + afterSunsetTime);
 			}
 
+			var read_error_msg_1 = "<!-- error 1 -->";
 			var img = $("<img title='allsky image' />")
 				.addClass(imageClass)
 				.on('load', function() {
 					$("#live_container").empty().append(img);
 					$scope.messages.innerHTML = "";
 				}).on('error', function(e) {
+					// Don't display anything for the first error since it may be transient.
 					if ($scope.messages.innerHTML == "") {
+						console.log("GOT ERROR reading image, waiting for another error.");
+						$scope.messages.innerHTML = read_error_msg_1;
+
+					} else if ($scope.messages.innerHTML == read_error_msg_1) {
 						console.log("GOT ERROR reading image");
 
 						let message = "The image at <span style='color: white;'>";

@@ -2185,6 +2185,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#moon-dependent-stretch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Moon-dependent stretch
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#sample-stretch-images" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3507,6 +3518,34 @@
     
   
     Formatting Variables
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../overlays/conditions.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Conditional Styles
   
 
     
@@ -6223,6 +6262,14 @@ The WebUI lets you manually set those settings, or have them automatically set b
 </li>
 </ul>
 <p>You may find that you can decrease the gain, and hence the noise, by increasing the stretch. Experiment with the settings to get the results you want.</p>
+<h3 id="moon-dependent-stretch">Moon-dependent stretch<a class="headerlink" href="#moon-dependent-stretch" title="Permanent link">¶</a></h3>
+<p>Moonlight brightens the sky, so a stretch that brings out faint stars on a moonless night can wash out the image under a bright Moon. With the nighttime setting <strong>Moon-dependent stretch</strong> on, Allsky changes the stretch with the moonlight:</p>
+<ul>
+<li>The regular <strong>Stretch Amount</strong> and <strong>Stretch mid point</strong> are used when there is no moonlight: around new Moon, or while the Moon is below the horizon.</li>
+<li><strong>Full Moon Stretch Amount</strong> and <strong>Full Moon Stretch mid point</strong> are used when a full Moon is high in the sky.</li>
+<li>In between, Allsky blends the two by how much of the Moon is lit and how high it is. The value it uses for each image is available to the overlay as <code>${MOONLIGHT}</code>, from 0 (none) to 1 (full Moon at the zenith), together with the stretch actually applied, <code>${STRETCH_AMOUNT}</code> and <code>${STRETCH_MIDPOINT}</code>.</li>
+</ul>
+<p>To find good values, use the <strong>Image Stretch Settings</strong> helper tool twice: with a moonless night image for the regular settings, and with an image taken under a full Moon for the Full Moon settings. The Full Moon amount is usually lower.</p>
 <h3 id="sample-stretch-images">Sample Stretch Images<a class="headerlink" href="#sample-stretch-images" title="Permanent link">¶</a></h3>
 <p>Stretch Amount: <code>0</code></p>
 <p>The exposure is 60 seconds; anything longer will produce streaks with most lenses. The gain is 250 which is near the maximum for the camera, and is already producing some noise.</p>

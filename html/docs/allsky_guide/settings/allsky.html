@@ -1165,6 +1165,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#Start-end-times" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Start / End Times
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#Websites-settings" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3666,6 +3677,34 @@
     
   
     Formatting Variables
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../overlays/conditions.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Conditional Styles
   
 
     
@@ -7033,6 +7072,16 @@
 <td>Enable to generate a timelapse video at the end of the night.</td>
 </tr>
 <tr>
+<td><mark>Start Time</mark></td>
+<td style="text-align: right;"></td>
+<td>Only use images taken at or after this time in the timelapse. Empty uses the first image of the day. See <a href="#Start-end-times">Start and End Times</a> for the values you can use.</td>
+</tr>
+<tr>
+<td><mark>End Time</mark></td>
+<td style="text-align: right;"></td>
+<td>Only use images taken at or before this time in the timelapse. Empty uses the last image of the day. See <a href="#Start-end-times">Start and End Times</a>.</td>
+</tr>
+<tr>
 <td><mark>Width</mark></td>
 <td style="text-align: right;">0</td>
 <td>Changes the width of the generated timelapse; must be an even number. <code>0</code> uses the image's full size. Large sensor cameras like the RPi HQ often need the timelapse to be shrunk in order for timelapses to work (or the individual images need to be shrunk).</td>
@@ -7168,6 +7217,16 @@
 <td>Enable to generate a keogram image at the end of the night.</td>
 </tr>
 <tr>
+<td><mark>Start Time</mark></td>
+<td style="text-align: right;"></td>
+<td>Only use images taken at or after this time in the keogram. Empty uses the first image of the day. See <a href="#Start-end-times">Start and End Times</a> for the values you can use.</td>
+</tr>
+<tr>
+<td><mark>End Time</mark></td>
+<td style="text-align: right;"></td>
+<td>Only use images taken at or before this time in the keogram. Empty uses the last image of the day. See <a href="#Start-end-times">Start and End Times</a>.</td>
+</tr>
+<tr>
 <td><mark>Expand</mark></td>
 <td style="text-align: right;">Yes</td>
 <td>Enable to expand keograms to the image width. Same as the <code>--image-expand</code> and <code>-x</code> options.</td>
@@ -7217,6 +7276,16 @@
 <td>Enable to generate a startrails image at the end of night.</td>
 </tr>
 <tr>
+<td><mark>Start Time</mark></td>
+<td style="text-align: right;"></td>
+<td>Only use images taken at or after this time in the startrails. Empty uses the first image of the day. See <a href="#Start-end-times">Start and End Times</a> for the values you can use.</td>
+</tr>
+<tr>
+<td><mark>End Time</mark></td>
+<td style="text-align: right;"></td>
+<td>Only use images taken at or before this time in the startrails. Empty uses the last image of the day. See <a href="#Start-end-times">Start and End Times</a>.</td>
+</tr>
+<tr>
 <td><mark>Brightness Threshold</mark></td>
 <td style="text-align: right;">0.1</td>
 <td>Average brightness level above which images are discarded (moon, headlights, aurora, etc.). If you are only getting very short trails, or none at all, adjust this number. Values are 0.0 (pure black, filters out nothing) to 1.0 (pure white, uses every image).</td>
@@ -7230,6 +7299,101 @@
 </table>
 </details>
 </details>
+<h2 id="Start-end-times">Start and End Times<a class="headerlink" href="#Start-end-times" title="Permanent link">¶</a></h2>
+<p>The <mark>Start Time</mark> and <mark>End Time</mark> settings of the <a href="#Timelapse-settings">Daily Timelapse</a>, <a href="#Keogram-startrails-settings">Keogram, and Startrails</a> select which of a day's images are used. Only images in that day's <code>~/allsky/images/YYYYMMDD</code> folder are used, so the result can cover less than a day, never more. That folder holds the images from the start of one day through the end of the following night.</p>
+<p>Each setting can be one of these values. Upper and lower case don't matter.</p>
+<table>
+<thead>
+<tr>
+<th class="w-20p">Value</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>(empty)</td>
+<td><mark>Start Time</mark>: the first image in the folder. <mark>End Time</mark>: the last image.</td>
+</tr>
+<tr>
+<td><code>HH:MM</code> or <code>HH:MM:SS</code></td>
+<td>A 24-hour clock time, for example <code>18:00</code> or <code>22:30:00</code>.</td>
+</tr>
+<tr>
+<td><code>sunrise</code>, <code>sunset</code></td>
+<td>When the Sun rises or sets at your <mark>Latitude</mark> and <mark>Longitude</mark>. These don't depend on the <mark>Angle</mark> setting.</td>
+</tr>
+<tr>
+<td><code>daytime_start</code></td>
+<td>The time of the <mark>first daytime</mark> image in the folder.</td>
+</tr>
+<tr>
+<td><code>daytime_end</code></td>
+<td>The time of the <mark>last daytime</mark> image in the folder.</td>
+</tr>
+<tr>
+<td><code>nighttime_start</code></td>
+<td>The time of the <mark>first nighttime</mark> image in the folder.</td>
+</tr>
+<tr>
+<td><code>nighttime_end</code></td>
+<td>The time of the <mark>last nighttime</mark> image in the folder, normally the next morning.</td>
+</tr>
+</tbody>
+</table>
+<p>An <mark>End Time</mark> earlier than the <mark>Start Time</mark> is on the next day, so a <mark>Start Time</mark> of <code>18:00</code> and an <mark>End Time</mark> of <code>06:00</code> works.</p>
+<p>Whether an image is a daytime or nighttime image is Allsky's own decision when it took the image, the same one that decides between the daytime and nighttime settings. It's read from the Allsky database. If the database has no entries for that day, the <code>daytime_*</code> and <code>nighttime_*</code> times are when the Sun crosses the <mark>Angle</mark> setting instead.</p>
+<details class="info" open="open">
+<summary><code>daytime_end</code> versus <code>nighttime_start</code></summary>
+<p>Both mark the evening change from day to night, but they are the times of two <mark>different</mark> images:</p>
+<ul>
+<li><code>daytime_end</code> is the time of the <mark>last image Allsky took in daytime mode</mark>.</li>
+<li><code>nighttime_start</code> is the time of the <mark>first image Allsky took in nighttime mode</mark>, normally the very next image.</li>
+</ul>
+<p>They are usually one daytime <mark>Delay</mark> plus one exposure apart, so a minute or two. The difference matters because the times are inclusive:</p>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th style="text-align: center;">Includes the last daytime image?</th>
+<th style="text-align: center;">Includes the first nighttime image?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><mark>Start Time</mark> <code>daytime_end</code></td>
+<td style="text-align: center;">Yes</td>
+<td style="text-align: center;">Yes</td>
+</tr>
+<tr>
+<td><mark>Start Time</mark> <code>nighttime_start</code></td>
+<td style="text-align: center;">No</td>
+<td style="text-align: center;">Yes</td>
+</tr>
+<tr>
+<td><mark>End Time</mark> <code>daytime_end</code></td>
+<td style="text-align: center;">Yes</td>
+<td style="text-align: center;">No</td>
+</tr>
+<tr>
+<td><mark>End Time</mark> <code>nighttime_start</code></td>
+<td style="text-align: center;">Yes</td>
+<td style="text-align: center;">Yes</td>
+</tr>
+</tbody>
+</table>
+<p>The same applies in the morning to <code>nighttime_end</code> (the last nighttime image) and <code>daytime_start</code> (the first daytime image of the folder, which is the morning <mark>before</mark> the night).</p>
+<p>In practice:</p>
+<ul>
+<li>For <mark>nighttime images only</mark>, for example startrails, use <code>nighttime_start</code> to <code>nighttime_end</code>. The last daytime image is often bright twilight and would spoil startrails.</li>
+<li>For <mark>daytime images only</mark> use <code>daytime_start</code> to <code>daytime_end</code>.</li>
+</ul>
+<p>If the database has no entries for the day, <code>daytime_end</code> and <code>nighttime_start</code> are the same time, so the difference disappears.</p>
+</details>
+<div class="admonition tip">
+<p class="admonition-title">Testing</p>
+<p>To see which images a window would use without waiting for the end of the night, run <code>generateForDay.sh</code> with <code>--start</code> and <code>--end</code>, for example:  <br><code>generateForDay.sh --timelapse --start nighttime_start --end 02:00 20261002</code></p>
+</div>
+<p>When you change one of these settings in the WebUI, Allsky checks the value. If it isn't one of the values above, you'll get a warning and the setting goes back to its old value.</p>
 <h2 id="Websites-settings">Websites and Remote Server<a class="headerlink" href="#Websites-settings" title="Permanent link">¶</a></h2>
 <details class="info" open="open">
 <summary>Settings</summary>

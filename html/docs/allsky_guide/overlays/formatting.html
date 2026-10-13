@@ -11,7 +11,7 @@
         <link rel="prev" href="interface.html">
       
       
-        <link rel="next" href="tips.html">
+        <link rel="next" href="conditions.html">
       
       
         
@@ -3531,10 +3531,21 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#filesize-formats_1" class="md-nav__link">
+  <a href="#temperature-formats" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Filesize Formats
+        Temperature Formats
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pressure-formats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pressure Formats
       
     </span>
   </a>
@@ -3594,6 +3605,34 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="conditions.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Conditional Styles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -6463,8 +6502,8 @@
 </tr>
 </tbody>
 </table>
-<h4 id="filesize-formats_1">Filesize Formats<a class="headerlink" href="#filesize-formats_1" title="Permanent link">¶</a></h4>
-<p>This allows an filesize value to be displayed in a Human Readable format, converting between units if required</p>
+<h4 id="temperature-formats">Temperature Formats<a class="headerlink" href="#temperature-formats" title="Permanent link">¶</a></h4>
+<p>This allows a temperature to be displayed in a Human Readable format, converting between units if required</p>
 <table>
 <thead>
 <tr>
@@ -6486,6 +6525,31 @@
 </tr>
 </tbody>
 </table>
+<h4 id="pressure-formats">Pressure Formats<a class="headerlink" href="#pressure-formats" title="Permanent link">¶</a></h4>
+<p>This allows a pressure to be displayed in hPa, inches of mercury or millimetres of mercury. Allsky's pressures, e.g. from a BME280 sensor or OpenWeatherMap, are in hPa.</p>
+<table>
+<thead>
+<tr>
+<th>Format</th>
+<th>Description</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Default pressure</td>
+<td>Pressure in hPa without decimal places</td>
+<td>1013 hPa</td>
+</tr>
+<tr>
+<td>Custom pressure</td>
+<td>Pick the unit (hPa, inHg, mmHg), the decimal places and whether to add the unit</td>
+<td>29.92 inHg</td>
+</tr>
+</tbody>
+</table>
+<p>For example, <em>Custom pressure</em> with the unit <strong>inHg</strong>, <strong>2</strong> decimal places and <strong>Add unit</strong> shows 1013 hPa as <code>29.92 inHg</code>.</p>
+<p>The conversion assumes the value is in hPa. If your pressure already comes in another unit, e.g. from Home Assistant or an Ecowitt gateway set to inHg, keep the unit at <strong>hPa</strong> and only use the decimal places; without a format the value is shown as it is.</p>
 <h4 id="gpio-formats">GPIO Formats<a class="headerlink" href="#gpio-formats" title="Permanent link">¶</a></h4>
 <p>This allows the state of a GPIO pin to be displayed in a more Human Readable format</p>
 <table>
@@ -6650,13 +6714,13 @@
         
         
           
-          <a href="tips.html" class="md-footer__link md-footer__link--next" aria-label="Next: Tips">
+          <a href="conditions.html" class="md-footer__link md-footer__link--next" aria-label="Next: Conditional Styles">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Tips
+                Conditional Styles
               </div>
             </div>
             <div class="md-footer__button md-icon">

@@ -567,8 +567,10 @@ class OEFIELDMANAGER {
     }
 
     enableTestMode(async=true) {
+        // The overlay's rule sets go along, so fields whose conditions use one are styled.
         let config ={
-            fields: this.buildTestJSON()
+            fields: this.buildTestJSON(),
+            conditionsets: window.oedi.get('config').getValue('conditionsets', {}) || {}
         };
 		$.LoadingOverlay('show', {text : 'Calculating field values'});
 		let loadingTimer = setTimeout(() => {
@@ -593,7 +595,7 @@ class OEFIELDMANAGER {
 			for (let key in data) {
 				let field = this.findField(data[key].id);
 				if (field !== null) {
-					field.enableTestMode(data[key].label);
+					field.enableTestMode(data[key].label, data[key]);
 				}
 			}
 

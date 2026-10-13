@@ -1140,6 +1140,7 @@ function getVideoThumbnailInfo($day, $videoPath, $videoUrl, $useThumbnails=true)
 		];
 	}
 
+	// The directory may be at the root or in a subdirectory.
 	$videoName = pathinfo($videoPath, PATHINFO_FILENAME);
 	$f = dirname($videoPath);
 	$thumbFile = "$f/videothumbnail/{$videoName}.jpg";
@@ -1825,12 +1826,15 @@ function getNewestAllskyVersion(&$changed=null)
 			$changed = true;
 		}
 
-		$msg = "[$cmd] returned $return_val, version_array=" . json_encode($newestVersion) . ", changed=$changed";
+		$msg = "[$cmd] returned $return_val, version_array=" . json_encode($newestVersion);
+		$msg .= ", changed=" . ($changed ? "yes" : "no");
 		echo "<script>console.log(`$msg`);</script>";
 
-		// Save new info.
-		@file_put_contents($versionFile, json_encode($version_array, JSON_PRETTY_PRINT));
-		@chmod($versionFile, 0664);		// so the user can remove it if desired
+		// Save new info if the info's changed
+		if ($changed) {
+			@file_put_contents($versionFile, json_encode($version_array, JSON_PRETTY_PRINT));
+			@chmod($versionFile, 0664);		// so the user can remove it if desired
+		}
 	}
 
 	return($version_array);

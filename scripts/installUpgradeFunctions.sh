@@ -888,6 +888,7 @@ function update_old_website_config_file()
 
 	if [[ ${PRIOR_VERSION} -le 6 ]] ; then	# use -le so testers get updated.
 		# Add keolapses
+		# shellcheck disable=SC1091
 		source "${ALLSKY_MIGRATIONS_DIR}/website/6.sh"
 		migrate "${FILE}"
 	fi

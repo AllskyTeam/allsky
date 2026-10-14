@@ -7,6 +7,8 @@
 ME="$( basename "${BASH_ARGV0}" )"
 ALLSKY_SCRIPTS="$( cd "$( dirname "${BASH_ARGV0}" )/.." && pwd )"
 REPO_DIR="$( dirname "${ALLSKY_SCRIPTS}" )"
+# Set by variables.sh in an installation.
+ALLSKY_MIGRATIONS_DIR="${ALLSKY_SCRIPTS}/utilities/migrations"
 
 # shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/migrations.sh"	|| exit 1

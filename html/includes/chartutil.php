@@ -16,7 +16,7 @@ class CHARTUTIL extends UTILBASE
             'GraphData' => ['post'],
             'AvailableGraphs' => ['get'],
             'SaveCharts' => ['post', 'get'],
-            'LoadCustomChart' => ['get'],
+            'LoadCustomChart' => ['get', 'post'],
             'DeleteCustomChart' => ['post'],
             'SaveCustomChart' => ['post'],
             'VariableSeriesData' => ['post'],

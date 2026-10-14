@@ -49,6 +49,11 @@ class OECONDITIONS {
 		return /^\s*\$\{[^}]*\}\s*$/.test(String(label || ''));
 	}
 
+	/** The number of variables in a label; the overlay applies conditions only with one. */
+	static variableCount(label) {
+		return (String(label || '').match(/\$\{[^}]*\}/g) || []).length;
+	}
+
 	/** Shown or hidden by our own toggles (not ':visible', which depends on layout). */
 	static #shown($element) {
 		return $element.length > 0 && $element.css('display') !== 'none';
@@ -120,7 +125,7 @@ class OECONDITIONS {
 		this.#onChange = onChange;
 
 		const label = field.label;
-		if (!OECONDITIONS.isSingleVariable(label) && !(field.fieldData && field.fieldData.conditions)) {
+		if (!OECONDITIONS.isSingleVariable(label) && !(field.fieldData && field.fieldData.conditions && OECONDITIONS.variableCount(label) === 1)) {
 			bootbox.alert('Conditions need a field that contains only one variable, e.g. <code>${TEMPERATURE_C}</code>, and no other text, since the style applies to the whole field. Put any other text in its own field.');
 			return;
 		}

@@ -180,7 +180,10 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" || ${1} == "--force" ]]; then
 	ALLSKY_EXTRA_LEGACY="${ALLSKY_OVERLAY}/extra"
 	ALLSKY_EXTRA="${ALLSKY_TMP}/extra"
 	ALLSKY_MODULE_INSTALLER="${ALLSKY_SCRIPTS}/modules/allskymodulemanager/moduleinstaller.py"
-	
+
+	# Migration scripts
+	ALLSKY_MIGRATIONS_DIR="${ALLSKY_UTILITIES}/migrations"
+
 	# URL for the Allsky API.
 	ALLSKY_API_URL="http://localhost:8090"
 

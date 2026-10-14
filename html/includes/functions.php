@@ -1140,9 +1140,12 @@ function getVideoThumbnailInfo($day, $videoPath, $videoUrl, $useThumbnails=true)
 		];
 	}
 
+	// The directory may be at the root or in a subdirectory.
 	$videoName = pathinfo($videoPath, PATHINFO_FILENAME);
-	$thumbFile = ALLSKY_IMAGES . "/{$day}/videothumbnail/{$videoName}.jpg";
-	$thumbUrl = "/images/{$day}/videothumbnail/" . rawurlencode($videoName . '.jpg');
+	$f = dirname($videoPath);
+	$thumbFile = "$f/videothumbnail/{$videoName}.jpg";
+	$u = dirname($videoUrl);
+	$thumbUrl = "$u/videothumbnail/" . rawurlencode($videoName . '.jpg');
 
 	if (file_exists($thumbFile)) {
 		return [

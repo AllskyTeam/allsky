@@ -13,28 +13,41 @@ of the current release.
 
     ???+ "v2026.10.01_01 - Point Release # 1"
 
-        ## **Major New Features (described more below)**
-        - **Moon-dependent stretch** - the nighttime stretch can follow the moonlight: a strong stretch on dark, moonless nights and a weaker one when a bright Moon is high in the sky.
-        - **Start and end times** for the timelapse, keogram, and startrails - for example only the night, or from 22:00 to 04:00. Times can also be `sunrise`, `sunset`, or the start or end of Allsky's daytime or nighttime.
-        - **Conditional overlay styles** - a text field in the **Overlay Editor** can change its colour (and optionally stroke, opacity, and font) depending on its value, e.g. a temperature in blue below freezing. A rule can also show a text instead of the value, e.g. `DANGER` above 90°. Rules can be saved as rule sets and reused by other fields.
-
+        <!-- ## **Major New Features (described more below)** -->
         ## **Enhancements / Changes**
+        - **Moon-dependent stretch**
+            - The nighttime stretch can follow the moonlight: a strong stretch on dark, moonless nights and a weaker one when a bright Moon is high in the sky.
+            - When ==Moon-dependent stretch== is on in the "Nighttime Settings" section of the WebUI, the existing ==Stretch Amount== and ==Stretch mid point== settings are used when there's no moonlight, and the new ==Full Moon Stretch Amount== and ==Full Moon Stretch mid point== settings when a full Moon is high in the sky. In between, Allsky interpolates by how bright and how high the Moon is. The overlay variable `${MOONLIGHT}` shows the current amount of moonlight.
+        - **Start and end times for the timelapse, keogram, and startrails**
+            - You can now specify what images to include in timelapse videos, keograms, and startrails. For example only the night images, or from 22:00 to 04:00. Times can also be `sunrise`, `sunset`, or the start or end of Allsky's daytime or nighttime.
+              See the [Allsky Settings](settings/allsky.html#Start-end-times) page for valid entries in these fields.
+              The `generateForDay.sh` `--start` and `--end` arguments can be used to temporarily override the saved settings.
+        - **Conditional overlay styles**
+            - A text field in the **Overlay Editor** can change its colour, stroke, opacity, and/or font depending on its value, e.g. having the temperature appear in blue if it's below freezing and red if it's hot. A rule can also show a text instead of the value, e.g. `DANGER` above 90Â°. Rules can be saved as rule sets and reused by other fields.
+
+	    - **Keolapses**
+            - If you're using the "Allsky Keolapse/Timelapse" module (available in the "Module package Manager" of the Module Manager), it will save the keolapse in `~/allsky/images/DAY/keolapse` as well as on the local and remote Websites (in `keolapses`) if they are enabled.
+            - The WebUI's "Images" page displays an icon for every day that has a keolapse.
+            - The local and remote Websites have a new "Archived Keolapses" icon on the left side.  You may need to set the associated `display` field to `true`.
+		    - `generateForDay.sh --keolapse DATE` creates or uploads the keolapse for the given DATE, with the module's settings. When the module is enabled in the **Night to Day** flow, keolapses are also part of `generateForDay.sh`'s default set.
 	    - **Days To Keep settings**
 			- The specified number of days' images are kept, regardless of their date.  The prior behaviour deleted anything older than the specified number of days.
-			- If you decrease the number of days' images to keep (either in the WebUI, a local Website, or a remoteWebsite) and there are more days' images than the new days to keep value, a notice will display in the WebUI.
+            - This applies to files in `~/allsky/images`, on a local Website, and on a remote Website.
+			- If you decrease the number of days' images to keep and there are more days' images than the new days to keep value, a notice will display in the WebUI.
 		- The WebUI checks for new Allsky releases every 12 hours instead of every 2 days.
-		- `generateForDay.sh --keolapse` creates or uploads the keolapse of the **Keolapse** module for a given day, with the module's settings. When the module is enabled in the **Night to Day** flow, keolapses are also part of `generateForDay.sh`'s default set.
+        - After installing Allsky, a link to the documentation may appear in the WebUI, depending on what prior Allsky release you were running.
 
         ## **Bug Fixes**
 		- The `upgrade.sh` command no longer fails when using the "in-place" method and a new Allsky release is available.
+		- Several overlay-related bugs including ones where a comma is used for the decimal point.
 
         ## **Deleted Settings**
         - ==Night images only== (Startrails) - replaced by the new startrails ==Start Time== and ==End Time== set to `nighttime_start` and `nighttime_end`, which use the same day/night decision. Existing settings are converted automatically.
 
         ## **New Settings**
-	    - ==Days To Keep on Remote Website== - similar to ==Days To Keep on Pi Website==, but for remote Websites.
-        - ==Moon-dependent stretch==, ==Full Moon Stretch Amount==, and ==Full Moon Stretch mid point== (Nighttime) - when ==Moon-dependent stretch== is on, the existing ==Stretch Amount== and ==Stretch mid point== are used when there's no moonlight and the two Full Moon settings when a full Moon is high in the sky. In between, Allsky interpolates by how bright and how high the Moon is. The overlay variable `${MOONLIGHT}` shows the current amount of moonlight.
-        - ==Start Time== and ==End Time== (Daily Timelapse, Keograms, and Startrails) - only use the images taken between these times. `generateForDay.sh` has matching `--start` and `--end` arguments.
+	    - ==Days To Keep on Remote Website== - This is similar to ==Days To Keep on Pi Website==, but for remote Websites.
+        - ==Moon-dependent stretch==, ==Full Moon Stretch Amount==, and ==Full Moon Stretch mid point== (Nighttime)
+        - ==Start Time== and ==End Time== for Daily Timelapse, Keograms, and Startrails
 
 
 
@@ -122,7 +135,7 @@ of the current release.
                 - Search and filter modules by type
                 - New configuration field types:
                     - Secret
-                    - I²C Input
+                    - IÂ²C Input
                     - 1-Wire Input
                     - AJAX Select
                     - GPIO
@@ -442,7 +455,7 @@ of the current release.
             - If a Website has trouble reading `data.json`, run `allsky-config check_post_data`.
             - `allsky-config move_images` is more robust and can move images back to `~/allsky/images`.
 
-        - If a Website is stuck on "Loading ..." because it can't find the current image, you’ll get a message telling you how to fix it.
+        - If a Website is stuck on "Loading ..." because it can't find the current image, you'll get a message telling you how to fix it.
         - Several Website files are now in subdirectories (e.g. `css`). No user action needed.
         - You can now have custom notification images:
           create `~/allsky/config/myFiles/notificationImages` and place files matching the names in `~/allsky/notificationImages`.
@@ -515,19 +528,19 @@ of the current release.
             The changes in this section may require settings changes;
             after upgrading, check that your settings and images look right.
 
-        - The `config.sh` and `ftp-settings.sh` files are gone — their settings are now in the WebUI.  
+        - The `config.sh` and `ftp-settings.sh` files are gone - their settings are now in the WebUI.  
           **Possible action:** The upgrade should migrate your prior settings unless you have a very old version.
 
         - The **CROP** settings have been simplified to pixels from top/right/bottom/left.  
           **Possible action:** If you used crop, the upgrade will tell you to re-enter values.
 
-        - **Remove Bad Images Thresholds** are now 0.0–1.0 (instead of 0–100).  
+        - **Remove Bad Images Thresholds** are now 0.0-1.0 (instead of 0-100).  
           **Possible action:** Upgrade should convert values, but verify.
 
         - Mean brightness is now used to determine too bright/too dark (matches auto-exposure).  
           **Possible action:** You may need to adjust **Remove Bad Images Thresholds**.
 
-        - (ZWO only) Mean brightness is now 0.0–1.0 (was 0–255).  
+        - (ZWO only) Mean brightness is now 0.0-1.0 (was 0-255).  
           **Possible action:** If **MEAN** is on your overlay, adjust formatting.
 
         - WebUI now hides settings within sections unless that section has an error.
@@ -549,7 +562,7 @@ of the current release.
         - Allsky only restarts when needed; tooltips indicate what will happen after changing settings.
         - **Overlay Method** `module` is now default for new installs; `legacy` will be removed in the next major release.
         - Multiple ZWO cameras (and on Pi 5 multiple RPi cameras) are supported; install shows all attached cameras.
-        - If you swap cameras without telling Allsky, it won’t start and will tell you what to do.
+        - If you swap cameras without telling Allsky, it won't start and will tell you what to do.
         - Unsupported cameras trigger a message on how to proceed / request support.
         - All ZWO cameras as of September 7, 2024 are supported (library version 1.36).
         - Support for new third-party RPi cameras added.
@@ -570,30 +583,30 @@ of the current release.
             - Separate daytime and nighttime overlays are supported via the new **Overlay Manager** in the **Overlay Editor**.
             - **Overlay Editor** warns if fields are outside the image and can fix them.
               See [Ensure overlay fields stay within bounds](https://github.com/AllskyTeam/allsky/issues/3317).
-            - **Overlay Editor** won’t start if images aren’t being captured (prevents using notification image as background).
+            - **Overlay Editor** won't start if images aren't being captured (prevents using notification image as background).
 
         - See the Modules Documentation for details on Extra Module changes.
 
         - New Modules:
-            - **Allsky AI** — Detects cloud cover using AI
-            - **Allsky Fans** — Controls a fan based on CPU temperature
-            - **Allsky Border** — Expands an image to include additional borders
-            - **Allsky HDD Temp** — Retrieves hard drive temperatures using SMART
-            - **Allsky ina3221** — Current and voltage measurements
-            - **Allsky influxdb** — Writes data to influxdb
-            - **Allsky light** — Determines light levels using a TSL2591
-            - **Allsky LightGraph** — Displays a graph of day and night
-            - **Allsky ltr390** — Measures UV levels
-            - **Allsky mlx90640** — Captures an IR image of the sky (experimental)
-            - **Allsky Publish Data** — Publish to Redis, MQTT, or REST
-            - **Allsky Temp** — Reads up to three temperature sensors and controls a GPIO pin
+            - **Allsky AI** - Detects cloud cover using AI
+            - **Allsky Fans** - Controls a fan based on CPU temperature
+            - **Allsky Border** - Expands an image to include additional borders
+            - **Allsky HDD Temp** - Retrieves hard drive temperatures using SMART
+            - **Allsky ina3221** - Current and voltage measurements
+            - **Allsky influxdb** - Writes data to influxdb
+            - **Allsky light** - Determines light levels using a TSL2591
+            - **Allsky LightGraph** - Displays a graph of day and night
+            - **Allsky ltr390** - Measures UV levels
+            - **Allsky mlx90640** - Captures an IR image of the sky (experimental)
+            - **Allsky Publish Data** - Publish to Redis, MQTT, or REST
+            - **Allsky Temp** - Reads up to three temperature sensors and controls a GPIO pin
 
         #### New Settings
 
-        - ==Images Sort Order== — sort order for the **Images** page
-        - ==Show Updated Message== — hides the “Daytime images updated every...” message on **Live View**
-        - ==Nighttime Capture== and **Nighttime Save** — nighttime equivalents of daytime settings
-        - ==ZWO Exposure Type== — how images should be taken (see docs)
+        - ==Images Sort Order== - sort order for the **Images** page
+        - ==Show Updated Message== - hides the "Daytime images updated every..." message on **Live View**
+        - ==Nighttime Capture== and **Nighttime Save** - nighttime equivalents of daytime settings
+        - ==ZWO Exposure Type== - how images should be taken (see docs)
 
         #### Deleted Settings
 
@@ -636,9 +649,9 @@ of the current release.
         - Added support for the **Pi 5**.
         - Increased suggested amount of swap by **1 GB** to help minimize timelapse creation problems.
         - New camera support:
-            - Arducam IMX462 camera (inexpensive 1920×1080 camera)
+            - Arducam IMX462 camera (inexpensive 1920Ã—1080 camera)
             - All ZWO cameras as of October 19, 2023 (ZWO SDK 1.32)
-        - The concept of **Advanced Options** no longer exists — **all settings are always shown**.
+        - The concept of **Advanced Options** no longer exists - **all settings are always shown**.
 
         #### Bug Fixes
 
@@ -669,7 +682,7 @@ of the current release.
 
         - `AUTO_STRETCH` now works.
         - Improved latitude/longitude handling and fixed bugs.
-        - Allsky Map no longer updates when “Show on map” is disabled.
+        - Allsky Map no longer updates when "Show on map" is disabled.
         - Nighttime delays on ZWO cameras now work.
         - Fixed missing-file error when installing a remote Website.
         - Corrected default WebUI values for RPi cameras.
@@ -704,7 +717,7 @@ of the current release.
             - Add  
               `--metadata /home/pi/allsky/config/overlay/extra/libcamera.json`
               to **Extra Arguments**
-            - Add `AS_SensorTemperature` via the **Overlay Editor → Variable Manager**
+            - Add `AS_SensorTemperature` via the **Overlay Editor - Variable Manager**
             - Save and enable the field
 
         #### Bug Fixes
@@ -721,7 +734,7 @@ of the current release.
         #### Enhancements
 
         - Multiple consecutive bad images now trigger a visible warning image and system message.
-        - **Editor** page buttons are fixed to the top with a quick “Top” button.
+        - **Editor** page buttons are fixed to the top with a quick "Top" button.
         - Camera refresh allows swapping cameras of the same type.
         - Installation speed significantly improved using prebuilt binaries.
         - Camera changes reuse shared settings where appropriate.
@@ -801,21 +814,21 @@ of the current release.
         - [Map settings](https://github.com/AllskyTeam/allsky/wiki/allsky-Settings/_edit#map-settings){ external }
       Added an **Allsky Map Setup** section to the WebUI to configure the map settings.
       The **Lens** field now shows in the popout on the Allsky Website (if installed).
-	- Significantly enhanced Wiki — more pages and more information, including known issues and fixes/workarounds.
+	- Significantly enhanced Wiki - more pages and more information, including known issues and fixes/workarounds.
 	- Added an option to keograms to make them full width, even if few images were used.
       In `config.sh`, set `KEOGRAM_EXTRA_PARAMETERS="--image-expand"`.
 	- Added/changed/deleted settings (in `config.sh` unless otherwise noted):
-        - Added `WEBUI_DATA_FILES` — one or more files whose contents are shown on the WebUI **System** page.
+        - Added `WEBUI_DATA_FILES` - one or more files whose contents are shown on the WebUI **System** page.
           See [this Wiki page](https://github.com/AllskyTeam/allsky/wiki/WEBUI_DATA_FILES){ external }.
         - Renamed `NIGHTS_TO_KEEP` to `DAYS_TO_KEEP` since it keeps **days**, not just nights.
           If blank (`""`), **all** days are kept.
-        - Deleted `AUTO_DELETE` — replaced by `DAYS_TO_KEEP`.
+        - Deleted `AUTO_DELETE` - replaced by `DAYS_TO_KEEP`.
           `DAYS_TO_KEEP=""` is similar to the old `AUTO_DELETE=false`.
-        - Added `WEB_DAYS_TO_KEEP` — how many days of Allsky Website images/videos to keep when hosted on the Pi.
-        - Added `WEB_IMAGE_DIR` in `ftp-settings.sh` — allows copying images to a local Pi location (often the Website)
+        - Added `WEB_DAYS_TO_KEEP` - how many days of Allsky Website images/videos to keep when hosted on the Pi.
+        - Added `WEB_IMAGE_DIR` in `ftp-settings.sh` - allows copying images to a local Pi location (often the Website)
           as well as to a remote machine (timelapse/startrails/keogram already supported this).
 	- The RPi camera now supports the same text overlay features as ZWO, including the **Extra Text** file.
-	- Removed the harmless “deprecated pixel format used” message from the timelapse log (it confused people).
+	- Removed the harmless "deprecated pixel format used" message from the timelapse log (it confused people).
 	- Improved auto-exposure for RPi cameras.
 	- Refactored ZWO and RPi camera code to simplify maintenance and future features.
 	- Upload reliability improvements:
@@ -828,9 +841,9 @@ of the current release.
 	- `removeBadImages.sh` also only creates a log file on error (saves a write per image).
 	- Allsky now stops with an error message on unrecoverable errors (e.g., no camera found), instead of restarting forever.
 	- More meaningful on-image messages:
-        - Replaced generic “ERROR. See /var/log/allsky.log” with more specific messages
-          (e.g., “*** ERROR *** Allsky Stopped! ZWO camera not found!”).
-        - On restart, shows “Allsky software is restarting” instead of “stopping” then “starting”.
+        - Replaced generic "ERROR. See /var/log/allsky.log" with more specific messages
+          (e.g., "*** ERROR *** Allsky Stopped! ZWO camera not found!").
+        - On restart, shows "Allsky software is restarting" instead of "stopping" then "starting".
 	- Timelapse debug output no longer prints a line for each of thousands of images, making real errors easier to spot.
 	- WebUI improvements:
         - **Camera Settings** page now shows min/max/default values in a popup for numerical fields.
@@ -839,9 +852,9 @@ of the current release.
 	- RPi WebUI setting **Gamma** renamed to **Saturation** (Gamma name was incorrect).
 
 	- Known issues:
-        - Startrails and keogram programs don’t work well if you bin differently during day vs night.
-          If you don’t save daytime images this won’t be a problem.
-        - Min/max/default values shown in the WebUI **Camera Settings** page (especially RPi) aren’t always correct,
+        - Startrails and keogram programs don't work well if you bin differently during day vs night.
+          If you don't save daytime images this won't be a problem.
+        - Min/max/default values shown in the WebUI **Camera Settings** page (especially RPi) aren't always correct,
           particularly on Bullseye where many settings changed.
 
 
@@ -854,12 +867,12 @@ of the current release.
 	- Decrease in ZWO sensor temperature.
 	- Many new settings, including splitting some settings into day and night versions.
 	- Added error checking and log messages in many areas to aid debugging.
-	- Support for **notification images**, such as “Allsky is starting up” and “Taking dark frames”.
+	- Support for **notification images**, such as "Allsky is starting up" and "Taking dark frames".
 	- Ability to resize uploaded images.
 	- Ability to set thumbnail size.
 	- Ability to delete bad images (corrupt, too light, or too dark).
 	- Ability to set an image file name prefix.
-	- Ability to reset the USB bus if a ZWO camera isn’t found (requires the `uhubctl` command).
+	- Ability to reset the USB bus if a ZWO camera isn't found (requires the `uhubctl` command).
 	- Ability to specify the format of the time displayed on images.
 	- Ability to display temperature in Celsius, Fahrenheit, or both.
 	- Ability to set the bitrate on timelapse videos.
@@ -869,7 +882,7 @@ of the current release.
 
 ??? "0.7"
 
-	- Added Raspberry Pi HQ camera support based on Rob Musquetier’s fork.
+	- Added Raspberry Pi HQ camera support based on Rob Musquetier's fork.
 	- Added support for x86 architecture (Ubuntu, etc.).
 	- Temperature-dependent dark frame library.
 	- Added browser-based script editor.

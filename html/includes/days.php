@@ -42,6 +42,56 @@ function ListDays()
 		$timezoneName = date_default_timezone_get();
 	}
 	$displayTimezone = new DateTimeZone($timezoneName);
+
+	// Determine what each days has - timelapse, keogram, etc.
+	$day_has_images = [];			$are_images = false;
+	$day_has_timelapse = [];		$are_timelapse = false;
+	$day_has_keolapse = [];			$are_keolapse = false;
+	$day_has_keogram = [];			$are_keogram = false;
+	$day_has_startrails = [];		$are_startrails = false;
+	$day_has_meteors = [];			$are_meteors = false;
+
+	foreach ($days as $day) {
+		// See if this day has ANY valid images or videos.
+		$i = getValidImageNames(ALLSKY_IMAGES . "/$day", true);	// true == stop after 1
+		if (count($i) > 0) {
+			$day_has_images[$day] = true;
+			$are_images = true;
+		}
+
+		$day_has_timelapse[$day] = (glob(ALLSKY_IMAGES . "/$day/*.mp4") != false);
+			if ($day_has_timelapse[$day]) $are_timelapse = true;
+		$day_has_keolapse[$day] = (glob(ALLSKY_IMAGES . "/$day/keolapse/*.mp4") != false);
+			if ($day_has_keolapse[$day]) $are_keolapse = true;
+
+		// For keograms and startrails assume if the directory exists a file does too.
+		$day_has_keogram[$day] = is_dir(ALLSKY_IMAGES . "/$day/keogram");
+			if ($day_has_keogram[$day]) $are_keogram = true;
+		$day_has_startrails[$day] = is_dir(ALLSKY_IMAGES . "/$day/startrails");
+			if ($day_has_startrails[$day]) $are_startrails = true;
+
+		// It's very possible there will be no meteor files
+		$meteorDir = ALLSKY_IMAGES . "/$day/meteors";
+		$day_has_meteors[$day] = false;
+		if (is_dir($meteorDir)) {
+			$meteorFiles = @scandir($meteorDir);
+			if ($meteorFiles !== false) {
+				foreach ($meteorFiles as $meteorFile) {
+					if (is_file($meteorDir . "/$meteorFile") && isListFileTypeSupportedFile($meteorFile, "picture")) {
+						$day_has_meteors[$day] = true;
+						$are_meteors = true;
+						break;
+					}
+				}
+			}
+		}
+	}
+	$images_total = '<span title="There are too many total images to view on one page.">-</span>';
+	$timelapse_total  = ($are_timelapse ? insertHref("list_videos", "All") : "none") .  ($are_keolapse ? " " . insertHref("list_keolapses", "All") : "");
+	$keogram_total    = ($are_keogram ? insertHref("list_keograms", "All") : "none");
+	$startrails_total = ($are_startrails ? insertHref("list_startrails", "All") : "none");
+	$meteors_total    = ($are_meteors ? insertHref("list_meteors", "All") : "none");
+
 ?>
 <div class="row">
 	<div class="col-lg-12">
@@ -77,7 +127,7 @@ function ListDays()
 				<div class="col-sm-10 days-actions-col">
 					<div class="row days-grid-actions">
 						<div class="col-xs-2 text-center days-action-col"><span class="days-grid-label">Images</span></div>
-						<div class="col-xs-2 text-center days-action-col"><span class="days-grid-label">Timelapse</span></div>
+						<div class="col-xs-2 text-center days-action-col"><span class="days-grid-label">Timelapse<?php if ($are_keolapse) echo " / Keolapse";?></span></div>
 						<div class="col-xs-2 text-center days-action-col"><span class="days-grid-label">Keogram</span></div>
 						<div class="col-xs-2 text-center days-action-col"><span class="days-grid-label">Startrails</span></div>
 						<div class="col-xs-2 text-center days-action-col"><span class="days-grid-label">Meteors</span></div>
@@ -94,11 +144,11 @@ function ListDays()
 				<div class="col-sm-2 hidden-xs hidden-sm"><span class="days-grid-value">-</span></div>
 				<div class="col-sm-10 days-actions-col">
 					<div class="row days-grid-actions">
-						<div class="col-xs-2 text-center days-action-col"><span class="days-grid-value"><span title="There are too many total images to view on one page.">-</span></span></div>
-						<div class="col-xs-2 text-center days-action-col"><span class="days-grid-value"><?php insertHref("list_videos", "All"); ?></span></div>
-						<div class="col-xs-2 text-center days-action-col"><span class="days-grid-value"><?php insertHref("list_keograms", "All"); ?></span></div>
-						<div class="col-xs-2 text-center days-action-col"><span class="days-grid-value"><?php insertHref("list_startrails", "All"); ?></span></div>
-						<div class="col-xs-2 text-center days-action-col"><span class="days-grid-value"><?php insertHref("list_meteors", "All"); ?></span></div>
+						<div class="col-xs-2 text-center days-action-col"><span class="days-grid-value"><?php echo $images_total ?></span></div>
+						<div class="col-xs-2 text-center days-action-col"><span class="days-grid-value"><?php echo $timelapse_total ?></span></div>
+						<div class="col-xs-2 text-center days-action-col"><span class="days-grid-value"><?php echo $keogram_total ?></span></div>
+						<div class="col-xs-2 text-center days-action-col"><span class="days-grid-value"><?php echo $startrails_total ?></span></div>
+						<div class="col-xs-2 text-center days-action-col"><span class="days-grid-value"><?php echo $meteors_total ?></span></div>
 						<div class="col-xs-2 text-center hidden-xs"><span class="days-grid-value"><span title="You cannot delete All files at once.">-</span></span></div>
 					</div>
 				</div>
@@ -106,32 +156,14 @@ function ListDays()
 <?php
 
 foreach ($days as $day) {
-	// See if this day has ANY valid images or videos.
-	$i = getValidImageNames(ALLSKY_IMAGES . "/$day", true);	// true == stop after 1
-	$has_images = (count($i) > 0);
+	$has_images = $day_has_images[$day];
+	$has_timelapse = $day_has_timelapse[$day];
+	$has_keolapse = $day_has_keolapse[$day];
+	$has_keogram = $day_has_keogram[$day];
+	$has_startrails = $day_has_startrails[$day];
+	$has_meteors = $day_has_meteors[$day];
 
-	$has_timelapse = (glob(ALLSKY_IMAGES . "/$day/*.mp4") != false);
-
-	// For keograms and startrails assume if the directory exists a file does too.
-	$has_keogram = is_dir(ALLSKY_IMAGES . "/$day/keogram");
-	$has_startrails = is_dir(ALLSKY_IMAGES . "/$day/startrails");
-
-	// It's very possible there will be no meteor files
-	$meteorDir = ALLSKY_IMAGES . "/$day/meteors";
-	$has_meteors = false;
-	if (is_dir($meteorDir)) {
-		$meteorFiles = @scandir($meteorDir);
-		if ($meteorFiles !== false) {
-			foreach ($meteorFiles as $meteorFile) {
-				if (is_file($meteorDir . "/$meteorFile") && isListFileTypeSupportedFile($meteorFile, "picture")) {
-					$has_meteors = true;
-					break;
-				}
-			}
-		}
-	}
-
-	if (! $has_images && ! $has_timelapse && ! $has_keogram && ! $has_startrails && ! $has_meteors) {
+	if (! $has_images && ! $has_timelapse && ! $has_keolapse && ! $has_keogram && ! $has_startrails && ! $has_meteors) {
 		echo "<script>console.log('Directory \"$day\" has no images, timelapse, et.al.; ignoring.');</script>";
 		continue;
 	}
@@ -154,17 +186,25 @@ foreach ($days as $day) {
 	ob_start();
 	if ($has_timelapse) {
 		$icon = "";
-		insertHref("list_videos", $day, false, $icon);
+		echo insertHref("list_videos", $day, false, $icon);
 	} else {
 		echo "none";
 	}
 	$timelapseHtml = ob_get_clean();
+	ob_start();
+	if ($has_keolapse) {
+		$icon = "";
+		echo insertHref("list_keolapses", $day, false, $icon);
+	} else {
+		// echo "none";
+	}
+	$keolapseHtml = ob_get_clean();
 
 	ob_start();
 	if ($has_keogram) {
 # TODO: create and use keogram thumbnails. They should probably be about 400px high because
 # a "regular" thumbnail is only 100 px wide so you can't see any details.
-		insertHref("list_keograms", $day);
+		echo insertHref("list_keograms", $day);
 	} else {
 		echo "none";
 	}
@@ -173,7 +213,7 @@ foreach ($days as $day) {
 	ob_start();
 	if ($has_startrails) {
 # TODO: create and use startrails thumbnails.
-		insertHref("list_startrails", $day);
+		echo insertHref("list_startrails", $day);
 	} else {
 		echo "none";
 	}
@@ -182,7 +222,7 @@ foreach ($days as $day) {
 	ob_start();
 	if ($has_meteors) {
 # TODO: create and use meteor thumbnails.
-		insertHref("list_meteors", $day);
+		echo insertHref("list_meteors", $day);
 	} else {
 		echo "none";
 	}
@@ -199,7 +239,7 @@ foreach ($days as $day) {
 	echo "    <div class='col-sm-10 days-actions-col'>\n";
 	echo "      <div class='row days-grid-actions'>\n";
 	echo "        <div class='col-xs-2 text-center days-action-col'><span class='days-grid-value'>$imagesHtml</span></div>\n";
-	echo "        <div class='col-xs-2 text-center days-action-col'><span class='days-grid-value'>$timelapseHtml</span></div>\n";
+	echo "        <div class='col-xs-2 text-center days-action-col'><span class='days-grid-value' style='white-space: nowrap'>$timelapseHtml $keolapseHtml</span></div>\n";
 	echo "        <div class='col-xs-2 text-center days-action-col'><span class='days-grid-value'>$keogramHtml</span></div>\n";
 	echo "        <div class='col-xs-2 text-center days-action-col'><span class='days-grid-value'>$startrailsHtml</span></div>\n";
 	echo "        <div class='col-xs-2 text-center days-action-col'><span class='days-grid-value'>$meteorsHtml</span></div>\n";

@@ -747,6 +747,7 @@ function update_old_website_config_file()
 	# While v2026.10.01 was being tested the repository briefly said 6, so testers can
 	# have files at 6: the steps for version 5 run for those too ("-le 6"), and the file
 	# then ends at 5.  Every step only changes what still needs changing.
+	# Version: 6 from v2026.10.01_01
 
 	if [[ ${PRIOR_VERSION} -eq 1 ]]; then
 		# These steps bring version 1 up to 2.
@@ -848,30 +849,27 @@ function update_old_website_config_file()
 		fi
 	fi
 
-	if [[ ${PRIOR_VERSION} -le 6 ]] ; then	# use -le so testers get updated.
+	if [[ ${PRIOR_VERSION} -le 5 ]] ; then	# use -le so testers get updated.
 		# Update timelapse icons
 		update_array_field "${FILE}" "homePage.leftSidebar" "icon" \
 			"fa fa-2x fa-fw fa-play-circle" "fa fa-2x fa-fw fa-video"
 		update_array_field "${FILE}" "homePage.leftSidebar" "icon" \
 			"fa fa-2x fa-fw icon-mini-timelapse" "fa fa-2x fa-fw fa-file-video"
-	fi
 
-	# Only while they are still the old kind, so running this again keeps a user's colours.
-	if [[ ${PRIOR_VERSION} -le 6 ]] &&
-		[[ "$( jq '[.config.colours | to_entries[] | select(.value | type == "object") | .value | has("constellation")] | all' "${FILE}" 2>/dev/null )" != "true" ]] ; then
-		# Replace the old XXX_cardinal-only colours with the current full colour set.
-		TEMP="/tmp/$$"
-		jq --indent 4 --slurpfile repo "${REPO_WEBSITE_CONFIGURATION_FILE}" \
-			'.config.colours = $repo[0].config.colours' "${FILE}" > "${TEMP}"
-		if [[ $? -eq 0 ]]; then
-			# cp so it keeps ${FILE}'s attributes
-			cp "${TEMP}" "${FILE}" && rm -f "${TEMP}"
-		else
-			rm -f "${TEMP}"
+		# Only while they are still the old kind, so running this again keeps a user's colours.
+		if [[ "$( jq '[.config.colours | to_entries[] | select(.value | type == "object") | .value | has("constellation")] | all' "${FILE}" 2>/dev/null )" != "true" ]] ; then
+			# Replace the old XXX_cardinal-only colours with the current full colour set.
+			TEMP="/tmp/$$"
+			jq --indent 4 --slurpfile repo "${REPO_WEBSITE_CONFIGURATION_FILE}" \
+				'.config.colours = $repo[0].config.colours' "${FILE}" > "${TEMP}"
+			if [[ $? -eq 0 ]]; then
+				# cp so it keeps ${FILE}'s attributes
+				cp "${TEMP}" "${FILE}" && rm -f "${TEMP}"
+			else
+				rm -f "${TEMP}"
+			fi
 		fi
-	fi
 
-	if [[ ${PRIOR_VERSION} -le 6 ]] ; then	# use -le so testers get updated.
 		# Add "overlayLean" and "overlayLeanAz" after "az", unless already there.
 		TEMP="/tmp/$$"
 		jq --indent 4 '
@@ -886,6 +884,12 @@ function update_old_website_config_file()
 		else
 			rm -f "${TEMP}"
 		fi
+	fi
+
+	if [[ ${PRIOR_VERSION} -le 6 ]] ; then	# use -le so testers get updated.
+		# Add keolapses
+		source "${ALLSKY_MIGRATIONS_DIR}/website/6.sh"
+		migrate "${FILE}"
 	fi
 
 	# Set to current config and Allsky versions.

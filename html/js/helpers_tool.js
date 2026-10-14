@@ -383,7 +383,8 @@ class HelperToolPage {
         }
 
         this.runCommandOutputElement.toggleClass("errorMsgBig", !!isError);
-        this.runCommandModalElement.modal("show");
+        // Escape the content stacking context so the body-level backdrop stays behind the modal.
+        this.runCommandModalElement.appendTo(document.body).modal("show");
     }
 
     runCommandButton(buttonElement) {

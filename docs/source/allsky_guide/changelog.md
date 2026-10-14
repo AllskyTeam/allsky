@@ -1,14 +1,10 @@
 This page lists the major changes to all Allsky releases.
 You can also see the
-[Known Issues and Limitations](knownIssues.html)
+Known Issues and Limitations
 of the current release.
-
 ---
-
-## v2026.10.01 { data-toc-label="v2026.10.01" }
-
+v2026.10.01 { data-toc-label="v2026.10.01" }
 ???+ "v2026.10.01"
-
     ### v2026.10.01
 
     ???+ "v2026.10.01_01 - Point Release # 1"
@@ -23,7 +19,7 @@ of the current release.
               See the [Allsky Settings](settings/allsky.html#Start-end-times) page for valid entries in these fields.
               The `generateForDay.sh` `--start` and `--end` arguments can be used to temporarily override the saved settings.
         - **Conditional overlay styles**
-            - A text field in the **Overlay Editor** can change its colour, stroke, opacity, and/or font depending on its value, e.g. having the temperature appear in blue if it's below freezing and red if it's hot. A rule can also show a text instead of the value, e.g. `DANGER` above 90Â°. Rules can be saved as rule sets and reused by other fields.
+            - A text field in the **Overlay Editor** can change its colour, stroke, opacity, and/or font depending on its value, e.g. having the temperature appear in blue if it's below freezing and red if it's hot. A rule can also show a text instead of the value, e.g. `DANGER` above 90°. Rules can be saved as rule sets and reused by other fields.
 
 	    - **Keolapses**
             - If you're using the "Allsky Keolapse/Timelapse" module (available in the "Module package Manager" of the Module Manager), it will save the keolapse in `~/allsky/images/DAY/keolapse` as well as on the local and remote Websites (in `keolapses`) if they are enabled.
@@ -135,7 +131,7 @@ of the current release.
                 - Search and filter modules by type
                 - New configuration field types:
                     - Secret
-                    - IÂ²C Input
+                    - I²C Input
                     - 1-Wire Input
                     - AJAX Select
                     - GPIO
@@ -242,10 +238,8 @@ of the current release.
 
 	---
 
-## v2024.12.06 { data-toc-label="v2024.12.06" }
-
+v2024.12.06 { data-toc-label="v2024.12.06" }
 ??? "v2024.12.06"
-
     ### v2024.12.06_06
 
     ???+ "v2024.12.06_06 - Point Release # 6"
@@ -632,10 +626,9 @@ of the current release.
 	---
 
 
-## v2023.05.01 { data-toc-label="v2023.05.01" }
 
+v2023.05.01 { data-toc-label="v2023.05.01" }
 ??? "v2023.05.01"
-
     ### v2023.05.01_04
 
     ??? "v2023.05.01_04 - Point Release # 4"
@@ -649,7 +642,7 @@ of the current release.
         - Added support for the **Pi 5**.
         - Increased suggested amount of swap by **1 GB** to help minimize timelapse creation problems.
         - New camera support:
-            - Arducam IMX462 camera (inexpensive 1920Ã—1080 camera)
+            - Arducam IMX462 camera (inexpensive 1920x1080 camera)
             - All ZWO cameras as of October 19, 2023 (ZWO SDK 1.32)
         - The concept of **Advanced Options** no longer exists - **all settings are always shown**.
 
@@ -804,11 +797,10 @@ of the current release.
 	---
 
 
-## v2022.03.01 { data-toc-label="v2022.03.01" }
 
+v2022.03.01 { data-toc-label="v2022.03.01" }
 ??? "v2022.03.01"
-
-	- Switched to date-based release names.
+- Switched to date-based release names.
 	- Added ability to have your allsky camera added to the Allsky Map by configuring:
         - [Allsky Map](http://www.thomasjacquin.com/allsky-map){ external }
         - [Map settings](https://github.com/AllskyTeam/allsky/wiki/allsky-Settings/_edit#map-settings){ external }
@@ -858,11 +850,10 @@ of the current release.
           particularly on Bullseye where many settings changed.
 
 
-### 0.8 { data-toc-label="0.8" }
 
+0.8 { data-toc-label="0.8" }
 ??? "0.8"
-
-	- Workaround for ZWO daytime auto-exposure bug.
+- Workaround for ZWO daytime auto-exposure bug.
 	- Improved exposure transitions between day and night to avoid large brightness jumps.
 	- Decrease in ZWO sensor temperature.
 	- Many new settings, including splitting some settings into day and night versions.
@@ -878,11 +869,10 @@ of the current release.
 	- Ability to set the bitrate on timelapse videos.
 
 
-## 0.7 { data-toc-label="0.7" }
 
+0.7 { data-toc-label="0.7" }
 ??? "0.7"
-
-	- Added Raspberry Pi HQ camera support based on Rob Musquetier's fork.
+- Added Raspberry Pi HQ camera support based on Rob Musquetier's fork.
 	- Added support for x86 architecture (Ubuntu, etc.).
 	- Temperature-dependent dark frame library.
 	- Added browser-based script editor.
@@ -891,11 +881,10 @@ of the current release.
 	- Changed default font size.
 
 
-## 0.6 { data-toc-label="0.6" }
 
+0.6 { data-toc-label="0.6" }
 ??? "0.6"
-
-	- Added daytime exposure and auto-exposure capability.
+- Added daytime exposure and auto-exposure capability.
 	- Added `-maxexposure`, `-autoexposure`, `-maxgain`, and `-autogain` options.  
       Using auto-exposure and auto-gain together may produce unexpected results (black frames).
 	- Autostart is now based on **systemd** and works on all Raspbian-based systems, including headless setups.
@@ -907,37 +896,32 @@ of the current release.
 	- Changed exposure units to milliseconds instead of microseconds.
 
 
-## 0.5 { data-toc-label="0.5" }
 
+0.5 { data-toc-label="0.5" }
 ??? "0.5"
-
-	- Added **Startrails** (image stacking) with brightness control.
+- Added **Startrails** (image stacking) with brightness control.
 	- Keogram and Startrails generation is now much faster thanks to a rewrite by Jarno Paananen.
 
 
-## 0.4 { data-toc-label="0.4" }
 
+0.4 { data-toc-label="0.4" }
 ??? "0.4"
+- Added **Keograms** (a summary of the night in a single image).
 
-	- Added **Keograms** (a summary of the night in a single image).
 
 
-## 0.3 { data-toc-label="0.3" }
-
+0.3 { data-toc-label="0.3" }
 ??? "0.3"
+- Added dark frame subtraction.
 
-	- Added dark frame subtraction.
 
 
-## 0.2 { data-toc-label="0.2" }
-
+0.2 { data-toc-label="0.2" }
 ??? "0.2"
+- Separated camera settings from code logic.
 
-	- Separated camera settings from code logic.
 
 
-## 0.1 { data-toc-label="0.1" }
-
+0.1 { data-toc-label="0.1" }
 ??? "0.1"
-
-	- Initial release.
+- Initial release.

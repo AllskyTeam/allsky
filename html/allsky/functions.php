@@ -272,7 +272,7 @@ function display_thumbnails($dir, $file_prefix, $title)
 {
 	global $back_button, $webSettings_array, $thumbnailsortorder;
 
-	if ($file_prefix === "allsky") {
+	if ($file_prefix === "allsky" || $file_prefix === "keolapse") {
 		$ext = "/\.(mp4|webm)$/";
 	} else {
 		$ext = "/\.(jpg|jpeg|png)$/";

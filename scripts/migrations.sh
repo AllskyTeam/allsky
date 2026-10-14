@@ -28,7 +28,7 @@
 # so each change is made in one place.  check_migrations() finds missing files,
 # so a version can't be raised without its migration.
 
-export ALLSKY_MIGRATIONS_DIR="${ALLSKY_SCRIPTS}/migrations"
+export ALLSKY_MIGRATIONS_DIR="${ALLSKY_UTILITIES:-${ALLSKY_SCRIPTS}/utilities}/migrations"
 export ALLSKY_MIGRATIONS_STATE_FILE="${ALLSKY_CONFIG}/migrations.json"
 
 # Run the "${1}" migrations on file "${2}", from version ${3} to version ${4}.

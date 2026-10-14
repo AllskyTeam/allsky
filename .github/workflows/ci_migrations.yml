@@ -7,13 +7,13 @@ on:
     paths:
       - 'config_repo/configuration.json.repo'
       - 'scripts/migrations.sh'
-      - 'scripts/migrations/**'
+      - 'scripts/utilities/migrations/**'
       - 'scripts/utilities/checkMigrations.sh'
   pull_request:
     paths:
       - 'config_repo/configuration.json.repo'
       - 'scripts/migrations.sh'
-      - 'scripts/migrations/**'
+      - 'scripts/utilities/migrations/**'
       - 'scripts/utilities/checkMigrations.sh'
 
 jobs:

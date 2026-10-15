@@ -414,8 +414,6 @@ get_connected_cameras()
 	CMD_RET=$?		# return of 2 means no command was found
 	[[ ${CMD_RET} -ne 0 ]] && CMD=""
 
-	setup_rpi_supported_cameras "${CMD}" "false"		# Will create full file is CMD == ""
-
 	# RPi format:	RPi \t camera_number \t camera_sensor [\t optional_other_stuff]
 	# ZWO format:	ZWO \t camera_number \t camera_model
 	# "true" == ignore errors

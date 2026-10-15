@@ -2481,7 +2481,7 @@ function create_links()
 function copy_repo_files()
 {
 	for i in "allskyvariables.json" "backup.json" "onewire.json" "devicemanager.json" \
-		"suggested_modules.json" "monitorable_logs.json" "helpers.json" "helpers.md"
+		"suggested_modules.json" "monitorable_logs.json" "helpers.json" "helpers.md" \
 		"editor_files.json" "editor_files.md" "$( basename "${ALLSKY_RPi_CAMERA_INFO}" )"
 	do
 		cp  "${ALLSKY_REPO}/${i}.repo" "${ALLSKY_CONFIG}/${i}"

@@ -2476,51 +2476,16 @@ function create_links()
 }
 
 
-# Set up the file that contains information on all supported RPi cameras.
-function setup_rpi_supported_cameras()
-{
-	local CMD="${1}"
-	local FORCE="${2}"
-
-	if [[ ! -f ${ALLSKY_RPi_SUPPORTED_CAMERAS} || ${FORCE} == "true" ]]; then
-		local notCMD
-		local B="$( basename "${ALLSKY_RPi_SUPPORTED_CAMERAS}" )"
-
-		# "libcamera" is the only software packages supported as of 2025,
-		# but leave the code to check for any future new software.
-		if [[ -z ${CMD} ]]; then
-			notCMD="xxxxx"		# won't match anything
-			CMD="all"
-		elif [[ ${CMD} == "NEW-TBD-SOFTWARE" ]]; then
-			notCMD="libcamera"
-		else
-			notCMD="NEW-TBD-SOFTWARE"
-		fi
-
-		local MSG="Creating ${ALLSKY_RPi_SUPPORTED_CAMERAS} with '${CMD}' entries."
-		display_msg --logonly info "${MSG}"
-
-		# Remove comment and blank lines and lines for the command we are NOT using.
-		grep -v -E "^\$|^#|^${notCMD}" "${ALLSKY_REPO}/${B}.repo" > "${ALLSKY_RPi_SUPPORTED_CAMERAS}"
-	fi
-}
-
-
 # Copy certain "static" files from ALLSKY_REPO to ALLSKY_CONFIG.
 # The files in ALLSKY_CONFIG won't change so we can safely overwrite them.
 function copy_repo_files()
 {
-	cp  "${ALLSKY_REPO}/allskyvariables.json.repo" "${ALLSKY_CONFIG}/allskyvariables.json"
-	cp  "${ALLSKY_REPO}/backup.json.repo" "${ALLSKY_CONFIG}/backup.json"
-	cp  "${ALLSKY_REPO}/onewire.json.repo" "${ALLSKY_CONFIG}/onewire.json"
-	cp  "${ALLSKY_REPO}/devicemanager.json.repo" "${ALLSKY_CONFIG}/devicemanager.json"
-	cp  "${ALLSKY_REPO}/suggested_modules.json.repo" "${ALLSKY_CONFIG}/suggested_modules.json"
-	cp  "${ALLSKY_REPO}/monitorable_logs.json.repo" "${ALLSKY_CONFIG}/monitorable_logs.json"
-	cp  "${ALLSKY_REPO}/helpers.json.repo" "${ALLSKY_CONFIG}/helpers.json"
-	cp  "${ALLSKY_REPO}/helpers.md.repo" "${ALLSKY_CONFIG}/helpers.md"
-
-	cp "${ALLSKY_REPO}/editor_files.json.repo" "${ALLSKY_CONFIG}/editor_files.json"
-	cp "${ALLSKY_REPO}/editor_files.md.repo" "${ALLSKY_CONFIG}/editor_files.md"
+	for i in "allskyvariables.json" "backup.json" "onewire.json" "devicemanager.json" \
+		"suggested_modules.json" "monitorable_logs.json" "helpers.json" "helpers.md"
+		"editor_files.json" "editor_files.md" "$( basename "${ALLSKY_RPi_CAMERA_INFO}" )"
+	do
+		cp  "${ALLSKY_REPO}/${i}.repo" "${ALLSKY_CONFIG}/${i}"
+	done
 
 	cp -r "${ALLSKY_REPO}/schema" "${ALLSKY_CONFIG}/"
 

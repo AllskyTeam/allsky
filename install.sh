@@ -3934,6 +3934,10 @@ set_what_can_be_skipped "${PRIOR_ALLSKY_VERSION}" "${ALLSKY_VERSION}"
 ##### Stop Allsky
 stop_Allsky
 
+##### Copy some static files to config.
+# This should be done before looking for connected cameras.
+copy_repo_files_to_config
+
 ##### Determine what camera(s) are connected
 get_connected_cameras
 
@@ -4005,9 +4009,6 @@ create_allsky_logs "true"			# "true" == do everything
 install_PHP_modules
 install_Python
 install_overlay
-
-##### Copy some files to config.
-copy_repo_files_to_config
 
 ##### Get Website checksums for optional remote Website.
 # Do this before we change the local Website files.

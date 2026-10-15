@@ -3932,6 +3932,34 @@ def get_api_url():
     return api_url
 
 
+def _raise_for_api_status(response):
+    """Raise HTTP errors with any error details supplied by the Allsky API."""
+    try:
+        response.raise_for_status()
+    except requests.HTTPError as exc:
+        try:
+            data = response.json()
+        except ValueError:
+            data = None
+
+        details = []
+        if isinstance(data, dict):
+            for key in ("error", "message", "reason"):
+                value = data.get(key)
+                if isinstance(value, str) and value.strip():
+                    value = value.strip()
+                    if not any(value in detail for detail in details):
+                        details.append(value)
+
+        if details:
+            raise requests.HTTPError(
+                f"{exc}: {'; '.join(details)}",
+                response=response,
+                request=exc.request,
+            ) from exc
+        raise
+
+
 def get_gpio_pin(gpio_pin, pi=None, show_errors=False):
     """
     Read the logical state of a GPIO pin via the Allsky API (legacy alias).
@@ -3977,14 +4005,14 @@ def read_gpio_pin(gpio_pin, pi=None, show_errors=False):
 
     Raises:
         requests.HTTPError:
-            If the HTTP request fails (via ``raise_for_status``).
+            If the HTTP request fails, including error details from the API.
     """
     api_url = get_api_url()
     response = requests.get(
         f'{api_url}/gpio/digital/{gpio_pin}',
         timeout=2
     )
-    response.raise_for_status()
+    _raise_for_api_status(response)
     data = response.json()
 
     return data.get('value') == 'on'
@@ -4011,7 +4039,7 @@ def set_gpio_pin(gpio_pin, state, name="", pi=None, show_errors=False):
 
     Raises:
         requests.HTTPError:
-            If the HTTP request fails (via ``raise_for_status``).
+            If the HTTP request fails, including error details from the API.
     """
     api_url = get_api_url()
     state = normalise_on_off(state)
@@ -4024,7 +4052,7 @@ def set_gpio_pin(gpio_pin, state, name="", pi=None, show_errors=False):
         },
         timeout=2
     )
-    response.raise_for_status()
+    _raise_for_api_status(response)
     return response.json()
 
 
@@ -4051,7 +4079,7 @@ def set_pwm(gpio_pin, duty_cycle, name="", pi=None, show_errors=False):
 
     Raises:
         requests.HTTPError:
-            If the HTTP request fails (via ``raise_for_status``).
+            If the HTTP request fails, including error details from the API.
     """
     api_url = get_api_url()
     frequency = 1000
@@ -4065,7 +4093,7 @@ def set_pwm(gpio_pin, duty_cycle, name="", pi=None, show_errors=False):
         },
         timeout=2
     )
-    response.raise_for_status()
+    _raise_for_api_status(response)
     return response.json()
 
 
@@ -4085,7 +4113,7 @@ def stop_pwm(gpio_pin):
 
     Raises:
         requests.HTTPError:
-            If the HTTP request fails (via ``raise_for_status``).
+            If the HTTP request fails, including error details from the API.
     """
     api_url = get_api_url()
     frequency = 1000
@@ -4099,7 +4127,7 @@ def stop_pwm(gpio_pin):
         },
         timeout=2
     )
-    response.raise_for_status()
+    _raise_for_api_status(response)
     return response.json()
 
 
@@ -4145,7 +4173,7 @@ def configure_tacho(
 
     Raises:
         requests.HTTPError:
-            If the HTTP request fails (via ``raise_for_status``).
+            If the HTTP request fails, including error details from the API.
     """
     api_url = get_api_url()
     response = requests.put(
@@ -4162,7 +4190,7 @@ def configure_tacho(
         },
         timeout=2
     )
-    response.raise_for_status()
+    _raise_for_api_status(response)
     return response.json()
 
 
@@ -4180,14 +4208,14 @@ def read_tacho(tacho_id):
 
     Raises:
         requests.HTTPError:
-            If the HTTP request fails (via ``raise_for_status``).
+            If the HTTP request fails, including error details from the API.
     """
     api_url = get_api_url()
     response = requests.get(
         f'{api_url}/gpio/tacho/{tacho_id}',
         timeout=2
     )
-    response.raise_for_status()
+    _raise_for_api_status(response)
     return response.json()
 
 
@@ -4238,14 +4266,14 @@ def stop_tacho(tacho_id):
 
     Raises:
         requests.HTTPError:
-            If the HTTP request fails (via ``raise_for_status``).
+            If the HTTP request fails, including error details from the API.
     """
     api_url = get_api_url()
     response = requests.delete(
         f'{api_url}/gpio/tacho/{tacho_id}',
         timeout=2
     )
-    response.raise_for_status()
+    _raise_for_api_status(response)
     return response.json()
 
 

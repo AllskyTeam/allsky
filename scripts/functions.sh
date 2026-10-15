@@ -364,8 +364,9 @@ function get_connected_camera_models()
 
 
 	# Input:
+	#		camera	RPi  camera_number  sensor			<other info not used here>
 	#		camera	ZWO  camera_number  camera_model
-	#		camera	RPi  camera_number  camera_sensor
+	#		1	    2    3              4
 
 	# Output (tab-separated):
 	#	Short:
@@ -374,32 +375,78 @@ function get_connected_camera_models()
 	#		ZWO  camera_number  camera_model
 	#		RPi  camera_number  camera_model  camera_sensor
 	#		1    2              3             4
-	#		1    2              3             4
 
 	# For RPi we have the sensor and need the model.
 	local PATH="${PATH}:${ALLSKY_UTILITIES}"
 	gawk -v TYPE="${TYPE}" -v FULL="${FULL}" --field-separator="\t" '
 		{
-			camera_type = $1;
-			if (camera_type != TYPE && TYPE != "both") next;
+			if ($1 != "camera")
+				next;
 
-			if ($1 == "camera") {
-				if (camera_type == "ZWO") {
-					if (FULL == "true") {
-						print $0;
-					} else {
-						model = $3;
-						print model;
-					}
+			camera_type = $2;
+			if (camera_type != TYPE && TYPE != "both") next;
+			camera_number = $3
+
+			if (camera_type == "ZWO") {
+				if (FULL == "true") {
+					printf("%s\t%d\t%s\t%s\n", camera_type, camera_type, model, sensor);
 				} else {
-					sensor = $3;
-					"getModelFromSensor.sh " sensor | getline model;
-					if (FULL == "true") {
-						printf("%s\t%d\t%s\t%s\n", $1, $2, model, sensor);
-					} else {
-						print model;
-					}
+					model = $4;
+					print model;
 				}
+			} else {
+				sensor = $4;
+				#TESTING: printf("sensor=%s\n", sensor);
+				"getModelFromSensor.sh " sensor | getline model;
+				if (FULL == "true") {
+					printf("%s\t%d\t%s\t%s\n", camera_type, camera_number, model, sensor);
+				} else {
+					print model;
+				}
+			}
+		}' "${ALLSKY_CONNECTED_CAMERAS_INFO}"
+}
+
+
+####
+# Get the RPi camera model given its sensor name.
+function get_model_from_sensor()
+{
+	local SENSOR="${1}"
+	if [[ -z ${SENSOR} ]]; then
+		echo "${ME:-${FUNCNAME[0]}}: ERROR: No sensor specified."
+		return 1
+	fi
+
+	# Input:
+	#		camera  type  camera_number  sensor/module  module_len  camera_model   <other info not used here>
+	#		1       2     3              4              5           6
+	# shellcheck disable=SC2154
+	gawk --field-separator '\t' -v sensor="${SENSOR}" '
+		BEGIN {
+			model = "";
+		}
+		{
+			if ($1 != "camera")
+				next;
+
+			type = $2;		# "RPi" or "ZWO"
+			module = $4;
+			module_len = $5;
+			if ((module_len == 0 && module == sensor) ||
+				(module == substr(sensor, 0, module_len))) {
+
+				model = $6;
+				exit(0);
+			}
+		}
+		END {
+			if (model != "") {
+				print model;
+				exit(0);
+			} else {
+				printf("unknown_sensor_%s\n", sensor);
+				exit(1);
 			}
 		}' "${ALLSKY_CONNECTED_CAMERAS_INFO}"
 }
@@ -1374,47 +1421,6 @@ function get_allsky_status()
 function get_allsky_status_timestamp()
 {
 	settings ".timestamp" "${ALLSKY_STATUS}" 2> /dev/null
-}
-
-
-####
-# Get the RPi camera model given its sensor name.
-function get_model_from_sensor()
-{
-	local SENSOR="${1}"
-	if [[ -z ${SENSOR} ]]; then
-		echo "${ME:-${FUNCNAME[0]}}: ERROR: No sensor specified."
-		return 1
-	fi
-
-	# shellcheck disable=SC2154
-	gawk --field-separator '\t' -v sensor="${SENSOR}" '
-		BEGIN {
-			model = "";
-		}
-		{
-			if ($1 == "camera") {
-				type = $2;		# "RPi" or "ZWO"
-				module = $3;
-				module_len = $4;
-				if ((module_len == 0 && module == sensor) ||
-					(module == substr(sensor, 0, module_len))) {
-
-					model = $5;
-					exit(0);
-				}
-			}
-				
-		}
-		END {
-			if (model != "") {
-				print model;
-				exit(0);
-			} else {
-				printf("unknown_sensor_%s\n", sensor);
-				exit(1);
-			}
-		}' "${ALLSKY_CONNECTED_CAMERAS_INFO}"
 }
 
 

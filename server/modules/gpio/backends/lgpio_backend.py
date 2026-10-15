@@ -129,7 +129,7 @@ class LgpioBackend:
 
         # gpio_get_mode bit 0 means claimed; GPIO_BUSY is an error code (-79).
         if mode & 1:
-            return True, "GPIO line is claimed"
+            return True, "GPIO line is claimed. Check the Allsky documentation FAQ section for help."
 
         try:
             result = subprocess.run(

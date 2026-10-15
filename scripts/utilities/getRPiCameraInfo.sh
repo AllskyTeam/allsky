@@ -85,7 +85,7 @@ CAMERA_RAW_DATA="${ALLSKY_TMP}/camera_data.txt"
 {
 	echo -e "===== ${CMD} --list-cameras --verbose"
 	# "--list-cameras" lists ALL the cameras found, even if we specify "--camera".
-	"${CMD}" ${CAM} --list-cameras --verbose 2>&1
+	"${CMD}" --list-cameras --verbose 2>&1
 } > "${CAMERA_RAW_DATA}"
 
 NUM_CAMERAS="$( grep -c "^[0-9]" "${CAMERA_RAW_DATA}" )"

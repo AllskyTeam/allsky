@@ -294,10 +294,8 @@ function determineCommandToUse()
 # Prepend each "camera" line with the CAMERA_TYPE.
 function get_connected_cameras_info()
 {
-	local RUN_dCTU="true"		# determine Command To Use
-	local RPi_CMD_TO_USE=""
+	local RPi_CMD_TO_USE_=""
 	if [[ ${1} == "--cmd" ]]; then
-		RUN_dCTU="false"
 		RPi_CMD_TO_USE_="${2}"
 		shift 2
 	fi

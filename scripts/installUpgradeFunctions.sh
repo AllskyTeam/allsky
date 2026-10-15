@@ -2480,6 +2480,7 @@ function create_links()
 # The files in ALLSKY_CONFIG won't change so we can safely overwrite them.
 function copy_repo_files()
 {
+	# shellcheck disable=SC2154
 	for i in "allskyvariables.json" "backup.json" "onewire.json" "devicemanager.json" \
 		"suggested_modules.json" "monitorable_logs.json" "helpers.json" "helpers.md" \
 		"editor_files.json" "editor_files.md" "$( basename "${ALLSKY_RPi_CAMERA_INFO}" )"

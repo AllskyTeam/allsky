@@ -1,6 +1,6 @@
 # Sensor module_len name pixel_size max_exposure cooled
 imx477	0	HQ	1.55	0	ASI_FALSE
-imx708	6	Module 3	1.4	0	ASI_FALSE
+imx708	0	Module 3	1.4	0	ASI_FALSE
 imx708_wide	0	Module 3	1.4	0	ASI_FALSE
 imx708_noir	0	Module 3	1.4	0	ASI_FALSE
 imx708_wide_noir	0	Module 3	1.4	0	ASI_FALSE

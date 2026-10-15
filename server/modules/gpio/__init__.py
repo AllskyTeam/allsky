@@ -1,9 +1,10 @@
 from flask import Blueprint, request, jsonify, Response
 from collections import deque
+import logging
 import threading
 import time
 from modules.auth_utils import api_auth_required
-from modules.gpio.backends import GPIOBackendUnavailable, select_gpio_backend
+from modules.gpio.backends import GPIOBackendUnavailable, GPIOPinReserved, select_gpio_backend
 
 # ---------------------------------------------------------------------------
 # Blueprint
@@ -528,6 +529,8 @@ def set_digital() -> Response:
 
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
+    except GPIOPinReserved as e:
+        return jsonify({"error": str(e), "pin": str(e.pin_num), "reason": e.reason}), 409
     except GPIOBackendUnavailable as e:
         return gpio_backend_unavailable_response(e)
     except Exception as e:
@@ -550,9 +553,6 @@ def set_pwm() -> Response:
         duty = int(request.json.get("duty", 0))
         name = str(request.json.get("name", "")).strip()
 
-        if name:
-            pin_names[pin] = name
-
         if frequency <= 0:
             return jsonify({"error": "Frequency must be greater than 0"}), 400
 
@@ -560,11 +560,25 @@ def set_pwm() -> Response:
             return jsonify({"error": "Duty must be between 0 and 65535"}), 400
 
         with gpio_lock:
+            # Check only unowned lines, before releasing any server resources.
+            if (
+                duty != 0
+                and pin not in digital_pins
+                and pin not in pwm_pins
+                and _tacho_monitor_for_pin(pin) is None
+            ):
+                reserved, reason = get_gpio_backend().gpio_is_reserved(pin_num)
+                if reserved:
+                    raise GPIOPinReserved(pin_num, reason)
+
             _release_tacho_pin(pin)
 
             if duty == 0:
                 if pin in pwm_pins:
                     _release_pwm_pin(pin)
+
+                if name:
+                    pin_names[pin] = name
 
                 return jsonify({
                     "pin": pin,
@@ -575,11 +589,23 @@ def set_pwm() -> Response:
 
             _release_digital_pin(pin)
 
-            if pin not in pwm_pins:
+            newly_claimed = pin not in pwm_pins
+            if newly_claimed:
                 _claim_output(pin_num, 0)
 
-            _set_pwm_value(pin_num, frequency, duty)
+            try:
+                _set_pwm_value(pin_num, frequency, duty)
+            except Exception:
+                if newly_claimed:
+                    try:
+                        get_gpio_backend().free(pin_num)
+                    except Exception:
+                        logging.exception("Failed to release GPIO %s after PWM setup failed", pin)
+                raise
+
             pwm_pins[pin] = {"frequency": frequency, "duty": duty}
+            if name:
+                pin_names[pin] = name
 
         return jsonify({
             "pin": pin,
@@ -590,6 +616,8 @@ def set_pwm() -> Response:
 
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
+    except GPIOPinReserved as e:
+        return jsonify({"error": str(e), "pin": str(e.pin_num), "reason": e.reason}), 409
     except GPIOBackendUnavailable as e:
         return gpio_backend_unavailable_response(e)
     except Exception as e:

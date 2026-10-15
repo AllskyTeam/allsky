@@ -1,4 +1,9 @@
-import logging 
+import logging
+import re
+import subprocess
+
+from .base import GPIOBackendUnavailable, GPIOPinReserved
+
 
 class LgpioBackend:
     name = "lgpio"
@@ -107,6 +112,57 @@ class LgpioBackend:
 
         return int(self.chip_info[1])
 
+    def gpio_is_reserved(self, pin_num):
+        """Check kernel ownership and pin muxing without claiming the line."""
+        try:
+            mode = self.lgpio.gpio_get_mode(self._handle(), pin_num)
+        except self.lgpio.error as exc:
+            raise GPIOBackendUnavailable(
+                f"Unable to determine GPIO {pin_num} ownership: {exc}"
+            ) from exc
+
+        if mode < 0:
+            raise GPIOBackendUnavailable(
+                f"Unable to determine GPIO {pin_num} ownership: "
+                f"{self.lgpio.error_text(mode)}"
+            )
+
+        # gpio_get_mode bit 0 means claimed; GPIO_BUSY is an error code (-79).
+        if mode & 1:
+            return True, "GPIO line is claimed"
+
+        try:
+            result = subprocess.run(
+                ["pinctrl", "get", str(pin_num)],
+                capture_output=True,
+                text=True,
+                check=True,
+                timeout=2,
+            )
+        except subprocess.CalledProcessError as exc:
+            raise GPIOBackendUnavailable(
+                f"Unable to determine GPIO {pin_num} function: "
+                f"{(exc.stderr or '').strip() or str(exc)}"
+            ) from exc
+        except (OSError, subprocess.TimeoutExpired) as exc:
+            raise GPIOBackendUnavailable(
+                f"Unable to determine GPIO {pin_num} function: {exc}"
+            ) from exc
+
+        match = re.search(rf"^\s*{pin_num}:\s+(\S+)", result.stdout, re.MULTILINE)
+        if not match:
+            raise GPIOBackendUnavailable(f"Unable to determine GPIO {pin_num} function")
+
+        function = match.group(1)
+        if re.fullmatch(r"a\d+", function):
+            return True, f"GPIO configured for alternate function ({function})"
+        if function not in ("ip", "op", "no"):
+            raise GPIOBackendUnavailable(
+                f"Unrecognised GPIO {pin_num} function ({function})"
+            )
+
+        return False, "GPIO available"
+
     def free(self, pin_num):
         self.lgpio.gpio_free(self._handle(), pin_num)
 
@@ -151,7 +207,16 @@ class LgpioBackend:
         callback_ref.cancel()
 
     def claim_output(self, pin_num, level=0):
-        self.lgpio.gpio_claim_output(self._handle(), pin_num, level=level)
+        try:
+            status = self.lgpio.gpio_claim_output(self._handle(), pin_num, level=level)
+        except self.lgpio.error as exc:
+            # Another process may claim the line after the reservation check.
+            if exc.value == self.lgpio.error_text(self.lgpio.GPIO_BUSY):
+                raise GPIOPinReserved(pin_num, "GPIO line is claimed") from exc
+            raise
+
+        if status == self.lgpio.GPIO_BUSY:
+            raise GPIOPinReserved(pin_num, "GPIO line is claimed")
 
     def read(self, pin_num):
         return bool(self.lgpio.gpio_read(self._handle(), pin_num))

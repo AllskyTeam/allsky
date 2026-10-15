@@ -1,4 +1,4 @@
-from .base import GPIOBackendUnavailable
+from .base import GPIOBackendUnavailable, GPIOPinReserved
 from .lgpio_backend import LgpioBackend
 from .rpi_gpio_backend import RPiGPIOBackend
 

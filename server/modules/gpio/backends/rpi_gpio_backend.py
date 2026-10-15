@@ -13,6 +13,13 @@ class RPiGPIOBackend:
     def get_gpio_count(self):
         return self.gpio_count
 
+    def gpio_is_reserved(self, pin_num):
+        function = self.GPIO.gpio_function(pin_num)
+        if function not in (self.GPIO.IN, self.GPIO.OUT):
+            return True, "GPIO configured for alternate function"
+
+        return False, "GPIO available"
+
     def free(self, pin_num):
         pwm = self.pwm_objects.pop(pin_num, None)
 

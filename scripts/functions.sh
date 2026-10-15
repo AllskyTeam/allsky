@@ -290,38 +290,29 @@ function determineCommandToUse()
 }
 
 #####
-# Get information on the connected camera(s), one line per camera.
-# Prepend each line with the CAMERA_TYPE.
+# Get information on the connected camera(s), one "camera" line per camera plus multiple "libcamera" lines.
+# Prepend each "camera" line with the CAMERA_TYPE.
 function get_connected_cameras_info()
 {
 	local RUN_dCTU="true"		# determine Command To Use
+	local RPi_CMD_TO_USE=""
 	if [[ ${1} == "--cmd" ]]; then
 		RUN_dCTU="false"
-		CMD_TO_USE_="${2}"
+		RPi_CMD_TO_USE_="${2}"
 		shift 2
 	fi
 	local IGNORE_ERRORS="${1:-false}"
 
 	####### Check for RPi
 	# Tab-separated output will be:
-	#		RPi  camera_number   camera_sensor
-	# for each camera found.
-	# camera_sensor will be one word.
-	# Only run determineCommandToUse() if it wasn't already run.
+	#		camera	RPi  camera_number   camera_sensor
+	# for each camera found, followed by lines for each camera capability.
+	"${ALLSKY_UTILITIES}/getRPiCameraInfo.sh" --info-only --cmd "${RPi_CMD_TO_USE_}"
 
-	if [[ -z ${CMD_TO_USE_} && ${RUN_dCTU} == "true" ]]; then
-		determineCommandToUse "false" "" "${IGNORE_ERRORS}" > /dev/null
-	fi
-	if [[ -n ${CMD_TO_USE_} ]]; then
-		# Input:
-		#	camera_number  : sensor  [other stuff]
-		"${CMD_TO_USE_}" --list-cameras 2>&1 |
-			gawk '/^[0-9]/ { printf("%s\t%d\t%s\n", "RPi", $1, $3); }'
-	fi
 
 	####### Check for ZWO
 	# Keep output similar to RPi:
-	#		ZWO  camera_number camera_model
+	#		camera	ZWO  camera_number camera_model
 	# for each camera found.
 	# lsusb output:
 	#	Bus 002 Device 002: ID 03c3:290b ZWO ASI290MM	(newer OS)
@@ -350,7 +341,7 @@ function get_connected_cameras_info()
 							break;
 						model = model " " $i;
 					}
-					printf("ZWO\t%d\t%s\n", num++, model);
+					printf("camera\tZWO\t%d\t%s\n", num++, model);
 					model = "<found>";		# This camera was output
 				}
 			}
@@ -373,8 +364,8 @@ function get_connected_camera_models()
 
 
 	# Input:
-	#		ZWO  camera_number  camera_model
-	#		RPi  camera_number  camera_sensor
+	#		camera	ZWO  camera_number  camera_model
+	#		camera	RPi  camera_number  camera_sensor
 
 	# Output (tab-separated):
 	#	Short:
@@ -392,20 +383,22 @@ function get_connected_camera_models()
 			camera_type = $1;
 			if (camera_type != TYPE && TYPE != "both") next;
 
-			if (camera_type == "ZWO") {
-				if (FULL == "true") {
-					print $0;
+			if ($1 == "camera") {
+				if (camera_type == "ZWO") {
+					if (FULL == "true") {
+						print $0;
+					} else {
+						model = $3;
+						print model;
+					}
 				} else {
-					model = $3;
-					print model;
-				}
-			} else {
-				sensor = $3;
-				"getModelFromSensor.sh " sensor | getline model;
-				if (FULL == "true") {
-					printf("%s\t%d\t%s\t%s\n", $1, $2, model, sensor);
-				} else {
-					print model;
+					sensor = $3;
+					"getModelFromSensor.sh " sensor | getline model;
+					if (FULL == "true") {
+						printf("%s\t%d\t%s\t%s\n", $1, $2, model, sensor);
+					} else {
+						print model;
+					}
 				}
 			}
 		}' "${ALLSKY_CONNECTED_CAMERAS_INFO}"
@@ -1401,12 +1394,13 @@ function get_model_from_sensor()
 		}
 		{
 			if ($1 == "camera") {
-				module = $2;
-				module_len = $3;
+				type = $2;		# "RPi" or "ZWO"
+				module = $3;
+				module_len = $4;
 				if ((module_len == 0 && module == sensor) ||
 					(module == substr(sensor, 0, module_len))) {
 
-					model = $4;
+					model = $5;
 					exit(0);
 				}
 			}
@@ -1420,7 +1414,7 @@ function get_model_from_sensor()
 				printf("unknown_sensor_%s\n", sensor);
 				exit(1);
 			}
-		} ' "${ALLSKY_RPi_SUPPORTED_CAMERAS}"
+		}' "${ALLSKY_CONNECTED_CAMERAS_INFO}"
 }
 
 

@@ -66,10 +66,31 @@ try:
     import numpy as np
     from scipy.optimize import least_squares
     from scipy.spatial import cKDTree
-except ImportError as _ex:                       # reported after --help has had its chance
-    _MISSING = str(_ex)
+except Exception as _ex:                        # reported after --help has had its chance
+    _MISSING = str(_ex) or type(_ex).__name__
 else:
     _MISSING = None
+
+
+def _missing_help():
+    """What to do when numpy, OpenCV or SciPy won't load.  The usual cause is a numpy
+    installed over another version without removing it first (pip's --ignore-installed),
+    which leaves files from both: "numpy._core.multiarray failed to import" or
+    "module 'numpy._globals' has no attribute ...".  Only a clean reinstall cures that."""
+    import importlib.util
+    spec = importlib.util.find_spec("numpy") if "numpy" in _MISSING else None
+    site = os.path.dirname(spec.origin) if spec and spec.origin else ""
+    site = os.path.realpath(os.path.dirname(site))
+    if not site.startswith(os.path.realpath(_VENV) + os.sep):
+        return f"{_MISSING}. Run this with Allsky's Python ({_VENV}/bin/python3)."
+    pip = os.path.join(_VENV, "bin", "pip")
+    return (f"{_MISSING}.\n"
+            "Allsky's numpy is damaged, most likely files of two numpy versions are mixed. "
+            "Reinstall it with these commands:\n"
+            f"  {pip} uninstall -y numpy\n"
+            f"  rm -rf {site}/numpy {site}/numpy-*.dist-info {site}/numpy.libs\n"
+            f"  {pip} install --ignore-installed numpy")
+
 
 ME = os.path.basename(sys.argv[0])
 CATALOGUE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "constellation_overlay_stars.json")
@@ -130,8 +151,9 @@ class Out:
 
     def error(self, text):
         if self.html:
-            print(f"<div class='helper-summary alert alert-danger'>{html.escape(text)}</div>")
-            print(f"<p class='errorMsg'>{html.escape(text)}</p>")
+            text = html.escape(text).replace("\n", "<br>")
+            print(f"<div class='helper-summary alert alert-danger'>{text}</div>")
+            print(f"<p class='errorMsg'>{text}</p>")
         else:
             print(f"ERROR: {text}", file=sys.stderr)
 
@@ -1034,7 +1056,7 @@ def main():
     out = Out(args.html)
     try:
         if _MISSING:
-            raise Failure(f"{_MISSING}. Run this with Allsky's Python ({_VENV}/bin/python3).")
+            raise Failure(_missing_help())
         run(args, out)
     except Failure as ex:
         out.error(str(ex))

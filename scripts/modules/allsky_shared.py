@@ -3933,7 +3933,7 @@ def get_api_url():
 
 
 def _raise_for_api_status(response):
-    """Raise HTTP errors with any error details supplied by the Allsky API."""
+    """Prefer API error details, falling back to the original HTTP error."""
     try:
         response.raise_for_status()
     except requests.HTTPError as exc:
@@ -3953,10 +3953,10 @@ def _raise_for_api_status(response):
 
         if details:
             raise requests.HTTPError(
-                f"{exc}: {'; '.join(details)}",
+                '; '.join(details),
                 response=response,
                 request=exc.request,
-            ) from exc
+            ) from None
         raise
 
 

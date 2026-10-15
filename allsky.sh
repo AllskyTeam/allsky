@@ -312,7 +312,7 @@ fi
 
 # "true" means ignore errors
 get_connected_cameras_info "true" > "${ALLSKY_CONNECTED_CAMERAS_INFO}"
-if grep --silent "^${CAMERA_TYPE}" "${ALLSKY_CONNECTED_CAMERAS_INFO}" ; then
+if grep --silent "^camera${TAB}${CAMERA_TYPE}" "${ALLSKY_CONNECTED_CAMERAS_INFO}" ; then
 	CAMERA_TYPE_FOUND="true"
 else
 	CAMERA_TYPE_FOUND="false"

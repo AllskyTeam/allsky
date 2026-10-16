@@ -159,8 +159,6 @@ struct config {			// for configuration variables
 	char const *configFile				= "";
 	// File with list of connected cameras
 	char const *connectedCamerasFile	= "XX_CONNECTED_CAMERAS_FILE_XX";
-	// File with info on all supported RPI cameras.
-	char const *RPI_cameraInfoFile		= "XX_RPI_CAMERA_INFO_FILE_XX";
 
 	bool isColorCamera					= false;		// Is the camera color or mono?
 	bool isCooledCamera					= false;		// Does the camera have a cooler?

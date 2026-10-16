@@ -30,10 +30,10 @@ struct CONNECTED_CAMERAS
 	char *Module;						// sensor type
 	size_t Module_len;					// strncmp length.  0 for whole Module name
 };
-CONNECTED_CAMERAS connectedCameras[100];
+CONNECTED_CAMERAS connectedCameras[10];		// We should never get to 10 connected cameras.
 int totalNum_connectedCameras = 0;			// num connected cameras of all types
 
-char *connectedCameraTypes[100] = {};		// points to connectedCameras.Type
+char *connectedCameraTypes[10] = {};		// points to connectedCameras.Type
 int num_connectedCameraTypes = 0;
 
 // Find the end of the token that begins at "start".
@@ -91,14 +91,15 @@ char *getToken(char *start, char delimeter)
 // Return the number of cameras PHYSICALLY connected of the correct type.
 // allsky.sh created the file; we just need to count the number of lines in it.
 // Also, save information on ALL connected cameras.
-int getNumOfConnectedCameras()
+int getConnectedCameras()
 {
+	Log(5, "========== Reading %s\n", CG.connectedCamerasFile);
 	// Read the whole file into memory so we can easily parse it.
 	static char *buf = readFileIntoBuffer(&CG, CG.connectedCamerasFile);
 	if (buf == NULL)
 	{
-		Log(0, "%s: ERROR: Unable to read from CG.RPI_cameraInfoFile '%s': %s\n",
-			CG.ME, CG.RPI_cameraInfoFile, strerror(errno));
+		Log(0, "%s: ERROR: Unable to read from CG.connectedCamerasFile '%s': %s\n",
+			CG.ME, CG.connectedCamerasFile, strerror(errno));
 		closeUp(EXIT_ERROR_STOP);
 	}
 
@@ -111,7 +112,7 @@ int getNumOfConnectedCameras()
 	// Sample lines:
 	// 		RPi          0               imx477                [4056x3040]
 	// 		ZWO          1               ASI120MC Mini
-	// ZWO Model names may have multiple words.
+	// Model names may have multiple words.
 
 	int on_line=0;
 	(void) getLine(NULL);		// resets the buffer pointer
@@ -603,7 +604,7 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 
 
 
-/* Sample "libcamera-still --list-cameras" ouput:
+/* Sample "rpicam-still --list-cameras" ouput:
 	1 : imx477 [4056x3040] (/base/soc/i2c0mux/i2c@1/pca@70/i2c@1/imx477@1a)
     	Modes:	'SRGGB10_CSI2P' : 1332x990
  	          	'SRGGB12_CSI2P' : 2028x1080 2028x1520 4056x3040
@@ -614,6 +615,39 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 		(bit-depth and packing are optional)
 	Some cameras also have additional resolutions for a given mode.
 */
+
+// Helper functions to convert strings to ZWO values.
+ASI_BOOL do_ASI_BOOL(char *s, int line)
+{
+	if (strcmp(s, "ASI_TRUE")) return ASI_TRUE;
+	if (strcmp(s, "ASI_FALSE")) return ASI_FALSE;
+
+	Log(0, "Got bad ASI_BOOL value on line %d: %s\n", line, s);
+	return ASI_FALSE;
+}
+ASI_BAYER_PATTERN do_ASI_BAYER_PATTERN(char *s, int line)
+{
+	if (strcmp(s, "BAYER_RG") == 0) return BAYER_RG;
+	if (strcmp(s, "BAYER_BG") == 0) return BAYER_BG;
+	if (strcmp(s, "BAYER_GR") == 0) return BAYER_GR;
+	if (strcmp(s, "BAYER_GB") == 0) return BAYER_GB;
+
+	Log(0, "Got bad ASI_BAYER_PATTERN value on line %d: %s\n", line, s);
+	return BAYER_RG;	// this is the most common one so make it the default
+}
+ASI_IMG_TYPE do_ASI_IMAGE_TYPE(char *s, int line)
+{
+	if(strcmp(s, "ASI_IMG_RAW8") == 0) return ASI_IMG_RAW8;
+	if(strcmp(s, "ASI_IMG_RGB24") == 0) return ASI_IMG_RGB24;
+	if(strcmp(s, "ASI_IMG_RAW16") == 0) return ASI_IMG_RAW16;
+	if(strcmp(s, "ASI_IMG_Y8") == 0) return ASI_IMG_Y8;
+	if(strcmp(s, "ASI_IMG_END") == 0) return ASI_IMG_END;
+
+	Log(0, "Got bad ASI_IMG_TYPE value on line %d: %s\n", line, s);
+	return ASI_IMG_RGB24;	// this is the most common one so make it the default
+
+}
+
 
 // Get the cameraNumber for the camera we're using.
 // Also save the info on each connected camera of the current type.
@@ -628,7 +662,7 @@ int getCameraNumber()
 		LT_camera, LT_libcamera
 	} lineType;
 
-if (0) {
+if (1) {
 	ASI_CAMERA_INFO *aci = NULL;
 	size_t size = sizeof(ASI_CAMERA_INFO) * CG.numCameras;
 	if ((aci = (ASI_CAMERA_INFO *) realloc(aci, size)) == NULL)
@@ -642,12 +676,13 @@ if (0) {
 	const int maxArgs = cameraTokens;
 	char *args[maxArgs] = {};		// maximum number of arguments
 
+	Log(5, "========== Reading %s\n", CG.connectedCamerasFile);
 	// Read the whole configuration file into memory so we can create argv with pointers.
-	static char *buf = readFileIntoBuffer(&CG, CG.RPI_cameraInfoFile);
+	static char *buf = readFileIntoBuffer(&CG, CG.connectedCamerasFile);
 	if (buf == NULL)
 	{
-		Log(0, "%s: ERROR: Unable to read from CG.RPI_cameraInfoFile '%s': %s\n",
-			CG.ME, CG.RPI_cameraInfoFile, strerror(errno));
+		Log(0, "%s: ERROR: Unable to read from CG.connectedCamerasFile '%s': %s\n",
+			CG.ME, CG.connectedCamerasFile, strerror(errno));
 		closeUp(EXIT_ERROR_STOP);
 	}
 
@@ -658,13 +693,17 @@ if (0) {
 	int on_line = 0;
 	char *token;
 	int max_tokens = 0;
+	bool want_cc = false;
 
 	(void) getLine(NULL);		// resets the buffer pointer
 	while ((line = getLine(buf)) != NULL)
 	{
 		strcpy(full_line, line);		// use full_line in error messages
 		on_line++;
-		Log(5, "Line %3d: %s\n", on_line, full_line);
+		Log(5, "Line %3d: %s\n", on_line, line);
+		if (*line == '#' || *line == '\0') {
+			continue;
+		}
 
 		(void) getToken(NULL, '\t');		// tells getToken() we have a new line.
 
@@ -673,24 +712,37 @@ if (0) {
 		if (lt == NULL)
 		{
 			Log(0, "%s: ERROR: Line %d: no line type found in %s [%s]\n",
-				CG.ME, on_line, CG.RPI_cameraInfoFile, full_line);
+				CG.ME, on_line, CG.connectedCamerasFile, full_line);
 			continue;
 		}
 
 		if (strcmp(lt, "camera") == 0)
 		{
+			// Make sure it's for the type we're looking for.
+			char *t = getToken(line, '\t');
+			if (strcmp(t, CAMERA_TYPE) != 0) {
+				Log(5, "    Found undesired camera type: %s; skipping.\n", t);
+				want_cc = false;
+				continue;
+			}
+
+			want_cc = true;
 			lineType = LT_camera;
 			max_tokens = cameraTokens;
 		}
 		else if (strcmp(lt, "libcamera") == 0)
 		{
-			lineType = LT_libcamera;
-			max_tokens = controlCapsTokens;
+			if (want_cc) {
+				lineType = LT_libcamera;
+				max_tokens = controlCapsTokens;
+			} else {
+				continue;
+			}
 		}
 		else
 		{
 			Log(0, "%s: ERROR: Line %d: unknown line '%s' type in %s [%s]\n",
-				CG.ME, on_line, lt, CG.RPI_cameraInfoFile, full_line);
+				CG.ME, on_line, lt, CG.connectedCamerasFile, full_line);
 			continue;
 		}
 
@@ -772,7 +824,7 @@ if (0) {
 				if (lineType == LT_camera && numTokens == 1)
 				{
 					numTokens++;
-					Log(5, ">> SETTING args[%d] to %s\n", numTokens-1, cameraLength);
+					Log(5, "SETTING args[%d] to %s\n", numTokens-1, cameraLength);
 					args[numTokens-1] = cameraLength;
 				}
 			}
@@ -789,10 +841,38 @@ if (0) {
 			}
 			else if (numTokens == cameraTokens)
 			{
-				// camera entry
+				// "camera" entry
+				/* 0 == module (sensor)
+				 * 1 == module name length
+				 * 2 == model name
+				 * 3 == cameraID
+				 * 4 == sensor height
+				 * 5 == sensor width
+				 * 6 == color camera?
+				 * 7 == bayer pattern
+				 * 8 == supported bins
+				 * 9 == supported video format
+				 * 10 == pixel size
+				 * 11 == cooled camera?
+				 * 12 == bit depth
+				 * 13 == returns sensor temperature?
+				 * 14 == support auto focus?
+				 */
 				strncpy(aci[num_RPiCameras - 1].Module, args[0], MODULE_SIZE-1);
 				aci[num_RPiCameras - 1].Module_len = atol(args[1]);
-// TODO: add rest of args.
+				strncpy(aci[num_RPiCameras - 1].Name, args[2], CAMERA_NAME_SIZE-1);
+				aci[num_RPiCameras - 1].CameraID = atoi(args[3]);
+				aci[num_RPiCameras - 1].MaxHeight = atol(args[4]);
+				aci[num_RPiCameras - 1].MaxWidth = atol(args[5]);
+				aci[num_RPiCameras - 1].IsColorCam = do_ASI_BOOL(args[6], on_line);
+				aci[num_RPiCameras - 1].BayerPattern = do_ASI_BAYER_PATTERN(args[7], on_line);
+//x is array				aci[num_RPiCameras - 1].SupportedBins args[8]
+//x is array				aci[num_RPiCameras - 1].SupportedVideoFormat args[9]
+				aci[num_RPiCameras - 1].PixelSize = atof(args[10]);
+				aci[num_RPiCameras - 1].IsColorCam = do_ASI_BOOL(args[11], on_line);
+				aci[num_RPiCameras - 1].BitDepth = atoi(args[12]);
+				aci[num_RPiCameras - 1].SupportsTemperature = do_ASI_BOOL(args[13], on_line);
+				aci[num_RPiCameras - 1].SupportsAutoFocus = do_ASI_BOOL(args[14], on_line);
 
 				inCamera = true;
 			}
@@ -805,7 +885,7 @@ if (0) {
 			else
 			{
 				Log(-1, "%s: Ignoring line %d in %s: too many %s tokens (%d) [%s]\n",
-					CG.ME, on_line, CG.RPI_cameraInfoFile,
+					CG.ME, on_line, CG.connectedCamerasFile,
 					(lineType == LT_camera) ? "camera" : "control caps",
 					numTokens, full_line);
 			}
@@ -837,7 +917,7 @@ if (numTokens > 1) Log(5, ", inCamera=%s, inControlCaps=%s, inLibcamera=%s\n", y
 
 		// Found a camera of the right type.
 
-// XXX TODO: use RPI_cameraInfoFile instead
+// XXX TODO: useconnectedCamerasFile  instead
 		// Check all known cameras to make sure it's one we know about.
 		for (int i=0; i < ASICameraInfoArraySize; i++)
 		{
@@ -1163,8 +1243,8 @@ char *getRetCode(ASI_ERROR_CODE code)
 void processConnectedCameras()
 {
 	// This also sets global totalNum_connectedCameras.
-	CG.numCameras = getNumOfConnectedCameras();
-	if (CG.numCameras <= 0)
+	CG.numCameras = getConnectedCameras();
+	if (CG.numCameras == 0)
 	{
 		Log(0, "*** %s: ERROR: No Connected Camera...\n", CG.ME);
 		closeUp(EXIT_NO_CAMERA);		// If there are no cameras we can't do anything.

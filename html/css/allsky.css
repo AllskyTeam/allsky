@@ -2341,11 +2341,6 @@ div.dt-container div.dt-scroll-body {
     align-items: center;
 }
 
-.navbar-header,
-.navbar-brand {
-    height: 100%;
-}
-
 .header .navbar-brand.valign-center {
     width: 100%;
     display: flex;

@@ -303,15 +303,16 @@ function get_connected_cameras_info()
 
 	####### Check for RPi
 	# Tab-separated output will be:
-	#		camera	RPi  camera_number   camera_sensor
+	#		camera	RPi  camera_number   camera_sensor  module_len   model
 	# for each camera found, followed by lines for each camera capability.
 	"${ALLSKY_UTILITIES}/getRPiCameraInfo.sh" --info-only --cmd "${RPi_CMD_TO_USE_}"
 
 
 	####### Check for ZWO
 	# Keep output similar to RPi:
-	#		camera	ZWO  camera_number camera_model
+	#		camera	ZWO  camera_number camera_model  0  camera_model
 	# for each camera found.
+	# Output the module_len (0) and last camera_model to make subsequent processing easier.
 	# lsusb output:
 	#	Bus 002 Device 002: ID 03c3:290b ZWO ASI290MM	(newer OS)
 	#	1   2   3       4   5  6         7   8
@@ -339,7 +340,8 @@ function get_connected_cameras_info()
 							break;
 						model = model " " $i;
 					}
-					printf("camera\tZWO\t%d\t%s\n", num++, model);
+					printf("camera\tZWO");
+					printf("\t%d\t%s\t%d\t%s\n", num++, model, 0, model);
 					model = "<found>";		# This camera was output
 				}
 			}

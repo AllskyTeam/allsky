@@ -56,6 +56,8 @@ export LIGHTTPD_ALLSKY_STRING="# Allsky changes"	# String that's added to the co
 
 export FINAL_SUDOERS_FILE="/etc/sudoers.d/allsky"
 
+export TAB="$( echo -e '\t' )"
+
 ######################################### functions
 
 #####
@@ -2084,9 +2086,6 @@ function add_new_settings()
 
 	display_msg --logonly info "Checking for new settings in options file."
 
-	if [[ -z ${TAB} ]]; then
-		local TAB="$( echo -e '\t' )"
-	fi
 	local NEW="$( "${ALLSKY_SCRIPTS}/convertJSON.php" \
 		--options-only \
 		--settings-file "${SETTINGS}" \

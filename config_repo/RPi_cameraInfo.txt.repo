@@ -1,9 +1,9 @@
 # Sensor module_len name pixel_size max_exposure cooled
 imx477	0	HQ	1.55	0	ASI_FALSE
 imx708	0	Module 3	1.4	0	ASI_FALSE
-imx708_wide	0	Module 3 Wide	1.4	0	ASI_FALSE
-imx708_noir	0	Module 3 NoIR	1.4	0	ASI_FALSE
-imx708_wide_noir	0	Module 3 Wide NoIR	1.4	0	ASI_FALSE
+imx708_wide	0	Module 3	1.4	0	ASI_FALSE
+imx708_noir	0	Module 3	1.4	0	ASI_FALSE
+imx708_wide_noir	0	Module 3	1.4	0	ASI_FALSE
 ov5647	0	Version 1	1.4	0	ASI_FALSE
 imx290	0	imx290 60.00 fps	2.9	0	ASI_FALSE
 imx519	0	Arducam 16 MP	0	1.22	0	ASI_FALSE

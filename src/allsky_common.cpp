@@ -905,7 +905,7 @@ char *LorF(double num, char const *L, char const *F)
 	static char n[NUM_BUFS][20];
 	static int on = 0;
 	int o = on;
-	if (num == (int)num) {
+	if (num == (int)num) {		// TODO FIX: floating point numbers ending in ".0" will match this, e.g., "16.0"
 		snprintf(n[on], sizeof(n[0]), L, (long)num);
 	} else {
 		snprintf(n[on], sizeof(n[0]), F, num);

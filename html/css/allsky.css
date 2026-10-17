@@ -4210,6 +4210,25 @@ div.dtsp-searchPane div.dtsp-topRow {
   margin-right: 10px;
 }
 
+@media (pointer: coarse) {
+  .allskymodule .module-add-button,
+  .allskymodule .module-remove-button,
+  .allskymodule .module-settings-button {
+    align-items: center;
+    display: inline-flex;
+    justify-content: center;
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .allskymodule .module-enable .el-switch {
+    align-items: center;
+    display: inline-flex;
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
 @media (min-width: 1280px) {
   .list-group-item {
     padding: 10px !important;

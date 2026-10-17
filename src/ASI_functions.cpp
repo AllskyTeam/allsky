@@ -105,6 +105,28 @@ int getTokenCount(char *line, char delimeter)
 	return(++num);		// ++ for the last token
 }
 
+// For debugging - display contents of arrays.
+void showConnectedCameras()
+{
+	for (int i=0; i<totalNum_connectedCameras; i++)
+	{
+		if (i>0) printf("\n");
+
+		CONNECTED_CAMERAS *cC = &connectedCameras[i];
+		printf("Attached camera %d of %d", i+1, totalNum_connectedCameras);
+		if (i == CG.cameraNumber) printf(" (selected)");
+		printf(":\n");
+		printf("     Type = %s\n", cC->Type);
+		printf("     cameraID = %d\n", cC->cameraID);
+		printf("     Sensor = %s\n", cC->Sensor);
+#ifdef IS_RPi
+		printf("     Module_len = %ld\n", cC->Module_len);
+#endif
+		printf("     Name = %s\n", cC->Name);
+	}
+	
+}
+
 
 //-----------------------------------------------------------------------------------------
 // Info and routines for RPi only
@@ -304,28 +326,6 @@ ASI_CONTROL_TYPE do_ASI_CONTROL_TYPE(char *s, int line)
 	if (strcmp(s, "SHARPNESS") == 0) return SHARPNESS;
 
 	return(CONTROL_TYPE_END);
-}
-
-// For debugging - display contents of arrays.
-void showConnectedCameras()
-{
-	for (int i=0; i<totalNum_connectedCameras; i++)
-	{
-		if (i>0) printf("\n");
-
-		CONNECTED_CAMERAS *cC = &connectedCameras[i];
-		printf("Attached camera %d of %d", i+1, totalNum_connectedCameras);
-		if (i == CG.cameraNumber) printf(" (selected)");
-		printf(":\n");
-		printf("     Type = %s\n", cC->Type);
-		printf("     cameraID = %d\n", cC->cameraID);
-		printf("     Sensor = %s\n", cC->Sensor);
-#ifdef IS_RPi
-		printf("     Module_len = %ld\n", cC->Module_len);
-#endif
-		printf("     Name = %s\n", cC->Name);
-	}
-	
 }
 
 // Read information on all PHYSICALLY connected cameras of the correct type.

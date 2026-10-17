@@ -954,10 +954,10 @@ function get_ram_tmp_swap()
 
 	declare -A TMP_SIZES=()
 	TMP_SIZES["512"]=75
-	TMP_SIZES["1024"]=150
-	TMP_SIZES["2048"]=200
-	TMP_SIZES["4096"]=300
-	local TMP_MAX=400
+	TMP_SIZES["1024"]=200
+	TMP_SIZES["2048"]=250
+	TMP_SIZES["4096"]=400
+	local TMP_MAX=600
 	TMP_SIZES["8192"]=${TMP_MAX}
 
 	SUGGESTED_SWAP_SIZE=0
@@ -1599,8 +1599,7 @@ function recheck_tmp()
 function check_tmp()
 {
 	local CALLED_FROM="${1}"
-# TODO: default to "false" so we don't prompt during installation
-	local PROMPT="${2:-true}"
+	local PROMPT="${2:-true}"		# the installer passes "false"
 
 	# global: TITLE  WT_WIDTH
 	local CURRENT_STRING  STRING  MSG  D  SIZE  NEW_SIZE  ERR_MSG
@@ -1618,9 +1617,28 @@ function check_tmp()
 		if [[ ${CALLED_FROM} == "install" ]]; then
 			# During installation, don't give the user the option of changing.
 			# They can do it afterwards via "allsky-config".
-# TODO: set to new, larger size if not already there.
-			MSG="${ALLSKY_TMP} is currently a memory filesystem; no change needed."
-			display_msg --logonly info "${MSG}"
+			# A size below the recommended one (e.g., from an older release's smaller
+			# defaults) is increased, since modules like keolapse need the space.
+			local RESIZED="false"
+			get_ram_tmp_swap		# Sets ${SUGGESTED_TMP_SIZE}
+			SIZE="$( echo "${CURRENT_STRING}" | sed -e "s;^.* size=;;" -e "s;M.*;;" )"
+			if [[ ${SIZE} =~ ^[0-9]+$ && ${SIZE} -lt ${SUGGESTED_TMP_SIZE} ]]; then
+				STRING="${CURRENT_STRING/size=${SIZE}M/size=${SUGGESTED_TMP_SIZE}M}"
+				if sudo sed -i -e "s;${CURRENT_STRING};${STRING};" "${FSTAB}" ; then
+					MSG="Increased the size of ${ALLSKY_TMP} from ${SIZE} MB to"
+					MSG+=" ${SUGGESTED_TMP_SIZE} MB, the recommended size for your Pi."
+					MSG+=" Use 'allsky-config recheck_tmp' to change it."
+					display_msg --log progress "${MSG}"
+					RESIZED="true"
+				else
+					MSG="Unable to increase the size of ${ALLSKY_TMP} in ${FSTAB};"
+					MSG+=" it stays at ${SIZE} MB."
+					display_msg --log warning "${MSG}"
+				fi
+			else
+				MSG="${ALLSKY_TMP} is currently a memory filesystem; no change needed."
+				display_msg --logonly info "${MSG}"
+			fi
 
 			# If there's a prior Allsky version and its tmp directory is mounted,
 			# try to unmount it, but that often gives an error that it's busy,
@@ -1640,6 +1658,11 @@ function check_tmp()
 			# This would be the case during an upgrade.
 			if is_mounted "${ALLSKY_TMP}" ; then
 				display_msg --logonly info "${ALLSKY_TMP} already mounted."
+				# A memory filesystem can grow while mounted, keeping its files.
+				if [[ ${RESIZED} == "true" ]] &&
+						! sudo mount -o "remount,size=${SUGGESTED_TMP_SIZE}M" "${ALLSKY_TMP}" ; then
+					set_reboot_needed		# the new size takes effect then
+				fi
 				return 0
 			fi
 

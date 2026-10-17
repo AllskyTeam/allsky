@@ -940,8 +940,8 @@ void processConnectedCameras()
 			printf("  - %d", cam_num);
 
 		char *cm;
-		CONNECTED_CAMERAS *cC = &connectedCameras[cc];
 #ifdef IS_RPi
+		CONNECTED_CAMERAS *cC = &connectedCameras[cc];
 		snprintf(cC->Sensor, FULL_SENSOR_SIZE, "%s [%s]", info.Name, info.Sensor);
 		cm = cC->Sensor;
 #else

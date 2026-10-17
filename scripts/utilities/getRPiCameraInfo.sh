@@ -272,8 +272,6 @@ MAX_EXPOSURE="$( sed -e 's/://' -e 's/\.\./ /' -e 's/\[//' -e 's/]//' "${CAMERA_
 				def = camera_cc[cam_num, "sharpness_default"];
 				do_cc(cam_num, out_file, "Sharpness", "Sharpness", high, low, def, "NOT_SET", "ASI_FALSE", "ASI_TRUE", "SHARPNESS", "float");
 			}
-
-			printf("libcamera\tEnd\n") > out_file;
 		}
 
 		{

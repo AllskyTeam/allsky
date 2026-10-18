@@ -1637,7 +1637,7 @@ function check_tmp()
 					MSG="Increased the size of ${ALLSKY_TMP} from ${SIZE} MB to"
 					MSG+=" ${SUGGESTED_TMP_SIZE} MB, the recommended size for your Pi."
 					MSG+=" Use 'allsky-config recheck_tmp' to change it."
-					display_msg --log progress "${MSG}"
+					display_msg --logonly info "${MSG}"
 					RESIZED="true"
 				else
 					MSG="Unable to increase the size of ${ALLSKY_TMP} in ${FSTAB};"
@@ -1736,7 +1736,7 @@ function check_tmp()
 		QUIT="true"
 	fi
 	if [[ ${QUIT} == "true" ]]; then
-		m "${MSG}" "" "--log" "info" "${CALLED_FROM}"
+		m "${MSG}" "" "--logonly" "info" "${CALLED_FROM}"
 		if [[ ${CALLED_FROM} == "install" ]]; then
 			STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 		fi
@@ -1768,7 +1768,7 @@ function check_tmp()
 
 		MSG="${ALLSKY_TMP} is now in memory, size=${NEW_SIZE} MB."
 		if [[ ${CALLED_FROM} == "install" ]]; then
-			display_msg --log progress "${MSG}"
+			display_msg --logonly info "${MSG}"
 		else
 			if [[ -n ${CURRENT_STRING} ]]; then
 				wO_ "\n${ALLSKY_TMP} is now ${NEW_SIZE} MB.\n"
@@ -1801,7 +1801,7 @@ function check_tmp()
 
 		if [[ ${CALLED_FROM} == "install" ]]; then
 			MSG="The ${ALLSKY_TMP} directory and its contents will remain on the SD card."
-			display_msg --log info "${MSG}"
+			display_msg --logonly info "${MSG}"
 		else
 			start_Allsky
 			MSG="\n${ALLSKY_TMP} is no longer in memory.\n"

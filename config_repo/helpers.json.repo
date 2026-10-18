@@ -35,7 +35,8 @@
       "outputFormat": "html",
       "showResultsTabs": true,
       "command": [
-        "bad_images_info"
+        "bad_images_info",
+		"--html"
       ],
       "contentHtml": [
         "<p>Allsky deletes any image that is \"bad\", that is, it's \"too dark\" or \"too bright\".",

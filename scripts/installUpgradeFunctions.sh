@@ -1594,6 +1594,15 @@ function recheck_tmp()
 }
 
 ####
+# Is Allsky on an NVMe disk?  It's fast enough and doesn't wear like an SD card,
+# so ${ALLSKY_TMP} can stay on it.  USB SSDs vary too much in speed to count.
+function on_nvme()
+{
+	local SOURCE
+	SOURCE="$( findmnt --noheadings --output SOURCE --target "${ALLSKY_HOME}" 2>/dev/null )"
+	[[ ${SOURCE} == /dev/nvme* ]]
+}
+
 # Check if ${ALLSKY_TMP} is a memory filesystem.
 # If not, offer to make it one.
 function check_tmp()
@@ -1706,6 +1715,8 @@ function check_tmp()
 		fi
 
 		NEW_SIZE="$( get_0_or_positive "${SIZE}" "remove ${ALLSKY_TMP} from memory" "${MSG}" )"
+	elif [[ -z ${CURRENT_STRING} ]] && on_nvme ; then
+		NEW_SIZE=0			# Not prompting, and the NVMe disk is fine for it
 	else
 		NEW_SIZE="${SIZE}"	# Not prompting, so go with default size
 	fi
@@ -1717,7 +1728,11 @@ function check_tmp()
 			QUIT="true"
 		fi
 	elif [[ ${NEW_SIZE} -eq 0 ]]; then
-		MSG="The ${ALLSKY_TMP} directory will remain on the SD card."
+		if on_nvme ; then
+			MSG="The ${ALLSKY_TMP} directory will remain on the NVMe disk."
+		else
+			MSG="The ${ALLSKY_TMP} directory will remain on the SD card."
+		fi
 		QUIT="true"
 	fi
 	if [[ ${QUIT} == "true" ]]; then

@@ -3939,7 +3939,8 @@ prompt_for_hostname
 ##### Check for sufficient swap space
 check_swap "install" ""
 
-##### Make ${ALLSKY_TMP} a memory filesystem; "allsky-config recheck_tmp" can change that.
+##### Make ${ALLSKY_TMP} a memory filesystem unless Allsky is on an NVMe disk;
+##### "allsky-config recheck_tmp" can change that.
 check_tmp "install" "false"
 
 ##### Tell the user it may take a while

@@ -153,7 +153,7 @@ The installer may offer to add swap space. This effectively gives the system mor
 
 #### Temporary directory in memory { data-toc-label="Temporary directory" }
 
-The installer places `~/allsky/tmp` in memory rather than on the SD card. This directory is used heavily for temporary files, and keeping it in memory can significantly reduce SD card writes, improving card longevity. Its size depends on your Pi's memory, from 75 MB on a Pi with 512 MB to 600 MB on a Pi with 8 GB or more. During an upgrade a smaller size from an earlier release is increased to that size. You can change the size, or move the directory back to the SD card, with `allsky-config recheck_tmp`.
+The installer places `~/allsky/tmp` in memory rather than on the SD card. This directory is used heavily for temporary files, and keeping it in memory can significantly reduce SD card writes, improving card longevity. Its size depends on your Pi's memory, from 75 MB on a Pi with 512 MB to 600 MB on a Pi with 8 GB or more. During an upgrade a smaller size from an earlier release is increased to that size. You can change the size, or move the directory back to the SD card, with `allsky-config recheck_tmp`. If Allsky is installed on an NVMe disk, `~/allsky/tmp` stays on the disk instead, since NVMe disks are fast and don't wear like SD cards; `allsky-config recheck_tmp` can still put it in memory.
 
 #### Latitude and longitude { data-toc-label="Latitude and longitude" }
 

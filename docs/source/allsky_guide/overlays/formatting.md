@@ -14,7 +14,7 @@ Each variable within Allsky has a default format but you can override this. To o
 The Variable Format Dialog
 ///
 
-In this example we have double clicked the 'AS_MOON_ASIMUTH' field and then clicked on the square root icon next to the number "1" in the image above. The resulting dialog displays all of the formatting options available for the variable, in this case data formats.
+In this example we have double clicked the 'AS_MOON_ASIMUTH' field and then clicked on the <span style="background-color: #337ab7; color: #bfbfbf">:fontawesome-solid-square-root-variable:</span> icon next to the number "1" in the image above. The resulting dialog displays all of the formatting options available for the variable, in this case data formats.
 
 Simply select the format you required and save the overlay.
 

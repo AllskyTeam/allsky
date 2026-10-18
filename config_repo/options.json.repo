@@ -933,7 +933,8 @@
 	{"value" : 1, "label" : 1},
 	{"value" : 2, "label" : 2},
 	{"value" : 3, "label" : 3},
-	{"value" : 4, "label" : 4}
+	{"value" : 4, "label" : 4},
+	{"value" : 5, "label" : 5}
 ],
 "action" : "reload"
 },
@@ -957,6 +958,7 @@
 "label" : "Remove Bad Images Threshold Low",
 "type" : "float",
 "booldependson" : "savedaytimeimages OR savenighttimeimages",
+"usage" : "capture",
 "action" : "restart"
 },
 {
@@ -968,6 +970,7 @@
 "label" : "Remove Bad Images Threshold High",
 "type" : "float",
 "booldependson" : "savedaytimeimages OR savenighttimeimages",
+"usage" : "capture",
 "action" : "restart"
 },
 {
@@ -976,6 +979,7 @@
 "description" : "After this many 'bad' images display a message.",
 "label" : "Remove Bad Images Threshold Count",
 "type" : "integer",
+"usage" : "capture",
 "action" : "restart"
 },
 {

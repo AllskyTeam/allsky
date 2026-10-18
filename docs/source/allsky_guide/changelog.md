@@ -31,7 +31,9 @@ v2026.10.01 { data-toc-label="v2026.10.01" }
             - This applies to files in `~/allsky/images`, on a local Website, and on a remote Website.
 			- If you decrease the number of days' images to keep and there are more days' images than the new days to keep value, a notice will display in the WebUI.
 		- The WebUI checks for new Allsky releases every 12 hours instead of every 2 days.
-        - After installing Allsky, a link to the documentation may appear in the WebUI, depending on what prior Allsky release you were running.
+		- `generateForDay.sh --keolapse` creates or uploads the keolapse of the **Keolapse** module for a given day, with the module's settings.
+		- `~/allsky/tmp` is always placed in memory during installation, with larger default sizes (200 MB to 600 MB depending on the Pi's memory) so modules like **Keolapse** have room. An upgrade increases a smaller size from an earlier release; `allsky-config recheck_tmp` still changes it. If Allsky is on an NVMe disk, `~/allsky/tmp` stays on the disk.
+    - After installing Allsky, a link to the documentation may appear in the WebUI, depending on what prior Allsky release you were running.
 
         ## **Bug Fixes**
 		- The `upgrade.sh` command no longer fails when using the "in-place" method and a new Allsky release is available.

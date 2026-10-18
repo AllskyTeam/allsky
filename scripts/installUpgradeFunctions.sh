@@ -959,10 +959,10 @@ function get_ram_tmp_swap()
 
 	declare -A TMP_SIZES=()
 	TMP_SIZES["512"]=75
-	TMP_SIZES["1024"]=150
-	TMP_SIZES["2048"]=200
-	TMP_SIZES["4096"]=300
-	local TMP_MAX=400
+	TMP_SIZES["1024"]=200
+	TMP_SIZES["2048"]=250
+	TMP_SIZES["4096"]=400
+	local TMP_MAX=600
 	TMP_SIZES["8192"]=${TMP_MAX}
 
 	SUGGESTED_SWAP_SIZE=0
@@ -1599,13 +1599,21 @@ function recheck_tmp()
 }
 
 ####
+# Is Allsky on an NVMe disk?  It's fast enough and doesn't wear like an SD card,
+# so ${ALLSKY_TMP} can stay on it.  USB SSDs vary too much in speed to count.
+function on_nvme()
+{
+	local SOURCE
+	SOURCE="$( findmnt --noheadings --output SOURCE --target "${ALLSKY_HOME}" 2>/dev/null )"
+	[[ ${SOURCE} == /dev/nvme* ]]
+}
+
 # Check if ${ALLSKY_TMP} is a memory filesystem.
 # If not, offer to make it one.
 function check_tmp()
 {
 	local CALLED_FROM="${1}"
-# TODO: default to "false" so we don't prompt during installation
-	local PROMPT="${2:-true}"
+	local PROMPT="${2:-true}"		# the installer passes "false"
 
 	# global: TITLE  WT_WIDTH
 	local CURRENT_STRING  STRING  MSG  D  SIZE  NEW_SIZE  ERR_MSG
@@ -1623,9 +1631,28 @@ function check_tmp()
 		if [[ ${CALLED_FROM} == "install" ]]; then
 			# During installation, don't give the user the option of changing.
 			# They can do it afterwards via "allsky-config".
-# TODO: set to new, larger size if not already there.
-			MSG="${ALLSKY_TMP} is currently a memory filesystem; no change needed."
-			display_msg --logonly info "${MSG}"
+			# A size below the recommended one (e.g., from an older release's smaller
+			# defaults) is increased, since modules like keolapse need the space.
+			local RESIZED="false"
+			get_ram_tmp_swap		# Sets ${SUGGESTED_TMP_SIZE}
+			SIZE="$( echo "${CURRENT_STRING}" | sed -e "s;^.* size=;;" -e "s;M.*;;" )"
+			if [[ ${SIZE} =~ ^[0-9]+$ && ${SIZE} -lt ${SUGGESTED_TMP_SIZE} ]]; then
+				STRING="${CURRENT_STRING/size=${SIZE}M/size=${SUGGESTED_TMP_SIZE}M}"
+				if sudo sed -i -e "s;${CURRENT_STRING};${STRING};" "${FSTAB}" ; then
+					MSG="Increased the size of ${ALLSKY_TMP} from ${SIZE} MB to"
+					MSG+=" ${SUGGESTED_TMP_SIZE} MB, the recommended size for your Pi."
+					MSG+=" Use 'allsky-config recheck_tmp' to change it."
+					display_msg --logonly info "${MSG}"
+					RESIZED="true"
+				else
+					MSG="Unable to increase the size of ${ALLSKY_TMP} in ${FSTAB};"
+					MSG+=" it stays at ${SIZE} MB."
+					display_msg --log warning "${MSG}"
+				fi
+			else
+				MSG="${ALLSKY_TMP} is currently a memory filesystem; no change needed."
+				display_msg --logonly info "${MSG}"
+			fi
 
 			# If there's a prior Allsky version and its tmp directory is mounted,
 			# try to unmount it, but that often gives an error that it's busy,
@@ -1645,6 +1672,11 @@ function check_tmp()
 			# This would be the case during an upgrade.
 			if is_mounted "${ALLSKY_TMP}" ; then
 				display_msg --logonly info "${ALLSKY_TMP} already mounted."
+				# A memory filesystem can grow while mounted, keeping its files.
+				if [[ ${RESIZED} == "true" ]] &&
+						! sudo mount -o "remount,size=${SUGGESTED_TMP_SIZE}M" "${ALLSKY_TMP}" ; then
+					set_reboot_needed		# the new size takes effect then
+				fi
 				return 0
 			fi
 
@@ -1688,6 +1720,8 @@ function check_tmp()
 		fi
 
 		NEW_SIZE="$( get_0_or_positive "${SIZE}" "remove ${ALLSKY_TMP} from memory" "${MSG}" )"
+	elif [[ -z ${CURRENT_STRING} ]] && on_nvme ; then
+		NEW_SIZE=0			# Not prompting, and the NVMe disk is fine for it
 	else
 		NEW_SIZE="${SIZE}"	# Not prompting, so go with default size
 	fi
@@ -1699,11 +1733,15 @@ function check_tmp()
 			QUIT="true"
 		fi
 	elif [[ ${NEW_SIZE} -eq 0 ]]; then
-		MSG="The ${ALLSKY_TMP} directory will remain on the SD card."
+		if on_nvme ; then
+			MSG="The ${ALLSKY_TMP} directory will remain on the NVMe disk."
+		else
+			MSG="The ${ALLSKY_TMP} directory will remain on the SD card."
+		fi
 		QUIT="true"
 	fi
 	if [[ ${QUIT} == "true" ]]; then
-		m "${MSG}" "" "--log" "info" "${CALLED_FROM}"
+		m "${MSG}" "" "--logonly" "info" "${CALLED_FROM}"
 		if [[ ${CALLED_FROM} == "install" ]]; then
 			STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 		fi
@@ -1735,7 +1773,7 @@ function check_tmp()
 
 		MSG="${ALLSKY_TMP} is now in memory, size=${NEW_SIZE} MB."
 		if [[ ${CALLED_FROM} == "install" ]]; then
-			display_msg --log progress "${MSG}"
+			display_msg --logonly info "${MSG}"
 		else
 			if [[ -n ${CURRENT_STRING} ]]; then
 				wO_ "\n${ALLSKY_TMP} is now ${NEW_SIZE} MB.\n"
@@ -1768,7 +1806,7 @@ function check_tmp()
 
 		if [[ ${CALLED_FROM} == "install" ]]; then
 			MSG="The ${ALLSKY_TMP} directory and its contents will remain on the SD card."
-			display_msg --log info "${MSG}"
+			display_msg --logonly info "${MSG}"
 		else
 			start_Allsky
 			MSG="\n${ALLSKY_TMP} is no longer in memory.\n"

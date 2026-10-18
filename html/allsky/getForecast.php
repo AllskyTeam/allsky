@@ -3,7 +3,14 @@ $url = "https://services.swpc.noaa.gov/text/3-day-forecast.txt";
 // Don't want warning messages to go into the web log for things like the server is down.
 // We display a message to the user which is sufficient.
 error_reporting(E_ALL ^ E_WARNING);
+const file_get_contents_timeout = 30;
+ini_set('default_socket_timeout', file_get_contents_timeout);
+
+$start_time = time();
 $forecast   = file_get_contents($url);
+$last		= error_get_last();
+$end_time	= time();
+
 if ($forecast != "") {
     $stripStart = substr($forecast, strpos($forecast, "00-03UT"));
     $kpTable    = substr($stripStart, 0, strpos($stripStart, "Rationale") -2 );
@@ -21,8 +28,14 @@ if ($forecast != "") {
         $info[$row]['day3']  = $row_data[3];
     }
 } else {
+	if ($end_time - $start_time >= file_get_contents_timeout) {
+		$reason = "Request timed out.";
+	} else {
+		$reason = $last["message"];
+	}
+
 	// The calling routine looks for "WARNING" in this field.
-	$info[0]['time'] = "WARNING: Unable to get data from '$url'";
+	$info[0]['time'] = "WARNING: Unable to get data from '$url'. $reason";
 }
 echo json_encode($info);
 ?>

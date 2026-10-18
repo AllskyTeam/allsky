@@ -148,6 +148,13 @@
                 "style": ""
             },
             {
+                "display": false,
+                "url": "keolapses/",
+                "title": "Archived Keolapses",
+                "icon": "fa fa-2x fa-fw fa-circle-notch",
+                "style": ""
+            },
+            {
                 "display": true,
                 "url": "keograms/",
                 "title": "Archived Keograms",
@@ -267,5 +274,5 @@
             }
         ]
     },
-    "ConfigVersion": "5"
+    "ConfigVersion": "6"
 }

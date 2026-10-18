@@ -337,7 +337,7 @@ function prompt_to_upload()
 
 	# See if there are any local images or timelapse.
 	local C  DIR  X  DEFAULT  COUNT=0
-	for i in startrails keograms meteors videos
+	for i in startrails keograms meteors videos keolapses
 	do
 		DIR="${ALLSKY_WEBSITE}/${i}"
 		C=$( find "${DIR}" -type f \( -name '*.jpg' -o -name '*.png' -o -name '*.mp4' \) | wc -l )
@@ -349,7 +349,7 @@ function prompt_to_upload()
 
 		DIALOG_TEXT="\n\n\nYour local Allsky Website has"
 		DIALOG_TEXT+="${DIALOG_BLUE}"
-		DIALOG_TEXT+=" ${COUNT} startrails, keogram, meteor, and/or timelapse files."
+		DIALOG_TEXT+=" ${COUNT} startrails, keogram, meteor, timelapse, and/or keolapse files."
 		DIALOG_TEXT+=" ${DIALOG_NC}"
 		X=""
 		if [[ "$( settings ".uselocalwebsite" )" != "true" ]]; then
@@ -385,11 +385,11 @@ ${INDENT} 2) Upload the remote Website's configuration file, keeping a copy on t
 ${INDENT} 3) Enable the remote Website.\n"
 		if [[ ${UPLOAD_IMAGE_FILES} == "true" ]]; then
 			DIALOG_TEXT+="\
-${INDENT} 4) Upload the local startrails, keograms, meteors, and/or\n\
+${INDENT} 4) Upload the local startrails, keograms, meteors, keolapse, and/or\n\
 ${INDENT}          timelapse images.\n"
 		else
 			DIALOG_TEXT+="\
-${INDENT} 4) NOTE: Any existing startrails, keograms, meteors, and/or\n\
+${INDENT} 4) NOTE: Any existing startrails, keograms, meteors, keolapse, and/or\n\
 ${INDENT}          timelapse images will NOT be touched.\n"
 		fi
 		DIALOG_TEXT+="\n\
@@ -884,6 +884,7 @@ function upload_remote_website()
 		# has the images).  "VALID" assumes "EXISTS".
 		# However, we must upload the index.php files.
 		EXCLUDE_FILES="--exclude-glob=videos/*.mp4"
+		EXCLUDE_FILES+=" --exclude-glob=keolapses/*.mp4"
 		EXCLUDE_FILES+=" --exclude-glob=keograms/*.jpg"
 		EXCLUDE_FILES+=" --exclude-glob=startrails/*.jpg"
 		EXCLUDE_FILES+=" --exclude-glob=meteors/*.jpg"

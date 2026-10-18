@@ -378,8 +378,8 @@ else # sftp/ftp/ftps
 		fi
 
 		if [[ -n ${DIRECTORY} ]]; then
-			# lftp outputs error message so we don't have to.
-			echo "cd '${DIRECTORY}' || exit 1"
+			# lftp outputs error message but it says "file not found" which is misleading.
+			echo "cd '${DIRECTORY}' || (echo 'ERROR: Directory \"${DIRECTORY}\" not found.'; exit 1) || exit 1"
 			if [[ ${DEBUG} == "true" ]]; then
 				echo "echo 'In DIRECTORY=${DIRECTORY}:'"
 				echo "ls"

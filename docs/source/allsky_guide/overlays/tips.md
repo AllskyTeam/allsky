@@ -1,6 +1,6 @@
 ### Best Practice { data-toc-label="Best Practice" }
 
-**Create separate overlys for day and night**
+**Create separate overlays for day and night**
 
 A lot of varibles make no sense in the daytime, for example a starcount. To make the overlays clearer in both daytime and nighttime create an overlay for each only displayng the required data.
 
@@ -10,16 +10,16 @@ Whilst you can combine the label and variable into a single field this can make 
 
 **Group fields**
 
-To make managing the overlay easy group logic filds together, this will make moving them far easier.
+To make managing the overlay easy group logic fields together, this will make moving them far easier.
 
-**Test The Overla**
+**Test The Overlay**
 
 Use the Preview option to check that the data is formatted as you expect.
 
 **Be Sensible With Fonts**
 
-Use fonts sparingly. Try to keep to a consisten font and use different weights of the same font for headings and data.
+Use fonts sparingly. Try to keep to a consistent font and use different weights of the same font for headings and data.
 
 **Ensure Images Are Optimised**
 
-When uploading images ensure they are sized correctly. Whilst you can resize on image in the overlay you should not rely on this to reize very large images. Ading very large images to an overlay will significantly slow down the generation of the overlay.
+When uploading images ensure they are sized correctly. Whilst you can resize on image in the overlay you should not rely on this to reize very large images. Adding very large images to an overlay will significantly slow down the generation of the overlay.

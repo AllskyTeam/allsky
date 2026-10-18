@@ -307,7 +307,8 @@ class ALLSKYPISTATUS(ALLSKYMODULEBASE):
 			temp = round(temp,1)
 			
 			extra_data['AS_CPUTEMP'] = temp   
-			extra_data['AS_CPUTEMP_C'] = temp   
+			extra_data['AS_CPUTEMP_C'] = temp
+			extra_data['AS_CPUTEMP_F'] = (9/5 * temp) + 32
 
 			board_info = allsky_shared.get_pi_board_info()
 			if board_info is not None:

@@ -455,7 +455,10 @@ class MODULEUTIL extends UTILBASE {
 		$selectedResult = [];
         foreach($configData as $selectedName=>$data) {
             $moduleName = "allsky_" . $selectedName . ".py";
-            // TODO: check if  $allModules[$moduleName]  exists.
+            if ( ! isset($allModules[$moduleName])) {
+				echo "<script>console.log('moduleName $moduleName does not exist.');";
+				continue;
+			}
             $moduleData = $allModules[$moduleName];
 
 			if ($moduleData === null) { // Corrupt module metaData
@@ -1275,7 +1278,7 @@ class MODULEUTIL extends UTILBASE {
 
 	public function postCheckModuleDependencies() {
 		$results = array();
-		$check = $_POST['check'];
+		$check = getVariableOrDefault($_POST, 'check', false);
 		$checkFlow = trim(filter_input(INPUT_POST, 'flow', FILTER_SANITIZE_STRING));
 
 		$flows = array('day', 'night', 'periodic', 'daynight', 'nightday');
@@ -1822,7 +1825,7 @@ class MODULEUTIL extends UTILBASE {
                 [$jl_code, $jl_out] = $exec_cmd('sudo journalctl -q -u ' . escapeshellarg($unit)
                     . ' -b -n ' . (int)$journalLines . ' --no-pager --no-hostname --output=short-monotonic');
                 $trim = function (string $s, int $max = 20000): string {
-                    return (strlen($s) > $max) ? (substr($s, 0, $max) . "\n…(truncated)…") : $s;
+                    return (strlen($s) > $max) ? (substr($s, 0, $max) . "\n...(truncated)...") : $s;
                 };
                 return [
                     'properties'             => $get_props($unit),

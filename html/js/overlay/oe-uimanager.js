@@ -183,21 +183,31 @@ class OEUIMANAGER {
 
     /**
      * The Conditions button: only enabled for a field that contains only one variable
-     * of a supported type, and highlighted when the field has conditions.  A field that
-     * already has conditions keeps it enabled, so they can be removed.
+     * of a supported type, and highlighted when the field has conditions.  An older field
+     * with conditions and other text keeps it enabled, so they can be removed.  With more
+     * than one variable the overlay ignores the conditions; they are kept, so they come
+     * back when the field holds one variable again.
      */
     updateConditionsButton(label) {
         const field = this.#selected;
         const $button = $('#oe-conditions-field');
         if (!field || $button.length === 0) return;
         label = (label === undefined) ? field.label : label;
-        const usable = OECONDITIONS.isSingleVariable(label) && OECONDITIONS.kindForType(field.type) !== null;
         const has = !!(field.fieldData && field.fieldData.conditions);
-        $button.prop('disabled', !usable && !has)
-            .toggleClass('btn-success', has).toggleClass('btn-primary', !has)
-            .attr('title', has ? 'Conditions: this field changes its style depending on the value'
-                : (usable ? 'Conditions: change the style depending on the value'
-                          : 'Conditions need a field that contains only one yes/no, number or text variable, and no other text'));
+        const single = OECONDITIONS.isSingleVariable(label) || (has && OECONDITIONS.variableCount(label) === 1);
+        const usable = single && OECONDITIONS.kindForType(field.type) !== null;
+        let title = 'Conditions need a field that contains only one yes/no, number or text variable, and no other text';
+        if (usable) {
+            title = has ? 'Conditions: this field changes its style depending on the value'
+                        : 'Conditions: change the style depending on the value';
+        } else if (has && OECONDITIONS.variableCount(label) > 1) {
+            title = 'This field\'s conditions are ignored: they need a field that contains only one yes/no, number or text variable';
+        }
+        $button.prop('disabled', !usable)
+            .toggleClass('btn-success', has && usable)
+            .toggleClass('btn-warning', has && !usable)
+            .toggleClass('btn-primary', !has)
+            .attr('title', title);
     }
 
     get dirty() {

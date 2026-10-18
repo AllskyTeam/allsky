@@ -165,7 +165,8 @@ usage_and_exit()
 	echo "   INPUT_DIR                       Is the day in '${ALLSKY_IMAGES}' to process."
 	echo
 	echo "If you don't specify --keogram, --startrails, --timelapse, or --keolapse,"
-	echo "a keogram, startrails, and timelapse will be ${MSG2}."
+	echo "a keogram, startrails, and timelapse will be ${MSG2}, and a keolapse"
+	echo "if the Keolapse module is enabled in the Night to Day flow."
 	echo
 	echo "The list of images to process is determined in one of two ways:"
 	echo
@@ -255,10 +256,38 @@ else
 	[[ -z ${OUTPUT_DIR} ]] && OUTPUT_DIR="${INPUT_DIR}"	# Put output file(s) in same location as input files.
 fi
 
+# The Keolapse module, if installed.
+KEOLAPSE_MODULE=""
+for M in "${ALLSKY_MY_MODULES}" "${ALLSKY_MODULE_LOCATION}/modules"; do
+	if [[ -f ${M}/allsky_keotimelapse.py ]]; then
+		KEOLAPSE_MODULE="${M}/allsky_keotimelapse.py"
+		break
+	fi
+done
+
+# Return 0 if the Keolapse module is installed and enabled in the Night to Day flow.
+keolapse_in_flow()
+{
+	[[ -z ${KEOLAPSE_MODULE} ]] && return 1
+	local FLOW="${ALLSKY_MODULES}/postprocessing_nightday.json"
+	[[ ! -s ${FLOW} ]] && return 1
+	jq -e '[ .[] | objects | select(.module == "allsky_keotimelapse.py" and
+		(.enabled == true or .enabled == "true")) ] | length > 0' "${FLOW}" > /dev/null 2>&1
+}
+
+KEOLAPSE_BY_DEFAULT="false"
 if [[ ${GOT} -eq 0 ]]; then
 	DO_KEOGRAM="true"
 	DO_STARTRAILS="true"
 	DO_TIMELAPSE="true"
+	# Keolapses are part of the default set when the module is used every night.
+	# The module uses its own settings for the whole day, so leave it out when the
+	# command line asks for something it can't do.
+	if [[ -z ${IMAGES_FILE} && -z ${OUTPUT_DIR_ENTERED} && ${GOT_TIME} == "false" &&
+			${THUMBNAIL_ONLY} == "false" ]] && keolapse_in_flow ; then
+		DO_KEOLAPSE="true"
+		KEOLAPSE_BY_DEFAULT="true"
+	fi
 fi
 
 if [[ ${TYPE} == "GENERATE" ]]; then
@@ -326,6 +355,7 @@ fi
 EXIT_CODE=0
 NUM_SUCCESS=0
 
+# TODO: Remove this check in major release after v2026.10.01.  Ditto for scripts/utilities/compareStartrails.sh.
 # Images are only used between a start and an end time if either is set.
 # The command-line arguments override the settings.
 if [[ ${GOT_TIME} == "false" && -z ${S_startrailsstart} && -z ${S_startrailsend} &&
@@ -430,6 +460,7 @@ if [[ ${DO_KEOGRAM} == "true" ]]; then
 		THICKNESS="${S_keogramlinethickness}"
 			[[ ${THICKNESS} != "" ]] && MORE+=" --font-type ${THICKNESS}"
 		CMD="'${ALLSKY_BIN}/keogram' ${N} ${SIZE_FILTER}"
+
 		if [[ -n ${IMAGES_FILE} ]]; then
 			CMD+=" --images '${IMAGES_FILE}'"
 		elif get_window_images "keogram" "${S_keogramstart}" "${S_keogramend}" ; then
@@ -515,18 +546,14 @@ if [[ ${DO_STARTRAILS} == "true" ]]; then
 		STARTRAILS_EXTRA_PARAMETERS="${S_startrailsextraparameters}"
 		CMD="'${ALLSKY_BIN}/startrails' ${N} ${SIZE_FILTER} -o '${UPLOAD_FILE}'"
 		STARTRAILS_LIST=""		# the images used, for their times in the database
+
 		if [[ -n ${IMAGES_FILE} ]]; then
 			CMD+=" --images '${IMAGES_FILE}'"
-		elif [[ ${S_startrailsnightonly} == "true" ]]; then
-			DAY="$( basename "${OUTPUT_DIR}" )"
-			FILE_NAMES="${OUTPUT_DIR}/startrails/images.txt"
-			mkdir -p "$( dirname "${FILE_NAMES}" )"
-			SQL="SELECT AS_CAMERAIMAGE FROM allsky_image WHERE AS_DATE_NAME = '${DAY}' AND AS_DAY_OR_NIGHT = 'NIGHT'"
-			"${ALLSKY_DATABASE_COMMAND}" --run "${SQL}" | sed "s;^;${OUTPUT_DIR}/;" > "${FILE_NAMES}"
-			NUM="$( wc -l < "${FILE_NAMES}" )"
-			if [[ ${NUM} -eq 0 ]]; then
-				W_ "${ME}: There are no nighttime images for ${DAY}" >&2
-				exit 1
+		elif get_window_images "startrails" "${S_startrailsstart}" "${S_startrailsend}" ; then
+			if [[ -n ${WINDOW_FILE} ]]; then
+				CMD+=" --images '${WINDOW_FILE}'"
+			else
+				CMD+=" -d '${INPUT_DIR}' -e ${ALLSKY_EXTENSION}"
 			fi
 		else
 			CMD=""
@@ -591,7 +618,7 @@ if [[ ${DO_STARTRAILS} == "true" ]]; then
 			if [[ ${ON_TTY} == "true" ]]; then
 				echo -e "${MSG1}${MSG2}${MSG3}" | sed 's/&gt;/>/' >&2
 			else
-				MSG2="\nGo to the <a external='true' href='/?page=startrails_settings'>Helper Tools -&gt; Startrails Settings</a> page"
+				MSG2="\nGo to the <a external='true' href='/?page=helper&helper=startrails_settings'>Helper Tools -&gt; Startrails Settings</a> page"
 				"${ALLSKY_SCRIPTS}/addMessage.sh" --type "warning" --msg "${MSG1}${MSG2}${MSG3}"
 			fi
 		elif [[ ${RET} -gt 90 && ${DO_TIMELAPSE} == "true" ]]; then
@@ -761,13 +788,6 @@ fi
 
 if [[ ${DO_KEOLAPSE} == "true" ]]; then
 	# The Keolapse module does the work, with the settings it has in the Night to Day flow.
-	KEOLAPSE_MODULE=""
-	for M in "${ALLSKY_MY_MODULES}" "${ALLSKY_MODULE_LOCATION}/modules"; do
-		if [[ -f ${M}/allsky_keotimelapse.py ]]; then
-			KEOLAPSE_MODULE="${M}/allsky_keotimelapse.py"
-			break
-		fi
-	done
 	if [[ -z ${KEOLAPSE_MODULE} ]]; then
 		E_ "*** ${ME} ERROR: '--keolapse' specified but the Keolapse module is not installed." >&2
 		((EXIT_CODE++))
@@ -775,7 +795,8 @@ if [[ ${DO_KEOLAPSE} == "true" ]]; then
 		E_ "*** ${ME} ERROR: '--keolapse' can't be used with '--images'." >&2
 		((EXIT_CODE++))
 	else
-		if [[ ${GOT_TIME} == "true" || -n ${OUTPUT_DIR_ENTERED} || ${THUMBNAIL_ONLY} == "true" ]]; then
+		if [[ ${KEOLAPSE_BY_DEFAULT} == "false" &&
+				( ${GOT_TIME} == "true" || -n ${OUTPUT_DIR_ENTERED} || ${THUMBNAIL_ONLY} == "true" ) ]]; then
 			W_ "${ME}: '--start', '--end', '--output-dir', and '--thumbnail-only' are ignored for the keolapse;" >&2
 			W_ "the module uses its own settings." >&2
 		fi

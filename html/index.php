@@ -114,6 +114,12 @@ $pageInfo = [
 		"AllTitle" => "All Timelapse (CAN BE SLOW TO LOAD)",
 		"help" => "docs/allsky_guide/using/images.html"
 	],
+	"list_keolapses" => [
+		"title" => "Keolapse",
+		"icon" => "fa fa-circle-notch $fa_size fa-fw",
+		"AllTitle" => "All Keolapses",
+		"help" => "docs/allsky_guide/using/images.html"
+	],
 	"list_keograms" => [
 		"title" => "Keogram",
 		"icon" => "fa fa-barcode $fa_size fa-fw",
@@ -130,8 +136,7 @@ $pageInfo = [
 		"title" => "Meteors",
 		"icon" => "fa fa-meteor $fa_size fa-fw",
 		"AllTitle" => "All Meteors",
-		// TODO: Add help documentation
-		// "help" => "docs/allsky_guide/using/meteors.html"
+		"help" => "docs/allsky_guide/using/images.html"
 	],
 	"configuration" => [
 		"title" => "Allsky Settings",
@@ -318,24 +323,27 @@ function insertHref($p, $day, $displayTitle = false, $iconImage = "")
 		$icon = $iconImage;
 		$external = "false";
 	}
+
+	$output = "";
 	if ($icon === "") {
-		echo "<span style='color: red' title='$title'>???</span>";
+		$output .= "<span style='color: red' title='$title'>???</span>";
 	} else {
 		if ($external === "true") {
 			$target = "target='_blank'";
 		} else {
 			$target = "";
 		}
-		echo "<a id='$p' $external_attr href='$href' title='$title' $target>";
+		$output .= "<a id='$p' $external_attr href='$href' title='$title' $target>";
 		if ($iconImage === "") {
-			echo "<i class='$icon'></i>";
+			$output .= "<i class='$icon'></i>";
 		} else {
-			echo $iconImage;
+			$output .= $iconImage;
 		}
 		if ($displayTitle)
-			echo " $title";
-		echo "</a>";
+			$output .= " $title";
+		$output .= "</a>";
 	}
+	return $output;
 }
 
 function insertMenuItem($p, $day, $type = "", $href_only = false)
@@ -427,6 +435,10 @@ function insertPage($p)
 		case "list_videos":
 			// directory, file name prefix, formal name, type of file
 			ListFileType("", "allsky", "Timelapse", "video");
+			break;
+		case "list_keolapses":
+			// directory, file name prefix, formal name, type of file
+			ListFileType("keolapse/", "keolapse", "Keolapse", "video");
 			break;
 		case "list_keograms":
 			// directory, file name prefix, formal name, type of file

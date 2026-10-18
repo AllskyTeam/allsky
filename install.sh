@@ -1028,6 +1028,7 @@ set_permissions()
 	# These directories aren't in GitHub so need to be manually created.
 	mkdir -p \
 		"${ALLSKY_WEBSITE}/videos/thumbnails" \
+		"${ALLSKY_WEBSITE}/keolapses/thumbnails" \
 		"${ALLSKY_WEBSITE}/keograms/thumbnails" \
 		"${ALLSKY_WEBSITE}/startrails/thumbnails" \
 		"${ALLSKY_WEBSITE}/meteors/thumbnails"
@@ -2531,47 +2532,63 @@ restore_prior_website_files()
 	# Each data directory will have zero or more images/videos.
 	# Make sure we do NOT mv any .php files.
 
+	ROOT_DIR="videos"
 	ITEM="${SPACE}${SPACE}timelapse videos"
-	D="${PRIOR_WEBSITE_DIR}/videos/thumbnails"
-	[[ -d ${D} ]] && mv "${D}"   "${ALLSKY_WEBSITE}/videos"
-	count=$( get_count "${PRIOR_WEBSITE_DIR}/videos" 'allsky-*' )
+	D="${PRIOR_WEBSITE_DIR}/${ROOT_DIR}/thumbnails"
+	[[ -d ${D} ]] && mv "${D}"   "${ALLSKY_WEBSITE}/${ROOT_DIR}"
+	count=$( get_count "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}" 'allsky-*' )
 	if [[ ${count} -ge 1 ]]; then
 		display_msg --log progress "${ITEM} (moving)"
-		mv "${PRIOR_WEBSITE_DIR}"/videos/allsky-*   "${ALLSKY_WEBSITE}/videos"
+		mv "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"/allsky-*   "${ALLSKY_WEBSITE}/${ROOT_DIR}"
 	else
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 	fi
 
+	ROOT_DIR="keolapses"
+	ITEM="${SPACE}${SPACE}keolapse videos"
+	D="${PRIOR_WEBSITE_DIR}/${ROOT_DIR}/thumbnails"
+	[[ -d ${D} ]] && mv "${D}"   "${ALLSKY_WEBSITE}/${ROOT_DIR}"
+	count=$( get_count "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}" 'keolapse-*' )
+	if [[ ${count} -ge 1 ]]; then
+		display_msg --log progress "${ITEM} (moving)"
+		mv "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"/keolapse-*   "${ALLSKY_WEBSITE}/${ROOT_DIR}"
+	else
+		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
+	fi
+
+	ROOT_DIR="keograms"
 	ITEM="${SPACE}${SPACE}keograms"
-	D="${PRIOR_WEBSITE_DIR}/keograms/thumbnails"
-	[[ -d ${D} ]] && mv "${D}"   "${ALLSKY_WEBSITE}/keograms"
-	count=$( get_count "${PRIOR_WEBSITE_DIR}/keograms" 'keogram-*' )
+	D="${PRIOR_WEBSITE_DIR}/${ROOT_DIR}/thumbnails"
+	[[ -d ${D} ]] && mv "${D}"   "${ALLSKY_WEBSITE}/${ROOT_DIR}"
+	count=$( get_count "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}" 'keogram-*' )
 	if [[ ${count} -ge 1 ]]; then
 		display_msg --log progress "${ITEM} (moving)"
-		mv "${PRIOR_WEBSITE_DIR}"/keograms/keogram-*   "${ALLSKY_WEBSITE}/keograms"
+		mv "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"/keogram-*   "${ALLSKY_WEBSITE}/${ROOT_DIR}"
 	else
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 	fi
 
+	ROOT_DIR="startrails"
 	ITEM="${SPACE}${SPACE}startrails"
-	D="${PRIOR_WEBSITE_DIR}/startrails/thumbnails"
-	[[ -d ${D} ]] && mv "${D}"   "${ALLSKY_WEBSITE}/startrails"
-	count=$( get_count "${PRIOR_WEBSITE_DIR}/startrails" 'startrails-*' )
+	D="${PRIOR_WEBSITE_DIR}/${ROOT_DIR}/thumbnails"
+	[[ -d ${D} ]] && mv "${D}"   "${ALLSKY_WEBSITE}/${ROOT_DIR}"
+	count=$( get_count "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}" 'startrails-*' )
 	if [[ ${count} -ge 1 ]]; then
 		display_msg --log progress "${ITEM} (moving)"
-		mv "${PRIOR_WEBSITE_DIR}"/startrails/startrails-*   "${ALLSKY_WEBSITE}/startrails"
+		mv "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"/startrails-*   "${ALLSKY_WEBSITE}/${ROOT_DIR}"
 	else
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 	fi
 
-	if [[ -d "${PRIOR_WEBSITE_DIR}/meteors" ]]; then
+	ROOT_DIR="meteors"
+	if [[ -d "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}" ]]; then
 		ITEM="${SPACE}${SPACE}meteors"
-		D="${PRIOR_WEBSITE_DIR}/meteors/thumbnails"
-		[[ -d ${D} ]] && mv "${D}"   "${ALLSKY_WEBSITE}/meteors"
-		count=$( get_count "${PRIOR_WEBSITE_DIR}/meteors" 'meteors-*' )
+		D="${PRIOR_WEBSITE_DIR}/${ROOT_DIR}/thumbnails"
+		[[ -d ${D} ]] && mv "${D}"   "${ALLSKY_WEBSITE}/${ROOT_DIR}"
+		count=$( get_count "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}" 'meteors-*' )
 		if [[ ${count} -ge 1 ]]; then
 			display_msg --log progress "${ITEM} (moving)"
-			mv "${PRIOR_WEBSITE_DIR}"/meteors/meteors-*   "${ALLSKY_WEBSITE}/meteors"
+			mv "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"/meteors-*   "${ALLSKY_WEBSITE}/${ROOT_DIR}"
 		else
 			display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 		fi
@@ -2723,47 +2740,63 @@ do_restore()
 	if [[ -n ${PRIOR_WEBSITE_DIR} ]]; then
 		display_msg --log progress "${SPACE}Local Website files:"
 
+		ROOT_DIR="videos"
 		ITEM="${SPACE}${SPACE}timelapse videos"
-		D="${ALLSKY_WEBSITE}/videos/thumbnails"
-		[[ -d ${D} ]] && mv "${D}"   "${PRIOR_WEBSITE_DIR}/videos"
-		count=$( get_count "${ALLSKY_WEBSITE}/videos" 'allsky-*' )
+		D="${ALLSKY_WEBSITE}/${ROOT_DIR}/thumbnails"
+		[[ -d ${D} ]] && mv "${D}"   "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"
+		count=$( get_count "${ALLSKY_WEBSITE}/${ROOT_DIR}" 'allsky-*' )
 		if [[ ${count} -ge 1 ]]; then
 			display_msg --log progress "${ITEM} (moving back)"
-			mv "${ALLSKY_WEBSITE}"/videos/allsky-*   "${PRIOR_WEBSITE_DIR}/videos"
+			mv "${ALLSKY_WEBSITE}/${ROOT_DIR}"/allsky-*   "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"
 		else
 			display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 		fi
 
+		ROOT_DIR="keolapses"
+		ITEM="${SPACE}${SPACE}keolapse videos"
+		D="${ALLSKY_WEBSITE}/${ROOT_DIR}/thumbnails"
+		[[ -d ${D} ]] && mv "${D}"   "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"
+		count=$( get_count "${ALLSKY_WEBSITE}/${ROOT_DIR}" 'keolapse-*' )
+		if [[ ${count} -ge 1 ]]; then
+			display_msg --log progress "${ITEM} (moving back)"
+			mv "${ALLSKY_WEBSITE}/${ROOT_DIR}"/keolapse-*   "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"
+		else
+			display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
+		fi
+
+		ROOT_DIR="keograms"
 		ITEM="${SPACE}${SPACE}keograms"
-		D="${ALLSKY_WEBSITE}/keograms/thumbnails"
-		[[ -d ${D} ]] && mv "${D}"   "${PRIOR_WEBSITE_DIR}/keograms"
-		count=$( get_count "${ALLSKY_WEBSITE}/keograms" 'keogram-*' )
+		D="${ALLSKY_WEBSITE}/${ROOT_DIR}/thumbnails"
+		[[ -d ${D} ]] && mv "${D}"   "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"
+		count=$( get_count "${ALLSKY_WEBSITE}/${ROOT_DIR}" 'keogram-*' )
 		if [[ ${count} -ge 1 ]]; then
 			display_msg --log progress "${ITEM} (moving back)"
-			mv "${ALLSKY_WEBSITE}"/keograms/keogram-*   "${PRIOR_WEBSITE_DIR}/keograms"
+			mv "${ALLSKY_WEBSITE}/${ROOT_DIR}"/keogram-*   "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"
 		else
 			display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 		fi
 
+		ROOT_DIR="startrails"
 		ITEM="${SPACE}${SPACE}startrails"
-		D="${ALLSKY_WEBSITE}/startrails/thumbnails"
-		[[ -d ${D} ]] && mv "${D}"   "${PRIOR_WEBSITE_DIR}/startrails"
-		count=$( get_count "${ALLSKY_WEBSITE}/startrails" 'startrails-*' )
+		D="${ALLSKY_WEBSITE}/${ROOT_DIR}/thumbnails"
+		[[ -d ${D} ]] && mv "${D}"   "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"
+		count=$( get_count "${ALLSKY_WEBSITE}/${ROOT_DIR}" 'startrails-*' )
 		if [[ ${count} -ge 1 ]]; then
 			display_msg --log progress "${ITEM} (moving back)"
-			mv "${ALLSKY_WEBSITE}"/startrails/startrails-*   "${PRIOR_WEBSITE_DIR}/startrails"
+			mv "${ALLSKY_WEBSITE}/${ROOT_DIR}"/startrails-*   "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"
 		else
 			display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 		fi
 
-		if [[ -d "${PRIOR_WEBSITE_DIR}/meteors" ]]; then
+		ROOT_DIR="meteors"
+		if [[ -d "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}" ]]; then
 			ITEM="${SPACE}${SPACE}meteors"
-			D="${ALLSKY_WEBSITE}/meteors/thumbnails"
-			[[ -d ${D} ]] && mv "${D}"   "${PRIOR_WEBSITE_DIR}/meteors"
-			count=$( get_count "${ALLSKY_WEBSITE}/meteors" 'meteors-*' )
+			D="${ALLSKY_WEBSITE}/${ROOT_DIR}/thumbnails"
+			[[ -d ${D} ]] && mv "${D}"   "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"
+			count=$( get_count "${ALLSKY_WEBSITE}/${ROOT_DIR}" 'meteors-*' )
 			if [[ ${count} -ge 1 ]]; then
 				display_msg --log progress "${ITEM} (moving back)"
-				mv "${ALLSKY_WEBSITE}"/meteors/meteors-*   "${PRIOR_WEBSITE_DIR}/meteors"
+				mv "${ALLSKY_WEBSITE}/${ROOT_DIR}"/meteors-*   "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"
 			else
 				display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 			fi
@@ -3234,8 +3267,7 @@ display_image()
 		if [[ -f ${ALLSKY_POST_INSTALL_ACTIONS} ]]; then
 			# Add a message the user will see in the WebUI.
 			MSG="Actions needed.  Click for more information."
-			X="${ALLSKY_POST_INSTALL_ACTIONS/${ALLSKY_HOME}/}"
-			"${ALLSKY_SCRIPTS}/addMessage.sh" --type warning --ID AM_POST --msg "${MSG}" --url "${X}"
+			"${ALLSKY_SCRIPTS}/addMessage.sh" --type warning --ID AM_POST --msg "${MSG}" --url "${ALLSKY_POST_INSTALL_ACTIONS_URL}"
 
 			# This tells allsky.sh not to display a message about actions since we just did.
 			touch "${ALLSKY_POST_INSTALL_ACTIONS}_initial_message"

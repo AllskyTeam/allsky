@@ -3418,6 +3418,34 @@
   
   
     <li class="md-nav__item">
+      <a href="allsky_guide/overlays/conditions.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Conditional Styles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="allsky_guide/overlays/tips.html" class="md-nav__link">
         
   
@@ -6177,6 +6205,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#modules.gpio.TachoMonitor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TachoMonitor
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#modules.gpio.get_gpio_backend" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6834,6 +6873,113 @@ component needs to be restarted but the web interface should remain active.</p>
 
 
 
+<div class="doc doc-object doc-class">
+
+
+
+<h4 id="modules.gpio.TachoMonitor" class="doc doc-heading">
+              <code class="highlight language-python"><span class="n">TachoMonitor</span><span class="p">(</span><span class="n">tacho_id</span><span class="p">,</span> <span class="n">pin</span><span class="p">,</span> <span class="n">pin_num</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">pulses_per_revolution</span><span class="p">,</span> <span class="n">sample_seconds</span><span class="p">,</span> <span class="n">stale_seconds</span><span class="p">,</span> <span class="n">debounce_ms</span><span class="p">)</span></code>
+
+<a href="#modules.gpio.TachoMonitor" class="headerlink" title="Permanent link">¶</a></h4>
+
+
+    <div class="doc doc-contents ">
+
+
+
+        <p>Count tachometer pulses for one GPIO input.</p>
+<p>The GPIO line is claimed with the internal pull-up enabled. Fan tacho wires
+are normally open-collector outputs, so the falling edge is counted by
+default.</p>
+
+
+
+
+
+
+
+
+                  <details class="mkdocstrings-source">
+                    <summary>Source code in <code>modules/gpio/__init__.py</code></summary>
+                    <div class="highlight"><table class="highlighttable"><tbody><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">152</span>
+<span class="normal">153</span>
+<span class="normal">154</span>
+<span class="normal">155</span>
+<span class="normal">156</span>
+<span class="normal">157</span>
+<span class="normal">158</span>
+<span class="normal">159</span>
+<span class="normal">160</span>
+<span class="normal">161</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span>
+<span class="normal">168</span>
+<span class="normal">169</span>
+<span class="normal">170</span>
+<span class="normal">171</span>
+<span class="normal">172</span>
+<span class="normal">173</span>
+<span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span>
+<span class="normal">177</span>
+<span class="normal">178</span>
+<span class="normal">179</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">tacho_id</span><span class="p">,</span>
+    <span class="n">pin</span><span class="p">,</span>
+    <span class="n">pin_num</span><span class="p">,</span>
+    <span class="n">name</span><span class="p">,</span>
+    <span class="n">pulses_per_revolution</span><span class="p">,</span>
+    <span class="n">sample_seconds</span><span class="p">,</span>
+    <span class="n">stale_seconds</span><span class="p">,</span>
+    <span class="n">debounce_ms</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">tacho_id</span> <span class="o">=</span> <span class="n">tacho_id</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">pin</span> <span class="o">=</span> <span class="n">pin</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">pin_num</span> <span class="o">=</span> <span class="n">pin_num</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">pulses_per_revolution</span> <span class="o">=</span> <span class="n">pulses_per_revolution</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">sample_seconds</span> <span class="o">=</span> <span class="n">sample_seconds</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">stale_seconds</span> <span class="o">=</span> <span class="n">stale_seconds</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">debounce_ms</span> <span class="o">=</span> <span class="n">debounce_ms</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_lock</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_pulse_times</span> <span class="o">=</span> <span class="n">deque</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_callback_ref</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_running</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_started_at</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_last_pulse</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_last_rpm</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_total_pulses</span> <span class="o">=</span> <span class="mi">0</span>
+</code></pre></div></td></tr></tbody></table></div>
+                  </details>
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
 
 <div class="doc doc-object doc-function">
 
@@ -6851,10 +6997,7 @@ component needs to be restarted but the web interface should remain active.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>modules/gpio/__init__.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tbody><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">24</span>
-<span class="normal">25</span>
-<span class="normal">26</span>
-<span class="normal">27</span>
+              <div class="highlight"><table class="highlighttable"><tbody><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">27</span>
 <span class="normal">28</span>
 <span class="normal">29</span>
 <span class="normal">30</span>
@@ -6865,7 +7008,10 @@ component needs to be restarted but the web interface should remain active.</p>
 <span class="normal">35</span>
 <span class="normal">36</span>
 <span class="normal">37</span>
-<span class="normal">38</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_gpio_backend</span><span class="p">():</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_gpio_backend</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Lazily select a GPIO backend.</span>
 <span class="sd">    """</span>
@@ -6902,11 +7048,11 @@ component needs to be restarted but the web interface should remain active.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>modules/gpio/__init__.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tbody><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">41</span>
-<span class="normal">42</span>
-<span class="normal">43</span>
-<span class="normal">44</span>
-<span class="normal">45</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_gpio_count</span><span class="p">():</span>
+              <div class="highlight"><table class="highlighttable"><tbody><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_gpio_count</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Return the number of GPIO lines exposed by the active backend.</span>
 <span class="sd">    """</span>
@@ -6956,34 +7102,43 @@ component needs to be restarted but the web interface should remain active.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>modules/gpio/__init__.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tbody><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">105</span>
-<span class="normal">106</span>
-<span class="normal">107</span>
-<span class="normal">108</span>
-<span class="normal">109</span>
-<span class="normal">110</span>
-<span class="normal">111</span>
-<span class="normal">112</span>
-<span class="normal">113</span>
-<span class="normal">114</span>
-<span class="normal">115</span>
-<span class="normal">116</span>
-<span class="normal">117</span>
-<span class="normal">118</span>
-<span class="normal">119</span>
-<span class="normal">120</span>
-<span class="normal">121</span>
-<span class="normal">122</span>
-<span class="normal">123</span>
-<span class="normal">124</span>
-<span class="normal">125</span>
-<span class="normal">126</span>
-<span class="normal">127</span>
-<span class="normal">128</span>
-<span class="normal">129</span>
-<span class="normal">130</span>
-<span class="normal">131</span>
-<span class="normal">132</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_gpio_status</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+              <div class="highlight"><table class="highlighttable"><tbody><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">387</span>
+<span class="normal">388</span>
+<span class="normal">389</span>
+<span class="normal">390</span>
+<span class="normal">391</span>
+<span class="normal">392</span>
+<span class="normal">393</span>
+<span class="normal">394</span>
+<span class="normal">395</span>
+<span class="normal">396</span>
+<span class="normal">397</span>
+<span class="normal">398</span>
+<span class="normal">399</span>
+<span class="normal">400</span>
+<span class="normal">401</span>
+<span class="normal">402</span>
+<span class="normal">403</span>
+<span class="normal">404</span>
+<span class="normal">405</span>
+<span class="normal">406</span>
+<span class="normal">407</span>
+<span class="normal">408</span>
+<span class="normal">409</span>
+<span class="normal">410</span>
+<span class="normal">411</span>
+<span class="normal">412</span>
+<span class="normal">413</span>
+<span class="normal">414</span>
+<span class="normal">415</span>
+<span class="normal">416</span>
+<span class="normal">417</span>
+<span class="normal">418</span>
+<span class="normal">419</span>
+<span class="normal">420</span>
+<span class="normal">421</span>
+<span class="normal">422</span>
+<span class="normal">423</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">get_gpio_status</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Inspect all available GPIO lines and return their current usage.</span>
 
@@ -7007,6 +7162,15 @@ component needs to be restarted but the web interface should remain active.</p>
             <span class="n">status</span><span class="p">[</span><span class="s2">"mode"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"pwm"</span>
             <span class="n">status</span><span class="p">[</span><span class="s2">"frequency"</span><span class="p">]</span> <span class="o">=</span> <span class="n">pwm</span><span class="p">[</span><span class="s2">"frequency"</span><span class="p">]</span>
             <span class="n">status</span><span class="p">[</span><span class="s2">"duty"</span><span class="p">]</span> <span class="o">=</span> <span class="n">pwm</span><span class="p">[</span><span class="s2">"duty"</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">tacho_monitor</span> <span class="o">=</span> <span class="n">_tacho_monitor_for_pin</span><span class="p">(</span><span class="n">pin</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">tacho_monitor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">tacho_status</span> <span class="o">=</span> <span class="n">tacho_monitor</span><span class="o">.</span><span class="n">status</span><span class="p">()</span>
+                <span class="n">status</span><span class="p">[</span><span class="s2">"mode"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"tacho"</span>
+                <span class="n">status</span><span class="p">[</span><span class="s2">"tacho_id"</span><span class="p">]</span> <span class="o">=</span> <span class="n">tacho_status</span><span class="p">[</span><span class="s2">"tacho_id"</span><span class="p">]</span>
+                <span class="n">status</span><span class="p">[</span><span class="s2">"rpm"</span><span class="p">]</span> <span class="o">=</span> <span class="n">tacho_status</span><span class="p">[</span><span class="s2">"rpm"</span><span class="p">]</span>
+                <span class="n">status</span><span class="p">[</span><span class="s2">"pull"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"up"</span>
+                <span class="n">status</span><span class="p">[</span><span class="s2">"edge"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"falling"</span>
 
         <span class="n">all_status</span><span class="p">[</span><span class="sa">f</span><span class="s2">"D</span><span class="si">{</span><span class="n">pin_num</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span> <span class="o">=</span> <span class="n">status</span>
 
@@ -7086,10 +7250,7 @@ component needs to be restarted but the web interface should remain active.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>modules/gpio/__init__.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tbody><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">48</span>
-<span class="normal">49</span>
-<span class="normal">50</span>
-<span class="normal">51</span>
+              <div class="highlight"><table class="highlighttable"><tbody><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">51</span>
 <span class="normal">52</span>
 <span class="normal">53</span>
 <span class="normal">54</span>
@@ -7106,7 +7267,10 @@ component needs to be restarted but the web interface should remain active.</p>
 <span class="normal">65</span>
 <span class="normal">66</span>
 <span class="normal">67</span>
-<span class="normal">68</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">normalise_pin</span><span class="p">(</span><span class="n">gpio_str</span><span class="p">):</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">normalise_pin</span><span class="p">(</span><span class="n">gpio_str</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Validate and normalise a GPIO pin number.</span>
 

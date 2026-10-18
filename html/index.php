@@ -136,8 +136,7 @@ $pageInfo = [
 		"title" => "Meteors",
 		"icon" => "fa fa-meteor $fa_size fa-fw",
 		"AllTitle" => "All Meteors",
-		// TODO: Add help documentation
-		// "help" => "docs/allsky_guide/using/meteors.html"
+		"help" => "docs/allsky_guide/using/images.html"
 	],
 	"configuration" => [
 		"title" => "Allsky Settings",

@@ -149,9 +149,8 @@ Add new overlay main tab
 
 1. Selects the overlay you wish to use as a starting point or select 'Blank Overlay' for an empty overlay
 2. Enter a Human Readable name for the overlay
-3. Enter a Human Readable name for the overlay
-4. Select the time of day you wish this overlay to be used in
-5. If selected then the overlay will be activated after it has been created. If not selected the overlay will be saved as a draft and you will have to manually activate it.
+3. Select the time of day you wish this overlay to be used in
+4. If selected then the overlay will be activated after it has been created. If not selected the overlay will be saved as a draft and you will have to manually activate it.
 
 !!! warning  ""
 

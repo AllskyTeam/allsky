@@ -91,8 +91,6 @@ sort --reverse --key=11,15 "${BAD_IMAGES_LIST}" > "${SORTED}"
 
 if [[ ${HTML} == "false" ]]; then
 	echo		# adds space at top to make it easier to read on a terminal
-else
-	echo "<span class='allow-select' style='font-size: 115%'>"
 fi
 
 # Pass in Bold ON, Bold Off, Highlight ON, Highlight Off
@@ -274,9 +272,8 @@ fi
 
 if [[ ${SHOW_BAD_IMAGES} -eq 0 ]]; then
 	if [[ ${HTML} == "true" ]]; then
-		echo "${wBR}${wBR}The following images were not saved:<pre>"
-		indent --html "$( < "${BAD_IMAGES_LIST}" )"
-		echo "</pre>"
+		echo "${wBR}${wBR}The following images were not saved:"
+		cat "${BAD_IMAGES_LIST}"
 	else
 		echo -e "\nLook in ${WSFs}${BAD_IMAGES_LIST}${WSFe} for the list of bad images."
 	fi
@@ -284,8 +281,6 @@ fi
 
 if [[ ${HTML} == "false" ]]; then
 	echo		# adds space at bottom to make it easier to read on a terminal
-else
-	echo "</span>"
 fi
 
 rm -f "${SORTED}"

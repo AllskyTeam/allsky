@@ -408,6 +408,9 @@ function insertHelperMenuItems()
 		$title = (string) ($helperConfig['title'] ?? $helperId);
 		$icon = (string) ($helperConfig['icon'] ?? 'fa-solid fa-hammer');
 		$href = 'index.php?page=helper&helper=' . rawurlencode((string) $helperId);
+		$outputFormat = (string) ($helperConfig['outputFormat'] ?? $helperId);
+		if ($outputFormat === "html")
+			$href .= "&html=true";
 
 		echo "<li>";
 		echo "<a id='" . htmlspecialchars((string) $helperId, ENT_QUOTES) . "' href='" . htmlspecialchars($href, ENT_QUOTES) . "'>";

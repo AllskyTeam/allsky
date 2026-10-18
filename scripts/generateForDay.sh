@@ -618,7 +618,7 @@ if [[ ${DO_STARTRAILS} == "true" ]]; then
 			if [[ ${ON_TTY} == "true" ]]; then
 				echo -e "${MSG1}${MSG2}${MSG3}" | sed 's/&gt;/>/' >&2
 			else
-				MSG2="\nGo to the <a external='true' href='/?page=startrails_settings'>Helper Tools -&gt; Startrails Settings</a> page"
+				MSG2="\nGo to the <a external='true' href='/?page=helper&helper=startrails_settings'>Helper Tools -&gt; Startrails Settings</a> page"
 				"${ALLSKY_SCRIPTS}/addMessage.sh" --type "warning" --msg "${MSG1}${MSG2}${MSG3}"
 			fi
 		elif [[ ${RET} -gt 90 && ${DO_TIMELAPSE} == "true" ]]; then

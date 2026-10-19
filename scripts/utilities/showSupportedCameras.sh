@@ -80,7 +80,8 @@ fi
 
 
 if [[ ${DO_RPI} == "true" ]]; then
-	if [[ -f ${ALLSKY_RPi_CAMERA_INFO} ]]; then
+	# shellcheck disable=SC2154		# not sure why this is needed - it's defined in variables.sh
+	if [[ -f ${ALLSKY_RPi_SUPPORTED_CAMERAS} ]]; then
 
 		echo -e "===== Supported RPi cameras:\n"
 
@@ -111,7 +112,7 @@ if [[ ${DO_RPI} == "true" ]]; then
 
 	else
 		# Write to stdout since they may not be an error, e.g., Allsky not installed yet.
-		echo "RPi information file '${ALLSKY_RPi_CAMERA_INFO}' not installed."
+		echo "RPi information file '${ALLSKY_RPi_SUPPORTED_CAMERAS}' not installed."
 	fi
 fi
 

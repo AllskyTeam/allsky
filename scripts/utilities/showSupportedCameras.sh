@@ -80,32 +80,39 @@ fi
 
 
 if [[ ${DO_RPI} == "true" ]]; then
-	echo -e "===== Supported RPi cameras:\n"
+	if [[ -f ${ALLSKY_RPi_CAMERA_INFO} ]]; then
 
-	# Format of input file:
-	#	camera  sensor  compare_length  model  other_info_for_camera_1
-	#	libcamera libcamera_camera_capability_line_1
-	#	libcamera libcamera_camera_capability_line_2
-	#	libcamera End
-	#	camera  sensor  compare_length  model  other_info_for_camera_2
-	#	...
-	gawk -F'\t' '
-		BEGIN {
-			printf("%-25s Sensor\n", "Camera Name");
-			printf("%-25s-------\n", "--------------------------");
-		}
-		{
-			if ($1 == "camera") {
-				sensor = $2;
-				compare_length = $3
-				model = $4;
-				if (compare_length > 0)
-					other = " and related sensors";
-				else
-					other = "";
-				printf("%-25s %s%s\n", model, sensor, other);
+		echo -e "===== Supported RPi cameras:\n"
+
+		# Format of input file:
+		#	camera  sensor  compare_length  model  other_info_for_camera_1
+		#	libcamera libcamera_camera_capability_line_1
+		#	libcamera libcamera_camera_capability_line_2
+		#	libcamera End
+		#	camera  sensor  compare_length  model  other_info_for_camera_2
+		#	...
+		gawk -F'\t' '
+			BEGIN {
+				printf("%-25s Sensor\n", "Camera Name");
+				printf("%-25s-------\n", "--------------------------");
 			}
-		}' "${ALLSKY_RPi_SUPPORTED_CAMERAS}"
+			{
+				if ($1 == "camera") {
+					sensor = $2;
+					compare_length = $3
+					model = $4;
+					if (compare_length > 0)
+						other = " and related sensors";
+					else
+						other = "";
+					printf("%-25s %s%s\n", model, sensor, other);
+				}
+			}' "${ALLSKY_RPi_SUPPORTED_CAMERAS}"
+
+	else
+		# Write to stdout since they may not be an error, e.g., Allsky not installed yet.
+		echo "RPi information file '${ALLSKY_RPi_CAMERA_INFO}' not installed."
+	fi
 fi
 
 if [[ ${DO_ZWO} == "true" ]]; then

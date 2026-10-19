@@ -553,5 +553,4 @@ When you change one of these settings in the WebUI, Allsky checks the value. If 
 
     | WebUI Setting { .w-20p } | Default { .w-10p }  | Description |
     |---|---:|---|
-    | ==Camera Type== |  | The type of camera you are using: ZWO or RPi. To select a camera of a different ==Camera Type==:  <br>1. Select the Type.  <br>2. Save the change via the ==Save changes== button.  <br>3. Update the ==Camera Model== as desired.  <br><br>If you connect or disconnect a camera on the Pi, select ==Refresh== to update the list of camera types and models. |
-    | ==Camera Model== |  | The model of camera you are using. Note this list is only the models of the current ==Camera Type==. |
+    | ==Camera== |  | The camera to use. All cameras connected to the Pi are listed, RPi and ZWO, for example:  <br>`RPi  Module 3 Wide NoIR  [imx708_wide_noir]`  <br>`ZWO  ASI178MC`  <br>RPi cameras show their sensor in brackets.  <br><br>To use another camera, select it and save the change via the ==Save changes== button. You can't change any other setting at the same time.  <br><br>If you connect or disconnect a camera on the Pi, select ==Refresh== and save to look for cameras again; the current camera stays selected. A camera that's selected but no longer connected is shown as `(not connected)`. |

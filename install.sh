@@ -608,16 +608,18 @@ do_save_camera_capabilities()
 
 	display_msg --logonly info "Making new settings file '${ALLSKY_SETTINGS_FILE}'."
 
+	local PRIOR_INFO=""  INFO
+	if [[ -n ${PRIOR_CAMERA_TYPE} ]]; then
+		PRIOR_INFO="$( set_camera_info --type "${PRIOR_CAMERA_TYPE}" \
+			--number "${PRIOR_CAMERA_NUMBER}" --model "${PRIOR_CAMERA_MODEL}" )"
+	fi
+	INFO="$( set_camera_info --type "${CAMERA_TYPE}" --number "${CAMERA_NUMBER}" \
+		--model "${CAMERA_MODEL}" )"
+
 	CMD="makeChanges.sh${FORCE}${OPTIONSONLY}"
 	CMD+=" --cameraTypeOnly --from install --addNewSettings ${DEBUG_ARG}"
 	#shellcheck disable=SC2089
-	CMD+=" cameranumber 'Camera Number' '${PRIOR_CAMERA_NUMBER}' '${CAMERA_NUMBER}'"
-	#shellcheck disable=SC2089
-	CMD+=" cameramodel 'Camera Model' '${PRIOR_CAMERA_MODEL}' '${CAMERA_MODEL}'"
-
-	# cameratype needs to come last.
-	#shellcheck disable=SC2089
-	CMD+=" cameratype 'Camera Type' '${PRIOR_CAMERA_TYPE}' '${CAMERA_TYPE}'"
+	CMD+=" camerainfo 'Camera' '${PRIOR_INFO}' '${INFO}'"
 
 	MSG="Executing ${CMD}"
 	display_msg "${LOG_TYPE}" info "${MSG}"
@@ -675,9 +677,9 @@ do_save_camera_capabilities()
 
 	check_for_required_settings		# Make sure the required settings are there.
 
-	CAMERA_MODEL="$( settings ".cameramodel" "${ALLSKY_SETTINGS_FILE}" )"
+	CAMERA_MODEL="$( get_camera_info --model "$( settings ".camerainfo" "${ALLSKY_SETTINGS_FILE}" )" )"
 	if [[ -z ${CAMERA_MODEL} ]]; then
-		display_msg --log error "cameramodel not found in settings file."
+		display_msg --log error "camerainfo not found in settings file."
 		return 1
 	fi
 
@@ -698,7 +700,7 @@ get_count()
 # This can be used after installation if the options file gets hosed.
 recreate_options_file()
 {
-	CAMERA_TYPE="$( settings ".cameratype" )"
+	CAMERA_TYPE="$( get_camera_info --type "$( get_settings_camera_info )" )"
 	save_camera_capabilities "true"
 	set_permissions
 }
@@ -1448,16 +1450,12 @@ does_prior_Allsky_exist()
 	# and that file will have the camera type and model.
 	PRIOR_SETTINGS_FILE="${PRIOR_CONFIG_DIR}/${SETTINGS_FILE_NAME}"
 	if [[ -f ${PRIOR_SETTINGS_FILE} ]]; then
-		# Look for newer, lowercase setting names starting in v2024.12.06.
-		PRIOR_CAMERA_TYPE="$( settings ".cameratype" "${PRIOR_SETTINGS_FILE}" )"
-		if [[ -n ${PRIOR_CAMERA_TYPE} ]]; then
-			PRIOR_CAMERA_MODEL="$( settings ".cameramodel" "${PRIOR_SETTINGS_FILE}" )"
-			PRIOR_CAMERA_NUMBER="$( settings ".cameranumber" "${PRIOR_SETTINGS_FILE}" )"
-		else
-			PRIOR_CAMERA_TYPE="$( settings ".cameraType" "${PRIOR_SETTINGS_FILE}" )"
-			PRIOR_CAMERA_MODEL="$( settings ".cameraModel" "${PRIOR_SETTINGS_FILE}" )"
-			PRIOR_CAMERA_NUMBER="$( settings ".cameraNumber" "${PRIOR_SETTINGS_FILE}" )"
-		fi
+		# The prior Allsky may have "camerainfo" or the older separate settings.
+		local PRIOR_INFO
+		PRIOR_INFO="$( get_settings_camera_info "${PRIOR_SETTINGS_FILE}" )"
+		PRIOR_CAMERA_TYPE="$( get_camera_info --type "${PRIOR_INFO}" )"
+		PRIOR_CAMERA_MODEL="$( get_camera_info --model "${PRIOR_INFO}" )"
+		PRIOR_CAMERA_NUMBER="$( get_camera_info --number "${PRIOR_INFO}" )"
 	else
 		# This shouldn't happen...
 		MSG="No prior settings file (${PRIOR_SETTINGS_FILE}) found!"
@@ -1813,6 +1811,11 @@ convert_settings_file()			# prior_file, new_file
 					fi
 					;;
 
+				# ===== Combined into camerainfo after v2026.10.01; it's added below.
+				"cameratype" | "cameramodel" | "cameranumber")
+					echo "${FIELD} ${FIELD} --delete" >> "${DELETED_SETTINGS}"
+					;;
+
 				# ===== Names changed in ${COMBINED_BASE_VERSION}
 				"darkframe")
 					doV "${FIELD}" "VALUE" "takedarkframes" "boolean" "${NEW_FILE}"
@@ -1868,6 +1871,15 @@ convert_settings_file()			# prior_file, new_file
 					;;
 			esac
 		done
+
+	# The camera's type, number, and model are in one setting after v2026.10.01.
+	if [[ -z "$( settings ".camerainfo" "${TEMP_PRIOR}" )" ]]; then
+		local INFO
+		if INFO="$( get_settings_camera_info "${TEMP_PRIOR}" )" ; then
+			"${ALLSKY_SCRIPTS}/updateJsonFile.sh" --verbosity silent --file "${NEW_FILE}" \
+				"camerainfo" "Camera" "${INFO}"
+		fi
+	fi
 
 	# Delete obsolete settings.
 	if [[ -s "${DELETED_SETTINGS}" ]]; then
@@ -2906,7 +2918,7 @@ do_change_images()
 # This can be needed if the user hosed something up, or there was a problem somewhere.
 do_update()
 {
-	CAMERA_TYPE="$( settings ".cameratype" )"
+	CAMERA_TYPE="$( get_camera_info --type "$( get_settings_camera_info )" )"
 	if [[ -z ${CAMERA_TYPE} ]]; then
 		display_msg --log error "Camera Type not set in settings file."
 		exit_installation 1 "${STATUS_ERROR}" "No Camera Type in settings file during update."

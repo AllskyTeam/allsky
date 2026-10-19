@@ -1491,6 +1491,24 @@ function getRemoteWebsiteConfigFile() {
 	return ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE;
 }
 
+// The "camerainfo" setting holds the camera's type, number, model, and sensor
+// (RPi only), separated by ";".  Use these functions rather than splitting it yourself.
+// $part is "type", "number", "model", or "sensor".
+function camera_info_part($cameraInfo, $part) {
+	$parts = explode(";", (string) $cameraInfo);
+	$index = array("type" => 0, "number" => 1, "model" => 2, "sensor" => 3);
+	if (! isset($index[$part])) return "";
+	return getVariableOrDefault($parts, $index[$part], "");
+}
+
+// What a user sees, e.g., "RPi Module 3 Wide NoIR [imx708_wide_noir]" or "ZWO ASI178MC".
+function camera_info_label($cameraInfo) {
+	$label = camera_info_part($cameraInfo, "type") . " " . camera_info_part($cameraInfo, "model");
+	$sensor = camera_info_part($cameraInfo, "sensor");
+	if ($sensor !== "") $label .= " [$sensor]";
+	return $label;
+}
+
 // Check if the specified variable is in the specified array.
 // If so, return it; if not, return default value;
 // This is used to make the code easier to read.

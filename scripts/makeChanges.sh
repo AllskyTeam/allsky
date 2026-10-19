@@ -285,9 +285,8 @@ do
 
 	shift 4
 
-	# Don't skip if it's a camera* settings since that means we need to refresh the camera info.
-	if [[ ${KEY} != "cameratype" && ${KEY} != "cameranumber" && ${KEY} != "cameramodel" &&
-			${OLD_VALUE} == "${NEW_VALUE}" ]]; then
+	# Don't skip camerainfo since that means we need to refresh the camera info.
+	if [[ ${KEY} != "camerainfo" && ${OLD_VALUE} == "${NEW_VALUE}" ]]; then
 		if debug ; then
 			wD_ "Skipping ${LABEL} - old and new are equal."
 		fi
@@ -327,38 +326,26 @@ do
 
 	case "${KEY}" in
 
-		# When called from the installer we get cameranumber, cameramodel, and cameratype.
-		# This is the only time cameranumber should be used since it could change if,
-		# for example, a user removes a camera.
-		# When called from the WebUI we only get what the user changed which is
-		# either cameramodel OR cameratype.
-		"cameranumber")
-			CAMERA_NUMBER="${NEW_VALUE:-0}"
-			CAMERA_NUMBER_ARG=" -cameranumber ${CAMERA_NUMBER}"
-			;;
-
-		"cameramodel" | "cameratype")
-			if [[ ${KEY} == "cameramodel" ]]; then
-				CAMERA_MODEL="${NEW_VALUE}"
-
-				if [[ ${FROM} == "install" ]]; then
-# TODO: Use the KEYS[] array so the settings can be passed in either order.
-					# When called during installation the camera model is
-					# passed in, then the camera type.
-					continue
-				fi
-
-				# If only the CAMERA_MODEL changed, it's the same CAMERA_TYPE.
-# TODO: use   CAMERA_TYPE="${S_cameratype}"
-				CAMERA_TYPE="$( settings ".cameratype" )"
-
-			else
-				CAMERA_TYPE="${NEW_VALUE}"
-				if [[ ! -e "${ALLSKY_BIN}/capture_${CAMERA_TYPE}" ]]; then
-					MSG="Unknown ${WSNs}${LABEL}${WSNe}: '${CAMERA_TYPE}'."
-					wE_ "${ERROR_PREFIX}ERROR: ${MSG}"
-					exit "${ALLSKY_EXIT_NO_CAMERA}"
-				fi
+		# "camerainfo" is the camera's type, number, model, and sensor (see get_camera_info()).
+		# The WebUI passes the same old and new value when the user selected "Refresh":
+		# look for cameras again and keep the same camera.  Its number may have changed,
+		# e.g., if a camera was added or removed, so it's found by its model.
+		"camerainfo")
+			CAMERA_TYPE="$( get_camera_info --type "${NEW_VALUE}" )"
+			CAMERA_MODEL="$( get_camera_info --model "${NEW_VALUE}" )"
+			CAMERA_NUMBER="$( get_camera_info --number "${NEW_VALUE}" )"
+			REFRESHING_CAMERA="false"
+			if [[ ${FROM} == "webui" && ${OLD_VALUE} == "${NEW_VALUE}" ]]; then
+				REFRESHING_CAMERA="true"
+				CAMERA_NUMBER=""
+			fi
+			if [[ -n ${CAMERA_NUMBER} ]]; then
+				CAMERA_NUMBER_ARG=" -cameranumber ${CAMERA_NUMBER}"
+			fi
+			if [[ -z ${CAMERA_TYPE} || ! -e "${ALLSKY_BIN}/capture_${CAMERA_TYPE}" ]]; then
+				MSG="Unknown camera type in ${WSNs}${LABEL}${WSNe}: '${CAMERA_TYPE}'."
+				wE_ "${ERROR_PREFIX}ERROR: ${MSG}"
+				exit "${ALLSKY_EXIT_NO_CAMERA}"
 			fi
 
 			# This requires Allsky to be stopped so we don't
@@ -382,17 +369,17 @@ do
 						exit "${RET}"
 					fi
 
-					if [[ ${FROM} != "install" ]]; then
-						# Installation routine already did this,
-						# otherwise do it again in case the list of cameras changed.
-
-						# "false" means don't ignore errors (i.e., exit on error).
-						get_connected_cameras_info "false" > "${ALLSKY_CONNECTED_CAMERAS_INFO}"
-					fi
-
 					OTHER_ARGS="-cmd ${RPi_COMMAND_TO_USE}"
 				else
 					OTHER_ARGS=""
+				fi
+
+				if [[ ${FROM} != "install" ]]; then
+					# Installation routine already did this,
+					# otherwise do it again in case the list of cameras changed.
+					# The "Camera" setting lists them all, so look for every type.
+					# "true" means ignore errors: there may be no camera of one type.
+					get_connected_cameras_info "true" > "${ALLSKY_CONNECTED_CAMERAS_INFO}"
 				fi
 
 				CC_FILE_OLD="${ALLSKY_CC_FILE}-OLD"
@@ -442,6 +429,20 @@ do
 				if [[ ${RET} -ne 0 || ! -f ${ALLSKY_CC_FILE} ]]; then
 					# Restore prior cc file if there was one.
 					[[ -f ${CC_FILE_OLD} ]] && mv "${CC_FILE_OLD}" "${ALLSKY_CC_FILE}"
+
+					if [[ ${REFRESHING_CAMERA} == "true" && -f ${ALLSKY_CC_FILE} ]]; then
+						# The camera is probably no longer connected.  Still list the
+						# cameras that are, so the user can pick one.
+						create_options_file --no-settings-file \
+							--cc-file "${ALLSKY_CC_FILE}" --options-file "${ALLSKY_OPTIONS_FILE}"
+						MSG="The ${CAMERA_TYPE} ${CAMERA_MODEL} camera was not found or could not be opened"
+						MSG+=" (is it still connected?)."
+						MSG+="${wBR}The list of cameras was updated;"
+						MSG+=" select the camera to use in ${WSNs}${LABEL}${WSNe}."
+						[[ -n ${R} ]] && MSG+="${wBR}${R}"
+						wW_ "${MSG}"
+						exit 255		# a warning
+					fi
 
 					# Invoker displays error message on ALLSKY_EXIT_NO_CAMERA.
 					if [[ ${RET} -ne "${ALLSKY_EXIT_NO_CAMERA}" ]]; then
@@ -503,8 +504,8 @@ do
 			# values from the prior settings file if it exists.
 			if [[ -f ${ALLSKY_SETTINGS_FILE} ]]; then
 				# Prior settings file exists so save the old TYPE and MODEL
-				OLD_TYPE="${S_cameratype}"
-				OLD_MODEL="${S_cameramodel}"
+				OLD_TYPE="$( get_camera_info --type "${S_camerainfo}" )"
+				OLD_MODEL="$( get_camera_info --model "${S_camerainfo}" )"
 			else
 				OLD_TYPE=""
 				OLD_MODEL=""
@@ -622,14 +623,17 @@ do
 			CHANGES+=( "computer" "Computer" "${COMPUTER}" )
 			CHANGES+=( "camera" "Camera" "${CAMERA_TYPE} ${CAMERA_MODEL}" )
 
-			# Because the user doesn't change the camera number directly it's
-			# not updated in the settings file, so we have to do it.
-			if [[ -z ${CAMERA_NUMBER} ]]; then
-				# This uses the ALLSKY_CC_FILE just created.
-				CAMERA_NUMBER="$( settings ".cameraNumber" "${ALLSKY_CC_FILE}" )"
-				CAMERA_NUMBER=${CAMERA_NUMBER:-0}
+			# The camera as the capture program found it, e.g., with its new number
+			# after a "Refresh".  The new settings file may be a different file.
+			# This uses the ALLSKY_CC_FILE just created.
+			CAMERA_NUMBER="$( settings ".cameraNumber" "${ALLSKY_CC_FILE}" )"
+			CAMERA_SENSOR=""
+			if [[ ${CAMERA_TYPE} == "RPi" ]]; then
+				CAMERA_SENSOR="$( settings ".sensor" "${ALLSKY_CC_FILE}" )"
 			fi
-			CHANGES+=( "cameranumber" "Camera Number" "${CAMERA_NUMBER}" )
+			CAMERA_INFO="$( set_camera_info --type "${CAMERA_TYPE}" --number "${CAMERA_NUMBER:-0}" \
+				--model "${CAMERA_MODEL}" --sensor "${CAMERA_SENSOR}" )"
+			CHANGES+=( "camerainfo" "Camera" "${CAMERA_INFO}" )
 
 			# shellcheck disable=SC2086
 			"${ALLSKY_SCRIPTS}/updateJsonFile.sh" \

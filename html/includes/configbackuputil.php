@@ -975,8 +975,28 @@ class CONFIGBACKUPUTIL extends UTILBASE
             return ['cameratype' => 'unknown', 'cameramodel' => 'unknown'];
         }
 
-        $type = trim((string)($decoded['cameratype'] ?? ''));
-        $model = trim((string)($decoded['cameramodel'] ?? ''));
+        return $this->cameraFromSettings($decoded);
+    }
+
+    /**
+     * Gets the camera type and model from a decoded settings file.
+     * Newer files have "camerainfo" (type, number, model, and sensor separated by ";"),
+     * older ones (including those in older backups) have "cameratype" and "cameramodel".
+     *
+     * @param array<string, mixed> $decoded Decoded settings file.
+     * @return array{cameratype: string, cameramodel: string}
+     */
+    private function cameraFromSettings(array $decoded): array
+    {
+        $info = (string)($decoded['camerainfo'] ?? '');
+        if ($info !== '') {
+            $parts = explode(';', $info);
+            $type = trim($parts[0] ?? '');
+            $model = trim($parts[2] ?? '');
+        } else {
+            $type = trim((string)($decoded['cameratype'] ?? ''));
+            $model = trim((string)($decoded['cameramodel'] ?? ''));
+        }
 
         return [
             'cameratype' => ($type === '') ? 'unknown' : $type,
@@ -2484,12 +2504,7 @@ class CONFIGBACKUPUTIL extends UTILBASE
             return ['cameratype' => 'unknown', 'cameramodel' => 'unknown'];
         }
 
-        $type = trim((string)($decoded['cameratype'] ?? ''));
-        $model = trim((string)($decoded['cameramodel'] ?? ''));
-        return [
-            'cameratype' => ($type === '') ? 'unknown' : $type,
-            'cameramodel' => ($model === '') ? 'unknown' : $model,
-        ];
+        return $this->cameraFromSettings($decoded);
     }
 
     /**

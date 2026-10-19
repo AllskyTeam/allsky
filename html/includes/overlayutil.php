@@ -964,8 +964,8 @@ class OVERLAYUTIL extends UTILBASE {
                 'nighttime' => $this->getSetting('nighttimeoverlay'),
             ],
             'brands'       => ['RPi', 'ZWO', 'Arducam'],
-            'brand'        => $this->getSetting('cameratype'),
-            'model'        => $this->getSetting('cameramodel'),
+            'brand'        => camera_info_part($this->getSetting('camerainfo', '', ''), 'type'),
+            'model'        => camera_info_part($this->getSetting('camerainfo', '', ''), 'model'),
             'sensorWidth'  => $this->cc['sensorWidth']  ?? null,
             'sensorHeight' => $this->cc['sensorHeight'] ?? null,
         ];

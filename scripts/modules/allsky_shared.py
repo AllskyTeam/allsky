@@ -4448,6 +4448,24 @@ def get_camera_type():
     return camera_type.lower()
 
 
+def get_camera_info(part):
+    """
+    Get one part of the ``camerainfo`` setting.
+
+    ``camerainfo`` holds the camera's type, number, model, and sensor (RPi only),
+    separated by ``;``. Use this rather than splitting it yourself.
+
+    Args:
+        part (str): ``"type"``, ``"number"``, ``"model"``, or ``"sensor"``.
+
+    Returns:
+        str: That part, or ``""`` if it isn't set.
+    """
+    parts = str(get_setting("camerainfo") or "").split(";")
+    index = {"type": 0, "number": 1, "model": 2, "sensor": 3}[part]
+    return parts[index] if index < len(parts) else ""
+
+
 def get_rpi_meta_value(key):
     """
     Read a single value from the Raspberry Pi camera metadata file.

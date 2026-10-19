@@ -152,6 +152,90 @@ function doExit()
 
 #####
 # This allows testing from the command line without "return" or doExit() killing the shell.
+#####
+# The "camerainfo" setting holds everything about the camera in one field, separated by ";":
+#	type;number;model;sensor
+# for example "RPi;0;Module 3 Wide NoIR;imx708_wide_noir" or "ZWO;0;ASI178MC".
+# The sensor is only set for RPi cameras; without one there's no trailing ";".
+# Not tabs: some scripts write JSON files with "echo -e", which turns "\t" into a tab
+# and makes the file invalid.  The number is per camera type.
+# Use these functions rather than splitting the field yourself.
+
+# Return one part of a camerainfo value:
+#	get_camera_info --type | --number | --model | --sensor  camerainfo
+function get_camera_info()
+{
+	local PART="${1}"
+	local INFO="${2}"
+	local TYPE  NUMBER  MODEL  SENSOR
+
+	IFS=";" read -r TYPE NUMBER MODEL SENSOR <<< "${INFO}"
+	case "${PART}" in
+		"--type")		echo "${TYPE}" ;;
+		"--number")		echo "${NUMBER}" ;;
+		"--model")		echo "${MODEL}" ;;
+		"--sensor")		echo "${SENSOR}" ;;
+		*)
+			echo "Usage: ${FUNCNAME[0]} --type | --number | --model | --sensor  camerainfo" >&2
+			return 2
+			;;
+	esac
+}
+
+# Return a camerainfo value:
+#	set_camera_info --type TYPE --number NUMBER --model MODEL [--sensor SENSOR]
+function set_camera_info()
+{
+	local TYPE=""  NUMBER="0"  MODEL=""  SENSOR=""
+
+	while [[ $# -gt 0 ]]
+	do
+		case "${1}" in
+			"--type")		TYPE="${2}" ;;
+			"--number")		NUMBER="${2:-0}" ;;
+			"--model")		MODEL="${2}" ;;
+			"--sensor")		SENSOR="${2}" ;;
+			*)
+				echo "Usage: ${FUNCNAME[0]} --type TYPE --number NUMBER --model MODEL [--sensor SENSOR]" >&2
+				return 2
+				;;
+		esac
+		shift 2
+	done
+	if [[ -n ${SENSOR} ]]; then
+		echo "${TYPE};${NUMBER};${MODEL};${SENSOR}"
+	else
+		echo "${TYPE};${NUMBER};${MODEL}"
+	fi
+}
+
+# Return the camerainfo of a settings file, also of one from before "camerainfo" existed:
+#	get_settings_camera_info [settings_file]
+function get_settings_camera_info()
+{
+	local FILE="${1:-${ALLSKY_SETTINGS_FILE}}"
+	local INFO  TYPE  MODEL  NUMBER
+
+	INFO="$( settings ".camerainfo" "${FILE}" )"
+	if [[ -n ${INFO} ]]; then
+		echo "${INFO}"
+		return 0
+	fi
+
+	TYPE="$( settings ".cameratype" "${FILE}" )"
+	if [[ -n ${TYPE} ]]; then
+		MODEL="$( settings ".cameramodel" "${FILE}" )"
+		NUMBER="$( settings ".cameranumber" "${FILE}" )"
+	else
+		# Before v2024.12.06 setting names had uppercase letters.
+		TYPE="$( settings ".cameraType" "${FILE}" )"
+		MODEL="$( settings ".cameraModel" "${FILE}" )"
+		NUMBER="$( settings ".cameraNumber" "${FILE}" )"
+	fi
+	[[ -z ${TYPE} ]] && return 1
+	set_camera_info --type "${TYPE}" --number "${NUMBER}" --model "${MODEL}"
+}
+
 function test_verify_CAMERA_TYPE()
 {
 	# "true" == ignore errors
@@ -171,13 +255,13 @@ function verify_CAMERA_TYPE()
 	OK="true"
 	if [[ -z ${CT} ]]; then
 		OK="false"
-		MSG="'Camera Type' not set in WebUI."
-		IMAGE_MSG="${ERROR_MSG_PREFIX}\nCamera Type\nnot specified."
+		MSG="'Camera' not set in WebUI."
+		IMAGE_MSG="${ERROR_MSG_PREFIX}\nCamera\nnot specified."
 
 	elif [[ ${CT} != "RPi" && ${CT} != "ZWO" ]]; then
 		OK="false"
-		MSG="Unknown Camera Type: ${CT}."
-		IMAGE_MSG="${ERROR_MSG_PREFIX}\nCamera Type\nnot specified."
+		MSG="Unknown camera type: ${CT}."
+		IMAGE_MSG="${ERROR_MSG_PREFIX}\nCamera\nnot specified."
 	fi
 
 	if [[ ${OK} == "false" ]]; then
@@ -305,7 +389,13 @@ function get_connected_cameras_info()
 	# Tab-separated output will be:
 	#		camera	RPi  camera_number   camera_sensor  module_len   model
 	# for each camera found, followed by lines for each camera capability.
-	"${ALLSKY_UTILITIES}/getRPiCameraInfo.sh" --info-only --cmd "${RPi_CMD_TO_USE_}"
+	# getRPiCameraInfo.sh writes ${ALLSKY_CONNECTED_CAMERAS_INFO} itself and then outputs it.
+	# Callers usually send our output to that same file, so keep the RPi output and
+	# output it here; otherwise the ZWO lines would overwrite the start of the file.
+	local RPi_INFO
+	if RPi_INFO="$( "${ALLSKY_UTILITIES}/getRPiCameraInfo.sh" --info-only --cmd "${RPi_CMD_TO_USE_}" )" ; then
+		echo "${RPi_INFO}"
+	fi
 
 
 	####### Check for ZWO
@@ -388,10 +478,10 @@ function get_connected_camera_models()
 			camera_number = $3
 
 			if (camera_type == "ZWO") {
+				model = $4;
 				if (FULL == "true") {
-					printf("%s\t%d\t%s\t%s\n", camera_type, camera_type, model, sensor);
+					printf("%s\t%d\t%s\t%s\n", camera_type, camera_number, model, "");
 				} else {
-					model = $4;
 					print model;
 				}
 			} else {
@@ -479,37 +569,25 @@ function validate_camera()
 	local MSG  URL  RET
 
 	# Compare the specified camera to what's in the settings file.
-	SETTINGS_CT="$( settings ".cameratype" )"
-	SETTINGS_CM="$( settings ".cameramodel" )"
-	SETTINGS_CN="$( settings ".cameranumber" )"
+	local SETTINGS_CI  SETTINGS_CT  SETTINGS_CM  SETTINGS_CN  WHAT=""
+	SETTINGS_CI="$( settings ".camerainfo" )"
+	SETTINGS_CT="$( get_camera_info --type "${SETTINGS_CI}" )"
+	SETTINGS_CM="$( get_camera_info --model "${SETTINGS_CI}" )"
+	SETTINGS_CN="$( get_camera_info --number "${SETTINGS_CI}" )"
 
 	RET=0
 	if [[ ${SETTINGS_CT} != "${CT}" ]]; then
-		MSG="The Camera Type unexpectedly changed from '${SETTINGS_CT}' to '${CT}'."
-		MSG+="\nGo to the 'Allsky Settings' page of the WebUI and"
-		MSG+=" change the 'Camera Type' to 'Refresh' then save the settings."
-		if [[ ${ON_TTY} == "true" ]]; then
-			E_ "\n${MSG}\n"
-		else
-			URL="/index.php?page=configuration"
-			"${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${MSG}" --url "${URL}"
-		fi
-		RET=1
+		WHAT="type changed from '${SETTINGS_CT}' to '${CT}'"
 	elif [[ ${SETTINGS_CM} != "${CM}" ]]; then
-		MSG="The Camera Model unexpectedly changed from '${SETTINGS_CM}' to '${CM}'."
-		MSG+="\nGo to the 'Allsky Settings' page of the WebUI and"
-		MSG+=" change the 'Camera Model' to '${CM}' then save the settings."
-		if [[ ${ON_TTY} == "true" ]]; then
-			E_ "\n${MSG}\n"
-		else
-			URL="/index.php?page=configuration"
-			"${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${MSG}" --url "${URL}"
-		fi
-		RET=1
+		WHAT="model changed from '${SETTINGS_CM}' to '${CM}'"
 	elif [[ ${SETTINGS_CN} != "${CN}" ]]; then
-		MSG="The camera's number unexpectedly changed from '${SETTINGS_CN}' to '${CN}'."
-		MSG+="\nGo to the 'Allsky Settings' page of the WebUI and"
-		MSG+=" change the 'Camera Type' to 'Refresh' then save the settings."
+		WHAT="number changed from '${SETTINGS_CN}' to '${CN}'"
+	fi
+	if [[ -n ${WHAT} ]]; then
+		MSG="The camera's ${WHAT} unexpectedly."
+		MSG+="\nGo to the 'Allsky Settings' page of the WebUI,"
+		MSG+=" select 'Refresh' for the 'Camera' setting and save the settings,"
+		MSG+=" then select the camera to use."
 		if [[ ${ON_TTY} == "true" ]]; then
 			E_ "\n${MSG}\n"
 		else
@@ -959,14 +1037,10 @@ function get_links()
 # Return 0 code and no message if successful, else 1 and return a message.
 function check_settings_link()
 {
-	local FULL_FILE FILE DIRNAME SETTINGS_LINK RET MSG F E CORRECT_NAME
-	local CT="cameratype"
-	local CM="cameramodel"
-	if [[ ${1} == "--uppercase" ]]; then
-		CT="cameraType"
-		CM="cameraModel"
-		shift
-	fi
+	local FULL_FILE FILE DIRNAME SETTINGS_LINK RET MSG F E CORRECT_NAME INFO
+	# --uppercase was for setting names before v2024.12.06;
+	# get_settings_camera_info() handles those itself.
+	[[ ${1} == "--uppercase" ]] && shift
 
 	FULL_FILE="${1}"
 	if [[ -z ${FULL_FILE} ]]; then
@@ -977,13 +1051,11 @@ function check_settings_link()
 		echo "${FUNCNAME[0]}(): File '${FULL_FILE}' not found."
 		return 1
 	fi
-	if [[ -z ${CAMERA_TYPE} ]]; then
-		CAMERA_TYPE="$( settings ".${CT}"  "${FULL_FILE}" )"
-		[[ $? -ne 0 || -z ${CAMERA_TYPE} ]] && return "${ALLSKY_EXIT_ERROR_STOP}"
-	fi
-	if [[ -z ${CAMERA_MODEL} ]]; then
-		CAMERA_MODEL="$( settings ".${CM}"  "${FULL_FILE}" )"
-		[[ $? -ne 0 || -z ${CAMERA_TYPE} ]] && return "${ALLSKY_EXIT_ERROR_STOP}"
+	if [[ -z ${CAMERA_TYPE} || -z ${CAMERA_MODEL} ]]; then
+		INFO="$( get_settings_camera_info "${FULL_FILE}" )" || return "${ALLSKY_EXIT_ERROR_STOP}"
+		[[ -z ${CAMERA_TYPE} ]] && CAMERA_TYPE="$( get_camera_info --type "${INFO}" )"
+		[[ -z ${CAMERA_MODEL} ]] && CAMERA_MODEL="$( get_camera_info --model "${INFO}" )"
+		[[ -z ${CAMERA_TYPE} || -z ${CAMERA_MODEL} ]] && return "${ALLSKY_EXIT_ERROR_STOP}"
 	fi
 
 	DIRNAME="$( dirname "${FULL_FILE}" )"

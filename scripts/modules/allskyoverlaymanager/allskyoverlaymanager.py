@@ -183,8 +183,8 @@ class ALLSKYOVERLAYMANAGER:
         if Path(old_format_overlay_file).exists():
             self._log(False, "INFO: Old overlay system detected - Attempting to migrate overlay")
             old_camera_type = self._args.camera
-            camera_type = shared.get_setting("cameratype")
-            camera_model = shared.get_setting("cameramodel")
+            camera_type = shared.get_camera_info("type")
+            camera_model = shared.get_camera_info("model")
             cc_file = shared.get_environment_variable("ALLSKY_CC_FILE")
             sensor_width = shared._get_value_from_json_file(cc_file, "sensorWidth")
             sensor_height = shared._get_value_from_json_file(cc_file, "sensorHeight")
@@ -221,7 +221,7 @@ class ALLSKYOVERLAYMANAGER:
                     json.dump(json_data, file, indent=4, ensure_ascii=False)
 
             else:
-                camera_model = shared.get_setting("cameramodel")                
+                camera_model = shared.get_camera_info("model")                
                 camera_model = camera_model.replace(" ", "_")
                 full_overlay_name = f"overlay-{camera_type}_{camera_model}-{sensor_width}x{sensor_height}-both.json"
                 short_overlay_name = f"overlay-{camera_type}.json"
@@ -295,8 +295,8 @@ class ALLSKYOVERLAYMANAGER:
         overlay, then updates the Allsky settings accordingly.
         """
         self._log(False, "INFO: Starting overlay install")
-        camera_type = shared.get_setting("cameratype")
-        camera_model = shared.get_setting("cameramodel")
+        camera_type = shared.get_camera_info("type")
+        camera_model = shared.get_camera_info("model")
         camera_model = camera_model.replace(" ", "_")
         cc_file = shared.get_environment_variable("ALLSKY_CC_FILE")
         sensor_width = shared._get_value_from_json_file(cc_file, "sensorWidth")

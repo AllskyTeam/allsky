@@ -32,18 +32,22 @@ v2026.10.01 { data-toc-label="v2026.10.01" }
 			- If you decrease the number of days' images to keep and there are more days' images than the new days to keep value, a notice will display in the WebUI.
 		- The WebUI checks for new Allsky releases every 12 hours instead of every 2 days.
         - After installing Allsky, a link to the documentation may appear in the WebUI, depending on what prior Allsky release you were running.
+        - **One Camera setting**
+            - The ==Camera Type== and ==Camera Model== settings are replaced by one ==Camera== setting that lists every camera connected to the Pi, RPi and ZWO, e.g., `RPi  Module 3 Wide NoIR  [imx708_wide_noir]` or `ZWO  ASI178MC`. You can now switch directly to any connected camera, also when several cameras of one type are connected. ==Refresh== looks for cameras again.
 
         ## **Bug Fixes**
 		- The `upgrade.sh` command no longer fails when using the "in-place" method and a new Allsky release is available.
 		- Several overlay-related bugs including ones where a comma is used for the decimal point.
 
         ## **Deleted Settings**
+        - ==Camera Type== and ==Camera Model== - replaced by the new ==Camera== setting.  Upgrades convert them automatically.
         - ==Night images only== (Startrails) - replaced by the new startrails ==Start Time== and ==End Time== set to `nighttime_start` and `nighttime_end`, which use the same day/night decision. Existing settings are converted automatically.
 
         ## **New Settings**
 	    - ==Days To Keep on Remote Website== - This is similar to ==Days To Keep on Pi Website==, but for remote Websites.
         - ==Moon-dependent stretch==, ==Full Moon Stretch Amount==, and ==Full Moon Stretch mid point== (Nighttime)
         - ==Start Time== and ==End Time== for Daily Timelapse, Keograms, and Startrails
+        - ==Camera== (Camera) - the camera to use, replacing ==Camera Type== and ==Camera Model==.
 
 
 

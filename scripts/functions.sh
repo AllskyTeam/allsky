@@ -151,8 +151,6 @@ function doExit()
 
 
 #####
-# This allows testing from the command line without "return" or doExit() killing the shell.
-#####
 # The "camerainfo" setting holds everything about the camera in one field, separated by ";":
 #	type;number;model;sensor
 # for example "RPi;0;Module 3 Wide NoIR;imx708_wide_noir" or "ZWO;0;ASI178MC".
@@ -236,6 +234,8 @@ function get_settings_camera_info()
 	set_camera_info --type "${TYPE}" --number "${NUMBER}" --model "${MODEL}"
 }
 
+#####
+# This allows testing from the command line without "return" or doExit() killing the shell.
 function test_verify_CAMERA_TYPE()
 {
 	# "true" == ignore errors
@@ -392,8 +392,12 @@ function get_connected_cameras_info()
 	# getRPiCameraInfo.sh writes ${ALLSKY_CONNECTED_CAMERAS_INFO} itself and then outputs it.
 	# Callers usually send our output to that same file, so keep the RPi output and
 	# output it here; otherwise the ZWO lines would overwrite the start of the file.
-	local RPi_INFO
-	if RPi_INFO="$( "${ALLSKY_UTILITIES}/getRPiCameraInfo.sh" --info-only --cmd "${RPi_CMD_TO_USE_}" )" ; then
+	# When ignoring errors, e.g., on a Pi with only ZWO cameras, don't show the
+	# RPi software's "no cameras available" message.
+	local RPi_INFO  RPi_ERRORS="/dev/stderr"
+	[[ ${IGNORE_ERRORS} == "true" ]] && RPi_ERRORS="/dev/null"
+	if RPi_INFO="$( "${ALLSKY_UTILITIES}/getRPiCameraInfo.sh" --info-only \
+			--cmd "${RPi_CMD_TO_USE_}" 2> "${RPi_ERRORS}" )" ; then
 		echo "${RPi_INFO}"
 	fi
 
@@ -570,7 +574,7 @@ function validate_camera()
 
 	# Compare the specified camera to what's in the settings file.
 	local SETTINGS_CI  SETTINGS_CT  SETTINGS_CM  SETTINGS_CN  WHAT=""
-	SETTINGS_CI="$( settings ".camerainfo" )"
+	SETTINGS_CI="$( get_settings_camera_info )"
 	SETTINGS_CT="$( get_camera_info --type "${SETTINGS_CI}" )"
 	SETTINGS_CM="$( get_camera_info --model "${SETTINGS_CI}" )"
 	SETTINGS_CN="$( get_camera_info --number "${SETTINGS_CI}" )"

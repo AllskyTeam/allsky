@@ -379,7 +379,9 @@ do
 					# otherwise do it again in case the list of cameras changed.
 					# The "Camera" setting lists them all, so look for every type.
 					# "true" means ignore errors: there may be no camera of one type.
-					get_connected_cameras_info "true" > "${ALLSKY_CONNECTED_CAMERAS_INFO}"
+					# shellcheck disable=SC2086
+					get_connected_cameras_info ${RPi_COMMAND_TO_USE:+--cmd "${RPi_COMMAND_TO_USE}"} \
+						"true" > "${ALLSKY_CONNECTED_CAMERAS_INFO}"
 				fi
 
 				CC_FILE_OLD="${ALLSKY_CC_FILE}-OLD"

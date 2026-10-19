@@ -131,6 +131,13 @@ fi
 #shellcheck disable=SC2119
 getAllSettings --var "lastchanged locale imageremovebadlow imageremovebadhigh imageremovebadcount imageremovebadhighdarkframe" || exit 1
 
+# A settings file from before "camerainfo" existed, e.g., from a restored older backup,
+# has the camera in separate settings; combine them so the WebUI shows the camera.
+if [[ -z ${CAMERA_INFO} ]] && CAMERA_INFO="$( get_settings_camera_info )" ; then
+	"${ALLSKY_SCRIPTS}/updateJsonFile.sh" --verbosity silent --file "${ALLSKY_SETTINGS_FILE}" \
+		"camerainfo" "Camera" "${CAMERA_INFO}"
+fi
+
 # If the "lastchanged" setting is missing, the user needs to review/change the settings.
 # This will happen after an installation or upgrade, which also sets the Allsky status.
 if [[ -z ${S_lastchanged} ]]; then

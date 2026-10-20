@@ -779,7 +779,7 @@ do
 
 		"latitude" | "longitude")
 			# Allow either +/- decimal numbers, OR numbers with N, S, E, W, but not both.
-			if LAT_LON="$( convertLatLong "${NEW_VALUE}" "${KEY}" 2>&1 )" ; then
+			if LAT_LON="$( getPublicLatLong "${KEY}" "${NEW_VALUE}" 2>&1 )" ; then
 				check_website && WEBSITE_CONFIG+=(config."${KEY}" "${LABEL}" "${LAT_LON}")
 				WEBSITE_VALUE_CHANGED="true"
 				RUN_POSTTOMAP="true"
@@ -791,6 +791,19 @@ do
 				update_json_file ".${KEY}" "${OLD_VALUE}" "${ALLSKY_SETTINGS_FILE}" "string"
 				(( NUM_CHANGED-- ))
 			fi
+			;;
+
+		"hidelocation")
+			# The Websites and the Allsky Map get the rounded or exact values.
+			if check_website ; then
+				for LL in "latitude" "longitude" ; do
+					if LAT_LON="$( getPublicLatLong "${LL}" "" "${NEW_VALUE}" 2>&1 )" ; then
+						WEBSITE_CONFIG+=(config."${LL}" "${LL^}" "${LAT_LON}")
+					fi
+				done
+			fi
+			WEBSITE_VALUE_CHANGED="true"
+			RUN_POSTTOMAP="true"
 			;;
 
 		"location" | "owner" | "lens" | "equipmentinfo")

@@ -555,10 +555,10 @@ function replace_website_placeholders()
 
 	LATITUDE="$( settings ".config.latitude" "${FILE}" )"
 	if [[ ${LATITUDE} == "${ALLSKY_NEED_TO_UPDATE}" ]]; then
-		# Convert latitude and longitude to use N, S, E, W.
+		# Convert latitude and longitude to use N, S, E, W, rounded if "Hide Exact Location".
 		TEMP="$( settings ".latitude" )"
 		if [[ -n ${TEMP} ]]; then
-			LATITUDE="$( convertLatLong "${TEMP}" "latitude" )"
+			LATITUDE="$( getPublicLatLong "latitude" "${TEMP}" )"
 		fi
 	fi
 	[[ -z ${LATITUDE} ]] && display_msg --log warning "latitude is empty"
@@ -567,7 +567,7 @@ function replace_website_placeholders()
 	if [[ ${LONGITUDE} == "${ALLSKY_NEED_TO_UPDATE}" ]]; then
 		TEMP="$( settings ".longitude" )"
 		if [[ -n ${TEMP} ]]; then
-			LONGITUDE="$( convertLatLong "${TEMP}" "longitude" )"
+			LONGITUDE="$( getPublicLatLong "longitude" "${TEMP}" )"
 		fi
 	fi
 	[[ -z ${LONGITUDE} ]] && display_msg --log warning "longitude is empty"

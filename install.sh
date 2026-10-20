@@ -3755,20 +3755,69 @@ display_wait_message()
 
 
 ####
-# Request that the user add their camera to the Allsky Map.
+# Ask the user to add their camera to the Allsky Map.
+# The map is public so the default is "No" to satisfy privacy laws.
+# If the user declines, remember the date and don't ask again for a year.
 request_map()
 {
 	[[ "$( settings ".showonmap" )" == "true" ]] && return
 
-	local MSG
+	local DECLINED  DECLINED_SECS  MSG  M
 
-	MSG+="\nPlease consider adding your camera to the Allsky Map."
+	DECLINED="$( settings ".showonmapdeclined" )"
+	if [[ -n ${DECLINED} ]] && DECLINED_SECS="$( date -d "${DECLINED}" +%s 2>/dev/null )" &&
+			(( $( date +%s ) - DECLINED_SECS < 365 * 24 * 60 * 60 )); then
+		display_msg --logonly info "User declined the Allsky Map on ${DECLINED}; not asking again."
+		return
+	fi
+
+	MSG="Do you want to add your camera to the public Allsky Map"
+	MSG+="\n(https://www.thomasjacquin.com/allsky-map/)?"
+	MSG+="\n\nThe map shows your camera's location and the information in the"
+	MSG+="\n'Allsky Map Settings' section of the WebUI's 'Allsky Settings' page."
 	if [[ "$( settings ".useremotewebsite" )" == "false" ]]; then
 		MSG+="\nYou don't need to have a remote Website to do this."
 	fi
-	MSG+="\nSee the 'Allsky Map Settings' section of the WebUI's 'Allsky Settings' page."
-	display_msg notice "${MSG}"
+	MSG+="\n\nIf you select <No> you won't be asked again for a year."
+	if ! whiptail --title "${TITLE}" --defaultno --yesno "${MSG}" 18 "${WT_WIDTH}" 3>&1 1>&2 2>&3; then
+		display_msg --logonly info "User declined the Allsky Map."
+		update_json_file ".showonmapdeclined" "$( date +%F )" "${ALLSKY_SETTINGS_FILE}" "text"
+		MSG="You can add your camera to the Allsky Map at any time in the"
+		MSG+="\n'Allsky Map Settings' section of the WebUI's 'Allsky Settings' page."
+		display_msg info "${MSG}"
+		return
+	fi
 
+	display_msg --logonly info "User wants to be on the Allsky Map."
+	update_json_file ".showonmap" "true" "${ALLSKY_SETTINGS_FILE}" "boolean"
+	update_json_file ".showonmapdeclined" "" "${ALLSKY_SETTINGS_FILE}" "text"
+	# Same arguments the WebUI passes to makeChanges.sh: name, label, old value, new value.
+	local CHANGES=( "showonmap" "Show on Map" "false" "true" )
+
+	if [[ "$( settings ".hidelocation" )" != "true" ]]; then
+		MSG="Do you want to hide your exact location?"
+		MSG+="\n\nIf you select <Yes> the latitude and longitude shown on the Allsky Map"
+		MSG+="\nand the Allsky Websites are rounded to 1 decimal place (about 11 km / 7 miles)."
+		MSG+="\nAllsky itself still uses the exact values."
+		MSG+="\n\nYou can change this later with the 'Hide Exact Location' setting."
+		if whiptail --title "${TITLE}" --yesno "${MSG}" 18 "${WT_WIDTH}" 3>&1 1>&2 2>&3; then
+			display_msg --logonly info "User wants to hide the exact location."
+			update_json_file ".hidelocation" "true" "${ALLSKY_SETTINGS_FILE}" "boolean"
+			CHANGES+=( "hidelocation" "Hide Exact Location" "false" "true" )
+		fi
+	fi
+
+	# Update the Website configuration files and the Allsky Map.
+	# shellcheck disable=SC2086
+	if ! M="$( "${ALLSKY_SCRIPTS}/makeChanges.sh" --from install ${DEBUG_ARG} "${CHANGES[@]}" 2>&1 )" ; then
+		display_msg --log warning "Unable to update the Allsky Map now: ${M}"
+	elif [[ -n ${M} ]]; then
+		display_msg --logonly info "makeChanges.sh output: ${M}"
+	fi
+
+	MSG="Please review the 'Allsky Map Settings' section of the WebUI's 'Allsky Settings' page."
+	MSG+="\nThe Allsky Map is updated at the end of every other night."
+	display_msg notice "${MSG}"
 	add_to_post_actions "${MSG}"
 }
 

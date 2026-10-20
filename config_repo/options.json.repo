@@ -847,6 +847,15 @@
 "action" : "reload"
 },
 {
+"name" : "hidelocation",
+"default" : false,
+"description" : "Enable to round the <span class='WebUISetting'>Latitude</span> and <span class='WebUISetting'>Longitude</span> to 1 decimal place (about 11 km / 7 miles) on the Allsky Map and the local and remote Allsky Websites. Allsky itself still uses the exact values.",
+"label" : "Hide Exact Location",
+"type" : "boolean",
+"carryforward" : true,
+"checkchanges" : true
+},
+{
 "name" : "angle",
 "default" : "-6",
 "description" : "Altitude of the Sun in degrees relative to the horizon at which to switch between day and night.",
@@ -2142,6 +2151,15 @@
 "carryforward" : true,
 "checkchanges" : true,
 "booldependson" : "uselocalwebsite OR useremotewebsite"
+},
+{
+"name" : "showonmapdeclined",
+"settingsonly" : true,
+"default" : "",
+"description" : "The date (YYYY-MM-DD) the user last declined the installer's request to add the camera to the Allsky Map. Set automatically.",
+"label" : "NOT DISPLAYED IN WebUI",
+"type" : "text",
+"carryforward" : true
 },
 {
 "name" : "location",

@@ -522,7 +522,7 @@ Log(6, "  NEW TYPE FOUND [%s], num_connectedCameraTypes now = %d\n", cC->Type, n
 			}
 
 			RPiCameras[n].CameraInfo = &aci[n];
-			Log(4, "Saving module [%s], name [%s] from aci[%d] to RPiCameras[%d],",
+			Log(4, "Saving module [%s], name [%s] from aci[%d] to RPiCameras[%d]\n",
 				aci[n].Module, aci[n].Name, n, n);
 
 			if (cameraMatch)
@@ -1082,6 +1082,49 @@ void saveCameraInfo(
 
 	// output basic information on camera as well as all it's capabilities
 	fprintf(f, "{\n");
+	fprintf(f, "\t\"cameraInfo\" : \"%s;%d;%s", CAMERA_TYPE, CG.cameraNumber, camModel);
+#ifdef IS_RPi
+	fprintf(f, ";%s", cameraInfo.Sensor);
+#endif
+	fprintf(f, "\",\n");
+		fprintf(f, "\t\"cameras\" : [\n");
+		int num = 0;
+		bool foundThisModel = false;
+		for (int cc=0; cc < totalNum_connectedCameras; cc++)
+		{
+			CONNECTED_CAMERAS *cC = &connectedCameras[cc];
+			if (num > 0)
+			{
+				fprintf(f, ",");		// comma on all but last one
+				fprintf(f, "\n");
+			}
+			char *cm = getCameraModel(cC->Name);
+			Log(4, "cC->Name=%s, cm=%s, camModel=%s\n", cC->Name, cm, camModel);
+			if (strcmp(cm, camModel) == 0)
+			{
+				foundThisModel = true;
+			}
+			char m[100];
+#ifdef IS_RPi
+			snprintf(m, sizeof(m)-1, "%s [%s]", cm, cC->Sensor);
+#else
+			snprintf(m, sizeof(m)-1, "%s", cm);
+#endif
+			fprintf(f, "\t\t{ \"value\" : \"%s;%d;%s;%s\", \"label\" : \"%s %s\" }",
+				cC->Type, cC->cameraID, cm,
+#ifdef IS_RPi
+				skipType(cC->Sensor),
+#else
+				cm,
+#endif
+				cC->Type, cm
+			);
+
+			num++;
+		}
+		fprintf(f, "\n\t],\n");
+
+// XXXXX TODO OLD: can delete
 	fprintf(f, "\t\"cameraType\" : \"%s\",\n", CAMERA_TYPE);
 		fprintf(f, "\t\"cameraTypes\" : [\n");
 		for (int camType = 0; camType < num_connectedCameraTypes; camType++)
@@ -1094,8 +1137,8 @@ void saveCameraInfo(
 	fprintf(f, "\t\"cameraName\" : \"%s\",\n", cameraInfo.Name);
 	fprintf(f, "\t\"cameraModel\" : \"%s\",\n", camModel);
 		fprintf(f, "\t\"cameraModels\" : [\n");
-		int num = 0;
-		bool foundThisModel = false;
+		num = 0;
+		foundThisModel = false;
 		for (int cc=0; cc < totalNum_connectedCameras; cc++)
 		{
 			CONNECTED_CAMERAS *cC = &connectedCameras[cc];
@@ -1128,6 +1171,7 @@ void saveCameraInfo(
 			num++;
 		}
 		fprintf(f, "\n\t],\n");
+
 		if (! foundThisModel)
 		{
 			Log(0, "%s: ERROR: Currently connected camera '%s %s' not found in '%s'.\n",

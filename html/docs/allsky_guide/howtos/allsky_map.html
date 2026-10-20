@@ -22,7 +22,7 @@
     
     
       
-        <title>The Allsky map - Allsky Documentation</title>
+        <title>The Allsky Map - Allsky Documentation</title>
       
     
     
@@ -277,7 +277,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              The Allsky map
+              The Allsky Map
             
           </span>
         </div>
@@ -864,6 +864,62 @@
     
   
     v2026.10.01
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../known_issues.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Known Issues
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../changelog.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ChangeLog
   
 
     
@@ -2266,7 +2322,7 @@
   <span class="md-ellipsis">
     
   
-    The Allsky map
+    The Allsky Map
   
 
     
@@ -2284,7 +2340,7 @@
   <span class="md-ellipsis">
     
   
-    The Allsky map
+    The Allsky Map
   
 
     
@@ -2315,6 +2371,34 @@
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Adding your camera">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#my-image-doesnt-appear-on-the-mapstyleborder-1px-solid-red" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        My Image Doesn't Appear on the Map{style="border: 1px solid red"}
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#Pi-as-Website" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using Your Pi as a Remote Website
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -2937,62 +3021,6 @@
   
   
   
-    <li class="md-nav__item">
-      <a href="../known_issues.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Known Issues
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../changelog.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    ChangeLog
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
     
     
     
@@ -3007,10 +3035,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_12">
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_10">
         
           
-          <label class="md-nav__link" for="__nav_2_12" id="__nav_2_12_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_2_10" id="__nav_2_10_label" tabindex="0">
             
   
   
@@ -3028,8 +3056,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_12_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_12">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_10">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -6167,9 +6195,14 @@
   
 
 
-  <h1>The Allsky map</h1>
+  <h1>The Allsky Map</h1>
 
-<p>The <a class="external" href="https://www.thomasjacquin.com/allsky-map/" rel="noopener" target="_blank">Allsky Map</a>  shows the location and basic information of all known allsky cameras. Clicking on a pin displays information about the camera and if the owner has set their image URL, you'll see their last image as well; clicking on the image takes you to their Allsky website.</p>
+<p>The <a class="external" href="https://www.thomasjacquin.com/allsky-map/" rel="noopener" target="_blank">Allsky Map</a>  shows the location and basic information of all known allsky cameras. Clicking on a pin displays information about the camera and if the owner has set their image URL, you'll see their last image as well; clicking on the image takes you to their Allsky Website.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>We strongly suggest that you make your camera available on the Allsky Map.  Doing so gives us a better idea how many people are using Allsky, what cameras are being used, and what model Pis are being used.
+We can use that data to know where to concentrate our development efforts.</p>
+</div>
 <figure>
 <p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../../assets/howtos_images/allsky-map-with-pins.png" data-desc-position="bottom"><img alt="" src="../../assets/howtos_images/allsky-map-with-pins.png"></a></p>
 <figcaption>
@@ -6177,12 +6210,32 @@
 </figcaption>
 </figure>
 <h2 id="adding-your-camera">Adding your camera<a class="headerlink" href="#adding-your-camera" title="Permanent link">¶</a></h2>
-<p>To add your camera to the map, enable the Show On Map setting in the Allsky Map Settings section of the WebUI. If your camera is already on the map you can remove it by turning the setting off. You can also update your information by changing any of the map-related settings.</p>
-<p>Once you've enabled Show On Map, your map information will be automatically sent to the map server whenever you change it, as well as every other day so it can distinguish current data from old, expired data.</p>
+<p>You determine whether or not your camera appears on the Allsky Map, and what data is shown, by changing the Map settings:</p>
+<figure>
+<p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../../assets/howtos_images/allskyMapSettings.png" data-desc-position="bottom"><img alt="" src="../../assets/howtos_images/allskyMapSettings.png"></a></p>
+<figcaption>
+<p>Settings for The Allsky Map</p>
+</figcaption>
+</figure>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>You can have your camera information appear on the Allsky Map even if your Website isn't available on the Internet.
+Just make sure the <mark>Website URL</mark> and <mark>Image URL</mark> fields of the <strong>Websites and Remote Server Settings</strong> section in the WebUI are empty, then follow the directions below.</p>
+</div>
+<p>The most common way to have a camera appear on the Allsky Map is to use a remote Allsky Website. The Map server then grabs the image from that Website and when users click on the image in the Allsky Map, they are directed to the URL for the remote Website.</p>
+<p>If you are using your Pi as a remote Website (not common), click <a href="#Pi-as-Website">here</a> for special instructions.</p>
+<p>To add your camera to the map, enable <mark>Show on Map</mark>. If your camera is already on the map you can remove it by turning the setting off. You can also update your information by changing any of the map-related settings.</p>
+<p>Once you've enabled <mark>Show On Map</mark>, your map information will be automatically sent to the map server whenever you change it, as well as every other day so it can distinguish current data from old, expired data.</p>
 <p>All these changes take effect immediately - no human intervention required!</p>
-<p>See the Allsky Settings   documentation page for a description of the map-related settings.</p>
-<p><strong>My Website isn't available on the Internet</strong></p>
-<p>You can still have a pin of your camera's location appear on the map - just leave the Website URL and Image URL fields blank in the WebUI.</p>
+<p>See the <a does_not_work_external="true" href="/allsky_guide/settings/allsky.html#Allsky-map-settings" target="_blank">Allsky Settings documentation</a> page for a description of the map-related settings.</p>
+<h3 id="my-image-doesnt-appear-on-the-mapstyleborder-1px-solid-red">My Image Doesn't Appear on the Map{style="border: 1px solid red"}<a class="headerlink" href="#my-image-doesnt-appear-on-the-mapstyleborder-1px-solid-red" title="Permanent link">¶</a></h3>
+<p>The Map server uses <strong>https</strong> and if the URL to your server uses <strong>http</strong> then your image won't appear.  For security reasons, most browsers won't follow an <strong>http</strong> link that's on an <strong>https</strong> page.
+The fix is to use <strong>https</strong>.  If you are using a hosted service, talk to the hosting company.  Nowadays, almost all commercial services provide <strong>https</strong>, although you may need to pay for it.</p>
+<p>If you see a message like this:</p>
+<p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../../assets/howtos_images/allskyMapMessage.png" data-desc-position="bottom"><img alt="" src="../../assets/howtos_images/allskyMapMessage.png"></a></p>
+<p>it usually means the <mark>Website URL</mark> and/or <mark>Image URL</mark> settings are empty.</p>
+<h3 id="Pi-as-Website">Using Your Pi as a Remote Website<a class="headerlink" href="#Pi-as-Website" title="Permanent link">¶</a></h3>
+<p>The location of the <code>image.jpg</code> file is different on your Pi versus on a remote Website, so you'll need to update the <mark>Image URL</mark> field in the <strong>Websites and Remote Server Settings</strong> section of the WebUI.  If, for example, the URL to Allsky on your Pi is <code>https://myallsky.com</code>, the <mark>Image URL</mark> should be <code>https://myallsky.com/current/image.jpg</code>.  Your Pi's webserver will convert <code>/current</code> to <code>~/allsky/tmp/current_images</code> which is where <code>image.jpg</code> resides.</p>
 
 
 

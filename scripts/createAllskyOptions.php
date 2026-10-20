@@ -186,12 +186,9 @@ function camera_info($type, $number, $model, $sensor) {
 // The current camera is always listed so the WebUI never changes it by accident,
 // even if it's no longer connected.
 function camera_info_options() {
-	global $cc_array, $cc_file;
+	global $cc_array;
 
-	if (defined('ALLSKY_CONNECTED_CAMERAS_INFO'))
-		$file = ALLSKY_CONNECTED_CAMERAS_INFO;
-	else
-		$file = dirname($cc_file) . "/connected_cameras.txt";
+	$file = ALLSKY_CONNECTED_CAMERAS_INFO;
 
 	// Lines (tab-separated):
 	//		camera  RPi  number  sensor  module_len  model  <other info not used here>

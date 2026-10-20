@@ -1762,6 +1762,9 @@ convert_settings_file()			# prior_file, new_file
 					if ! MSG="$( _check_immediate "${VALUE}" "Extra Arguments" )" ; then
 						display_msg --log notice "${MSG}"
 					fi
+					if ! MSG="$( _check_metadata "${VALUE}" "Extra Arguments" )" ; then
+						display_msg --log notice "${MSG}"
+					fi
 					;;
 
 				# ===== Deleted in ${COMBINED_BASE_VERSION}.

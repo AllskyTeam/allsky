@@ -90,7 +90,7 @@ class UTILBASE
     /**
      * Validate and normalize the incoming request:
      *  - Lowercase method
-     *  - Ensure `request` matches a safe identifier (A–Z, 0–9, _)
+     *  - Ensure `request` matches a safe identifier (A-Z, 0-9, _)
      *  - Decide JSON vs text responses from the Accept header
      */
     protected function sanitiseRequest(): void
@@ -98,8 +98,11 @@ class UTILBASE
         $this->method = strtolower($_SERVER['REQUEST_METHOD'] ?? 'GET');
 
         $raw = $_GET['request'] ?? '';
+		if ($raw === "") {
+            $this->sendHTTPResponse('"request" not given in URL.', 400);
+		}
         if (!preg_match('/^[A-Za-z][A-Za-z0-9_]*$/', $raw)) {
-            $this->sendHTTPResponse('Invalid request.', 400);
+            $this->sendHTTPResponse("Invalid request: $raw.", 400);
         }
         $this->request = $raw;
 

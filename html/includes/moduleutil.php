@@ -1278,7 +1278,7 @@ class MODULEUTIL extends UTILBASE {
 
 	public function postCheckModuleDependencies() {
 		$results = array();
-		$check = getVariableOrDefault($_POST, 'check', false);
+		$check = toBool(getVariableOrDefault($_POST, 'check', "false"));
 		$checkFlow = trim(filter_input(INPUT_POST, 'flow', FILTER_SANITIZE_STRING));
 
 		$flows = array('day', 'night', 'periodic', 'daynight', 'nightday');
@@ -1298,9 +1298,16 @@ class MODULEUTIL extends UTILBASE {
 				}
 			}
 
-			foreach ($flowKeys as $moduleFile) {
-				$moduleMetaData = $this->findModule($moduleFile);
-				$flowInfo[$flow][$moduleFile] = $moduleMetaData;
+			if (gettype($flowKeys) === "array") {
+// FIX: Is some code missing?  I added the "if" statement above to avoid getting errors
+// in errors.log due to $flowKeys being "true".
+// If $flowKeys was set to $check, nothing is done with $flowKeys.  Is that right?
+// If so, should the "foreach" below move up a few lines to be under the "else"?
+// And the "if ($flow == $checkFlow) {" could then become "if ($flow != $checkFlow) {"
+				foreach ($flowKeys as $moduleFile) {
+					$moduleMetaData = $this->findModule($moduleFile);
+					$flowInfo[$flow][$moduleFile] = $moduleMetaData;
+				}
 			}
 		}
 

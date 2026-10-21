@@ -353,6 +353,11 @@ function get_connected_cameras_info()
 # Get just the model name(s) of the specified camera type that are connected to the Pi.
 function get_connected_camera_models()
 {
+	if [[ ! -s ${ALLSKY_CONNECTED_CAMERAS_INFO} ]]; then
+		echo "${FUNCNAME[0]}: File '${ALLSKY_CONNECTED_CAMERAS_INFO}' not found." >&2
+		return 1
+	fi
+
 	local FULL="false"
 	[[ ${1} == "--full" ]] && FULL="true" && shift
 
@@ -388,10 +393,10 @@ function get_connected_camera_models()
 			camera_number = $3
 
 			if (camera_type == "ZWO") {
+				model = $4;
 				if (FULL == "true") {
-					printf("%s\t%d\t%s\t%s\n", camera_type, camera_type, model, sensor);
+					printf("%s\t%d\t%s\n", camera_type, camera_type, model);
 				} else {
-					model = $4;
 					print model;
 				}
 			} else {
@@ -1346,6 +1351,7 @@ function activate_python_venv()
 	# Maybe check for != bullseye  ?
 
 	local ACTIVATE="${ALLSKY_PYTHON_VENV}/bin/activate"
+	[[ ! -f ${ACTIVATE} ]] && return 1
 
 	#shellcheck disable=SC1090,SC1091
 	source "${ACTIVATE}" || exit 1

@@ -847,7 +847,7 @@
 "action" : "reload"
 },
 {
-"name" : "hidelocation",
+"name" : "hideexactlocation",
 "default" : false,
 "description" : "Enable to round the <span class='WebUISetting'>Latitude</span> and <span class='WebUISetting'>Longitude</span> to 1 decimal place (about 11 km / 7 miles) on the Allsky Map and the local and remote Allsky Websites. Allsky itself still uses the exact values.",
 "label" : "Hide Exact Location",

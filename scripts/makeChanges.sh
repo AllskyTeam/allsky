@@ -772,6 +772,8 @@ do
 			;;
 
 		"showonmap")
+			# The same for every camera.
+			update_all_settings_files ".${KEY}" "${NEW_VALUE}" "boolean"
 			SHOW_ON_MAP="true"
 			[[ ${NEW_VALUE} == "false" ]] && POSTTOMAP_ACTION="--delete"
 			RUN_POSTTOMAP="true"
@@ -793,7 +795,9 @@ do
 			fi
 			;;
 
-		"hidelocation")
+		"hideexactlocation")
+			# The same for every camera.
+			update_all_settings_files ".${KEY}" "${NEW_VALUE}" "boolean"
 			# The Websites and the Allsky Map get the rounded or exact values.
 			if check_website ; then
 				for LL in "latitude" "longitude" ; do

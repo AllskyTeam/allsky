@@ -149,8 +149,9 @@ Add new overlay main tab
 
 1. Selects the overlay you wish to use as a starting point or select 'Blank Overlay' for an empty overlay
 2. Enter a Human Readable name for the overlay
-3. Select the time of day you wish this overlay to be used in
-4. If selected then the overlay will be activated after it has been created. If not selected the overlay will be saved as a draft and you will have to manually activate it.
+3. Enter a Human Readable name for the overlay
+4. Select the time of day you wish this overlay to be used in
+5. If selected then the overlay will be activated after it has been created. If not selected the overlay will be saved as a draft and you will have to manually activate it.
 
 !!! warning  ""
 
@@ -257,27 +258,13 @@ Masks consist of two colours
 
 For more complex masks its possible to blend the black to white transisiotn in the mask to prevent false positives in modules that may be looking for edges such as the Meteor detection module.
 
-The Mask Editor has two modes, Easy and Expert, the default is Easy mode. In Easy mode all you do is draw a white ellipse to capture the areas you wish to keep, when you ssave the mask the bacl areas will be automatically added. In Expert mode you have a series of drawing tools you can use to create much more detailed masks including blended edges on shapes to help with false positives on edge detection.
+The Mask Editor saves a black and white PNG for use by overlays and image modules. Enter a mask name and choose a background image with the Allsky image picker, or use the current camera image. Use the brush or filled rectangle, ellipse, and circle to draw white areas that reveal the image. Set Paint to black to hide an area with any drawing tool, or use the eraser to paint black freehand. Brush size controls brush and line width; feather softens the edge of each object. Select an object to drag it, adjust its shape, colour, size or feather, or delete it. Undo and Redo also work after moving or deleting objects. The object list shows the top object first and lets you select, hide, duplicate, or reorder shapes.
 
-![Mask editor](/assets/overlay_images/mask-editor.png)
+**Detect image circle** looks for the circular image boundary against darker surroundings and adds an editable white circle with a feathered edge. Check its position before saving, since detection depends on the background image. Feathered edges appear in the editor preview as you adjust them. Background opacity changes only the background image in the editor; drawn objects and the saved mask retain their opacity. **Preview result** shows the background through the mask at full opacity, as it will appear when applied. Click it again to resume drawing.
 
-/// caption
-The Mask Editor Dialog
-///
+Saving stores the PNG in the overlay image library and keeps the editable project, a copy of the PNG, and its background in `config/overlay/masks/<mask-name>/`. Closing the editor, opening another saved mask, or choosing a new background with unsaved changes asks for confirmation. Saving with an existing name asks before replacing that mask; enter a different name to save a separate mask. To edit a saved mask, select its PNG in the Image Manager and click **Edit Selected Mask**. PNG masks made with the old editor have no editable project and must be recreated.
 
-1. Start creating a new mask
-2. Switch between easy and export mode
-3. In Expert mode select the type of drawing tool to use
-4. Undo and Redo buttons
-5. Sets the opactity of the mask being created, useful for fine details work where you need to see thru the mask
-6. Set the brightnedd of the background image
-7. For the brush tool set the thickness of the brush
-8. Zoom controls
-
-Once you are happy with the mask click the 'Save' button and you will be prompted to give the mask a name and it will then be saved. There are a few rules around names
-
-1. The name must be unique to all other images
-2. Do not use spaces in the name
+Enter the name before saving. Names may contain letters, numbers, underscores, and hyphens. Use the icon toolbar to choose drawing tools, paint colour, size, feathering, and background opacity. Zoom In, Zoom Out, and Fit change only the editor view; the PNG keeps the original image dimensions. Undo, Redo, and Clear are in the header. Undo keeps up to 40 recent edits and limits memory used by large masks. After drawing a rectangle, ellipse, circle, or line, the editor switches to Select and leaves the new shape selected so you can adjust its handles. Brush and eraser remain active for repeated strokes. Use Ctrl/Cmd+Z to undo, Ctrl/Cmd+Y or Ctrl/Cmd+Shift+Z to redo, Delete or Backspace to remove the selected object, and hold Space while dragging the canvas to pan.
 
 !!! info  "Other ways to create masks"
 

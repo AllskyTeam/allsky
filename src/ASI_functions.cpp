@@ -480,14 +480,16 @@ Log(6, "  NEW TYPE FOUND [%s], num_connectedCameraTypes now = %d\n", cC->Type, n
 			if (CG.cameraNumber == NOT_SET || cameraNum == CG.cameraNumber)
 			{
 				cameraMatch_onNumber = cameraNum;
+// printf("Got cameraMatch_onNumber, CG.cameraNumber=%d, cameraNum=%d\n", CG.cameraNumber, cameraNum);
 			}
 			if (*CG.cm == '\0' || strcmp(CG.cm, cameraName) == 0)
 			{
 				cameraMatch_onModel = cC->Name;
 				cameraMatch_onModel_number = cameraNum;
+// printf("Got cameraMatch_onModel, cC->Name=%s, cameraNum=%d\n", cC->Name, cameraNum);
 			}
 
-			if (cameraMatch_onNumber != NOT_SET && cameraMatch_onModel != NULL)
+			if (cameraMatch_onNumber == cameraNum && cameraMatch_onModel != NULL)
 			{
 				Log(5, "=========== MATCH\n");
 				cameraMatch = true;
@@ -665,11 +667,11 @@ Log(6, "  NEW TYPE FOUND [%s], num_connectedCameraTypes now = %d\n", cC->Type, n
 			char more[100];
 			if (cameraMatch_onModel != NULL)
 			{
-				sprintf(more, "  Camera %s found at position %d.", cameraMatch_onModel, cameraMatch_onModel_number);
+				sprintf(more, ", however it was found at position %d.", cameraMatch_onModel_number);
 			} else {
-				*more = '\0';
+				sprintf(more, ".");
 			}
-			Log(0, "%s: ERROR: camera number %d [%s] not found.%s\n", CG.ME, CG.cameraNumber, CG.cm, more);
+			Log(0, "%s: ERROR: '%s' camera not found at position %d%s\n", CG.ME, CG.cm, CG.cameraNumber, more);
 		}
 		else
 		{

@@ -124,13 +124,17 @@ if [[ ${RET} -ne 0 ]]; then
 fi
 
 # Get the max exposure for the specified camera as well as capabilites for all cameras.
+if [[ ! -s ${ALLSKY_RPi_CAMERA_INFO} ]]; then
+	echo "${ME}: File '${ALLSKY_RPi_CAMERA_INFO}' not found." >&2
+	exit 1
+fi
 MAX_EXPOSURE="$( sed -e 's/://' -e 's/\.\./ /' -e 's/\[//' -e 's/]//' "${CAMERA_RAW_DATA}" |
 	gawk -v CAMERA_NUMBER="${CAMERA_NUMBER}" -v CAMERA_INFO_FILE="${ALLSKY_CONNECTED_CAMERAS_INFO}" -v INFO="${ALLSKY_RPi_CAMERA_INFO}" '
 		BEGIN {
 			et = 0; fdl = 0; camera_number = ""; number_of_cameras = 0;
 			SAVED_FS = FS;
 			FS = "	";
-			while (getline < INFO) {
+			while ((getline < INFO) > 0) {
 				if (substr($1, 1, 1) == "#" || $0 == "")
 					continue;
 				sensor = $1;
@@ -145,6 +149,7 @@ MAX_EXPOSURE="$( sed -e 's/://' -e 's/\.\./ /' -e 's/\[//' -e 's/]//' "${CAMERA_
 				a_max_exposure[sensor] = max_exposure;
 				a_is_cooled[sensor] = is_cooled;
 			}
+			close(INFO);
 			FS = SAVED_FS;
 		}
 

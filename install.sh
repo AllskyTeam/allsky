@@ -3781,7 +3781,7 @@ request_map()
 	MSG+="\n\nIf you select <No> you won't be asked again for a year."
 	if ! whiptail --title "${TITLE}" --defaultno --yesno "${MSG}" 18 "${WT_WIDTH}" 3>&1 1>&2 2>&3; then
 		display_msg --logonly info "User declined the Allsky Map."
-		update_json_file ".showonmapdeclined" "$( date +%F )" "${ALLSKY_SETTINGS_FILE}" "text"
+		update_all_settings_files ".showonmapdeclined" "$( date +%F )" "text"
 		MSG="You can add your camera to the Allsky Map at any time in the"
 		MSG+="\n'Allsky Map Settings' section of the WebUI's 'Allsky Settings' page."
 		display_msg info "${MSG}"
@@ -3789,12 +3789,12 @@ request_map()
 	fi
 
 	display_msg --logonly info "User wants to be on the Allsky Map."
-	update_json_file ".showonmap" "true" "${ALLSKY_SETTINGS_FILE}" "boolean"
-	update_json_file ".showonmapdeclined" "" "${ALLSKY_SETTINGS_FILE}" "text"
+	update_all_settings_files ".showonmap" "true" "boolean"
+	update_all_settings_files ".showonmapdeclined" "" "text"
 	# Same arguments the WebUI passes to makeChanges.sh: name, label, old value, new value.
 	local CHANGES=( "showonmap" "Show on Map" "false" "true" )
 
-	if [[ "$( settings ".hidelocation" )" != "true" ]]; then
+	if [[ "$( settings ".hideexactlocation" )" != "true" ]]; then
 		MSG="Do you want to hide your exact location?"
 		MSG+="\n\nIf you select <Yes> the latitude and longitude shown on the Allsky Map"
 		MSG+="\nand the Allsky Websites are rounded to 1 decimal place (about 11 km / 7 miles)."
@@ -3802,8 +3802,8 @@ request_map()
 		MSG+="\n\nYou can change this later with the 'Hide Exact Location' setting."
 		if whiptail --title "${TITLE}" --yesno "${MSG}" 18 "${WT_WIDTH}" 3>&1 1>&2 2>&3; then
 			display_msg --logonly info "User wants to hide the exact location."
-			update_json_file ".hidelocation" "true" "${ALLSKY_SETTINGS_FILE}" "boolean"
-			CHANGES+=( "hidelocation" "Hide Exact Location" "false" "true" )
+			update_all_settings_files ".hideexactlocation" "true" "boolean"
+			CHANGES+=( "hideexactlocation" "Hide Exact Location" "false" "true" )
 		fi
 	fi
 

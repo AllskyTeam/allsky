@@ -451,6 +451,28 @@ function update_json_file()		# [-d] field, new value, file, [type]
 
 
 ####
+# Update a setting that's the same for every camera, e.g., the Allsky Map ones,
+# in the settings file and in all the camera-specific settings files.
+function update_all_settings_files()		# field, new value, [type]
+{
+	local NAME  EXT  FILE  RET=0
+
+	NAME="$( basename "${ALLSKY_SETTINGS_FILE}" )"
+	EXT="${NAME##*.}"
+	NAME="${NAME%.*}"
+
+	update_json_file "${1}" "${2}" "${ALLSKY_SETTINGS_FILE}" "${3}" || RET=1
+	for FILE in "${ALLSKY_CONFIG}/${NAME}_"*".${EXT}" ; do
+		# The settings file is a link to one of them.
+		[[ ! -f ${FILE} || ${FILE} -ef ${ALLSKY_SETTINGS_FILE} ]] && continue
+		update_json_file "${1}" "${2}" "${FILE}" "${3}" || RET=1
+	done
+
+	return "${RET}"
+}
+
+
+####
 # Update a field in an array or delete the array index the field is at.
 function update_array_field()
 {

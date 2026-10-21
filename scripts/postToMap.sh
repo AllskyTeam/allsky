@@ -231,10 +231,10 @@ fi
 # Check for errors.  getPublicLatLong outputs error message.
 # The map gets the rounded values if "Hide Exact Location" is enabled.
 ERR_MSG=""
-if ! LATITUDE="$( getPublicLatLong "latitude" "${LATITUDE}" "${S_hidelocation}" 2>&1 )" ; then
+if ! LATITUDE="$( getPublicLatLong "latitude" "${LATITUDE}" "${S_hideexactlocation}" 2>&1 )" ; then
 	ERR_MSG+="\n${LATITUDE}"
 fi
-if ! LONGITUDE="$( getPublicLatLong "longitude" "${LONGITUDE}" "${S_hidelocation}" 2>&1 )" ; then
+if ! LONGITUDE="$( getPublicLatLong "longitude" "${LONGITUDE}" "${S_hideexactlocation}" 2>&1 )" ; then
 	ERR_MSG+="\n${LONGITUDE}"
 fi
 F="${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
@@ -356,7 +356,7 @@ else
 	{
 		local PARENT="${1}"
 		local FILE="${2}"
-		if [[ ${S_hidelocation} == "true" ]]; then
+		if [[ ${S_hideexactlocation} == "true" ]]; then
 			jq --arg lat "${LATITUDE}" --arg lon "${LONGITUDE}" \
 				"(${PARENT}) |= (if type == \"object\" then .latitude = \$lat | .longitude = \$lon else . end)" \
 				"${FILE}"

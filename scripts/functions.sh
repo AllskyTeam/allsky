@@ -685,7 +685,7 @@ function getPublicLatLong()
 {
 	local TYPE="${1}"						# "latitude" or "longitude"
 	local LATLONG="${2:-$( settings ".${TYPE}" )}"
-	local HIDE="${3:-$( settings ".hidelocation" )}"
+	local HIDE="${3:-$( settings ".hideexactlocation" )}"
 
 	LATLONG="$( convertLatLong "${LATLONG}" "${TYPE}" )" || return 1
 	if [[ ${HIDE} == "true" ]]; then

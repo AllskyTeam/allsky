@@ -244,7 +244,7 @@ struct RPI_CAMERAS
 
 
 ASI_CAMERA_INFO aci[MAX_CAMERAS];				// Need all camera's data.
-ASI_CONTROL_CAPS CCs[MAX_NUM_CONTROL_CAPS];		// Only for the camera we're using.
+ASI_CONTROL_CAPS CCs[MAX_CAMERAS][MAX_NUM_CONTROL_CAPS];
 
 // Control type name, command-line argument name (without leading "day" and "night").
 // ControlType is the array index.
@@ -344,8 +344,11 @@ int getConnectedCameras()
 	}
 
 	int numThisType = 0;
+	int	currentCameraIndex = -1;
 	char *line;
 	bool cameraMatch = false;
+   	int cameraMatch_onNumber = NOT_SET;
+	char *cameraMatch_onModel = NULL; int cameraMatch_onModel_number = NOT_SET;
 	char full_line[1000];
 	int on_line = 0;
 	bool want_cc = false;
@@ -405,7 +408,6 @@ int getConnectedCameras()
 
 		if (strcmp(lt, "camera") == 0)
 		{
-			want_cc = false;
 			on_cap = -1;
 			cameraType = getToken(line, '\t');
 
@@ -470,10 +472,22 @@ Log(6, "  NEW TYPE FOUND [%s], num_connectedCameraTypes now = %d\n", cC->Type, n
 				continue;
 			}
 
+			want_cc = true;
+
 			Log(5, "=========== cameraNum=%d, CG.cameraNumber=%d, CG.cm=%s, cameraName=%s, cameraModule=%s\n",
 				cameraNum, CG.cameraNumber, CG.cm, cameraName, cameraModule);
-			if ((CG.cameraNumber == NOT_SET || cameraNum == CG.cameraNumber) &&
-				(*CG.cm == '\0' || strcmp(CG.cm, cameraName) == 0))
+
+			if (CG.cameraNumber == NOT_SET || cameraNum == CG.cameraNumber)
+			{
+				cameraMatch_onNumber = cameraNum;
+			}
+			if (*CG.cm == '\0' || strcmp(CG.cm, cameraName) == 0)
+			{
+				cameraMatch_onModel = cC->Name;
+				cameraMatch_onModel_number = cameraNum;
+			}
+
+			if (cameraMatch_onNumber != NOT_SET && cameraMatch_onModel != NULL)
 			{
 				Log(5, "=========== MATCH\n");
 				cameraMatch = true;
@@ -484,50 +498,56 @@ Log(6, "  NEW TYPE FOUND [%s], num_connectedCameraTypes now = %d\n", cC->Type, n
 				}
 			}
 
-			int n = numThisType++;		// "n" is index, "numThisType" is a count
+			numThisType++;
+			currentCameraIndex++;
 
-			aci[n].CameraID = cameraNum;
-			strncpy(aci[n].Module, cameraModule, MODULE_SIZE-1);
-			aci[n].Module_len = module_len;
-			strncpy(aci[n].Name, cameraName, CAMERA_NAME_SIZE-1);
-			aci[n].MaxHeight = atol(getToken(line, '\t'));
-			aci[n].MaxWidth = atol(getToken(line, '\t'));
-			aci[n].IsColorCam = do_ASI_BOOL(getToken(line, '\t'), on_line);
-			aci[n].BayerPattern = do_ASI_BAYER_PATTERN(getToken(line, '\t'), on_line);
+			aci[currentCameraIndex].CameraID = cameraNum;
+			strncpy(aci[currentCameraIndex].Module, cameraModule, MODULE_SIZE-1);
+			aci[currentCameraIndex].Module_len = module_len;
+			strncpy(aci[currentCameraIndex].Name, cameraName, CAMERA_NAME_SIZE-1);
+			aci[currentCameraIndex].MaxHeight = atol(getToken(line, '\t'));
+			aci[currentCameraIndex].MaxWidth = atol(getToken(line, '\t'));
+			aci[currentCameraIndex].IsColorCam = do_ASI_BOOL(getToken(line, '\t'), on_line);
+			aci[currentCameraIndex].BayerPattern = do_ASI_BAYER_PATTERN(getToken(line, '\t'), on_line);
 			char *t;
 			int c;
 			t = getToken(line, '\t');
 			c = sscanf(t, "%d %d %d %d %d",
-				&aci[n].SupportedBins[0],
-				&aci[n].SupportedBins[1],
-				&aci[n].SupportedBins[2],
-				&aci[n].SupportedBins[3],
-				&aci[n].SupportedBins[4]);
-			aci[n].SupportedBins[c] = 0;	// 0 means end of list
+				&aci[currentCameraIndex].SupportedBins[0],
+				&aci[currentCameraIndex].SupportedBins[1],
+				&aci[currentCameraIndex].SupportedBins[2],
+				&aci[currentCameraIndex].SupportedBins[3],
+				&aci[currentCameraIndex].SupportedBins[4]);
+			aci[currentCameraIndex].SupportedBins[c] = 0;	// 0 means end of list
 											//
 			char *svf = getToken(line, '\t');	// a string so needs to be parsed after all the getToken()'s.
-			aci[n].PixelSize = atof(getToken(line, '\t'));
-			aci[n].IsCoolerCam = do_ASI_BOOL(getToken(line, '\t'), on_line);
-			aci[n].BitDepth = atoi(getToken(line, '\t'));
-			aci[n].SupportsTemperature = do_ASI_BOOL(getToken(line, '\t'), on_line);
-			aci[n].SupportsAutoFocus = do_ASI_BOOL(getToken(line, '\t'), on_line);
-			strncpy(aci[n].Sensor, cameraModule, SENSOR_SIZE-1);
+			aci[currentCameraIndex].PixelSize = atof(getToken(line, '\t'));
+			aci[currentCameraIndex].IsCoolerCam = do_ASI_BOOL(getToken(line, '\t'), on_line);
+			aci[currentCameraIndex].BitDepth = atoi(getToken(line, '\t'));
+			aci[currentCameraIndex].SupportsTemperature = do_ASI_BOOL(getToken(line, '\t'), on_line);
+			aci[currentCameraIndex].SupportsAutoFocus = do_ASI_BOOL(getToken(line, '\t'), on_line);
+			strncpy(aci[currentCameraIndex].Sensor, cameraModule, SENSOR_SIZE-1);
 
 			c = getTokenCount(svf, ' ');
 			(void) getToken(NULL, ' ');
 			for (int i=0; i<c; i++)
 			{
 				char *f = getToken(svf, ' ');
-				aci[n].SupportedVideoFormat[i] = do_ASI_IMAGE_TYPE(f, on_line);
+				aci[currentCameraIndex].SupportedVideoFormat[i] = do_ASI_IMAGE_TYPE(f, on_line);
 			}
 
-			RPiCameras[n].CameraInfo = &aci[n];
-			Log(4, "Saving module [%s], name [%s] from aci[%d] to RPiCameras[%d]\n",
-				aci[n].Module, aci[n].Name, n, n);
+			RPiCameras[currentCameraIndex].CameraInfo = &aci[currentCameraIndex];
+			Log(4, "Saving module [%s], name [%s] from aci[%d] to RPiCameras[%d].CameraInfo\n",
+				aci[currentCameraIndex].Module, aci[currentCameraIndex].Name, currentCameraIndex, currentCameraIndex);
 
-			if (cameraMatch)
+			Log(4, ">>> Also saving from CCs[%d] to RPiCameras[%d].ControlCaps\n",
+				currentCameraIndex, currentCameraIndex);
+			// Contents filled in below.
+			RPiCameras[currentCameraIndex].ControlCaps = &CCs[currentCameraIndex][0];
+			for (int i=0; i < MAX_NUM_CONTROL_CAPS; i++)
 			{
-				RPiCameras[n].ControlCaps = &CCs[0];	// Contents filled in below.
+				// Mark the end of the list.
+				RPiCameras[currentCameraIndex].ControlCaps[i].ControlType = CONTROL_TYPE_END;
 			}
 		}
 
@@ -557,40 +577,41 @@ Log(6, "  NEW TYPE FOUND [%s], num_connectedCameraTypes now = %d\n", cC->Type, n
 
 			on_cap++;
 
-			strcpy(CCs[on_cap].Name, cap_name);
+			strcpy(CCs[currentCameraIndex][on_cap].Name, cap_name);
 
 			char *t;
 			t = getToken(line, '\t');
 			cap_description = t;
-			strcpy(CCs[on_cap].Description, cap_description);
+			strcpy(CCs[currentCameraIndex][on_cap].Description, cap_description);
 			
 			t = getToken(line, '\t');
 			cap_max = atof(t);
-			CCs[on_cap].MaxValue = cap_max;
+			CCs[currentCameraIndex][on_cap].MaxValue = cap_max;
 
 			t = getToken(line, '\t');
 			cap_min = atof(t);
-			CCs[on_cap].MinValue = cap_min;
+			CCs[currentCameraIndex][on_cap].MinValue = cap_min;
 
 			t = getToken(line, '\t');
 			cap_default = atof(t);
-			CCs[on_cap].DefaultValue = cap_default;
+			CCs[currentCameraIndex][on_cap].DefaultValue = cap_default;
 
 			t = getToken(line, '\t');
 			cap_current = atof(t);
-			CCs[on_cap].CurrentValue = cap_current;
+			CCs[currentCameraIndex][on_cap].CurrentValue = cap_current;
 
 			t = getToken(line, '\t');
 			cap_auto = do_ASI_BOOL(t, on_line);
-			CCs[on_cap].IsAutoSupported = cap_auto;
+			CCs[currentCameraIndex][on_cap].IsAutoSupported = cap_auto;
 
 			t = getToken(line, '\t');
 			cap_writeable = do_ASI_BOOL(t, on_line);
-			CCs[on_cap].IsWritable = cap_writeable;
+			CCs[currentCameraIndex][on_cap].IsWritable = cap_writeable;
 
 			t = getToken(line, '\t');
 			cap_control_type = do_ASI_CONTROL_TYPE(t, on_line);
-			CCs[on_cap].ControlType = cap_control_type;
+			CCs[currentCameraIndex][on_cap].ControlType = cap_control_type;
+// printf("CCs[%d][%d].ControlType=%d\n", currentCameraIndex, on_cap, cap_control_type);
 		}
 		else
 		{
@@ -641,7 +662,14 @@ Log(6, "  NEW TYPE FOUND [%s], num_connectedCameraTypes now = %d\n", cC->Type, n
 	{
 		if (CG.cameraNumber != NOT_SET)
 		{
-			Log(0, "%s: ERROR: camera number %d [%s] not found.\n", CG.ME, CG.cameraNumber, CG.cm);
+			char more[100];
+			if (cameraMatch_onModel != NULL)
+			{
+				sprintf(more, "  Camera %s found at position %d.", cameraMatch_onModel, cameraMatch_onModel_number);
+			} else {
+				*more = '\0';
+			}
+			Log(0, "%s: ERROR: camera number %d [%s] not found.%s\n", CG.ME, CG.cameraNumber, CG.cm, more);
 		}
 		else
 		{
@@ -675,14 +703,15 @@ ASI_ERROR_CODE ASIGetNumOfControls(int iCameraIndex, int *piNumberOfControls)
 		Log(0, "%s: ERROR: ASIGetNumOfControls(), iCameraIndex (%d) bad.\n", CG.ME, iCameraIndex);
 		return(ASI_ERROR_INVALID_INDEX);
 	}
-
 	ASI_CONTROL_CAPS *p = RPiCameras[iCameraIndex].ControlCaps;
 
 	int num = 0;
 	for (int i=0; i < MAX_NUM_CONTROL_CAPS; i++)
 	{
 		if (p[i].ControlType == CONTROL_TYPE_END)
+		{
 			break;
+		}
 		num++;
 	}
 	*piNumberOfControls = num;		// This also sets the global iNumOfCtrl variable

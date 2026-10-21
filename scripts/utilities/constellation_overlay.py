@@ -78,9 +78,15 @@ def _missing_help():
     which leaves files from both: "numpy._core.multiarray failed to import" or
     "module 'numpy._globals' has no attribute ...".  Only a clean reinstall cures that."""
     import importlib.util
-    spec = importlib.util.find_spec("numpy") if "numpy" in _MISSING else None
-    site = os.path.dirname(spec.origin) if spec and spec.origin else ""
-    site = os.path.realpath(os.path.dirname(site))
+    try:            # a half-imported numpy can make find_spec() fail as well
+        spec = importlib.util.find_spec("numpy") if "numpy" in _MISSING else None
+    except Exception:
+        spec = None
+    if spec is None or not spec.origin:
+        # OpenCV or SciPy, or a numpy that can't be found at all.
+        return (f"{_MISSING}.\nA Python package Allsky needs is missing or damaged; "
+                "run Allsky's installation again to reinstall it.")
+    site = os.path.realpath(os.path.dirname(os.path.dirname(spec.origin)))
     if not site.startswith(os.path.realpath(_VENV) + os.sep):
         return f"{_MISSING}. Run this with Allsky's Python ({_VENV}/bin/python3)."
     pip = os.path.join(_VENV, "bin", "pip")

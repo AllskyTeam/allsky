@@ -1291,10 +1291,20 @@ class MODULEUTIL extends UTILBASE {
 			} else {
 				$flowFileName = ALLSKY_MODULES . "/postprocessing_$flow.json";
 				$flowData = file_get_contents($flowFileName);
-				$flowData = json_decode($flowData);
-				$flowKeys = array_keys(get_object_vars($flowData));
-				foreach($flowKeys as &$flowKey) {
-					$flowKey = "allsky_$flowKey.py";
+				try {
+					$flowData = json_decode($flowData, false, 512,JSON_THROW_ON_ERROR);
+				$t = gettype($flowData);
+				} catch (\JsonException $e) {
+					error_log("JSON error in $flowFileName: " . $e->getMessage() . " on line " . $e->getLine() . "\n");
+					continue;
+				}
+				if ($t == "object") {
+					$flowKeys = array_keys(get_object_vars($flowData));
+					foreach($flowKeys as &$flowKey) {
+						$flowKey = "allsky_$flowKey.py";
+					}
+				} else {
+					error_log("Got flowData type '$t'; should be 'object'.\n");
 				}
 			}
 

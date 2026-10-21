@@ -305,7 +305,18 @@ function get_connected_cameras_info()
 	# Tab-separated output will be:
 	#		camera	RPi  camera_number   camera_sensor  module_len   model
 	# for each camera found, followed by lines for each camera capability.
-	"${ALLSKY_UTILITIES}/getRPiCameraInfo.sh" --info-only --cmd "${RPi_CMD_TO_USE_}"
+
+	# getRPiCameraInfo.sh writes ${ALLSKY_CONNECTED_CAMERAS_INFO} itself and then outputs it.
+	# Callers usually send our output to that same file, so keep the RPi output and
+	# output it here; otherwise the ZWO lines would overwrite the start of the file.
+	# When ignoring errors, e.g., on a Pi with only ZWO cameras, don't show the
+	# RPi software's "no cameras available" message.
+	local RPi_INFO  RPi_ERRORS="/dev/stderr"
+	[[ ${IGNORE_ERRORS} == "true" ]] && RPi_ERRORS="/dev/null"
+	if RPi_INFO="$( "${ALLSKY_UTILITIES}/getRPiCameraInfo.sh" --info-only \
+			--cmd "${RPi_CMD_TO_USE_}" 2> "${RPi_ERRORS}" )" ; then
+		echo "${RPi_INFO}"
+	fi
 
 
 	####### Check for ZWO

@@ -3774,7 +3774,7 @@ request_map()
 	MSG="Do you want to add your camera to the public Allsky Map"
 	MSG+="\n(https://www.thomasjacquin.com/allsky-map/)?"
 	MSG+="\n\nThe map shows your camera's location and the information in the"
-	MSG+="\n'Allsky Map Settings' section of the WebUI's 'Allsky Settings' page."
+	MSG+="\n'Allsky Map' section of the WebUI's 'Privacy & Sharing' settings."
 	if [[ "$( settings ".useremotewebsite" )" == "false" ]]; then
 		MSG+="\nYou don't need to have a remote Website to do this."
 	fi
@@ -3783,7 +3783,7 @@ request_map()
 		display_msg --logonly info "User declined the Allsky Map."
 		update_all_settings_files ".showonmapdeclined" "$( date +%F )" "text"
 		MSG="You can add your camera to the Allsky Map at any time in the"
-		MSG+="\n'Allsky Map Settings' section of the WebUI's 'Allsky Settings' page."
+		MSG+="\n'Allsky Map' section of the WebUI's 'Privacy & Sharing' settings."
 		display_msg info "${MSG}"
 		return
 	fi
@@ -3816,7 +3816,7 @@ request_map()
 		display_msg --logonly info "makeChanges.sh output: ${M}"
 	fi
 
-	MSG="Please review the 'Allsky Map Settings' section of the WebUI's 'Allsky Settings' page."
+	MSG="Please review the 'Allsky Map' section of the WebUI's 'Privacy & Sharing' settings."
 	MSG+="\nThe Allsky Map is updated at the end of every other night."
 	display_msg notice "${MSG}"
 	add_to_post_actions "${MSG}"

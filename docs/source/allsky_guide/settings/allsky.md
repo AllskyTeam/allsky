@@ -291,8 +291,7 @@ AllskySettings
     | ==Time Format== | `%Y%m%d %H:%M:%S` | Determines the format of the displayed time. Run `man 3 strftime` to see the options. |
     | ==Temperature Units== | Celsius | Determines what unit(s) the temperature will be displayed in (Celsius, Fahrenheit, or Both). |
     | ==Latitude== <span class="red">AW</span> |  | Latitude of the camera. Formats include: `123.4N`, `123.4S`, `+123.4`, or `-123.4`. Southern hemisphere is negative. The `+` is needed for positive numbers. |
-    | ==Longitude== <span class="red">AW</span> |  | Longitude of the camera. Formats include: `123.4E`, `123.4W`, `+123.4`, or `-123.4`. West is negative. The `+` is needed for positive numbers.  <br><br> The actual values for latitude and longitude are not displayed on the map, but users can zoom in to see exactly where your camera is. If that bothers you, enable ==Hide Exact Location==.  <br><br> When installing Allsky the first time, the installation script will attempt to determine your rough ==Latitude== and ==Longitude== based on your IP address. These values may be "close enough" in most cases but you may want to check them anyhow. |
-    | ==Hide Exact Location== <span class="red">AW</span> | No | Enable to round the ==Latitude== and ==Longitude== to 1 decimal place (about 11 km / 7 miles) on the [Allsky Map](/docs/allsky_guide/howtos/allsky_map.html) and the local and remote Allsky Websites. The settings file keeps the exact values and Allsky itself still uses them, for example to determine when daytime and nighttime begin. <br><br>Text overlays that show the latitude or longitude are not changed. |
+    | ==Longitude== <span class="red">AW</span> |  | Longitude of the camera. Formats include: `123.4E`, `123.4W`, `+123.4`, or `-123.4`. West is negative. The `+` is needed for positive numbers.  <br><br> The actual values for latitude and longitude are not displayed on the map, but users can zoom in to see exactly where your camera is. If that bothers you, enable ==Hide Exact Location== in the [Privacy & Sharing](#Allsky-map-settings) section.  <br><br> When installing Allsky the first time, the installation script will attempt to determine your rough ==Latitude== and ==Longitude== based on your IP address. These values may be "close enough" in most cases but you may want to check them anyhow. |
     | ==Angle== <span class="red">AW</span> | -6 | Altitude of the Sun above or below the horizon at which daytime and nighttime switch. Can be negative (Sun below horizon) or positive (Sun above horizon).  <br><br>- `0` = Sunset  <br>- `-6` = Civil twilight  <br>- `-12` = Nautical twilight  <br>- `-18` = Astronomical twilight  <br><br>[Click here](/docs/allsky_guide/howtos/angle_sunrise_sunset.html) for a more detailed description of ==Angle==. |
     | ==Take Dark Frames== | No | Enable to take dark frames which are use to decrease noise in images.  <br><br>See the [in-depth explanation](/docs/allsky_guide/howtos/dark_frames.html) of dark frames, including how to take and use them. |
     | ==Dark Frame Upper Threshold== | 0.05 | Any dark frame that has a mean brightness higher than this number is not saved.  <br><br>If you're getting messages about "bad images" while taking dark frames, first make sure your lens is ==FULLY covered== and ==NO== light is getting in.  <br><br>If you are positive no light is getting in and your camera is noisy, then increase this to `0.1` and see if it helps. If not, then increase it more. |
@@ -511,7 +510,11 @@ When you change one of these settings in the WebUI, Allsky checks the value. If 
         | ==Remote Keogram File Name== | keogram.jpg | Unless you are using the remote server as a backup, this is ==usually== used so the server knows the file name. |
         | ==Remote Startrails File Name== | startrails.jpg | Unless you are using the remote server as a backup, this is ==usually== used so the server knows the file name. |
 
-## Allsky Map { data-toc-label="Allsky Map" id="Allsky-map-settings"}
+## Privacy & Sharing { data-toc-label="Privacy & Sharing" id="Privacy-settings"}
+
+See [Privacy & Sharing](/docs/allsky_guide/settings/privacy.html) for what is sent, where it goes, and why.
+
+### Allsky Map { data-toc-label="Allsky Map" id="Allsky-map-settings"}
 ???+ info "Settings"
 
     !!! note
@@ -520,6 +523,7 @@ When you change one of these settings in the WebUI, Allsky checks the value. If 
     | WebUI Setting { .w-20p } | Default { .w-10p }  | Description |
     |---|---:|---|
     | ==Show on Map== | No | Enable to have your camera appear on the [Allsky map](https://www.thomasjacquin.com/allsky-map). ==If off, the following settings are ignored.== |
+    | ==Hide Exact Location== <span class="red">AW</span> | No | Enable to round the ==Latitude== and ==Longitude== to 1 decimal place (about 11 km / 7 miles) on the [Allsky Map](/docs/allsky_guide/howtos/allsky_map.html) and the local and remote Allsky Websites. The settings file keeps the exact values and Allsky itself still uses them, for example to determine when daytime and nighttime begin. <br><br>Text overlays that show the latitude or longitude are not changed. |
     | ==Location== <span class="red">AW</span> |  | The location of your camera. You can put any level of detail you want. |
     | ==Owner== <span class="red">AW</span> |  | The owner of the camera - your name, an association name, an observatory, etc. |
     | ==Lens== <span class="red">AW</span> |  | The lens you're using on your camera, for example: ==Arecont 1.55==. |

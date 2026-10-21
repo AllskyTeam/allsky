@@ -847,15 +847,6 @@
 "action" : "reload"
 },
 {
-"name" : "hideexactlocation",
-"default" : false,
-"description" : "Enable to round the <span class='WebUISetting'>Latitude</span> and <span class='WebUISetting'>Longitude</span> to 1 decimal place (about 11 km / 7 miles) on the Allsky Map and the local and remote Allsky Websites. Allsky itself still uses the exact values.",
-"label" : "Hide Exact Location",
-"type" : "boolean",
-"carryforward" : true,
-"checkchanges" : true
-},
-{
 "name" : "angle",
 "default" : "-6",
 "description" : "Altitude of the Sun in degrees relative to the horizon at which to switch between day and night.",
@@ -2133,19 +2124,24 @@
 },
 
 {
-"name" : "allskymaptab========================================",
-"label" : "Map",
+"name" : "privacytab========================================",
+"label" : "Privacy & Sharing",
 "type" : "header-tab"
 },
 {
-"name" : "allskymapheader",
-"label" : "Allsky Map Settings",
+"name" : "privacyheader",
+"label" : "Privacy & Sharing Settings",
 "type" : "header"
+},
+{
+"name" : "allskymapsubheader",
+"label" : "Allsky Map",
+"type" : "header-sub"
 },
 {
 "name" : "showonmap",
 "default" : false,
-"description" : "Enable to have your camera appear on the <a href='https://www.thomasjacquin.com/allsky-map/' target='_blank' title='Opens in new tab/window'><span class='WebUISetting'>Allsky Map <i class='fa fa-external-link-alt fa-fw'></i></span></a>.",
+"description" : "Enable to have your camera appear on the <a href='https://www.thomasjacquin.com/allsky-map/' target='_blank' title='Opens in new tab/window'><span class='WebUISetting'>Allsky Map <i class='fa fa-external-link-alt fa-fw'></i></span></a>.<br>See <a external='true' href='/docs/allsky_guide/settings/privacy.html'>Privacy &amp; Sharing</a> for what is sent and why.",
 "label" : "Show on Map",
 "type" : "boolean",
 "carryforward" : true,
@@ -2160,6 +2156,15 @@
 "label" : "NOT DISPLAYED IN WebUI",
 "type" : "text",
 "carryforward" : true
+},
+{
+"name" : "hideexactlocation",
+"default" : false,
+"description" : "Enable to round the <span class='WebUISetting'>Latitude</span> and <span class='WebUISetting'>Longitude</span> to 1 decimal place (about 11 km / 7 miles) on the Allsky Map and the local and remote Allsky Websites. Allsky itself still uses the exact values.",
+"label" : "Hide Exact Location",
+"type" : "boolean",
+"carryforward" : true,
+"checkchanges" : true
 },
 {
 "name" : "location",

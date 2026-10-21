@@ -20,6 +20,7 @@ v2026.10.01 { data-toc-label="v2026.10.01" }
               The `generateForDay.sh` `--start` and `--end` arguments can be used to temporarily override the saved settings.
         - **Allsky Map and privacy**
             - If your camera isn't on the [Allsky Map](howtos/allsky_map.html), the installation asks if you want to add it. The answer defaults to ==No==, and if you keep it you won't be asked again for a year.
+            - The Allsky Map settings moved to the new **Privacy & Sharing** tab of the WebUI's **Allsky Settings** page.
             - The new ==Hide Exact Location== setting rounds the ==Latitude== and ==Longitude== on the Allsky Map and the local and remote Allsky Websites to 1 decimal place (about 11 km / 7 miles). Allsky itself still uses the exact values.
         - **Conditional overlay styles**
             - A text field in the **Overlay Editor** can change its colour, stroke, opacity, and/or font depending on its value, e.g. having the temperature appear in blue if it's below freezing and red if it's hot. A rule can also show a text instead of the value, e.g. `DANGER` above 90°. Rules can be saved as rule sets and reused by other fields.
@@ -49,7 +50,7 @@ v2026.10.01 { data-toc-label="v2026.10.01" }
 	    - ==Days To Keep on Remote Website== - This is similar to ==Days To Keep on Pi Website==, but for remote Websites.
         - ==Moon-dependent stretch==, ==Full Moon Stretch Amount==, and ==Full Moon Stretch mid point== (Nighttime)
         - ==Start Time== and ==End Time== for Daily Timelapse, Keograms, and Startrails
-        - ==Hide Exact Location== (right after ==Latitude== and ==Longitude==)
+        - ==Hide Exact Location== (in the new **Privacy & Sharing** tab)
 
 
 

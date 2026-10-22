@@ -475,7 +475,7 @@ class MODULEUTIL extends UTILBASE {
             $module = str_replace('allsky_', '', $moduleName);
             $module = str_replace('.py', '', $module);
 			
-            if (!isset($configData->{$module})) {
+            if (! isset($configData->{$module})) {
 				if ($moduleData === null) { // Corrupt module metaData
 					$moduleData = [
 						"metadata" => [
@@ -496,7 +496,7 @@ class MODULEUTIL extends UTILBASE {
         foreach($configData as $selectedName=>$data) {
             $moduleName = "allsky_" . $selectedName . ".py";
             if ( ! isset($allModules[$moduleName])) {
-				echo "<script>console.log('moduleName $moduleName does not exist.');";
+				error_log("WARNING: Module '$moduleName' defined in $configFileName but it's not installed; skipping.\n");
 				continue;
 			}
             $moduleData = $allModules[$moduleName];

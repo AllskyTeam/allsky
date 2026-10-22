@@ -2376,6 +2376,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#hiding-your-exact-location" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hiding your exact location
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#when-installing-or-upgrading-allsky" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When installing or upgrading Allsky
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#my-image-doesnt-appear-on-the-mapstyleborder-1px-solid-red" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6227,6 +6249,15 @@ Just make sure the <mark>Website URL</mark> and <mark>Image URL</mark> fields of
 <p>To add your camera to the map, enable <mark>Show on Map</mark>. If your camera is already on the map you can remove it by turning the setting off. You can also update your information by changing any of the map-related settings.</p>
 <p>Once you've enabled <mark>Show On Map</mark>, your map information will be automatically sent to the map server whenever you change it, as well as every other day so it can distinguish current data from old, expired data.</p>
 <p>All these changes take effect immediately - no human intervention required!</p>
+<h3 id="hiding-your-exact-location">Hiding your exact location<a class="headerlink" href="#hiding-your-exact-location" title="Permanent link">¶</a></h3>
+<p>Users of the Allsky Map can zoom in to see where your camera is.
+If you don't want to show its exact location, enable <mark>Hide Exact Location</mark> right after <mark>Latitude</mark> and <mark>Longitude</mark> in the WebUI's <strong>Allsky Settings</strong> page.
+The Allsky Map and your local and remote Allsky Websites then only get the <mark>Latitude</mark> and <mark>Longitude</mark> rounded to 1 decimal place, which is about 11 km (7 miles).
+Allsky itself still uses the exact values.</p>
+<h3 id="when-installing-or-upgrading-allsky">When installing or upgrading Allsky<a class="headerlink" href="#when-installing-or-upgrading-allsky" title="Permanent link">¶</a></h3>
+<p>If your camera isn't on the Allsky Map, the installation asks if you want to add it.
+The answer defaults to <mark>No</mark> and if you keep it, you won't be asked again for a year.
+If you answer <mark>Yes</mark>, you're also asked if you want to hide your exact location.</p>
 <p>See the <a does_not_work_external="true" href="/allsky_guide/settings/allsky.html#Allsky-map-settings" target="_blank">Allsky Settings documentation</a> page for a description of the map-related settings.</p>
 <h3 id="my-image-doesnt-appear-on-the-mapstyleborder-1px-solid-red">My Image Doesn't Appear on the Map{style="border: 1px solid red"}<a class="headerlink" href="#my-image-doesnt-appear-on-the-mapstyleborder-1px-solid-red" title="Permanent link">¶</a></h3>
 <p>The Map server uses <strong>https</strong> and if the URL to your server uses <strong>http</strong> then your image won't appear.  For security reasons, most browsers won't follow an <strong>http</strong> link that's on an <strong>https</strong> page.

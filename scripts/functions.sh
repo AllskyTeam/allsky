@@ -998,7 +998,7 @@ function check_settings_link()
 	fi
 	if [[ -z ${CAMERA_MODEL} ]]; then
 		CAMERA_MODEL="$( settings ".${CM}"  "${FULL_FILE}" )"
-		[[ $? -ne 0 || -z ${CAMERA_TYPE} ]] && return "${ALLSKY_EXIT_ERROR_STOP}"
+		[[ $? -ne 0 || -z ${CAMERA_MODEL} ]] && return "${ALLSKY_EXIT_ERROR_STOP}"
 	fi
 
 	DIRNAME="$( dirname "${FULL_FILE}" )"

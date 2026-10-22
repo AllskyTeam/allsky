@@ -448,6 +448,7 @@ if [[ ${UPLOAD} == "true" ]]; then
 	fi
 
 	# Get the return string and other optional info from the server.
+	# shellcheck disable=SC2034
 	while read -r UNUSED STATUS MORE_INFO
 	do
 		if [[ ${STATUS} == "INSERTED" || ${STATUS} == "DELETED" ]]; then

@@ -313,7 +313,7 @@ function get_connected_cameras_info()
 	# RPi software's "no cameras available" message.
 	if RPi_INFO="$( "${ALLSKY_UTILITIES}/getRPiCameraInfo.sh" --info-only \
 			--ignore-errors "${IGNORE_ERRORS}" \
-			--cmd "${RPi_CMD_TO_USE_}" )" ; then
+			--cmd "${RPi_CMD_TO_USE_}" 2>&1 )" ; then
 		echo "${RPi_INFO}"
 	fi
 

@@ -124,8 +124,8 @@ do
 	(( ON_CAMERA++ ))
 done >> "${CAMERA_RAW_DATA}" 2>&1
 if [[ ${RET} -ne 0 ]]; then
-	echo "${ME}: '${CMD}' failed:"
-	indent "$( "${CAMERA_RAW_DATA}" )"
+	echo "${ME}: '${CMD}' failed:" >&2
+	indent "${CAMERA_RAW_DATA}" >&2
 	exit "${RET}"
 fi
 

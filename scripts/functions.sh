@@ -311,10 +311,9 @@ function get_connected_cameras_info()
 	# output it here; otherwise the ZWO lines would overwrite the start of the file.
 	# When ignoring errors, e.g., on a Pi with only ZWO cameras, don't show the
 	# RPi software's "no cameras available" message.
-	local RPi_INFO  RPi_ERRORS="/dev/stderr"
-	[[ ${IGNORE_ERRORS} == "true" ]] && RPi_ERRORS="/dev/null"
 	if RPi_INFO="$( "${ALLSKY_UTILITIES}/getRPiCameraInfo.sh" --info-only \
-			--cmd "${RPi_CMD_TO_USE_}" 2> "${RPi_ERRORS}" )" ; then
+			--ignore-errors "${IGNORE_ERRORS}" \
+			--cmd "${RPi_CMD_TO_USE_}" )" ; then
 		echo "${RPi_INFO}"
 	fi
 

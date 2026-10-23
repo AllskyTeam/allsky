@@ -83,6 +83,7 @@ class UTILBASE
 
         $hdr = $_SERVER['HTTP_X_REQUESTED_WITH'] ?? '';
         if ($hdr === '' || strcasecmp($hdr, 'xmlhttprequest') !== 0) {
+			error_log("checkXHRRequest(): HTTP_X_REQUESTED_WITH not found.\n");
             $this->sendHTTPResponse('Not found', 404);
         }
     }

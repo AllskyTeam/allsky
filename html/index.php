@@ -511,7 +511,7 @@ function insertPage($p)
 
 }
 
-function insertVersions()
+function insertVersions() 
 {
 	global $hostname;
 
@@ -537,9 +537,8 @@ function insertVersions()
 			if ($note !== "") {
 				$msg .= "$x$note";
 			}
-			// The local documentation is for the installed release, so link to the new one's notes.
-			// Double quotes in the link since the message is passed in single quotes.
-			$notes = "https://github.com/AllskyTeam/allsky/releases/tag/" . rawurlencode($newestVersion);
+
+			$notes = "https://allskyteam.github.io/allsky/allsky_guide/upgrade/" . rawurlencode($newestVersion);
 			$msg .= "$x" . 'Please read the <a external="true" href="' . $notes . '">release notes</a>';
 			$msg .= " before upgrading, since some changes may require action on your part.";
 			$msg .= "<br><br>";

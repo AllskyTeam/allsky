@@ -314,8 +314,8 @@ class ALLSKYSHOWMESSAGES {
       this.#resetTableDom();
     }
 
-    // Visible columns: Date, Count, Message, Action => 4
-    const groupColspan = 4;
+    // Visible columns: Date, Count, Message
+    const groupColspan = 3;
 
     /** @type {any} */
     const config = {
@@ -352,7 +352,6 @@ class ALLSKYSHOWMESSAGES {
       columns: [
         // Hidden fields used internally (id/level)
         { data: 'id', visible: false },
-        { data: 'level', visible: false },
 
         // Hidden numeric ordering for severity when grouping is ON
         {
@@ -374,7 +373,6 @@ class ALLSKYSHOWMESSAGES {
         // Visible columns
         { title: 'Date', data: 'date', width: '210px' },
         { title: 'Count', data: 'count', width: '70px' },
-
         {
           title: 'Message',
           data: 'message',
@@ -390,47 +388,20 @@ class ALLSKYSHOWMESSAGES {
            * @returns {string}
            */
           render: (data, type, row) => {
-            const html = data || '';
+            var html = data || '';
+			if (row.cmd_txt) {
+				if (row.id) {
+    				html += "<a href='" +  this.opts.executeUrlBase + '?ID=' + encodeURIComponent(row.id) + "'>" + row.cmd_txt + "</a>";
+				} else {
+					html += row.cmd_txt;
+				}
+			}
             if (row.url) {
               return `<a href="${ALLSKYSHOWMESSAGES.#escapeStatic(row.url)}" target="_blank" rel="noopener">${html}</a>`;
             }
             return html;
           }
         },
-
-        {
-          title: 'Action',
-          data: null,
-          orderable: false,
-          searchable: false,
-          width: '90px',
-          className: 'text-center',
-
-          /**
-           * Action column:
-           * - Only shown if `id` is non-empty
-           * - Uses /execute.php?ID={id}
-           *
-           * @param {any} _data
-           * @param {string} _type
-           * @param {MessageRow} row
-           * @returns {string}
-           */
-          render: (_data, _type, row) => {
-            const id = (row && row.id != null) ? String(row.id) : '';
-            if (!id) return '';
-
-            const safeIdAttr = ALLSKYSHOWMESSAGES.#escapeStatic(id);
-
-            return `
-              <button type="button"
-                      class="btn btn-xs btn-primary js-run-action"
-                      data-id="${safeIdAttr}"
-                      title="Execute">
-                <i class="fa-solid fa-play"></i>
-              </button>`;
-          }
-        }
       ],
 
       /**
@@ -815,7 +786,7 @@ class ALLSKYSHOWMESSAGES {
   static #alertStyleCache = {};
 
   /**
-   * Extracts Bootstrap alert colours (background/text/border/link) from the page’s CSS.
+   * Extracts Bootstrap alert colours (background/text/border/link) from the page's CSS.
    *
    * Why this exists:
    * - Bootstrap alert colours vary by theme

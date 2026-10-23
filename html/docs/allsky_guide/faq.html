@@ -5,7 +5,7 @@
       
       
       
-        <link rel="canonical" href="https://docs.allsky.local/allsky_guide/faq.html">
+        <link rel="canonical" href="https://allskyteam.github.io/allsky/allsky_guide/faq.html">
       
       
         <link rel="prev" href="troubleshooting/others.html">
@@ -836,6 +836,34 @@
     
   
     Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="upgrade/v2026.10.01_01.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v2026.10.01_01
   
 
     
@@ -6339,7 +6367,7 @@
 <details class="question">
 <summary>How can I reduce wear on my SD card?</summary>
 <p>SD cards have a limited number of writes they can handle before they wear out. Although this is usually a very large number, you may want to minimize writes to the SD card by moving the <code>~/allsky/tmp</code> directory from the SD card into memory.</p>
-<p>During Allsky installation you were prompted to do this. If you did, you can ignore this FAQ item.</p>
+<p>Allsky installations since v2026.10.01_01 do this automatically, unless Allsky is on an NVMe disk, where <code>~/allsky/tmp</code> stays on the disk. If you chose to keep it on the SD card during an earlier installation, the next upgrade moves it into memory.</p>
 <div class="admonition info">
 <p class="admonition-title">Pi 5 or newer</p>
 <p>If you have a Pi 5 or newer, you can also replace the SD card with an NVMe SSD disk, which is much faster, more reliable, and allows significantly more space than an SD card, but costs more.</p>

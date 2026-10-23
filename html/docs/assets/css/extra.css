@@ -183,3 +183,199 @@ a[external="true"]::after {
 .editorBracketsJSON {
   color: rgb(253, 151, 31);
 }
+
+/* Release notes: quiet, stacked changes with a clear type marker. */
+.md-typeset .release-notes-panel {
+  background: #f8fafc;
+  border: 1px solid #e5eaf1;
+  border-radius: .7rem;
+  border-top: 3px solid #1682db;
+  margin: .6rem 0 1.5rem;
+  max-width: 42rem;
+  padding: .4rem 1rem;
+}
+
+[data-md-color-scheme="slate"] .md-typeset .release-notes-panel {
+  background: #111722;
+  border-color: #263244;
+  border-top-color: #1682db;
+}
+
+.md-typeset .release-note {
+  --note-accent: #64748b;
+  --note-tint: #e9eef4;
+  --note-text: #475569;
+  border-left: 2px solid var(--note-accent);
+  margin: .8rem 0;
+  padding: 0 .65rem;
+}
+
+.md-typeset .release-note--new {
+  --note-accent: #18a866;
+  --note-tint: #dff7ea;
+  --note-text: #146b43;
+}
+
+.md-typeset .release-note--improved {
+  --note-accent: #3b91ee;
+  --note-tint: #e3f1ff;
+  --note-text: #17639e;
+}
+
+.md-typeset .release-note--fixed {
+  --note-accent: #ed5261;
+  --note-tint: #ffe8eb;
+  --note-text: #a5283a;
+}
+
+[data-md-color-scheme="slate"] .md-typeset .release-note {
+  --note-tint: #283343;
+  --note-text: #aab9ce;
+}
+
+[data-md-color-scheme="slate"] .md-typeset .release-note--new {
+  --note-tint: #173d30;
+  --note-text: #52d894;
+}
+
+[data-md-color-scheme="slate"] .md-typeset .release-note--improved {
+  --note-tint: #17314e;
+  --note-text: #79b9ff;
+}
+
+[data-md-color-scheme="slate"] .md-typeset .release-note--fixed {
+  --note-tint: #45242d;
+  --note-text: #ff8490;
+}
+
+.md-typeset .release-note .release-note-badges {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: .3rem;
+}
+
+.md-typeset .release-note .release-note-badge {
+  background: var(--note-tint);
+  border-radius: 1rem;
+  color: var(--note-text);
+  display: inline-block;
+  font-size: .56rem;
+  font-weight: 700;
+  letter-spacing: .02em;
+  line-height: 1.6;
+  padding: 0 .42rem;
+}
+
+.md-typeset .release-note .release-note-badge::before {
+  background: var(--note-accent);
+  border-radius: 50%;
+  content: "";
+  display: inline-block;
+  height: .3rem;
+  margin-right: .3rem;
+  vertical-align: .05rem;
+  width: .3rem;
+}
+
+.md-typeset .release-note .release-note-area {
+  background: #e9eef4;
+  border-radius: 1rem;
+  color: #475569;
+  display: inline-block;
+  font-size: .56rem;
+  font-weight: 600;
+  letter-spacing: .02em;
+  line-height: 1.6;
+  padding: 0 .45rem;
+  text-transform: uppercase;
+}
+
+[data-md-color-scheme="slate"] .md-typeset .release-note .release-note-area {
+  background: #273445;
+  color: #b5c5d8;
+}
+
+.md-typeset .release-note p {
+  margin: 0;
+}
+
+.md-typeset .release-note .release-note-title {
+  font-size: .78rem;
+  font-weight: 700;
+  line-height: 1.35;
+  margin-top: .18rem;
+}
+
+.md-typeset .release-note .release-note-summary {
+  color: var(--md-default-fg-color--light);
+  font-size: .7rem;
+  line-height: 1.45;
+  margin-top: .1rem;
+}
+
+.md-typeset .release-note li.release-note-summary {
+  margin-left: 1rem;
+}
+
+.md-typeset .release-note .release-note-source {
+  font-size: .6rem;
+  margin-top: .2rem;
+}
+
+.md-typeset .release-notes-technical {
+  border-top: 1px solid var(--md-default-fg-color--lightest);
+  font-size: .72rem;
+  padding: .45rem 0;
+}
+
+.md-typeset .release-notes-technical summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.md-typeset .release-notes-technical h4 {
+  margin: .75rem 0 .25rem;
+}
+
+.md-typeset .release-notes-technical ul {
+  margin: 0 0 .5rem;
+}
+
+/* Custom Material block: !!! pullquote "" */
+.md-typeset .admonition.pullquote {
+  background: transparent;
+  border: 0;
+  border-left: .15rem solid #31cdb7;
+  border-radius: 0;
+  box-shadow: none;
+  color: #7089a1;
+  font-size: .8rem;
+  margin: 1.2rem 0;
+  max-width: 36rem;
+  padding: .45rem 0 .45rem 1.2rem;
+}
+
+.md-typeset .admonition.pullquote p {
+  margin: 0;
+}
+
+.md-typeset .admonition.pullquote p:first-child {
+  font-style: italic;
+}
+
+.md-typeset .admonition.pullquote p + p {
+  color: #4d6c88;
+  font-size: .72rem;
+  font-style: normal;
+  font-weight: 600;
+  margin-top: .4rem;
+}
+
+[data-md-color-scheme="slate"] .md-typeset .admonition.pullquote {
+  color: #a9bbce;
+}
+
+[data-md-color-scheme="slate"] .md-typeset .admonition.pullquote p + p {
+  color: #8fb1d0;
+}

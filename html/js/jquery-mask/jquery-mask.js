@@ -1,662 +1,1062 @@
 "use strict";
-; (function ($) {
+(function ($) {
+    const api = 'includes/overlayutil.php?request=';
+    const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+    const copy = value => JSON.parse(JSON.stringify(value));
 
-	$.allskyMASK = function (el, options) {
-		var defaults = {
-			dirty: false,
-			id: 'mask',
-			modalId: 'allsky-mask-drawingModal',
-			image: '/current/image.jpg',
-			saveURL: 'includes/overlayutil.php?request=Base64Image',
-			onComplete: function (latlon) { }
-		}
+    class MaskRenderer {
+        static blurAlpha(alpha, width, height, radius) {
+            const temporary = new Uint8Array(alpha.length);
+            let result = new Uint8Array(alpha.length);
+            const divisor = radius * 2 + 1;
+            for (let pass = 0; pass < 3; pass++) {
+                for (let y = 0; y < height; y++) {
+                    const row = y * width;
+                    let sum = 0;
+                    for (let x = 0; x <= radius && x < width; x++) sum += alpha[row + x];
+                    for (let x = 0; x < width; x++) {
+                        temporary[row + x] = Math.round(sum / divisor);
+                        if (x - radius >= 0) sum -= alpha[row + x - radius];
+                        if (x + radius + 1 < width) sum += alpha[row + x + radius + 1];
+                    }
+                }
+                for (let x = 0; x < width; x++) {
+                    let sum = 0;
+                    for (let y = 0; y <= radius && y < height; y++) sum += temporary[y * width + x];
+                    for (let y = 0; y < height; y++) {
+                        result[y * width + x] = Math.round(sum / divisor);
+                        if (y - radius >= 0) sum -= temporary[(y - radius) * width + x];
+                        if (y + radius + 1 < height) sum += temporary[(y + radius + 1) * width + x];
+                    }
+                }
+                [alpha, result] = [result, alpha];
+            }
+            return alpha;
+        }
+        static bounds(object) {
+            if (object.type === 'circle') {
+                const radius = Math.hypot(object.b.x - object.a.x, object.b.y - object.a.y);
+                return { left: object.a.x - radius, top: object.a.y - radius,
+                    right: object.a.x + radius, bottom: object.a.y + radius };
+            }
+            const points = object.points || [object.a, object.b];
+            const bounds = { left: Infinity, top: Infinity, right: -Infinity, bottom: -Infinity };
+            for (const point of points) {
+                bounds.left = Math.min(bounds.left, point.x);
+                bounds.top = Math.min(bounds.top, point.y);
+                bounds.right = Math.max(bounds.right, point.x);
+                bounds.bottom = Math.max(bounds.bottom, point.y);
+            }
+            return bounds;
+        }
+        static shapePath(context, object) {
+            const a = object.a, b = object.b || a;
+            context.beginPath();
+            if (object.type === 'rectangle') {
+                context.rect(Math.min(a.x, b.x), Math.min(a.y, b.y), Math.abs(b.x - a.x), Math.abs(b.y - a.y));
+            } else if (object.type === 'ellipse') {
+                const rx = Math.abs(b.x - a.x) / 2, ry = Math.abs(b.y - a.y) / 2;
+                context.ellipse((a.x + b.x) / 2, (a.y + b.y) / 2, Math.max(rx, .01), Math.max(ry, .01), 0, 0, Math.PI * 2);
+            } else if (object.type === 'circle') {
+                context.arc(a.x, a.y, Math.max(Math.hypot(b.x - a.x, b.y - a.y), .01), 0, Math.PI * 2);
+            } else {
+                const points = object.points || [a, b];
+                context.moveTo(points[0].x, points[0].y);
+                for (let i = 1; i < points.length; i++) context.lineTo(points[i].x, points[i].y);
+                if (points.length === 1) context.lineTo(points[0].x + .01, points[0].y);
+            }
+        }
+        static paintObject(context, object, scale, layer) {
+            const feather = Math.max(0, Number(object.feather) || 0);
+            const radius = feather ? Math.max(1, Math.round(feather * scale / 2)) : 0;
+            const bounds = MaskRenderer.bounds(object);
+            const strokePad = ['brush', 'eraser', 'line'].includes(object.type) ? (object.size || 1) / 2 : 0;
+            const margin = radius * 3 + 2;
+            const left = Math.max(0, Math.floor((bounds.left - strokePad) * scale) - margin);
+            const top = Math.max(0, Math.floor((bounds.top - strokePad) * scale) - margin);
+            const right = Math.min(context.canvas.width, Math.ceil((bounds.right + strokePad) * scale) + margin);
+            const bottom = Math.min(context.canvas.height, Math.ceil((bounds.bottom + strokePad) * scale) + margin);
+            if (right <= left || bottom <= top) return;
+            const tileWidth = right - left, tileHeight = bottom - top;
+            // Blur a smaller mask when the feather is wide, then let canvas
+            // interpolate it back to the image resolution. This keeps edits
+            // responsive even for large images and large feathers.
+            const reduction = radius ? Math.min(8, Math.max(1, Math.floor(radius / 4))) : 1;
+            layer.width = Math.ceil(tileWidth / reduction);
+            layer.height = Math.ceil(tileHeight / reduction);
+            const xScale = layer.width / tileWidth, yScale = layer.height / tileHeight;
+            const brush = layer.getContext('2d');
+            brush.setTransform(scale * xScale, 0, 0, scale * yScale, -left * xScale, -top * yScale);
+            brush.fillStyle = object.color === 'black' ? '#000' : '#fff';
+            brush.strokeStyle = brush.fillStyle;
+            brush.lineWidth = object.size || 1;
+            brush.lineJoin = 'round';
+            brush.lineCap = 'round';
+            MaskRenderer.shapePath(brush, object);
+            if (['brush', 'eraser', 'line'].includes(object.type)) brush.stroke();
+            else brush.fill();
+            if (radius) {
+                const image = brush.getImageData(0, 0, layer.width, layer.height);
+                const alpha = new Uint8Array(layer.width * layer.height);
+                for (let pixel = 0; pixel < alpha.length; pixel++) alpha[pixel] = image.data[pixel * 4 + 3];
+                const softened = MaskRenderer.blurAlpha(alpha, layer.width, layer.height,
+                    Math.max(1, Math.round(radius * Math.min(xScale, yScale))));
+                const colour = object.color === 'black' ? 0 : 255;
+                for (let pixel = 0; pixel < softened.length; pixel++) {
+                    const offset = pixel * 4;
+                    image.data[offset] = colour;
+                    image.data[offset + 1] = colour;
+                    image.data[offset + 2] = colour;
+                    image.data[offset + 3] = softened[pixel];
+                }
+                brush.setTransform(1, 0, 0, 1, 0, 0);
+                brush.putImageData(image, 0, 0);
+            }
+            context.imageSmoothingEnabled = true;
+            context.drawImage(layer, left, top, tileWidth, tileHeight);
+        }
+    }
 
-		var plugin = this;
-		var el = $(el);
-		plugin.settings = {}
+    class MaskEditor {
+      constructor(element, options) {
+        const settings = $.extend({
+            modalId: 'allsky-mask-drawingModal',
+            image: null,
+            name: null,
+            onComplete: function () {}
+        }, options);
+        let modal, canvas, ctx, panels = $(), background = null, backgroundName = '', width = 0, height = 0;
+        let objects = [], history = [], historySizes = [], cursor = -1, selected = -1, active = null;
+        let tool = 'select', paintColour = 'white', size = 20, feather = 0, backgroundOpacity = 65, displayScale = 1, zoom = 1;
+        let projectName = settings.name || '', backgroundSourceMask = '', ready = false;
+        let activeProjectOption = '', knownProjects = new Set(), confirmingOverwrite = false, loadSequence = 0;
+        let cleanState = null, allowClose = false, confirmingClose = false;
+        let previewMode = false, spacePan = false, cacheDirty = true, cacheExcluded = -2;
+        const cachedObjects = document.createElement('canvas');
+        const previewMask = document.createElement('canvas');
+        const paintLayer = document.createElement('canvas');
 
-		plugin.init = function () {
-			plugin.settings = $.extend({}, defaults, options)
+        const field = id => modal.find('[data-mask-' + id + ']');
+        const message = value => field('message').text(value || '');
+        const saveFeedback = (value, state = '') => field('save-feedback').text(value || '').attr('data-state', state);
+        const saveError = (reason, control) => {
+            saveFeedback(reason, 'error');
+            if (control) control.addClass('allsky-mask-invalid').trigger('focus');
+        };
+        const requestError = (xhr, fallback) => xhr.responseJSON?.message || fallback;
+        const project = () => ({ version: 1, width, height, background: backgroundName, objects: copy(objects) });
+        const state = () => JSON.stringify({ name: field('name').val().trim(), width, height, backgroundName, objects });
+        const markClean = () => { cleanState = state(); };
+        const hasUnsavedChanges = () => cleanState !== null && state() !== cleanState;
+        const snapshot = () => {
+            const serialized = JSON.stringify(objects);
+            if (history[cursor] === serialized) return draw();
+            history = history.slice(0, cursor + 1);
+            historySizes = historySizes.slice(0, cursor + 1);
+            history.push(serialized);
+            historySizes.push(serialized.length);
+            let totalBytes = historySizes.reduce((total, bytes) => total + bytes, 0);
+            while (history.length > 1 && (history.length > 41 || totalBytes > 32 * 1024 * 1024)) {
+                history.shift();
+                totalBytes -= historySizes.shift();
+            }
+            cursor = history.length - 1;
+            field('undo').prop('disabled', cursor < 1);
+            field('redo').prop('disabled', true);
+            cacheDirty = true;
+            renderObjectList();
+            draw();
+        };
+        const restore = index => {
+            cursor = index;
+            objects = JSON.parse(history[cursor]);
+            selected = -1;
+            field('undo').prop('disabled', cursor < 1);
+            field('redo').prop('disabled', cursor >= history.length - 1);
+            cacheDirty = true;
+            renderObjectList();
+            draw();
+        };
+        const renderObjectList = () => {
+            if (field('object-panel').prop('hidden')) return;
+            const list = field('object-list');
+            list.find('[data-mask-object-action]').popover('destroy');
+            list.empty();
+            for (let index = objects.length - 1; index >= 0; index--) {
+                const object = objects[index];
+                const row = $('<div class="allsky-mask-object-row">').attr('data-mask-object-index', index);
+                $('<button type="button" class="allsky-mask-object-name">')
+                    .attr('aria-label', 'Select ' + object.type + ' ' + (index + 1))
+                    .text((index + 1) + '. ' + object.type).appendTo(row);
+                const actions = $('<span class="allsky-mask-object-actions">').appendTo(row);
+                for (const [action, icon, label, disabled] of [
+                    ['visibility', object.hidden ? 'fa-eye-slash' : 'fa-eye', object.hidden ? 'Show' : 'Hide', false],
+                    ['duplicate', 'fa-copy', 'Duplicate', false],
+                    ['up', 'fa-arrow-up', 'Move forward', index === objects.length - 1],
+                    ['down', 'fa-arrow-down', 'Move backward', index === 0]
+                ]) {
+                    $('<button type="button" class="btn btn-default btn-xs">').attr({
+                        'data-mask-object-action': action,
+                        'aria-label': label + ' ' + object.type + ' ' + (index + 1),
+                        title: label,
+                        disabled: disabled || null
+                    }).append($('<i class="fa-solid">').addClass(icon).attr('aria-hidden', 'true')).appendTo(actions);
+                }
+                list.append(row);
+                row.find('[data-mask-object-action]').each(function () {
+                    const action = this.dataset.maskObjectAction;
+                    $(this).popover({ container: 'body', trigger: 'hover focus', placement: 'left',
+                        content: action === 'visibility' ? 'Show or hide this object in the saved mask.' :
+                            action === 'duplicate' ? 'Create an offset copy of this object.' :
+                            'Change this object’s stacking order.',
+                        delay: { show: 450, hide: 100 } });
+                });
+            }
+            field('object-empty').prop('hidden', objects.length > 0);
+        };
+        const syncControls = () => {
+            const object = objects[selected];
+            field('selected').text(object ? 'Object ' + (selected + 1) + ' of ' + objects.length : 'No object selected');
+            field('delete').prop('disabled', !object);
+            field('size').val(object ? object.size : size);
+            field('feather').val(object ? object.feather : feather);
+            modal.find('[data-mask-color-choice]').each(function () {
+                const isActive = $(this).data('mask-color-choice') === (object ? object.color : paintColour);
+                $(this).toggleClass('active', isActive).attr('aria-pressed', String(isActive));
+            });
+            field('size-value').text(field('size').val() + ' px');
+            field('feather-value').text(field('feather').val() + ' px');
+            field('object-list').children('[data-mask-object-index]').each(function () {
+                $(this).toggleClass('selected', Number(this.dataset.maskObjectIndex) === selected);
+            });
+        };
+        const renderMask = (target, scale) => {
+            const targetCtx = target.getContext('2d');
+            const layer = document.createElement('canvas');
+            layer.width = target.width;
+            layer.height = target.height;
+            targetCtx.filter = 'none';
+            targetCtx.globalAlpha = 1;
+            targetCtx.fillStyle = '#000';
+            targetCtx.fillRect(0, 0, target.width, target.height);
+            for (const object of objects) if (!object.hidden) MaskRenderer.paintObject(targetCtx, object, scale, layer);
+            targetCtx.globalAlpha = 1;
+        };
+        const ensureCachedObjects = excluded => {
+            if (!cacheDirty && cacheExcluded === excluded && cachedObjects.width === canvas.width &&
+                cachedObjects.height === canvas.height) return;
+            cachedObjects.width = canvas.width;
+            cachedObjects.height = canvas.height;
+            const cacheContext = cachedObjects.getContext('2d');
+            for (let index = 0; index < objects.length; index++) {
+                if (index !== excluded && !objects[index].hidden) {
+                    MaskRenderer.paintObject(cacheContext, objects[index], displayScale, paintLayer);
+                }
+            }
+            cacheExcluded = excluded;
+            cacheDirty = false;
+        };
+        const draw = () => {
+            if (!ready) return;
+            const pixelWidth = canvas.width, pixelHeight = canvas.height;
+            ctx.clearRect(0, 0, pixelWidth, pixelHeight);
+            const liveIndex = active && active.kind !== 'pan' ? selected : -1;
+            ensureCachedObjects(liveIndex);
+            if (previewMode) {
+                previewMask.width = pixelWidth;
+                previewMask.height = pixelHeight;
+                const maskContext = previewMask.getContext('2d');
+                maskContext.fillStyle = '#000';
+                maskContext.fillRect(0, 0, pixelWidth, pixelHeight);
+                maskContext.drawImage(cachedObjects, 0, 0);
+                if (liveIndex >= 0 && !objects[liveIndex].hidden) {
+                    MaskRenderer.paintObject(maskContext, objects[liveIndex], displayScale, paintLayer);
+                }
+                if (background) {
+                    ctx.drawImage(background, 0, 0, pixelWidth, pixelHeight);
+                    ctx.globalCompositeOperation = 'multiply';
+                    ctx.drawImage(previewMask, 0, 0);
+                    ctx.globalCompositeOperation = 'source-over';
+                } else ctx.drawImage(previewMask, 0, 0);
+            } else {
+                ctx.fillStyle = '#242424';
+                ctx.fillRect(0, 0, pixelWidth, pixelHeight);
+                ctx.globalAlpha = backgroundOpacity / 100;
+                if (background) ctx.drawImage(background, 0, 0, pixelWidth, pixelHeight);
+                ctx.globalAlpha = 1;
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+                ctx.fillRect(0, 0, pixelWidth, pixelHeight);
+                ctx.drawImage(cachedObjects, 0, 0);
+                if (liveIndex >= 0 && !objects[liveIndex].hidden) {
+                    MaskRenderer.paintObject(ctx, objects[liveIndex], displayScale, paintLayer);
+                }
+            }
+            const object = objects[selected];
+            if (!previewMode && object && !object.hidden && panels.filter('[data-mask-panel="feather"]').prop('hidden')) {
+                ctx.save();
+                ctx.scale(displayScale, displayScale);
+                ctx.strokeStyle = '#00d8ff';
+                ctx.lineWidth = 2 / displayScale;
+                ctx.setLineDash([7 / displayScale, 5 / displayScale]);
+                const bounds = MaskRenderer.bounds(object);
+                const padding = (object.feather || 0) +
+                    (['brush', 'eraser', 'line'].includes(object.type) ? object.size / 2 : 0) + 6 / displayScale;
+                ctx.strokeRect(bounds.left - padding, bounds.top - padding,
+                    bounds.right - bounds.left + padding * 2, bounds.bottom - bounds.top + padding * 2);
+                if (!['brush', 'eraser'].includes(object.type)) {
+                    ctx.setLineDash([]);
+                    for (const point of [object.a, object.b]) {
+                        ctx.fillStyle = '#00d8ff';
+                        ctx.fillRect(point.x - 5 / displayScale, point.y - 5 / displayScale,
+                            10 / displayScale, 10 / displayScale);
+                    }
+                }
+                ctx.restore();
+            }
+            syncControls();
+        };
+        const resize = () => {
+            if (!width || !height) return;
+            const frame = field('frame')[0];
+            const wrap = field('canvas-wrap')[0];
+            const centreX = ready ? (frame.scrollLeft + frame.clientWidth / 2 - canvas.offsetLeft) / displayScale : width / 2;
+            const centreY = ready ? (frame.scrollTop + frame.clientHeight / 2 - canvas.offsetTop) / displayScale : height / 2;
+            const maxWidth = Math.max(200, frame.clientWidth - 2);
+            const maxHeight = Math.max(200, frame.clientHeight - 2);
+            const fitScale = Math.min(1, maxWidth / width, maxHeight / height);
+            const maxZoom = Math.min(4, 8192 / (width * fitScale), 8192 / (height * fitScale),
+                Math.sqrt(32000000 / (width * height * fitScale * fitScale)));
+            zoom = clamp(zoom, 0.25, maxZoom);
+            displayScale = fitScale * zoom;
+            canvas.width = Math.max(1, Math.round(width * displayScale));
+            canvas.height = Math.max(1, Math.round(height * displayScale));
+            canvas.style.width = canvas.width + 'px';
+            canvas.style.height = canvas.height + 'px';
+            wrap.style.width = Math.max(frame.clientWidth, canvas.width) + 'px';
+            wrap.style.height = Math.max(frame.clientHeight, canvas.height) + 'px';
+            frame.scrollLeft = centreX * displayScale + canvas.offsetLeft - frame.clientWidth / 2;
+            frame.scrollTop = centreY * displayScale + canvas.offsetTop - frame.clientHeight / 2;
+            field('zoom-value').text(Math.round(zoom * 100) + '%');
+            field('zoom-out').prop('disabled', zoom <= 0.25);
+            field('zoom-in').prop('disabled', zoom >= maxZoom);
+            ready = true;
+            cacheDirty = true;
+            draw();
+        };
+        const setZoom = value => {
+            zoom = value;
+            resize();
+        };
+        const loadImage = (url, storedName, reset, markAsClean = false,
+            beforeApply = null, isCurrent = () => true) => {
+            const image = new Image();
+            image.onload = () => {
+                if (!isCurrent()) return;
+                backgroundSourceMask = '';
+                if (beforeApply) beforeApply();
+                background = image;
+                backgroundName = storedName || '';
+                if (reset) {
+                    ready = false;
+                    width = image.naturalWidth;
+                    height = image.naturalHeight;
+                    zoom = 1;
+                    objects = [];
+                    history = [];
+                    historySizes = [];
+                    cursor = -1;
+                    selected = -1;
+                    snapshot();
+                }
+                resize();
+                if (markAsClean) markClean();
+                saveFeedback();
+                message('Background: ' + width + ' × ' + height);
+            };
+            image.onerror = () => { if (isCurrent()) message('Unable to load background image.'); };
+            image.src = url;
+        };
+        const pointer = event => {
+            const rect = canvas.getBoundingClientRect();
+            return {
+                x: clamp((event.clientX - rect.left) * width / rect.width, 0, width),
+                y: clamp((event.clientY - rect.top) * height / rect.height, 0, height)
+            };
+        };
+        const hit = point => {
+            const test = document.createElement('canvas').getContext('2d');
+            for (let i = objects.length - 1; i >= 0; i--) {
+                const object = objects[i];
+                if (object.hidden) continue;
+                MaskRenderer.shapePath(test, object);
+                if (['brush', 'eraser', 'line'].includes(object.type)) {
+                    test.lineWidth = Math.max(object.size, 10 / displayScale) + object.feather * 2;
+                    if (test.isPointInStroke(point.x, point.y)) return i;
+                } else if (test.isPointInPath(point.x, point.y)) return i;
+            }
+            return -1;
+        };
+        const moveObject = (object, dx, dy) => {
+            object.a.x += dx; object.a.y += dy;
+            if (object.b) { object.b.x += dx; object.b.y += dy; }
+            if (object.points) object.points.forEach(point => { point.x += dx; point.y += dy; });
+        };
+        const detectCircle = () => {
+            if (!background) return message('Choose a background image first.');
+            const sample = document.createElement('canvas');
+            sample.width = 256;
+            sample.height = Math.max(1, Math.round(256 * height / width));
+            const sampleCtx = sample.getContext('2d', { willReadFrequently: true });
+            sampleCtx.drawImage(background, 0, 0, sample.width, sample.height);
+            const pixels = sampleCtx.getImageData(0, 0, sample.width, sample.height).data;
+            const brightness = (x, y) => {
+                x = clamp(Math.round(x), 0, sample.width - 1);
+                y = clamp(Math.round(y), 0, sample.height - 1);
+                const i = (y * sample.width + x) * 4;
+                return (pixels[i] + pixels[i + 1] + pixels[i + 2]) / 3;
+            };
+            const w = sample.width, h = sample.height, side = Math.min(w, h);
+            let best = null;
+            for (let cy = h * .4; cy <= h * .6; cy += Math.max(2, side * .04)) {
+                for (let cx = w * .4; cx <= w * .6; cx += Math.max(2, side * .04)) {
+                    for (let radius = side * .32; radius <= side * .58; radius += Math.max(2, side * .025)) {
+                        let inside = 0, outside = 0, count = 0;
+                        for (let angle = 0; angle < 48; angle++) {
+                            const radians = angle * Math.PI / 24;
+                            const ix = cx + Math.cos(radians) * radius * .88;
+                            const iy = cy + Math.sin(radians) * radius * .88;
+                            const ox = cx + Math.cos(radians) * radius * 1.08;
+                            const oy = cy + Math.sin(radians) * radius * 1.08;
+                            if (ox < 0 || ox >= w || oy < 0 || oy >= h) continue;
+                            inside += brightness(ix, iy);
+                            outside += brightness(ox, oy);
+                            count++;
+                        }
+                        if (count < 24) continue;
+                        const score = (inside - outside) / count;
+                        if (!best || score > best.score) best = { cx, cy, radius, score };
+                    }
+                }
+            }
+            if (!best || best.score < 12) return message('No clear image circle found. Draw one manually.');
+            const ratio = width / w;
+            objects.push({ type: 'circle', color: 'white', a: { x: best.cx * ratio, y: best.cy * ratio },
+                b: { x: (best.cx + best.radius) * ratio, y: best.cy * ratio }, size: 1,
+                feather: Math.max(feather, Math.round(width * .008)) });
+            selected = objects.length - 1;
+            snapshot();
+            message('Detected circle added. Select and drag it to adjust.');
+        };
+        const confirmAction = (title, detail, confirmLabel, callback) => {
+            const dialog = bootbox.confirm({
+                className: 'allsky-mask-close-confirm', title, message: detail,
+                buttons: {
+                    cancel: { label: 'Cancel', className: 'btn-default' },
+                    confirm: { label: confirmLabel, className: 'btn-danger' }
+                },
+                callback
+            });
+            $('.modal-backdrop').last().addClass('allsky-mask-close-backdrop');
+            dialog.on('hidden.bs.modal', () => {
+                if (modal.hasClass('in')) $('body').addClass('modal-open');
+            });
+        };
+        const confirmDiscard = (description, proceed) => {
+            if (!hasUnsavedChanges()) return proceed();
+            confirmAction('Discard unsaved mask changes?', description,
+                'Discard changes', confirmed => { if (confirmed) proceed(); });
+        };
+        const normalizedName = () => field('name').val().trim().replace(/\.png$/i, '');
+        const confirmOverwrite = name => {
+            if (confirmingOverwrite) return;
+            confirmingOverwrite = true;
+            saveFeedback();
+            confirmAction('Replace existing PNG?', 'Saving "' + $('<span>').text(name).html() +
+                '" will replace its PNG and any editable mask project with that name.', 'Replace mask', confirmed => {
+                confirmingOverwrite = false;
+                if (confirmed) performSave(name, true);
+            });
+        };
+        const saveProject = (name, overwrite) => {
+            const output = document.createElement('canvas');
+            output.width = width;
+            output.height = height;
+            let image;
+            try {
+                renderMask(output, 1);
+                image = output.toDataURL('image/png');
+            } catch (error) {
+                saveError('Unable to render the PNG mask. Try a smaller background image.');
+                field('save').prop('disabled', false);
+                return;
+            }
+            $.ajax({ url: api + 'MaskProject', method: 'POST', dataType: 'json',
+                data: { name, sourceMask: backgroundSourceMask, overwrite: overwrite ? 1 : 0,
+                    project: JSON.stringify(project()), image } })
+                .done(response => {
+                    projectName = name;
+                    backgroundSourceMask = name;
+                    knownProjects.add(name);
+                    markClean();
+                    allowClose = true;
+                    modal.modal('hide');
+                    settings.onComplete.call(element, response);
+                })
+                .fail(xhr => {
+                    if (xhr.status === 409 && !overwrite) confirmOverwrite(name);
+                    else saveError(requestError(xhr, 'Unable to save mask. Check the connection and try again.'));
+                })
+                .always(() => field('save').prop('disabled', false));
+        };
+        const performSave = (name, overwrite) => {
+            field('save').prop('disabled', true);
+            saveFeedback('Saving mask…', 'progress');
+            if (backgroundName || !background) return saveProject(name, overwrite);
+            $.ajax({ url: api + 'MaskBackground', method: 'POST', dataType: 'json', data: { current: 1 } })
+                .done(result => { backgroundName = result.background; backgroundSourceMask = ''; saveProject(name, overwrite); })
+                .fail(xhr => {
+                    saveError(requestError(xhr, 'Unable to store the background image. Check the connection and try again.'));
+                    field('save').prop('disabled', false);
+                });
+        };
+        const save = () => {
+            saveFeedback();
+            if (!ready) return saveError('Choose a background image before saving.');
+            const name = normalizedName();
+            if (!/^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$/.test(name)) {
+                return saveError('Enter a mask name using letters, numbers, underscores or hyphens.', field('name'));
+            }
+            field('name').removeClass('allsky-mask-invalid');
+            loadSequence++; // A pending background or project load must not replace the mask being saved.
+            if (knownProjects.has(name) || name === projectName) return confirmOverwrite(name);
+            performSave(name, false);
+        };
+        const build = () => {
+            $('#' + settings.modalId).remove();
+            modal = $(`<div class="modal fade" id="${settings.modalId}" tabindex="-1" role="dialog" aria-label="Mask editor">
+              <div class="modal-dialog allsky-mask-dialog" role="document"><div class="modal-content">
+                <div class="modal-header allsky-mask-header">
+                  <h4 class="modal-title">Mask Editor</h4>
+                  <div class="allsky-mask-project-row">
+                    <label>Mask name <input data-mask-name type="text" maxlength="80" placeholder="my_mask" class="form-control input-sm"></label>
+                    <label>Saved mask <select data-mask-projects class="form-control input-sm"><option value="">New mask</option></select></label>
+                    <span data-mask-imagepicker class="allsky-mask-image-picker">
+                      <input type="hidden" class="js-allsky-image-picker-input">
+                      <button type="button" class="btn btn-default js-allsky-image-picker-button" title="Choose background image" aria-label="Choose background image"><i class="fa-solid fa-folder-open" aria-hidden="true"></i></button>
+                    </span>
+                    <button data-mask-detect type="button" class="btn btn-default" title="Detect image circle" aria-label="Detect image circle"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i></button>
+                  </div>
+                  <div class="allsky-mask-header-actions">
+                    <div class="btn-group" role="group" aria-label="Undo, redo and clear">
+                      <button data-mask-undo type="button" class="btn btn-default" title="Undo" aria-label="Undo" disabled><i class="fa-solid fa-rotate-left" aria-hidden="true"></i></button>
+                      <button data-mask-redo type="button" class="btn btn-default" title="Redo" aria-label="Redo" disabled><i class="fa-solid fa-rotate-right" aria-hidden="true"></i></button>
+                      <button data-mask-clear type="button" class="btn btn-default" title="Clear all objects" aria-label="Clear all objects"><i class="fa-solid fa-broom" aria-hidden="true"></i></button>
+                    </div>
+                    <span class="allsky-mask-close-action"><button data-mask-close type="button" class="btn btn-default" data-dismiss="modal" title="Close editor" aria-label="Close editor"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></span>
+                  </div>
+                </div>
+                <div class="modal-body"><div class="allsky-mask-toolbar" role="toolbar" aria-label="Mask editor tools">
+                  <div data-mask-tool-row class="allsky-mask-tool-row">
+                    <div class="allsky-mask-tools btn-group" role="group" aria-label="Drawing tools">
+                      <button data-tool="select" type="button" class="btn btn-default active" title="Select and move" aria-label="Select and move"><i class="fa-solid fa-arrow-pointer" aria-hidden="true"></i></button>
+                      <button data-tool="brush" type="button" class="btn btn-default" title="Brush" aria-label="Brush"><i class="fa-solid fa-paintbrush" aria-hidden="true"></i></button>
+                      <button data-tool="eraser" type="button" class="btn btn-default" title="Eraser" aria-label="Eraser"><i class="fa-solid fa-eraser" aria-hidden="true"></i></button>
+                      <button data-tool="rectangle" type="button" class="btn btn-default" title="Rectangle" aria-label="Rectangle"><i class="fa-regular fa-square" aria-hidden="true"></i></button>
+                      <button data-tool="ellipse" type="button" class="btn btn-default" title="Ellipse" aria-label="Ellipse"><span class="allsky-mask-ellipse-icon" aria-hidden="true"></span></button>
+                      <button data-tool="circle" type="button" class="btn btn-default" title="Circle" aria-label="Circle"><i class="fa-regular fa-circle" aria-hidden="true"></i></button>
+                      <button data-tool="line" type="button" class="btn btn-default" title="Line" aria-label="Line"><i class="fa-solid fa-slash" aria-hidden="true"></i></button>
+                    </div>
+                    <div class="allsky-mask-colors btn-group" role="group" aria-label="Paint colour">
+                      <button data-mask-color-choice="white" type="button" class="btn btn-default active" title="Paint white: show image" aria-label="Paint white: show image" aria-pressed="true"><span class="allsky-mask-swatch allsky-mask-swatch-white"></span></button>
+                      <button data-mask-color-choice="black" type="button" class="btn btn-default" title="Paint black: hide image" aria-label="Paint black: hide image" aria-pressed="false"><span class="allsky-mask-swatch allsky-mask-swatch-black"></span></button>
+                    </div>
+                    <div class="allsky-mask-popover-wrap">
+                      <button data-mask-panel-toggle="size" type="button" class="btn btn-default" title="Brush and line size" aria-label="Brush and line size" aria-expanded="false"><i class="fa-solid fa-up-right-and-down-left-from-center" aria-hidden="true"></i></button>
+                      <div data-mask-panel="size" class="allsky-mask-popover" hidden><label>Brush / line size</label><div class="allsky-mask-slider-row"><input data-mask-size type="range" min="1" max="200" value="20" aria-label="Brush and line size"><span data-mask-size-value>20 px</span></div></div>
+                    </div>
+                    <div class="allsky-mask-popover-wrap">
+                      <button data-mask-panel-toggle="feather" type="button" class="btn btn-default" title="Feather edges" aria-label="Feather edges" aria-expanded="false"><i class="fa-solid fa-feather" aria-hidden="true"></i></button>
+                      <div data-mask-panel="feather" class="allsky-mask-popover" hidden><label>Feather edges</label><div class="allsky-mask-slider-row"><input data-mask-feather type="range" min="0" max="100" value="0" aria-label="Feather edges"><span data-mask-feather-value>0 px</span></div></div>
+                    </div>
+                    <div class="allsky-mask-popover-wrap">
+                      <button data-mask-panel-toggle="opacity" type="button" class="btn btn-default" title="Background opacity" aria-label="Background opacity" aria-expanded="false"><i class="fa-solid fa-image" aria-hidden="true"></i></button>
+                      <div data-mask-panel="opacity" class="allsky-mask-popover" hidden><label>Background opacity</label><div class="allsky-mask-slider-row"><input data-mask-opacity type="range" min="0" max="100" value="65" aria-label="Background opacity"><span data-mask-opacity-value>65%</span></div></div>
+                    </div>
+                    <button data-mask-delete type="button" class="btn btn-default" title="Delete selected object" aria-label="Delete selected object" disabled><i class="fa-solid fa-trash" aria-hidden="true"></i></button>
+                    <div class="allsky-mask-zoom btn-group" role="group" aria-label="Canvas zoom">
+                      <button data-mask-zoom-out type="button" class="btn btn-default" title="Zoom out" aria-label="Zoom out"><i class="fa-solid fa-magnifying-glass-minus" aria-hidden="true"></i></button>
+                      <button data-mask-zoom-fit type="button" class="btn btn-default" title="Fit image" aria-label="Fit image"><i class="fa-solid fa-expand" aria-hidden="true"></i></button>
+                      <button data-mask-zoom-in type="button" class="btn btn-default" title="Zoom in" aria-label="Zoom in"><i class="fa-solid fa-magnifying-glass-plus" aria-hidden="true"></i></button>
+                    </div>
+                    <button data-mask-preview type="button" class="btn btn-default" title="Preview masked image" aria-label="Preview masked image" aria-pressed="false"><i class="fa-solid fa-eye" aria-hidden="true"></i></button>
+                    <button data-mask-objects type="button" class="btn btn-default" title="Show object list" aria-label="Show object list" aria-expanded="false"><i class="fa-solid fa-layer-group" aria-hidden="true"></i></button>
+                    <span data-mask-zoom-value class="allsky-mask-zoom-value" aria-live="polite">100%</span>
+                    <span data-mask-selected class="allsky-mask-selection">No object selected</span>
+                  </div>
+                </div><div class="allsky-mask-stage"><div data-mask-frame class="allsky-mask-frame"><div data-mask-canvas-wrap class="allsky-mask-canvas-wrap"><canvas data-mask-canvas></canvas></div></div>
+                  <aside data-mask-object-panel class="allsky-mask-object-panel" aria-label="Mask objects" hidden><div class="allsky-mask-object-panel-title">Objects <small>Top first</small></div><div data-mask-object-list class="allsky-mask-object-list"></div><p data-mask-object-empty class="allsky-mask-object-empty">No objects yet</p></aside></div>
+                <p data-mask-message class="allsky-mask-message" role="status"></p></div>
+                <div class="modal-footer"><span data-mask-save-feedback class="allsky-mask-save-feedback" role="status" aria-live="polite"></span><button data-mask-save type="button" class="btn btn-primary">Save</button><button data-mask-close type="button" class="btn btn-default" data-dismiss="modal">Close</button></div>
+              </div></div></div>`).appendTo('body');
+            this.modal = modal;
+            panels = modal.find('[data-mask-panel]');
+            panels.each(function () { $(this).data('mask-home', this.parentNode); });
+            canvas = field('canvas')[0];
+            ctx = canvas.getContext('2d');
+            const pickerContainer = field('imagepicker');
+            let pickerModal = null;
+            if (typeof $.fn.allskyImagePicker === 'function') {
+                pickerContainer.allskyImagePicker({
+                    title: 'Choose mask background image',
+                    topLevelFoldersOnly: true,
+                    excludeTestFolders: true
+                });
+                pickerModal = pickerContainer.data('allskyImagePicker').modalElement;
+                pickerModal.on('hidden.bs.modal', () => {
+                    if (modal.hasClass('in')) $('body').addClass('modal-open');
+                });
+                modal.on('hidden.bs.modal', () => pickerModal.remove());
+            } else {
+                pickerContainer.find('button').prop('disabled', true);
+                message('Image picker is unavailable.');
+            }
+            pickerContainer.find('.js-allsky-image-picker-input').on('change', function () {
+                if (!this.value) return;
+                const path = this.value;
+                this.value = '';
+                if (field('save').prop('disabled')) return message('Wait for the mask to finish saving.');
+                const sequence = ++loadSequence;
+                const choose = () => confirmDiscard(
+                    'Choosing another background will clear the current mask objects and unsaved changes.', () => {
+                        const acceptedState = state();
+                        saveFeedback();
+                        message('Loading background…');
+                        $.ajax({ url: api + 'MaskBackground', method: 'POST', dataType: 'json', data: { path } })
+                            .done(result => {
+                                if (sequence === loadSequence) loadImage(result.url + '&v=' + Date.now(),
+                                    result.background, true, false, null, () => {
+                                        if (sequence !== loadSequence) return false;
+                                        if (state() !== acceptedState) {
+                                            message('Mask changed while the background loaded. Choose the image again.');
+                                            return false;
+                                        }
+                                        return true;
+                                    });
+                            })
+                            .fail(xhr => {
+                                if (sequence === loadSequence) message(requestError(xhr, 'Unable to load background image.'));
+                            });
+                    });
+                if (pickerModal && pickerModal.hasClass('in')) pickerModal.one('hidden.bs.modal', choose);
+                else choose();
+            });
+            field('name').val(projectName);
+            markClean();
+            field('name').on('input', function () {
+                $(this).removeClass('allsky-mask-invalid');
+                saveFeedback();
+            });
+            for (const id of ['undo', 'redo', 'clear', 'delete', 'zoom-out', 'zoom-fit', 'zoom-in']) {
+                field(id).wrap('<span class="allsky-mask-help-host"></span>').removeAttr('title');
+            }
+            const help = [
+                [field('undo'), 'Undo', 'Revert a recent change. Up to 40 steps are kept within the undo memory limit.'],
+                [field('redo'), 'Redo', 'Restore the last undone change.'],
+                [field('clear'), 'Clear mask', 'Remove all drawn objects. You can undo this.'],
+                [field('close'), 'Close editor', 'Close the editor. Unsaved changes require confirmation.'],
+                [field('name'), 'Mask name', 'Name the PNG mask and editable project.'],
+                [field('projects'), 'Saved mask', 'Open a saved mask or start a new one. Unsaved changes require confirmation.'],
+                [pickerContainer.find('button'), 'Background image', 'Choose an image to draw the mask over. Clearing unsaved objects requires confirmation.'],
+                [field('detect'), 'Detect image circle', 'Find the circular image area and add a feathered white circle.'],
+                [modal.find('[data-tool="select"]'), 'Select', 'Click an object to edit it. Drag it to move it, or drag a shape handle to resize it.'],
+                [modal.find('[data-tool="brush"]'), 'Brush', 'Draw a freehand stroke using the selected paint colour and brush size.'],
+                [modal.find('[data-tool="eraser"]'), 'Eraser', 'Paint black freehand to hide part of the masked image.'],
+                [modal.find('[data-tool="rectangle"]'), 'Rectangle', 'Drag to draw a filled rectangle. The editor returns to Select afterward.'],
+                [modal.find('[data-tool="ellipse"]'), 'Ellipse', 'Drag to draw a filled ellipse. The editor returns to Select afterward.'],
+                [modal.find('[data-tool="circle"]'), 'Circle', 'Drag outward from the centre to draw a filled circle.'],
+                [modal.find('[data-tool="line"]'), 'Line', 'Drag to draw a line at the selected brush size.'],
+                [modal.find('[data-mask-color-choice="white"]'), 'White paint', 'White reveals the image through the saved mask.'],
+                [modal.find('[data-mask-color-choice="black"]'), 'Black paint', 'Black hides the image in the saved mask.'],
+                [modal.find('[data-mask-panel-toggle="size"]'), 'Brush size', 'Set the width of brush, eraser, and line strokes.'],
+                [modal.find('[data-mask-panel-toggle="feather"]'), 'Feather', 'Soften the edge of the selected object or new objects.'],
+                [modal.find('[data-mask-panel-toggle="opacity"]'), 'Background opacity', 'Change only the background image opacity in this preview.'],
+                [field('size'), 'Brush size', 'Set the stroke width in pixels.'],
+                [field('feather'), 'Feather', 'Set the edge softness in pixels.'],
+                [field('opacity'), 'Background opacity', 'Adjust background visibility while editing. This does not change the saved mask.'],
+                [field('delete'), 'Delete object', 'Remove the selected object. You can undo this.'],
+                [field('zoom-out'), 'Zoom out', 'Reduce the editor canvas zoom.'],
+                [field('zoom-fit'), 'Fit image', 'Fit the full image in the editor.'],
+                [field('zoom-in'), 'Zoom in', 'Enlarge the editor canvas for detailed work.'],
+                [field('preview'), 'Preview result', 'Show how the background image looks through the saved mask. Click again to edit.'],
+                [field('objects'), 'Object list', 'Show objects to select, hide, duplicate, or change their stacking order.'],
+                [field('save'), 'Save mask', 'Save the PNG mask and its editable project. Replacing an existing mask requires confirmation.']
+            ];
+            let helpControls = $();
+            for (const [control, title, content] of help) {
+                control.each(function () {
+                    const element = $(this);
+                    const host = element.parent('.allsky-mask-help-host');
+                    const target = host.length ? host : element;
+                    const placement = target.closest('.modal-footer').length ? 'top' : 'bottom';
+                    target.popover({ title, content, container: 'body', trigger: 'hover focus',
+                        placement, delay: { show: 450, hide: 100 } });
+                    helpControls = helpControls.add(target);
+                });
+            }
+            modal.on('click', 'button, input, select', event => {
+                const control = $(event.target).closest('button, input, select');
+                const host = control.parent('.allsky-mask-help-host');
+                const target = host.length ? host : control;
+                if (target.data('bs.popover')) target.popover('hide');
+            });
+            modal.on('hide.bs.modal', () => helpControls.popover('hide'));
+            modal.on('hidden.bs.modal', () => {
+                helpControls.popover('destroy');
+                field('object-list').find('[data-mask-object-action]').popover('destroy');
+            });
+            field('zoom-out').on('click', () => setZoom(zoom / 1.25));
+            field('zoom-in').on('click', () => setZoom(zoom * 1.25));
+            field('zoom-fit').on('click', () => setZoom(1));
+            modal.on('hide.bs.modal', event => {
+                if (allowClose || !hasUnsavedChanges()) return;
+                event.preventDefault();
+                if (confirmingClose) return;
+                confirmingClose = true;
+                const confirmDialog = bootbox.confirm({
+                    className: 'allsky-mask-close-confirm',
+                    title: 'Discard mask changes?',
+                    message: 'Close the mask editor and discard your unsaved changes?',
+                    buttons: {
+                        cancel: { label: 'Keep editing', className: 'btn-default' },
+                        confirm: { label: 'Discard changes', className: 'btn-danger' }
+                    },
+                    callback: confirmed => {
+                        if (confirmed) {
+                            allowClose = true;
+                            modal.modal('hide');
+                        }
+                    }
+                });
+                $('.modal-backdrop').last().addClass('allsky-mask-close-backdrop');
+                confirmDialog.on('hidden.bs.modal', () => {
+                    confirmingClose = false;
+                    if (modal.hasClass('in')) $('body').addClass('modal-open');
+                });
+            });
+            modal.on('shown.bs.modal', resize).on('hidden.bs.modal', () => {
+                loadSequence++;
+                $(window).off('resize.allskyMask', resize);
+                $(window).off('resize.allskyMaskPanel');
+                $(document).off('click.allskyMaskPanel');
+                $(document).off('.allskyMaskKeys');
+                modal.remove();
+                $(element).removeData('allskyMASK');
+            });
+            $(window).on('resize.allskyMask', resize);
+            modal.on('click', '[data-tool]', event => {
+                tool = $(event.currentTarget).data('tool');
+                modal.find('[data-tool]').removeClass('active');
+                $(event.currentTarget).addClass('active');
+                selected = -1; draw();
+            });
+            const closePanels = () => {
+                const featherWasOpen = !panels.filter('[data-mask-panel="feather"]').prop('hidden');
+                panels.each(function () {
+                    const panel = $(this);
+                    const home = panel.data('mask-home');
+                    panel.prop('hidden', true).removeAttr('style');
+                    if (this.parentNode !== home) panel.appendTo(home);
+                });
+                modal.find('[data-mask-panel-toggle]').attr('aria-expanded', 'false').removeClass('active');
+                if (featherWasOpen) draw();
+            };
+            modal.on('hide.bs.modal', closePanels);
+            $(window).on('resize.allskyMaskPanel', closePanels);
+            field('tool-row').on('scroll', closePanels);
+            modal.on('click', '[data-mask-panel-toggle]', event => {
+                event.stopPropagation();
+                const button = $(event.currentTarget);
+                const panel = panels.filter('[data-mask-panel="' + button.data('mask-panel-toggle') + '"]');
+                const shouldOpen = panel.prop('hidden');
+                closePanels();
+                if (shouldOpen) {
+                    const content = modal.find('.modal-content');
+                    panel.appendTo(content).prop('hidden', false);
+                    const rect = button[0].getBoundingClientRect();
+                    const bounds = content[0].getBoundingClientRect();
+                    const left = Math.max(8, Math.min(rect.left - bounds.left, bounds.width - panel.outerWidth() - 8));
+                    const below = rect.bottom - bounds.top + 6;
+                    const top = below + panel.outerHeight() <= bounds.height - 8
+                        ? below : Math.max(8, rect.top - bounds.top - panel.outerHeight() - 6);
+                    panel.css({ left: left + 'px', top: top + 'px' });
+                    button.attr('aria-expanded', 'true').addClass('active');
+                    if (button.data('mask-panel-toggle') === 'feather') draw();
+                }
+            });
+            panels.on('click', event => event.stopPropagation());
+            $(document).on('click.allskyMaskPanel', closePanels);
+            field('size').on('input', function () {
+                size = Number(this.value);
+                if (selected >= 0) objects[selected].size = size;
+                cacheDirty = true;
+                draw();
+            });
+            field('size').on('change', () => { if (selected >= 0) snapshot(); });
+            field('feather').on('input', function () {
+                feather = Number(this.value);
+                if (selected >= 0) objects[selected].feather = feather;
+                cacheDirty = true;
+                draw();
+            });
+            field('feather').on('change', () => { if (selected >= 0) snapshot(); });
+            field('opacity').on('input change', function () {
+                backgroundOpacity = Number(this.value);
+                field('opacity-value').text(backgroundOpacity + '%');
+                draw();
+            });
+            modal.on('click', '[data-mask-color-choice]', event => {
+                paintColour = $(event.currentTarget).data('mask-color-choice');
+                if (selected >= 0) { objects[selected].color = paintColour; snapshot(); }
+                else syncControls();
+            });
+            field('undo').on('click', () => { if (cursor > 0) restore(cursor - 1); });
+            field('redo').on('click', () => { if (cursor < history.length - 1) restore(cursor + 1); });
+            const deleteSelected = () => { if (selected >= 0) { objects.splice(selected, 1); selected = -1; snapshot(); } };
+            field('delete').on('click', deleteSelected);
+            field('clear').on('click', () => { objects = []; selected = -1; snapshot(); });
+            field('preview').on('click', () => {
+                previewMode = !previewMode;
+                field('preview').toggleClass('active', previewMode).attr('aria-pressed', String(previewMode));
+                field('preview').attr('aria-label', previewMode ? 'Return to editing' : 'Preview masked image');
+                modal.toggleClass('allsky-mask-previewing', previewMode);
+                draw();
+            });
+            field('objects').on('click', () => {
+                const panel = field('object-panel');
+                const opening = panel.prop('hidden');
+                panel.prop('hidden', !opening);
+                field('objects').toggleClass('active', opening).attr('aria-expanded', String(opening));
+                if (opening) renderObjectList();
+                resize();
+            });
+            field('object-list').on('click', '[data-mask-object-index]', event => {
+                const row = $(event.target).closest('[data-mask-object-index]');
+                const index = Number(row.attr('data-mask-object-index'));
+                const action = $(event.target).closest('[data-mask-object-action]').attr('data-mask-object-action');
+                if (!action) {
+                    selected = index;
+                    tool = 'select';
+                    modal.find('[data-tool]').removeClass('active');
+                    modal.find('[data-tool="select"]').addClass('active');
+                    draw();
+                    return;
+                }
+                if (action === 'visibility') {
+                    objects[index].hidden = !objects[index].hidden;
+                    if (objects[index].hidden && selected === index) selected = -1;
+                } else if (action === 'duplicate') {
+                    const duplicated = copy(objects[index]);
+                    moveObject(duplicated, 20, 20);
+                    objects.splice(index + 1, 0, duplicated);
+                    selected = index + 1;
+                } else {
+                    const destination = index + (action === 'up' ? 1 : -1);
+                    if (destination < 0 || destination >= objects.length) return;
+                    [objects[index], objects[destination]] = [objects[destination], objects[index]];
+                    if (selected === index) selected = destination;
+                    else if (selected === destination) selected = index;
+                }
+                snapshot();
+            });
+            $(document).on('keydown.allskyMaskKeys keyup.allskyMaskKeys', event => {
+                if (event.type === 'keyup') {
+                    if (event.code === 'Space') {
+                        spacePan = false;
+                        modal.removeClass('allsky-mask-panning');
+                    }
+                    return;
+                }
+                if ($('.modal.in').last()[0] !== modal[0]) return;
+                const editingText = $(event.target).is('input, textarea, select, [contenteditable="true"]');
+                if (editingText) return;
+                if (event.code === 'Space' && !event.ctrlKey && !event.metaKey && !event.altKey) {
+                    if ($(event.target).is('button, a')) return;
+                    spacePan = true;
+                    modal.addClass('allsky-mask-panning');
+                    event.preventDefault();
+                } else if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z') {
+                    if (event.shiftKey) field('redo').trigger('click');
+                    else field('undo').trigger('click');
+                    event.preventDefault();
+                } else if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'y') {
+                    field('redo').trigger('click');
+                    event.preventDefault();
+                } else if (event.key === 'Delete' || event.key === 'Backspace') {
+                    deleteSelected();
+                    event.preventDefault();
+                }
+            });
+            field('detect').on('click', detectCircle);
+            field('save').on('click', save);
+            field('projects').on('change', function () {
+                const name = this.value;
+                field('projects').val(activeProjectOption);
+                if (name === activeProjectOption) return;
+                if (field('save').prop('disabled')) return message('Wait for the mask to finish saving.');
+                const sequence = ++loadSequence;
+                const open = () => {
+                    if (!name) {
+                        projectName = '';
+                        activeProjectOption = '';
+                        field('name').val('');
+                        field('projects').val('');
+                        objects = [];
+                        history = []; historySizes = []; cursor = -1; selected = -1;
+                        snapshot();
+                        markClean();
+                        message('New mask. Choose a background or draw on the current image.');
+                        return;
+                    }
+                    saveFeedback();
+                    message('Opening mask…');
+                    const acceptedState = state();
+                    $.getJSON(api + 'MaskProject', { name }).done(result => {
+                        if (sequence !== loadSequence) return;
+                        if (state() !== acceptedState) {
+                            return message('Mask changed while the project loaded. Open it again.');
+                        }
+                        if (result.version !== 1 || !Array.isArray(result.objects)) {
+                            return message('Unsupported mask project.');
+                        }
+                        const apply = () => {
+                            projectName = name;
+                            activeProjectOption = name;
+                            backgroundSourceMask = name;
+                            field('name').val(name);
+                            field('projects').val(name);
+                            ready = false;
+                            width = result.width; height = result.height;
+                            zoom = 1;
+                            objects = result.objects;
+                            selected = -1; history = []; historySizes = []; cursor = -1;
+                            tool = 'select';
+                            modal.find('[data-tool]').removeClass('active');
+                            modal.find('[data-tool="select"]').addClass('active');
+                            snapshot();
+                        };
+                        const url = result.background ? api + 'MaskBackground&mask=' + encodeURIComponent(name) +
+                            '&name=' + encodeURIComponent(result.background) : settings.image;
+                        if (url) loadImage(url, result.background || '', false, true, apply,
+                            () => {
+                                if (sequence !== loadSequence) return false;
+                                if (state() !== acceptedState) {
+                                    message('Mask changed while the project image loaded. Open it again.');
+                                    return false;
+                                }
+                                return true;
+                            });
+                        else {
+                            apply(); background = null; backgroundName = '';
+                            resize(); markClean();
+                        }
+                    }).fail(xhr => {
+                        if (sequence === loadSequence) message(requestError(xhr, 'Unable to open mask project.'));
+                    });
+                };
+                confirmDiscard('Opening another mask will replace your current unsaved changes.', open);
+            });
+            canvas.addEventListener('pointerdown', event => {
+                if (!ready || event.button !== 0) return;
+                if (previewMode && !spacePan) return;
+                canvas.setPointerCapture(event.pointerId);
+                if (spacePan) {
+                    active = { kind: 'pan', x: event.clientX, y: event.clientY,
+                        left: field('frame')[0].scrollLeft, top: field('frame')[0].scrollTop };
+                    return;
+                }
+                const point = pointer(event);
+                if (tool === 'select') {
+                    const current = objects[selected] && !objects[selected].hidden ? objects[selected] : null;
+                    const handle = current && !['brush', 'eraser'].includes(current.type) &&
+                        ['a', 'b'].find(key => Math.hypot(point.x - current[key].x, point.y - current[key].y) < 12 / displayScale);
+                    if (handle) active = { kind: 'resize', handle, changed: false };
+                    else {
+                        selected = hit(point);
+                        active = selected < 0 ? null : { kind: 'move', last: point, changed: false };
+                    }
+                } else {
+                    const object = { type: tool, color: tool === 'eraser' ? 'black' : paintColour,
+                        a: point, b: copy(point), size, feather };
+                    if (['brush', 'eraser'].includes(tool)) object.points = [copy(point)];
+                    objects.push(object);
+                    selected = objects.length - 1;
+                    active = { kind: 'draw', object };
+                }
+                draw();
+            });
+            canvas.addEventListener('pointermove', event => {
+                if (!active) return;
+                if (active.kind === 'pan') {
+                    const frame = field('frame')[0];
+                    frame.scrollLeft = active.left - (event.clientX - active.x);
+                    frame.scrollTop = active.top - (event.clientY - active.y);
+                    return;
+                }
+                const point = pointer(event);
+                if (active.kind === 'move') {
+                    const dx = point.x - active.last.x, dy = point.y - active.last.y;
+                    if (dx || dy) { moveObject(objects[selected], dx, dy); active.changed = true; }
+                    active.last = point;
+                } else if (active.kind === 'resize') {
+                    objects[selected][active.handle] = point;
+                    active.changed = true;
+                } else if (['brush', 'eraser'].includes(tool)) active.object.points.push(point);
+                else active.object.b = point;
+                draw();
+            });
+            const finish = event => {
+                if (!active) return;
+                if (active.kind === 'draw' || active.changed) snapshot();
+                if (event.type === 'pointerup' && active.kind === 'draw' &&
+                    ['rectangle', 'ellipse', 'circle', 'line'].includes(active.object.type)) {
+                    tool = 'select';
+                    modal.find('[data-tool]').removeClass('active');
+                    modal.find('[data-tool="select"]').addClass('active');
+                }
+                active = null;
+            };
+            canvas.addEventListener('pointerup', finish);
+            canvas.addEventListener('pointercancel', finish);
+            $.getJSON(api + 'MaskProjects').done(names => {
+                knownProjects = new Set(names);
+                names.forEach(name => field('projects').append($('<option>').val(name).text(name)));
+                if (projectName && names.includes(projectName)) field('projects').val(projectName).trigger('change');
+            });
+            if (!projectName) {
+                const sequence = ++loadSequence;
+                $.ajax({ url: api + 'MaskBackground', method: 'POST', dataType: 'json', data: { current: 1 } })
+                    .done(result => {
+                        if (sequence === loadSequence) loadImage(result.url, result.background, true, true,
+                            null, () => sequence === loadSequence);
+                    })
+                    .fail(() => {
+                        if (sequence === loadSequence) message('Choose a background image to begin.');
+                    });
+            }
+            modal.modal({ keyboard: true });
+        };
+        build();
+      }
+      destroy() {
+        if (this.modal) this.modal.modal('hide');
+      }
+    }
 
-			let pluginPrefix = plugin.settings.id + '-' + Math.random().toString(36).substring(2, 9)
-
-			plugin.stage = null
-			plugin.drawingLayer = null
-			plugin.drawnGroup = null
-			plugin.transformer = null
-			plugin.originalImageWidth = 0
-			plugin.originalImageHeight = 0
-			plugin.imageScaleFactor = 1
-			plugin.displayedImageWidth = 0
-			plugin.mode = "easy"
-			plugin.currentTool = "circle"
-			plugin.isDrawing = false
-			plugin.currentLine = null
-			plugin.currentShape = null
-			plugin.startPos = null
-			plugin.easyCircle = null
-			plugin.drawnObjects = []
-			plugin.undoneObjects = []
-
-			$.ajax({
-				url: "includes/overlayutil.php?request=ImageDetails",
-				type: "GET",
-				dataType: "json",
-				cache: false,
-  				context: this,		
-				success: function(response) {
-					plugin.settings.image = response;
-					createUI()
-					addFilters()
-					createEditor()
-					showMaskEditor()
-				},
-				error: function(xhr, status, error) {
-					alert("Error fetching image details, cannot start Mask Editor: " + error);
-				}
-			});
-
-		}
-
-		var addFilters = function () {
-			Konva.Filters.DarkAreaBrighten = function (imageData) {
-				var brightness = this.brightness()
-				var data = imageData.data
-				var threshold = 128
-				var addValue = brightness > 0 ? brightness * 100 : 0
-				for (var i = 0; i < data.length; i += 4) {
-					var avg = (data[i] + data[i + 1] + data[i + 2]) / 3
-					if (avg < threshold) {
-						data[i] = Math.min(255, data[i] + addValue)
-						data[i + 1] = Math.min(255, data[i + 1] + addValue)
-						data[i + 2] = Math.min(255, data[i + 2] + addValue)
-					}
-				}
-			}
-		}
-
-		var createUI = function () {
-			let dialogHTML = `
-				<div id="allsky-mask">
-					<div class="modal fade" id="${plugin.settings.modalId}" tabindex="-1" role="dialog" aria-labelledby="allsky-mask-drawingModalLabel">
-						<div class="modal-dialog" role="document">
-							<div class="modal-content">
-								<div class="modal-header">
-									<button type="button" class="close" data-dismiss="modal" aria-label="Close">
-										<span>&times;</span>
-									</button>
-									<a class="pull-right mr-4" href="/docs/allsky_guide/overlays/interface.html#the-mask-editor" target="_blank" rel="noopener noreferrer" data-toggle="tooltip" data-container="body" data-placement="left" title="Help">
-										<i class="fa-solid fa-circle-question"></i> Help
-									</a>
-									<h4 class="modal-title" id="allsky-mask-drawingModalLabel">Allsky Mask Editor</h4>
-								</div>
-								<div class="modal-body">
-									<nav class="navbar navbar-default" id="allsky-mask-toolbar-nav">
-										<div class="container-fluid">
-											<ul class="nav navbar-nav" id="allsky-mask-toolbar">
-												<li>
-													<button class="allsky-mask-tool-button btn btn-lg navbar-btn btn-default" id="allsky-mask-newBtn" title="Clear mask and start again"><i class="fa-solid fa-file"></i></button>
-												</li>
-												<li class="allsky-mask-toolbar-group">
-													<div class="btn-group" role="group">
-														<button type="button" class="btn btn-default active" id="allsky-mask-easyModeBtn" title="Easy mode - can only create a circle">Easy</button>
-														<button type="button" class="btn btn-default" id="allsky-mask-expertModeBtn" title="Expert mode">Expert</button>
-													</div>
-												</li>
-												<li class="allsky-mask-toolbar-group">
-													<div class="dropdown">
-														<button id="drawingToolDropdown" class="btn btn-lg navbar-btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" title="Pick how to create the mask">
-															<i class="fas fa-brush"></i> <span class="caret"></span>
-														</button>
-														<ul class="dropdown-menu">
-															<li><a href="#" data-tool="freehand"><i class="fas fa-brush" title="Use a brush to draw"></i> Freehand brush</a></li>
-															<li><a href="#" data-tool="square"><i class="fa-solid fa-square" title="Create a square"></i> Square</a></li>
-															<li><a href="#" data-tool="circle"><i class="fa-solid fa-circle" title="Create a circle"></i> Circle</a></li>
-															<li><a href="#" data-tool="filledPath"><i class="fa-solid fa-draw-polygon" title="Draw a shape"></i> Draw shape</a></li>
-															<li><a href="#" data-tool="feather"><i class="fa-solid fa-feather" title="Use a feather to draw"></i> Feather</a></li>
-														</ul>
-													</div>
-												</li>
-												<li>
-													<button class="allsky-mask-tool-button btn btn-lg navbar-btn btn-default" id="allsky-mask-undoBtn" title="Undo"><i class="fa-solid fa-rotate-left"></i></button>
-												</li>
-												<li>
-													<button class="allsky-mask-tool-button btn btn-lg navbar-btn btn-default" id="allsky-mask-redoBtn" title="Redo"><i class="fa-solid fa-rotate-right"></i></button>
-												</li>
-												<li class="allsky-mask-toolbar-group">
-													<div class="dropdown">
-														<button class="btn btn-lg navbar-btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" title="Change mask opacity">
-															<i class="fa-solid fa-filter"></i>
-															<span class="caret"></span>
-														</button>
-														<ul class="dropdown-menu allsky-mask-brush-dropdown-background">
-															<li class="ml-4 mr-4">
-																<input type="text" id="allsky-mask-opacitySlider" type="text" data-slider-min="0" data-slider-max="100" data-slider-step="1" data-slider-value="100" />
-															</li>
-														</ul>
-													</div>
-												</li>
-												<li class="allsky-mask-toolbar-group">
-													<div class="dropdown">
-														<button class="btn btn-lg navbar-btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" title="Change image brightness">
-															<i class="fa-solid fa-lightbulb"></i>
-															<span class="caret"></span>
-														</button>
-														<ul class="dropdown-menu allsky-mask-brush-dropdown-background">
-															<li class="ml-4 mr-4">
-																<input type="text" id="allsky-mask-brightnessSlider" type="text" data-slider-min="0" data-slider-max="1" data-slider-step="0.1" data-slider-value="0" />
-															</li>
-														</ul>
-													</div>
-												</li>
-												<li class="allsky-mask-toolbar-group">
-													<div class="dropdown">
-														<button class="btn btn-lg navbar-btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" title="Adjust brush size">
-															<i class="fa-solid fa-expand"></i>
-															<span class="caret"></span>
-														</button>
-														<ul class="dropdown-menu allsky-mask-brush-dropdown-background">
-															<li class="ml-4 mr-4">
-																<input type="text" id="allsky-mask-brushSizeSlider" type="text" data-slider-min="0" data-slider-max="100" data-slider-step="1" data-slider-value="10" />
-															</li>
-														</ul>
-													</div>
-												</li>
-												<li class="allsky-mask-toolbar-group">
-													<div class="dropdown">
-														<button class="btn btn-lg navbar-btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" title="Zoom image">
-															<i class="fa-solid fa-magnifying-glass"></i>
-															<span class="caret"></span>
-														</button>
-														<ul class="dropdown-menu allsky-mask-brush-dropdown-background">
-															<li class="ml-4 mr-4">
-																<input type="text" id="allsky-mask-zoomSlider" type="text" data-slider-min="0.5" data-slider-max="3" data-slider-step="0.05" data-slider-value="1" />
-															</li>
-														</ul>
-													</div>
-												</li>
-											</ul>
-										</div>
-									</nav>
-								<div id="allsky-mask-container"></div>
-								</div>
-								<div class="modal-footer">
-									<button type="button" class="btn btn-default btn-primary" id="allsky-mask-saveBtn" title="Save mask and close">Save</button>
-									<button type="button" class="btn btn-default btn-success" data-dismiss="modal" title="Close this window">Close</button>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>		
-			`
-			$(`#${plugin.settings.modalId}`).remove()
-			$('body').append(dialogHTML)
-		}
-
-		var showMaskEditor = function () {
-
-			$(`#${plugin.settings.modalId}`).on('hidden.bs.modal', () => {
-				$(`#${plugin.settings.modalId}`).remove();
-				$('.modal-backdrop').remove();
-				$('body').removeClass('modal-open');
-				plugin.destroy();
-			});
-
-			$(`#${plugin.settings.modalId}`).modal({
-				keyboard: false
-			});
-		}
-
-		var createEditor = function () {
-
-			$('#allsky-mask-brushSizeSlider').bootstrapSlider({
-				value: 10
-			}).on('slide', (e) => {
-				brushSize = parseInt(e.value, 10);
-			})
-			var brushSize = parseInt($("#allsky-mask-brushSizeSlider").bootstrapSlider('getValue'), 10);
-
-
-			$("#drawingToolDropdown").next(".dropdown-menu").on("click", "a", function (e) {
-				e.preventDefault()
-				var tool = $(this).data("tool")
-				plugin.currentTool = tool
-
-				if (tool === "freehand") {
-					$("#drawingToolDropdown").html('<i class="fas fa-brush"></i> <span class="caret"></span>')
-				}
-				if (tool === "feather") {
-					$("#drawingToolDropdown").html('<i class="fas fa-feather"></i> <span class="caret"></span>')
-				}
-				if (tool === "square") {
-					$("#drawingToolDropdown").html('<i class="fas fa-square"></i> <span class="caret"></span>')
-				}
-				if (tool === "circle") {
-					$("#drawingToolDropdown").html('<i class="fas fa-circle"></i> <span class="caret"></span>')
-				}
-				if (tool === "filledPath") {
-					$("#drawingToolDropdown").html('<i class="fas fa-draw-polygon"></i> <span class="caret"></span>')
-				}
-			})
-
-			$("#allsky-mask-easyModeBtn").click(function () {
-				plugin.mode = "easy"
-				plugin.currentTool = "circle"
-				$(this).addClass("active")
-				$("#allsky-mask-expertModeBtn").removeClass("active")
-			})
-			$("#allsky-mask-expertModeBtn").click(function () {
-				plugin.mode = "expert"
-				$(this).addClass("active")
-				$("#allsky-mask-easyModeBtn").removeClass("active")
-			})
-
-			$("#allsky-mask-newBtn").click(function () {
-				plugin.drawnGroup.destroyChildren()
-				plugin.drawnObjects = []
-				plugin.undoneObjects = []
-				plugin.drawingLayer.draw()
-				plugin.easyCircle = null
-			})
-
-			$("#allsky-mask-undoBtn").click(function () {
-				if (plugin.mode === "easy") return
-				if (plugin.drawnObjects.length > 0) {
-					var node = plugin.drawnObjects.pop()
-					node.remove()
-					plugin.undoneObjects.push(node)
-					plugin.drawingLayer.draw()
-				}
-			})
-
-			$("#allsky-mask-redoBtn").click(function () {
-				if (mode === "easy") return
-				if (plugin.undoneObjects.length > 0) {
-					var node = plugin.undoneObjects.pop()
-					plugin.drawnGroup.add(node)
-					plugin.drawnObjects.push(node)
-					plugin.drawingLayer.draw()
-				}
-			})
-
-			$("#allsky-mask-saveBtn").click(() => {
-				plugin.transformer.hide()
-				plugin.drawingLayer.opacity(1)
-				plugin.drawingLayer.draw()
-				var pixelRatio = 1 / plugin.imageScaleFactor
-				var dataURL = plugin.drawingLayer.toDataURL({
-					pixelRatio: pixelRatio,
-					x: 0,
-					y: 0,
-					width: plugin.stage.width(),
-					height: plugin.stage.height(),
-					backgroundColor: "transparent"
-				})
-				plugin.transformer.show()
-				plugin.drawingLayer.draw()
-				var tempCanvas = document.createElement("canvas")
-				tempCanvas.width = plugin.originalImageWidth
-				tempCanvas.height = plugin.originalImageHeight
-				var ctx = tempCanvas.getContext("2d")
-				ctx.fillStyle = "black"
-				ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height)
-				var drawingImg = new Image()
-				drawingImg.onload = function () {
-					ctx.drawImage(drawingImg, 0, 0, plugin.originalImageWidth, plugin.originalImageHeight)
-					var finalDataURL = tempCanvas.toDataURL()
-					$("<img>").attr("src", finalDataURL)
-					.addClass("mask-tmp-image")
-					.css({
-						"max-width": "100%",
-						"display": "none",
-						"margin": "10px auto"
-					}).appendTo("body")
-					plugin.finalDataURL = finalDataURL
-					saveImage();
-				}
-
-
-				drawingImg.src = dataURL;
-			})
-
-			$(`#${plugin.settings.modalId}`).on("shown.bs.modal", function () {
-				var container = document.getElementById("allsky-mask-container")
-				var rect = container.getBoundingClientRect()
-				var containerWidth = rect.width
-				var containerHeight = rect.height
-
-				plugin.stage = new Konva.Stage({
-					container: "allsky-mask-container",
-					width: containerWidth,
-					height: containerHeight
-				})
-
-				var imageLayer = new Konva.Layer()
-				plugin.drawingLayer = new Konva.Layer()
-				plugin.stage.add(imageLayer)
-				plugin.stage.add(plugin.drawingLayer)
-
-				plugin.drawnGroup = new Konva.Group({ id: "allsky-mask-plugin.drawnGroup" })
-				plugin.drawingLayer.add(plugin.drawnGroup)
-
-				plugin.transformer = new Konva.Transformer()
-				plugin.drawingLayer.add(plugin.transformer)
-
-				var imageObj = new Image()
-				imageObj.onload = function () {
-					plugin.originalImageWidth = imageObj.naturalWidth
-					plugin.originalImageHeight = imageObj.naturalHeight
-					plugin.imageScaleFactor = Math.min(containerWidth / plugin.originalImageWidth, containerHeight / plugin.originalImageHeight)
-					plugin.displayedImageWidth = plugin.originalImageWidth * plugin.imageScaleFactor
-					var displayedImageHeight = plugin.originalImageHeight * plugin.imageScaleFactor
-
-					plugin.stage.width(plugin.displayedImageWidth)
-					plugin.stage.height(displayedImageHeight)
-
-					var konvaImage = new Konva.Image({
-						image: imageObj,
-						x: 0,
-						y: 0,
-						width: plugin.displayedImageWidth,
-						height: displayedImageHeight,
-						draggable: false
-					})
-					konvaImage.filters([Konva.Filters.DarkAreaBrighten])
-					konvaImage.brightness(0)
-					konvaImage.cache({ x: 0, y: 0, width: plugin.displayedImageWidth, height: displayedImageHeight })
-					konvaImage.listening(false)
-					imageLayer.add(konvaImage)
-					imageLayer.draw()
-
-					$("#allsky-mask .modal-dialog").css("width", plugin.displayedImageWidth + "px")
-
-					setTimeout(function () {
-						var newRect = container.getBoundingClientRect()
-						var newWidth = newRect.width
-						var newHeight = newRect.height
-						plugin.imageScaleFactor = Math.min(newWidth / plugin.originalImageWidth, newHeight / plugin.originalImageHeight)
-						plugin.displayedImageWidth = plugin.originalImageWidth * plugin.imageScaleFactor
-						var newDisplayedHeight = plugin.originalImageHeight * plugin.imageScaleFactor
-						plugin.stage.width(plugin.displayedImageWidth)
-						plugin.stage.height(newDisplayedHeight)
-						konvaImage.width(plugin.displayedImageWidth)
-						konvaImage.height(newDisplayedHeight)
-						konvaImage.cache({ x: 0, y: 0, width: plugin.displayedImageWidth, height: newDisplayedHeight })
-						imageLayer.batchDraw()
-					}, 100)
-				}
-				imageObj.onerror = function () {
-					console.error("Error loading image at /current/tmp/i.jpg")
-				}
-				//imageObj.src = "/current/tmp/i.jpg?noCache=" + new Date().getTime()
-				imageObj.src = `${plugin.settings.image}?noCache=` + new Date().getTime()
-
-				$("#allsky-mask-zoomSlider").on("input", function () {
-					var newScale = parseFloat($(this).val())
-					plugin.stage.scale({ x: newScale, y: newScale })
-					plugin.stage.batchDraw()
-				})
-
-				$('#allsky-mask-zoomSlider').bootstrapSlider({
-					value: 1
-				}).on('slide', (e) => {
-					var newScale = parseFloat(e.value);
-					plugin.stage.scale({ x: newScale, y: newScale });
-					plugin.stage.batchDraw();
-				})
-
-				plugin.stage.on("wheel", function (e) {
-					e.evt.preventDefault()
-					var oldScale = plugin.stage.scaleX()
-					var scaleBy = 1.05
-					var newScale = e.evt.deltaY > 0 ? oldScale / scaleBy : oldScale * scaleBy
-					plugin.stage.scale({ x: newScale, y: newScale })
-					$("#allsky-mask-zoomSlider").val(newScale)
-					plugin.stage.batchDraw()
-				})
-
-				$('#allsky-mask-brightnessSlider').bootstrapSlider({
-					value: 0
-				}).on('slide', (e) => {
-					var value = parseFloat(e.value);
-					var bgImage = imageLayer.findOne("Image");
-					if (bgImage) {
-						bgImage.brightness(value);
-						bgImage.cache({ x: 0, y: 0, width: plugin.displayedImageWidth, height: plugin.stage.height() });
-						imageLayer.batchDraw();
-					}
-				})
-
-
-				$('#allsky-mask-opacitySlider').bootstrapSlider({
-					value: 0
-				}).on('slide', (e) => {
-					var opac = parseFloat(e.value) / 100;
-					plugin.drawingLayer.opacity(opac);
-					plugin.drawingLayer.draw();
-				})
-
-				// Separate event handling for easy and expert plugin.modes.
-				plugin.stage.on("mousedown touchstart", function (e) {
-					if (plugin.mode === "easy") {
-						// In easy plugin.mode, only allow a single circle.
-						if (e.target === plugin.stage) {
-							if (!plugin.easyCircle) {
-								var circle = new Konva.Circle({
-									x: plugin.stage.width() / 2,
-									y: plugin.stage.height() / 2,
-									radius: 50,
-									fill: "white",
-									draggable: true
-								});
-								plugin.drawnGroup.add(circle)
-								plugin.transformer.nodes([circle])
-								plugin.drawingLayer.draw()
-								plugin.drawnObjects.push(circle)
-								plugin.easyCircle = circle
-							} else {
-								plugin.transformer.nodes([plugin.easyCircle])
-								plugin.drawingLayer.draw()
-							}
-						}
-						return
-					}
-
-					if (plugin.mode === "expert") {
-						plugin.isDrawing = true;
-						plugin.startPos = getTransformedPointerPosition();
-						switch (plugin.currentTool) {
-							case "freehand":
-							case "feather":
-								plugin.currentLine = new Konva.Line({
-									stroke: "white",
-									strokeWidth: plugin.currentTool === "feather" ? brushSize * 2 : brushSize,
-									lineCap: "round",
-									lineJoin: "round",
-									points: [plugin.startPos.x, plugin.startPos.y]
-								});
-								plugin.currentLine.setAttr("brushType", plugin.currentTool);
-								plugin.drawnGroup.add(plugin.currentLine);
-								break
-							case "square":
-								plugin.currentShape = new Konva.Rect({
-									x: plugin.startPos.x,
-									y: plugin.startPos.y,
-									width: 0,
-									height: 0,
-									stroke: "white",
-									strokeWidth: 2
-								})
-								plugin.drawnGroup.add(plugin.currentShape)
-								break
-							case "filledPath":
-								plugin.currentLine = new Konva.Line({
-									stroke: "white",
-									strokeWidth: 2,
-									closed: false,
-									points: [plugin.startPos.x, plugin.startPos.y]
-								})
-								plugin.drawnGroup.add(plugin.currentLine)
-								break
-							case "circle":
-								plugin.currentShape = new Konva.Circle({
-									x: plugin.startPos.x,
-									y: plugin.startPos.y,
-									radius: 0,
-									stroke: "white",
-									strokeWidth: 2,
-									fill: "white"
-								})
-								plugin.drawnGroup.add(plugin.currentShape)
-								break
-						}
-					}
-				})
-
-				plugin.stage.on("mousemove touchmove", function (e) {
-					if (!plugin.isDrawing) return
-					var pos = getTransformedPointerPosition()
-					if (plugin.mode === "expert") {
-						if (plugin.currentTool === "freehand" || plugin.currentTool === "feather") {
-							var newPoints = plugin.currentLine.points().concat([pos.x, pos.y])
-							plugin.currentLine.points(newPoints)
-							plugin.drawingLayer.batchDraw();
-						} else if (plugin.currentTool === "square") {
-							plugin.currentShape.width(pos.x - plugin.startPos.x)
-							plugin.currentShape.height(pos.y - plugin.startPos.y)
-							plugin.drawingLayer.batchDraw()
-						} else if (plugin.currentTool === "filledPath") {
-							var newPoints = plugin.currentLine.points().concat([pos.x, pos.y])
-							plugin.currentLine.points(newPoints)
-							plugin.drawingLayer.batchDraw()
-						} else if (plugin.currentTool === "circle") {
-							var dx = pos.x - plugin.startPos.x
-							var dy = pos.y - plugin.startPos.y
-							var newRadius = Math.sqrt(dx * dx + dy * dy)
-							plugin.currentShape.radius(newRadius)
-							plugin.drawingLayer.batchDraw()
-						}
-					}
-				})
-
-				plugin.stage.on("mouseup touchend", function () {
-					if (plugin.isDrawing && plugin.mode === "expert") {
-						if (plugin.currentTool === "filledPath" && plugin.currentLine) {
-							plugin.currentLine.closed(true)
-							plugin.currentLine.fill("white")
-							plugin.drawingLayer.draw()
-							plugin.drawnObjects.push(plugin.currentLine)
-						}
-						if (plugin.currentTool === "square" && plugin.currentShape) {
-							plugin.currentShape.fill("white")
-							plugin.drawingLayer.draw()
-							plugin.drawnObjects.push(plugin.currentShape)
-						}
-						if (plugin.currentTool === "circle" && plugin.currentShape) {
-							plugin.drawingLayer.draw()
-							plugin.drawnObjects.push(plugin.currentShape)
-						}
-						if ((plugin.currentTool === "freehand" || plugin.currentTool === "feather") && plugin.currentLine) {
-							if (plugin.currentTool === "feather") {
-								plugin.currentLine.filters([Konva.Filters.Blur])
-								plugin.currentLine.blurRadius(3)
-								plugin.currentLine.cache()
-							}
-							plugin.drawingLayer.draw()
-							plugin.drawnObjects.push(plugin.currentLine)
-						}
-					}
-					plugin.isDrawing = false
-					plugin.currentLine = null
-					plugin.currentShape = null
-				})
-
-				plugin.drawingLayer.draw()
-			})
-		}
-
-		var getTransformedPointerPosition = function () {
-			var pos = plugin.stage.getPointerPosition()
-			var scale = plugin.stage.scaleX()
-			return { x: pos.x / scale, y: pos.y / scale }
-		}
-
-		var askForValidFilename = function (callback) {
-			const validateFilename = (name) => /^[a-zA-Z0-9_.-]+$/.test(name);
-
-			function showPrompt() {
-				bootbox.prompt({
-					title: "Enter a filename",
-					centerVertical: true,
-					callback: function (result) {
-						if (result === null) {
-							if (typeof callback === "function") callback(null);
-							return;
-						}
-
-						result = result.trim();
-						if (!result) {
-							bootbox.alert("Filename must not be empty.", showPrompt);
-						} else if (!validateFilename(result)) {
-							bootbox.alert("Filename can only contain letters, numbers, underscores (_), hyphens (-), and periods (.)", showPrompt);
-						} else {
-							if (typeof callback === "function") callback(result);
-						}
-					}
-				});
-			}
-
-			showPrompt();
-		}
-
-
-		var saveImage = function () {
-			askForValidFilename((filename) => {
-				if (filename) {
-					console.log("Valid filename inside plugin:", filename);
-
-					$.ajax({
-						type: 'POST',
-						url: plugin.settings.saveURL,
-						data: {
-							filename: filename,
-							image: plugin.finalDataURL
-						},
-						success: (response) => {
-							$(".mask-tmp-image").remove();
-							$(`#${plugin.settings.modalId}`).modal('hide');
-							plugin.settings.onComplete.call(this, {});
-						},
-						error: function (xhr, status, error) {
-							$(".mask-tmp-image").remove();
-							console.error('Error:', error);
-						}
-					});
-
-
-				} else {
-					console.log("User cancelled inside plugin.");
-				}
-			});
-		}
-
-		plugin.destroy = function () {
-			plugin.stage.destroy()
-			$(`#${plugin.settings.modalId}`).remove()
-			$(document).removeData('allskyMASK');
-		}
-
-		plugin.init();
-
-	}
-
-	$.fn.allskyMASK = function (options) {
-		return this.each(function () {
-			if (undefined == $(this).data('allskyMASK')) {
-				var plugin = new $.allskyMASK(this, options)
-				$(this).data('allskyMASK', plugin)
-			}
-		})
-	}
-
+    $.fn.allskyMASK = function (options) {
+        return this.each(function () {
+            const existing = $(this).data('allskyMASK');
+            if (existing) existing.destroy();
+            $(this).data('allskyMASK', new MaskEditor(this, options));
+        });
+    };
 })(jQuery);

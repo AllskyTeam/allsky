@@ -4236,6 +4236,13 @@ div.dtsp-searchPane div.dtsp-topRow {
   }
 }
 
+@media (max-width: 1050px) {
+  #modules-selected-empty span,
+  #modules-available-empty span {
+    font-size: 1.0rem;
+  }
+}
+
 @media (max-width: 1280px) {
 
   .module-version,
@@ -4252,11 +4259,6 @@ div.dtsp-searchPane div.dtsp-topRow {
 
   .list-group-item {
     font-size: 0.75em;
-  }
-
-  #modules-selected-empty span,
-  #modules-available-empty span {
-    display: none;
   }
 
   #modules-selected-empty:after,

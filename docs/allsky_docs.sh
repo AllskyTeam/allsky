@@ -14,12 +14,12 @@ usage() {
     cat <<'EOF'
 Usage:
   ./allsky_docs.sh dev
-  ./allsky_docs.sh build [site_dir]
+  ./allsky_docs.sh build [site_dir] [asset_path]
   ./allsky_docs.sh deploy
 
 Commands:
   dev               Run the MkDocs development server on 0.0.0.0:8000
-  build [site_dir]  Build docs into site_dir (default: html/docs)
+  build [site_dir] [asset_path]  Build docs into site_dir (defaults: html/docs, /docs/assets)
   deploy            Publish docs to GitHub Pages with mkdocs gh-deploy
 EOF
 }
@@ -64,6 +64,7 @@ ensure_mkdocs() {
 
 build_docs() {
     local site_dir="${1:-${REPO_ROOT}/html/docs}"
+    local asset_path="${2:-/docs/assets}"
 
     ensure_mkdocs
 
@@ -80,7 +81,7 @@ build_docs() {
     echo "==> Rewriting asset paths inside: ${site_dir}"
 
     find "${site_dir}" -type f -name '*.html' -print0 \
-      | xargs -0 sed -i 's|"\/assets|"\/docs\/assets|g'
+      | xargs -0 sed -i "s|\"/assets|\"${asset_path}|g"
 
     echo "==> DONE"
     echo "Output written to: ${site_dir}"
@@ -94,10 +95,9 @@ run_dev() {
 }
 
 run_deploy() {
-    ensure_mkdocs
+    #ensure_mkdocs
 
-    echo "==> Deploying MkDocs to GitHub Pages"
-    mkdocs gh-deploy --clean -f "${MKDOCS_CONFIG}"
+    echo "==> This process is now handled automatically by github actions"
 }
 
 command="${1:-}"
@@ -107,7 +107,7 @@ case "${command}" in
         run_dev
         ;;
     build)
-        build_docs "${2:-${REPO_ROOT}/html/docs}"
+        build_docs "${2:-${REPO_ROOT}/html/docs}" "${3:-/docs/assets}"
         ;;
     deploy)
         run_deploy

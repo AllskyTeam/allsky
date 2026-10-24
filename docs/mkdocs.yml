@@ -1,5 +1,5 @@
 site_name: Allsky Documentation
-site_url: "https://docs.allsky.local"
+site_url: !ENV [ALLSKY_DOCS_SITE_URL, "https://allskyteam.github.io/allsky/"]
 docs_dir: "source"
 site_dir: "../html/docs"
 
@@ -150,6 +150,7 @@ nav:
       - allsky_guide/server.md
     - Upgrade Notes:
       - Introduction: allsky_guide/upgrade/introduction.md
+      - v2026.10.01_01: allsky_guide/upgrade/v2026.10.01_01.md
       - v2026.10.01: allsky_guide/upgrade/v2026.10.01.md
     - Settings:
       - allsky_guide/settings/allsky.md

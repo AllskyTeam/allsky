@@ -290,39 +290,39 @@ function determineCommandToUse()
 }
 
 #####
-# Get information on the connected camera(s), one line per camera.
-# Prepend each line with the CAMERA_TYPE.
+# Get information on the connected camera(s), one "camera" line per camera plus multiple "libcamera" lines.
+# Prepend each "camera" line with the CAMERA_TYPE.
 function get_connected_cameras_info()
 {
-	local RUN_dCTU="true"		# determine Command To Use
+	local RPi_CMD_TO_USE_=""
 	if [[ ${1} == "--cmd" ]]; then
-		RUN_dCTU="false"
-		CMD_TO_USE_="${2}"
+		RPi_CMD_TO_USE_="${2}"
 		shift 2
 	fi
 	local IGNORE_ERRORS="${1:-false}"
 
 	####### Check for RPi
 	# Tab-separated output will be:
-	#		RPi  camera_number   camera_sensor
-	# for each camera found.
-	# camera_sensor will be one word.
-	# Only run determineCommandToUse() if it wasn't already run.
+	#		camera	RPi  camera_number   camera_sensor  module_len   model
+	# for each camera found, followed by lines for each camera capability.
 
-	if [[ -z ${CMD_TO_USE_} && ${RUN_dCTU} == "true" ]]; then
-		determineCommandToUse "false" "" "${IGNORE_ERRORS}" > /dev/null
+	# getRPiCameraInfo.sh writes ${ALLSKY_CONNECTED_CAMERAS_INFO} itself and then outputs it.
+	# Callers usually send our output to that same file, so keep the RPi output and
+	# output it here; otherwise the ZWO lines would overwrite the start of the file.
+	# When ignoring errors, e.g., on a Pi with only ZWO cameras, don't show the
+	# RPi software's "no cameras available" message.
+	if RPi_INFO="$( "${ALLSKY_UTILITIES}/getRPiCameraInfo.sh" --info-only \
+			--ignore-errors "${IGNORE_ERRORS}" \
+			--cmd "${RPi_CMD_TO_USE_}" 2>&1 )" ; then
+		echo "${RPi_INFO}"
 	fi
-	if [[ -n ${CMD_TO_USE_} ]]; then
-		# Input:
-		#	camera_number  : sensor  [other stuff]
-		"${CMD_TO_USE_}" --list-cameras 2>&1 |
-			gawk '/^[0-9]/ { printf("%s\t%d\t%s\n", "RPi", $1, $3); }'
-	fi
+
 
 	####### Check for ZWO
 	# Keep output similar to RPi:
-	#		ZWO  camera_number camera_model
+	#		camera	ZWO  camera_number camera_model  0  camera_model
 	# for each camera found.
+	# Output the module_len (0) and last camera_model to make subsequent processing easier.
 	# lsusb output:
 	#	Bus 002 Device 002: ID 03c3:290b ZWO ASI290MM	(newer OS)
 	#	1   2   3       4   5  6         7   8
@@ -350,7 +350,8 @@ function get_connected_cameras_info()
 							break;
 						model = model " " $i;
 					}
-					printf("ZWO\t%d\t%s\n", num++, model);
+					printf("camera\tZWO");
+					printf("\t%d\t%s\t%d\t%s\n", num++, model, 0, model);
 					model = "<found>";		# This camera was output
 				}
 			}
@@ -362,6 +363,11 @@ function get_connected_cameras_info()
 # Get just the model name(s) of the specified camera type that are connected to the Pi.
 function get_connected_camera_models()
 {
+	if [[ ! -s ${ALLSKY_CONNECTED_CAMERAS_INFO} ]]; then
+		echo "${FUNCNAME[0]}: File '${ALLSKY_CONNECTED_CAMERAS_INFO}' not found." >&2
+		return 1
+	fi
+
 	local FULL="false"
 	[[ ${1} == "--full" ]] && FULL="true" && shift
 
@@ -373,8 +379,9 @@ function get_connected_camera_models()
 
 
 	# Input:
-	#		ZWO  camera_number  camera_model
-	#		RPi  camera_number  camera_sensor
+	#		camera	RPi  camera_number  sensor			<other info not used here>
+	#		camera	ZWO  camera_number  camera_model
+	#		1	    2    3              4
 
 	# Output (tab-separated):
 	#	Short:
@@ -383,30 +390,78 @@ function get_connected_camera_models()
 	#		ZWO  camera_number  camera_model
 	#		RPi  camera_number  camera_model  camera_sensor
 	#		1    2              3             4
-	#		1    2              3             4
 
 	# For RPi we have the sensor and need the model.
 	local PATH="${PATH}:${ALLSKY_UTILITIES}"
 	gawk -v TYPE="${TYPE}" -v FULL="${FULL}" --field-separator="\t" '
 		{
-			camera_type = $1;
+			if ($1 != "camera")
+				next;
+
+			camera_type = $2;
 			if (camera_type != TYPE && TYPE != "both") next;
+			camera_number = $3
 
 			if (camera_type == "ZWO") {
+				model = $4;
 				if (FULL == "true") {
-					print $0;
+					printf("%s\t%d\t%s\n", camera_type, camera_type, model);
 				} else {
-					model = $3;
 					print model;
 				}
 			} else {
-				sensor = $3;
+				sensor = $4;
+				#TESTING: printf("sensor=%s\n", sensor);
 				"getModelFromSensor.sh " sensor | getline model;
 				if (FULL == "true") {
-					printf("%s\t%d\t%s\t%s\n", $1, $2, model, sensor);
+					printf("%s\t%d\t%s\t%s\n", camera_type, camera_number, model, sensor);
 				} else {
 					print model;
 				}
+			}
+		}' "${ALLSKY_CONNECTED_CAMERAS_INFO}"
+}
+
+
+####
+# Get the RPi camera model given its sensor name.
+function get_model_from_sensor()
+{
+	local SENSOR="${1}"
+	if [[ -z ${SENSOR} ]]; then
+		echo "${ME:-${FUNCNAME[0]}}: ERROR: No sensor specified."
+		return 1
+	fi
+
+	# Input:
+	#		camera  type  camera_number  sensor/module  module_len  camera_model   <other info not used here>
+	#		1       2     3              4              5           6
+	# shellcheck disable=SC2154
+	gawk --field-separator '\t' -v sensor="${SENSOR}" '
+		BEGIN {
+			model = "";
+		}
+		{
+			if ($1 != "camera")
+				next;
+
+			type = $2;		# "RPi" or "ZWO"
+			module = $4;
+			module_len = $5;
+			if ((module_len == 0 && module == sensor) ||
+				(module == substr(sensor, 0, module_len))) {
+
+				model = $6;
+				exit(0);
+			}
+		}
+		END {
+			if (model != "") {
+				print model;
+				exit(0);
+			} else {
+				printf("unknown_sensor_%s\n", sensor);
+				exit(1);
 			}
 		}' "${ALLSKY_CONNECTED_CAMERAS_INFO}"
 }
@@ -943,7 +998,7 @@ function check_settings_link()
 	fi
 	if [[ -z ${CAMERA_MODEL} ]]; then
 		CAMERA_MODEL="$( settings ".${CM}"  "${FULL_FILE}" )"
-		[[ $? -ne 0 || -z ${CAMERA_TYPE} ]] && return "${ALLSKY_EXIT_ERROR_STOP}"
+		[[ $? -ne 0 || -z ${CAMERA_MODEL} ]] && return "${ALLSKY_EXIT_ERROR_STOP}"
 	fi
 
 	DIRNAME="$( dirname "${FULL_FILE}" )"
@@ -1306,6 +1361,7 @@ function activate_python_venv()
 	# Maybe check for != bullseye  ?
 
 	local ACTIVATE="${ALLSKY_PYTHON_VENV}/bin/activate"
+	[[ ! -f ${ACTIVATE} ]] && return 1
 
 	#shellcheck disable=SC1090,SC1091
 	source "${ACTIVATE}" || exit 1
@@ -1326,19 +1382,18 @@ function activate_python_server_venv()
 	# Maybe check for != bullseye  ?
 
 	local ACTIVATE="${ALLSKY_PYTHON_SERVER_VENV}/bin/activate"
+	[[ ! -f ${ACTIVATE} ]] && return 1
 
 	#shellcheck disable=SC1090,SC1091
 	source "${ACTIVATE}" || exit 1
 	PYTHON_SERVER_VENV_ACTIVATED="true"
 	return 0	# Successfully activated
-
 }
 
 function deactivate_python_server_venv()
 {
 	[[ ${PYTHON_SERVER_VENV_ACTIVATED} == "true" ]] && deactivate
 }
-
 
 
 # Determine if the specified value is a number.
@@ -1381,46 +1436,6 @@ function get_allsky_status()
 function get_allsky_status_timestamp()
 {
 	settings ".timestamp" "${ALLSKY_STATUS}" 2> /dev/null
-}
-
-
-####
-# Get the RPi camera model given its sensor name.
-function get_model_from_sensor()
-{
-	local SENSOR="${1}"
-	if [[ -z ${SENSOR} ]]; then
-		echo "${ME:-${FUNCNAME[0]}}: ERROR: No sensor specified."
-		return 1
-	fi
-
-	# shellcheck disable=SC2154
-	gawk --field-separator '\t' -v sensor="${SENSOR}" '
-		BEGIN {
-			model = "";
-		}
-		{
-			if ($1 == "camera") {
-				module = $2;
-				module_len = $3;
-				if ((module_len == 0 && module == sensor) ||
-					(module == substr(sensor, 0, module_len))) {
-
-					model = $4;
-					exit(0);
-				}
-			}
-				
-		}
-		END {
-			if (model != "") {
-				print model;
-				exit(0);
-			} else {
-				printf("unknown_sensor_%s\n", sensor);
-				exit(1);
-			}
-		} ' "${ALLSKY_RPi_SUPPORTED_CAMERAS}"
 }
 
 

@@ -36,7 +36,7 @@ class MODULEUTIL extends UTILBASE {
             'WatchdogManageService' => ['get'],
             'WatchdogStatus' => ['get'],
             'ProxyLocalApi' => ['get'],
-            'ModuleFile' => ['get']            
+            'ModuleFile' => ['get']
         ];
     }
 
@@ -57,10 +57,10 @@ class MODULEUTIL extends UTILBASE {
     function __construct() {
         $this->allskyModules = ALLSKY_SCRIPTS . '/modules';
         $this->userModules = ALLSKY_MODULE_LOCATION . '/modules';
-		$this->allskyMyFiles = ALLSKY_MYFILES_DIR;        
+		$this->allskyMyFiles = ALLSKY_MYFILES_DIR;
 		$this->myFilesBase = ALLSKY_MYFILES_DIR;
         $this->myFiles = ALLSKY_MYFILES_DIR . '/modules';
-		$this->myFilesData = ALLSKY_MYFILES_DIR . '/modules/moduledata';        
+		$this->myFilesData = ALLSKY_MYFILES_DIR . '/modules/moduledata';
         $this->allsky_home = ALLSKY_HOME;
         $this->allsky_scripts = ALLSKY_SCRIPTS;
         $this->allsky_config = ALLSKY_CONFIG;
@@ -90,24 +90,24 @@ class MODULEUTIL extends UTILBASE {
 
             $level = 0;
             foreach ($fileContents as $source_line) {
-        
+
                 if (rtrim($source_line) !== '' && $this->endsWith(rtrim($source_line), '{')) {
                     $level++;
                 }
-            
+
                 if (ltrim($source_line) !== '' && $this->startsWith(ltrim($source_line), '}')) {
                     $level--;
                 }
-            
+
                 if (ltrim($source_line) !== '' && $this->startsWith(ltrim($source_line), $metaName)) {
                     $found = true;
                     $source_line = str_replace([$metaName, "=", " "], "", $source_line);
                 }
-            
+
                 if ($found) {
                     $metaData .= $source_line;
                 }
-            
+
                 if (trim($source_line) === '}' && $found && $level === 0) {
                     break;
                 }
@@ -128,8 +128,8 @@ class MODULEUTIL extends UTILBASE {
             if ($metaData == "") {
                 $fileName = $this->allskyModules . '/' . $modulelName;
                 $metaData = $this->getMetaDataFromFile($fileName);
-                
-            }                
+
+            }
         }
         return $metaData;
     }
@@ -161,6 +161,7 @@ class MODULEUTIL extends UTILBASE {
                                     $arrFiles[$entry]['metadata']->experimental = $experimental;
                                 }
                             } else {
+								error_log("ERROR: json_decode(metaData) failed: " . json_last_error_msg() . "\n");
                                 $arrFiles[$entry] = [
                                     'module' => $entry,
                                     'metadata' => (object)[],
@@ -245,7 +246,9 @@ class MODULEUTIL extends UTILBASE {
         $configFileName = ALLSKY_MODULES . '/module-settings.json';
         $settings = $_POST['settings'];
         $formattedJSON = json_encode(json_decode($settings), JSON_PRETTY_PRINT);
-
+		if ($formattedJSON == false) {
+			error_log("ERROR: json_encode() failed in postModulesSettings: " . json_last_error_msg() . "\n");
+		}
         $result = file_put_contents($configFileName, $formattedJSON);
         if ($result) {
             $this->sendResponse();
@@ -280,20 +283,29 @@ class MODULEUTIL extends UTILBASE {
         $configFileName = ALLSKY_MODULES . '/module-settings.json';
         $rawConfigData = file_get_contents($configFileName);
         $configData = json_decode($rawConfigData);
+		if ($configData == null) {
+			error_log("ERROR: json_decode(rawConfigData) of $configFileName failed: " . json_last_error_msg() . "\n");
+		}
         $result['settings'] = $configData;
 
         $configFileName = ALLSKY_CONFIG . '/devicemanager.json';
         if (file_exists($configFileName)) {
             $rawDeviceManagerData = @file_get_contents($configFileName);
             $deviceManagerData = json_decode($rawDeviceManagerData);
+			if ($deviceManagerData == null) {
+				error_log("ERROR: json_decode(rawDeviceManagerData) of $configFileName failed: " . json_last_error_msg() . "\n");
+			}
             $result['devicemanager'] = $deviceManagerData;
         } else {
             $result['devicemanager'] = null;
         }
 
         $result['haveDatabase'] = haveDatabase();
-                
+
         $formattedJSON = json_encode($result, JSON_PRETTY_PRINT);
+		if ($formattedJSON == false) {
+			error_log("ERROR: json_encode(result) failed: " . json_last_error_msg() . "\n");
+		}
         $this->sendResponse($formattedJSON);
     }
 
@@ -328,7 +340,11 @@ class MODULEUTIL extends UTILBASE {
             'path' => $secretFile
         ];
 
-        $this->sendResponse(json_encode($result, JSON_PRETTY_PRINT));
+        $j = json_encode($result, JSON_PRETTY_PRINT);
+		if ($j == false) {
+			error_log("ERROR: json_encode(result) failed: " . json_last_error_msg() . "\n");
+		}
+        $this->sendResponse($j);
     }
 
     public function getSunData() {
@@ -371,12 +387,21 @@ class MODULEUTIL extends UTILBASE {
             $result['tod'] = 'night';
         }
 
-        $this->sendResponse(json_encode($result, JSON_PRETTY_PRINT));
+        $j = json_encode($result, JSON_PRETTY_PRINT);
+		if ($j == false) {
+			error_log("ERROR: json_encode(result) failed: " . json_last_error_msg() . "\n");
+		}
+        $this->sendResponse($j);
     }
 
     public function getModules() {
         $result = $this->readModules();
+//x error_log( print_r(debug_backtrace(), true) . "\n");
         $result = json_encode($result);
+		if ($result == false) {
+			error_log("ERROR: json_encode(result) failed in getModules(): " . json_last_error_msg() . "\n");
+		}
+//x error_log("type(result)=" . gettype($result) . "\n");
         $this->sendResponse($result);
     }
 
@@ -404,14 +429,29 @@ class MODULEUTIL extends UTILBASE {
         $configFileName = ALLSKY_MODULES . '/module-settings.json';
         $rawConfigData = file_get_contents($configFileName);
         $moduleConfig = json_decode($rawConfigData);
+		if ($moduleConfig == null) {
+			error_log("ERROR: json_decode(rawConfigData) of $configFileName failed: " . json_last_error_msg() . "\n");
+		}
 
 		$secrets = json_decode(file_get_contents(ALLSKY_ENV));
+		if ($secrets == null) {
+			error_log("ERROR: json_decode(" . ALLSKY_ENV . ") failed: " . json_last_error_msg() . "\n");
+		}
 
         $event = $_GET['event'];
         $configFileName = ALLSKY_MODULES . '/' . 'postprocessing_' . strtolower($event) . '.json';
         $debugFileName = ALLSKY_MODULES . '/' . 'postprocessing_' . strtolower($event) . '-debug.json';
-        $rawConfigData = file_get_contents($configFileName);
-        $configData = json_decode($rawConfigData);
+        if ( ! file_exists($configFileName)) {
+			// TODO: How to notify the user?
+			error_log("ERROR: File '$configFileName' not found; skipping\n");
+			$configData = null;
+		} else {
+        	$rawConfigData = file_get_contents($configFileName);
+        	$configData = json_decode($rawConfigData);
+			if ($configData == null) {
+				error_log("ERROR: json_decode(rawConfigData) of $configFileName failed: " . json_last_error_msg() . "\n");
+			}
+		}
 
         $corrupted = false;
         if ($configData == null) {
@@ -435,13 +475,13 @@ class MODULEUTIL extends UTILBASE {
             $module = str_replace('allsky_', '', $moduleName);
             $module = str_replace('.py', '', $module);
 			
-            if (!isset($configData->{$module})) {
+            if (! isset($configData->{$module})) {
 				if ($moduleData === null) { // Corrupt module metaData
 					$moduleData = [
 						"metadata" => [
 							"name" => "Reads Pi Status",
 							"description" => "Reads Pi Data",
-							"module" => "allsky_pistatus",    
+							"module" => "allsky_pistatus",
 							"version" => "v1.0.0",							
 							"arguments" => []
 						],
@@ -456,7 +496,7 @@ class MODULEUTIL extends UTILBASE {
         foreach($configData as $selectedName=>$data) {
             $moduleName = "allsky_" . $selectedName . ".py";
             if ( ! isset($allModules[$moduleName])) {
-				echo "<script>console.log('moduleName $moduleName does not exist.');";
+				error_log("WARNING: Module '$moduleName' defined in $configFileName but it's not installed; skipping.\n");
 				continue;
 			}
             $moduleData = $allModules[$moduleName];
@@ -526,6 +566,9 @@ class MODULEUTIL extends UTILBASE {
         if (file_exists($debugFileName)) {
             $debugInfo = file_get_contents($debugFileName);
             $debugInfo = json_decode($debugInfo);
+			if ($debugInfo == null) {
+				error_log("ERROR: json_decode(debugInfo) of $debugFileName failed: " . json_last_error_msg() . "\n");
+			}
         }
 
         $result = [
@@ -723,7 +766,7 @@ class MODULEUTIL extends UTILBASE {
 					$secretKey = strtoupper($moduleConfig->metadata->module) . '_' . strtoupper($argument);
 					if (isset($envData->$secretKey)) {
 						$moduleConfig->metadata->arguments->$argument = $envData->$secretKey;
-					} 
+					}
 				}
 			}
 		}
@@ -799,6 +842,9 @@ class MODULEUTIL extends UTILBASE {
         // Inject any required secrets into the flow
         $flow = $this->addSecretsToFlow($flow);
         $jsonFlow = json_decode($flow, true);
+		if ($jsonFlow == null) {
+			error_log("ERROR: json_decode(flow) of $configFileName failed: " . json_last_error_msg() . "\n");
+		}
         if (is_array($jsonFlow)) {
             $validationMessage = $this->validateRunScriptModuleTest($jsonFlow);
             if ($validationMessage !== null) {
@@ -1201,7 +1247,7 @@ class MODULEUTIL extends UTILBASE {
                 if ($imageInfo) {
                     $capturedWidth = $imageInfo[0];
                     $capturedHeight = $imageInfo[1];
-                    
+
                     if (($capturedWidth !== $maskWidth) && ($capturedHeight !== $maskHeight)) {
                         $error = true;
                         $message = "The mask does not match the captured images. Captured image is {$capturedWidth}x{$capturedHeight} but the mask is {$maskWidth}x{$maskHeight}";
@@ -1211,12 +1257,12 @@ class MODULEUTIL extends UTILBASE {
                     }
                 } else {
                     $error = false;
-                    $message = "Unable to locate a captured image";                    
+                    $message = "Unable to locate a captured image";
                 }
             } else {
                 $error = true;
                 $message = "Unable to read the image file - {$filePath}";
-            }            
+            }
 
         } else {
             $error = true;
@@ -1228,7 +1274,7 @@ class MODULEUTIL extends UTILBASE {
             'message'=>$message
         ];
 
-        $this->sendResponse(json_encode($result));        
+        $this->sendResponse(json_encode($result));
     }
 
 	private function findModule($module) {
@@ -1238,7 +1284,7 @@ class MODULEUTIL extends UTILBASE {
         $extraModulesDir = '/opt/allsky/modules';
 
 		$found = false;
-		$checkPath = $coreModuleDir . '/' . $module;      
+		$checkPath = $coreModuleDir . '/' . $module;
 		if (file_exists($checkPath)) {
 			$found = true;
 		} else {
@@ -1256,6 +1302,9 @@ class MODULEUTIL extends UTILBASE {
 		if ($found) {
 			$metaData = $this->getMetaDataFromFile($checkPath);
 			$metaData = json_decode($metaData, false);
+			if ($metaData == null) {
+				error_log("ERROR: json_decode(metaData) of $checkPath failed: " . json_last_error_msg() . "\n");
+			}
 		}
 
 		return $metaData;
@@ -1278,7 +1327,7 @@ class MODULEUTIL extends UTILBASE {
 
 	public function postCheckModuleDependencies() {
 		$results = array();
-		$check = getVariableOrDefault($_POST, 'check', false);
+		$check = filter_input(INPUT_POST, 'check', FILTER_DEFAULT, FILTER_REQUIRE_ARRAY) ?: [];
 		$checkFlow = trim(filter_input(INPUT_POST, 'flow', FILTER_SANITIZE_STRING));
 
 		$flows = array('day', 'night', 'periodic', 'daynight', 'nightday');
@@ -1291,10 +1340,20 @@ class MODULEUTIL extends UTILBASE {
 			} else {
 				$flowFileName = ALLSKY_MODULES . "/postprocessing_$flow.json";
 				$flowData = file_get_contents($flowFileName);
-				$flowData = json_decode($flowData);
-				$flowKeys = array_keys(get_object_vars($flowData));
-				foreach($flowKeys as &$flowKey) {
-					$flowKey = "allsky_$flowKey.py";
+				try {
+					$flowData = json_decode($flowData, false, 512,JSON_THROW_ON_ERROR);
+				$t = gettype($flowData);
+				} catch (\JsonException $e) {
+					error_log("ERROR: json_decode() failed in $flowFileName: " . $e->getMessage() . " on line " . $e->getLine() . "\n");
+					continue;
+				}
+				if ($t == "object") {
+					$flowKeys = array_keys(get_object_vars($flowData));
+					foreach($flowKeys as &$flowKey) {
+						$flowKey = "allsky_$flowKey.py";
+					}
+				} else {
+					error_log("ERROR: Got flowData type '$t'; should be 'object'.\n");
 				}
 			}
 
@@ -1324,7 +1383,11 @@ class MODULEUTIL extends UTILBASE {
 				}
 			}
 		}
-		$this->sendResponse(json_encode($results));
+		$j = json_encode($results);
+		if ($j == false) {
+				error_log("ERROR: json_encode(results) in postCheckModuleDependencies() failed: " . json_last_error_msg() . "\n");
+		}
+		$this->sendResponse($j);
 	}
 
 	public function getOnewire() {
@@ -1535,7 +1598,7 @@ class MODULEUTIL extends UTILBASE {
     }
 
     public function getTemplateList() {
-        $result = array();        
+        $result = array();
         $basePath = $this->myFilesData . DIRECTORY_SEPARATOR . 'blocks';
         $corePath = $this->allsky_config . '/overlay/config/blocks';
 
@@ -1564,7 +1627,6 @@ class MODULEUTIL extends UTILBASE {
                     if ($file->getExtension() === 'json') {
                         $json = file_get_contents($file->getPathname());
                         $parsed = json_decode($json, true);
-
                         if (json_last_error() === JSON_ERROR_NONE) {
                             foreach ($parsed as $blockKey => $data) {
                                 $result[] = [
@@ -1577,13 +1639,14 @@ class MODULEUTIL extends UTILBASE {
                             }
                         } else {
                             // TODO: Log error
+							error_log("ERROR: json_decode(json) of " . $file->getPathname() . " failed: " . json_last_error_msg() . "\n");
                         }
                     }
                 }
             }
         }
-        
-        $this->sendResponse(json_encode($result));        
+
+        $this->sendResponse(json_encode($result));
     }
 
     private function getAllskySetting($setting) {
@@ -1606,7 +1669,7 @@ class MODULEUTIL extends UTILBASE {
             $data = json_decode($json, true);
 
             if (!is_array($data)) {
-                continue; 
+                continue;
             }
 
             if (array_key_exists($variable, $data)) {
@@ -1614,7 +1677,7 @@ class MODULEUTIL extends UTILBASE {
             }
         }
 
-        return null;         
+        return null;
     }
 
     private function findVariableInExtraData($variable) {
@@ -1635,7 +1698,7 @@ class MODULEUTIL extends UTILBASE {
         $fileName = $_GET['filename'];
         $block = $_GET['block'];
         $group = $_GET['group'];
-        
+
         $blockFilename = $this->allsky_config . '/overlay/config/blocks/' . $group . "/" . $fileName;
         $rawBlockData = @file_get_contents($blockFilename);
         if ($rawBlockData === false) {
@@ -1644,14 +1707,18 @@ class MODULEUTIL extends UTILBASE {
         }
 
         $result = json_decode($rawBlockData, true);
-        $result = $result[$block];
+		if ($result == null) {
+			error_log("ERROR: json_decode(rawBlockData) in getTemplate() failed: " . json_last_error_msg() . "\n");
+		} else {
+        	$result = $result[$block];
+		}
 
         $moduleData = $this->findModule($group . '.py');
         foreach ($result['fields'] as &$row) {
             foreach ($row as &$rowData) {
                 if (isset($rowData["text"])) {
                     $format = "";
-                    $font = "";                    
+                    $font = "";
                     if (preg_match('/\$\{([^}]+)\}/', $rowData["text"], $matches)) {
                         $variable = $matches[1];
                         if (isset($moduleData->extradata)) {
@@ -1667,7 +1734,7 @@ class MODULEUTIL extends UTILBASE {
                                             $font = $value->font;
                                         }
                                         $found = true;
-                                        break;                                     
+                                        break;
                                     }
                                 }
                                 if (!$found) {
@@ -1686,12 +1753,12 @@ class MODULEUTIL extends UTILBASE {
                     }
                     //$format = $this->getAllskySetting($format);
                     $rowData['format'] = $format;
-                    $rowData['font'] = $font;                    
-                } else {                   
+                    $rowData['font'] = $font;
+                } else {
                     foreach ($rowData as &$colData) {
                         if (isset($colData["text"])) {
                             $format = "";
-                            $font = "";                                              
+                            $font = "";
                             if (preg_match('/\$\{([^}]+)\}/', $colData["text"], $matches)) {
                                 $variable = $matches[1];
                                 if (isset($moduleData->extradata)) {
@@ -1710,20 +1777,20 @@ class MODULEUTIL extends UTILBASE {
                                     }
                                 }
                             }
-                            //$format = $this->getAllskySetting($format);                            
+                            //$format = $this->getAllskySetting($format);
                             $colData['format'] = $format;
                             $colData['font'] = $font;
-                        }                        
+                        }
                     }
                 }
             }
         }
 
         //var_dump($result["fields"]); die();
-        $this->sendResponse(json_encode($result));          
+        $this->sendResponse(json_encode($result));
 
-    }  
-    
+    }
+
     public function getWatchdogStatus() {
         $results = [];
 
@@ -1746,7 +1813,7 @@ class MODULEUTIL extends UTILBASE {
                 'pid'     => $pid,
             ];
         }
-        $this->sendResponse(json_encode($results));  
+        $this->sendResponse(json_encode($results));
     }
 
     public function getWatchdogManageService() {
@@ -1775,7 +1842,7 @@ class MODULEUTIL extends UTILBASE {
             }
 
             $unit = $normalized . '.service';
-            $SYSTEMCTL = 'sudo /bin/systemctl'; 
+            $SYSTEMCTL = 'sudo /bin/systemctl';
 
 
             $exec_cmd = function (string $cmd): array {
@@ -1864,7 +1931,7 @@ class MODULEUTIL extends UTILBASE {
                 do {
                     $act = $is_active($unit);
                     if ($act !== 'active') {
-                        return false; 
+                        return false;
                     }
                     $st = $get_state($unit);
                     if (isset($st['SubState']) && stripos((string)$st['SubState'], 'auto-restart') !== false) {
@@ -1953,8 +2020,8 @@ class MODULEUTIL extends UTILBASE {
         }
 
     }
-    
-    
+
+
 /**
  * Proxy a local API endpoint via PHP (SSRF-safe).
  *

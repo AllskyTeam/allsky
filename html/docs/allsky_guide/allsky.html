@@ -5,7 +5,7 @@
       
       
       
-        <link rel="canonical" href="https://docs.allsky.local/allsky_guide/allsky.html">
+        <link rel="canonical" href="https://allskyteam.github.io/allsky/allsky_guide/allsky.html">
       
       
         <link rel="prev" href="../index.html">
@@ -1032,6 +1032,34 @@
     
   
     Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="upgrade/v2026.10.01_01.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v2026.10.01_01
   
 
     
@@ -6406,7 +6434,7 @@ Submodule path 'src/sunwait-src': checked out '151d8340a748a4dac7752ebcd38983b28
 <h4 id="swap-space">Swap space<a class="headerlink" href="#swap-space" title="Permanent link">¶</a></h4>
 <p>The installer may offer to add swap space. This effectively gives the system more working memory, and that can be important on smaller Pis. Insufficient swap space is one of the more common causes of timelapse creation problems.</p>
 <h4 id="temporary-directory-in-memory">Temporary directory in memory<a class="headerlink" href="#temporary-directory-in-memory" title="Permanent link">¶</a></h4>
-<p>You may be asked whether <code>~/allsky/tmp</code> should be placed in memory rather than on the SD card. This directory is used heavily for temporary files, and keeping it in memory can significantly reduce SD card writes, improving card longevity.</p>
+<p>The installer places <code>~/allsky/tmp</code> in memory rather than on the SD card. This directory is used heavily for temporary files, and keeping it in memory can significantly reduce SD card writes, improving card longevity. Its size depends on your Pi's memory, from 75 MB on a Pi with 512 MB to 600 MB on a Pi with 8 GB or more. During an upgrade a smaller size from an earlier release is increased to that size. You can change the size, or move the directory back to the SD card, with <code>allsky-config recheck_tmp</code>. If Allsky is installed on an NVMe disk, <code>~/allsky/tmp</code> stays on the disk instead, since NVMe disks are fast and don't wear like SD cards; <code>allsky-config recheck_tmp</code> can still put it in memory.</p>
 <h4 id="latitude-and-longitude">Latitude and longitude<a class="headerlink" href="#latitude-and-longitude" title="Permanent link">¶</a></h4>
 <p>On a new installation, the installer will ask for the location. In many cases it can suggest defaults based on the network environment. These values matter because Allsky uses them for sunrise, sunset, and other time-dependent behaviour.</p>
 <h4 id="reboot">Reboot<a class="headerlink" href="#reboot" title="Permanent link">¶</a></h4>

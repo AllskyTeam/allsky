@@ -2341,11 +2341,6 @@ div.dt-container div.dt-scroll-body {
     align-items: center;
 }
 
-.navbar-header,
-.navbar-brand {
-    height: 100%;
-}
-
 .header .navbar-brand.valign-center {
     width: 100%;
     display: flex;
@@ -2919,6 +2914,7 @@ div.sticky {
     font-size: 1.25em;
     padding: 3px 3px 3px 3px;
 }
+
 
 /* Back to top button */
 #backToTopBtn {
@@ -4215,9 +4211,35 @@ div.dtsp-searchPane div.dtsp-topRow {
   margin-right: 10px;
 }
 
+@media (pointer: coarse) {
+  .allskymodule .module-add-button,
+  .allskymodule .module-remove-button,
+  .allskymodule .module-settings-button {
+    align-items: center;
+    display: inline-flex;
+    justify-content: center;
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .allskymodule .module-enable .el-switch {
+    align-items: center;
+    display: inline-flex;
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
 @media (min-width: 1280px) {
   .list-group-item {
     padding: 10px !important;
+  }
+}
+
+@media (max-width: 1050px) {
+  #modules-selected-empty span,
+  #modules-available-empty span {
+    font-size: 1.0rem;
   }
 }
 
@@ -4237,11 +4259,6 @@ div.dtsp-searchPane div.dtsp-topRow {
 
   .list-group-item {
     font-size: 0.75em;
-  }
-
-  #modules-selected-empty span,
-  #modules-available-empty span {
-    display: none;
   }
 
   #modules-selected-empty:after,
@@ -5943,3 +5960,127 @@ table.dataTable .selected .as-variable-has-value {
         font-weight: bold;
 }
 /** End Error Messages **/
+
+
+
+
+
+
+/* Settings page CSS - NOTE: This is temporary until the page is re developed */
+/* These styles WILL override ones earlier in the file but this will be corrected when the page is re developed. */
+
+/* ===== Desktop / shared ===== */
+
+/* Label column: skip the row after a rowspan, whose first cell is the control */
+.settings-header tr.form-group:not(tr:has(> td[rowspan]) + tr) > td:first-child {
+  width: 15%;
+}
+
+/* Section headers */
+table.settingsHeader { width: 100%; margin: 0 0 8px; border-bottom: 2px solid #337ab7; }
+table.settingsHeader td { font-size: 17px; font-weight: 600; padding: 8px 5px; }
+
+/* Setting rows */
+tr.rowSeparator { border-bottom: 1px solid rgba(0,0,0,.06); }
+tr.rowSeparator:hover { background: rgba(51,122,183,.04); }
+tr.form-group > td { padding: 10px 8px !important; vertical-align: top; }
+tr.rowSeparator > td:nth-child(2) { width: 210px; text-align: left !important; }
+tr.rowSeparator > td:last-child { color: #5b6b7c; font-size: 13px; line-height: 1.5; }
+label.WebUISetting { font-weight: 600; margin: 0; }
+
+/* Inputs */
+.settingInput.form-control { width: 100%; max-width: 200px; padding: 6px 10px !important; border-color: #c5d3dc; }
+.settingInput.form-control:focus { border-color: #337ab7; box-shadow: 0 0 0 3px rgba(51,122,183,.2); }
+
+/* ===== Desktop only ===== */
+@media (min-width: 992px) {
+  /* Stop long descriptions squeezing the label column */
+  .settings-header tr.form-group > td:first-child label.WebUISetting {
+    display: block;
+    min-width: 160px;
+  }
+
+  /* Top-align labels, nudged down to sit level with the 34px input */
+  .settings-header tr.form-group:not(tr:has(> td[rowspan]) + tr) > td:first-child {
+    vertical-align: top !important;
+    padding: 17px 8px 10px !important;   /* top: 10px cell padding + (34px input - 20px line) / 2 */
+  }
+}
+
+/* ===== Tablets / landscape phones: label | control, description underneath ===== */
+@media (max-width: 991px) {
+  .settings-header table,
+  .settings-header tbody { display: block; width: 100% !important; }
+
+  .settings-header tr.form-group {
+    display: grid;
+    grid-template-columns: minmax(120px, 35%) 1fr;
+    column-gap: 12px;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(0,0,0,.06);
+  }
+
+  .settings-header tr.form-group > td {
+    display: block;
+    width: auto !important;
+    min-width: 0 !important;
+    padding: 0 8px !important;
+    text-align: left !important;
+  }
+
+  /* Description (3rd cell) spans both columns, under label + control */
+  .settings-header tr.form-group > td:nth-child(n+3):last-child {
+    grid-column: 1 / -1;
+    padding-top: 4px !important;
+  }
+
+  /* Row after a rowspan row: no label cell, so push its control into column 2 */
+  .settings-header tr.form-group:has(> td[rowspan]) { border-bottom: 0; }
+  .settings-header tr.form-group:has(> td[rowspan]) + tr.form-group > td:first-child { grid-column: 2; }
+  .settings-header tr.form-group:has(> td[rowspan]) + tr.form-group > td:last-child:not(:first-child) {
+    grid-column: 1 / -1;
+  }
+
+  .settingInput.form-control { max-width: 260px; }
+  
+}
+
+/* ===== Portrait phones: stack everything ===== */
+@media (max-width: 480px) {
+  .settings-header tr.form-group { grid-template-columns: 1fr; }
+  .settings-header tr.form-group > td { grid-column: 1 !important; }
+  .settings-header tr.form-group > td:first-child { padding-bottom: 6px !important; }
+  .settingInput.form-control { max-width: none; }
+}
+
+/* ===== Short landscape screens: shrink the sticky Save bar ===== */
+@media (max-height: 500px) and (orientation: landscape) {
+  .settings-buttons { padding: 4px 8px !important; }
+  .settings-buttons .btn { padding: 4px 10px; font-size: 13px; }
+}
+
+/* Save/Reset on the left, expand/collapse-all on the right, always on one line */
+.settings-nav .settings-buttons > .row:first-child {
+  display: flex;
+  align-items: center;
+}
+/* Bootstrap 3's clearfix pseudo-elements would become flex items */
+.settings-nav .settings-buttons > .row:first-child::before,
+.settings-nav .settings-buttons > .row:first-child::after {
+  display: none;
+}
+.settings-nav .buttons {
+  flex: 1 1 auto;
+  width: auto !important;
+  float: none !important;
+}
+.settings-nav .expand-collapse-button {
+  flex: 0 0 auto;
+  width: auto !important;
+  float: none !important;
+}
+.settings-nav .settings-expand {
+  float: none !important;
+  margin-left: 0 !important;
+}

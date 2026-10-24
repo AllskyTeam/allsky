@@ -1382,19 +1382,18 @@ function activate_python_server_venv()
 	# Maybe check for != bullseye  ?
 
 	local ACTIVATE="${ALLSKY_PYTHON_SERVER_VENV}/bin/activate"
+	[[ ! -f ${ACTIVATE} ]] && return 1
 
 	#shellcheck disable=SC1090,SC1091
 	source "${ACTIVATE}" || exit 1
 	PYTHON_SERVER_VENV_ACTIVATED="true"
 	return 0	# Successfully activated
-
 }
 
 function deactivate_python_server_venv()
 {
 	[[ ${PYTHON_SERVER_VENV_ACTIVATED} == "true" ]] && deactivate
 }
-
 
 
 # Determine if the specified value is a number.

@@ -5981,10 +5981,15 @@ table.settingsHeader { width: 100%; margin: 0 0 8px; border-bottom: 2px solid #3
 table.settingsHeader td { font-size: 17px; font-weight: 600; padding: 8px 5px; }
 
 /* Setting rows */
+@media (min-width: 992px) {
+  .settings-table { width: 100%; table-layout: fixed; }
+  .settings-table .settings-label-column { width: 180px; }
+  .settings-table .settings-control-column { width: 195px; }
+}
 tr.rowSeparator { border-bottom: 1px solid rgba(0,0,0,.06); }
 tr.rowSeparator:hover { background: rgba(51,122,183,.04); }
 tr.form-group > td { padding: 10px 8px !important; vertical-align: top; }
-tr.rowSeparator > td:nth-child(2) { width: 210px; text-align: left !important; }
+tr.rowSeparator > td:nth-child(2) { text-align: left !important; }
 tr.rowSeparator > td:last-child { color: #5b6b7c; font-size: 13px; line-height: 1.5; }
 label.WebUISetting { font-weight: 600; margin: 0; }
 
@@ -6043,7 +6048,7 @@ label.WebUISetting { font-weight: 600; margin: 0; }
   }
 
   .settingInput.form-control { max-width: 260px; }
-  
+
 }
 
 /* ===== Portrait phones: stack everything ===== */

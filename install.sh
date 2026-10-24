@@ -1617,22 +1617,24 @@ install_dependencies_etc()
 	update_allsky_common ""
 	update_repo_files
 
-	display_msg --log progress "Creating Allsky commands."
+	if [[ ${SKIP} != "true" ]]; then
+		display_msg --log progress "Creating Allsky commands."
 
-	display_msg --logonly info "   Running 'make'."
-	TMP="${ALLSKY_LOGS}/make_all.log"
-	{
-		echo "===== make src"		# The "make -C src" does an "all"
-		make -C src			# TODO: FIX: Remove:    && echo -e "\n\n===== make all" && make -C src all
-	} > "${TMP}" 2>&1
-	check_success $? "Compile failed" "${TMP}" "${DEBUG}" ||
-		exit_with_image 1 "${STATUS_ERROR}" "compile failed"
+		display_msg --logonly info "   Running 'make'."
+		TMP="${ALLSKY_LOGS}/make_all.log"
+		{
+			echo "===== make src"		# The "make -C src" does an "all"
+			make -C src			# TODO: FIX: Remove:    && echo -e "\n\n===== make all" && make -C src all
+		} > "${TMP}" 2>&1
+		check_success $? "Compile failed" "${TMP}" "${DEBUG}" ||
+			exit_with_image 1 "${STATUS_ERROR}" "compile failed"
 
-	display_msg --logonly info "   Running 'make install'."
-	TMP="${ALLSKY_LOGS}/make_install.log"
-	sudo make install > "${TMP}" 2>&1
-	check_success $? "make install failed" "${TMP}" "${DEBUG}" ||
-		exit_with_image 1 "${STATUS_ERROR}" "make install failed"
+		display_msg --logonly info "   Running 'make install'."
+		TMP="${ALLSKY_LOGS}/make_install.log"
+		sudo make install > "${TMP}" 2>&1
+		check_success $? "make install failed" "${TMP}" "${DEBUG}" ||
+			exit_with_image 1 "${STATUS_ERROR}" "make install failed"
+	fi
 
 	STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
 }
@@ -1713,47 +1715,6 @@ convert_settings_file()			# prior_file, new_file
 		MSG="Unable to convert old settings file: $( < "${TEMP_PRIOR}" )"
 		display_msg --log error "${MSG}"
 		exit_installation 1 "${STATUS_ERROR}" "${MSG}."
-	fi
-
-	# Starting in v2026.10.01_02, cameras whose cameramodel is "Module 3" may now have the full name,
-	# e.g., "Module 3 Wide NoIR".
-	# This means the settings file name must also change.
-	# We need to look in the cc file to determine what the new file name and setting value should be.
-	# Possibilities: "imx708", "imx708_wide", "imx708_noir", "imx708_wide_noir"
-	# The CC file may not exist yet so use the prior file.
-	NAME="$( basename "${NEW_FILE}" )"
-	OLD_FILE="${PRIOR_CONFIG_DIR}/${NAME}"
-	if [[ ${PRIOR_ALLSKY_VERSION} < "v2026.10.01_02" && ${NAME} == "settings_RPi_Module_3.json" ]]; then
-		local NEW
-		OLD_CC_FILE="${OLD_FILE/settings/cc}"
-		if [[ -f ${OLD_CC_FILE} ]]; then
-			NEW_MODEL_NAME=""
-			local SENSOR="$( settings ".sensor" "${OLD_CC_FILE}" )"
-			[[ ${SENSOR} =~ "wide" ]] && NEW_MODEL_NAME+=" Wide"
-			[[ ${SENSOR} =~ "noir" ]] && NEW_MODEL_NAME+=" NoIR"
-			if [[ -n ${NEW_MODEL_NAME} ]]; then
-				NEW_MODEL_NAME="Module 3${NEW_MODEL_NAME}"
-				display_msg --log progress "Updating camera model from 'Module 3' to '${NEW_MODEL_NAME}' in '${NEW_FILE}'."
-				update_json_file ".cameramodel" "${NEW_MODEL_NAME}" "${NEW_FILE}" "text"
-
-				NEW_MODEL_FILE_NAME="${NEW_MODEL_NAME// /_}"
-
-				NEW="${NEW_FILE/Module_3/${NEW_MODEL_FILE_NAME}}"
-				display_msg --log info "Renaming '${NEW_FILE}' to '${NEW}'."
-				mv "${NEW_FILE}" "${NEW}"
-				NEW_FILE="${NEW}"
-
-				NEW_CC_FILE="${ALLSKY_CONFIG}/${NAME/settings/cc}"
-				if [[ -f ${NEW_CC_FILE} ]]; then
-					display_msg --logonly info "Renaming '${NEW_CC_FILE}' to '${NEW}'."
-					NEW="${NEW_CC_FILE/Module_3/${NEW_MODEL_FILE_NAME}}"
-					mv "${NEW_CC_FILE}" "${NEW}"
-				fi
-			# else it's just a "Module 3" camera, so nothing to do.
-			fi
-		else
-			display_msg --logonly info "Prior CC file '${OLD_CC_FILE}' not found."
-		fi
 	fi
 
 	# For each field in prior file, update new file with old value.
@@ -1912,6 +1873,7 @@ convert_settings_file()			# prior_file, new_file
 				*)
 					# Since we don't know the setting name, we don't know its type.
 					# Any setting that's not new, old, or changed (most of them), comes here.
+## [[ $FIELD == "cameramodel" ]] && echo "XXXX FIELD=$FIELD, VALUE=$VALUE, $NEW_FILE"
 					doV "${FIELD}" "VALUE" "${FIELD}" "" "${NEW_FILE}"
 					;;
 			esac
@@ -1923,6 +1885,47 @@ convert_settings_file()			# prior_file, new_file
 		# shellcheck disable=SC2046
 		"${ALLSKY_SCRIPTS}/updateJsonFile.sh" --file "${NEW_FILE}" $( < "${DELETED_SETTINGS}" )
 	fi
+
+	# Starting in v2026.10.01_02, cameras whose cameramodel is "Module 3" may now have the full name,
+	# e.g., "Module 3 Wide NoIR".
+	# This means the settings file name must also change.
+	# We need to look in the cc file to determine what the new file name and setting value should be.
+	# Possibilities: "imx708", "imx708_wide", "imx708_noir", "imx708_wide_noir"
+	# The CC file may not exist yet so use the prior file.
+	NAME="$( basename "${NEW_FILE}" )"
+	OLD_FILE="${PRIOR_CONFIG_DIR}/${NAME}"
+	if [[ ${PRIOR_ALLSKY_VERSION} < "v2026.10.01_02" && ${NAME} == "settings_RPi_Module_3.json" ]]; then
+		local NEW
+		OLD_CC_FILE="${OLD_FILE/settings/cc}"
+		if [[ -f ${OLD_CC_FILE} ]]; then
+			NEW_MODEL_NAME=""
+			local SENSOR="$( settings ".sensor" "${OLD_CC_FILE}" )"
+			[[ ${SENSOR} =~ "wide" ]] && NEW_MODEL_NAME+=" Wide"
+			[[ ${SENSOR} =~ "noir" ]] && NEW_MODEL_NAME+=" NoIR"
+			if [[ -n ${NEW_MODEL_NAME} ]]; then
+				NEW_MODEL_NAME="Module 3${NEW_MODEL_NAME}"
+				display_msg --log progress "Updating camera model from 'Module 3' to '${NEW_MODEL_NAME}' in '${NEW_FILE}'."
+				update_json_file ".cameramodel" "${NEW_MODEL_NAME}" "${NEW_FILE}" "text"
+
+				NEW_MODEL_FILE_NAME="${NEW_MODEL_NAME// /_}"
+				NEW="${NEW_FILE/Module_3/${NEW_MODEL_FILE_NAME}}"
+				display_msg --log progress "Renaming '${NEW_FILE}' to '${NEW}'."
+				mv "${NEW_FILE}" "${NEW}"
+				NEW_FILE="${NEW}"
+
+				NEW_CC_FILE="${ALLSKY_CONFIG}/${NAME/settings/cc}"
+				if [[ -f ${NEW_CC_FILE} ]]; then
+					display_msg --logonly progress "Renaming '${NEW_CC_FILE}' to '${NEW}'."
+					NEW="${NEW_CC_FILE/Module_3/${NEW_MODEL_FILE_NAME}}"
+					mv "${NEW_CC_FILE}" "${NEW}"
+				fi
+			# else it's just a "Module 3" camera, so nothing to do.
+			fi
+		else
+			display_msg --logonly info "Prior CC file '${OLD_CC_FILE}' not found."
+		fi
+	fi
+
 }
 
 
@@ -2604,7 +2607,7 @@ restore_prior_website_files()
 		else
 			display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 		fi
-	# else - don't output anything since the prior release didn't have keolapses.
+		display_msg --logonly info "${ITEM}: Directory '${D2}' does not exist."
 	fi
 
 	ROOT_DIR="keograms"
@@ -4028,7 +4031,7 @@ check_swap "install" ""
 
 ##### Make ${ALLSKY_TMP} a memory filesystem unless Allsky is on an NVMe disk;
 ##### "allsky-config recheck_tmp" can change that.
-check_tmp "install" "false"
+check_tmp "install"
 
 ##### Tell the user it may take a while
 display_wait_message

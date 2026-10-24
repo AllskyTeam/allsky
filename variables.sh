@@ -266,9 +266,17 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" || ${1} == "--force" ]]; then
 		ALLSKY_FILENAME="${ALLSKY_FULL_FILENAME%.*}"
 		ALLSKY_EXTENSION="${ALLSKY_FULL_FILENAME##*.}"
 
-		CAMERA_TYPE="$( jq -r '.cameratype' "${ALLSKY_SETTINGS_FILE}" )"
-		CAMERA_MODEL="$( jq -r '.cameramodel' "${ALLSKY_SETTINGS_FILE}" )"
-		CAMERA_NUMBER="$( jq -r '.cameranumber' "${ALLSKY_SETTINGS_FILE}" )"
+		# "camerainfo" is "type;number;model;sensor"; use get_camera_info() to
+		# get one part.  Settings files from before it existed have separate settings.
+		CAMERA_INFO="$( jq -r '.camerainfo // ""' "${ALLSKY_SETTINGS_FILE}" )"
+		if [[ -n ${CAMERA_INFO} ]]; then
+			IFS=";" read -r CAMERA_TYPE CAMERA_NUMBER CAMERA_MODEL CAMERA_SENSOR <<< "${CAMERA_INFO}"
+		else
+			CAMERA_TYPE="$( jq -r '.cameratype // ""' "${ALLSKY_SETTINGS_FILE}" )"
+			CAMERA_MODEL="$( jq -r '.cameramodel // ""' "${ALLSKY_SETTINGS_FILE}" )"
+			CAMERA_NUMBER="$( jq -r '.cameranumber // ""' "${ALLSKY_SETTINGS_FILE}" )"
+			CAMERA_SENSOR=""
+		fi
 		CAMERA_NUMBER="${CAMERA_NUMBER:-0}"
 
 		# So scripts can conditionally output messages.

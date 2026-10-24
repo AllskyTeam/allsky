@@ -131,6 +131,13 @@ fi
 #shellcheck disable=SC2119
 getAllSettings --var "lastchanged cameranumber locale" || exit 1
 
+# A settings file from before "camerainfo" existed, e.g., from a restored older backup,
+# has the camera in separate settings; combine them so the WebUI shows the camera.
+if [[ -z ${CAMERA_INFO} ]] && CAMERA_INFO="$( get_settings_camera_info )" ; then
+	"${ALLSKY_SCRIPTS}/updateJsonFile.sh" --verbosity silent --file "${ALLSKY_SETTINGS_FILE}" \
+		"camerainfo" "Camera" "${CAMERA_INFO}"
+fi
+
 # If the "lastchanged" setting is missing, the user needs to review/change the settings.
 # This will happen after an installation or upgrade, which also sets the Allsky status.
 if [[ -z ${S_lastchanged} ]]; then
@@ -347,7 +354,7 @@ if [[ ! ${CCM} =~ "${CAM}" ]]; then
 		set_allsky_status "${ALLSKY_STATUS_CAMERA_CHANGED}"
 		IMAGE_MSG="${ERROR_MSG_PREFIX}"
 		IMAGE_MSG+="The camera changed."
-		IMAGE_MSG+="\nCheck Camera Type\n& Model in the WebUI."
+		IMAGE_MSG+="\nCheck the Camera\nsetting in the WebUI."
 		reset_usb "Camera changed"
 		doExit "${ALLSKY_EXIT_ERROR_STOP}" "Error" "${IMAGE_MSG}"
 	fi
@@ -428,7 +435,6 @@ trap "catch_signal" SIGTERM SIGINT SIGHUP
 set_allsky_status "${ALLSKY_STATUS_STARTING}"
 
 # Run the camera-specific capture program - this is the main attraction...
-CAMERA_NUMBER="${S_cameranumber:-0}"		# default
 # shellcheck disable=SC2086
 "${ALLSKY_BIN}/${CAPTURE}" \
 	-debuglevel "${ALLSKY_DEBUG_LEVEL}" \

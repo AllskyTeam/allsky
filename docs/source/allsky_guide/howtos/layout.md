@@ -50,7 +50,7 @@ Some of the most important items here are:
 - The `overlay` directory, which contains configuration for the **Overlay Editor**.
 - `cc.json` and `options.json`, which are automatically created based on your camera and control which settings appear in the WebUI, along with their valid ranges and defaults.
 
-If you change camera type or model through the WebUI, some of these files are regenerated automatically.
+If you change the camera through the WebUI, some of these files are regenerated automatically.
 
 If you use a remote Allsky Website, you may also see `remote_configuration.json` here. That file is uploaded to the remote Website when you update it through the WebUI's **Editor** page.
 

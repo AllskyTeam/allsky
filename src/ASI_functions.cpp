@@ -18,23 +18,24 @@ char *skipType(char *);
 #define SENSOR_SIZE			(CAMERA_NAME_SIZE + MODULE_SIZE + 5)
 #define FULL_SENSOR_SIZE	(2 * SENSOR_SIZE)
 
-// Holds connected camera types.
+// Holds connected camera information, 1 entry per camera.
 struct CONNECTED_CAMERAS
 {
-	int cameraID;
 	char Type[CC_TYPE_SIZE];			// ZWO or RPi
-	char Name[CAMERA_NAME_SIZE];		// camera name, e.g., "ASI290MC", "HQ"
+	int cameraID;
 	char Sensor[FULL_SENSOR_SIZE];		// full sensor name (what --list-cameras returns)
-
-	// These are RPi only:
-	char *Module;						// sensor type
-	size_t Module_len;					// strncmp length.  0 for whole Module name
+	size_t Module_len;					// RPi only.  strncmp length.  0 for whole Sensor name
+	char Name[CAMERA_NAME_SIZE];		// camera name, e.g., "ASI290MC", "HQ"
 };
-CONNECTED_CAMERAS connectedCameras[100];
+#define MAX_CAMERAS 10					// We should never get to this many connected cameras.
+CONNECTED_CAMERAS connectedCameras[MAX_CAMERAS];
 int totalNum_connectedCameras = 0;			// num connected cameras of all types
 
-char *connectedCameraTypes[100] = {};		// points to connectedCameras.Type
+// One entry per camera Type, so if two RPi cameras are connected there's only 1 entry.
+char *connectedCameraTypes[MAX_CAMERAS] = {};	// points to connectedCameras.Type
 int num_connectedCameraTypes = 0;
+
+#define MAX_NUM_CONTROL_CAPS (CONTROL_TYPE_END)
 
 // Find the end of the token that begins at "start".
 // The end is either "delimeter" or NULL.
@@ -87,132 +88,44 @@ char *getToken(char *start, char delimeter)
 
 	return(startOfToken);
 }
-
-// Return the number of cameras PHYSICALLY connected of the correct type.
-// allsky.sh created the file; we just need to count the number of lines in it.
-// Also, save information on ALL connected cameras.
-int getNumOfConnectedCameras()
+// Count the number of tokens in the line.
+int getTokenCount(char *line, char delimeter)
 {
-	// Read the whole file into memory so we can easily parse it.
-	static char *buf = readFileIntoBuffer(&CG, CG.connectedCamerasFile);
-	if (buf == NULL)
+	int num = 0;
+	char *ptr = line;
+	if (*ptr == '\0') return(0);
+
+	while (*ptr != '\0')
 	{
-		Log(0, "%s: ERROR: Unable to read from CG.RPI_cameraInfoFile '%s': %s\n",
-			CG.ME, CG.RPI_cameraInfoFile, strerror(errno));
-		closeUp(EXIT_ERROR_STOP);
+		if (*ptr == delimeter)
+			num++;
+		ptr++;
 	}
 
-	int numThisType = 0;
-	char *line;
-
-	// Input file format (tab-separated):
-	//		camera_type  camera_number   sensor_name_or_Model  optional_other_stuff
-	//		1            2               3                      4
-	// Sample lines:
-	// 		RPi          0               imx477                [4056x3040]
-	// 		ZWO          1               ASI120MC Mini
-	// ZWO Model names may have multiple words.
-
-	int on_line=0;
-	(void) getLine(NULL);		// resets the buffer pointer
-	while ((line = getLine(buf)) != NULL)
-	{
-		on_line++;
-		Log(5, "Line %d: [%s]\n", on_line, line);
-		(void) getToken(NULL, '\t');		// tells getToken() we have a new line.
-
-		char *cameraType = getToken(line, '\t');
-		char *numStr = getToken(line, '\t');
-		char *cameraModel = getToken(line, '\t');
-		if (cameraModel != NULL)
-		{
-			int cameraNum = atoi(numStr);
-			Log(5, "  cameraType=[%s], cameraNum=[%d], cameraModel=[%s]\n", cameraType, cameraNum, cameraModel);
-			CONNECTED_CAMERAS *cC = &connectedCameras[totalNum_connectedCameras++];
-			cC->cameraID = cameraNum;
-			strncpy(cC->Type, cameraType, CC_TYPE_SIZE);
-#ifdef IS_ZWO
-			strncpy(cC->Name, cameraModel, CAMERA_NAME_SIZE);
-			strncpy(cC->Sensor, cameraModel, CAMERA_NAME_SIZE);
-#else
-			// cC->Name done later
-			strncpy(cC->Sensor, cameraModel, SENSOR_SIZE);
-#endif
-
-			if (strcmp(cameraType, CAMERA_TYPE) == 0)
-				numThisType++;
-
-			// Add to the list of connected camera types if not already there.
-			const char *p;
-			int n = num_connectedCameraTypes;
-			for (int i=0; i <= n; i++)
-			{
-Log(5, "Checking connectedCameraTypes[%d] of %d\n", i, n);
-				if (i == num_connectedCameraTypes)
-				{
-					p = "";
-				}
-				else
-				{
-					p = connectedCameraTypes[i];
-				}
-Log(5, "    p is [%s], cameraType=[%s]\n", *p != '\0' ? p : "NOT SET", cameraType);
-				if (strcmp(p, cameraType) == 0)
-				{
-Log(5, "  >> %s already in list; skipping\n", p);
-					break;
-				} else if (num_connectedCameraTypes == 0 || strcmp(p, cameraType) != 0)
-				{
-					connectedCameraTypes[num_connectedCameraTypes] = cC->Type;
-					num_connectedCameraTypes++;
-Log(5, "  NEW TYPE FOUND [%s], num_connectedCameraTypes now = %d\n", cC->Type, num_connectedCameraTypes);
-					break;
-				}
-			}
-		}
-		else
-		{
-			// "line" ends with newline
-			Log(1, "%s: WARNING: skipping invalid line %d in '%s': [%s]",
-				CG.ME, on_line, basename(CG.connectedCamerasFile), line);
-		}
-	}
-
-	Log(4, "%s connected cameras: %d of %d total types connected\n",
-		CAMERA_TYPE, numThisType, num_connectedCameraTypes);
-
-#ifdef IS_ZWO
-	int  ZWOnum = ASIGetNumOfConnectedCameras();
-	if (ZWOnum != numThisType)
-	{
-		Log(0, "%s: ERROR: mismatch with number of ZWO cameras connected: per ZWO SDK: %d, per %s: %d\n",
-			CG.ME, ZWOnum, CG.connectedCamerasFile, numThisType);
-
-		Log(1, "Attached Cameras:\n");
-		ASI_CAMERA_INFO info;
-		for (int i=0; i < ZWOnum; i++)
-		{
-			Log(1, "    Camera # %d: ", i);
-			ASI_ERROR_CODE ret = ASIGetCameraProperty(&info, i);
-			if (ret != ASI_SUCCESS)
-			{
-				char *getRetCode(ASI_ERROR_CODE code);
-				Log(1, "ERROR: cannot get information: %s.\n", getRetCode(ret));
-			}
-			else
-			{
-				Log(1, "Name: %s, CameraID: %d, MaxHeight: %ld, MaxWidth: %ld\n",
-					info.Name, info.CameraID, info.MaxHeight, info.MaxWidth);
-			}
-		}
-
-		closeUp(EXIT_ERROR_STOP);
-	}
-#endif
-
-	return(numThisType);
+	return(++num);		// ++ for the last token
 }
 
+// For debugging - display contents of arrays.
+void showConnectedCameras()
+{
+	for (int i=0; i<totalNum_connectedCameras; i++)
+	{
+		if (i>0) printf("\n");
+
+		CONNECTED_CAMERAS *cC = &connectedCameras[i];
+		printf("Attached camera %d of %d", i+1, totalNum_connectedCameras);
+		if (i == CG.cameraNumber) printf(" (selected)");
+		printf(":\n");
+		printf("     Type = %s\n", cC->Type);
+		printf("     cameraID = %d\n", cC->cameraID);
+		printf("     Sensor = %s\n", cC->Sensor);
+#ifdef IS_RPi
+		printf("     Module_len = %ld\n", cC->Module_len);
+#endif
+		printf("     Name = %s\n", cC->Name);
+	}
+	
+}
 
 
 //-----------------------------------------------------------------------------------------
@@ -322,88 +235,16 @@ typedef struct _ASI_ID {
 } ASI_ID;
 typedef ASI_ID ASI_SN;
 
-// We vary somewhat from ZWO here:
-//	* We must hard-code the values since we can't query the camera.
-
-ASI_CAMERA_INFO ASICameraInfoArray[] =
-{
-	// The CameraID will be updated for the cameras physically connected.
-
-	// Module (sensor), Module_len, Name, CameraID, MaxHeight, MaxWidth, IsColorCam,
-		// BayerPattern, SupportedBins, SupportedVideoFormat, PixelSize, IsCoolerCam,
-		// BitDepth, SupportsTemperature, SupportAutoFocus
-	{ "imx477", 0, "HQ", 0, 3040, 4056, ASI_TRUE,
-		// Need ASI_IMG_END so we know where the end of the list is.
-		BAYER_RG, {1, 2, 0}, {ASI_IMG_RGB24, ASI_IMG_END}, 1.55, ASI_FALSE,
-		12, ASI_TRUE, ASI_FALSE
-	},
-
-	// There are many versions of the imx708 (_wide, _noir, _wide_noir, etc.)
-	// so just check for "imx708" (6 characters).
-	{ "imx708", 6, "Module 3", 0, 2592, 4608, ASI_TRUE,
-		BAYER_RG, {1, 2, 0}, {ASI_IMG_RGB24, ASI_IMG_END}, 1.4, ASI_FALSE,
-		10, ASI_TRUE, ASI_TRUE
-	},
-
-	{ "ov5647", 0, "Version 1", 0, 1944, 2592, ASI_TRUE,
-		BAYER_RG, {1, 2, 0}, {ASI_IMG_RGB24, ASI_IMG_END}, 1.4, ASI_FALSE,
-		10, ASI_FALSE, ASI_FALSE
-	},
-
-	{ "imx290", 0, "imx290 60.00 fps", 0, 1080, 1920, ASI_TRUE,
-		BAYER_RG, {1, 2, 0}, {ASI_IMG_RGB24, ASI_IMG_END}, 2.9, ASI_FALSE,
-		12, ASI_FALSE, ASI_FALSE
-	},
-
-	{ "imx519", 0, "Arducam 16 MP", 0, 3496, 4656, ASI_TRUE,
-		BAYER_RG, {1, 2, 0}, {ASI_IMG_RGB24, ASI_IMG_END}, 1.22, ASI_FALSE,
-		10, ASI_FALSE, ASI_TRUE
-	},
-
-	{ "arducam_64mp", 0, "Arducam 64 MP", 0, 6944, 9152, ASI_TRUE,
-		BAYER_RG, {1, 2, 0}, {ASI_IMG_RGB24, ASI_IMG_END}, 0.8, ASI_FALSE,
-		10, ASI_FALSE, ASI_TRUE
-	},
-
-	{ "arducam-pivariety", 0, "Arducam 462", 0, 1080, 1920, ASI_TRUE,
-		BAYER_RG, {1, 2, 0}, {ASI_IMG_RGB24, ASI_IMG_END}, 2.9, ASI_FALSE,
-		10, ASI_FALSE, ASI_TRUE
-	},
-
-	{ "imx219", 0, "Waveshare imx219-d160", 0, 2464, 3280, ASI_TRUE,
-		BAYER_RG, {1, 2, 0}, {ASI_IMG_RGB24, ASI_IMG_END}, 1.12, ASI_FALSE,
-		10, ASI_FALSE, ASI_FALSE
-	},
-
-	{ "ov64a40", 0, "Arducam 64MP Owlsight", 0, 6944, 9248, ASI_TRUE,
-		BAYER_BG, {1, 2, 0}, {ASI_IMG_RGB24, ASI_IMG_END}, 1.008, ASI_FALSE,
-		10, ASI_FALSE, ASI_TRUE
-	},
-
-	{ "imx283", 0, "OneInchEye IMX283", 0, 3648, 5472, ASI_TRUE,
-		BAYER_RG, {1, 2, 0}, {ASI_IMG_RGB24, ASI_IMG_END}, 2.4, ASI_FALSE,
-		12, ASI_FALSE, ASI_FALSE
-	},
-
-	// FUTURE CAMERAS GO HERE...
-};
-int const ASICameraInfoArraySize =  sizeof(ASICameraInfoArray) / sizeof(ASI_CAMERA_INFO);
-
-// This array will be populated with pointers to ASICameraInfoArray[] for the camera(s)
-// physically connected to the Pi.
-// This way, the "number of cameras" is the same as the size of valid entries in
-// RPiCameras[], and the pointer to the camera we're using will always be <= number of cameras.
-// For example, if a imx477 and imx519 are physicall connected,
-// RPiCameras[] will have two pointers into ASICameraInfoArray[]
-// and two pointers into those camera's ControlCapsArray[] entries.
+// This array will be populated with pointers to information for cameras physically connected to the Pi.
 struct RPI_CAMERAS
 {
 	ASI_CAMERA_INFO *CameraInfo;
 	ASI_CONTROL_CAPS *ControlCaps;
-} RPiCameras[ASICameraInfoArraySize];
+} RPiCameras[MAX_CAMERAS];
 
 
-// The number and order of these need to match what's in the ControlCapsArray.
+ASI_CAMERA_INFO aci[MAX_CAMERAS];				// Need all camera's data.
+ASI_CONTROL_CAPS CCs[MAX_CAMERAS][MAX_NUM_CONTROL_CAPS];
 
 // Control type name, command-line argument name (without leading "day" and "night").
 // ControlType is the array index.
@@ -425,185 +266,7 @@ char const *argumentNames[][2] = {
 };
 int const argumentNamesSize =  sizeof(argumentNames) / sizeof(argumentNames[0]);
 
-#define MAX_NUM_CONTROL_CAPS (CONTROL_TYPE_END)
-ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
-{
-	// Each camera model has 1 entry for libcamera.
-	// If a newer camera package is ever release an entry for it needs to be added.
-	// They need to be in that order and in the same order as in ASICameraInfoArray[].
-
-	// The "Name" must match what ZWO uses; "" names means not supported.
-	// 99 == don't know
-
-	// Name, Description, MaxValue, MinValue, DefaultValue, CurrentValue, IsAutoSupported, IsWritable, ControlType
-	{ // imx477, libcamera		THIS MUST BE THE FIRST CAMERA
-		{ "Gain", "Gain", 16.0, 1.0, 1.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_GAIN },
-		{ "Exposure", "Exposure Time (us)", 230 * US_IN_SEC, 114, 10000, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_EXPOSURE },
-		{ "WB_R", "White balance: Red component", 10.0, 0.1, 2.5, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_R },
-		{ "WB_B", "White balance: Blue component", 10.0, 0.1, 2.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_B },
-		{ "Flip", "Flip: 0->None, 1->Horiz, 2->Vert, 3->Both", 3, 0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_FLIP },
-		{ "AutoExpMaxGain", "Auto exposure maximum gain value", 16.0, 1.0, 16.0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_GAIN },
-		{ "AutoExpMaxExpMS", "Auto exposure maximum exposure value (ms)", 230 * MS_IN_SEC, 1, 60 * MS_IN_SEC, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_EXP },
-		{ "ExposureCompensation", "Exposure Compensation", 10.0, -10.0, 0.0, NOT_SET, ASI_FALSE, ASI_TRUE, EV },
-		{ "Saturation", "Saturation", 15.99, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SATURATION },
-		{ "Contrast", "Contrast", 15.99, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, CONTRAST },
-		{ "Sharpness", "Sharpness", 15.99, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SHARPNESS },
-
-		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },	// Signals end of list
-	},
-
-	{ // imx708*, libcamera
-		{ "Gain", "Gain", 16.0, 1.122807, 1.122807, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_GAIN },
-		{ "Exposure", "Exposure Time (us)", 112015553, 26, 10000, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_EXPOSURE },
-		{ "WB_R", "White balance: Red component", 32.0, 0.0, 2.5, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_R },
-		{ "WB_B", "White balance: Blue component", 32.0, 0.0, 2.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_B },
-		{ "Flip", "Flip: 0->None, 1->Horiz, 2->Vert, 3->Both", 3, 0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_FLIP },
-		{ "AutoExpMaxGain", "Auto exposure maximum gain value", 16.0, 1.122807, 16.0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_GAIN },
-		{ "AutoExpMaxExpMS", "Auto exposure maximum exposure value (ms)", 112015553 / US_IN_MS, 26.0, 60 * MS_IN_SEC, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_EXP },
-		{ "ExposureCompensation", "Exposure Compensation", 8.0, -8.0, 0.0, NOT_SET, ASI_FALSE, ASI_TRUE, EV },
-		{ "Saturation", "Saturation", 32.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SATURATION },
-		{ "Contrast", "Contrast", 32.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, CONTRAST },
-		{ "Sharpness", "Sharpness", 32.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SHARPNESS },
-
-		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
-	},
-
-	{ // ov5647, libcamera
-		{ "Gain", "Gain", 63.9375, 1.0, 1.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_GAIN },
-		{ "Exposure", "Exposure Time (us)", 969249, 130, 9000, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_EXPOSURE },
-		{ "WB_R", "White balance: Red component", 32.0, 0.0, 0.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_R },
-		{ "WB_B", "White balance: Blue component", 32.0, 0.0, 0.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_B },
-		{ "Flip", "Flip: 0->None, 1->Horiz, 2->Vert, 3->Both", 3, 0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_FLIP },
-		{ "AutoExpMaxGain", "Auto exposure maximum gain value", 63.9375, 1.0, 63.9375, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_GAIN },
-		{ "AutoExpMaxExpMS", "Auto exposure maximum exposure value (ms)", 969249 / US_IN_MS, 1.0, 9 * MS_IN_SEC, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_EXP },
-		{ "ExposureCompensation", "Exposure Compensation", 8.0, -8.0, 0.0, NOT_SET, ASI_FALSE, ASI_TRUE, EV },
-		{ "Saturation", "Saturation", 32, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SATURATION },
-		{ "Contrast", "Contrast", 32.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, CONTRAST },
-		{ "Sharpness", "Sharpness", 16.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SHARPNESS },
-
-		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
-	},
-
-	{ // imx290, libcamera
-		{ "Gain", "Gain", 16.0, 1.0, 1.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_GAIN },
-		{ "Exposure", "Exposure Time (us)", 200 * US_IN_SEC, 1, 10000, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_EXPOSURE },
-		{ "WB_R", "White balance: Red component", 10.0, 0.1, 2.5, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_R },
-		{ "WB_B", "White balance: Blue component", 10.0, 0.1, 2.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_B },
-		{ "Flip", "Flip: 0->None, 1->Horiz, 2->Vert, 3->Both", 3, 0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_FLIP },
-		{ "AutoExpMaxGain", "Auto exposure maximum gain value", 16.0, 1.0, 16.0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_GAIN },
-		{ "AutoExpMaxExpMS", "Auto exposure maximum exposure value (ms)", 200 * MS_IN_SEC, 1, 60 * MS_IN_SEC, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_EXP },
-		{ "ExposureCompensation", "Exposure Compensation", 10.0, -10.0, 0.0, NOT_SET, ASI_FALSE, ASI_TRUE, EV },
-		{ "Saturation", "Saturation", 15.99, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SATURATION },
-		{ "Contrast", "Contrast", 15.99, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, CONTRAST },
-		{ "Sharpness", "Sharpness", 15.99, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SHARPNESS },
-
-		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
-	},
-
-	{ // imx519, libcamera
-		{ "Gain", "Gain", 16.0, 1.0, 1.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_GAIN },
-		{ "Exposure", "Exposure Time (us)", 200 * US_IN_SEC, 1, 10000, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_EXPOSURE },
-		{ "WB_R", "White balance: Red component", 32.0, 0.1, 2.5, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_R },
-		{ "WB_B", "White balance: Blue component", 32.0, 0.1, 2.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_B },
-		{ "Flip", "Flip: 0->None, 1->Horiz, 2->Vert, 3->Both", 3, 0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_FLIP },
-		{ "AutoExpMaxGain", "Auto exposure maximum gain value", 16.0, 1.0, 16.0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_GAIN },
-		{ "AutoExpMaxExpMS", "Auto exposure maximum exposure value (ms)", 200 * MS_IN_SEC, 1, 60 * MS_IN_SEC, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_EXP },
-		{ "ExposureCompensation", "Exposure Compensation", 10.0, -10.0, 0.0, NOT_SET, ASI_FALSE, ASI_TRUE, EV },
-		{ "Saturation", "Saturation", 32.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SATURATION },
-		{ "Contrast", "Contrast", 32.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, CONTRAST },
-		{ "Sharpness", "Sharpness", 16.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SHARPNESS },
-
-		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
-	},
-
-	{ // arducam_64mp, libcamera
-		{ "Gain", "Gain", 16.0, 1.0, 1.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_GAIN },
-		{ "Exposure", "Exposure Time (us)", 200 * US_IN_SEC, 1, 10000, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_EXPOSURE },
-		{ "WB_R", "White balance: Red component", 10.0, 0.1, 2.5, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_R },
-		{ "WB_B", "White balance: Blue component", 10.0, 0.1, 2.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_B },
-		{ "Flip", "Flip: 0->None, 1->Horiz, 2->Vert, 3->Both", 3, 0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_FLIP },
-		{ "AutoExpMaxGain", "Auto exposure maximum gain value", 16.0, 1.0, 16.0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_GAIN },
-		{ "AutoExpMaxExpMS", "Auto exposure maximum exposure value (ms)", 200 * MS_IN_SEC, 1, 60 * MS_IN_SEC, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_EXP },
-		{ "ExposureCompensation", "Exposure Compensation", 10.0, -10.0, 0.0, NOT_SET, ASI_FALSE, ASI_TRUE, EV },
-		{ "Saturation", "Saturation", 15.99, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SATURATION },
-		{ "Contrast", "Contrast", 15.99, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, CONTRAST },
-		{ "Sharpness", "Sharpness", 15.99, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SHARPNESS },
-
-		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
-	},
-
-	{ // arducam-pivariety, libcamera
-		{ "Gain", "Gain", 200.0, 1.0, 1.33, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_GAIN },
-		{ "Exposure", "Exposure Time (us)", 15.5 * US_IN_SEC, 14, 10 * US_IN_SEC, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_EXPOSURE },
-		{ "WB_R", "White balance: Red component", 32.0, 0.0, 1.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_R },
-		{ "WB_B", "White balance: Blue component", 32.0, 0.0, 1.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_B },
-		{ "Flip", "Flip: 0->None, 1->Horiz, 2->Vert, 3->Both", 3, 0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_FLIP },
-		{ "AutoExpMaxGain", "Auto exposure maximum gain value", 200.0, 1.0, 200.0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_GAIN },
-		{ "AutoExpMaxExpMS", "Auto exposure maximum exposure value (ms)", 15.5 * MS_IN_SEC, 1, 15.5 * MS_IN_SEC, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_EXP },
-		{ "ExposureCompensation", "Exposure Compensation", 8.0, -8.0, 0.0, NOT_SET, ASI_FALSE, ASI_TRUE, EV },
-		{ "Saturation", "Saturation", 32.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SATURATION },
-		{ "Contrast", "Contrast", 32.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, CONTRAST },
-		{ "Sharpness", "Sharpness", 16.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SHARPNESS },
-
-		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
-	},
-
-	{ // Waveshare imx219, libcamera
-		{ "Gain", "Gain", 10.666667, 1.0, 1.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_GAIN },
-		{ "Exposure", "Exposure Time (us)", 11.767556 * US_IN_SEC, 75, 10 * US_IN_SEC, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_EXPOSURE },
-		{ "WB_R", "White balance: Red component", 32.0, 0.0, 1.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_R },
-		{ "WB_B", "White balance: Blue component", 32.0, 0.0, 1.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_B },
-		{ "Flip", "Flip: 0->None, 1->Horiz, 2->Vert, 3->Both", 3, 0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_FLIP },
-		{ "AutoExpMaxGain", "Auto exposure maximum gain value", 10.666667, 1.0, 10.666667, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_GAIN },
-		{ "AutoExpMaxExpMS", "Auto exposure maximum exposure value (ms)", 11.767556 * MS_IN_SEC, 1, 11.767556 * MS_IN_SEC, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_EXP },
-		{ "ExposureCompensation", "Exposure Compensation", 8.0, -8.0, 0.0, NOT_SET, ASI_FALSE, ASI_TRUE, EV },
-		{ "Brightness", "Brightness", 1.0, -1.0, 0.0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_TARGET_BRIGHTNESS },
-		{ "Saturation", "Saturation", 32.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SATURATION },
-		{ "Contrast", "Contrast", 32.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, CONTRAST },
-		{ "Sharpness", "Sharpness", 16.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SHARPNESS },
-
-		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
-	},
-
-	{	// Arducam ov64a40, libcamera
-		{ "Gain", "Gain", 15.992188, 1.0, 1.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_GAIN },
-		{ "Exposure", "Exposure Time (us)", 608453664, 580, 10000000, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_EXPOSURE },
-		{ "WB_R", "White balance: Red component", 32.0, 0.0, 1.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_R },
-		{ "WB_B", "White balance: Blue component", 32.0, 0.0, 1.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_B },
-		{ "Flip", "Flip: 0->None 1->Horiz 2->Vert 3->Both", 3, 0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_FLIP },
-		{ "AutoExpMaxGain", "Auto exposure maximum gain value", 15.992188, 1.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_GAIN },
-		{ "AutoExpMaxExpMS", "Auto exposure maximum exposure value (ms)", 608454, 0.580, 60000, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_EXP },
-		{ "ExposureCompensation", "Exposure Compensation", 8.0, -8.0, 0.0, NOT_SET, ASI_FALSE, ASI_TRUE, EV },
-		{ "Saturation", "Saturation", 32.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SATURATION },
-		{ "Contrast", "Contrast", 32.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, CONTRAST },
-		{ "Sharpness", "Sharpness", 16.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SHARPNESS },
-
-		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
-	},
-
-	{ // OneInchEye IMX283, libcamera
-		{ "Gain", "Gain", 22.505495, 1.0, 4.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_GAIN },
-		{ "Exposure", "Exposure Time (us)", 129373756, 58, 10 * US_IN_SEC, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_EXPOSURE },
-		{ "WB_R", "White balance: Red component", 32.0, 0.0, 1.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_R },
-		{ "WB_B", "White balance: Blue component", 32.0, 0.0, 1.0, NOT_SET, ASI_TRUE, ASI_TRUE, ASI_WB_B },
-		{ "Flip", "Flip: 0->None 1->Horiz 2->Vert 3->Both", 3, 0, 0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_FLIP },
-		{ "AutoExpMaxGain", "Auto exposure maximum gain value", 22.505495, 1.0, 4.0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_GAIN },
-		{ "AutoExpMaxExpMS", "Auto exposure maximum exposure value (ms)", 129374, .0580, 60 * MS_IN_SEC, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_MAX_EXP },
-		{ "ExposureCompensation", "Exposure Compensation", 8.0, -8.0, 0.0, NOT_SET, ASI_FALSE, ASI_TRUE, EV },
-		{ "Brightness", "Brightness", 1.0, -1.0, 0.0, NOT_SET, ASI_FALSE, ASI_TRUE, ASI_AUTO_TARGET_BRIGHTNESS },
-		{ "Saturation", "Saturation", 32.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SATURATION },
-		{ "Contrast", "Contrast", 32.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, CONTRAST },
-		{ "Sharpness", "Sharpness", 16.0, 0.0, 1.0, NOT_SET, ASI_FALSE, ASI_TRUE, SHARPNESS },
-
-		{ "End", "End", 0.0, 0.0, 0.0, 0.0, ASI_FALSE, ASI_FALSE, CONTROL_TYPE_END },
-	},
-
-	// FUTURE CAMERAS GO HERE...
-};
-
-
-
-/* Sample "libcamera-still --list-cameras" ouput:
+/* Sample "rpicam-still --list-cameras" ouput:
 	1 : imx477 [4056x3040] (/base/soc/i2c0mux/i2c@1/pca@70/i2c@1/imx477@1a)
     	Modes:	'SRGGB10_CSI2P' : 1332x990
  	          	'SRGGB12_CSI2P' : 2028x1080 2028x1520 4056x3040
@@ -615,300 +278,409 @@ ASI_CONTROL_CAPS ControlCapsArray[][MAX_NUM_CONTROL_CAPS] =
 	Some cameras also have additional resolutions for a given mode.
 */
 
-// Get the cameraNumber for the camera we're using.
-// Also save the info on each connected camera of the current type.
-int getCameraNumber()
+// Helper functions to convert strings to ZWO values.
+ASI_BOOL do_ASI_BOOL(char *s, int line)
 {
-	int actualIndex;					// index into ASICameraInfoArray[]
-	int RPiCameraIndex = -1;			// index into RPiCameras[]
-	int thisIndex = -1;					// index of camera found in RPiCameras
-	int num_RPiCameras = 0;
+	if (strcmp(s, "ASI_TRUE") == 0) return ASI_TRUE;
+	if (strcmp(s, "ASI_FALSE") == 0) return ASI_FALSE;
 
-	enum LINE_TYPE {
-		LT_camera, LT_libcamera
-	} lineType;
+	Log(0, "Got bad ASI_BOOL value on line %d: %s\n", line, s);
+	return ASI_FALSE;
+}
+ASI_BAYER_PATTERN do_ASI_BAYER_PATTERN(char *s, int line)
+{
+	if (strcmp(s, "BAYER_RG") == 0) return BAYER_RG;
+	if (strcmp(s, "BAYER_BG") == 0) return BAYER_BG;
+	if (strcmp(s, "BAYER_GR") == 0) return BAYER_GR;
+	if (strcmp(s, "BAYER_GB") == 0) return BAYER_GB;
 
-if (0) {
-	ASI_CAMERA_INFO *aci = NULL;
-	size_t size = sizeof(ASI_CAMERA_INFO) * CG.numCameras;
-	if ((aci = (ASI_CAMERA_INFO *) realloc(aci, size)) == NULL)
-	{
-		int e = errno;
-		Log(0, "*** %s: ERROR: Could not realloc() for aci: %s!", CG.ME, strerror(e));
-		closeUp(EXIT_ERROR_STOP);
-	}
+	Log(0, "Got bad ASI_BAYER_PATTERN value on line %d: %s\n", line, s);
+	return BAYER_RG;	// this is the most common one so make it the default
+}
+ASI_IMG_TYPE do_ASI_IMAGE_TYPE(char *s, int line)
+{
+	if(strcmp(s, "ASI_IMG_RAW8") == 0) return ASI_IMG_RAW8;
+	if(strcmp(s, "ASI_IMG_RGB24") == 0) return ASI_IMG_RGB24;
+	if(strcmp(s, "ASI_IMG_RAW16") == 0) return ASI_IMG_RAW16;
+	if(strcmp(s, "ASI_IMG_Y8") == 0) return ASI_IMG_Y8;
+	if(strcmp(s, "ASI_IMG_END") == 0) return ASI_IMG_END;
 
-	const int cameraTokens = 15, controlCapsTokens = 9;
-	const int maxArgs = cameraTokens;
-	char *args[maxArgs] = {};		// maximum number of arguments
+	Log(0, "Got bad ASI_IMG_TYPE value on line %d: %s\n", line, s);
+	return ASI_IMG_RGB24;	// this is the most common one so make it the default
 
-	// Read the whole configuration file into memory so we can create argv with pointers.
-	static char *buf = readFileIntoBuffer(&CG, CG.RPI_cameraInfoFile);
+}
+ASI_CONTROL_TYPE do_ASI_CONTROL_TYPE(char *s, int line)
+{
+	if (strcmp(s, "ASI_GAIN") == 0) return ASI_GAIN;
+	if (strcmp(s, "ASI_EXPOSURE") == 0) return ASI_EXPOSURE;
+	if (strcmp(s, "ASI_WB_R") == 0) return ASI_WB_R;
+	if (strcmp(s, "ASI_WB_B") == 0) return ASI_WB_B;
+	if (strcmp(s, "ASI_TEMPERATURE") == 0) return ASI_TEMPERATURE;
+	if (strcmp(s, "ASI_FLIP") == 0) return ASI_FLIP;
+	if (strcmp(s, "ASI_AUTO_MAX_GAIN") == 0) return ASI_AUTO_MAX_GAIN;
+	if (strcmp(s, "ASI_AUTO_MAX_EXP") == 0) return ASI_AUTO_MAX_EXP;
+	if (strcmp(s, "ASI_AUTO_TARGET_BRIGHTNESS") == 0) return ASI_AUTO_TARGET_BRIGHTNESS;
+	if (strcmp(s, "EV") == 0) return EV;
+	if (strcmp(s, "SATURATION") == 0) return SATURATION;
+	if (strcmp(s, "CONTRAST") == 0) return CONTRAST;
+	if (strcmp(s, "SHARPNESS") == 0) return SHARPNESS;
+
+	return(CONTROL_TYPE_END);
+}
+
+// Read information on all PHYSICALLY connected cameras of the correct type.
+// Return the number of cameras.
+// Set the cameraNumber for the camera we're using.
+int getConnectedCameras()
+{
+	Log(5, "========== Reading %s\n", CG.connectedCamerasFile);
+	// Read the whole file into memory so we can easily parse it.
+	static char *buf = readFileIntoBuffer(&CG, CG.connectedCamerasFile);
 	if (buf == NULL)
 	{
-		Log(0, "%s: ERROR: Unable to read from CG.RPI_cameraInfoFile '%s': %s\n",
-			CG.ME, CG.RPI_cameraInfoFile, strerror(errno));
+		Log(0, "%s: ERROR: Unable to read from CG.connectedCamerasFile '%s': %s\n",
+			CG.ME, CG.connectedCamerasFile, strerror(errno));
 		closeUp(EXIT_ERROR_STOP);
 	}
 
-	bool cameraMatch = false;
-	bool inCamera = false, inControlCaps = false, inLibcamera = false;
-	char full_line[1000];
+	int numThisType = 0;
+	int	currentCameraIndex = -1;
 	char *line;
+	bool cameraMatch = false;
+   	int cameraMatch_onNumber = NOT_SET;
+	char *cameraMatch_onModel = NULL; int cameraMatch_onModel_number = NOT_SET;
+	char full_line[1000];
 	int on_line = 0;
-	char *token;
-	int max_tokens = 0;
+	bool want_cc = false;
 
+	// "camera" entries
+	const int RPi_cameraTokens = 17;
+	const int ZWO_cameraTokens = 6;
+	char *cameraType = NULL;
+	int cameraNum = 0;
+	char *cameraModule = NULL;
+	char *cameraLength = NULL;
+	size_t module_len = 0;
+	char *cameraName = NULL;
+
+	// "libcamera" entries
+	const int controlCapsTokens = 10;
+	char *cap_name;
+	char *cap_description;
+	double cap_max, cap_min, cap_default, cap_current;
+	bool cap_auto;
+	bool cap_writeable;
+	ASI_CONTROL_TYPE cap_control_type;
+	int on_cap = -1;
+
+	// Input file format (tab-separated):
+	//		camera	  camera_type  camera_number   sensor_name_or_Module  module_len  model  [optional_other_stuff]
+	//		1         2            3               4                     5           6
+	// Sample lines:
+	// 		camera    RPi          0               imx477                0           HQ
+	// 		camera    ZWO          1               ASI120MC Mini         0           ASI120MC Mini
+	//
+	// 		libcamera Gain	Gain  16.0 ...
+	// 		libcamera End
+	// Model names may have multiple words.
+
+	on_line=0;
 	(void) getLine(NULL);		// resets the buffer pointer
 	while ((line = getLine(buf)) != NULL)
 	{
-		strcpy(full_line, line);		// use full_line in error messages
 		on_line++;
-		Log(5, "Line %3d: %s\n", on_line, full_line);
+		Log(5, "Line %3d: %s\n", on_line, line);
+		if (*line == '#' || *line == '\0') {
+			continue;
+		}
+		strcpy(full_line, line);			// use full_line in error messages
 
+		int num_tokens = getTokenCount(line, '\t');
 		(void) getToken(NULL, '\t');		// tells getToken() we have a new line.
 
-		char *cameraLength = NULL;
 		char *lt = getToken(line, '\t');	// line type
 		if (lt == NULL)
 		{
 			Log(0, "%s: ERROR: Line %d: no line type found in %s [%s]\n",
-				CG.ME, on_line, CG.RPI_cameraInfoFile, full_line);
+				CG.ME, on_line, CG.connectedCamerasFile, full_line);
 			continue;
 		}
 
 		if (strcmp(lt, "camera") == 0)
 		{
-			lineType = LT_camera;
-			max_tokens = cameraTokens;
-		}
-		else if (strcmp(lt, "libcamera") == 0)
-		{
-			lineType = LT_libcamera;
-			max_tokens = controlCapsTokens;
-		}
-		else
-		{
-			Log(0, "%s: ERROR: Line %d: unknown line '%s' type in %s [%s]\n",
-				CG.ME, on_line, lt, CG.RPI_cameraInfoFile, full_line);
-			continue;
-		}
+			on_cap = -1;
+			cameraType = getToken(line, '\t');
 
-		// Create an array of arguments.
-		int numTokens = 0;
-		while ((token = getToken(line, '\t')) != NULL)
-		{
-			numTokens++;
-// printf("xxxxx token %d: %s\n", numTokens, token);
-
-			if (numTokens == 1)
+			int expected = 0;
+			if (strcmp(cameraType, "ZWO") == 0) expected = ZWO_cameraTokens;
+			else if (strcmp(cameraType, "RPi") == 0) expected = RPi_cameraTokens;
+			if (num_tokens != expected)
 			{
-				if (strcmp(token, "End") == 0)
+				Log(0, "%s: ERROR: Line %d: expected %d tokens, found %d in %s [%s].\n",
+					CG.ME, on_line, expected, num_tokens, CG.connectedCamerasFile, full_line);
+				continue;
+			}
+
+			// Save basic camera info on ALL cameras, even ones that aren't our type.
+			char *numStr = getToken(line, '\t');
+			cameraNum = atoi(numStr);
+			cameraModule = getToken(line, '\t');		// sensor on RPi
+			cameraLength = getToken(line, '\t');
+			module_len = atoi(cameraLength);
+			cameraName = getToken(line, '\t');
+
+			Log(5, "  cameraType=[%s], cameraNum=[%d], cameraModule=[%s], cameraName=[%s]\n",
+				cameraType, cameraNum, cameraModule, cameraName);
+
+			// Save basic info on ALL connected cameras.
+			CONNECTED_CAMERAS *cC = &connectedCameras[totalNum_connectedCameras++];
+			strncpy(cC->Type, cameraType, CC_TYPE_SIZE);
+			cC->cameraID = cameraNum;
+			strncpy(cC->Sensor, cameraModule, SENSOR_SIZE);
+			cC->Module_len = module_len;
+			strncpy(cC->Name, cameraName, CAMERA_NAME_SIZE);
+
+			// Add to the list of connected camera types if not already there.
+			const char *p;
+			for (int i=0; i <= num_connectedCameraTypes; i++)
+			{
+				if (i == num_connectedCameraTypes)
 				{
-					break;
-				}
-
-				if (lineType == LT_camera)
-				{
-					// See if this is one of the connected cameras.
-
-					// Determine how much of the Sensor name to compare.
-					cameraLength = getToken(line, '\t');
-// TODO: check for NULL
-// printf("xxxxx >> token (l) %d: %s\n", numTokens+1, cameraLength);
-					size_t len = atoi(cameraLength);
-					if (len == 0)
-					{
-						len = strlen(token);
-					}
-
-					cameraMatch = false;
-					for (int cc=0; cc < totalNum_connectedCameras; cc++)
-					{
-						CONNECTED_CAMERAS *cC = &connectedCameras[cc];
-						if (strcmp(cC->Type, CAMERA_TYPE) != 0)
-						{
-							continue;
-						}
-
-// printf(">>>> checking %s vs %s for %ld [%s]\n", token, cC->Sensor, len, cameraLength);
-			
-						// Now compare the attached sensor name with what's in our list.
-						if (strncmp(token, cC->Sensor, len) == 0)
-						{
-							cameraMatch = true;
-							num_RPiCameras++;
-							Log(5, "[[[[[[[[[[[[[ MATCH, num_RPiCameras=%d\n", num_RPiCameras);
-							break;
-						}
-					}
-				}
-
-				if (cameraMatch)
-				{
-					if (lineType == LT_camera)
-					{
-						inCamera = true;
-						inLibcamera = false;
-						inControlCaps = false;
-					}
-					else if (lineType == LT_libcamera)
-					{
-						inLibcamera = true;
-						inControlCaps = true;
-					}
-				}
-			}
-			else if (numTokens > max_tokens)
-			{
-				Log(5, "Too many tokens (%d vs %d)\n", numTokens, max_tokens);
-				break;
-			}
-
-			if (cameraMatch)
-			{
-				Log(5, "SETTING args[%d] to %s\n", numTokens-1, token);
-				args[numTokens-1] = token;
-				if (lineType == LT_camera && numTokens == 1)
-				{
-					numTokens++;
-					Log(5, ">> SETTING args[%d] to %s\n", numTokens-1, cameraLength);
-					args[numTokens-1] = cameraLength;
-				}
-			}
-		}
-
-		if (cameraMatch)
-		{
-			if (numTokens == 1)
-			{
-				// End of control capability entries for this camera.
-				inCamera = false;
-				inLibcamera = false;
-				inControlCaps = false;
-			}
-			else if (numTokens == cameraTokens)
-			{
-				// camera entry
-				strncpy(aci[num_RPiCameras - 1].Module, args[0], MODULE_SIZE-1);
-				aci[num_RPiCameras - 1].Module_len = atol(args[1]);
-// TODO: add rest of args.
-
-				inCamera = true;
-			}
-			else if (numTokens == controlCapsTokens)
-			{
-				// control caps entry
-// TODO: add to CC array.
-				inControlCaps = true;
-			}
-			else
-			{
-				Log(-1, "%s: Ignoring line %d in %s: too many %s tokens (%d) [%s]\n",
-					CG.ME, on_line, CG.RPI_cameraInfoFile,
-					(lineType == LT_camera) ? "camera" : "control caps",
-					numTokens, full_line);
-			}
-		}
-if (numTokens > 1) Log(5, ", inCamera=%s, inControlCaps=%s, inLibcamera=%s\n", yesNo(inCamera), yesNo(inControlCaps), yesNo(inLibcamera));
-
-		if (num_RPiCameras == CG.numCameras)
-		{
-			Log(5, "Found %d cameras; skipping rest of file\n", CG.numCameras);
-			break;
-		}
-
-	}
-}// end of if(0)
-
-	// For each camera found, update the next *RPiCameras[] entry to point to the
-	// camera's ASICameraInfoArray[] entry.
-	// Return the index into *RPiCameras[] of the attached camera we're using.
-
-	for (int cc=0; cc < totalNum_connectedCameras; cc++)
-	{
-		CONNECTED_CAMERAS *cC = &connectedCameras[cc];
-		if (strcmp(cC->Type, CAMERA_TYPE) != 0)
-		{
-			continue;
-		}
-
-		char *sensor = cC->Sensor;
-
-		// Found a camera of the right type.
-
-// XXX TODO: use RPI_cameraInfoFile instead
-		// Check all known cameras to make sure it's one we know about.
-		for (int i=0; i < ASICameraInfoArraySize; i++)
-		{
-			ASI_CAMERA_INFO *p = &ASICameraInfoArray[i];
-
-			// This code tells us how much of the Module name to compare.
-			size_t len;
-			if (p->Module_len > 0)
-				len = p->Module_len;
-			else
-				len = sizeof(p->Module);
-
-			// Now compare the attached sensor name with what's in our list.
-			if (strncmp(sensor, p->Module, len) == 0)
-			{
-				// The sensor is in our list.
-				actualIndex = i;
-				num_RPiCameras++;
-				thisIndex++;
-				cC->Module_len = p->Module_len;
-				cC->Module = p->Module;
-
-				strncpy(p->Sensor, sensor, SENSOR_SIZE);
-				RPiCameras[thisIndex].CameraInfo = &ASICameraInfoArray[actualIndex];
-				Log(4, "Saving sensor [%s] from ASICameraInfoArray[%d] to RPiCameras[%d],",
-					sensor, actualIndex, thisIndex);
-				RPiCameras[thisIndex].ControlCaps = &ControlCapsArray[actualIndex][0];
-				Log(4, " ControlCapsArray[%d]", actualIndex);
-
-				// Use camera model if we have it.
-				if (CG.cm[0] != '\0')
-				{
- 					if (strcmp(RPiCameras[thisIndex].CameraInfo->Name, CG.cm) == 0)
-					{
-						RPiCameraIndex = thisIndex;
-						Log(4, " - MATCH on cm=%s\n", CG.cm);
-					}
-					else
-					{
-						Log(4, ".\n");
-					}
-				} else if (thisIndex == CG.cameraNumber)
-				{
-					RPiCameraIndex = thisIndex;
-					Log(4, " - MATCH\n");
+					p = "";
 				}
 				else
 				{
-					Log(4, ".\n");
+					p = connectedCameraTypes[i];
 				}
+Log(6, "    p=[%s], cameraType=[%s], num_connectedCameraTypes=[%d]\n", *p != '\0' ? p : "NULL", cameraType, num_connectedCameraTypes);
+				if (strcmp(p, cameraType) == 0)
+				{
+Log(6, "  >> %s already in list; skipping\n", p);
+					break;
+				} else if (num_connectedCameraTypes == 0 || strcmp(p, cameraType) != 0)
+				{
+					connectedCameraTypes[num_connectedCameraTypes] = cC->Type;
+					num_connectedCameraTypes++;
+Log(6, "  NEW TYPE FOUND [%s], num_connectedCameraTypes now = %d\n", cC->Type, num_connectedCameraTypes);
+					break;
+				}
+			}
 
-				break;		// exit inner loop
+			// Only continue with additional information for our camera type.
+			if (strcmp(cameraType, CAMERA_TYPE) != 0) {
+				Log(5, "    Skipping camera type: %s.\n", cameraType);
+				continue;
+			}
+
+			want_cc = true;
+
+			Log(5, "=========== cameraNum=%d, CG.cameraNumber=%d, CG.cm=%s, cameraName=%s, cameraModule=%s\n",
+				cameraNum, CG.cameraNumber, CG.cm, cameraName, cameraModule);
+
+			if (CG.cameraNumber == NOT_SET || cameraNum == CG.cameraNumber)
+			{
+				cameraMatch_onNumber = cameraNum;
+// printf("Got cameraMatch_onNumber, CG.cameraNumber=%d, cameraNum=%d\n", CG.cameraNumber, cameraNum);
+			}
+			if (*CG.cm == '\0' || strcmp(CG.cm, cameraName) == 0)
+			{
+				cameraMatch_onModel = cC->Name;
+				cameraMatch_onModel_number = cameraNum;
+// printf("Got cameraMatch_onModel, cC->Name=%s, cameraNum=%d\n", cC->Name, cameraNum);
+			}
+
+			if (cameraMatch_onNumber == cameraNum && cameraMatch_onModel != NULL)
+			{
+				Log(5, "=========== MATCH\n");
+				cameraMatch = true;
+				want_cc = true;
+				if (CG.cameraNumber == NOT_SET)
+				{
+					CG.cameraNumber = cameraNum;
+				}
+			}
+
+			numThisType++;
+			currentCameraIndex++;
+
+			aci[currentCameraIndex].CameraID = cameraNum;
+			strncpy(aci[currentCameraIndex].Module, cameraModule, MODULE_SIZE-1);
+			aci[currentCameraIndex].Module_len = module_len;
+			strncpy(aci[currentCameraIndex].Name, cameraName, CAMERA_NAME_SIZE-1);
+			aci[currentCameraIndex].MaxHeight = atol(getToken(line, '\t'));
+			aci[currentCameraIndex].MaxWidth = atol(getToken(line, '\t'));
+			aci[currentCameraIndex].IsColorCam = do_ASI_BOOL(getToken(line, '\t'), on_line);
+			aci[currentCameraIndex].BayerPattern = do_ASI_BAYER_PATTERN(getToken(line, '\t'), on_line);
+			char *t;
+			int c;
+			t = getToken(line, '\t');
+			c = sscanf(t, "%d %d %d %d %d",
+				&aci[currentCameraIndex].SupportedBins[0],
+				&aci[currentCameraIndex].SupportedBins[1],
+				&aci[currentCameraIndex].SupportedBins[2],
+				&aci[currentCameraIndex].SupportedBins[3],
+				&aci[currentCameraIndex].SupportedBins[4]);
+			aci[currentCameraIndex].SupportedBins[c] = 0;	// 0 means end of list
+											//
+			char *svf = getToken(line, '\t');	// a string so needs to be parsed after all the getToken()'s.
+			aci[currentCameraIndex].PixelSize = atof(getToken(line, '\t'));
+			aci[currentCameraIndex].IsCoolerCam = do_ASI_BOOL(getToken(line, '\t'), on_line);
+			aci[currentCameraIndex].BitDepth = atoi(getToken(line, '\t'));
+			aci[currentCameraIndex].SupportsTemperature = do_ASI_BOOL(getToken(line, '\t'), on_line);
+			aci[currentCameraIndex].SupportsAutoFocus = do_ASI_BOOL(getToken(line, '\t'), on_line);
+			strncpy(aci[currentCameraIndex].Sensor, cameraModule, SENSOR_SIZE-1);
+
+			c = getTokenCount(svf, ' ');
+			(void) getToken(NULL, ' ');
+			for (int i=0; i<c; i++)
+			{
+				char *f = getToken(svf, ' ');
+				aci[currentCameraIndex].SupportedVideoFormat[i] = do_ASI_IMAGE_TYPE(f, on_line);
+			}
+
+			RPiCameras[currentCameraIndex].CameraInfo = &aci[currentCameraIndex];
+			Log(4, "Saving module [%s], name [%s] from aci[%d] to RPiCameras[%d].CameraInfo\n",
+				aci[currentCameraIndex].Module, aci[currentCameraIndex].Name, currentCameraIndex, currentCameraIndex);
+
+			Log(4, ">>> Also saving from CCs[%d] to RPiCameras[%d].ControlCaps\n",
+				currentCameraIndex, currentCameraIndex);
+			// Contents filled in below.
+			RPiCameras[currentCameraIndex].ControlCaps = &CCs[currentCameraIndex][0];
+			for (int i=0; i < MAX_NUM_CONTROL_CAPS; i++)
+			{
+				// Mark the end of the list.
+				RPiCameras[currentCameraIndex].ControlCaps[i].ControlType = CONTROL_TYPE_END;
 			}
 		}
+
+		else if (strcmp(lt, "libcamera") == 0)
+		{
+			if (! want_cc)
+				continue;
+
+			// Possible inputs:
+			//	libcamera  End
+			//	libcamera  cap_name  cap_description  cap_max  cap_min  cap_default  cap_current  cap_auto  cap_writeable  cap_control_type
+
+			cap_name = getToken(line, '\t');
+			if (strcmp(cap_name, "End") == 0)
+			{
+				want_cc = false;
+				continue;
+			}
+
+			if (num_tokens != controlCapsTokens)
+			{
+				Log(0, "%s: ERROR: Line %d: expected %d tokens, found %d in %s [%s].\n",
+					CG.ME, on_line, controlCapsTokens, num_tokens, CG.connectedCamerasFile, full_line);
+				want_cc = false;
+				continue;
+			}
+
+			on_cap++;
+
+			strcpy(CCs[currentCameraIndex][on_cap].Name, cap_name);
+
+			char *t;
+			t = getToken(line, '\t');
+			cap_description = t;
+			strcpy(CCs[currentCameraIndex][on_cap].Description, cap_description);
+			
+			t = getToken(line, '\t');
+			cap_max = atof(t);
+			CCs[currentCameraIndex][on_cap].MaxValue = cap_max;
+
+			t = getToken(line, '\t');
+			cap_min = atof(t);
+			CCs[currentCameraIndex][on_cap].MinValue = cap_min;
+
+			t = getToken(line, '\t');
+			cap_default = atof(t);
+			CCs[currentCameraIndex][on_cap].DefaultValue = cap_default;
+
+			t = getToken(line, '\t');
+			cap_current = atof(t);
+			CCs[currentCameraIndex][on_cap].CurrentValue = cap_current;
+
+			t = getToken(line, '\t');
+			cap_auto = do_ASI_BOOL(t, on_line);
+			CCs[currentCameraIndex][on_cap].IsAutoSupported = cap_auto;
+
+			t = getToken(line, '\t');
+			cap_writeable = do_ASI_BOOL(t, on_line);
+			CCs[currentCameraIndex][on_cap].IsWritable = cap_writeable;
+
+			t = getToken(line, '\t');
+			cap_control_type = do_ASI_CONTROL_TYPE(t, on_line);
+			CCs[currentCameraIndex][on_cap].ControlType = cap_control_type;
+// printf("CCs[%d][%d].ControlType=%d\n", currentCameraIndex, on_cap, cap_control_type);
+		}
+		else
+		{
+			// "line" ends with newline
+			Log(1, "%s: WARNING: skipping invalid line line %d in '%s': %s",
+				CG.ME, on_line, basename(CG.connectedCamerasFile), full_line);
+		}
+
+#ifdef IS_ZWO
+		int  ZWOnum = ASIGetNumOfConnectedCameras();
+		if (ZWOnum != numThisType)
+		{
+			Log(0, "%s: ERROR: mismatch with number of ZWO cameras connected: per ZWO SDK: %d, per %s: %d\n",
+				CG.ME, ZWOnum, CG.connectedCamerasFile, numThisType);
+
+			Log(1, "Attached Cameras:\n");
+			ASI_CAMERA_INFO info;
+			for (int i=0; i < ZWOnum; i++)
+			{
+				Log(1, "    Camera # %d: ", i);
+				ASI_ERROR_CODE ret = ASIGetCameraProperty(&info, i);
+				if (ret != ASI_SUCCESS)
+				{
+					char *getRetCode(ASI_ERROR_CODE code);
+					Log(1, "ERROR: cannot get information: %s.\n", getRetCode(ret));
+				}
+				else
+				{
+					Log(1, "Name: %s, CameraID: %d, MaxHeight: %ld, MaxWidth: %ld\n",
+						info.Name, info.CameraID, info.MaxHeight, info.MaxWidth);
+				}
+			}
+
+			closeUp(EXIT_ERROR_STOP);
+		}
+#endif
+
 	}
 
 	// These checks should "never" fail since allsky.sh created the input file
 	// based on what's connected.
-	if (num_RPiCameras == 0)
+	if (numThisType == 0)
 	{
 		Log(0, "%s: ERROR: No %s cameras found.\n", CG.ME, CAMERA_TYPE);
 		closeUp(EXIT_NO_CAMERA);
 	}
-	if (RPiCameraIndex == -1)
+	if (! cameraMatch)
 	{
-		Log(0, "%s: ERROR: camera number %d not found.\n", CG.ME, CG.cameraNumber);
+		if (CG.cameraNumber != NOT_SET)
+		{
+			char more[100];
+			if (cameraMatch_onModel != NULL)
+			{
+				sprintf(more, ", however it was found at position %d.", cameraMatch_onModel_number);
+			} else {
+				sprintf(more, ".");
+			}
+			Log(0, "%s: ERROR: '%s' camera not found at position %d%s\n", CG.ME, CG.cm, CG.cameraNumber, more);
+		}
+		else
+		{
+			Log(0, "%s: ERROR: camera model [%s] not found.\n", CG.ME, CG.cm);
+		}
 		closeUp(EXIT_NO_CAMERA);
 	}
 
-	// Caller will determine if this is out of range.
-	return(RPiCameraIndex);
+	return(numThisType);	// Number of cameras
 }
 
 // Put the properties for the specified camera into pASICameraInfo.
@@ -920,7 +692,6 @@ ASI_ERROR_CODE ASIGetCameraProperty(ASI_CAMERA_INFO *pASICameraInfo, int iCamera
 			CG.ME, iCameraIndex, CG.numCameras);
 		return(ASI_ERROR_INVALID_INDEX);
 	}
-
 	*pASICameraInfo = *(RPiCameras[iCameraIndex].CameraInfo);
 	return(ASI_SUCCESS);
 }
@@ -934,14 +705,15 @@ ASI_ERROR_CODE ASIGetNumOfControls(int iCameraIndex, int *piNumberOfControls)
 		Log(0, "%s: ERROR: ASIGetNumOfControls(), iCameraIndex (%d) bad.\n", CG.ME, iCameraIndex);
 		return(ASI_ERROR_INVALID_INDEX);
 	}
-
 	ASI_CONTROL_CAPS *p = RPiCameras[iCameraIndex].ControlCaps;
 
 	int num = 0;
 	for (int i=0; i < MAX_NUM_CONTROL_CAPS; i++)
 	{
 		if (p[i].ControlType == CONTROL_TYPE_END)
+		{
 			break;
+		}
 		num++;
 	}
 	*piNumberOfControls = num;		// This also sets the global iNumOfCtrl variable
@@ -1077,6 +849,10 @@ int getCameraNumber()
 {
 	return(CG.cameraNumber);
 }
+int getConnectedCameras()
+{
+	return(ASIGetNumOfConnectedCameras());
+}
 
 ASI_ID cameraID;	// USB 3 cameras only
 unsigned char cID[sizeof(cameraID)+1] = { '[', 'n', 'o', 'n', 'e', ']', 0 };
@@ -1163,14 +939,12 @@ char *getRetCode(ASI_ERROR_CODE code)
 void processConnectedCameras()
 {
 	// This also sets global totalNum_connectedCameras.
-	CG.numCameras = getNumOfConnectedCameras();
-	if (CG.numCameras <= 0)
+	CG.numCameras = getConnectedCameras();
+	if (CG.numCameras == 0)
 	{
 		Log(0, "*** %s: ERROR: No Connected Camera...\n", CG.ME);
 		closeUp(EXIT_NO_CAMERA);		// If there are no cameras we can't do anything.
 	}
-
-	CG.cameraNumber = getCameraNumber();
 	if (CG.cameraNumber >= CG.numCameras)
 	{
 		Log(0, "*** %s: ERROR: Camera number %d not connected.  Highest number is %d.\n",
@@ -1178,46 +952,39 @@ void processConnectedCameras()
 		closeUp(EXIT_NO_CAMERA);
 	}
 
-	if (CG.numCameras > 1 && CG.debugLevel >= 4)
-		printf("\nAttached Cameras:\n");
+	if (CG.debugLevel >= 5) showConnectedCameras();
 
+	Log(4, "\nAttached %s Cameras:\n", CAMERA_TYPE);
 	ASI_CAMERA_INFO info;
-	int numThisType = 0;
-	for (int cc=0; cc < totalNum_connectedCameras; cc++)
+	int cam_num = 0;
+	for (int cc=0; cc < CG.numCameras; cc++)
 	{
-		CONNECTED_CAMERAS *cC = &connectedCameras[cc];
-		if (strcmp(cC->Type, CAMERA_TYPE) != 0)
-		{
-			continue;
-		}
-
-		if (ASIGetCameraProperty(&info, numThisType) != ASI_SUCCESS)
+		if (ASIGetCameraProperty(&info, cam_num) != ASI_SUCCESS)
 		{
 #ifdef IS_ZWO	// RPi version already displayed message.
-			Log(0, "ERROR: cannot get information for camera number %d.\n", numThisType);
+			Log(0, "ERROR: cannot get information for camera number %d.\n", cam_num);
 #endif
-			numThisType++;
+			cam_num++;
 			continue;
 		}
-
-		if (CG.numCameras > 1 && CG.debugLevel >= 4)
-			printf("  - %d", numThisType);
+		if (CG.numCameras >= 1 && CG.debugLevel >= 4)
+			printf("  - %d", cam_num);
 
 		char *cm;
 #ifdef IS_RPi
-		strncpy(cC->Name, info.Name, CAMERA_NAME_SIZE);
+		CONNECTED_CAMERAS *cC = &connectedCameras[cc];
 		snprintf(cC->Sensor, FULL_SENSOR_SIZE, "%s [%s]", info.Name, info.Sensor);
 		cm = cC->Sensor;
 #else
 		cm = info.Name;
 #endif
-		if (CG.numCameras > 1 && CG.debugLevel >= 4)
+		if (CG.numCameras >= 1 && CG.debugLevel >= 4)
 		{
 			printf(" %s ", cm);
-			printf(" %s\n", numThisType == CG.cameraNumber ? " (selected)" : "");
+			printf(" %s\n", cam_num == CG.cameraNumber ? " (selected)" : "");
 		}
 
-		numThisType++;
+		cam_num++;
 	}
 }
 
@@ -1291,6 +1058,7 @@ char *getSerialNumber(int camNum)
 }
 
 // Remove the camera type from the name if it's there.
+// ZWO cameras' names tend to look like: "ZWO ASI178MC" and we just want "ASI178MC".
 char *skipType(char *cameraName)
 {
 	static char *p;
@@ -1314,6 +1082,7 @@ char *getCameraModel(char *cameraName)
 }
 
 // Save information on the specified camera.
+// This info is used by the WebUI's "Settings" page.
 void saveCameraInfo(
 		ASI_CAMERA_INFO cameraInfo,
 		char const *file,
@@ -1344,6 +1113,49 @@ void saveCameraInfo(
 
 	// output basic information on camera as well as all it's capabilities
 	fprintf(f, "{\n");
+	fprintf(f, "\t\"cameraInfo\" : \"%s;%d;%s", CAMERA_TYPE, CG.cameraNumber, camModel);
+#ifdef IS_RPi
+	fprintf(f, ";%s", cameraInfo.Sensor);
+#endif
+	fprintf(f, "\",\n");
+		fprintf(f, "\t\"cameras\" : [\n");
+		int num = 0;
+		bool foundThisModel = false;
+		for (int cc=0; cc < totalNum_connectedCameras; cc++)
+		{
+			CONNECTED_CAMERAS *cC = &connectedCameras[cc];
+			if (num > 0)
+			{
+				fprintf(f, ",");		// comma on all but last one
+				fprintf(f, "\n");
+			}
+			char *cm = getCameraModel(cC->Name);
+			Log(4, "cC->Name=%s, cm=%s, camModel=%s\n", cC->Name, cm, camModel);
+			if (strcmp(cm, camModel) == 0)
+			{
+				foundThisModel = true;
+			}
+			char m[100];
+#ifdef IS_RPi
+			snprintf(m, sizeof(m)-1, "%s [%s]", cm, cC->Sensor);
+#else
+			snprintf(m, sizeof(m)-1, "%s", cm);
+#endif
+			fprintf(f, "\t\t{ \"value\" : \"%s;%d;%s;%s\", \"label\" : \"%s %s\" }",
+				cC->Type, cC->cameraID, cm,
+#ifdef IS_RPi
+				skipType(cC->Sensor),
+#else
+				cm,
+#endif
+				cC->Type, cm
+			);
+
+			num++;
+		}
+		fprintf(f, "\n\t],\n");
+
+// XXXXX TODO OLD: can delete
 	fprintf(f, "\t\"cameraType\" : \"%s\",\n", CAMERA_TYPE);
 		fprintf(f, "\t\"cameraTypes\" : [\n");
 		for (int camType = 0; camType < num_connectedCameraTypes; camType++)
@@ -1356,23 +1168,24 @@ void saveCameraInfo(
 	fprintf(f, "\t\"cameraName\" : \"%s\",\n", cameraInfo.Name);
 	fprintf(f, "\t\"cameraModel\" : \"%s\",\n", camModel);
 		fprintf(f, "\t\"cameraModels\" : [\n");
-		int numThisType = 0;
-		bool foundThisModel = false;
+		num = 0;
+		foundThisModel = false;
 		for (int cc=0; cc < totalNum_connectedCameras; cc++)
 		{
 			CONNECTED_CAMERAS *cC = &connectedCameras[cc];
 			if (strcmp(cC->Type, CAMERA_TYPE) != 0)
 			{
+// printf("skipping cC->Type = %s, cc=%d\n", cC->Type, cc);
 				continue;
 			}
 
-			if (numThisType > 0)
+			if (num > 0)
 			{
 				fprintf(f, ",");		// comma on all but last one
 				fprintf(f, "\n");
 			}
 			char *cm = getCameraModel(cC->Name);
-			Log(5, "cC->Name=%s, cm=%s, camModel=%s\n", cC->Name, cm, camModel);
+			Log(4, "cC->Name=%s, cm=%s, camModel=%s\n", cC->Name, cm, camModel);
 			if (strcmp(cm, camModel) == 0)
 			{
 				foundThisModel = true;
@@ -1386,12 +1199,13 @@ void saveCameraInfo(
 #endif
 			);
 
-			numThisType++;
+			num++;
 		}
 		fprintf(f, "\n\t],\n");
+
 		if (! foundThisModel)
 		{
-			Log(0, "%s: ERROR: Currently connected '%s %s' camera not found in '%s'.\n",
+			Log(0, "%s: ERROR: Currently connected camera '%s %s' not found in '%s'.\n",
 				CG.ME, CAMERA_TYPE, camModel, CG.connectedCamerasFile);
 			if (f != stdout)
 				fclose(f);
@@ -1708,7 +1522,6 @@ void saveCameraInfo(
 				CG.ME, cameraInfo.CameraID, i, getRetCode(ret));
 			continue;
 		}
-// printf("iNumOfCtrl=%d, i=%d, cc.ControlType=%d, cc.Name=%s\n", iNumOfCtrl, i, cc.ControlType, cc.Name);
 		if (cc.ControlType >= argumentNamesSize) {
 			Log(0, "%s: ccControlType (%d) >= argumentNamesSize (%d)\n",
 				CG.ME, cc.ControlType, argumentNamesSize);
@@ -1719,17 +1532,13 @@ void saveCameraInfo(
 		// blank names means it's unsupported
 		if (cc.Name[0] == '\0')
 		{
-// printf("cc.Name[0] is null, i=%d\n", i);
 			continue;
 		}
 
 		// blank argument name means we don't have a command-line argument for it
-// printf("getting a for ControlType %d (of %d), i=%d\n", cc.ControlType, argumentNamesSize, i);
 		char const *a =  argumentNames[cc.ControlType][1];
 		if (a == NULL || a[0] == '\0')
 		{
-// if (a == NULL) printf("a is null, i=%d\n", i);
-// else printf("a[0] is null, i=%d\n", i);
 			continue;
 		}
 

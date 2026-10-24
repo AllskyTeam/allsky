@@ -145,8 +145,8 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" || ${1} == "--force" ]]; then
 	# Camera information:
 	# List of ALL connected cameras.
 	ALLSKY_CONNECTED_CAMERAS_INFO="${ALLSKY_CONFIG}/connected_cameras.txt"
-	# Supported RPi cameras
-	ALLSKY_RPi_SUPPORTED_CAMERAS="${ALLSKY_CONFIG}/RPi_cameraInfo.txt"
+	# Known RPi cameras.
+	ALLSKY_RPi_CAMERA_INFO="${ALLSKY_CONFIG}/RPi_camera_info.txt"
 
 	# Log-related information.
 	ALLSKY_LOGS="${ALLSKY_CONFIG}/logs"

@@ -89,19 +89,6 @@ if [[ ! -s ${FILES_DOWNLOADED_FILE} ]] ||
 fi
 
 
-REPO="$( basename "${ALLSKY_REPO}" )/$( basename "${ALLSKY_RPi_SUPPORTED_CAMERAS}" )"
-if [[ ! -s ${FILES_DOWNLOADED_FILE} ]] ||
-		grep -m 1 --silent "${REPO}" "${FILES_DOWNLOADED_FILE}" ; then
-	echo "* Updating list of RPi supported cameras."
-	# true == ignore errors.  ${CMD} will be "" if no command found.
-	CMD="$( determineCommandToUse "false" "" "true" 2> /dev/null )"
-	RET=$?		# return of 2 means no command was found
-	[[ ${RET} -ne 0 ]] && CMD=""
-	# Will create full file is CMD == "".  "true" is to force creation.
-	setup_rpi_supported_cameras "${CMD}" "true" > /dev/null
-fi
-
-
 # TODO: when ALLSKY_CONFIG is in GitHub, and hence comes with Allsky,
 # remove these lines and the copy_repo_files function.
 echo "* Copying some ${ALLSKY_REPO} files to ${ALLSKY_CONFIG}."

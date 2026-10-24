@@ -155,6 +155,7 @@ nav:
     - Settings:
       - allsky_guide/settings/allsky.md
       - allsky_guide/settings/website.md
+      - Privacy & Sharing: allsky_guide/settings/privacy.md
     - Using Allsky:
       - Access Control: allsky_guide/using/access_control.md
       - WebUI: allsky_guide/using/webui.md

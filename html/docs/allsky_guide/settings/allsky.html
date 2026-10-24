@@ -6960,7 +6960,7 @@
 <tr>
 <td><mark>Longitude</mark> <span class="red">AW</span></td>
 <td style="text-align: right;"></td>
-<td>Longitude of the camera. Formats include: <code>123.4E</code>, <code>123.4W</code>, <code>+123.4</code>, or <code>-123.4</code>. West is negative. The <code>+</code> is needed for positive numbers.  <br><br> The actual values for latitude and longitude are not displayed on the map, but users can zoom in to see exactly where your camera is. If that bothers you, change the latitude and/or longitude values slightly. Allsky itself only uses them to determine when daytime and nighttime begin so you can change the values a fair amount and not impact anything.  <br><br> When installing Allsky the first time, the installation script will attempt to determine your rough <mark>Latitude</mark> and <mark>Longitude</mark> based on your IP address. These values may be "close enough" in most cases but you may want to check them anyhow.</td>
+<td>Longitude of the camera. Formats include: <code>123.4E</code>, <code>123.4W</code>, <code>+123.4</code>, or <code>-123.4</code>. West is negative. The <code>+</code> is needed for positive numbers.  <br><br> The actual values for latitude and longitude are not displayed on the map, but users can zoom in to see exactly where your camera is. If that bothers you, enable <mark>Hide Exact Location</mark> in the <a href="#Allsky-map-settings">Privacy &amp; Sharing</a> section.  <br><br> When installing Allsky the first time, the installation script will attempt to determine your rough <mark>Latitude</mark> and <mark>Longitude</mark> based on your IP address. These values may be "close enough" in most cases but you may want to check them anyhow.</td>
 </tr>
 <tr>
 <td><mark>Angle</mark> <span class="red">AW</span></td>
@@ -7722,7 +7722,9 @@
 </table>
 </details>
 </details>
-<h2 id="Allsky-map-settings">Allsky Map<a class="headerlink" href="#Allsky-map-settings" title="Permanent link">¶</a></h2>
+<h2 id="Privacy-settings">Privacy &amp; Sharing<a class="headerlink" href="#Privacy-settings" title="Permanent link">¶</a></h2>
+<p>See <a href="/docs/allsky_guide/settings/privacy.html">Privacy &amp; Sharing</a> for what is sent, where it goes, and why.</p>
+<h3 id="Allsky-map-settings">Allsky Map<a class="headerlink" href="#Allsky-map-settings" title="Permanent link">¶</a></h3>
 <details class="info" open="open">
 <summary>Settings</summary>
 <div class="admonition note">
@@ -7742,6 +7744,11 @@
 <td><mark>Show on Map</mark></td>
 <td style="text-align: right;">No</td>
 <td>Enable to have your camera appear on the <a href="https://www.thomasjacquin.com/allsky-map">Allsky map</a>. <mark>If off, the following settings are ignored.</mark></td>
+</tr>
+<tr>
+<td><mark>Hide Exact Location</mark> <span class="red">AW</span></td>
+<td style="text-align: right;">No</td>
+<td>Enable to round the <mark>Latitude</mark> and <mark>Longitude</mark> to 1 decimal place (about 11 km / 7 miles) on the <a href="/docs/allsky_guide/howtos/allsky_map.html">Allsky Map</a> and the local and remote Allsky Websites. The settings file keeps the exact values and Allsky itself still uses them, for example to determine when daytime and nighttime begin. <br><br>Text overlays that show the latitude or longitude are not changed.</td>
 </tr>
 <tr>
 <td><mark>Location</mark> <span class="red">AW</span></td>

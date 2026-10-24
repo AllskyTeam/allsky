@@ -18,7 +18,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
     
     
       
@@ -26,10 +26,10 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
       
       
 
@@ -916,10 +916,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
       
         <li class="md-nav__item">
-  <a href="#howto-upgrade" class="md-nav__link">
+  <a href="#how-to-upgrade" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Howto Upgrade
+        How to Upgrade
       
     </span>
   </a>
@@ -6316,14 +6316,14 @@
 
 
 <h1 id="upgrade-notes-for-v20261001_01">Upgrade Notes for v2026.10.01_01<a class="headerlink" href="#upgrade-notes-for-v20261001_01" title="Permanent link">¶</a></h1>
-<h2 id="howto-upgrade">Howto Upgrade<a class="headerlink" href="#howto-upgrade" title="Permanent link">¶</a></h2>
-<p>Please refer to the <a href="../allsky.html">installation instructions</a> on howto upgrade Allsky. Once you have upgraded to this version you can use the much simpler upgrade function outlined above for later updates</p>
-<h2 id="key-features-in-this-release">Key features In This Release<a class="headerlink" href="#key-features-in-this-release" title="Permanent link">¶</a></h2>
+<h2 id="how-to-upgrade">How to Upgrade<a class="headerlink" href="#how-to-upgrade" title="Permanent link">¶</a></h2>
+<p>Please refer to the <a href="../allsky.html">installation instructions</a> on how to upgrade Allsky. <!-- Once you have upgraded to this version you can use the much simpler upgrade function outlined above for later updates. --></p>
+<h2 id="key-features-in-this-release">Key Features In This Release<a class="headerlink" href="#key-features-in-this-release" title="Permanent link">¶</a></h2>
 <ul>
 <li>Defined image stretching based upon the Moons brightness</li>
-<li>Ability to define how long image sare kept on local and remote websites</li>
-<li>Upload Keolapses to remote and local websites</li>
-<li>Display Keolapses in the WebUI</li>
+<li>Ability to define how long images are kept on remote Allsky Websites</li>
+<li>Upload Keolapses to local and remote Websites and remote servers</li>
+<li>Display Keolapses in the WebUI and on Allsky Websites</li>
 <li>Improved mask editor</li>
 <li>Conditional formatting of fields in the overlay editor</li>
 <li>Ability to read the speed of a pwm fan</li>
@@ -6341,7 +6341,7 @@
       <span class="release-note-area">Image processing</span>
     </div>
     <p class="release-note-title">Days to keep logic change</p>
-    <p class="release-note-summary">If Keep Days is 10, then keep the last 10 days images, irregardless of when those 10 days are. The current method keeps the last 10 days images.</p>
+    <p class="release-note-summary">If Days to Keep is 10, then keep the last 10 days images, irregardless of when those 10 days are. The current method keeps the last 10 days' images.</p>
   </article>
   <article class="release-note release-note--new">
     <div class="release-note-badges">
@@ -6357,8 +6357,8 @@
       <span class="release-note-badge">FIXED</span>
       <span class="release-note-area">Startrails</span>
     </div>
-    <p class="release-note-title">Fix the generate for day script to show the correct url for the startrails helper.</p>
-    <p class="release-note-summary">Fix the startrails helper in the geenrate for day script</p>
+    <p class="release-note-title">Show the correct URL for the Startrails Settings helper tool.</p>
+    <p class="release-note-summary">Fix the "generateForDay.sh" script to use the correct URL to the Startrails Settings helper tool</p>
   </article>
   <article class="release-note release-note--improved">
     <div class="release-note-badges">
@@ -6366,7 +6366,7 @@
       <span class="release-note-area">Startrails</span>
     </div>
     <p class="release-note-title">Store the time of the first and last image</p>
-    <p class="release-note-summary">db_data.json.repo: the startrails table has two new columns, starttime and endtime (int, seconds since 1970). generateForDay.sh: saves the time of the first and last image looked…</p>
+    <p class="release-note-summary">The startrails table in the database has two new columns, <b>starttime</b> and <b>endtime</b> which are the times the first and last images were taken. Those fields are displayed in the "Startrails info" page.</p>
     <p class="release-note-source"><a href="https://github.com/AllskyTeam/allsky/pull/5317" target="_blank">PR #5317</a></p>
   </article>  
 </div>
@@ -6379,7 +6379,7 @@
       <span class="release-note-area">overlays</span>
     </div>
     <p class="release-note-title">Modules: Improve Mask editor</p>
-    <p class="release-note-summary">The current mask editor is limited. This change implements a much improved mask editor with more advanced features. such as
+    <p class="release-note-summary">The prior mask editor was limited. This change implements a much improved mask editor with more advanced features. such as:
       </p><li class="release-note-summary">Masks are editable after they are created</li>
       <li class="release-note-summary">Undo and Redo</li>
       <li class="release-note-summary">More tools available such as an eraser</li>
@@ -6393,7 +6393,7 @@
       <span class="release-note-area">Overlays</span>
     </div>
     <p class="release-note-title">Overlays: Conditional styles for fields (colour, stroke, opacity, font by value)</p>
-    <p class="release-note-summary">This change allows you to control the attributes (Colour, font etc) of a field based upon its value.</p>
+    <p class="release-note-summary">This change allows you to control the attributes (Colour, font etc) of a field based upon its value. For example, if the CPU temperature is above 40 C it can display as red.</p>
   </article>
   <article class="release-note release-note--new">
     <div class="release-note-badges">
@@ -6401,15 +6401,15 @@
       <span class="release-note-area">overlays</span>
     </div>
     <p class="release-note-title">New pressure formats (hPa, inHg, mmHg)</p>
-    <p class="release-note-summary">New formatter as_pressure, offered for variables of type pressure: Until now that type was:</p>
-  </article>
+    <p class="release-note-summary">Pressure variables can now be formatted in hPa, inHg, or mmHg.&gt;
+  </p></article>
   <article class="release-note release-note--new">
     <div class="release-note-badges">
       <span class="release-note-badge">NEW</span>
       <span class="release-note-area">Modules</span>
     </div>
-    <p class="release-note-title">Add fan tacho support</p>
-    <p class="release-note-summary">Allow the speed of a tacho to be read and used in overlays</p>
+    <p class="release-note-title">Add fan tachometer support</p>
+    <p class="release-note-summary">Allow the speed of a fan (i.e., RPM) to be read and used in overlays.  This requires a PWM fan with four wires.</p>
     <p class="release-note-source"><a href="https://github.com/AllskyTeam/allsky/issues/5377">Issue #5377</a></p>
   </article>
   <article class="release-note release-note--fixed">
@@ -6418,7 +6418,7 @@
       <span class="release-note-area">overlays</span>
     </div>
     <p class="release-note-title">Prevent formatting issues crashing the overlays</p>
-    <p class="release-note-summary">A field whose value can't be formatted no longer causes th ewhole overlay to fail</p>
+    <p class="release-note-summary">A field whose value can't be formatted no longer causes the whole overlay to fail</p>
   </article>
   <article class="release-note release-note--fixed">
     <div class="release-note-badges">
@@ -6442,7 +6442,7 @@
       <span class="release-note-area">Modules</span>
     </div>
     <p class="release-note-title">Fix locale conversion</p>
-    <p class="release-note-summary">Ensure key values are converted in the users locale</p>
+    <p class="release-note-summary">Ensure key values are converted in the user's locale.  This impacted people who used a comma as a decimal separator.</p>
   </article>
   <article class="release-note release-note--fixed">
     <div class="release-note-badges">
@@ -6450,7 +6450,7 @@
       <span class="release-note-area">overlays</span>
     </div>
     <p class="release-note-title">Allow custom variables to be formatted</p>
-    <p class="release-note-summary">Allow variables generated by external scripts to be formatted in the overlay editor</p>
+    <p class="release-note-summary">Allows variables generated by external scripts to be formatted in the overlay editor</p>
     <p class="release-note-source"><a href="https://github.com/AllskyTeam/allsky/issues/5358" target="_blank">Issue #5358</a></p>
   </article>
   <article class="release-note release-note--fixed">
@@ -6459,7 +6459,7 @@
       <span class="release-note-area">Overlays</span>
     </div>
     <p class="release-note-title">Fix normalise on/off function</p>
-    <p class="release-note-summary">Ensure that various boolean and textual values evaluate to on and off correctly</p>
+    <p class="release-note-summary">Ensure that various boolean and textual values evaluate to "on" and "off" correctly.  For example, "1", "on", "true", and "yes" now evaluate to "on".</p>
     <p class="release-note-source"><a href="https://github.com/AllskyTeam/allsky/issues/5365" target="_blank">Issue #5365</a></p>
   </article>
   <article class="release-note release-note--improved">
@@ -6468,7 +6468,7 @@
       <span class="release-note-area">Modules and overlays</span>
     </div>
     <p class="release-note-title">Enhance mask loader to check for files</p>
-    <p class="release-note-summary">Before loading a mask for use ensure that it exists, if it doesnt an error is generated</p>
+    <p class="release-note-summary">Before loading a mask for use ensure that it exists, if it doesn't an error is generated</p>
     <p class="release-note-source"><a href="https://github.com/AllskyTeam/allsky/issues/5418" target="_blank">Issue #5418</a></p>
   </article>
 </div>
@@ -6480,7 +6480,7 @@
       <span class="release-note-badge">FIXED</span>
       <span class="release-note-area">CHARTS</span>
     </div>
-    <p class="release-note-title">Edit doesnt edit the chart</p>
+    <p class="release-note-title">Edit doesn't edit the chart</p>
     <p class="release-note-summary">The chart edit button was failing to load the chart correctly.</p>
     <p class="release-note-source"><a href="https://github.com/AllskyTeam/allsky/issues/5391" target="_blank">Issue #5391</a></p>
   </article>
@@ -6489,8 +6489,8 @@
       <span class="release-note-badge">FIXED</span>
       <span class="release-note-area">CHARTS</span>
     </div>
-    <p class="release-note-title">Cleanup web server error logs</p>
-    <p class="release-note-summary">Due to a timing issue in teh way charts are loaded errors were being generated in the web server error log</p>
+    <p class="release-note-title">Cleanup Pi web server error logs</p>
+    <p class="release-note-summary">Due to a timing issue in the way charts are loaded, errors were being generated in the Pi web server error log</p>
     <p class="release-note-source"><a href="https://github.com/AllskyTeam/allsky/issues/5391" target="_blank">Issue #5391</a></p>
   </article>
 </div>
@@ -6502,8 +6502,8 @@
       <span class="release-note-badge">NEW</span>
       <span class="release-note-area">Install and upgrade</span>
     </div>
-    <p class="release-note-title">Define size for Allsky temporary files folder, Ignore for nvme devices</p>    
-    <p class="release-note-summary">Improve the way the Allsky temporary files folder is created in memory. For nvme devices do not create in memory</p>
+    <p class="release-note-title">Define size for Allsky temporary files folder, Ignore for NVMe devices</p>    
+    <p class="release-note-summary">Improve the way "~/allsky/tmp" is created in memory. For NVMe devices do not create in memory</p>
     <p class="release-note-source"><a href="https://github.com/AllskyTeam/allsky/pull/5415" target="_blank">&gt;PR #5415</a></p>
   </article>
 
@@ -6512,8 +6512,8 @@
       <span class="release-note-badge">NEW</span>
       <span class="release-note-area">Install and upgrade</span>
     </div>
-    <p class="release-note-title">Implement Days To Keep for remote websites</p>    
-    <p class="release-note-summary">Implement the number of days of images and videos to keep on the remote Website as the local WebUI does</p>
+    <p class="release-note-title">Implement Days To Keep for remote Websites</p>    
+    <p class="release-note-summary">Add the number of "Days To Keep on Remote Website" setting to determine how many image and video files to keep on the remote Website</p>
     <p class="release-note-source"><a href="https://github.com/AllskyTeam/allsky/pull/5292" target="_blank">&gt;PR #5292</a></p>
   </article>
   <article class="release-note release-note--fixed">
@@ -6531,7 +6531,7 @@
       <span class="release-note-area">Install and upgrade</span>
     </div>
     <p class="release-note-title">Copy support logs</p>
-    <p class="release-note-summary">Copy any support logs from allsky-OLD to allsky</p>
+    <p class="release-note-summary">During installation, copy any support logs from <b>allsky-OLD</b> to <b>allsky</b></p>
     <p class="release-note-source"><a href="https://github.com/AllskyTeam/allsky/pull/5295" target="_blank">PR #5295</a></p>
   </article>
   <article class="release-note release-note--improved">
@@ -6540,8 +6540,8 @@
       <span class="release-note-area">Install and upgrade</span>
     </div>
     <p class="release-note-title">Better documentation links</p>
-    <p class="release-note-summary">After installation or upgrade point the user at  the Allsky documentation/p&gt;
-    </p><p class="release-note-source"><a href="https://github.com/AllskyTeam/allsky/pull/5301" target="_blank">PR #5301</a></p>
+    <p class="release-note-summary">After installation or upgrade point the user at  the Allsky documentation</p>
+    <p class="release-note-source"><a href="https://github.com/AllskyTeam/allsky/pull/5301" target="_blank">PR #5301</a></p>
   </article>
 </div>
 
@@ -6552,8 +6552,8 @@
       <span class="release-note-badge">NEW</span>
       <span class="release-note-area">Images</span>
     </div>
-    <p class="release-note-title">display keolapses in webui and allsky websites</p>
-    <p class="release-note-summary">Add displaying keolapses in the Allsky WebUI and allsky website, either local or remote</p>
+    <p class="release-note-title">display keolapses in WebUI and Allsky Websites</p>
+    <p class="release-note-summary">Add displaying keolapses in the Allsky WebUI and Allsky Website, either local or remote</p>
     <p class="release-note-source"><a href="https://github.com/AllskyTeam/allsky/pull/5390" target="_blank">PR #5390</a></p>
   </article>
   <article class="release-note release-note--new">
@@ -6561,8 +6561,8 @@
       <span class="release-note-badge">NEW</span>
       <span class="release-note-area">WebUI</span>
     </div>
-    <p class="release-note-title">GenerateForDay.sh: --keolapse creates or uploads the Keolapse module's keolapse</p>
-    <p class="release-note-summary">generateForDay.sh can now create or upload a keolapse, like keograms, startrails and timelapses. The copy was removed afterwards.</p>
+    <p class="release-note-title">"generateForDay.sh: --keolapse" creates or uploads the Allsky Keolapse/Timelapse module's keolapse</p>
+    <p class="release-note-summary">generateForDay.sh can now create or upload a keolapse, like keograms, startrails, and timelapses..</p>
     <p class="release-note-source"><a href="https://github.com/AllskyTeam/allsky/pull/5350" target="_blank">PR #5350</a></p>
   </article>
   <article class="release-note release-note--new">
@@ -6570,8 +6570,8 @@
       <span class="release-note-badge">NEW</span>
       <span class="release-note-area">WebUI</span>
     </div>
-    <p class="release-note-title">GenerateForDay.sh: creates or uploads keolapse</p>
-    <p class="release-note-summary">When: a plain generateForDay.sh DATE, or --upload DATE, now also creates or uploads the keolapse. Condition: the Keolapse module must be installed</p>
+    <p class="release-note-title">generateForDay.sh: automatically create or upload keolapse</p>
+    <p class="release-note-summary">When: a plain "generateForDay.sh DATE," or "--upload DATE" is run, it now also creates or uploads the keolapse. Condition: the Allsky Keolapse/Timelapse module must be installed</p>
     <p class="release-note-source"><a href="https://github.com/AllskyTeam/allsky/pull/5360" target="_blank">PR #5360</a></p>
   </article>
 
@@ -6580,8 +6580,8 @@
       <span class="release-note-badge">FIXED</span>
       <span class="release-note-area">WebUI</span>
     </div>
-    <p class="release-note-title">Fix module manager on ipad and other touch devices</p>
-    <p class="release-note-summary">When clicking on the module gear icon on iPad no setting open up</p>
+    <p class="release-note-title">Fix module manager on iPad and other touch devices</p>
+    <p class="release-note-summary">When clicking on the module gear icon on iPad the settings now open up</p>
     <p class="release-note-source"><a href="https://github.com/AllskyTeam/allsky/issues/5394" target="_blank">Issue #5394</a></p>
   </article>
   <article class="release-note release-note--fixed">
@@ -6590,7 +6590,7 @@
       <span class="release-note-area">WebUI</span>
     </div>
     <p class="release-note-title">Fix to ensure Info Modal is displayed correctly</p>
-    <p class="release-note-summary">Going to the "Startrails" helper tool, then clicking on the "Get Startrails Info" button at the bottom darkens the window while the circle icon is displayed, then leaves it that…</p>
+    <p class="release-note-summary">Going to the "Startrails Settings" helper tool, then clicking on the "Get Startrails Info" button at the bottom no longer leaves the window darkened</p>
     <p class="release-note-source"><a href="https://github.com/AllskyTeam/allsky/issues/5386" target="_blank">Issue #5386</a></p>
   </article>
   <article class="release-note release-note--fixed">
@@ -6608,7 +6608,7 @@
       <span class="release-note-area">WebUI</span>
     </div>
     <p class="release-note-title">Add link to release notes</p>
-    <p class="release-note-summary">When a new release is available display a link to the release notes in the webui notification</p>
+    <p class="release-note-summary">When a new release is available display a link to the release notes in the WebUI notification</p>
     <p class="release-note-source"><a href="https://github.com/AllskyTeam/allsky/pull/5460" target="_blank">Issue #5460</a></p>
   </article>
   <article class="release-note release-note--improved">
@@ -6630,7 +6630,7 @@
       <span class="release-note-area">Core</span>
     </div>
     <p class="release-note-title">Flow-runner: set day/night (TOD) in the periodic flow</p>
-    <p class="release-note-summary">For the periodic flow, flow-runner.py now works out day or night with Allsky's own rule: the Sun above the *Angle* setting is day. It uses astral, which is already a requirement.</p>
+    <p class="release-note-summary">For the periodic flow, flow-runner.py now works out day or night with Allsky's own rule: the Sun above the <b>Angle</b> setting is day. It uses astral, which is already a requirement.</p>
     <p class="release-note-source"><a href="https://github.com/AllskyTeam/allsky/pull/5310" target="_blank">PR #5310</a></p>
   </article>
   <article class="release-note release-note--fixed">
@@ -6639,7 +6639,7 @@
       <span class="release-note-area">Core scripts</span>
     </div>
     <p class="release-note-title">Ensure the support info can be collected for a failed installation</p>
-    <p class="release-note-summary">Handle the case where Allsky wasn't installed when a user ran support.sh (which is the case if the installation didn't work).</p>
+    <p class="release-note-summary">Handle the case where Allsky wasn't installed when a user ran <b>support.sh</b> (which is the case if the installation didn't work).</p>
     <p class="release-note-source"><a href="https://github.com/AllskyTeam/allsky/pull/5430" target="_blank">PR #5430</a></p>
   </article>  
   <article class="release-note release-note--improved">
@@ -6661,7 +6661,8 @@
       <span class="release-note-area">WebUI</span>
     </div>
     <p class="release-note-title">Documentation Changes</p>
-    <li class="release-note-summary">Detail howto reset a password or clear a locked out user</li>
+    <li class="release-note-summary">Greatly improve the Upgrade Notes (this page)</li>
+    <li class="release-note-summary">Detail how to reset a password or clear a locked out user</li>
     <li class="release-note-summary">New settings for Moonlight stretches</li>
     <li class="release-note-summary">Explain Start and end times for the timelapse, keogram and startrails</li>
     <li class="release-note-summary">Remove old upgrade notes</li>    
@@ -6759,10 +6760,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.expand", "toc.integrate", "content.code.annotate", "header.autohide", "navigation.footer", "search.suggest"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": {"API Required": "api", "Data Capture": "data", "Experimental": "experimental", "Extra Module": "extra", "Hardware": "hw", "Hardware Required": "hardware", "Image Adjustments": "image", "MQTT": "mqtt", "Modules": "module", "Networking": "network", "Overlay Data": "overlay", "Overlays": "overlay", "Pipeline Day": "day", "Pipeline Night": "night", "Pipeline Periodic": "clock", "Power": "power", "Sensors": "sensor", "Software": "sw", "Weather": "weather"}, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.expand", "toc.integrate", "content.code.annotate", "header.autohide", "navigation.footer", "search.suggest"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": {"API Required": "api", "Data Capture": "data", "Experimental": "experimental", "Extra Module": "extra", "Hardware": "hw", "Hardware Required": "hardware", "Image Adjustments": "image", "MQTT": "mqtt", "Modules": "module", "Networking": "network", "Overlay Data": "overlay", "Overlays": "overlay", "Pipeline Day": "day", "Pipeline Night": "night", "Pipeline Periodic": "clock", "Power": "power", "Sensors": "sensor", "Software": "sw", "Weather": "weather"}, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../../assets/javascripts/bundle.c21346df.min.js"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

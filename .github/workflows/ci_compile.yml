@@ -12,8 +12,10 @@ on:
 jobs:
   # This workflow contains a single job called "build"
   build:
-    # The type of runner that the job will run on
-    runs-on: ubuntu-latest
+    # Keep the compiler and OpenCV packages on Ubuntu 24.04 while GitHub moves
+    # ubuntu-latest to 26.04. The newer image reports a warning in an OpenCV
+    # header, which the Makefile treats as an error because it uses -Werror.
+    runs-on: ubuntu-24.04
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:

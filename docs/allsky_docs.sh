@@ -95,10 +95,9 @@ run_dev() {
 }
 
 run_deploy() {
-    ensure_mkdocs
+    #ensure_mkdocs
 
-    echo "==> Deploying MkDocs to GitHub Pages"
-    mkdocs gh-deploy --clean -f "${MKDOCS_CONFIG}"
+    echo "==> This process is now handled automatically by github actions"
 }
 
 command="${1:-}"

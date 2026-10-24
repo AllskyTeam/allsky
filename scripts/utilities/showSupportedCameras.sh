@@ -85,6 +85,7 @@ if [[ ${DO_RPI} == "true" ]]; then
 		echo -e "===== Supported RPi cameras:\n"
 
 		# Format of input file:
+
 		#	sensor  compare_length  model  other_info_for_camera_1
 		#	sensor  compare_length  model  other_info_for_camera_2
 		#	...

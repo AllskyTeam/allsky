@@ -17,6 +17,7 @@ DO_HELP="false"
 CAMERA_NUMBER=0
 CMD=""
 INFO_ONLY="false"
+IGNORE_ERRORS="false"
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
 	case "${ARG,,}" in
@@ -34,6 +35,10 @@ while [[ $# -gt 0 ]]; do
 		--info-only)
 			INFO_ONLY="true"
 			;;
+		--ignore-errors)
+			IGNORE_ERRORS="$2"
+			shift
+			;;
 		-*)
 			E_ "Unknown argument '${ARG}'." >&2
 			OK="false"
@@ -47,17 +52,18 @@ usage_and_exit()
 	local RET=${1}
 	exec >&2
 	echo
-	local USAGE="Usage: ${ME} [--help] [--camera NUM]"
+	local USAGE="Usage: ${ME} [--help] [--camera NUM] [--ignore-errors true|false]"
 	if [[ ${RET} -ne 0 ]]; then
 		E_ "${USAGE}"
 	else
 		echo -e "${USAGE}"
 	fi
 	echo "Arguments:"
-	echo "    --help         displays this message and exits."
-	echo "    --camera NUM   use camera number NUM."
-	echo "    --cmd CMD      execute 'CMD' to get camera information."
-	echo "    --info-only    only output camera information to stdout."
+	echo "    --help           displays this message and exits."
+	echo "    --camera NUM     use camera number NUM."
+	echo "    --cmd CMD        execute 'CMD' to get camera information."
+	echo "    --info-only      only output camera information to stdout."
+	echo "    --ignore-errors  don't output any error message."
 	echo
 
 	W_ "NOTE: This command only works if you have an RPi camera connected to the Pi."
@@ -90,7 +96,7 @@ CAMERA_RAW_DATA="${ALLSKY_TMP}/camera_data.txt"
 
 NUM_CAMERAS="$( grep -c "^[0-9]" "${CAMERA_RAW_DATA}" )"
 if [[ ${NUM_CAMERAS} -eq 0 ]]; then
-	echo "${ME}: No RPi cameras found!" >&2
+	[[ ${IGNORE_ERRORS} == "false" ]] && echo "${ME}: No RPi cameras found!" >&2
 	exit 1
 fi
 
@@ -118,19 +124,23 @@ do
 	(( ON_CAMERA++ ))
 done >> "${CAMERA_RAW_DATA}" 2>&1
 if [[ ${RET} -ne 0 ]]; then
-	echo "${ME}: '${CMD}' failed:"
-	indent "$( "${CAMERA_RAW_DATA}" )"
+	echo "${ME}: '${CMD}' failed:" >&2
+	indent "${CAMERA_RAW_DATA}" >&2
 	exit "${RET}"
 fi
 
 # Get the max exposure for the specified camera as well as capabilites for all cameras.
+if [[ ! -s ${ALLSKY_RPi_CAMERA_INFO} ]]; then
+	[[ ${IGNORE_ERRORS} == "false" ]] && echo "${ME}: File '${ALLSKY_RPi_CAMERA_INFO}' not found." >&2
+	exit 1
+fi
 MAX_EXPOSURE="$( sed -e 's/://' -e 's/\.\./ /' -e 's/\[//' -e 's/]//' "${CAMERA_RAW_DATA}" |
 	gawk -v CAMERA_NUMBER="${CAMERA_NUMBER}" -v CAMERA_INFO_FILE="${ALLSKY_CONNECTED_CAMERAS_INFO}" -v INFO="${ALLSKY_RPi_CAMERA_INFO}" '
 		BEGIN {
 			et = 0; fdl = 0; camera_number = ""; number_of_cameras = 0;
 			SAVED_FS = FS;
 			FS = "	";
-			while (getline < INFO) {
+			while ((getline < INFO) > 0) {
 				if (substr($1, 1, 1) == "#" || $0 == "")
 					continue;
 				sensor = $1;
@@ -145,6 +155,7 @@ MAX_EXPOSURE="$( sed -e 's/://' -e 's/\.\./ /' -e 's/\[//' -e 's/]//' "${CAMERA_
 				a_max_exposure[sensor] = max_exposure;
 				a_is_cooled[sensor] = is_cooled;
 			}
+			close(INFO);
 			FS = SAVED_FS;
 		}
 
@@ -439,7 +450,7 @@ if [[ ${RET} -eq 0 ]]; then
 		fi
 	fi
 else
-	echo -e "\n${ME}: ERROR: Unable to determine maximum exposure time for camera ${MODEL} ${SENSOR}.\n" >&2
+	[[ ${IGNORE_ERRORS} == "false" ]] && echo -e "\n${ME}: ERROR: Unable to determine maximum exposure time for camera ${MODEL} ${SENSOR}.\n" >&2
 fi
 
 exit "${RET}"

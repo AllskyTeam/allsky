@@ -365,7 +365,8 @@ function DisplayAllskyConfig() {
 							$nonCameraChanges = "<b>$label</b>";
 						else
 							$nonCameraChanges .= ", <b>$label</b>";
-						$nonCameraChanges .= " (from '$oldValue' to '$newValue')";
+						$nonCameraChanges .= ($oldValue !== "" ? " (from '$oldValue' " : " (");
+						$nonCameraChanges .= "to '$newValue')";
 						if ($name === "latitude" ||
 							  $name === "longitude" ||
 							  $name === "angle" ||

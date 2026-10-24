@@ -5512,19 +5512,20 @@ def writeDebugImage(module, fileName, image):
     log(4, "INFO: Wrote debug file {0}".format(moduleTmpFile))
 
 
-def load_mask(mask_file_name, target_image):
+def load_mask(mask_file_name:str, target_image:str = None) -> np.ndarray | None :
     """
     Load a grayscale mask image and resize it to match a target image.
 
     The mask is loaded from ``ALLSKY_OVERLAY/images/<mask_file_name>`` and
     converted to a float mask in the range [0, 1]. If the mask dimensions do
-    not match the target image, it is resized accordingly.
+    not match the target image, it is resized accordingly if a target_image is
+    passed
 
     Args:
         mask_file_name (str):
             Name of the mask file to load.
         target_image (numpy.ndarray):
-            Target image whose shape is used for resizing.
+            Target image whose shape is used for resizing or None
 
     Returns:
         numpy.ndarray | None:
@@ -5534,15 +5535,23 @@ def load_mask(mask_file_name, target_image):
     import cv2
     mask = None
 
-    mask_path = os.path.join(ALLSKY_OVERLAY, 'images', mask_file_name)
-    target_shape = target_image.shape[:2]
+    base_path = os.path.join(ALLSKY_OVERLAY, 'images')
+   
+    if do_any_files_exist(base_path, [mask_file_name]):
+        mask_path = os.path.join(base_path, mask_file_name)
 
-    mask = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
-    if mask is not None:
-        if (mask.shape[0] != target_shape[0]) or (mask.shape[1] != target_shape[1]):
-            mask = cv2.resize(mask, (target_shape[1], target_shape[0]))
-        mask = mask.astype(np.float32) / 255.0
-
+        mask = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
+        if mask is not None:
+            if target_image is not None:
+                target_shape = target_image.shape[:2]
+                if (mask.shape[0] != target_shape[0]) or (mask.shape[1] != target_shape[1]):
+                    mask = cv2.resize(mask, (target_shape[1], target_shape[0]))
+                mask = mask.astype(np.float32) / 255.0
+        else:
+            log(4, f'ERROR: Mask exists {mask_file_name} but could not be loaded') 
+    else:
+      log(4, f'ERROR: Mask {mask_file_name} not found')  
+      
     return mask
 
 
@@ -5571,19 +5580,20 @@ def mask_image(image, mask_file_name='', log_info=False):
     try:
         if mask_file_name != '':
             mask = load_mask(mask_file_name, image)
-            if len(image.shape) == 2:
-                image = image.astype(np.float32)
-                output = image * mask
-            else:
-                image = image.astype(np.float32)
-                if mask.ndim == 2:
-                    mask = mask[..., np.newaxis]
-                output = image * mask
+            if mask is not None:
+                if len(image.shape) == 2:
+                    image = image.astype(np.float32)
+                    output = image * mask
+                else:
+                    image = image.astype(np.float32)
+                    if mask.ndim == 2:
+                        mask = mask[..., np.newaxis]
+                    output = image * mask
 
-            output = np.clip(output, 0, 255).astype(np.uint8)
+                output = np.clip(output, 0, 255).astype(np.uint8)
 
-            if log_info:
-                log(4, f'INFO: Mask {mask_file_name} applied')
+                if log_info:
+                    log(4, f'INFO: Mask {mask_file_name} applied')
 
     except Exception as e:
         me = os.path.basename(__file__)

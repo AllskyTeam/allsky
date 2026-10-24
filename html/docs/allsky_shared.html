@@ -5,7 +5,7 @@
       
       
       
-        <link rel="canonical" href="https://docs.allsky.local/allsky_shared.html">
+        <link rel="canonical" href="https://allskyteam.github.io/allsky/allsky_shared.html">
       
       
         <link rel="prev" href="developer_guide/building_module/database.html">
@@ -831,6 +831,34 @@
     
   
     Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="allsky_guide/upgrade/v2026.10.01_01.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v2026.10.01_01
   
 
     
@@ -7266,17 +7294,7 @@ A tuple containing:</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>scripts/modules/allsky_shared.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tbody><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">5584</span>
-<span class="normal">5585</span>
-<span class="normal">5586</span>
-<span class="normal">5587</span>
-<span class="normal">5588</span>
-<span class="normal">5589</span>
-<span class="normal">5590</span>
-<span class="normal">5591</span>
-<span class="normal">5592</span>
-<span class="normal">5593</span>
-<span class="normal">5594</span>
+              <div class="highlight"><table class="highlighttable"><tbody><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">5594</span>
 <span class="normal">5595</span>
 <span class="normal">5596</span>
 <span class="normal">5597</span>
@@ -7324,7 +7342,17 @@ A tuple containing:</p>
 <span class="normal">5639</span>
 <span class="normal">5640</span>
 <span class="normal">5641</span>
-<span class="normal">5642</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">count_starts_in_image</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">mask_file_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="normal">5642</span>
+<span class="normal">5643</span>
+<span class="normal">5644</span>
+<span class="normal">5645</span>
+<span class="normal">5646</span>
+<span class="normal">5647</span>
+<span class="normal">5648</span>
+<span class="normal">5649</span>
+<span class="normal">5650</span>
+<span class="normal">5651</span>
+<span class="normal">5652</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">count_starts_in_image</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">mask_file_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Detect stars in an image using Photutils' DAOStarFinder.</span>
 
@@ -11612,7 +11640,7 @@ as JSON regardless of its extension.</p>
 
 
 <h3 id="scripts.modules.allsky_shared.load_mask" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">load_mask</span><span class="p">(</span><span class="n">mask_file_name</span><span class="p">,</span> <span class="n">target_image</span><span class="p">)</span></code>
+            <code class="highlight language-python"><span class="n">load_mask</span><span class="p">(</span><span class="n">mask_file_name</span><span class="p">,</span> <span class="n">target_image</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
 
 <a href="#scripts.modules.allsky_shared.load_mask" class="headerlink" title="Permanent link">¶</a></h3>
 
@@ -11622,7 +11650,8 @@ as JSON regardless of its extension.</p>
         <p>Load a grayscale mask image and resize it to match a target image.</p>
 <p>The mask is loaded from <code>ALLSKY_OVERLAY/images/&lt;mask_file_name&gt;</code> and
 converted to a float mask in the range [0, 1]. If the mask dimensions do
-not match the target image, it is resized accordingly.</p>
+not match the target image, it is resized accordingly if a target_image is
+passed</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -11661,11 +11690,11 @@ not match the target image, it is resized accordingly.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Target image whose shape is used for resizing.</p>
+                <p>Target image whose shape is used for resizing or None</p>
               </div>
             </td>
             <td>
-                <em>required</em>
+                  <code>None</code>
             </td>
           </tr>
       </tbody>
@@ -11683,6 +11712,7 @@ not match the target image, it is resized accordingly.</p>
       <tbody>
           <tr class="doc-section-item">
             <td>
+                  <code><span title="numpy.ndarray">ndarray</span> | None</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -11729,19 +11759,29 @@ not be loaded.</p>
 <span class="normal">5525</span>
 <span class="normal">5526</span>
 <span class="normal">5527</span>
-<span class="normal">5528</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">load_mask</span><span class="p">(</span><span class="n">mask_file_name</span><span class="p">,</span> <span class="n">target_image</span><span class="p">):</span>
+<span class="normal">5528</span>
+<span class="normal">5529</span>
+<span class="normal">5530</span>
+<span class="normal">5531</span>
+<span class="normal">5532</span>
+<span class="normal">5533</span>
+<span class="normal">5534</span>
+<span class="normal">5535</span>
+<span class="normal">5536</span>
+<span class="normal">5537</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">load_mask</span><span class="p">(</span><span class="n">mask_file_name</span><span class="p">:</span><span class="nb">str</span><span class="p">,</span> <span class="n">target_image</span><span class="p">:</span><span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="kc">None</span> <span class="p">:</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Load a grayscale mask image and resize it to match a target image.</span>
 
 <span class="sd">    The mask is loaded from ``ALLSKY_OVERLAY/images/&lt;mask_file_name&gt;`` and</span>
 <span class="sd">    converted to a float mask in the range [0, 1]. If the mask dimensions do</span>
-<span class="sd">    not match the target image, it is resized accordingly.</span>
+<span class="sd">    not match the target image, it is resized accordingly if a target_image is</span>
+<span class="sd">    passed</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        mask_file_name (str):</span>
 <span class="sd">            Name of the mask file to load.</span>
 <span class="sd">        target_image (numpy.ndarray):</span>
-<span class="sd">            Target image whose shape is used for resizing.</span>
+<span class="sd">            Target image whose shape is used for resizing or None</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        numpy.ndarray | None:</span>
@@ -11751,14 +11791,22 @@ not be loaded.</p>
     <span class="kn">import</span><span class="w"> </span><span class="nn">cv2</span>
     <span class="n">mask</span> <span class="o">=</span> <span class="kc">None</span>
 
-    <span class="n">mask_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">ALLSKY_OVERLAY</span><span class="p">,</span> <span class="s1">'images'</span><span class="p">,</span> <span class="n">mask_file_name</span><span class="p">)</span>
-    <span class="n">target_shape</span> <span class="o">=</span> <span class="n">target_image</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">base_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">ALLSKY_OVERLAY</span><span class="p">,</span> <span class="s1">'images'</span><span class="p">)</span>
 
-    <span class="n">mask</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="n">mask_path</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">IMREAD_GRAYSCALE</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">if</span> <span class="p">(</span><span class="n">mask</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">target_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="ow">or</span> <span class="p">(</span><span class="n">mask</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">target_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
-            <span class="n">mask</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="p">(</span><span class="n">target_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">target_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
-        <span class="n">mask</span> <span class="o">=</span> <span class="n">mask</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span> <span class="o">/</span> <span class="mf">255.0</span>
+    <span class="k">if</span> <span class="n">do_any_files_exist</span><span class="p">(</span><span class="n">base_path</span><span class="p">,</span> <span class="p">[</span><span class="n">mask_file_name</span><span class="p">]):</span>
+        <span class="n">mask_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">base_path</span><span class="p">,</span> <span class="n">mask_file_name</span><span class="p">)</span>
+
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="n">mask_path</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">IMREAD_GRAYSCALE</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">target_image</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">target_shape</span> <span class="o">=</span> <span class="n">target_image</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">mask</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">target_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="ow">or</span> <span class="p">(</span><span class="n">mask</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">target_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+                    <span class="n">mask</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="p">(</span><span class="n">target_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">target_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+                <span class="n">mask</span> <span class="o">=</span> <span class="n">mask</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span> <span class="o">/</span> <span class="mf">255.0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">log</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="sa">f</span><span class="s1">'ERROR: Mask exists </span><span class="si">{</span><span class="n">mask_file_name</span><span class="si">}</span><span class="s1"> but could not be loaded'</span><span class="p">)</span> 
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">log</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="sa">f</span><span class="s1">'ERROR: Mask </span><span class="si">{</span><span class="n">mask_file_name</span><span class="si">}</span><span class="s1"> not found'</span><span class="p">)</span>  
 
     <span class="k">return</span> <span class="n">mask</span>
 </code></pre></div></td></tr></tbody></table></div>
@@ -12178,16 +12226,7 @@ Masked image, or None if no mask is applied or an error occurs.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>scripts/modules/allsky_shared.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tbody><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">5531</span>
-<span class="normal">5532</span>
-<span class="normal">5533</span>
-<span class="normal">5534</span>
-<span class="normal">5535</span>
-<span class="normal">5536</span>
-<span class="normal">5537</span>
-<span class="normal">5538</span>
-<span class="normal">5539</span>
-<span class="normal">5540</span>
+              <div class="highlight"><table class="highlighttable"><tbody><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">5540</span>
 <span class="normal">5541</span>
 <span class="normal">5542</span>
 <span class="normal">5543</span>
@@ -12222,7 +12261,17 @@ Masked image, or None if no mask is applied or an error occurs.</p>
 <span class="normal">5572</span>
 <span class="normal">5573</span>
 <span class="normal">5574</span>
-<span class="normal">5575</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">mask_image</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">mask_file_name</span><span class="o">=</span><span class="s1">''</span><span class="p">,</span> <span class="n">log_info</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="normal">5575</span>
+<span class="normal">5576</span>
+<span class="normal">5577</span>
+<span class="normal">5578</span>
+<span class="normal">5579</span>
+<span class="normal">5580</span>
+<span class="normal">5581</span>
+<span class="normal">5582</span>
+<span class="normal">5583</span>
+<span class="normal">5584</span>
+<span class="normal">5585</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">mask_image</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">mask_file_name</span><span class="o">=</span><span class="s1">''</span><span class="p">,</span> <span class="n">log_info</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Apply a mask to an image, returning a masked copy.</span>
 
@@ -12247,19 +12296,20 @@ Masked image, or None if no mask is applied or an error occurs.</p>
     <span class="k">try</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">mask_file_name</span> <span class="o">!=</span> <span class="s1">''</span><span class="p">:</span>
             <span class="n">mask</span> <span class="o">=</span> <span class="n">load_mask</span><span class="p">(</span><span class="n">mask_file_name</span><span class="p">,</span> <span class="n">image</span><span class="p">)</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
-                <span class="n">image</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
-                <span class="n">output</span> <span class="o">=</span> <span class="n">image</span> <span class="o">*</span> <span class="n">mask</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">image</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">mask</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
-                    <span class="n">mask</span> <span class="o">=</span> <span class="n">mask</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
-                <span class="n">output</span> <span class="o">=</span> <span class="n">image</span> <span class="o">*</span> <span class="n">mask</span>
+            <span class="k">if</span> <span class="n">mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                    <span class="n">image</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+                    <span class="n">output</span> <span class="o">=</span> <span class="n">image</span> <span class="o">*</span> <span class="n">mask</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">image</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">mask</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                        <span class="n">mask</span> <span class="o">=</span> <span class="n">mask</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+                    <span class="n">output</span> <span class="o">=</span> <span class="n">image</span> <span class="o">*</span> <span class="n">mask</span>
 
-            <span class="n">output</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+                <span class="n">output</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
 
-            <span class="k">if</span> <span class="n">log_info</span><span class="p">:</span>
-                <span class="n">log</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="sa">f</span><span class="s1">'INFO: Mask </span><span class="si">{</span><span class="n">mask_file_name</span><span class="si">}</span><span class="s1"> applied'</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">log_info</span><span class="p">:</span>
+                    <span class="n">log</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="sa">f</span><span class="s1">'INFO: Mask </span><span class="si">{</span><span class="n">mask_file_name</span><span class="si">}</span><span class="s1"> applied'</span><span class="p">)</span>
 
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="n">me</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span>

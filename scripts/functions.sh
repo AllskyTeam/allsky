@@ -394,10 +394,10 @@ function get_connected_cameras_info()
 	# output it here; otherwise the ZWO lines would overwrite the start of the file.
 	# When ignoring errors, e.g., on a Pi with only ZWO cameras, don't show the
 	# RPi software's "no cameras available" message.
-	local RPi_INFO  RPi_ERRORS="/dev/stderr"
-	[[ ${IGNORE_ERRORS} == "true" ]] && RPi_ERRORS="/dev/null"
+
 	if RPi_INFO="$( "${ALLSKY_UTILITIES}/getRPiCameraInfo.sh" --info-only \
-			--cmd "${RPi_CMD_TO_USE_}" 2> "${RPi_ERRORS}" )" ; then
+			--ignore-errors "${IGNORE_ERRORS}" \
+			--cmd "${RPi_CMD_TO_USE_}" 2>&1 )" ; then
 		echo "${RPi_INFO}"
 	fi
 
@@ -447,6 +447,11 @@ function get_connected_cameras_info()
 # Get just the model name(s) of the specified camera type that are connected to the Pi.
 function get_connected_camera_models()
 {
+	if [[ ! -s ${ALLSKY_CONNECTED_CAMERAS_INFO} ]]; then
+		echo "${FUNCNAME[0]}: File '${ALLSKY_CONNECTED_CAMERAS_INFO}' not found." >&2
+		return 1
+	fi
+
 	local FULL="false"
 	[[ ${1} == "--full" ]] && FULL="true" && shift
 
@@ -1422,6 +1427,7 @@ function activate_python_venv()
 	# Maybe check for != bullseye  ?
 
 	local ACTIVATE="${ALLSKY_PYTHON_VENV}/bin/activate"
+	[[ ! -f ${ACTIVATE} ]] && return 1
 
 	#shellcheck disable=SC1090,SC1091
 	source "${ACTIVATE}" || exit 1
@@ -1442,19 +1448,18 @@ function activate_python_server_venv()
 	# Maybe check for != bullseye  ?
 
 	local ACTIVATE="${ALLSKY_PYTHON_SERVER_VENV}/bin/activate"
+	[[ ! -f ${ACTIVATE} ]] && return 1
 
 	#shellcheck disable=SC1090,SC1091
 	source "${ACTIVATE}" || exit 1
 	PYTHON_SERVER_VENV_ACTIVATED="true"
 	return 0	# Successfully activated
-
 }
 
 function deactivate_python_server_venv()
 {
 	[[ ${PYTHON_SERVER_VENV_ACTIVATED} == "true" ]] && deactivate
 }
-
 
 
 # Determine if the specified value is a number.

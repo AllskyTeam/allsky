@@ -1815,7 +1815,8 @@ bool saveBadFileName(config *cg, char *msg)
 			cg->allskyScripts,
 			// Don't add a number since that causes multiple System Messages.
 			"Multiple consecutive bad images.",
-			"Click <a external='true' href='/execute.php?ID=AM_ALLSKY_CONFIG bad_images_info --html'>here</a> to see a summary.");
+			"Visit the <a external='true' href='/index.php?page=helper&helper=bad_images&html=true'>Bad Images Info Help Tool</a> to see a summary.");
+
 		Log(4, "Executing %s\n", command);
 		(void) system(command);
 	}

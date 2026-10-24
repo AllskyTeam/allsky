@@ -129,7 +129,7 @@ fi
 
 # Get all settings we're going to use.
 #shellcheck disable=SC2119
-getAllSettings --var "lastchanged locale imageremovebadlow imageremovebadhigh imageremovebadcount imageremovebadhighdarkframe" || exit 1
+getAllSettings --var "lastchanged cameranumber locale" || exit 1
 
 # A settings file from before "camerainfo" existed, e.g., from a restored older backup,
 # has the camera in separate settings; combine them so the WebUI shows the camera.
@@ -411,13 +411,7 @@ fi
 	# These aren't settings but are needed by the capture programs.
 	echo "version=${ALLSKY_VERSION}"
 	echo "save_dir=${ALLSKY_CURRENT_DIR}"
-	echo "imageremovebadlow=${S_imageremovebadlow}"
-	echo "imageremovebadhigh=${S_imageremovebadhigh}"
-	[[ -z ${S_imageremovebadcount} ]] && S_imageremovebadcount=5
-	echo "imageremovebadcount=${S_imageremovebadcount}"
 	echo "bad_image_count_file=${ALLSKY_BAD_IMAGE_COUNT}"
-	[[ -z ${S_imageremovebadhighdarkframe} ]] && S_imageremovebadhighdarkframe="0.05"
-	echo "imageremovebadhighdarkframe=${S_imageremovebadhighdarkframe}"
 	[[ ${PREVIEW} == "true" ]] && echo "preview=true"
 } > "${ARGS_FILE}"
 

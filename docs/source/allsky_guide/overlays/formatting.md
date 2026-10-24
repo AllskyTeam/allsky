@@ -1,12 +1,12 @@
 # Formatting Fields
 
-All data within Allsky is stored in consistent internal formats, so for example ALL temeopratures are stored in Degreed Centigrade. Yo will therfore probably want to format data to improve its visual appearance, typicall formatting options are
+All data within Allsky is stored in consistent internal formats, so for example ALL temperatures are stored in Degreed Centigrade. Yo will therfore probably want to format data to improve its visual appearance, typical formatting options are:
 
-- Changing Unit i.e. Degreed Centigrade to Degrees Farenhite
+- Changing Unit i.e. Degrees Centigrade to Degrees Fahrenheit
 - Setting the number of decimal places
 - Converting an internal format, i.e. decimal degrees to DDD MM SS
 
-Each variable within Allsky has a default format but you can override this. To overide a variables format double click on the field containing the variable then click on the ? button at the end of the format field
+Each variable within Allsky has a default format but you can override this. To overide a variables format double click on the field containing the variable then click on the **?** button at the end of the format field
 
 ![Format Dialog](/assets/overlay_images/format-dialog.png)
 
@@ -14,7 +14,7 @@ Each variable within Allsky has a default format but you can override this. To o
 The Variable Format Dialog
 ///
 
-In this example we have double clicked the 'AS-SUN_DAWN' field and then clicked on the ? (1). The resultignm dialog displays all of the formatting options available for the variable, in this case data formats.
+In this example we have double clicked the 'AS_MOON_ASIMUTH' field and then clicked on the <span style="background-color: #337ab7; color: #bfbfbf">:fontawesome-solid-square-root-variable:</span> icon next to the number "1" in the image above. The resulting dialog displays all of the formatting options available for the variable, in this case data formats.
 
 Simply select the format you required and save the overlay.
 
@@ -22,7 +22,7 @@ Simply select the format you required and save the overlay.
 
 !!! warning  ""
 
-    NOTE: Some formats will display legacy formatting options. These mUST NOT be used for formatting fields and are present for backwards compatibility only
+    NOTE: Some formats will display legacy formatting options. These must NOT be used for formatting fields and are present for backwards compatibility only
 
 **Please Note** The lists below are not exhaustive and may change from release to release. Please refer to the Formatting Dialog for available options
 
@@ -54,7 +54,7 @@ The Number Format Dialog
 ///
 
 #### Boolean Formats { data-toc-label="Boolean Formats" }
-This allows boolean values to be displayed in a more Human Readable format
+This allows boolean values to be displayed in a more human readable format
 
 | Format | Description | Example |
 |--------|-------------|---------|
@@ -64,14 +64,14 @@ This allows boolean values to be displayed in a more Human Readable format
 |num	|Output '1' if input is 1, or '0'	|1, 0|
 
 #### Elevation Formats { data-toc-label="Elevation Formats" }
-This allows an elevation value to be displayed in a Human Readable format
+This allows an elevation value to be displayed in a human readable format
 
 | Format | Description | Example |
 |--------|-------------|---------|
-|Custom elevation	|	Elevation with decimal places and degree symbol	|52.12 ° |
+|Custom elevation	|	Elevation with decimal places and degree symbol	|52.12 Â° |
 
 #### Azimuth Formats { data-toc-label="Azimuth Formats" }
-This allows an azimuth value to be displayed in a Human Readable format
+This allows an azimuth value to be displayed in a human readable format
 
 | Format | Description | Example |
 |--------|-------------|---------|
@@ -79,7 +79,7 @@ This allows an azimuth value to be displayed in a Human Readable format
 |dms	|Display azimuth with Degrees, Minutes, and Seconds	|123|
 
 #### Filesize Formats { data-toc-label="Filesize Formats" }
-This allows an filesize value to be displayed in a Human Readable format
+This allows an filesize value to be displayed in a human readable format
 
 | Format | Description | Example |
 |--------|-------------|---------|
@@ -87,12 +87,12 @@ This allows an filesize value to be displayed in a Human Readable format
 |Custom filesize	|Filesize with decimal places and units (GB, MB, etc.)	|12 TB|
 
 #### Temperature Formats { data-toc-label="Temperature Formats" }
-This allows a temperature to be displayed in a Human Readable format, converting between units if required
+This allows a temperature to be displayed in a human readable format, converting between units if required
 
 | Format | Description | Example |
 |--------|-------------|---------|
-|Default temperature	|Use default temperature attributes - see Sample -->	|23.5° C	|
-|Custom temperature	|Customize variable attributes	|23,54° C|
+|Default temperature	|Use default temperature attributes - see Sample -->	|23.5Â° C	|
+|Custom temperature	|Customize variable attributes	|23,54Â° C|
 
 #### Pressure Formats { data-toc-label="Pressure Formats" }
 This allows a pressure to be displayed in hPa, inches of mercury or millimetres of mercury. Allsky's pressures, e.g. from a BME280 sensor or OpenWeatherMap, are in hPa.
@@ -107,7 +107,7 @@ For example, *Custom pressure* with the unit **inHg**, **2** decimal places and 
 The conversion assumes the value is in hPa. If your pressure already comes in another unit, e.g. from Home Assistant or an Ecowitt gateway set to inHg, keep the unit at **hPa** and only use the decimal places; without a format the value is shown as it is.
 
 #### GPIO Formats { data-toc-label="GPIO Formats" }
-This allows the state of a GPIO pin to be displayed in a more Human Readable format
+This allows the state of a GPIO pin to be displayed in a more human readable format
 
 | Format | Description | Example |
 |--------|-------------|---------|

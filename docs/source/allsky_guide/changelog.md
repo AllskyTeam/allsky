@@ -27,13 +27,15 @@ v2026.10.01 { data-toc-label="v2026.10.01" }
             - The local and remote Websites have a new "Archived Keolapses" icon on the left side.  You may need to set the associated `display` field to `true`.
 		    - `generateForDay.sh --keolapse DATE` creates or uploads the keolapse for the given DATE, with the module's settings. When the module is enabled in the **Night to Day** flow, keolapses are also part of `generateForDay.sh`'s default set.
 	    - **Days To Keep settings**
-			- The specified number of days' images are kept, regardless of their date.  The prior behaviour deleted anything older than the specified number of days.
+		      	- The specified number of days' images are kept, regardless of their date.  The prior behaviour deleted anything older than the specified number of days.
             - This applies to files in `~/allsky/images`, on a local Website, and on a remote Website.
-			- If you decrease the number of days' images to keep and there are more days' images than the new days to keep value, a notice will display in the WebUI.
+		      	- If you decrease the number of days' images to keep and there are more days' images than the new days to keep value, a notice will display in the WebUI.
 		- The WebUI checks for new Allsky releases every 12 hours instead of every 2 days.
-        - After installing Allsky, a link to the documentation may appear in the WebUI, depending on what prior Allsky release you were running.
-        - **One Camera setting**
+    - **One Camera setting**
             - The ==Camera Type== and ==Camera Model== settings are replaced by one ==Camera== setting that lists every camera connected to the Pi, RPi and ZWO, e.g., `RPi  Module 3 Wide NoIR  [imx708_wide_noir]` or `ZWO  ASI178MC`. You can now switch directly to any connected camera, also when several cameras of one type are connected. ==Refresh== looks for cameras again.
+		- `generateForDay.sh --keolapse` creates or uploads the keolapse of the **Keolapse** module for a given day, with the module's settings.
+		- `~/allsky/tmp` is always placed in memory during installation, with larger default sizes (200 MB to 600 MB depending on the Pi's memory) so modules like **Keolapse** have room. An upgrade increases a smaller size from an earlier release; `allsky-config recheck_tmp` still changes it. If Allsky is on an NVMe disk, `~/allsky/tmp` stays on the disk.
+    - After installing Allsky, a link to the documentation may appear in the WebUI, depending on what prior Allsky release you were running.
 
         ## **Bug Fixes**
 		- The `upgrade.sh` command no longer fails when using the "in-place" method and a new Allsky release is available.

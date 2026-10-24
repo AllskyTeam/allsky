@@ -134,7 +134,7 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" || ${1} == "--force" ]]; then
 	ALLSKY_MESSAGES="${ALLSKY_CONFIG}/messages.txt"
 
 	# Holds a count of continuous "bad" images.
-	ALLSKY_BAD_IMAGE_COUNT="${ALLSKY_TMP}/bad_images.txt"
+	ALLSKY_BAD_IMAGE_COUNT="${ALLSKY_TMP}/bad_images_count.txt"
 
 	# Holds the number of images left until uploading.
 	ALLSKY_FREQUENCY_FILE="${ALLSKY_TMP}/IMG_UPLOAD_FREQUENCY.txt"

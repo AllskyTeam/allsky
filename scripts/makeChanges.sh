@@ -1048,19 +1048,22 @@ do
 				YYYYMMDD="20[2-9][0-9][01][0-9][0123][0-9]"
 
 	 			if [[ ${KEY} == "daystokeep" ]]; then
-					NUM="$( find "${ALLSKY_IMAGES}/" -maxdepth 1 -type d -name "${YYYYMMDD}" | wc -l )"
+					NUM="$( find "${ALLSKY_IMAGES}/" -maxdepth 1 -type d -name "${YYYYMMDD}" 2>/dev/null | wc -l )"
 					DIFF=$(( ${NUM} - ${NEW_VALUE} ))
 					if [[ ${DIFF} -gt 0 ]]; then
 						wI_ "NOTE: ${DIFF} days' images/videos will be removed in the morning."
 					fi
 
 	 			elif [[ ${KEY} == "daystokeeplocalwebsite" ]]; then
-					for dir in startrails keograms meteors videos
+					for dir in startrails keograms meteors videos keolapses
 					do
+						WEB="${ALLSKY_WEBSITE}/${dir}"
+						[[ ! -d ${WEB} ]] && continue
+
 						RE="*-${YYYYMMDD}"
 						# The meteors images have YYYYMMDDHHMMSS.
 						[[ ${dir} == "meteors" ]] && RE+="[0-9][0-9][0-9][0-9][0-9][0-9]"
-						NUM="$( find "${ALLSKY_WEBSITE}/${dir}" -maxdepth 1 -type f \
+						NUM="$( find "${WEB}" -maxdepth 1 -type f \
 							\( -name "${RE}.jpg" -o -name "${RE}.png" -o -name "${RE}.mp4" \) | wc -l
 						)"
 						DIFF=$(( ${NUM} - ${NEW_VALUE} ))
@@ -1074,7 +1077,7 @@ do
 					REMOTE_WEBSITE_URL="$( settings ".remotewebsiteurl" "${ALLSKY_SETTINGS_FILE}" )"
 					F="${ALLSKY_TMP}/${ME}_${ALLSKY_REMOTE_WEBSITE_COMMANDS_NAME}"
 					echo -e "set\thtml\t0" > "${F}"
-					for dir in startrails keograms meteors videos
+					for dir in startrails keograms meteors videos keolapses
 					do
 						RE="*-${YYYYMMDD}"
 						echo -e "get_numfiles\t${dir}/${RE}*"

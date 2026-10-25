@@ -38,6 +38,7 @@ def get_gpio_backend():
 
     try:
         gpio_backend = select_gpio_backend()
+        logger.info("Selected GPIO backend: %s", gpio_backend.name)
         return gpio_backend
     except GPIOBackendUnavailable as exc:
         logger.debug("GPIO backend selection failed", exc_info=True)

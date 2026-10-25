@@ -529,6 +529,14 @@ See [Privacy & Sharing](/docs/allsky_guide/settings/privacy.html) for what is se
     | ==Lens== <span class="red">AW</span> |  | The lens you're using on your camera, for example: ==Arecont 1.55==. |
     | ==Equipment Info== <span class="red">AW</span> |  | Any optional information you want to add about the equipment you are using. For example, if you are using a camera with no infrared filter (a "NoIR" camera). |
 
+### Usage Data and Contact { data-toc-label="Usage Data and Contact" id="Usage-data-settings"}
+???+ info "Settings"
+
+    | WebUI Setting { .w-20p } | Default { .w-10p }  | Description |
+    |---|---:|---|
+    | ==Share Usage Data== | No | Enable to send the Allsky Team, once a week, how Allsky is used on this Pi: the Pi OS, the Pi model, the camera, how many cameras are connected, the enabled modules, and how often Allsky was started, the camera was changed, and the WebUI was used. See [Usage Data](/docs/allsky_guide/settings/privacy.html#Usage-data) for exactly what is sent. Disabling it deletes the data from the server. |
+    | ==Contact Email== |  | Optional email address the Allsky Team can use to contact you, for example about a problem with the data your Pi sends or about a security issue in Allsky. It isn't shown publicly or shared outside the Allsky Team. See [Contact Email](/docs/allsky_guide/settings/privacy.html#Contact-email). Clearing it deletes the address from the server. |
+
 ## WebUI { data-toc-label="WebUI" id="WebUI-settings"}
 ???+ info "Settings"
 

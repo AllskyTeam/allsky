@@ -676,6 +676,25 @@ function convertLatLong()
 
 
 #####
+# Count one use of something for the Usage Data, e.g., "allsky_starts".
+# Nothing is counted unless "Share Usage Data" is enabled.  postToData.sh sends the
+# counts and starts over after a successful upload.
+function count_usage()
+{
+	local NAME="${1}"
+	[[ "$( settings ".shareusagedata" 2>/dev/null )" != "true" ]] && return 0
+
+	local FILE="${ALLSKY_USAGE_DATA_FILE}"
+	if [[ ! -s ${FILE} ]]; then
+		echo "{ \"since\": \"$( date +%F )\", \"counts\": { } }" > "${FILE}" || return 1
+	fi
+	local TEMP="${FILE}.tmp"
+	jq --arg n "${NAME}" '.counts[$n] = ((.counts[$n] // 0) + 1)' "${FILE}" > "${TEMP}" &&
+		mv "${TEMP}" "${FILE}"
+}
+
+
+#####
 # Return the latitude or longitude in NSEW format the way the public sees it,
 # i.e., on the Allsky Map and on the local and remote Allsky Websites.
 # If "Hide Exact Location" is enabled the value is rounded to the nearest 0.02 degrees

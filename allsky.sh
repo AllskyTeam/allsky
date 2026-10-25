@@ -426,6 +426,7 @@ function catch_signal() { return 0; }
 trap "catch_signal" SIGTERM SIGINT SIGHUP
 
 set_allsky_status "${ALLSKY_STATUS_STARTING}"
+count_usage "allsky_starts"		# only if "Share Usage Data" is enabled
 
 # Run the camera-specific capture program - this is the main attraction...
 CAMERA_NUMBER="${S_cameranumber:-0}"		# default

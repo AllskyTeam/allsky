@@ -9,12 +9,12 @@ ME="$( basename "${BASH_ARGV0}" )"
 # Information is gathered automatically from the settings file.
 # The script can be called manually, via endOfNight.sh, or via the WebUI.
 
-MAP_COMMAND="https://www.thomasjacquin.com/allsky-map/postToMap.php"
-
 #shellcheck source-path=.
 source "${ALLSKY_HOME}/variables.sh"		|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${ALLSKY_EXIT_ERROR_STOP}"
+
+MAP_COMMAND="${ALLSKY_MAP_URL}postToMap.php"
 
 function usage_and_exit()
 {

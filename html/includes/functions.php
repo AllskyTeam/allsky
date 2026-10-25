@@ -1760,6 +1760,31 @@ function getDayNightStatus(): array {
 	return $result;
 }
 
+// Count the days the WebUI is used, for the Usage Data (see postToData.sh).
+// Only if "Share Usage Data" is enabled.  The file is written at most once a day.
+function countWebUIUse()
+{
+	global $settings_array;
+
+	if (! defined('ALLSKY_WEBUI_USAGE_DATA_FILE')) return;
+	if (! toBool(getVariableOrDefault($settings_array, 'shareusagedata', "false"))) return;
+
+	$file = ALLSKY_WEBUI_USAGE_DATA_FILE;
+	$today = date("Y-m-d");
+	$usage = null;
+	if (file_exists($file)) {
+		$usage = json_decode(@file_get_contents($file), true);
+	}
+	if (! is_array($usage)) {
+		$usage = array("since" => $today, "last_day" => "", "days" => 0);
+	}
+	if (getVariableOrDefault($usage, 'last_day', "") === $today) return;
+
+	$usage['last_day'] = $today;
+	$usage['days'] = intval(getVariableOrDefault($usage, 'days', 0)) + 1;
+	@file_put_contents($file, json_encode($usage, JSON_PRETTY_PRINT));
+}
+
 // Get the newest Allsky version string.
 // For efficiency, only check every 12 hours.  The check runs while a page loads,
 // so after a failed check (e.g., no network) wait an hour before trying again.

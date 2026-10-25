@@ -2224,6 +2224,35 @@
 "checkchanges" : true,
 "optional" : true
 },
+{
+"name" : "usagedatasubheader",
+"label" : "Usage Data",
+"type" : "header-sub"
+},
+{
+"name" : "shareusagedata",
+"default" : false,
+"description" : "Enable to send the Allsky Team, once a week, how Allsky is used on this Pi: the Pi OS, the Pi model, the camera, how many cameras are connected, the enabled modules, and how often Allsky was started, the camera was changed, and the WebUI was used. Nothing else is sent, and the data are not shared with anyone else. They help decide what to improve and test.<br>See <a external='true' href='/docs/allsky_guide/settings/privacy.html'>Privacy &amp; Sharing</a> for exactly what is sent. Disabling this deletes the data from the server.",
+"label" : "Share Usage Data",
+"type" : "boolean",
+"carryforward" : true,
+"checkchanges" : true
+},
+{
+"name" : "contactsubheader",
+"label" : "Contact",
+"type" : "header-sub"
+},
+{
+"name" : "contactemail",
+"default" : "",
+"description" : "Optional email address the Allsky Team can use to contact you, for example about a problem with the data your Pi sends or about a security issue in Allsky. It is not used for anything else, not shown publicly, and not shared outside the Allsky Team.<br>See <a external='true' href='/docs/allsky_guide/settings/privacy.html'>Privacy &amp; Sharing</a>. Clearing this deletes the address from the server.",
+"label" : "Contact Email",
+"type" : "text",
+"carryforward" : true,
+"checkchanges" : true,
+"optional" : true
+},
 
 {
 "name" : "webuitab========================================",

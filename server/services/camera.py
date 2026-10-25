@@ -1,6 +1,7 @@
 import os
 import time
 import json
+import logging
 import cv2
 import numpy as np
 from PIL import Image
@@ -11,6 +12,8 @@ from picamera2 import Picamera2
 from services.helpers import get_camera_image_details, focus_measures, star_size_fwhm_proxy, focus_score_laplacian
 import services.asi  as asi
 from flask import current_app
+
+logger = logging.getLogger(__name__)
 
 # Map Bayer pattern -> OpenCV conversion code (to RGB)
 BAYER2RGB = {
@@ -69,8 +72,8 @@ def get_available_cameras():
             pos = pos + 1
         picam2.close()
         
-    except Exception as ex:
-        print(ex)
+    except Exception:
+        logger.exception("Camera discovery failed")
     print(camera_details)        
     return camera_details
 
@@ -91,7 +94,7 @@ def init_asi():
                 asi.init(lib_path)
                 return
             except Exception:
-                pass
+                logger.debug("ASI SDK candidate failed: %s", lib_path, exc_info=True)
     raise FileNotFoundError("Could not initialize libASICamera2.so; set lib_path.")
 
 def debayer_to_rgb(bayer_frame: np.ndarray, pattern: str) -> np.ndarray:
@@ -122,6 +125,7 @@ def debayer_to_rgb(bayer_frame: np.ndarray, pattern: str) -> np.ndarray:
             return rgb16
         except Exception:
             # Fallback: downscale to 8-bit, debayer, return 8-bit
+            logger.debug("16-bit demosaic failed; trying 8-bit", exc_info=True)
             b8 = (bayer_frame >> 8).astype(np.uint8)   # simple 16->8 shrink
             rgb = cv2.cvtColor(b8, code)
             return rgb
@@ -137,6 +141,7 @@ def debayer_to_rgb(bayer_frame: np.ndarray, pattern: str) -> np.ndarray:
         return cv2.cvtColor(b16, code)
     except Exception:
         # Last resort: go to 8-bit
+        logger.debug("16-bit demosaic failed; trying 8-bit", exc_info=True)
         b8 = (b16 >> 8).astype(np.uint8)
         return cv2.cvtColor(b8, code)
 
@@ -172,7 +177,7 @@ def get_zwo_image(
             cam.set_control_value(asi.ASI_BRIGHTNESS, 0)
             cam.set_control_value(asi.ASI_FLIP, 0)
         except Exception:
-            pass
+            logger.warning("Could not set one or more ASI camera controls", exc_info=True)
 
         if is_color:
             if wb_r is not None and wb_b is not None:
@@ -184,7 +189,7 @@ def get_zwo_image(
                 try:
                     cam.set_control_value("AutoWhiteBalance", 1)
                 except Exception:
-                    pass
+                    logger.debug("ASI auto white balance unavailable", exc_info=True)
 
         time.sleep(0.05)
 
@@ -258,7 +263,7 @@ def get_zwo_image(
         try:
             cam.stop_exposure()
         except Exception:
-            pass
+            logger.warning("Could not stop ASI exposure during cleanup", exc_info=True)
         cam.close()
 #
 # End ZWO Camera Code
@@ -306,6 +311,7 @@ def get_pi_image(exposure: int, gain: float, camera_name:str='') -> bool:
         from zoneinfo import ZoneInfo
         LONDON_TZ = ZoneInfo("Europe/London")
     except Exception:
+        logger.warning("Europe/London time zone unavailable; using system time zone", exc_info=True)
         LONDON_TZ = None
 
     unix_time_ns = time.time_ns() - (time.monotonic_ns() - int(sensor_timestamp_ns))

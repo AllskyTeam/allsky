@@ -4,10 +4,13 @@ import os
 import secrets
 import bcrypt
 import json
+import logging
 from datetime import datetime, timezone
 from flask_jwt_extended import get_jwt_identity, get_jwt, verify_jwt_in_request
 from functools import wraps
 from flask import jsonify, request
+
+logger = logging.getLogger(__name__)
 
 DEFAULT_AUTH_USERNAME = "local"
 INITIAL_PASSWORD_FILENAME = "allsky_server_initial_password.txt"
@@ -48,6 +51,7 @@ def api_auth_required(module: str, action: str):
             try:
                 from flask_login import current_user
             except ImportError:
+                logger.debug("Flask-Login unavailable; trying JWT authentication", exc_info=True)
                 current_user = None
 
             if current_user:
@@ -56,12 +60,14 @@ def api_auth_required(module: str, action: str):
                         return fn(*args, **kwargs)
                 except RuntimeError:
                     # e.g., called outside an app/request context
+                    logger.debug("Session authentication unavailable; trying JWT", exc_info=True)
                     pass
 
             # 3) JWT
             try:
                 verify_jwt_in_request()
             except Exception:
+                logger.debug("JWT authentication rejected", exc_info=True)
                 return jsonify({"error": "Authentication required"}), 401
 
             if not get_jwt_identity():
@@ -105,7 +111,11 @@ def load_env_credentials():
             p = data.get("password") or data.get("WEBUI_PASSWORD")
             if u and p:
                 return u, p
+        except FileNotFoundError:
+            logger.debug("Credentials file missing: %s", path, exc_info=True)
+            continue
         except Exception:
+            logger.warning("Could not read credentials file: %s", path, exc_info=True)
             continue
     return None, None
 
@@ -132,6 +142,7 @@ def check_bcrypt_password(password, stored_hash):
             if bcrypt.checkpw(password_bytes, candidate.encode()):
                 return True
         except ValueError:
+            logger.debug("Stored bcrypt hash could not be checked", exc_info=True)
             continue
     return False
 
@@ -154,8 +165,8 @@ def validate_user(user_name, password):
                     # fallback if plain text stored
                     if password == env_p:
                         return {"*": ["*"]}
-            except Exception as e:
-                print(f"Env password validation error: {e}")
+            except Exception:
+                logger.exception("Environment password validation failed")
         # if username doesn't match env user, fall through to DB
 
     # --- 2. SQLite user DB fallback ---
@@ -173,8 +184,8 @@ def validate_user(user_name, password):
     try:
         if check_bcrypt_password(password, stored_hash):
             return json.loads(perms)
-    except Exception as e:
-        print(f"DB password validation error: {e}")
+    except Exception:
+        logger.exception("Database password validation failed")
 
     return False
 
@@ -190,6 +201,7 @@ def permission_required(module, action):
             try:
                 verify_jwt_in_request()
             except Exception:
+                logger.debug("JWT authentication rejected", exc_info=True)
                 return jsonify({"error": "Authentication required"}), 401
 
             identity = get_jwt_identity()
@@ -259,6 +271,7 @@ def create_or_rotate_bootstrap_user(cur):
         try:
             has_static_default = bcrypt.checkpw("local".encode(), row[0].encode())
         except Exception:
+            logger.warning("Could not check bootstrap user's stored password", exc_info=True)
             has_static_default = False
 
         if not has_static_default:

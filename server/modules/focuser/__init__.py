@@ -1,6 +1,7 @@
 import time
 import json
 import os
+import logging
 from pathlib import Path
 from flask import Blueprint, render_template,  request, jsonify
 from modules.auth_utils import web_login_required_or_local
@@ -9,6 +10,8 @@ from services.allsky import get_allsky_status
 from services.motor import motor_action
 from services.camera import get_pi_image, get_zwo_image, get_available_cameras
 from services.helpers import get_camera_image_details, load_module_config, save_module_config
+
+logger = logging.getLogger(__name__)
 
 focuser_bp = Blueprint("focuser", __name__)
 
@@ -119,9 +122,10 @@ def focuser_settings():
             return jsonify({"ok": True, "saved": True})
 
     except Exception as e:
+        logger.exception("Focuser settings request failed")
         return jsonify({"ok": False, "error": str(e)}), 500
 
 
 #
 # End Motor control endpoint
-# 
+#

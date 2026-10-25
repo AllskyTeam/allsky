@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+        <span class="navbar-brand">Server Logs</span>
+        <a class="btn btn-outline-light btn-sm" href="{{ url_for('dashboard.allsky_dashboard') }}">Dashboard</a>
+    </div>
+</nav>
+
+<div class="container-fluid pt-4">
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+        <span class="text-muted">Recent allskyserver journal entries</span>
+        <button class="btn btn-primary btn-sm" id="server-log-follow" type="button">Pause following</button>
+        <button class="btn btn-outline-secondary btn-sm" id="server-log-refresh" type="button">Refresh now</button>
+        <span class="ms-auto small" id="server-log-status" role="status">Loading…</span>
+    </div>
+    <pre class="server-log-output bg-dark text-light rounded p-3" id="server-log-output" role="log" aria-label="Allsky API server journal"></pre>
+</div>
+{% endblock %}
+{% set extra_js = ['app/js/server-logs.js'] %}

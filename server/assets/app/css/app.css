@@ -196,3 +196,12 @@
 	padding-bottom: 0px !important;
 }
 /* End Focuser */
+
+.server-log-output {
+	min-height: 24rem;
+	height: calc(100vh - 190px);
+	max-height: 70rem;
+	overflow: auto;
+	white-space: pre;
+	font-size: 0.82rem;
+}

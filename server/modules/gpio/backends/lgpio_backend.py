@@ -1,4 +1,6 @@
-import logging 
+import logging
+
+logger = logging.getLogger(__name__)
 
 class LgpioBackend:
     name = "lgpio"
@@ -49,6 +51,7 @@ class LgpioBackend:
             try:
                 chip = int(name.removeprefix("gpiochip"))
             except ValueError:
+                logger.debug("Ignoring invalid GPIO chip device name: %s", device, exc_info=True)
                 continue
 
             handle = None
@@ -68,7 +71,7 @@ class LgpioBackend:
                     self.handle = handle
                     self.chip_info = info
 
-                    logging.info(
+                    logger.info(
                         "Using /dev/gpiochip%d (%s, %d lines) for Raspberry Pi GPIO",
                         chip,
                         label,
@@ -78,6 +81,7 @@ class LgpioBackend:
                     return self.handle
 
             except Exception as exc:
+                logger.debug("Could not inspect GPIO chip %s", device, exc_info=True)
                 last_error = exc
 
             finally:
@@ -86,7 +90,7 @@ class LgpioBackend:
                     try:
                         self.lgpio.gpiochip_close(handle)
                     except Exception:
-                        pass
+                        logger.warning("Could not close GPIO chip %s", device, exc_info=True)
 
         found_text = ", ".join(
             f"gpiochip{chip}={label}"

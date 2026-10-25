@@ -23,6 +23,12 @@
       "description": "Allsky Periodic Log",
       "location": "/var/log/allskyperiodic.log",
       "default": false
+    },
+    {
+      "id": "allskyserver",
+      "description": "Allsky Server Log",
+      "location": "journal:allskyserver.service",
+      "default": false
     }
   ]
 }

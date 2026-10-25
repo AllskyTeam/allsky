@@ -3,15 +3,20 @@ from flask_jwt_extended import jwt_required
 from modules.auth_utils import api_auth_required
 import os
 import json
+import logging
+
+logger = logging.getLogger(__name__)
 
 try:
     from smbus2 import SMBus
     SMBUS_AVAILABLE = True
 except ImportError:
+    logger.debug("smbus2 unavailable; trying smbus", exc_info=True)
     try:
         from smbus import SMBus
         SMBUS_AVAILABLE = True
     except ImportError:
+        logger.debug("No I2C SMBus library available", exc_info=True)
         SMBUS_AVAILABLE = False
 
 i2c_bp = Blueprint("i2c", __name__)
@@ -29,9 +34,11 @@ def scan_i2c_bus(bus_num):
                 bus.write_quick(addr)
                 found.append(hex(addr))
             except OSError:
+                logger.debug("No I2C response on bus %s address 0x%02X", bus_num, addr, exc_info=True)
                 continue
         return found
     except FileNotFoundError:
+        logger.debug("I2C bus %s unavailable", bus_num, exc_info=True)
         return None
     finally:
         if bus is not None:

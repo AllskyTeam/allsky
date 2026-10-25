@@ -1,9 +1,12 @@
 from flask import Blueprint, request, jsonify, Response
 from collections import deque
+import logging
 import threading
 import time
 from modules.auth_utils import api_auth_required
 from modules.gpio.backends import GPIOBackendUnavailable, select_gpio_backend
+
+logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # Blueprint
@@ -37,6 +40,7 @@ def get_gpio_backend():
         gpio_backend = select_gpio_backend()
         return gpio_backend
     except GPIOBackendUnavailable as exc:
+        logger.debug("GPIO backend selection failed", exc_info=True)
         gpio_backend_error = str(exc)
         raise
 
@@ -63,6 +67,7 @@ def normalise_pin(gpio_str):
     try:
         pin_num = int(pin)
     except (TypeError, ValueError):
+        logger.debug("Invalid GPIO pin: %r", gpio_str, exc_info=True)
         raise ValueError(f"Invalid GPIO pin {gpio_str}")
 
     if pin_num < 0 or pin_num >= get_gpio_count():
@@ -210,7 +215,7 @@ class TachoMonitor:
             try:
                 get_gpio_backend().free(self.pin_num)
             except Exception:
-                pass
+                logger.warning("Could not release GPIO pin %s after tacho setup failure", self.pin, exc_info=True)
             raise RuntimeError(f"Unable to claim GPIO pin {self.pin} for tacho input: {exc}")
 
     def stop(self):
@@ -223,12 +228,12 @@ class TachoMonitor:
             try:
                 get_gpio_backend().remove_edge_detect(callback_ref)
             except Exception:
-                pass
+                logger.warning("Could not remove tacho edge detection for pin %s", self.pin, exc_info=True)
 
         try:
             get_gpio_backend().free(self.pin_num)
         except Exception:
-            pass
+            logger.warning("Could not free tacho GPIO pin %s", self.pin, exc_info=True)
 
     def _record_pulse(self, pin_num):
         now = time.monotonic()
@@ -366,7 +371,7 @@ def _configure_tacho_locked(config):
     try:
         get_gpio_backend().free(config["pin_num"])
     except Exception:
-        pass
+        logger.debug("GPIO pin %s was not free before tacho setup", config["pin_num"], exc_info=True)
 
     monitor = TachoMonitor(
         tacho_id=tacho_id,
@@ -424,6 +429,7 @@ def get_gpio_status() -> dict:
 
 
 def gpio_backend_unavailable_response(exc):
+    logger.exception("GPIO backend unavailable: %s", exc)
     return (
         jsonify({
             "error": "GPIO backend unavailable",
@@ -450,6 +456,7 @@ def all_gpio_status() -> Response:
     except GPIOBackendUnavailable as e:
         return gpio_backend_unavailable_response(e)
     except Exception as e:
+        logger.exception("Failed to retrieve all GPIO status")
         return (
             jsonify({
                 "error": "Failed to retrieve all GPIO status",
@@ -482,10 +489,12 @@ def read_digital(pin) -> Response:
         return jsonify({"pin": pin, "value": "on" if value else "off", "name": pin_name})
 
     except ValueError as e:
+        logger.debug("Invalid digital pin request", exc_info=True)
         return jsonify({"error": str(e)}), 400
     except GPIOBackendUnavailable as e:
         return gpio_backend_unavailable_response(e)
     except Exception as e:
+        logger.exception("Failed to read digital pin")
         return (
             jsonify({
                 "error": "Failed to read digital pin",
@@ -527,10 +536,12 @@ def set_digital() -> Response:
         return jsonify({"pin": pin, "state": "on" if state else "off"})
 
     except ValueError as e:
+        logger.debug("Invalid digital pin update", exc_info=True)
         return jsonify({"error": str(e)}), 400
     except GPIOBackendUnavailable as e:
         return gpio_backend_unavailable_response(e)
     except Exception as e:
+        logger.exception("Failed to set digital pin")
         return (
             jsonify({
                 "error": "Failed to set digital pin",
@@ -589,10 +600,12 @@ def set_pwm() -> Response:
         })
 
     except ValueError as e:
+        logger.debug("Invalid PWM request", exc_info=True)
         return jsonify({"error": str(e)}), 400
     except GPIOBackendUnavailable as e:
         return gpio_backend_unavailable_response(e)
     except Exception as e:
+        logger.exception("Failed to set PWM")
         return (
             jsonify({
                 "error": "Failed to set PWM",
@@ -618,6 +631,7 @@ def all_tacho_status() -> Response:
     except GPIOBackendUnavailable as e:
         return gpio_backend_unavailable_response(e)
     except Exception as e:
+        logger.exception("Failed to retrieve tacho status")
         return (
             jsonify({
                 "error": "Failed to retrieve tacho status",
@@ -642,10 +656,12 @@ def tacho_status(tacho_id) -> Response:
             return jsonify(monitor.status())
 
     except ValueError as e:
+        logger.debug("Invalid tacho status request", exc_info=True)
         return jsonify({"error": str(e)}), 400
     except GPIOBackendUnavailable as e:
         return gpio_backend_unavailable_response(e)
     except Exception as e:
+        logger.exception("Failed to retrieve tacho status")
         return (
             jsonify({
                 "error": "Failed to retrieve tacho status",
@@ -678,12 +694,15 @@ def configure_tacho() -> Response:
         return jsonify(result)
 
     except ValueError as e:
+        logger.debug("Invalid tacho configuration", exc_info=True)
         return jsonify({"error": str(e)}), 400
     except RuntimeError as e:
+        logger.debug("Tacho configuration conflict", exc_info=True)
         return jsonify({"error": str(e)}), 409
     except GPIOBackendUnavailable as e:
         return gpio_backend_unavailable_response(e)
     except Exception as e:
+        logger.exception("Failed to configure tacho")
         return (
             jsonify({
                 "error": "Failed to configure tacho",
@@ -707,10 +726,12 @@ def delete_tacho(tacho_id) -> Response:
         return jsonify({"tacho_id": tacho_id, "running": False, "rpm": 0, "changed": changed})
 
     except ValueError as e:
+        logger.debug("Invalid tacho delete request", exc_info=True)
         return jsonify({"error": str(e)}), 400
     except GPIOBackendUnavailable as e:
         return gpio_backend_unavailable_response(e)
     except Exception as e:
+        logger.exception("Failed to delete tacho")
         return (
             jsonify({
                 "error": "Failed to delete tacho",
@@ -808,6 +829,7 @@ def status(format) -> Response:
     except GPIOBackendUnavailable as e:
         return gpio_backend_unavailable_response(e)
     except Exception as e:
+        logger.exception("Failed to retrieve status")
         return (
             jsonify({
                 "error": "Failed to retrieve status",

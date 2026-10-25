@@ -21,6 +21,7 @@ systems where the module has not been installed.
 """
 
 import json
+import logging
 import os
 import queue
 import threading
@@ -30,6 +31,7 @@ from flask import Blueprint, jsonify, request
 
 from modules.auth_utils import api_auth_required
 
+logger = logging.getLogger(__name__)
 
 lightning_bp = Blueprint("lightning", __name__)
 
@@ -128,6 +130,7 @@ class LightningMonitor:
             import board
             import sparkfun_qwiicas3935
         except ImportError as exc:
+            logger.debug("Lightning monitor driver unavailable", exc_info=True)
             self._state["available"] = False
             self._state["error"] = (
                 "sparkfun_qwiicas3935 is not installed. "
@@ -165,6 +168,7 @@ class LightningMonitor:
         try:
             interrupt_pin_num = int(interrupt_pin)
         except ValueError:
+            logger.debug("Invalid lightning interrupt pin: %s", interrupt_pin, exc_info=True)
             raise ValueError(f"Invalid interruptpin {interrupt_pin}")
 
         i2c_address = str(data.get("i2caddress", "")).strip()
@@ -172,6 +176,7 @@ class LightningMonitor:
             try:
                 int(i2c_address, 16)
             except ValueError:
+                logger.debug("Invalid lightning I2C address: %s", i2c_address, exc_info=True)
                 raise ValueError(f"Invalid i2caddress {i2c_address}")
 
         return {
@@ -241,6 +246,7 @@ class LightningMonitor:
                 self._save_config_locked(config)
                 return {"changed": True, **self.status()}
             except Exception as exc:
+                logger.exception("Lightning monitor configuration failed")
                 self._stop_locked()
                 self._state["configured"] = False
                 self._state["running"] = False
@@ -293,6 +299,7 @@ class LightningMonitor:
                     handle = lgpio.gpiochip_open(chip)
                     break
                 except Exception as exc:
+                    logger.debug("Could not open GPIO chip %s for lightning IRQ", chip, exc_info=True)
                     last_error = exc
 
             if handle is None:
@@ -306,6 +313,7 @@ class LightningMonitor:
             self._lgpio_handle = handle
             return
         except Exception:
+            logger.debug("lgpio lightning IRQ setup failed; trying RPi.GPIO", exc_info=True)
             self._release_lgpio_locked()
 
         import RPi.GPIO as GPIO
@@ -443,9 +451,14 @@ class LightningMonitor:
         try:
             with open(self.CONFIG_FILE, "r", encoding="utf-8") as config_file:
                 config = json.load(config_file)
+        except FileNotFoundError:
+            logger.debug("No saved lightning monitor configuration", exc_info=True)
+            return
         except OSError:
+            logger.warning("Could not read saved lightning monitor configuration", exc_info=True)
             return
         except json.JSONDecodeError as exc:
+            logger.exception("Saved lightning monitor configuration is invalid")
             with self._lock:
                 self._state["error"] = f"Failed to read saved lightning monitor config: {exc}"
             return
@@ -478,7 +491,7 @@ class LightningMonitor:
                 self._rpi_gpio.remove_event_detect(int(self._irq))
                 self._rpi_gpio.cleanup(int(self._irq))
             except Exception:
-                pass
+                logger.warning("Could not clean up RPi.GPIO lightning IRQ", exc_info=True)
 
         self._irq = None
         self._irq_pin = None
@@ -498,18 +511,18 @@ class LightningMonitor:
             try:
                 self._irq.cancel()
             except Exception:
-                pass
+                logger.warning("Could not cancel lightning GPIO callback", exc_info=True)
 
         if self._lgpio is not None and self._lgpio_handle is not None:
             try:
                 if self._irq_pin is not None:
                     self._lgpio.gpio_free(self._lgpio_handle, int(self._irq_pin))
             except Exception:
-                pass
+                logger.warning("Could not free lightning GPIO pin", exc_info=True)
             try:
                 self._lgpio.gpiochip_close(self._lgpio_handle)
             except Exception:
-                pass
+                logger.warning("Could not close lightning GPIO chip", exc_info=True)
 
         self._lgpio = None
         self._lgpio_handle = None
@@ -546,6 +559,7 @@ def configure_lightning():
         status_code = 200 if result.get("running") else 503
         return jsonify(result), status_code
     except ValueError as exc:
+        logger.debug("Invalid lightning configuration request", exc_info=True)
         return jsonify({"error": str(exc)}), 400
 
 

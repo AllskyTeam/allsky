@@ -2,9 +2,12 @@ import threading
 import sqlite3
 import bcrypt
 import json
-from flask import Blueprint, request, jsonify, current_app
+import logging
+from flask import Blueprint, request, jsonify
 from flask_jwt_extended import create_access_token
 from modules.auth_utils import validate_user
+
+logger = logging.getLogger(__name__)
 
 DB_PATH = 'config/secrets.db'
 
@@ -30,5 +33,5 @@ def login():
         return jsonify(access_token=token)
 
     except Exception:
-        current_app.logger.exception("Login failed")
+        logger.exception("Login failed")
         return jsonify({'error': 'Login failed'}), 500

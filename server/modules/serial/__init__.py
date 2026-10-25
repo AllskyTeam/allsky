@@ -2,6 +2,9 @@ from flask import Blueprint, request, jsonify, Response
 from flask_jwt_extended import jwt_required
 from modules.auth_utils import api_auth_required
 import serial.tools.list_ports
+import logging
+
+logger = logging.getLogger(__name__)
 
 serial_bp = Blueprint("serial", __name__)
 
@@ -16,6 +19,7 @@ def try_serial_probe(port, baudrates=[9600, 19200, 38400, 57600, 115200]):
                         try:
                             lines.append(line.decode(errors='replace').strip())
                         except UnicodeDecodeError:
+                            logger.warning("Could not decode serial data from %s at %s baud", port.device, baud, exc_info=True)
                             lines.append("<unreadable>")
                     else:
                         break
@@ -26,6 +30,7 @@ def try_serial_probe(port, baudrates=[9600, 19200, 38400, 57600, 115200]):
                         "data": "\n".join(lines)
                     }
         except (serial.SerialException, OSError):
+            logger.debug("Serial probe failed for %s at %s baud", port.device, baud, exc_info=True)
             continue
     return {
         "device": port.device,
@@ -35,11 +40,11 @@ def try_serial_probe(port, baudrates=[9600, 19200, 38400, 57600, 115200]):
 
 @serial_bp.route("/sample", defaults={"format": "json"}, methods=["GET"])
 @serial_bp.route("/sample/<format>", methods=["GET"])
-@api_auth_required("serial", "read")  
+@api_auth_required("serial", "read")
 def get_serial_port_sample(format) -> Response:
     ports = serial.tools.list_ports.comports()
     result = [try_serial_probe(port) for port in ports]
-    
+
     if format == "json":
         return jsonify(list(result))
     else:
@@ -48,4 +53,3 @@ def get_serial_port_sample(format) -> Response:
             html += f"<h4>{item['device']} @ {item['baud'] or 'Unknown baud'}</h4>"
             html += f"<pre>{item['data']}</pre>"
         return Response(html, mimetype="text/html")
-  

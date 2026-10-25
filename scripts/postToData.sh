@@ -114,8 +114,8 @@ if [[ -z ${MACHINE_ID} ]]; then
 	error "ERROR: Unable to get 'machine_id': check /etc/machine-id."
 	exit 3
 fi
-ID="$( echo -n "allsky:${MACHINE_ID}" | sha256sum )"
-ID="${ID%% *}"
+DATA_ID="$( echo -n "allsky:${MACHINE_ID}" | sha256sum )"
+DATA_ID="${DATA_ID%% *}"
 
 #shellcheck disable=SC2119
 getAllSettings || exit 1
@@ -181,7 +181,7 @@ function post_data()
 	[[ ${S_shareusagedata} == "true" ]] && USAGE="$( usage_data )"
 	EMAIL="${S_contactemail}"
 	jq -n \
-		--arg id "${ID}" \
+		--arg id "${DATA_ID}" \
 		--arg version "${ALLSKY_VERSION}" \
 		--arg email "${EMAIL}" \
 		--argjson usage "${USAGE}" \
@@ -260,11 +260,11 @@ function reset_usage_data()
 
 if [[ -n ${DELETE} ]]; then
 	if [[ ${SHOW} == "true" ]]; then
-		jq -n --arg id "${ID}" --arg type "${DELETE}" '{ id: $id, type: $type }'
+		jq -n --arg id "${DATA_ID}" --arg type "${DELETE}" '{ id: $id, type: $type }'
 		exit 0
 	fi
 	[[ ${WHISPER} == "false" ]] && echo "${ME}: Deleting '${DELETE}' data from the Allsky Map server."
-	jq -n --arg id "${ID}" --arg type "${DELETE}" '{ id: $id, type: $type }' |
+	jq -n --arg id "${DATA_ID}" --arg type "${DELETE}" '{ id: $id, type: $type }' |
 		send "${DELETE_COMMAND}" || exit 2
 	if [[ ${DELETE} != "email" ]]; then
 		reset_usage_data ""

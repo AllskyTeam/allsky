@@ -5981,6 +5981,8 @@ table.settingsHeader { width: 100%; margin: 0 0 8px; border-bottom: 2px solid #3
 table.settingsHeader td { font-size: 17px; font-weight: 600; padding: 8px 5px; }
 
 /* Setting rows */
+/* An older cached settings.js opens section bodies as table-row. Keep them as row groups. */
+.settings-table > tbody.settings-header[style*="table-row"] { display: table-row-group !important; }
 @media (min-width: 992px) {
   .settings-table { width: 100%; table-layout: fixed; }
   .settings-table .settings-label-column { width: 180px; }
@@ -6014,6 +6016,7 @@ label.WebUISetting { font-weight: 600; margin: 0; }
 
 /* ===== Tablets / landscape phones: label | control, description underneath ===== */
 @media (max-width: 991px) {
+  .settings-table > tbody.settings-header[style*="table-row"] { display: block !important; }
   .settings-header table,
   .settings-header tbody { display: block; width: 100% !important; }
 

@@ -70,7 +70,7 @@ class ALLSKYSETTINGSCONTROLLER {
         let sectionEl = $('#header' + sectionNumber);
 
         $(headerEl).html(this.#hideIcon);
-        $(sectionEl).css('display', 'table-row');
+        sectionEl[0].style.removeProperty('display');
     }
 
     #closeSettingsGroup(sectionNumber) {

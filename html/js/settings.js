@@ -82,6 +82,57 @@ class ALLSKYSETTINGSCONTROLLER {
     }
 
     run() {
+        const helpButtons = $('.setting-help-button');
+        let openHelpButton = null;
+
+        if (helpButtons.length) {
+            helpButtons.popover({
+                trigger: 'manual',
+                html: true,
+                container: 'body',
+                placement: 'auto bottom',
+                title: function() { return $(this).attr('data-help-title'); },
+                content: function() { return $(this).attr('data-help-content'); },
+                template: '<div class="popover settings-help-popover" role="dialog" tabindex="-1"><div class="arrow"></div><h3 class="popover-title"></h3><div class="popover-content"></div></div>'
+            });
+
+            const closeHelp = () => {
+                if (!openHelpButton) return;
+                openHelpButton.popover('hide').attr('aria-expanded', 'false');
+                openHelpButton = null;
+            };
+
+            helpButtons.on('click', (event) => {
+                const button = $(event.currentTarget);
+                if (openHelpButton && openHelpButton[0] === button[0]) {
+                    closeHelp();
+                    return;
+                }
+                closeHelp();
+                button.popover('show').attr('aria-expanded', 'true');
+                openHelpButton = button;
+                $('.settings-help-popover').last()
+                    .attr('aria-label', 'Help for ' + button.attr('data-help-title'))
+                    .trigger('focus');
+            });
+
+            $(document).on('click', (event) => {
+                if ($(event.target).closest('.setting-help-button, .settings-help-popover').length === 0) closeHelp();
+            });
+            $(document).on('focusin', (event) => {
+                if ($(event.target).closest('.setting-help-button, .settings-help-popover').length === 0) closeHelp();
+            });
+            $(document).on('keydown', (event) => {
+                if (event.key !== 'Escape' || !openHelpButton) return;
+                const button = openHelpButton;
+                closeHelp();
+                button.trigger('focus');
+            });
+            $(window).on('resize', () => {
+                if (window.innerWidth > 991) closeHelp();
+            });
+        }
+
         /**
          * Handle clicking open/close all settings button
          */

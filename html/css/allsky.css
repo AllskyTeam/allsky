@@ -5994,6 +5994,10 @@ tr.form-group > td { padding: 10px 8px !important; vertical-align: top; }
 tr.rowSeparator > td:nth-child(2) { text-align: left !important; }
 tr.rowSeparator > td:last-child { color: #5b6b7c; font-size: 13px; line-height: 1.5; }
 label.WebUISetting { font-weight: 600; margin: 0; }
+.setting-help-button { display: none; border: 0; background: transparent; color: #337ab7; padding: 2px 5px; cursor: pointer; }
+.setting-help-button:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+.settings-help-popover { max-width: min(360px, calc(100vw - 24px)); }
+.settings-help-popover .popover-content { max-height: min(50vh, 320px); overflow: auto; overflow-wrap: anywhere; }
 
 /* Inputs */
 .settingInput.form-control { width: 100%; max-width: 200px; padding: 6px 10px !important; border-color: #c5d3dc; }
@@ -6014,14 +6018,26 @@ label.WebUISetting { font-weight: 600; margin: 0; }
   }
 }
 
-/* ===== Tablets / landscape phones: label | control, description underneath ===== */
+/* ===== Tablets / landscape phones: label | control, help in a popover ===== */
 @media (max-width: 991px) {
   .settings-table > tbody.settings-header[style*="table-row"] { display: block !important; }
+  .settings-table > tbody.settings-header,
   .settings-header table,
   .settings-header tbody { display: block; width: 100% !important; }
 
+  .settings-header .setting-help-button { display: inline-flex; align-items: center; }
+  .settings-header .setting-description-text { display: none; }
+  .settings-header .setting-description-warning > br { display: none; }
+  .settings-header tr.form-group > td.setting-description-cell:not(.setting-description-warning) { display: none; }
+  .settings-header tr.form-group > td.setting-description-warning { grid-column: 1 / -1; }
+  .settings-header tr.setting-description-row:not([data-has-warning]) { display: none; }
+  .settings-header tr.setting-description-row[data-has-warning] { display: block; }
+  .settings-header tr.setting-description-row[data-has-warning] > td:first-child { display: none; }
+  .settings-header tr.setting-description-row[data-has-warning] > td.setting-description-cell { display: block; width: 100%; }
+
   .settings-header tr.form-group {
     display: grid;
+    width: 100%;
     grid-template-columns: minmax(120px, 35%) 1fr;
     column-gap: 12px;
     align-items: center;
@@ -6037,7 +6053,7 @@ label.WebUISetting { font-weight: 600; margin: 0; }
     text-align: left !important;
   }
 
-  /* Description (3rd cell) spans both columns, under label + control */
+  /* Validation messages span both columns, under label + control */
   .settings-header tr.form-group > td:nth-child(n+3):last-child {
     grid-column: 1 / -1;
     padding-top: 4px !important;

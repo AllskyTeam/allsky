@@ -128,20 +128,34 @@ def refresh_api_log_level():
         settings_mtime_ns = mtime_ns
         if new_debug_level == debug_level:
             return
+        old_debug_level = debug_level
+        old_log_level = logging.getLogger().level
         debug_level = new_debug_level
         new_log_level = level_for_debug(debug_level)
         root_logger = logging.getLogger()
+        change_message = (
+            "Allsky API Debug Level changed from %s to %s (%s to %s)"
+        )
+        change_args = (
+            old_debug_level, debug_level,
+            logging.getLevelName(old_log_level), logging.getLevelName(new_log_level),
+        )
+        # Log before moving to ERROR, since WARNING entries would then be filtered.
+        if new_log_level >= logging.ERROR:
+            logger.warning(change_message, *change_args)
         root_logger.setLevel(new_log_level)
         for handler in root_logger.handlers:
             if handler.formatter and handler.formatter._fmt in (standard_log_format, debug_log_format):
                 handler.setFormatter(logging.Formatter(
                     debug_log_format if new_log_level == logging.DEBUG else standard_log_format
                 ))
-        logger.warning("Allsky API logging changed to %s (Allsky Debug Level %s)",
-                       logging.getLevelName(new_log_level), debug_level)
+        if new_log_level < logging.ERROR:
+            logger.warning(change_message, *change_args)
 
 @app.after_request
 def log_api_request(response):
+    if request.endpoint == 'dashboard.server_logs_data':
+        return response
     if debug_level is not None and debug_level >= 4:
         logger.debug("HTTP %s %s -> %s", request.method, request.path, response.status_code)
     elif debug_level is not None and debug_level >= 2 and response.status_code >= 400:

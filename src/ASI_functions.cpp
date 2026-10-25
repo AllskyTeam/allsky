@@ -1,4 +1,4 @@
-// This file is #include'd into the capture*.cpp files. 
+// This file is #include'd into the capture*.cpp files.
 // The CAMERA_TYPE #define must be set.
 // For the RPi, functions that mimic the ZWO "ASI" functions were added so the capture
 // code for both cameras can be as similar as possible.
@@ -35,7 +35,117 @@ int totalNum_connectedCameras = 0;			// num connected cameras of all types
 char *connectedCameraTypes[MAX_CAMERAS] = {};	// points to connectedCameras.Type
 int num_connectedCameraTypes = 0;
 
-#define MAX_NUM_CONTROL_CAPS (CONTROL_TYPE_END)
+#define MAX_NUM_CONTROL_CAPS 50
+
+#ifdef IS_RPi
+// Mirror the ZWO structs as much as possible to keep the code similar (including the "ASI" in the names).
+typedef enum ASI_BOOL{
+	ASI_FALSE =0,
+	ASI_TRUE
+} ASI_BOOL;
+
+typedef enum ASI_BAYER_PATTERN {
+	ASI_BAYER_RG=0,
+	ASI_BAYER_BG,
+	ASI_BAYER_GR,
+	ASI_BAYER_GB
+} ASI_BAYER_PATTERN;
+
+typedef enum ASI_IMG_TYPE {	// Supported Video/Image Formats
+	ASI_IMG_RAW8 = 0,
+	ASI_IMG_RGB24,
+	ASI_IMG_RAW16,
+	ASI_IMG_Y8,
+	ASI_IMG_END = -1
+} ASI_IMG_TYPE;
+
+typedef struct _ASI_CAMERA_INFO
+{
+	char Module[MODULE_SIZE];				// sensor name; RPi only
+	size_t Module_len;						// strncmp length.  0 for whole Module name
+	char Name[CAMERA_NAME_SIZE];			// Name of camera
+	int CameraID;
+	long MaxHeight;							// sensor height
+	long MaxWidth;
+	ASI_BOOL IsColorCam;					// Is this a color camera?
+	ASI_BAYER_PATTERN BayerPattern;
+	int SupportedBins[5];	// 1 means bin 1x1 is supported, 2 means 2x2 is supported, etc.
+	ASI_IMG_TYPE SupportedVideoFormat[8];	// Supported image formats
+	double PixelSize;						// e.g, 5.6 um
+	ASI_BOOL IsCoolerCam;
+	int BitDepth;
+	ASI_BOOL SupportsTemperature;
+
+	// These are RPi only:
+	ASI_BOOL SupportsAutoFocus;
+	char Sensor[SENSOR_SIZE];				// full sensor name returned by --list-cameras
+} ASI_CAMERA_INFO;
+
+
+// The number and order of these needs to match argumentNames[]
+typedef enum ASI_CONTROL_TYPE{
+	ASI_GAIN = 0,
+	ASI_EXPOSURE,
+	ASI_WB_R,
+	ASI_WB_B,
+	ASI_TEMPERATURE,
+	ASI_FLIP,
+	ASI_AUTO_MAX_GAIN,				// Max gain in auto-gain mode
+	ASI_AUTO_MAX_EXP,				// Max exposure in auto-exposure mode, in ms
+	ASI_AUTO_TARGET_BRIGHTNESS,
+
+	// RPI only:
+	EV,
+	SATURATION,
+	CONTRAST,
+	SHARPNESS,
+
+	// Put ZWO ones here - they need to be defined
+	ASI_GAMMA,
+	ASI_OFFSET,
+	ASI_BANDWIDTHOVERLOAD,			// ZWO only
+	ASI_COOLER_POWER_PERC,
+	ASI_TARGET_TEMP,
+	ASI_COOLER_ON,
+	ASI_FAN_ON,
+} ASI_CONTROL_TYPE;
+
+
+typedef struct _ASI_CONTROL_CAPS
+{
+	char Name[64];					// the name of the Control like Exposure, Gain etc..
+	char Description[128];			// description of this control
+	double MaxValue;				// "long" on ZWO
+	double MinValue;				// "long" on ZWO
+	double DefaultValue;			// "long" on ZWO
+	double CurrentValue;			// mimic getting value from camera
+	ASI_BOOL IsAutoSupported;		// 1 means this capability support auto mode
+	ASI_BOOL IsWritable;			// some controls like temperature can only be read by some cameras 
+	ASI_CONTROL_TYPE ControlType;	// this is used to get value and set value of the control
+} ASI_CONTROL_CAPS;
+
+typedef enum ASI_ERROR_CODE {
+	ASI_SUCCESS=0,
+	ASI_ERROR_INVALID_INDEX,		// no camera connected or index value out of boundary
+	ASI_ERROR_INVALID_CONTROL_TYPE,	// invalid control type, usually because control isn't supported
+	ASI_ERROR_GENERAL_ERROR,		// general error, eg: value is out of valid range
+	ASI_ERROR_END
+} ASI_ERROR_CODE;
+
+typedef struct _ASI_ID {
+	unsigned char id[8];
+} ASI_ID;
+typedef ASI_ID ASI_SN;
+#endif	// IS_RPi
+
+// This array will be populated with pointers to information for cameras physically connected to the Pi.
+struct RPI_CAMERAS
+{
+	ASI_CAMERA_INFO *CameraInfo;
+	ASI_CONTROL_CAPS *ControlCaps;
+} RPiCameras[MAX_CAMERAS];
+
+
 
 // Find the end of the token that begins at "start".
 // The end is either "delimeter" or NULL.
@@ -134,117 +244,6 @@ void showConnectedCameras()
 
 #ifdef IS_RPi
 
-// Mirror the ZWO structs as much as possible to keep the code similar (including the "ASI" in the names).
-typedef enum ASI_BOOL{
-	ASI_FALSE =0,
-	ASI_TRUE
-} ASI_BOOL;
-
-typedef enum ASI_BAYER_PATTERN {
-	BAYER_RG=0,
-	BAYER_BG,
-	BAYER_GR,
-	BAYER_GB
-} ASI_BAYER_PATTERN;
-
-typedef enum ASI_IMG_TYPE {	// Supported Video/Image Formats
-	ASI_IMG_RAW8 = 0,
-	ASI_IMG_RGB24,
-	ASI_IMG_RAW16,
-	ASI_IMG_Y8,
-	ASI_IMG_END = -1
-} ASI_IMG_TYPE;
-
-typedef struct _ASI_CAMERA_INFO
-{
-	char Module[MODULE_SIZE];				// sensor name; RPi only
-	size_t Module_len;						// strncmp length.  0 for whole Module name
-	char Name[CAMERA_NAME_SIZE];			// Name of camera
-	int CameraID;
-	long MaxHeight;							// sensor height
-	long MaxWidth;
-	ASI_BOOL IsColorCam;					// Is this a color camera?
-	ASI_BAYER_PATTERN BayerPattern;
-	int SupportedBins[5];	// 1 means bin 1x1 is supported, 2 means 2x2 is supported, etc.
-	ASI_IMG_TYPE SupportedVideoFormat[8];	// Supported image formats
-	double PixelSize;						// e.g, 5.6 um
-	ASI_BOOL IsCoolerCam;
-	int BitDepth;
-	ASI_BOOL SupportsTemperature;
-
-	// These are RPi only:
-	ASI_BOOL SupportsAutoFocus;
-	char Sensor[SENSOR_SIZE];				// full sensor name returned by --list-cameras
-} ASI_CAMERA_INFO;
-
-
-// The number and order of these needs to match argumentNames[]
-typedef enum ASI_CONTROL_TYPE{
-	ASI_GAIN = 0,
-	ASI_EXPOSURE,
-	ASI_WB_R,
-	ASI_WB_B,
-	ASI_TEMPERATURE,
-	ASI_FLIP,
-	ASI_AUTO_MAX_GAIN,				// Max gain in auto-gain mode
-	ASI_AUTO_MAX_EXP,				// Max exposure in auto-exposure mode, in ms
-	ASI_AUTO_TARGET_BRIGHTNESS,
-
-	// RPI only:
-	EV,
-	SATURATION,
-	CONTRAST,
-	SHARPNESS,
-
-	// Put ZWO ones here - they need to be defined
-	ASI_GAMMA,
-	ASI_OFFSET,
-	ASI_BANDWIDTHOVERLOAD,			// ZWO only
-	ASI_COOLER_POWER_PERC,
-	ASI_TARGET_TEMP,
-	ASI_COOLER_ON,
-	ASI_FAN_ON,
-
-	CONTROL_TYPE_END
-} ASI_CONTROL_TYPE;
-
-
-typedef struct _ASI_CONTROL_CAPS
-{
-	char Name[64];					// the name of the Control like Exposure, Gain etc..
-	char Description[128];			// description of this control
-	double MaxValue;				// "long" on ZWO
-	double MinValue;				// "long" on ZWO
-	double DefaultValue;			// "long" on ZWO
-	double CurrentValue;			// mimic getting value from camera
-	bool IsAutoSupported;			// 1 means this capability support auto mode
-	bool IsWritable;				// some controls like temperature can only be read by some cameras 
-	ASI_CONTROL_TYPE ControlType;	// this is used to get value and set value of the control
-} ASI_CONTROL_CAPS;
-
-typedef enum ASI_ERROR_CODE {
-	ASI_SUCCESS=0,
-	ASI_ERROR_INVALID_INDEX,		// no camera connected or index value out of boundary
-	ASI_ERROR_INVALID_CONTROL_TYPE,	// invalid control type, usually because control isn't supported
-	ASI_ERROR_GENERAL_ERROR,		// general error, eg: value is out of valid range
-	ASI_ERROR_END
-} ASI_ERROR_CODE;
-
-typedef struct _ASI_ID {
-	unsigned char id[8];
-} ASI_ID;
-typedef ASI_ID ASI_SN;
-
-// This array will be populated with pointers to information for cameras physically connected to the Pi.
-struct RPI_CAMERAS
-{
-	ASI_CAMERA_INFO *CameraInfo;
-	ASI_CONTROL_CAPS *ControlCaps;
-} RPiCameras[MAX_CAMERAS];
-
-
-ASI_CAMERA_INFO aci[MAX_CAMERAS];				// Need all camera's data.
-ASI_CONTROL_CAPS CCs[MAX_CAMERAS][MAX_NUM_CONTROL_CAPS];
 
 // Control type name, command-line argument name (without leading "day" and "night").
 // ControlType is the array index.
@@ -278,6 +277,113 @@ int const argumentNamesSize =  sizeof(argumentNames) / sizeof(argumentNames[0]);
 	Some cameras also have additional resolutions for a given mode.
 */
 
+
+// Put the properties for the specified camera into pASICameraInfo.
+ASI_ERROR_CODE ASIGetCameraProperty(ASI_CAMERA_INFO *pASICameraInfo, int iCameraIndex)
+{
+	if (iCameraIndex < 0 || iCameraIndex >= CG.numCameras)
+	{
+		Log(0, "%s: ERROR: ASIGetCameraProperty(), iCameraIndex (%d) bad (CG.numCameras=%d).\n",
+			CG.ME, iCameraIndex, CG.numCameras);
+		return(ASI_ERROR_INVALID_INDEX);
+	}
+	*pASICameraInfo = *(RPiCameras[iCameraIndex].CameraInfo);
+	return(ASI_SUCCESS);
+}
+
+
+// Get the number of capabilities supported by this camera and put in piNumberOfControls.
+ASI_ERROR_CODE ASIGetNumOfControls(int iCameraIndex, int *piNumberOfControls)
+{
+	if (iCameraIndex < 0 || iCameraIndex >= CG.numCameras)
+	{
+		Log(0, "%s: ERROR: ASIGetNumOfControls(), iCameraIndex (%d) bad.\n", CG.ME, iCameraIndex);
+		return(ASI_ERROR_INVALID_INDEX);
+	}
+	ASI_CONTROL_CAPS *p = RPiCameras[iCameraIndex].ControlCaps;
+
+	int num = 0;
+	for (int i=0; i < MAX_NUM_CONTROL_CAPS; i++)
+	{
+		if (p[i].ControlType == (ASI_CONTROL_TYPE)-1)
+		{
+			break;
+		}
+		num++;
+	}
+	*piNumberOfControls = num;		// This also sets the global iNumOfCtrl variable
+	return(ASI_SUCCESS);
+}
+
+
+// Get the camera control at index iControlIndex in the array, and put in pControlCaps.
+// This is typically used in a loop over all the control capabilities.
+ASI_ERROR_CODE ASIGetControlCaps(
+		int iCameraIndex,
+		int iControlIndex,
+		ASI_CONTROL_CAPS *pControlCaps)
+{
+	if (iCameraIndex < 0 || iCameraIndex >= CG.numCameras)
+		return(ASI_ERROR_INVALID_INDEX);
+
+	int numCaps = iNumOfCtrl != NOT_SET ? iNumOfCtrl : MAX_NUM_CONTROL_CAPS;
+	if (iControlIndex < 0 || iControlIndex > numCaps)
+		return(ASI_ERROR_INVALID_CONTROL_TYPE);
+
+	*pControlCaps = RPiCameras[iCameraIndex].ControlCaps[iControlIndex];
+	return(ASI_SUCCESS);
+}
+
+
+// Get the specified control capability's data value and put in plValue.
+ASI_ERROR_CODE ASIGetControlValue(
+		int iCameraIndex,
+		ASI_CONTROL_TYPE ControlType,
+		double *plValue,
+		ASI_BOOL *pbAuto)
+{
+	if (iCameraIndex < 0 || iCameraIndex >= CG.numCameras)
+		return(ASI_ERROR_INVALID_INDEX);
+
+	int numCaps = iNumOfCtrl != NOT_SET ? iNumOfCtrl : MAX_NUM_CONTROL_CAPS;
+	ASI_CONTROL_CAPS *p = RPiCameras[iCameraIndex].ControlCaps;
+	for (int i=0; i < numCaps ; i++)
+	{
+		if (ControlType == p[i].ControlType)
+		{
+			*plValue = p[i].CurrentValue;
+			// It's too much of a hassle to determine if this control type was auto so just return "false".
+			// We'd need to see if the control type supports auto and if it was last set to auto (and
+			// we're not setting any control values).
+			*pbAuto = ASI_FALSE;
+		}
+		return(ASI_SUCCESS);
+	}
+
+	return(ASI_ERROR_INVALID_CONTROL_TYPE);
+}
+
+
+// Empty routines so code compiles.
+int stopExposure(int cameraID) { return((int) ASI_SUCCESS); }
+int stopVideoCapture(int cameraID) { return((int) ASI_SUCCESS); }
+int closeCamera(int cameraID) { return((int) ASI_SUCCESS); }
+char const *getZWOexposureType(ZWOexposure t) { return("ZWOend"); }
+
+// Get the camera's serial number.  RPi cameras don't support serial numbers.
+ASI_ERROR_CODE  ASIGetSerialNumber(int iCameraIndex, ASI_SN *pSN)
+{
+	if (iCameraIndex < 0 || iCameraIndex >= CG.numCameras)
+		return(ASI_ERROR_INVALID_INDEX);
+
+	return(ASI_ERROR_GENERAL_ERROR);		// Not supported on RPi cameras
+}
+
+#endif	// RPi
+
+ASI_CAMERA_INFO aci[MAX_CAMERAS];				// Need all camera's data.
+ASI_CONTROL_CAPS CCs[MAX_CAMERAS][MAX_NUM_CONTROL_CAPS];
+
 // Helper functions to convert strings to ZWO values.
 ASI_BOOL do_ASI_BOOL(char *s, int line)
 {
@@ -289,13 +395,13 @@ ASI_BOOL do_ASI_BOOL(char *s, int line)
 }
 ASI_BAYER_PATTERN do_ASI_BAYER_PATTERN(char *s, int line)
 {
-	if (strcmp(s, "BAYER_RG") == 0) return BAYER_RG;
-	if (strcmp(s, "BAYER_BG") == 0) return BAYER_BG;
-	if (strcmp(s, "BAYER_GR") == 0) return BAYER_GR;
-	if (strcmp(s, "BAYER_GB") == 0) return BAYER_GB;
+	if (strcmp(s, "BAYER_RG") == 0) return ASI_BAYER_RG;
+	if (strcmp(s, "BAYER_BG") == 0) return ASI_BAYER_BG;
+	if (strcmp(s, "BAYER_GR") == 0) return ASI_BAYER_GR;
+	if (strcmp(s, "BAYER_GB") == 0) return ASI_BAYER_GB;
 
 	Log(0, "Got bad ASI_BAYER_PATTERN value on line %d: %s\n", line, s);
-	return BAYER_RG;	// this is the most common one so make it the default
+	return ASI_BAYER_RG;	// this is the most common one so make it the default
 }
 ASI_IMG_TYPE do_ASI_IMAGE_TYPE(char *s, int line)
 {
@@ -320,12 +426,14 @@ ASI_CONTROL_TYPE do_ASI_CONTROL_TYPE(char *s, int line)
 	if (strcmp(s, "ASI_AUTO_MAX_GAIN") == 0) return ASI_AUTO_MAX_GAIN;
 	if (strcmp(s, "ASI_AUTO_MAX_EXP") == 0) return ASI_AUTO_MAX_EXP;
 	if (strcmp(s, "ASI_AUTO_TARGET_BRIGHTNESS") == 0) return ASI_AUTO_TARGET_BRIGHTNESS;
+#ifdef IS_RPi
 	if (strcmp(s, "EV") == 0) return EV;
 	if (strcmp(s, "SATURATION") == 0) return SATURATION;
 	if (strcmp(s, "CONTRAST") == 0) return CONTRAST;
 	if (strcmp(s, "SHARPNESS") == 0) return SHARPNESS;
+#endif
 
-	return(CONTROL_TYPE_END);
+	return((ASI_CONTROL_TYPE) -1);
 }
 
 // Read information on all PHYSICALLY connected cameras of the correct type.
@@ -368,8 +476,8 @@ int getConnectedCameras()
 	char *cap_name;
 	char *cap_description;
 	double cap_max, cap_min, cap_default, cap_current;
-	bool cap_auto;
-	bool cap_writeable;
+	ASI_BOOL cap_auto;
+	ASI_BOOL cap_writeable;
 	ASI_CONTROL_TYPE cap_control_type;
 	int on_cap = -1;
 
@@ -504,9 +612,12 @@ Log(6, "  NEW TYPE FOUND [%s], num_connectedCameraTypes now = %d\n", cC->Type, n
 			currentCameraIndex++;
 
 			aci[currentCameraIndex].CameraID = cameraNum;
+			strncpy(aci[currentCameraIndex].Name, cameraName, CAMERA_NAME_SIZE-1);
+#ifdef IS_RPi
+			// These tokens don't appear on ZWO camera lines.
+// TODO: Should we set aci[] for these tokens for ZWO cameras?
 			strncpy(aci[currentCameraIndex].Module, cameraModule, MODULE_SIZE-1);
 			aci[currentCameraIndex].Module_len = module_len;
-			strncpy(aci[currentCameraIndex].Name, cameraName, CAMERA_NAME_SIZE-1);
 			aci[currentCameraIndex].MaxHeight = atol(getToken(line, '\t'));
 			aci[currentCameraIndex].MaxWidth = atol(getToken(line, '\t'));
 			aci[currentCameraIndex].IsColorCam = do_ASI_BOOL(getToken(line, '\t'), on_line);
@@ -537,11 +648,20 @@ Log(6, "  NEW TYPE FOUND [%s], num_connectedCameraTypes now = %d\n", cC->Type, n
 				char *f = getToken(svf, ' ');
 				aci[currentCameraIndex].SupportedVideoFormat[i] = do_ASI_IMAGE_TYPE(f, on_line);
 			}
+#endif
 
 			RPiCameras[currentCameraIndex].CameraInfo = &aci[currentCameraIndex];
-			Log(4, "Saving module [%s], name [%s] from aci[%d] to RPiCameras[%d].CameraInfo\n",
-				aci[currentCameraIndex].Module, aci[currentCameraIndex].Name, currentCameraIndex, currentCameraIndex);
-
+			if (CG.debugLevel >= 4)
+			{
+				char *m;
+#ifdef IS_RPi
+				m = aci[currentCameraIndex].Module;
+#else
+				m = aci[currentCameraIndex].Name;
+#endif
+				Log(4, "Saving module [%s], name [%s] from aci[%d] to RPiCameras[%d].CameraInfo\n",
+					m, aci[currentCameraIndex].Name, currentCameraIndex, currentCameraIndex);
+			}
 			Log(4, ">>> Also saving from CCs[%d] to RPiCameras[%d].ControlCaps\n",
 				currentCameraIndex, currentCameraIndex);
 			// Contents filled in below.
@@ -549,7 +669,7 @@ Log(6, "  NEW TYPE FOUND [%s], num_connectedCameraTypes now = %d\n", cC->Type, n
 			for (int i=0; i < MAX_NUM_CONTROL_CAPS; i++)
 			{
 				// Mark the end of the list.
-				RPiCameras[currentCameraIndex].ControlCaps[i].ControlType = CONTROL_TYPE_END;
+				RPiCameras[currentCameraIndex].ControlCaps[i].ControlType = (ASI_CONTROL_TYPE) -1;
 			}
 		}
 
@@ -599,8 +719,12 @@ Log(6, "  NEW TYPE FOUND [%s], num_connectedCameraTypes now = %d\n", cC->Type, n
 			CCs[currentCameraIndex][on_cap].DefaultValue = cap_default;
 
 			t = getToken(line, '\t');
+#ifdef IS_RPi
 			cap_current = atof(t);
 			CCs[currentCameraIndex][on_cap].CurrentValue = cap_current;
+#else
+			cap_current = cap_current;	// keeps compiler quiet
+#endif
 
 			t = getToken(line, '\t');
 			cap_auto = do_ASI_BOOL(t, on_line);
@@ -680,112 +804,20 @@ Log(6, "  NEW TYPE FOUND [%s], num_connectedCameraTypes now = %d\n", cC->Type, n
 		closeUp(EXIT_NO_CAMERA);
 	}
 
+#ifdef IS_ZWO
+	// Compare what we found to what the driver says.
+	int n = ASIGetNumOfConnectedCameras();
+	if (n != numThisType)
+	{
+		Log(0, "%s: ERROR: We found %d ZWO cameras but driver found %d\n", CG.ME, numThisType, n);
+		closeUp(EXIT_NO_CAMERA);
+	}
+#endif
+
 	return(numThisType);	// Number of cameras
 }
 
-// Put the properties for the specified camera into pASICameraInfo.
-ASI_ERROR_CODE ASIGetCameraProperty(ASI_CAMERA_INFO *pASICameraInfo, int iCameraIndex)
-{
-	if (iCameraIndex < 0 || iCameraIndex >= CG.numCameras)
-	{
-		Log(0, "%s: ERROR: ASIGetCameraProperty(), iCameraIndex (%d) bad (CG.numCameras=%d).\n",
-			CG.ME, iCameraIndex, CG.numCameras);
-		return(ASI_ERROR_INVALID_INDEX);
-	}
-	*pASICameraInfo = *(RPiCameras[iCameraIndex].CameraInfo);
-	return(ASI_SUCCESS);
-}
-
-
-// Get the number of capabilities supported by this camera and put in piNumberOfControls.
-ASI_ERROR_CODE ASIGetNumOfControls(int iCameraIndex, int *piNumberOfControls)
-{
-	if (iCameraIndex < 0 || iCameraIndex >= CG.numCameras)
-	{
-		Log(0, "%s: ERROR: ASIGetNumOfControls(), iCameraIndex (%d) bad.\n", CG.ME, iCameraIndex);
-		return(ASI_ERROR_INVALID_INDEX);
-	}
-	ASI_CONTROL_CAPS *p = RPiCameras[iCameraIndex].ControlCaps;
-
-	int num = 0;
-	for (int i=0; i < MAX_NUM_CONTROL_CAPS; i++)
-	{
-		if (p[i].ControlType == CONTROL_TYPE_END)
-		{
-			break;
-		}
-		num++;
-	}
-	*piNumberOfControls = num;		// This also sets the global iNumOfCtrl variable
-	return(ASI_SUCCESS);
-}
-
-
-// Get the camera control at index iControlIndex in the array, and put in pControlCaps.
-// This is typically used in a loop over all the control capabilities.
-ASI_ERROR_CODE ASIGetControlCaps(
-		int iCameraIndex,
-		int iControlIndex,
-		ASI_CONTROL_CAPS *pControlCaps)
-{
-	if (iCameraIndex < 0 || iCameraIndex >= CG.numCameras)
-		return(ASI_ERROR_INVALID_INDEX);
-
-	int numCaps = iNumOfCtrl != NOT_SET ? iNumOfCtrl : MAX_NUM_CONTROL_CAPS;
-	if (iControlIndex < 0 || iControlIndex > numCaps)
-		return(ASI_ERROR_INVALID_CONTROL_TYPE);
-
-	*pControlCaps = RPiCameras[iCameraIndex].ControlCaps[iControlIndex];
-	return(ASI_SUCCESS);
-}
-
-
-// Get the specified control capability's data value and put in plValue.
-ASI_ERROR_CODE ASIGetControlValue(
-		int iCameraIndex,
-		ASI_CONTROL_TYPE ControlType,
-		double *plValue,
-		ASI_BOOL *pbAuto)
-{
-	if (iCameraIndex < 0 || iCameraIndex >= CG.numCameras)
-		return(ASI_ERROR_INVALID_INDEX);
-
-	int numCaps = iNumOfCtrl != NOT_SET ? iNumOfCtrl : MAX_NUM_CONTROL_CAPS;
-	ASI_CONTROL_CAPS *p = RPiCameras[iCameraIndex].ControlCaps;
-	for (int i=0; i < numCaps ; i++)
-	{
-		if (ControlType == p[i].ControlType)
-		{
-			*plValue = p[i].CurrentValue;
-			// It's too much of a hassle to determine if this control type was auto so just return "false".
-			// We'd need to see if the control type supports auto and if it was last set to auto (and
-			// we're not setting any control values).
-			*pbAuto = ASI_FALSE;
-		}
-		return(ASI_SUCCESS);
-	}
-
-	return(ASI_ERROR_INVALID_CONTROL_TYPE);
-}
-
-
-// Empty routines so code compiles.
-int stopExposure(int cameraID) { return((int) ASI_SUCCESS); }
-int stopVideoCapture(int cameraID) { return((int) ASI_SUCCESS); }
-int closeCamera(int cameraID) { return((int) ASI_SUCCESS); }
-char const *getZWOexposureType(ZWOexposure t) { return("ZWOend"); }
-
-// Get the camera's serial number.  RPi cameras don't support serial numbers.
-ASI_ERROR_CODE  ASIGetSerialNumber(int iCameraIndex, ASI_SN *pSN)
-{
-	if (iCameraIndex < 0 || iCameraIndex >= CG.numCameras)
-		return(ASI_ERROR_INVALID_INDEX);
-
-	return(ASI_ERROR_GENERAL_ERROR);		// Not supported on RPi cameras
-}
-
-
-#else		////////////////////// ZWO
+#ifdef IS_ZWO
 
 // To keep the compiler quiet, we need to define these - they are RPi only.
 // It doesn't matter what the value is.
@@ -848,10 +880,6 @@ int closeCamera(int cameraID)
 int getCameraNumber()
 {
 	return(CG.cameraNumber);
-}
-int getConnectedCameras()
-{
-	return(ASIGetNumOfConnectedCameras());
 }
 
 ASI_ID cameraID;	// USB 3 cameras only
@@ -1185,7 +1213,6 @@ void saveCameraInfo(
 				fprintf(f, "\n");
 			}
 			char *cm = getCameraModel(cC->Name);
-			Log(4, "cC->Name=%s, cm=%s, camModel=%s\n", cC->Name, cm, camModel);
 			if (strcmp(cm, camModel) == 0)
 			{
 				foundThisModel = true;
@@ -1560,12 +1587,14 @@ void saveCameraInfo(
 #endif
 
 // XXXXXXXXX this is to help determine why some float settings are being output as integers
-if (strcmp(cc.Name,"Gain") == 0 && CG.debugLevel >= 4)
-{
-printf("===== cc.MinValue=%1.2f, min=%1.2f   cc.MaxValue=%1.2f, max=%1.2f, iNumOfCtrl=%d\n",
-(double) cc.MinValue, min, (double) cc.MaxValue, max, iNumOfCtrl);
-printf("MinValue : %s,\n", LorF(min, "%ld", "%.3f"));
-printf("MaxValue : %s,\n", LorF(max, "%ld", "%.3f"));
+if (0) {
+  if (strcmp(cc.Name,"Gain") == 0 && CG.debugLevel >= 4)
+  {
+  printf("===== cc.MinValue=%1.2f, min=%1.2f   cc.MaxValue=%1.2f, max=%1.2f, iNumOfCtrl=%d\n",
+	(double) cc.MinValue, min, (double) cc.MaxValue, max, iNumOfCtrl);
+  printf("MinValue : %s,\n", LorF(min, "%ld", "%.3f"));
+  printf("MaxValue : %s,\n", LorF(max, "%ld", "%.3f"));
+  }
 }
 
 		fprintf(f, "\t\t{\n");
@@ -2212,4 +2241,3 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 
 	return(ok);
 }
-

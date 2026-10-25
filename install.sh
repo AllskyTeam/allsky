@@ -3797,7 +3797,8 @@ request_map()
 	if [[ "$( settings ".hideexactlocation" )" != "true" ]]; then
 		MSG="Do you want to hide your exact location?"
 		MSG+="\n\nIf you select <Yes> the latitude and longitude shown on the Allsky Map"
-		MSG+="\nand the Allsky Websites are rounded to 1 decimal place (about 11 km / 7 miles)."
+		MSG+="\nand the Allsky Websites are rounded to the nearest 0.02 degrees,"
+		MSG+="\nso they are at most about 1.3 km (0.8 miles) from your real location."
 		MSG+="\nAllsky itself still uses the exact values."
 		MSG+="\n\nYou can change this later with the 'Hide Exact Location' setting."
 		if whiptail --title "${TITLE}" --yesno "${MSG}" 18 "${WT_WIDTH}" 3>&1 1>&2 2>&3; then

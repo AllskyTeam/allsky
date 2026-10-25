@@ -50,6 +50,12 @@ class LOGUTIL extends UTILBASE
                     'location' => '/var/log/allskyperiodic.log',
                     'default' => false,
                 ],
+                [
+                    'id' => 'allskyserver',
+                    'description' => 'Allsky Server Log',
+                    'location' => 'journal:allskyserver.service',
+                    'default' => false,
+                ],
             ],
         ];
 
@@ -105,7 +111,7 @@ class LOGUTIL extends UTILBASE
 
             if ($id === '' || $label === '' || $path === '') continue;
             if (!preg_match('/^[A-Za-z][A-Za-z0-9_-]*$/', $id)) continue;
-            if ($path[0] !== '/') continue;
+            if ($path[0] !== '/' && !preg_match('/^journal:[A-Za-z0-9_.@-]+\.service$/', $path)) continue;
 
             $logs[$id] = [
                 'label' => $label,
@@ -140,7 +146,16 @@ class LOGUTIL extends UTILBASE
             $this->send400('Invalid log ID.');
         }
 
+        $maxBytes = (int)($_GET['maxBytes'] ?? 65536);
+        if ($maxBytes < 1024) $maxBytes = 1024;
+        if ($maxBytes > 262144) $maxBytes = 262144;
+
         $path = $this->logs[$logId]['path'];
+        if (str_starts_with($path, 'journal:')) {
+            $this->getJournalTail($logId, substr($path, strlen('journal:')), $maxBytes);
+            return;
+        }
+
         if (!is_file($path) || !is_readable($path)) {
             $this->send404('Log file not found or not readable.');
         }
@@ -151,10 +166,6 @@ class LOGUTIL extends UTILBASE
             $offset = (int)$offsetRaw;
             if ($offset < 0) $offset = 0;
         }
-
-        $maxBytes = (int)($_GET['maxBytes'] ?? 65536);
-        if ($maxBytes < 1024) $maxBytes = 1024;
-        if ($maxBytes > 262144) $maxBytes = 262144;
 
         $size = @filesize($path);
         if ($size === false) {
@@ -201,6 +212,46 @@ class LOGUTIL extends UTILBASE
             'reset' => $reset,
             'truncated' => $truncated,
             'text' => $text,
+        ]);
+    }
+
+    private function getJournalTail(string $logId, string $unit, int $maxBytes): void
+    {
+        // The unit comes only from a validated monitorable_logs.json entry.
+        $command = [
+            'sudo', '-n', '/bin/journalctl', '--quiet', '--no-pager', '--boot',
+            '--unit=' . $unit, '--lines=300', '--output=short-iso', '--no-hostname',
+        ];
+        $process = @proc_open($command, [
+            1 => ['pipe', 'w'],
+            2 => ['pipe', 'w'],
+        ], $pipes);
+        if (!is_resource($process)) {
+            $this->send500('Unable to start journalctl.');
+        }
+
+        $text = stream_get_contents($pipes[1]);
+        fclose($pipes[1]);
+        $error = stream_get_contents($pipes[2]);
+        fclose($pipes[2]);
+        if (proc_close($process) !== 0 || $text === false) {
+            error_log('Unable to read journal for ' . $unit . ': ' . trim((string)$error));
+            $this->send500('Unable to read the server journal.');
+        }
+
+        $truncated = strlen($text) > $maxBytes;
+        if ($truncated) $text = substr($text, -$maxBytes);
+        $cursor = hash('sha256', $text);
+        $unchanged = hash_equals($cursor, (string)($_GET['offset'] ?? ''));
+
+        $this->sendResponse([
+            'logId' => $logId,
+            'size' => strlen($text),
+            'start' => 0,
+            'nextOffset' => $cursor,
+            'reset' => !$unchanged,
+            'truncated' => $truncated,
+            'text' => $unchanged ? '' : $text,
         ]);
     }
 }

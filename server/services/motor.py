@@ -1,10 +1,12 @@
 import board
 import time
-import sys
+import logging
 from digitalio import DigitalInOut, Direction
 from typing import Literal, Dict
 from services.gpio import get_board_pin
 from services.helpers import load_module_config
+
+logger = logging.getLogger(__name__)
 
 def motor_action(motor_type:Literal['a4988', 'byj'] = 'a4988', action:str='move', motor_direction: str = 'in', steps:int = 100, speed: Literal['slow', 'fast'] = 'slow' ) -> Dict|None:
 
@@ -112,13 +114,11 @@ class A4988Nema(object):
                         print("Steps count {}".format(i+1), end="\r", flush=True)
 
         except KeyboardInterrupt:
-            print("User Keyboard Interrupt : RpiMotorLib:")
+            logger.info("Motor movement interrupted from keyboard")
         except StopMotorInterrupt:
-            print("Stop Motor Interrupt : RpiMotorLib: ")
-        except Exception as motor_error:
-            print(sys.exc_info()[0])
-            print(motor_error)
-            print("RpiMotorLib  : Unexpected error:")
+            logger.info("Motor movement stopped")
+        except Exception:
+            logger.exception("Motor movement failed")
         else:
             # print report status
             if verbose:

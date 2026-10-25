@@ -131,7 +131,8 @@ class ALLSKYLOGS {
             }
 
             this.appendText(data.text || '');
-            this.offset = typeof data.nextOffset === 'number' ? data.nextOffset : this.offset;
+            this.offset = (typeof data.nextOffset === 'number' || typeof data.nextOffset === 'string')
+                ? data.nextOffset : this.offset;
 
             const size = typeof data.size === 'number' ? data.size : 0;
             const now = new Date();

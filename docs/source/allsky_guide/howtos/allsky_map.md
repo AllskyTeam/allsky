@@ -37,7 +37,7 @@ All these changes take effect immediately - no human intervention required!
 ### Hiding your exact location
 Users of the Allsky Map can zoom in to see where your camera is.
 If you don't want to show its exact location, enable ==Hide Exact Location== right after ==Latitude== and ==Longitude== in the WebUI's **Allsky Settings** page.
-The Allsky Map and your local and remote Allsky Websites then only get the ==Latitude== and ==Longitude== rounded to 1 decimal place, which is about 11 km (7 miles).
+The Allsky Map and your local and remote Allsky Websites then only get the ==Latitude== and ==Longitude== rounded to the nearest 0.02 degrees, so the location they show is at most about 1.3 km (0.8 miles) from your real one.
 Allsky itself still uses the exact values.
 
 ### When installing or upgrading Allsky

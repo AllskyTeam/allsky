@@ -828,7 +828,8 @@ CSRFToken();
 		$missingSettings = "";
 		$sourceFiles = array();
 		$sourceFilesContents = array();
-		echo "<table border='0' width='100%'>";
+		echo "<table border='0' width='100%' class='settings-table'>";
+		echo "<colgroup><col class='settings-label-column'><col class='settings-control-column'><col></colgroup>";
 			$inHeader = false;
 			$onHeader = 0;
 
@@ -841,7 +842,7 @@ CSRFToken();
 					show(headerNum, header, h);
 				}
 				function show(headerNum, header, h) {
-					header.style.display = "table-row";
+					header.style.removeProperty("display");
 					h.title = "Click to hide";
 					h.innerHTML = "<?php echo "$hideIcon" ?>";
 				}

@@ -422,7 +422,7 @@
     
     
       <li class="md-tabs__item md-tabs__item--active">
-        <a href="../allsky.html" class="md-tabs__link">
+        <a href="../preparation.html" class="md-tabs__link">
           
   
   
@@ -676,6 +676,34 @@
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../preparation.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preparation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -4560,6 +4588,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../allsky_modules/extra/meteor.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Meteor Detection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../allsky_modules/extra/adsb.html" class="md-nav__link">
         
   
@@ -5245,10 +5301,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_5_27">
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_5_28">
         
           
-          <label class="md-nav__link" for="__nav_4_5_27" id="__nav_4_5_27_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_4_5_28" id="__nav_4_5_28_label" tabindex="0">
             
   
   
@@ -5266,8 +5322,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_5_27_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4_5_27">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_5_28_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5_28">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -6329,9 +6385,47 @@
 <li>Ability to read the speed of a pwm fan</li>
 </ul>
 <h2 id="breaking-changes">Breaking Changes<a class="headerlink" href="#breaking-changes" title="Permanent link">¶</a></h2>
-<div class="admonition pullquote">
-<p>There are no breaking changes in this release.</p>
-</div>
+<p>If upgrading from anything other than v2026.10.01 there are some breaking changes</p>
+<details class="success">
+<summary>Remapping variables in the Overlay Editor</summary>
+<p>In this release, some overlay variables have changed name. That means an older overlay may still contain fields that point to variable names that are no longer the preferred or current ones.</p>
+<p>To help with that, the Overlay Editor now provides a <strong>remapping</strong> option in the <strong>field properties editor</strong>. The purpose of this is simple: instead of deleting a field and rebuilding it by hand, you can update the field so it points to the replacement variable.</p>
+<p>From a user's point of view, this matters because the layout of the field may still be perfectly fine. The problem is not necessarily where the field is or how it looks. The problem is that the variable reference inside it may need to be brought up to date.</p>
+<p>This is especially useful when:</p>
+<ul>
+<li>you have upgraded Allsky and an older overlay needs bringing into line with newer variable names,</li>
+<li>you want to keep the existing overlay design intact,</li>
+<li>you would rather correct fields one by one than rebuild the overlay from scratch.</li>
+</ul>
+<p>The practical benefit is straightforward: you can update an older overlay more cleanly and with much less rework. The remapping option in the field properties editor is there to help you make that sort of maintenance change safely and deliberately.</p>
+</details>
+<details class="danger">
+<summary>The Sun Moon and Planets have moved to a module</summary>
+<p>This feature has been removed from the overlay manager and put into a dedicated module. Please install the <code>Solar System</code> Module and configure it. The Allsky upgrade will NOT migrate any settings you had.</p>
+</details>
+<details class="danger">
+<summary>Dew heater module is new and requires the Temp module</summary>
+<p>Historically several modules have all replicated the code to read sensors so adding a new sensor required updating the same code multiple times.
+Now the Temp module is the only module that can read a temperature sensor. When it does so it makes the data available to other modules via variables, AS_TEMP, AS_HUMIDITY etc
+In practice hit means if you want to run the dew heater module then you will need to</p>
+<div class="highlight"><pre><span></span><code>- Install the Temp and Dew heature modules.
+- Configure the Temp module to read your sensor(s)
+- Set the Dew Heater to use "Allsky" as the "Sensor Type"
+- Configure the Dew Heater module
+</code></pre></div>
+<p>None of your older dew heater settings will be migrated</p>
+</details>
+<details class="warning">
+<summary>Running custom scripts on the System Page / Scripts Module</summary>
+<p>For security reasons scripts used in Buttons on the system page or run via the scripts module can only be run from the following directory</p>
+<div class="highlight"><pre><span></span><code>~/allsky/config/myFile
+</code></pre></div>
+<p>If you have any scripts run from the System Page or Scripts Module then you will need to move the scripts to the location above and change the config</p>
+</details>
+<details class="danger">
+<summary>Neteor Module has been replaced</summary>
+<p>The core Allsky meteor module has been replaced by a new <a href="../../allsky_modules/extra/meteor.html">"Temporal Meteor Detection"</a> module.</p>
+</details>
 <h2 id="changelog">Changelog<a class="headerlink" href="#changelog" title="Permanent link">¶</a></h2>
 <h3 id="image-processing">Image processing<a class="headerlink" href="#image-processing" title="Permanent link">¶</a></h3>
 <div class="release-notes-panel">

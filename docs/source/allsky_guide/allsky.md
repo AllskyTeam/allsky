@@ -30,7 +30,7 @@ For most users, the overall process is simple: prepare the Pi, make sure the cam
 
 Before you install Allsky for the first time, make sure the Pi itself is in a sensible starting state.
 
-The Raspberry Pi should already be running Raspberry Pi OS. The Desktop version is recommended because it tends to make general setup and troubleshooting easier, especially while you are still getting the system working.
+The Raspberry Pi should already be running a [supported Raspberry Pi OS release](preparation.md). For most dedicated Allsky systems, choose the 64-bit Lite edition. Choose Desktop if you want a local graphical interface or camera preview while setting up. The [preparation guide](preparation.md#choosing-an-image-64-bit-or-32-bit-lite-or-desktop) explains when to choose each image and [how to write it to a microSD card](preparation.md#writing-raspberry-pi-os-to-a-microsd-card).
 
 The Pi should also have a working Internet connection. A wired network connection is preferable if you can use one, because it is generally faster and more reliable than Wi-Fi during installation. This matters more than it may first appear. The installer may need to fetch packages, update components, and compile software, and that is all easier when the connection is stable. If you are using Power over Ethernet, that can make deployment especially neat because you only need one cable to the Pi.
 

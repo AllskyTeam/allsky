@@ -244,7 +244,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#description" class="md-skip">
+        <a href="#notice" class="md-skip">
           Skip to content
         </a>
       
@@ -418,7 +418,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../allsky_guide/allsky.html" class="md-tabs__link">
+        <a href="../../allsky_guide/preparation.html" class="md-tabs__link">
           
   
   
@@ -671,6 +671,34 @@
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/preparation.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preparation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -4176,49 +4204,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
       
         <li class="md-nav__item">
-  <a href="#description" class="md-nav__link">
+  <a href="#notice" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Description
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#settings" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Settings
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Settings">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#the-debug-options" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        The Debug Options
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#available-in" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Available in
+        Notice
       
     </span>
   </a>
@@ -4457,6 +4446,34 @@
     
   
     Dew Heater
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../extra/meteor.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Meteor Detection
   
 
     
@@ -5162,10 +5179,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_5_27">
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_5_28">
         
           
-          <label class="md-nav__link" for="__nav_4_5_27" id="__nav_4_5_27_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_4_5_28" id="__nav_4_5_28_label" tabindex="0">
             
   
   
@@ -5183,8 +5200,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_5_27_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4_5_27">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_5_28_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5_28">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -6234,87 +6251,8 @@
 
   <h1>Meteor Count</h1>
 
-<h2 id="description">Description<a class="headerlink" href="#description" title="Permanent link">¶</a></h2>
-<p>This module counts meteors in an image. It utilises a couple of algorithms to acheive this.</p>
-<div class="admonition warning">
-<p class="admonition-title">Create a mask</p>
-<p>It is essential that you create a mask before attempting to use this module. Failure to mask the image properly will result in a considerable number of false positives</p>
-<p>For details on howto create masks please refer to the <a href="../../allsky_guide/overlays/interface.html#the-mask-editor">Creating Masks</a> documentation</p>
-</div>
-<div class="admonition warning">
-<p class="admonition-title">The Moon</p>
-<p>The Moon can play havoc with star detection due to reflections in the dome. During intense moonlit nights the star count will be inaccurate</p>
-</div>
-<div class="admonition info">
-<p class="admonition-title">Tip</p>
-<p>When creating a mask ensure that it removes ALL areas of the image that could trigger false positives. Ideally the masked area should be smaller then the image circle, probably quite a bit smaller to prevent false positives around the horizon.</p>
-</div>
-<h2 id="settings">Settings<a class="headerlink" href="#settings" title="Permanent link">¶</a></h2>
-<p>The following settings are available in the module</p>
-<table>
-<thead>
-<tr>
-<th>Setting</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Use clearsky</td>
-<td>If the clearsky module is enabled then this will be used to determine if the star count module should even run</td>
-</tr>
-<tr>
-<td>Mask Path</td>
-<td>The mask to apply to the image</td>
-</tr>
-<tr>
-<td>Min Length</td>
-<td>The minimum length of a streak</td>
-</tr>
-</tbody>
-</table>
-<h3 id="the-debug-options">The Debug Options<a class="headerlink" href="#the-debug-options" title="Permanent link">¶</a></h3>
-<p>The debug options allow you to fine tune the settings and annotate the main image so see what the algorithms are detecting.</p>
-<table>
-<thead>
-<tr>
-<th>Setting</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Enable Debug Mode</td>
-<td>Enables debug mode</td>
-</tr>
-<tr>
-<td>Annotate Main</td>
-<td>If enabled any detected stars will be circled on the captured image</td>
-</tr>
-</tbody>
-</table>
-<div class="admonition info">
-<p class="admonition-title">Tip</p>
-<p>When using debug images set the 'Debug Image Name' to a file inside the Allsky web root. This will allow you to browse to the image</p>
-</div>
-<h2 id="available-in">Available in<a class="headerlink" href="#available-in" title="Permanent link">¶</a></h2>
-<div class="tabbed-set tabbed-alternate" data-tabs="1:1"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio"><div class="tabbed-labels"><label for="__tabbed_1_1">Pipelines available In</label></div>
-<div class="tabbed-content">
-<div class="tabbed-block">
-<div class="grid cards" markdown="">
-<ul>
-<li>
-<p><span class="twemoji lg middle"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M256 0C114.6 0 0 114.6 0 256s114.6 256 256 256c68.8 0 131.3-27.2 177.3-71.4 7.3-7 9.4-17.9 5.3-27.1s-13.7-14.9-23.8-14.1c-4.9.4-9.8.6-14.8.6-101.6 0-184-82.4-184-184 0-72.1 41.5-134.6 102.1-164.8 9.1-4.5 14.3-14.3 13.1-24.4s-8.6-18.3-18.5-20.5C294.4 2.2 275.4 0 256 0"></path></svg></span> <strong>Nighttime</strong></p>
-<hr>
-<ul>
-<li>The Night time pipeline</li>
-</ul>
-</li>
-</ul>
-</div>
-</div>
-</div>
-</div>
+<h2 id="notice">Notice<a class="headerlink" href="#notice" title="Permanent link">¶</a></h2>
+<p>This module has been deprecated and will be removed in a futire release. If you are using this module please switch to the <a href="../extra/meteor.html">Temporal Meteor detection module</a></p>
 
 
 

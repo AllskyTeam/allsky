@@ -422,7 +422,7 @@
     
     
       <li class="md-tabs__item md-tabs__item--active">
-        <a href="../allsky.html" class="md-tabs__link">
+        <a href="../preparation.html" class="md-tabs__link">
           
   
   
@@ -676,6 +676,34 @@
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../preparation.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preparation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -3014,6 +3042,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#booting-a-pi-5-from-an-nvme-ssd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Booting a Pi 5 from an NVMe SSD
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -4645,6 +4684,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../allsky_modules/extra/meteor.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Meteor Detection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../allsky_modules/extra/adsb.html" class="md-nav__link">
         
   
@@ -5330,10 +5397,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_5_27">
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_5_28">
         
           
-          <label class="md-nav__link" for="__nav_4_5_27" id="__nav_4_5_27_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_4_5_28" id="__nav_4_5_28_label" tabindex="0">
             
   
   
@@ -5351,8 +5418,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_5_27_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4_5_27">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_5_28_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5_28">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -6582,6 +6649,16 @@
 <li>SSDs are faster, generally more durable, and often available in larger capacities.</li>
 </ul>
 <p>For many people, the SD card is the simplest answer. For others, especially those using a Pi 5 or wanting a more durable storage setup, an SSD can be a better long-term choice.</p>
+<h3 id="booting-a-pi-5-from-an-nvme-ssd">Booting a Pi 5 from an NVMe SSD<a class="headerlink" href="#booting-a-pi-5-from-an-nvme-ssd" title="Permanent link">¶</a></h3>
+<p>A Pi 5 can boot Raspberry Pi OS from an NVMe SSD connected through its PCIe connector. This is useful if you want the OS, Allsky, and captured images on the same faster, higher-capacity drive. You need an NVMe M.2 SSD and a compatible PCIe adapter, such as the <a href="https://www.raspberrypi.com/documentation/computers/raspberry-pi.html#nvme-ssd-boot">Raspberry Pi M.2 HAT+ or M.2 HAT+ Compact</a>. Check that the drive, adapter, power supply, and cooling fit your enclosure before buying them.</p>
+<p>For a <strong>new installation</strong>:</p>
+<ol>
+<li><a href="https://www.raspberrypi.com/software/">Download Raspberry Pi Imager</a> on another computer. Connect the NVMe drive to that computer with a USB NVMe enclosure or adapter, and write a supported Raspberry Pi OS image to the drive. For most new Allsky setups, choose <strong>Trixie 64-bit Lite</strong>. Imager will erase the selected drive, so check it carefully and set your username, network, and SSH options before writing.</li>
+<li>Install the SSD and HAT on the Pi 5 according to the adapter's instructions. If the Pi does not yet boot from NVMe, start it from a temporary Raspberry Pi OS microSD card, update the OS with <code>sudo apt update &amp;&amp; sudo apt full-upgrade</code>, then run <code>sudo raspi-config</code>. Under <strong>Advanced Options → Boot Order</strong>, choose an option that includes NVMe, finish, and reboot.</li>
+<li>Remove the temporary microSD card and boot the Pi from the NVMe drive. Run <code>findmnt -n -o SOURCE /</code> to confirm that the root filesystem is on an NVMe partition, such as <code>/dev/nvme0n1p2</code>. Then <a href="../allsky.html">install Allsky</a> on the running system.</li>
+</ol>
+<p>If you are moving an existing Allsky installation, make <a href="../backup_restore/overview.html">configuration and image backups</a> before imaging the NVMe drive, then restore them after installing Allsky on the new OS. When Allsky runs from NVMe, its <code>~/allsky/tmp</code> directory stays on the SSD by default instead of being moved into RAM.</p>
+<p>The official <a href="https://www.raspberrypi.com/documentation/computers/raspberry-pi.html#nvme-ssd-boot">NVMe boot instructions</a> cover boot order and troubleshooting. Leave the Pi 5 at its default PCIe Gen 2 speed unless you have tested your drive and adapter; Raspberry Pi does not certify Gen 3 operation.</p>
 <h2 id="recommended-combinations">Recommended combinations<a class="headerlink" href="#recommended-combinations" title="Permanent link">¶</a></h2>
 <p>If you want concrete starting points, these combinations are sensible:</p>
 <h3 id="strong-new-build">Strong new build<a class="headerlink" href="#strong-new-build" title="Permanent link">¶</a></h3>

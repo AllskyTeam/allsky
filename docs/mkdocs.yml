@@ -145,6 +145,7 @@ nav:
   - Home: index.md
   - Allsky Guide:
     - Installation: 
+      - Preparation: allsky_guide/preparation.md
       - allsky_guide/allsky.md
       - allsky_guide/website.md
       - allsky_guide/server.md
@@ -259,6 +260,7 @@ nav:
     - Extra Modules:
       - Environment: allsky_modules/extra/environment.md    
       - Dew Heater: allsky_modules/extra/dew_heater.md
+      - Meteor Detection: allsky_modules/extra/meteor.md
       - ADSB: allsky_modules/extra/adsb.md
       - Border: allsky_modules/extra/border.md
       - Discord: allsky_modules/extra/discord.md

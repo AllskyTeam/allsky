@@ -22,16 +22,10 @@ This page lists known issues and limitations with the current Allsky release. Wo
 
     **Future Plans**: Will change in a future release.
 
-- **Known Issue**: The Overlay Module may be disabled the first time it runs. This is due to the module having to download the JPL ephemeris data which can take some time on a slow Internet connection.
-    **Workaround**: Re-enable it in the Module Manager.
+## Charts
 
-    **Future Plans**: Will fix in the next release.
+- **Bullseye**: Charts will **NOT** work on Bullseye due to outdated system software. We strongly recommend that you upgrade from Bullseys
 
-- **Known Issue**: The "additional modules" have been installed but they don't all appear.
-
-    **Workaround**: Ensure the "Show Experimental" setting is enabled in the Module Manager's settings.
-
-    **Future Plans**: Will fix in the next release.
 
 ## Other { data-toc-label="Other" }
 

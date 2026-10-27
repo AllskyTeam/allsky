@@ -230,7 +230,7 @@ void showConnectedCameras()
 		printf("     cameraID = %d\n", cC->cameraID);
 		printf("     Sensor = %s\n", cC->Sensor);
 #ifdef IS_RPi
-		printf("     Module_len = %ld\n", cC->Module_len);
+		printf("     Module_len = %zu\n", cC->Module_len);
 #endif
 		printf("     Name = %s\n", cC->Name);
 	}

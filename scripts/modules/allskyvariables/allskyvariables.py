@@ -196,6 +196,10 @@ class ALLSKYVARIABLES:
         variable = None
 
         for raw_variable_data in variables:
+            if 'variable' in raw_variable_data and raw_variable_data['variable'] == search_variable:
+                return raw_variable_data
+
+        for raw_variable_data in variables:
             variable_label = raw_variable_data['name']
             variable_label = variable_label.replace('${', '').replace('}', '')
             if variable_label == search_variable:

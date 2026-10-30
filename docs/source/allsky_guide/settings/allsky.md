@@ -291,7 +291,7 @@ AllskySettings
     | ==Time Format== | `%Y%m%d %H:%M:%S` | Determines the format of the displayed time. Run `man 3 strftime` to see the options. |
     | ==Temperature Units== | Celsius | Determines what unit(s) the temperature will be displayed in (Celsius, Fahrenheit, or Both). |
     | ==Latitude== <span class="red">AW</span> |  | Latitude of the camera. Formats include: `123.4N`, `123.4S`, `+123.4`, or `-123.4`. Southern hemisphere is negative. The `+` is needed for positive numbers. |
-    | ==Longitude== <span class="red">AW</span> |  | Longitude of the camera. Formats include: `123.4E`, `123.4W`, `+123.4`, or `-123.4`. West is negative. The `+` is needed for positive numbers.  <br><br> The actual values for latitude and longitude are not displayed on the map, but users can zoom in to see exactly where your camera is. If that bothers you, change the latitude and/or longitude values slightly. Allsky itself only uses them to determine when daytime and nighttime begin so you can change the values a fair amount and not impact anything.  <br><br> When installing Allsky the first time, the installation script will attempt to determine your rough ==Latitude== and ==Longitude== based on your IP address. These values may be "close enough" in most cases but you may want to check them anyhow. |
+    | ==Longitude== <span class="red">AW</span> |  | Longitude of the camera. Formats include: `123.4E`, `123.4W`, `+123.4`, or `-123.4`. West is negative. The `+` is needed for positive numbers.  <br><br> The actual values for latitude and longitude are not displayed on the map, but users can zoom in to see exactly where your camera is. If that bothers you, enable ==Hide Exact Location== in the [Privacy & Sharing](#Allsky-map-settings) section.  <br><br> When installing Allsky the first time, the installation script will attempt to determine your rough ==Latitude== and ==Longitude== based on your IP address. These values may be "close enough" in most cases but you may want to check them anyhow. |
     | ==Angle== <span class="red">AW</span> | -6 | Altitude of the Sun above or below the horizon at which daytime and nighttime switch. Can be negative (Sun below horizon) or positive (Sun above horizon).  <br><br>- `0` = Sunset  <br>- `-6` = Civil twilight  <br>- `-12` = Nautical twilight  <br>- `-18` = Astronomical twilight  <br><br>[Click here](/docs/allsky_guide/howtos/angle_sunrise_sunset.html) for a more detailed description of ==Angle==. |
     | ==Take Dark Frames== | No | Enable to take dark frames which are use to decrease noise in images.  <br><br>See the [in-depth explanation](/docs/allsky_guide/howtos/dark_frames.html) of dark frames, including how to take and use them. |
     | ==Dark Frame Upper Threshold== | 0.05 | Any dark frame that has a mean brightness higher than this number is not saved.  <br><br>If you're getting messages about "bad images" while taking dark frames, first make sure your lens is ==FULLY covered== and ==NO== light is getting in.  <br><br>If you are positive no light is getting in and your camera is noisy, then increase this to `0.1` and see if it helps. If not, then increase it more. |
@@ -510,7 +510,11 @@ When you change one of these settings in the WebUI, Allsky checks the value. If 
         | ==Remote Keogram File Name== | keogram.jpg | Unless you are using the remote server as a backup, this is ==usually== used so the server knows the file name. |
         | ==Remote Startrails File Name== | startrails.jpg | Unless you are using the remote server as a backup, this is ==usually== used so the server knows the file name. |
 
-## Allsky Map { data-toc-label="Allsky Map" id="Allsky-map-settings"}
+## Privacy & Sharing { data-toc-label="Privacy & Sharing" id="Privacy-settings"}
+
+See [Privacy & Sharing](/docs/allsky_guide/settings/privacy.html) for what is sent, where it goes, and why.
+
+### Allsky Map { data-toc-label="Allsky Map" id="Allsky-map-settings"}
 ???+ info "Settings"
 
     !!! note
@@ -519,10 +523,19 @@ When you change one of these settings in the WebUI, Allsky checks the value. If 
     | WebUI Setting { .w-20p } | Default { .w-10p }  | Description |
     |---|---:|---|
     | ==Show on Map== | No | Enable to have your camera appear on the [Allsky map](https://www.thomasjacquin.com/allsky-map). ==If off, the following settings are ignored.== |
+    | ==Hide Exact Location== <span class="red">AW</span> | No | Enable to round the ==Latitude== and ==Longitude== to the nearest 0.02 degrees on the [Allsky Map](/docs/allsky_guide/howtos/allsky_map.html) and the local and remote Allsky Websites, so they are at most about 1.3 km (0.8 miles) from your real location. The settings file keeps the exact values and Allsky itself still uses them, for example to determine when daytime and nighttime begin. <br><br>Text overlays that show the latitude or longitude are not changed. |
     | ==Location== <span class="red">AW</span> |  | The location of your camera. You can put any level of detail you want. |
     | ==Owner== <span class="red">AW</span> |  | The owner of the camera - your name, an association name, an observatory, etc. |
     | ==Lens== <span class="red">AW</span> |  | The lens you're using on your camera, for example: ==Arecont 1.55==. |
     | ==Equipment Info== <span class="red">AW</span> |  | Any optional information you want to add about the equipment you are using. For example, if you are using a camera with no infrared filter (a "NoIR" camera). |
+
+### Usage Data and Contact { data-toc-label="Usage Data and Contact" id="Usage-data-settings"}
+???+ info "Settings"
+
+    | WebUI Setting { .w-20p } | Default { .w-10p }  | Description |
+    |---|---:|---|
+    | ==Share Usage Data== | No | Enable to send the Allsky Team, once a week, how Allsky is used on this Pi: the Pi OS, the Pi model, the camera, how many cameras are connected, the enabled modules, and how often Allsky was started, the camera was changed, and the WebUI was used. See [Usage Data](/docs/allsky_guide/settings/privacy.html#Usage-data) for exactly what is sent. Disabling it deletes the data from the server. |
+    | ==Contact Email== |  | Optional email address the Allsky Team can use to contact you, for example about a problem with the data your Pi sends or about a security issue in Allsky. It isn't shown publicly or shared outside the Allsky Team. See [Contact Email](/docs/allsky_guide/settings/privacy.html#Contact-email). Clearing it deletes the address from the server. |
 
 ## WebUI { data-toc-label="WebUI" id="WebUI-settings"}
 ???+ info "Settings"

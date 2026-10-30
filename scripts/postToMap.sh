@@ -9,12 +9,12 @@ ME="$( basename "${BASH_ARGV0}" )"
 # Information is gathered automatically from the settings file.
 # The script can be called manually, via endOfNight.sh, or via the WebUI.
 
-MAP_COMMAND="https://www.thomasjacquin.com/allsky-map/postToMap.php"
-
 #shellcheck source-path=.
 source "${ALLSKY_HOME}/variables.sh"		|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${ALLSKY_EXIT_ERROR_STOP}"
+
+MAP_COMMAND="${ALLSKY_MAP_URL}postToMap.php"
 
 function usage_and_exit()
 {
@@ -228,12 +228,13 @@ if [[ -n ${E} ]]; then
 	exit 1
 fi
 
-# Check for errors.  convertLatLong outputs error message.
+# Check for errors.  getPublicLatLong outputs error message.
+# The map gets the rounded values if "Hide Exact Location" is enabled.
 ERR_MSG=""
-if ! LATITUDE="$( convertLatLong "${LATITUDE}" "latitude" 2>&1 )" ; then
+if ! LATITUDE="$( getPublicLatLong "latitude" "${LATITUDE}" "${S_hideexactlocation}" 2>&1 )" ; then
 	ERR_MSG+="\n${LATITUDE}"
 fi
-if ! LONGITUDE="$( convertLatLong "${LONGITUDE}" "longitude" 2>&1 )" ; then
+if ! LONGITUDE="$( getPublicLatLong "longitude" "${LONGITUDE}" "${S_hideexactlocation}" 2>&1 )" ; then
 	ERR_MSG+="\n${LONGITUDE}"
 fi
 F="${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
@@ -349,16 +350,32 @@ else
 		exit 2
 	fi
 
+	# Output the json file ${2} with single quotes escaped and, if "Hide Exact Location"
+	# is enabled, the latitude and longitude under the ${1} object replaced by the rounded values.
+	public_location()
+	{
+		local PARENT="${1}"
+		local FILE="${2}"
+		if [[ ${S_hideexactlocation} == "true" ]]; then
+			jq --arg lat "${LATITUDE}" --arg lon "${LONGITUDE}" \
+				"(${PARENT}) |= (if type == \"object\" then .latitude = \$lat | .longitude = \$lon else . end)" \
+				"${FILE}"
+		else
+			cat "${FILE}"
+		fi | sed -e "s/'/'\"'\"'/g"
+	}
+
 	generate_post_data()
 	{
 		# Need to escape single quotes.
-		local ALLSKY_SETTINGS="$( sed -e "s/'/'\"'\"'/g" "${ALLSKY_SETTINGS_FILE}" )"
+		# Both files contain the location so make it match what's sent above.
+		local ALLSKY_SETTINGS="$( public_location "." "${ALLSKY_SETTINGS_FILE}" )"
 
 		local WEBSITE_SETTINGS=""
 		if [[ ${S_uselocalwebsite} == "true" ]]; then
-			WEBSITE_SETTINGS="$( sed -e "s/'/'\"'\"'/g" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}" )"
+			WEBSITE_SETTINGS="$( public_location ".config" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}" )"
 		elif [[ ${S_useremotewebsite} == "true" ]]; then
-			WEBSITE_SETTINGS="$( sed -e "s/'/'\"'\"'/g" "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" )"
+			WEBSITE_SETTINGS="$( public_location ".config" "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" )"
 		fi
 		[[ -z ${WEBSITE_SETTINGS} ]] && WEBSITE_SETTINGS="{ }"
 

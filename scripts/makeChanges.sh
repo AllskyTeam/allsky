@@ -107,6 +107,7 @@ fi
 
 RUN_POSTTOMAP="false"
 POSTTOMAP_ACTION=""
+POSTTODATA_ACTIONS=()		# arguments for each run of postToData.sh
 WEBSITE_CONFIG=()
 WEBSITE_VALUE_CHANGED="false"
 GOT_WARNING="false"
@@ -364,6 +365,8 @@ do
 			# This requires Allsky to be stopped so we don't
 			# try to call the capture program while it's already running.
 			[[ ${FROM} == "install" ]] && stop_Allsky
+			# Changes the user makes, not the installer's.
+			[[ ${FROM} != "install" ]] && count_usage "camera_changes"
 
 			if [[ ${OPTIONS_FILE_ONLY} == "false" ]]; then
 
@@ -772,14 +775,43 @@ do
 			;;
 
 		"showonmap")
+			# The same for every camera.
+			update_all_settings_files ".${KEY}" "${NEW_VALUE}" "boolean"
 			SHOW_ON_MAP="true"
 			[[ ${NEW_VALUE} == "false" ]] && POSTTOMAP_ACTION="--delete"
 			RUN_POSTTOMAP="true"
 			;;
 
+		"shareusagedata")
+			# The same for every camera.  Disabling it deletes the data from the server.
+			update_all_settings_files ".${KEY}" "${NEW_VALUE}" "boolean"
+			if [[ ${NEW_VALUE} == "true" ]]; then
+				POSTTODATA_ACTIONS+=( "--force" )
+			else
+				POSTTODATA_ACTIONS+=( "--delete usage" )
+			fi
+			;;
+
+		"contactemail")
+			if [[ -n ${NEW_VALUE} && ! ${NEW_VALUE} =~ ^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$ ]]; then
+				wE_ "${ERROR_PREFIX}ERROR: '${NEW_VALUE}' is not a valid email address."
+				echo "${wBR}Setting ${WSNs}${LABEL}${WSNe} back to ${WSVs}${OLD_VALUE}${WSVe}."
+				update_json_file ".${KEY}" "${OLD_VALUE}" "${ALLSKY_SETTINGS_FILE}" "string"
+				(( NUM_CHANGED-- ))
+				continue
+			fi
+			# The same for every camera.  Clearing it deletes the address from the server.
+			update_all_settings_files ".${KEY}" "${NEW_VALUE}" "string"
+			if [[ -n ${NEW_VALUE} ]]; then
+				POSTTODATA_ACTIONS+=( "--force" )
+			else
+				POSTTODATA_ACTIONS+=( "--delete email" )
+			fi
+			;;
+
 		"latitude" | "longitude")
 			# Allow either +/- decimal numbers, OR numbers with N, S, E, W, but not both.
-			if LAT_LON="$( convertLatLong "${NEW_VALUE}" "${KEY}" 2>&1 )" ; then
+			if LAT_LON="$( getPublicLatLong "${KEY}" "${NEW_VALUE}" 2>&1 )" ; then
 				check_website && WEBSITE_CONFIG+=(config."${KEY}" "${LABEL}" "${LAT_LON}")
 				WEBSITE_VALUE_CHANGED="true"
 				RUN_POSTTOMAP="true"
@@ -791,6 +823,21 @@ do
 				update_json_file ".${KEY}" "${OLD_VALUE}" "${ALLSKY_SETTINGS_FILE}" "string"
 				(( NUM_CHANGED-- ))
 			fi
+			;;
+
+		"hideexactlocation")
+			# The same for every camera.
+			update_all_settings_files ".${KEY}" "${NEW_VALUE}" "boolean"
+			# The Websites and the Allsky Map get the rounded or exact values.
+			if check_website ; then
+				for LL in "latitude" "longitude" ; do
+					if LAT_LON="$( getPublicLatLong "${LL}" "" "${NEW_VALUE}" 2>&1 )" ; then
+						WEBSITE_CONFIG+=(config."${LL}" "${LL^}" "${LAT_LON}")
+					fi
+				done
+			fi
+			WEBSITE_VALUE_CHANGED="true"
+			RUN_POSTTOMAP="true"
 			;;
 
 		"location" | "owner" | "lens" | "equipmentinfo")
@@ -1247,6 +1294,17 @@ if [[ ${RUN_POSTTOMAP} == "true" ]]; then
 		"${ALLSKY_SCRIPTS}/postToMap.sh" --whisper --force ${DEBUG_ARG} --from "${FROM}" ${POSTTOMAP_ACTION}
 	fi
 fi
+
+# The settings files are already updated so each run sends what is now enabled.
+# Sending once is enough even if both settings were enabled or changed.
+SENT_DATA="false"
+for ACTION in "${POSTTODATA_ACTIONS[@]}"; do
+	[[ ${ACTION} == "--force" && ${SENT_DATA} == "true" ]] && continue
+	[[ ${ACTION} == "--force" ]] && SENT_DATA="true"
+	debug && wD_ "Executing postToData.sh ${ACTION}"
+	# shellcheck disable=SC2086
+	"${ALLSKY_SCRIPTS}/postToData.sh" --whisper ${DEBUG_ARG} --from "${FROM}" ${ACTION}
+done
 
 if [[ ${GOT_WARNING} == "true" ]]; then
 	exit 255

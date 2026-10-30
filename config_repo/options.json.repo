@@ -2124,24 +2124,47 @@
 },
 
 {
-"name" : "allskymaptab========================================",
-"label" : "Map",
+"name" : "privacytab========================================",
+"label" : "Privacy & Sharing",
 "type" : "header-tab"
 },
 {
-"name" : "allskymapheader",
-"label" : "Allsky Map Settings",
+"name" : "privacyheader",
+"label" : "Privacy & Sharing Settings",
 "type" : "header"
+},
+{
+"name" : "allskymapsubheader",
+"label" : "Allsky Map",
+"type" : "header-sub"
 },
 {
 "name" : "showonmap",
 "default" : false,
-"description" : "Enable to have your camera appear on the <a href='https://www.thomasjacquin.com/allsky-map/' target='_blank' title='Opens in new tab/window'><span class='WebUISetting'>Allsky Map <i class='fa fa-external-link-alt fa-fw'></i></span></a>.",
+"description" : "Enable to have your camera appear on the <a href='https://www.thomasjacquin.com/allsky-map/' target='_blank' title='Opens in new tab/window'><span class='WebUISetting'>Allsky Map <i class='fa fa-external-link-alt fa-fw'></i></span></a>.<br>See <a external='true' href='/docs/allsky_guide/settings/privacy.html'>Privacy &amp; Sharing</a> for what is sent and why.",
 "label" : "Show on Map",
 "type" : "boolean",
 "carryforward" : true,
 "checkchanges" : true,
 "booldependson" : "uselocalwebsite OR useremotewebsite"
+},
+{
+"name" : "showonmapdeclined",
+"settingsonly" : true,
+"default" : "",
+"description" : "The date (YYYY-MM-DD) the user last declined the installer's request to add the camera to the Allsky Map. Set automatically.",
+"label" : "NOT DISPLAYED IN WebUI",
+"type" : "text",
+"carryforward" : true
+},
+{
+"name" : "hideexactlocation",
+"default" : false,
+"description" : "Enable to round the <span class='WebUISetting'>Latitude</span> and <span class='WebUISetting'>Longitude</span> to the nearest 0.02 degrees on the Allsky Map and the local and remote Allsky Websites, so they are at most about 1.3 km (0.8 miles) from your real location. Allsky itself still uses the exact values.",
+"label" : "Hide Exact Location",
+"type" : "boolean",
+"carryforward" : true,
+"checkchanges" : true
 },
 {
 "name" : "location",
@@ -2198,6 +2221,35 @@
 "description" : "Optional information on your equipment.",
 "label" : "Equipment Info",
 "type" : "widetext",
+"checkchanges" : true,
+"optional" : true
+},
+{
+"name" : "usagedatasubheader",
+"label" : "Usage Data",
+"type" : "header-sub"
+},
+{
+"name" : "shareusagedata",
+"default" : false,
+"description" : "Enable to send the Allsky Team, once a week, how Allsky is used on this Pi: the Pi OS, the Pi model, the camera, how many cameras are connected, the enabled modules, and how often Allsky was started, the camera was changed, and the WebUI was used. Nothing else is sent, and the data are not shared with anyone else. They help decide what to improve and test.<br>See <a external='true' href='/docs/allsky_guide/settings/privacy.html'>Privacy &amp; Sharing</a> for exactly what is sent. Disabling this deletes the data from the server.",
+"label" : "Share Usage Data",
+"type" : "boolean",
+"carryforward" : true,
+"checkchanges" : true
+},
+{
+"name" : "contactsubheader",
+"label" : "Contact",
+"type" : "header-sub"
+},
+{
+"name" : "contactemail",
+"default" : "",
+"description" : "Optional email address the Allsky Team can use to contact you, for example about a problem with the data your Pi sends or about a security issue in Allsky. It is not used for anything else, not shown publicly, and not shared outside the Allsky Team.<br>See <a external='true' href='/docs/allsky_guide/settings/privacy.html'>Privacy &amp; Sharing</a>. Clearing this deletes the address from the server.",
+"label" : "Contact Email",
+"type" : "text",
+"carryforward" : true,
 "checkchanges" : true,
 "optional" : true
 },

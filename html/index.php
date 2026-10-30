@@ -37,6 +37,7 @@ $status = new StatusMessages();
 define('DHCP_ENABLED', false);
 
 checkClearingMessages();
+countWebUIUse();
 
 function getRemoteWebsiteVersion()
 {

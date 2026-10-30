@@ -413,50 +413,55 @@ get_connected_cameras()
 	CMD="$( determineCommandToUse "false" "" "true" 2> /dev/null )"
 	CMD_RET=$?		# return of 2 means no command was found
 	[[ ${CMD_RET} -ne 0 ]] && CMD=""
+	display_msg --logonly info "determineCommandToUse() returned: ${CMD:-null}."
 
 	# RPi format:	RPi \t camera_number \t camera_sensor [\t optional_other_stuff]
 	# ZWO format:	ZWO \t camera_number \t camera_model
 	# "true" == ignore errors
 	get_connected_cameras_info --cmd "${CMD}" "true" > "${ALLSKY_CONNECTED_CAMERAS_INFO}" 2>/dev/null
 
-	# Get the RPi connected cameras, if any.
-	CC=""
-	if [[ -n ${CMD} ]]; then
-		local RPI_MODELS="$( get_connected_camera_models --full "RPi" )"
-		# Output from above is:
-		#	RPi \t camera_number \t camera_model \t camera_sensor
-		if [[ -n ${RPI_MODELS} ]]; then
-			CC="RPi"
-			local CT_ CN_ MODEL SENSOR
-   			# shellcheck disable=SC2034
-			while read -r CT_ CN_ MODEL SENSOR
-			do
-				MODEL="${MODEL//++/ }"
-				SENSOR="${SENSOR//++/ }"
-				local FULL_NAME="${MODEL}  (${SENSOR})"
-				[[ -z ${FUNCTION} ]] && display_msg --log progress "Found" " RPi ${FULL_NAME}"
-				CT+=("${NUM_RPI};RPi;${MODEL}" "RPi     ${FULL_NAME}")
-				((NUM_RPI++))
-			done <<<"${RPI_MODELS// /++}"		# replace any spaces
-		fi
-	fi
-
-	# Get the ZWO connected cameras, if any.
-	local ZWO_MODELS="$( get_connected_camera_models "ZWO" )"
-	if [[ -n ${ZWO_MODELS} ]]; then
-		[[ -n ${CC} ]] && CC+=" "
-		CC+="ZWO"
-		for X in ${ZWO_MODELS// /++}
-		do
-			MODEL="${X//++/ }"
-			[[ -z ${FUNCTION} ]] && display_msg --log progress "Found" " ZWO ${MODEL}"
-			if ! strings "${ZWO_FILE}" | grep --silent "${MODEL}" ; then
-				display_msg --log warning "ZWO ${MODEL} not supported; ignoring"
-			else
-				CT+=( "${NUM_ZWO};ZWO;${MODEL}" "ZWO     ${MODEL}" )
-				((NUM_ZWO++))
+	if [[ ! -s ${ALLSKY_CONNECTED_CAMERAS_INFO} ]]; then
+		display_msg --logonly info "get_connected_cameras_info() returned nothing."
+	else
+		# Get the RPi connected camera model(s), if any.
+		CC=""
+		if [[ -n ${CMD} ]]; then
+			local RPI_MODELS="$( get_connected_camera_models --full "RPi" )"
+			# Output from above is:
+			#	RPi \t camera_number \t camera_model \t camera_sensor
+			if [[ -n ${RPI_MODELS} ]]; then
+				CC="RPi"
+				local CT_ CN_ MODEL SENSOR
+   				# shellcheck disable=SC2034
+				while read -r CT_ CN_ MODEL SENSOR
+				do
+					MODEL="${MODEL//++/ }"
+					SENSOR="${SENSOR//++/ }"
+					local FULL_NAME="${MODEL}  (${SENSOR})"
+					[[ -z ${FUNCTION} ]] && display_msg --log progress "Found" " RPi ${FULL_NAME}"
+					CT+=("${NUM_RPI};RPi;${MODEL}" "RPi     ${FULL_NAME}")
+					((NUM_RPI++))
+				done <<<"${RPI_MODELS// /++}"		# replace any spaces
 			fi
-		done
+		fi
+
+		# Get the ZWO connected camera model(s), if any.
+		local ZWO_MODELS="$( get_connected_camera_models "ZWO" )"
+		if [[ -n ${ZWO_MODELS} ]]; then
+			[[ -n ${CC} ]] && CC+=" "
+			CC+="ZWO"
+			for X in ${ZWO_MODELS// /++}
+			do
+				MODEL="${X//++/ }"
+				[[ -z ${FUNCTION} ]] && display_msg --log progress "Found" " ZWO ${MODEL}"
+				if ! strings "${ZWO_FILE}" | grep --silent "${MODEL}" ; then
+					display_msg --log warning "ZWO ${MODEL} not supported; ignoring"
+				else
+					CT+=( "${NUM_ZWO};ZWO;${MODEL}" "ZWO     ${MODEL}" )
+					((NUM_ZWO++))
+				fi
+			done
+		fi
 	fi
 
 	NUM_CONNECTED_CAMERAS=$(( NUM_RPI + NUM_ZWO ))

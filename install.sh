@@ -413,50 +413,55 @@ get_connected_cameras()
 	CMD="$( determineCommandToUse "false" "" "true" 2> /dev/null )"
 	CMD_RET=$?		# return of 2 means no command was found
 	[[ ${CMD_RET} -ne 0 ]] && CMD=""
+	display_msg --logonly info "determineCommandToUse() returned: ${CMD:-null}."
 
 	# RPi format:	RPi \t camera_number \t camera_sensor [\t optional_other_stuff]
 	# ZWO format:	ZWO \t camera_number \t camera_model
 	# "true" == ignore errors
 	get_connected_cameras_info --cmd "${CMD}" "true" > "${ALLSKY_CONNECTED_CAMERAS_INFO}" 2>/dev/null
 
-	# Get the RPi connected cameras, if any.
-	CC=""
-	if [[ -n ${CMD} ]]; then
-		local RPI_MODELS="$( get_connected_camera_models --full "RPi" )"
-		# Output from above is:
-		#	RPi \t camera_number \t camera_model \t camera_sensor
-		if [[ -n ${RPI_MODELS} ]]; then
-			CC="RPi"
-			local CT_ CN_ MODEL SENSOR
-   			# shellcheck disable=SC2034
-			while read -r CT_ CN_ MODEL SENSOR
-			do
-				MODEL="${MODEL//++/ }"
-				SENSOR="${SENSOR//++/ }"
-				local FULL_NAME="${MODEL}  (${SENSOR})"
-				[[ -z ${FUNCTION} ]] && display_msg --log progress "Found" " RPi ${FULL_NAME}"
-				CT+=("${NUM_RPI};RPi;${MODEL}" "RPi     ${FULL_NAME}")
-				((NUM_RPI++))
-			done <<<"${RPI_MODELS// /++}"		# replace any spaces
-		fi
-	fi
-
-	# Get the ZWO connected cameras, if any.
-	local ZWO_MODELS="$( get_connected_camera_models "ZWO" )"
-	if [[ -n ${ZWO_MODELS} ]]; then
-		[[ -n ${CC} ]] && CC+=" "
-		CC+="ZWO"
-		for X in ${ZWO_MODELS// /++}
-		do
-			MODEL="${X//++/ }"
-			[[ -z ${FUNCTION} ]] && display_msg --log progress "Found" " ZWO ${MODEL}"
-			if ! strings "${ZWO_FILE}" | grep --silent "${MODEL}" ; then
-				display_msg --log warning "ZWO ${MODEL} not supported; ignoring"
-			else
-				CT+=( "${NUM_ZWO};ZWO;${MODEL}" "ZWO     ${MODEL}" )
-				((NUM_ZWO++))
+	if [[ ! -s ${ALLSKY_CONNECTED_CAMERAS_INFO} ]]; then
+		display_msg --logonly info "get_connected_cameras_info() returned nothing."
+	else
+		# Get the RPi connected camera model(s), if any.
+		CC=""
+		if [[ -n ${CMD} ]]; then
+			local RPI_MODELS="$( get_connected_camera_models --full "RPi" )"
+			# Output from above is:
+			#	RPi \t camera_number \t camera_model \t camera_sensor
+			if [[ -n ${RPI_MODELS} ]]; then
+				CC="RPi"
+				local CT_ CN_ MODEL SENSOR
+   				# shellcheck disable=SC2034
+				while read -r CT_ CN_ MODEL SENSOR
+				do
+					MODEL="${MODEL//++/ }"
+					SENSOR="${SENSOR//++/ }"
+					local FULL_NAME="${MODEL}  (${SENSOR})"
+					[[ -z ${FUNCTION} ]] && display_msg --log progress "Found" " RPi ${FULL_NAME}"
+					CT+=("${NUM_RPI};RPi;${MODEL}" "RPi     ${FULL_NAME}")
+					((NUM_RPI++))
+				done <<<"${RPI_MODELS// /++}"		# replace any spaces
 			fi
-		done
+		fi
+
+		# Get the ZWO connected camera model(s), if any.
+		local ZWO_MODELS="$( get_connected_camera_models "ZWO" )"
+		if [[ -n ${ZWO_MODELS} ]]; then
+			[[ -n ${CC} ]] && CC+=" "
+			CC+="ZWO"
+			for X in ${ZWO_MODELS// /++}
+			do
+				MODEL="${X//++/ }"
+				[[ -z ${FUNCTION} ]] && display_msg --log progress "Found" " ZWO ${MODEL}"
+				if ! strings "${ZWO_FILE}" | grep --silent "${MODEL}" ; then
+					display_msg --log warning "ZWO ${MODEL} not supported; ignoring"
+				else
+					CT+=( "${NUM_ZWO};ZWO;${MODEL}" "ZWO     ${MODEL}" )
+					((NUM_ZWO++))
+				fi
+			done
+		fi
 	fi
 
 	NUM_CONNECTED_CAMERAS=$(( NUM_RPI + NUM_ZWO ))
@@ -1645,7 +1650,7 @@ create_allsky_logs()
 {
 	local DO_ALL="${1}"
 
-	display_msg --logonly progress "Setting permissions on ${ALLSKY_LOG} and ${ALLSKY_PERIODIC_LOG}."
+	display_msg --logonly info "Setting permissions on ${ALLSKY_LOG} and ${ALLSKY_PERIODIC_LOG}."
 
 	if [[ ${DO_ALL} == "true" && ${DO_UPGRADE} == "false" && ${SKIP} == "false" && ${SKIP2} == "false" ]]; then
 		sudo systemctl stop rsyslog 2> /dev/null
@@ -2878,7 +2883,7 @@ display_msg --logonly info "${ITEM} contents: $( ls "${ALLSKY_WEBSITE_MYFILES_DI
 
 	# If ${ALLSKY_TMP} is a memory filesystem, unmount it.
 	if is_mounted "${ALLSKY_TMP}" ; then
-		display_msg --logonly progress "Unmounting '${ALLSKY_TMP}'."
+		display_msg --logonly info "Unmounting '${ALLSKY_TMP}'."
 		umount_dir "${ALLSKY_TMP}" "install"
 		WAS_MOUNTED="true"
 	else
@@ -2904,7 +2909,7 @@ display_msg --logonly info "${ITEM} contents: $( ls "${ALLSKY_WEBSITE_MYFILES_DI
 
 	if [[ ${WAS_MOUNTED} == "true" ]]; then
 		# Remounts ${ALLSKY_TMP}
-		display_msg --logonly progress "Re-mounting '${ALLSKY_TMP}'."
+		display_msg --logonly info "Re-mounting '${ALLSKY_TMP}'."
 		mount_dir "${ALLSKY_TMP}" "install"
 	fi
 
@@ -3108,7 +3113,7 @@ install_Python()
 
 	if [[ ${SKIP} == "false" && ${SKIP2} == "false" ]]; then
 		PKGs="python3-pip python3-full libgfortran5 libopenblas0-pthread"
-		display_msg --logonly progress "Installing ${PKGs}."
+		display_msg --logonly info "Installing ${PKGs}."
 		TMP="${ALLSKY_LOGS}/python3-full.log"
 		# shellcheck disable=SC2086
 		run_aptGet ${PKGs} > "${TMP}" 2>&1
@@ -3221,7 +3226,7 @@ install_overlay()
 
 copy_repo_files_to_config()
 {
-	display_msg --logonly progress "Copying static repo files to config."
+	display_msg --logonly info "Copying static repo files to config."
 	copy_repo_files		# is defined elsewhere
 }
 

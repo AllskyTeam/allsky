@@ -1645,7 +1645,7 @@ create_allsky_logs()
 {
 	local DO_ALL="${1}"
 
-	display_msg --logonly progress "Setting permissions on ${ALLSKY_LOG} and ${ALLSKY_PERIODIC_LOG}."
+	display_msg --logonly info "Setting permissions on ${ALLSKY_LOG} and ${ALLSKY_PERIODIC_LOG}."
 
 	if [[ ${DO_ALL} == "true" && ${DO_UPGRADE} == "false" && ${SKIP} == "false" && ${SKIP2} == "false" ]]; then
 		sudo systemctl stop rsyslog 2> /dev/null
@@ -2878,7 +2878,7 @@ display_msg --logonly info "${ITEM} contents: $( ls "${ALLSKY_WEBSITE_MYFILES_DI
 
 	# If ${ALLSKY_TMP} is a memory filesystem, unmount it.
 	if is_mounted "${ALLSKY_TMP}" ; then
-		display_msg --logonly progress "Unmounting '${ALLSKY_TMP}'."
+		display_msg --logonly info "Unmounting '${ALLSKY_TMP}'."
 		umount_dir "${ALLSKY_TMP}" "install"
 		WAS_MOUNTED="true"
 	else
@@ -2904,7 +2904,7 @@ display_msg --logonly info "${ITEM} contents: $( ls "${ALLSKY_WEBSITE_MYFILES_DI
 
 	if [[ ${WAS_MOUNTED} == "true" ]]; then
 		# Remounts ${ALLSKY_TMP}
-		display_msg --logonly progress "Re-mounting '${ALLSKY_TMP}'."
+		display_msg --logonly info "Re-mounting '${ALLSKY_TMP}'."
 		mount_dir "${ALLSKY_TMP}" "install"
 	fi
 
@@ -3108,7 +3108,7 @@ install_Python()
 
 	if [[ ${SKIP} == "false" && ${SKIP2} == "false" ]]; then
 		PKGs="python3-pip python3-full libgfortran5 libopenblas0-pthread"
-		display_msg --logonly progress "Installing ${PKGs}."
+		display_msg --logonly info "Installing ${PKGs}."
 		TMP="${ALLSKY_LOGS}/python3-full.log"
 		# shellcheck disable=SC2086
 		run_aptGet ${PKGs} > "${TMP}" 2>&1
@@ -3221,7 +3221,7 @@ install_overlay()
 
 copy_repo_files_to_config()
 {
-	display_msg --logonly progress "Copying static repo files to config."
+	display_msg --logonly info "Copying static repo files to config."
 	copy_repo_files		# is defined elsewhere
 }
 

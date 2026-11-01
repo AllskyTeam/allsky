@@ -151,6 +151,7 @@ nav:
       - allsky_guide/server.md
     - Upgrade Notes:
       - Introduction: allsky_guide/upgrade/introduction.md
+      - v2026.10.01_02: allsky_guide/upgrade/v2026.10.01_02.md
       - v2026.10.01_01: allsky_guide/upgrade/v2026.10.01_01.md
       - v2026.10.01: allsky_guide/upgrade/v2026.10.01.md
     - Settings:

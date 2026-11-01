@@ -4,7 +4,7 @@
 
 ## Before installing or upgrading Allsky, please view the [installation instructions](https://allskyteam.github.io/allsky/allsky_guide/allsky.html).
 
-## Also view the [upgrade notes](https://allskyteam.github.io/allsky/allsky_guide/upgrade/v2026.10.01.html) for information about some of the changes.
+## Also view the [upgrade notes](https://allskyteam.github.io/allsky/allsky_guide/upgrade/v2026.10.01_01.html) for information about some of the changes.
 <br><br>
 
 ![](./assets/allsky_camera.png)

@@ -18,6 +18,8 @@ function DisplayModule()
         '/js/bootbox/bootbox.locales.min.js',
         '/js/overlay/imagemanager/oe-imagemanager.css',
         '/js/overlay/imagemanager/oe-imagemanager.js',
+        '/js/jquery-allskyimagepicker/jquery-allskyimagepicker.css',
+        '/js/jquery-allskyimagepicker/jquery-allskyimagepicker.js',
         '/js/jquery-mask/jquery-mask.css',
         '/js/jquery-mask/jquery-mask.js',
         '/js/bootstrap-slider/dist/css/bootstrap-slider.css',

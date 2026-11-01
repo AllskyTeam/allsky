@@ -1,5 +1,5 @@
 site_name: Allsky Documentation
-site_url: "https://docs.allsky.local"
+site_url: !ENV [ALLSKY_DOCS_SITE_URL, "https://allskyteam.github.io/allsky/"]
 docs_dir: "source"
 site_dir: "../html/docs"
 
@@ -145,11 +145,13 @@ nav:
   - Home: index.md
   - Allsky Guide:
     - Installation: 
+      - Preparation: allsky_guide/preparation.md
       - allsky_guide/allsky.md
       - allsky_guide/website.md
       - allsky_guide/server.md
     - Upgrade Notes:
       - Introduction: allsky_guide/upgrade/introduction.md
+      - v2026.10.01_01: allsky_guide/upgrade/v2026.10.01_01.md
       - v2026.10.01: allsky_guide/upgrade/v2026.10.01.md
     - Settings:
       - allsky_guide/settings/allsky.md
@@ -230,6 +232,7 @@ nav:
     - Extra Data: allsky_guide/overlays/extra.md
     - Interface: allsky_guide/overlays/interface.md
     - Formatting Variables: allsky_guide/overlays/formatting.md
+    - Conditional Styles: allsky_guide/overlays/conditions.md
     - Tips: allsky_guide/overlays/tips.md
     - Sun and Moon: allsky_guide/overlays/sunmoon.md    
   - Modules:
@@ -257,6 +260,7 @@ nav:
     - Extra Modules:
       - Environment: allsky_modules/extra/environment.md    
       - Dew Heater: allsky_modules/extra/dew_heater.md
+      - Meteor Detection: allsky_modules/extra/meteor.md
       - ADSB: allsky_modules/extra/adsb.md
       - Border: allsky_modules/extra/border.md
       - Discord: allsky_modules/extra/discord.md

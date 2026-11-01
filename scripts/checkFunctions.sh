@@ -44,6 +44,7 @@ function _check_web_connectivity()
 	local HTTP_STATUS  RET  MSG  WHY
 
 	HTTP_STATUS="$( curl --user-agent Allsky -o /dev/null --head --silent --show-error --location \
+		--connect-timeout 5 --max-time 10 \
 		--write-out "%{http_code}" "${URL}" )"
 	RET=$?
 	if [[ ${RET} -ne 0 ]] ; then
@@ -143,6 +144,21 @@ function _check_immediate()
 
 	if [[ -n ${SETTING_NAME} && ${SETTING_NAME} =~ --immediate ]]; then
 		echo -n "${WSVs}--immediate${WSVe} is no longer needed in the ${WSNs}${SETTING_LABEL}${WSNe}"
+		echo " setting since Allsky uses that option by default."
+		return 1
+	fi
+	return 0
+}
+
+###
+# Check if the user specified --metadate; capture_RPi specifies it.
+function _check_metadata()
+{
+	local SETTING_NAME="${1}"
+	local SETTING_LABEL="${2}"
+
+	if [[ -n ${SETTING_NAME} && ${SETTING_NAME} =~ --metadata ]]; then
+		echo -n "${WSVs}--metadata${WSVe} is no longer needed in the ${WSNs}${SETTING_LABEL}${WSNe}"
 		echo " setting since Allsky uses that option by default."
 		return 1
 	fi

@@ -98,7 +98,7 @@ This .json file, which has been truncated for brevity, includes all of the attri
 
 !!! warning  "This example demonstrates some important points:"
 
-    - The attributes of a variable can be used to control how the variable appears, so for example if the temperature is close to the dew point then some text could be displayed in a highlighted colour. Note that this makes the variable a 'Field' and can only be used where a single variable is used within a field.
+    - The attributes of a variable can be used to control how the variable appears, so for example if the temperature is close to the dew point then some text could be displayed in a highlighted colour. Note that this makes the variable a 'Field' and can only be used where a single variable is used within a field. Users can also change a field's style by its value themselves, with [Conditional Styles](conditions.md); those are applied after the module's attributes.
 
     - Images can by dynamically added to the captured image. So if you wanted to control when an image is added or not added, the program that creates the "extra" file can simply add the image's json code, or not add it, to the file.
 

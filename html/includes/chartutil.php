@@ -16,7 +16,7 @@ class CHARTUTIL extends UTILBASE
             'GraphData' => ['post'],
             'AvailableGraphs' => ['get'],
             'SaveCharts' => ['post', 'get'],
-            'LoadCustomChart' => ['get'],
+            'LoadCustomChart' => ['get', 'post'],
             'DeleteCustomChart' => ['post'],
             'SaveCustomChart' => ['post'],
             'VariableSeriesData' => ['post'],
@@ -212,8 +212,8 @@ class CHARTUTIL extends UTILBASE
                     if ($variable == "AS_EXPOSURE_US") {
                         $value = $row[$variable] / 1000;
                     } else {
-                        // Format numeric values to 2 decimal places (ensures float consistency)
-                        $value = number_format($row[$variable], 2) + 0;
+                        // Round without adding thousands separators before JSON encoding.
+                        $value = round((float)$row[$variable], 2);
                     }
 
                     // Convert database timestamp (usually 'id') to JavaScript millisecond epoch
@@ -321,9 +321,9 @@ class CHARTUTIL extends UTILBASE
             if (isset($row[$variable])) {
                 $value = $row[$variable];
 
-                // Format numeric values to two decimal places for consistency
+                // Round numeric values without adding thousands separators.
                 if (is_numeric($value)) {
-                    $value = number_format($value, 2) + 0; // Ensure numeric type, not string
+                    $value = round((float)$value, 2);
                 }
             }
 
@@ -2046,7 +2046,7 @@ class CHARTUTIL extends UTILBASE
 
                 // Only include variables of type int, float, number or bool
                 // TODO: Validate the above list
-                if (in_array($vmeta['type'] ?? null, ['int', 'float', 'number', 'temperature', 'bool'], true)) {
+                if (in_array($vmeta['type'] ?? null, ['int', 'float', 'number', 'temperature', 'pressure', 'bool'], true)) {
                     // Extract description and display group
                     $desc          = $vmeta['description'] ?? '';
                     $groupDisplay  = $meta['group'] ?? 'Unknown';

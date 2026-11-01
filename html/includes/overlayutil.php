@@ -19,6 +19,7 @@ include_once('utilbase.php');
  * - Shell/Python helpers are executed via tiny wrappers that capture stdout/stderr and validate inputs.
  */
 class OVERLAYUTIL extends UTILBASE {
+    protected array $nonAjaxRequests = ['MaskBackground'];
     protected function getRoutes(): array
     {
         return [
@@ -34,6 +35,9 @@ class OVERLAYUTIL extends UTILBASE {
             'Formats'          => ['get'],
             'Image'            => ['delete'],
             'ImageDetails'     => ['get'],
+            'MaskProjects'     => ['get'],
+            'MaskProject'      => ['get', 'post'],
+            'MaskBackground'   => ['get', 'post'],
             'Images'           => ['get', 'post'],
             'LoadOverlay'      => ['get'],
             'NewOverlay'       => ['post'],
@@ -122,7 +126,7 @@ class OVERLAYUTIL extends UTILBASE {
 
     /**
      * Create a square thumbnail (90×90 by default) while keeping aspect ratio.
-     * PNGs retain transparency; other formats get a flat background color.
+     * PNGs retain transparency; other formats get a flat background colour.
      * Returns false on any failure; callers decide how to surface errors.
      */
     private function createThumbnail(string $sourceImagePath, string $destImagePath, int $thumbWidth = 90, int $thumbHeight = 90, $background = false): bool
@@ -132,7 +136,7 @@ class OVERLAYUTIL extends UTILBASE {
         [$ow, $oh, $otype] = getimagesize($sourceImagePath);
         if ($ow <= 0 || $oh <= 0) return false;
 
-        // Scale to fit inside a square and center the result
+        // Scale to fit inside a square and centre the result
         if ($ow > $oh) {
             $nw = $thumbWidth;
             $nh = (int) floor($oh * $nw / $ow);
@@ -165,8 +169,8 @@ class OVERLAYUTIL extends UTILBASE {
         } else {
             $bg = is_array($background) ? $background : [0, 0, 0];
             [$r, $g, $b] = $bg;
-            $color = imagecolorallocate($dst, (int)$r, (int)$g, (int)$b);
-            imagefill($dst, 0, 0, $color);
+            $colour = imagecolorallocate($dst, (int)$r, (int)$g, (int)$b);
+            imagefill($dst, 0, 0, $colour);
         }
 
         imagecopyresampled($dst, $src, $dx, $dy, 0, 0, $nw, $nh, $ow, $oh);
@@ -709,6 +713,291 @@ class OVERLAYUTIL extends UTILBASE {
         $this->sendResponse(json_encode($imagePath, JSON_UNESCAPED_SLASHES));
     }
 
+    private function maskDirectory(): string
+    {
+        return $this->overlayPath . '/masks';
+    }
+
+    private function maskProjectDirectory(string $name): string
+    {
+        return $this->maskDirectory() . '/' . $name;
+    }
+
+    private function pendingMaskBackgroundDirectory(): string
+    {
+        return $this->allskyTmp . '/mask-backgrounds';
+    }
+
+    private function removeUnusedLegacyMaskBackground(string $background): void
+    {
+        if (!preg_match('/^[a-f0-9]{24}\.(jpg|png|webp)$/D', $background)) return;
+        foreach (glob($this->maskDirectory() . '/*.json') ?: [] as $file) {
+            $project = json_decode(file_get_contents($file) ?: '{}', true);
+            if (($project['background'] ?? '') === $background) return;
+        }
+        $file = $this->maskDirectory() . '/' . $background;
+        if (is_file($file)) @unlink($file);
+    }
+
+    public function getMaskBackground(): void
+    {
+        $name = (string)($_GET['name'] ?? '');
+        if (!preg_match('/^[a-f0-9]{24}\.(jpg|png|webp)$/D', $name)) {
+            $this->sendHTTPResponse('Invalid background name.', 400);
+        }
+        $mask = (string)($_GET['mask'] ?? '');
+        $file = $mask !== ''
+            ? $this->maskProjectDirectory($this->maskName($mask)) . '/' . $name
+            : $this->pendingMaskBackgroundDirectory() . '/' . $name;
+        if (!is_file($file)) $file = $this->maskDirectory() . '/' . $name; // Older projects.
+        if (!is_file($file)) $this->sendHTTPResponse('Background not found.', 404);
+        $mime = ['jpg' => 'image/jpeg', 'png' => 'image/png', 'webp' => 'image/webp'];
+        header('Content-Type: ' . $mime[pathinfo($name, PATHINFO_EXTENSION)]);
+        header('Cache-Control: private, max-age=3600');
+        readfile($file);
+        exit;
+    }
+
+    private function maskName(string $name): string
+    {
+        if (!preg_match('/^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$/D', $name)) {
+            $this->sendHTTPResponse('Invalid mask name.', 400);
+        }
+        return $name;
+    }
+
+    public function getMaskProjects(): void
+    {
+        $names = [];
+        foreach (glob($this->maskDirectory() . '/*', GLOB_ONLYDIR) ?: [] as $dir) {
+            $name = basename($dir);
+            if (preg_match('/^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$/D', $name) &&
+                is_file($dir . '/' . $name . '.json')) $names[] = $name;
+        }
+        foreach (glob($this->maskDirectory() . '/*.json') ?: [] as $file) {
+            $names[] = basename($file, '.json');
+        }
+        $names = array_values(array_unique($names));
+        sort($names);
+        $this->sendResponse(json_encode($names));
+    }
+
+    public function getMaskProject(): void
+    {
+        $name = $this->maskName((string)($_GET['name'] ?? ''));
+        $file = $this->maskProjectDirectory($name) . '/' . $name . '.json';
+        if (!is_file($file)) $file = $this->maskDirectory() . '/' . $name . '.json';
+        if (!is_file($file)) $this->sendHTTPResponse('Mask project not found.', 404);
+        $this->sendResponse(file_get_contents($file) ?: '{}');
+    }
+
+    public function postMaskBackground(): void
+    {
+        $isCurrent = !empty($_POST['current']);
+        $source = $isCurrent
+            ? ALLSKY_CURRENT_DIR . '/' . $this->safeFileName((string)$this->getSetting('filename'))
+            : (string)($_POST['path'] ?? '');
+        $root = realpath($isCurrent ? $this->allsky_home : ALLSKY_IMAGES);
+        $source = realpath($source);
+        if ($root === false || $source === false || !is_file($source) || !is_readable($source) ||
+            !str_starts_with($source, $root . '/')) {
+            $this->sendHTTPResponse('Image file is unavailable.', 400);
+        }
+        if (filesize($source) > 30 * 1024 * 1024) $this->sendHTTPResponse('Image exceeds 30 MB.', 413);
+        $info = @getimagesize($source);
+        $types = [IMAGETYPE_JPEG => 'jpg', IMAGETYPE_PNG => 'png', IMAGETYPE_WEBP => 'webp'];
+        if (!$info || !isset($types[$info[2]]) || $info[0] > 10000 || $info[1] > 10000) {
+            $this->sendHTTPResponse('Use a JPG, PNG, or WebP image up to 10000 pixels per side.', 415);
+        }
+        $dir = $this->pendingMaskBackgroundDirectory();
+        if (!is_dir($dir) && !@mkdir($dir, 0775, true)) $this->sendHTTPResponse('Cannot create mask directory.', 500);
+        foreach (glob($dir . '/*') ?: [] as $file) {
+            if (is_file($file) && filemtime($file) < time() - 7 * 86400) @unlink($file);
+        }
+        $name = bin2hex(random_bytes(12)) . '.' . $types[$info[2]];
+        if (!@copy($source, $dir . '/' . $name)) {
+            $this->sendHTTPResponse('Cannot save background image.', 500);
+        }
+        $this->sendResponse(['ok' => true, 'background' => $name,
+            'url' => 'includes/overlayutil.php?request=MaskBackground&name=' . $name]);
+    }
+
+    private function publishMaskFiles(array $files, string $thumbnailPath, string $pngPath): string
+    {
+        $staged = [];
+        $backups = [];
+        $published = [];
+        $lock = null;
+        try {
+            foreach ($files as $path => $contents) {
+                $temporary = @tempnam(dirname($path), '.mask-stage-');
+                if ($temporary === false) throw new RuntimeException('Cannot prepare mask files for saving.');
+                $staged[$path] = $temporary;
+                if (@file_put_contents($temporary, $contents) !== strlen($contents)) {
+                    throw new RuntimeException('Cannot prepare mask files for saving.');
+                }
+                @chmod($temporary, 0664);
+            }
+            $temporary = @tempnam(dirname($thumbnailPath), '.mask-stage-');
+            if ($temporary === false) throw new RuntimeException('Cannot create the mask thumbnail.');
+            $staged[$thumbnailPath] = $temporary;
+            if (!$this->createThumbnail($staged[$pngPath], $temporary)) {
+                throw new RuntimeException('Cannot create the mask thumbnail.');
+            }
+            @chmod($temporary, 0664);
+
+            $lock = @fopen($this->maskDirectory() . '/.save.lock', 'c');
+            if ($lock === false || !@flock($lock, LOCK_EX)) {
+                throw new RuntimeException('Cannot lock mask files for saving.');
+            }
+            foreach ($staged as $path => $temporary) {
+                if (is_file($path)) {
+                    $backup = @tempnam(dirname($path), '.mask-backup-');
+                    if ($backup === false) throw new RuntimeException('Cannot back up the previous mask.');
+                    $backups[$path] = $backup;
+                    if (!@copy($path, $backup)) {
+                        throw new RuntimeException('Cannot back up the previous mask.');
+                    }
+                    @chmod($backup, fileperms($path) & 0777);
+                }
+            }
+            foreach ($staged as $path => $temporary) {
+                if (!@rename($temporary, $path)) {
+                    throw new RuntimeException('Cannot publish the saved mask.');
+                }
+                $published[] = $path;
+            }
+            return '';
+        } catch (Throwable $error) {
+            $rollbackFailed = false;
+            foreach (array_reverse($published) as $path) {
+                if (isset($backups[$path])) {
+                    if (!@rename($backups[$path], $path) && !@copy($backups[$path], $path)) {
+                        $rollbackFailed = true;
+                        unset($backups[$path]); // Preserve the backup for manual recovery.
+                    }
+                } elseif (!@unlink($path)) $rollbackFailed = true;
+            }
+            return $error->getMessage() . ($rollbackFailed ? ' Previous file backup was preserved for recovery.' : '');
+        } finally {
+            foreach ($staged as $temporary) if (is_file($temporary)) @unlink($temporary);
+            foreach ($backups as $temporary) if (is_file($temporary)) @unlink($temporary);
+            if ($lock !== null && $lock !== false) {
+                @flock($lock, LOCK_UN);
+                fclose($lock);
+            }
+        }
+    }
+
+    public function postMaskProject(): void
+    {
+        $name = $this->maskName((string)($_POST['name'] ?? ''));
+        if (empty($_POST['overwrite']) &&
+            (is_file($this->maskProjectDirectory($name) . '/' . $name . '.json') ||
+             is_file($this->maskDirectory() . '/' . $name . '.json') ||
+             is_file($this->overlayPath . '/images/' . $name . '.png'))) {
+            $this->sendHTTPResponse('A PNG or mask with this name already exists. Confirm replacement to continue.', 409);
+        }
+        $project = json_decode((string)($_POST['project'] ?? ''), true);
+        $dataUrl = (string)($_POST['image'] ?? '');
+        if (!is_array($project) || ($project['version'] ?? null) !== 1 ||
+            !is_array($project['objects'] ?? null) || count($project['objects']) > 5000 ||
+            !is_int($project['width'] ?? null) || !is_int($project['height'] ?? null) ||
+            $project['width'] < 1 || $project['height'] < 1 ||
+            $project['width'] > 10000 || $project['height'] > 10000) {
+            $this->sendHTTPResponse('Invalid mask project.', 422);
+        }
+        $types = ['brush', 'eraser', 'rectangle', 'ellipse', 'circle', 'line'];
+        foreach ($project['objects'] as $object) {
+            if (!is_array($object) || !in_array($object['type'] ?? null, $types, true) ||
+                !in_array($object['color'] ?? null, ['black', 'white'], true) ||
+                !isset($object['a']['x'], $object['a']['y'], $object['b']['x'], $object['b']['y']) ||
+                !is_numeric($object['size'] ?? null) || !is_numeric($object['feather'] ?? null) ||
+                $object['size'] < 1 || $object['size'] > 200 ||
+                $object['feather'] < 0 || $object['feather'] > 100 ||
+                (isset($object['points']) && !is_array($object['points'])) ||
+                (isset($object['hidden']) && !is_bool($object['hidden'])) ||
+                count($object['points'] ?? []) > 100000) {
+                $this->sendHTTPResponse('Invalid mask object.', 422);
+            }
+            foreach (array_merge([$object['a'], $object['b']], $object['points'] ?? []) as $point) {
+                if (!is_array($point) || !is_numeric($point['x'] ?? null) || !is_numeric($point['y'] ?? null) ||
+                    abs((float)$point['x']) > 20000 || abs((float)$point['y']) > 20000) {
+                    $this->sendHTTPResponse('Invalid mask coordinates.', 422);
+                }
+            }
+        }
+        $background = (string)($project['background'] ?? '');
+        if ($background !== '' && !preg_match('/^[a-f0-9]{24}\.(jpg|png|webp)$/D', $background)) {
+            $this->sendHTTPResponse('Background image not found.', 422);
+        }
+        $dir = $this->maskProjectDirectory($name);
+        $backgroundInProject = $dir . '/' . $background;
+        $pendingBackground = $this->pendingMaskBackgroundDirectory() . '/' . $background;
+        $legacyBackground = $this->maskDirectory() . '/' . $background;
+        $sourceMask = (string)($_POST['sourceMask'] ?? '');
+        $sourceBackground = $sourceMask !== ''
+            ? $this->maskProjectDirectory($this->maskName($sourceMask)) . '/' . $background
+            : '';
+        if ($background !== '' && !is_file($backgroundInProject) &&
+            !is_file($pendingBackground) && !is_file($legacyBackground) && !is_file($sourceBackground)) {
+            $this->sendHTTPResponse('Background image not found.', 422);
+        }
+        if (!preg_match('/^data:image\/png;base64,([A-Za-z0-9+\/=]+)$/D', $dataUrl, $matches)) {
+            $this->sendHTTPResponse('Expected a PNG mask.', 415);
+        }
+        $raw = base64_decode($matches[1], true);
+        if ($raw === false || strlen($raw) > 50 * 1024 * 1024) $this->sendHTTPResponse('Invalid or oversized PNG.', 422);
+        $info = @getimagesizefromstring($raw);
+        if (!$info || $info[2] !== IMAGETYPE_PNG || $info[0] !== $project['width'] || $info[1] !== $project['height']) {
+            $this->sendHTTPResponse('PNG dimensions do not match project.', 422);
+        }
+        $images = $this->overlayPath . '/images';
+        $thumbs = $this->overlayPath . '/imagethumbnails';
+        foreach ([$dir, $images, $thumbs] as $path) {
+            if (!is_dir($path) && !@mkdir($path, 0775, true)) $this->sendHTTPResponse('Cannot create mask directory.', 500);
+        }
+        $png = $name . '.png';
+        $json = json_encode($project, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        if ($json === false || strlen($json) > 8 * 1024 * 1024) $this->sendHTTPResponse('Project too large.', 422);
+        $copiedBackground = false;
+        if ($background !== '' && !is_file($backgroundInProject)) {
+            $source = is_file($pendingBackground) ? $pendingBackground :
+                (is_file($sourceBackground) ? $sourceBackground : $legacyBackground);
+            if (!@copy($source, $backgroundInProject)) {
+                $this->sendHTTPResponse('Cannot save background image in mask folder.', 500);
+            }
+            $copiedBackground = true;
+        }
+        $projectPng = $dir . '/' . $png;
+        $msg = $this->publishMaskFiles([
+            $projectPng => $raw,
+            $images . '/' . $png => $raw,
+            $dir . '/' . $name . '.json' => $json
+        ], $thumbs . '/' . $png, $projectPng);
+        if ($msg !== '') {
+            if ($copiedBackground) @unlink($backgroundInProject);
+            $this->sendHTTPResponse($msg, 500);
+        }
+        if ($background !== '' && is_file($pendingBackground)) @unlink($pendingBackground);
+        foreach (glob($dir . '/*') ?: [] as $file) {
+            $fileName = basename($file);
+            if ($fileName !== $background && preg_match('/^[a-f0-9]{24}\.(jpg|png|webp)$/D', $fileName)) {
+                @unlink($file);
+            }
+        }
+        $legacyProject = $this->maskDirectory() . '/' . $name . '.json';
+        if (is_file($legacyProject)) {
+            $oldProject = json_decode(file_get_contents($legacyProject) ?: '{}', true);
+            $oldBackground = (string)($oldProject['background'] ?? '');
+            @unlink($legacyProject);
+            $legacyPng = $this->maskDirectory() . '/' . $png;
+            if (is_file($legacyPng)) @unlink($legacyPng);
+            $this->removeUnusedLegacyMaskBackground($oldBackground);
+        }
+        $this->sendResponse(['ok' => true, 'filename' => $png]);
+    }
+
     /**
      * Accept a small base64 image and save it to /images, plus a 90×90 thumbnail.
      * Only jpg/jpeg/png are allowed here.
@@ -813,6 +1102,27 @@ class OVERLAYUTIL extends UTILBASE {
         $ok = true;
         if (is_file($img))   $ok = $ok && @unlink($img);
         if (is_file($thumb)) $ok = $ok && @unlink($thumb);
+
+        $maskName = pathinfo($name, PATHINFO_FILENAME);
+        $maskDir = $this->maskProjectDirectory($maskName);
+        if ($ok && is_file($maskDir . '/' . $maskName . '.json')) {
+            foreach (scandir($maskDir) ?: [] as $entry) {
+                if ($entry === $maskName . '.json' || $entry === $maskName . '.png' ||
+                    preg_match('/^[a-f0-9]{24}\.(jpg|png|webp)$/D', $entry)) {
+                    $ok = @unlink($maskDir . '/' . $entry) && $ok;
+                }
+            }
+            if ($ok) $ok = @rmdir($maskDir);
+        }
+        $projectFile = $this->maskDirectory() . '/' . $maskName . '.json';
+        if ($ok && is_file($projectFile)) {
+            $project = json_decode(file_get_contents($projectFile) ?: '{}', true);
+            $background = (string)($project['background'] ?? '');
+            $maskPng = $this->maskDirectory() . '/' . $maskName . '.png';
+            $ok = @unlink($projectFile);
+            if ($ok && is_file($maskPng)) $ok = @unlink($maskPng);
+            if ($ok) $this->removeUnusedLegacyMaskBackground($background);
+        }
 
         if ($ok) $this->sendResponse(['ok' => true]);
         $this->sendHTTPResponse('Image not found.', 404);

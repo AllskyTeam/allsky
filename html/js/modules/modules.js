@@ -229,12 +229,6 @@ class MODULESEDITOR {
 					$(document).trigger('module:dirty');
 				});
 
-				const interactiveModuleControls = '.allskymodule button, .allskymodule a, .allskymodule input, .allskymodule select, .allskymodule textarea, .allskymodule label';
-				$(document).off('mousedown touchstart pointerdown', interactiveModuleControls);
-				$(document).on('mousedown touchstart pointerdown', interactiveModuleControls, (event) => {
-					event.stopPropagation();
-				});
-
 				$(document).off('click', '.module-settings-button');
 				$(document).on('click', '.module-settings-button', (event) => {
 					event.preventDefault();
@@ -265,6 +259,9 @@ class MODULESEDITOR {
 					forceFallback: true,
 					fallbackOnBody: true,
 					filter: '.filtered, button, a, input, select, textarea, label, .btn, .el-switch',
+					preventOnFilter: false,
+					delay: 180,
+					delayOnTouchOnly: true,
 					onMove: function (evt) {
 
 						if (evt.related.classList.contains('filtered')) {
@@ -296,6 +293,9 @@ class MODULESEDITOR {
 					forceFallback: true,
 					fallbackOnBody: true,
 					filter: '.filtered, button, a, input, select, textarea, label, .btn, .el-switch',
+					preventOnFilter: false,
+					delay: 180,
+					delayOnTouchOnly: true,
 					onMove: function (evt) {
 
 						if (evt.related.classList.contains('filtered')) {
@@ -595,7 +595,7 @@ class MODULESEDITOR {
 			let popover = 'data-toggle="popover" data-delay=\'{"show": 100, "hide": 200}\' data-placement="top" data-trigger="hover" title="' + deprecatedText + '"'
 			addHTML = '<button type="button" class="btn btn-sm btn-danger  ml-2"' + popover + '><i class="fa-solid fa-circle-info fa-lg"></i></button>';
 		} else {
-			let popover = 'data-toggle="popover" data-delay=\'{"show": 1000, "hide": 200}\' data-placement="top" data-trigger="hover" title="Add Module" data-content="Adds the ' + data.metadata.name + ' to the selected modules"'
+			let popover = 'data-toggle="popover" data-delay=\'{"show": 1000, "hide": 200}\' data-placement="top" data-trigger="' + (window.matchMedia('(pointer: coarse)').matches ? 'manual' : 'hover') + '" title="Add Module" data-content="Adds the ' + data.metadata.name + ' to the selected modules"'
 			addHTML = '<button type="button" class="btn btn-sm btn-success module-add-button ml-2 ' + hidden + '" id="' + moduleKey + 'add" data-module="' + moduleKey + '" ' + popover + '>>></button>';
 		}
 
@@ -685,9 +685,14 @@ class MODULESEDITOR {
 
 	#hexToRgb(hex) {
 		let result = '0,0,0'
-		hex = hex.replace(/^#/, '')
+		hex = hex.trim().replace(/^#/, '')
 
-		if (hex.length === 6) {
+		// The colour picker uses the short form when it can, e.g. "#fff" for white.
+		if (/^[0-9a-fA-F]{3}$/.test(hex)) {
+			hex = hex.split('').map(c => c + c).join('')
+		}
+
+		if (/^[0-9a-fA-F]{6}$/.test(hex)) {
 			const r = parseInt(hex.slice(0, 2), 16)
 			const g = parseInt(hex.slice(2, 4), 16)
 			const b = parseInt(hex.slice(4, 6), 16)

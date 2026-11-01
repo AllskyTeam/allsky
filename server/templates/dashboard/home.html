@@ -2,7 +2,8 @@
 {% block content %}
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" href="#">Dashboard</a>     
+        <span class="navbar-brand">Dashboard</span>
+        <a class="btn btn-outline-light btn-sm" href="{{ url_for('dashboard.server_logs') }}">View Server Logs</a>
     </div>
 
 

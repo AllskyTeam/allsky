@@ -182,12 +182,17 @@ foreach ($lines AS $line) {
 			$daystokeep = $args[1];
 
 			$c = count_files($filetype);
-			$numToDelete = $c - $daystokeep;
-			if ($numToDelete > 0) {
-				// "true" to also delete the thumbnail.
-				delete_files($filetype, $numToDelete, $command, $args, true);
+			if ($c > 0) {
+				$numToDelete = $c - $daystokeep;
+				if ($numToDelete > 0) {
+					// "true" to also delete the thumbnail.
+					$c = delete_files($filetype, $numToDelete, $command, $args, true);
+	   				do_return($command, $args, "DELETED: $c '$filetype' file" . ($c === 1 ? "" : "s") . ".");
+				} else {
+					do_return($command, $args, "No '$parent' files deleted - $c left.");
+				}
 			} else {
-				do_return($command, $args, "No '$parent' files deleted - $c left.");
+				do_return($command, $args, "No '$parent' files found");
 			}
 			break;
 
@@ -417,7 +422,9 @@ function delete_files($filesToDelete, $deleteNum, $cmd, $a, $delete_thumbnail) {
 		}
 	}
 
-	if ($c > 0) do_return($cmd, $a, "Deleted: $filesDeleted");
+	if ($c > 0) {
+	   do_return($cmd, $a, "Deleted: $filesDeleted");
+	}
 	return($c);
 }
 

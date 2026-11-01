@@ -284,6 +284,12 @@ HTML;
 	 */
 	private function executeArgv(array $argv, bool $outputToConsole = false): string
 	{
+		foreach ($argv as $a) {
+			if ($a == "--html") {
+				$this->useText = true;	# Let invoked program do the formatting
+			}
+		}
+
 		$result = $this->runProcess($argv);
 		$output = (string)($result['message'] ?? '');
 		$code = (int)($result['code'] ?? (($result['error'] ?? false) ? 1 : 0));

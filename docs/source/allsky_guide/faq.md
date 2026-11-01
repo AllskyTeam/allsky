@@ -141,7 +141,7 @@
 ??? question "How can I reduce wear on my SD card?"
     SD cards have a limited number of writes they can handle before they wear out. Although this is usually a very large number, you may want to minimize writes to the SD card by moving the `~/allsky/tmp` directory from the SD card into memory.
 
-    During Allsky installation you were prompted to do this. If you did, you can ignore this FAQ item.
+    Allsky installations since v2026.10.01_01 do this automatically, unless Allsky is on an NVMe disk, where `~/allsky/tmp` stays on the disk. If you chose to keep it on the SD card during an earlier installation, the next upgrade moves it into memory.
 
     !!! info "Pi 5 or newer"
 

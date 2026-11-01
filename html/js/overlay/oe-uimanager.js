@@ -181,6 +181,35 @@ class OEUIMANAGER {
         return params;
     }
 
+    /**
+     * The Conditions button: only enabled for a field that contains only one variable
+     * of a supported type, and highlighted when the field has conditions.  An older field
+     * with conditions and other text keeps it enabled, so they can be removed.  With more
+     * than one variable the overlay ignores the conditions; they are kept, so they come
+     * back when the field holds one variable again.
+     */
+    updateConditionsButton(label) {
+        const field = this.#selected;
+        const $button = $('#oe-conditions-field');
+        if (!field || $button.length === 0) return;
+        label = (label === undefined) ? field.label : label;
+        const has = !!(field.fieldData && field.fieldData.conditions);
+        const single = OECONDITIONS.isSingleVariable(label) || (has && OECONDITIONS.variableCount(label) === 1);
+        const usable = single && OECONDITIONS.kindForType(field.type) !== null;
+        let title = 'Conditions need a field that contains only one yes/no, number or text variable, and no other text';
+        if (usable) {
+            title = has ? 'Conditions: this field changes its style depending on the value'
+                        : 'Conditions: change the style depending on the value';
+        } else if (has && OECONDITIONS.variableCount(label) > 1) {
+            title = 'This field\'s conditions are ignored: they need a field that contains only one yes/no, number or text variable';
+        }
+        $button.prop('disabled', !usable)
+            .toggleClass('btn-success', has && usable)
+            .toggleClass('btn-warning', has && !usable)
+            .toggleClass('btn-primary', !has)
+            .attr('title', title);
+    }
+
     get dirty() {
         let result = false;
         if (this.#fieldManager.dirty || this.#configManager.dirty) {
@@ -3256,6 +3285,7 @@ class OEUIMANAGER {
                     'strokewidth': this.#selected.strokewidth,
                     'stroke': strokeColour
                 });
+                this.updateConditionsButton();
             }
             if (this.#selected instanceof OEIMAGEFIELD) {
                 if (textVisible) {
@@ -3573,6 +3603,14 @@ class OEUIMANAGER {
             $('#oe-text-edit-dialog').modal('hide');
         });
 
+        $(document).off('click', '#oe-conditions-field');
+        $(document).on('click', '#oe-conditions-field', () => {
+            new OECONDITIONS().open(this.#selected, this.#fonts, () => {
+                this.updatePropertyEditor();
+                this.updateToolbar();
+            });
+        });
+
         $(document).off('click', '#oe-format-field');
         $(document).on('click', '#oe-format-field', (e) => {
 		    let selected = this.#selected
@@ -3622,7 +3660,8 @@ class OEUIMANAGER {
                     showInput: true,
                     showInitial: true,
                     showAlpha: false
-                }
+                },
+                postHTML: '<button type="button" id="oe-conditions-field" class="btn btn-primary btn-sm btn-oe-small" title="Conditions: change the style depending on the value"><i class="fa-solid fa-code-branch"></i></button>'
             },
             strokewidth: { group: 'Font', name: 'Stroke Size', type: 'number', options: { min: 0, max: 10, step: 1 } },
             stroke: {
@@ -3654,6 +3693,7 @@ class OEUIMANAGER {
                 }
             } else {
                 if (name == 'label') {
+                    uiManager.updateConditionsButton(value);
                     let x = field.x;
                     let oldSize = field.shape.measureSize(field.label); 
                     field[name] = value;

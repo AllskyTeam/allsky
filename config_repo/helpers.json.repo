@@ -35,14 +35,18 @@
       "outputFormat": "html",
       "showResultsTabs": true,
       "command": [
-        "bad_images_info"
+        "bad_images_info",
+		"--html"
       ],
       "contentHtml": [
-        "<p>This page display information on any bad images that have been rejected after capture.</p>"
+        "<p>Allsky deletes any image that is \"bad\", that is, it's \"too dark\" or \"too bright\".",
+		"<p>You decide what the low and high thresholds are via the <span class='WebUIsetting'>Remove Bad Images Threshold Low</span> and <span class='WebUIsetting'>Remove Bad Images Threshold High</span> settings in the WebUI.</p>",
+		"<p>You can also set how often the WebUI should display a message about bad images, for example, every 5th <b>consecutive</b> bad image.  This is done via the <span class='WebUIsetting'>Remove Bad Images Threshold Count</span> setting.  An occassional bad image is normal so don't set the count too low.  On the other hand don't set it too high or you may miss actual problems.</p>",
+        "<br>This page displays information on any \"bad\" images and helps you determine better thresholds to use.</p>"
       ],      
       "messages": {
-        "running": "Checking bad images...",
-        "working": "Checking bad images..."
+        "running": "Looking for bad images...",
+        "working": "Looking for bad images..."
       },
       "submit": {
         "name": "checkbadimages",
@@ -195,7 +199,8 @@
       ],
       "contentHtml": [
         "<p>Stretching an image is typically done to lighten parts of an image, such as the stars, while keeping the rest of the image (mostly) unchanged. There are two settings to stretch an image:<ol><li><span class=\"WebUISetting\">Stretch Amount</span> - This determines how much stretch to apply.<li><span class=\"WebUISetting\">Stretch Mid Point</span> - This determines what parts of the image are stretched (dark parts, middle-grey parts, light parts, etc.).</ol>See the <a external=\"true\" href=\"/docs/allsky_guide/howtos/exposure_settings.html#stretch\">stretch settings</a> page for an explanation of these settings.</p>",
-        "<p class=\"morePadding\">This page helps you determine what stretch settings to use to bring out the details you want.<br>The image you select below will be stretched multiple times using different settings. You can then compare the images to find the best one.<br>You may then want to run the test again but with finer granularity.</p>"
+        "<p class=\"morePadding\">This page helps you determine what stretch settings to use to bring out the details you want.<br>The image you select below will be stretched multiple times using different settings. You can then compare the images to find the best one.<br>You may then want to run the test again but with finer granularity.</p>",
+        "<p class=\"morePadding\">If <span class=\"WebUISetting\">Moon-dependent stretch</span> is on, run this twice: once with a moonless night image for the regular nighttime settings, and once with an image taken under a full Moon high in the sky for the two <span class=\"WebUISetting\">Full Moon</span> settings. Allsky blends between them by the moonlight.</p>"
       ],
       "fields": [
         {

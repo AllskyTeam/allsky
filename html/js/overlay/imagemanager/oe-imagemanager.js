@@ -68,7 +68,7 @@
 
             let maskHTML = '';
             if (plugin.settings.showMaskCreation) {
-                maskHTML = `<button type="button" class="btn btn-primary" id="${plugin.maskCreateId}">Create Mask</button>`;
+                maskHTML = `<button type="button" class="btn btn-default" id="${plugin.maskCreateId}-edit" disabled>Edit Selected Mask</button> <button type="button" class="btn btn-primary" id="${plugin.maskCreateId}">Create Mask</button>`;
             }
 
             let imageManagerDialog = `
@@ -100,6 +100,14 @@
                         onComplete: () => {
                             loadThumbnails();
                         }
+                    });
+                });
+                $(`#${plugin.maskCreateId}-edit`).off('click').on('click', () => {
+                    const filename = $('#' + plugin.imagesId + ' .oe-image-manager-image-selected').data('filename');
+                    if (!filename) return;
+                    $(document).allskyMASK({
+                        name: filename.replace(/\.png$/i, ''),
+                        onComplete: () => loadThumbnails()
                     });
                 });
 
@@ -194,10 +202,20 @@
                 $('#' + plugin.deleteId).addClass('disabled');
                 $('#' + plugin.addId).addClass('disabled');
             }
+            const filename = $('#' + plugin.imagesId + ' .oe-image-manager-image-selected').data('filename');
+            $('#' + plugin.maskCreateId + '-edit').prop('disabled',
+                !filename || !/\.png$/i.test(filename) || !plugin.maskProjects ||
+                !plugin.maskProjects.includes(filename.replace(/\.png$/i, '')));
 
         }
 
         var loadThumbnails = function() {
+            if (plugin.settings.showMaskCreation) {
+                $.getJSON('includes/overlayutil.php?request=MaskProjects').done(names => {
+                    plugin.maskProjects = names;
+                    updateToolbar();
+                });
+            }
             $.ajax({
                 url: plugin.settings.thumbnailURL,
                 type: 'GET',

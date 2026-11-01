@@ -5,20 +5,20 @@
       
       
       
-        <link rel="canonical" href="https://docs.allsky.local/allsky_guide/overlays/formatting.html">
+        <link rel="canonical" href="https://allskyteam.github.io/allsky/allsky_guide/overlays/formatting.html">
       
       
         <link rel="prev" href="interface.html">
       
       
-        <link rel="next" href="tips.html">
+        <link rel="next" href="conditions.html">
       
       
         
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
     
     
       
@@ -26,10 +26,10 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
       
       
 
@@ -418,7 +418,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../allsky.html" class="md-tabs__link">
+        <a href="../preparation.html" class="md-tabs__link">
           
   
   
@@ -679,6 +679,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../preparation.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preparation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../allsky.html" class="md-nav__link">
         
   
@@ -831,6 +859,34 @@
     
   
     Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../upgrade/v2026.10.01_01.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v2026.10.01_01
   
 
     
@@ -3531,10 +3587,21 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#filesize-formats_1" class="md-nav__link">
+  <a href="#temperature-formats" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Filesize Formats
+        Temperature Formats
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pressure-formats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pressure Formats
       
     </span>
   </a>
@@ -3594,6 +3661,34 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="conditions.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Conditional Styles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -4513,6 +4608,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../allsky_modules/extra/meteor.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Meteor Detection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../allsky_modules/extra/adsb.html" class="md-nav__link">
         
   
@@ -5198,10 +5321,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_5_27">
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_5_28">
         
           
-          <label class="md-nav__link" for="__nav_4_5_27" id="__nav_4_5_27_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_4_5_28" id="__nav_4_5_28_label" tabindex="0">
             
   
   
@@ -5219,8 +5342,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_5_27_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4_5_27">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_5_28_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5_28">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -6269,24 +6392,24 @@
 
 
 <h1 id="formatting-fields">Formatting Fields<a class="headerlink" href="#formatting-fields" title="Permanent link">¶</a></h1>
-<p>All data within Allsky is stored in consistent internal formats, so for example ALL temeopratures are stored in Degreed Centigrade. Yo will therfore probably want to format data to improve its visual appearance, typicall formatting options are</p>
+<p>All data within Allsky is stored in consistent internal formats, so for example ALL temperatures are stored in Degreed Centigrade. Yo will therfore probably want to format data to improve its visual appearance, typical formatting options are:</p>
 <ul>
-<li>Changing Unit i.e. Degreed Centigrade to Degrees Farenhite</li>
+<li>Changing Unit i.e. Degrees Centigrade to Degrees Fahrenheit</li>
 <li>Setting the number of decimal places</li>
 <li>Converting an internal format, i.e. decimal degrees to DDD MM SS</li>
 </ul>
-<p>Each variable within Allsky has a default format but you can override this. To overide a variables format double click on the field containing the variable then click on the ? button at the end of the format field</p>
+<p>Each variable within Allsky has a default format but you can override this. To overide a variables format double click on the field containing the variable then click on the <strong>?</strong> button at the end of the format field</p>
 <figure>
 <p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../../assets/overlay_images/format-dialog.png" data-desc-position="bottom"><img alt="Format Dialog" src="../../assets/overlay_images/format-dialog.png"></a></p>
 <figcaption>
 <p>The Variable Format Dialog</p>
 </figcaption>
 </figure>
-<p>In this example we have double clicked the 'AS-SUN_DAWN' field and then clicked on the ? (1). The resultignm dialog displays all of the formatting options available for the variable, in this case data formats.</p>
+<p>In this example we have double clicked the 'AS_MOON_ASIMUTH' field and then clicked on the <span style="background-color: #337ab7; color: #bfbfbf"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M282.6 78.1c8-27.3 33-46.1 61.4-46.1h200c17.7 0 32 14.3 32 32s-14.3 32-32 32H344L238.7 457c-3.6 12.3-14.1 21.2-26.8 22.8s-25.1-4.6-31.5-15.6L77.6 288H32c-17.7 0-32-14.3-32-32s14.3-32 32-32h45.6c22.8 0 43.8 12.1 55.3 31.8l65.2 111.8 84.4-289.5zm110.8 155.3c12.5-12.5 32.8-12.5 45.3 0l41.4 41.4 41.4-41.4c12.5-12.5 32.8-12.5 45.3 0s12.5 32.8 0 45.3l-41.4 41.4 41.4 41.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0l-41.4-41.4-41.4 41.4c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l41.4-41.4-41.4-41.4c-12.5-12.5-12.5-32.8 0-45.3"></path></svg></span></span> icon next to the number "1" in the image above. The resulting dialog displays all of the formatting options available for the variable, in this case data formats.</p>
 <p>Simply select the format you required and save the overlay.</p>
 <h3 id="common-formats">Common Formats<a class="headerlink" href="#common-formats" title="Permanent link">¶</a></h3>
 <div class="admonition warning">
-<p>NOTE: Some formats will display legacy formatting options. These mUST NOT be used for formatting fields and are present for backwards compatibility only</p>
+<p>NOTE: Some formats will display legacy formatting options. These must NOT be used for formatting fields and are present for backwards compatibility only</p>
 </div>
 <p><strong>Please Note</strong> The lists below are not exhaustive and may change from release to release. Please refer to the Formatting Dialog for available options</p>
 <h4 id="date-formats">Date Formats<a class="headerlink" href="#date-formats" title="Permanent link">¶</a></h4>
@@ -6367,7 +6490,7 @@
 </figcaption>
 </figure>
 <h4 id="boolean-formats">Boolean Formats<a class="headerlink" href="#boolean-formats" title="Permanent link">¶</a></h4>
-<p>This allows boolean values to be displayed in a more Human Readable format</p>
+<p>This allows boolean values to be displayed in a more human readable format</p>
 <table>
 <thead>
 <tr>
@@ -6400,7 +6523,7 @@
 </tbody>
 </table>
 <h4 id="elevation-formats">Elevation Formats<a class="headerlink" href="#elevation-formats" title="Permanent link">¶</a></h4>
-<p>This allows an elevation value to be displayed in a Human Readable format</p>
+<p>This allows an elevation value to be displayed in a human readable format</p>
 <table>
 <thead>
 <tr>
@@ -6413,12 +6536,12 @@
 <tr>
 <td>Custom elevation</td>
 <td>Elevation with decimal places and degree symbol</td>
-<td>52.12 °</td>
+<td>52.12 Â°</td>
 </tr>
 </tbody>
 </table>
 <h4 id="azimuth-formats">Azimuth Formats<a class="headerlink" href="#azimuth-formats" title="Permanent link">¶</a></h4>
-<p>This allows an azimuth value to be displayed in a Human Readable format</p>
+<p>This allows an azimuth value to be displayed in a human readable format</p>
 <table>
 <thead>
 <tr>
@@ -6441,7 +6564,7 @@
 </tbody>
 </table>
 <h4 id="filesize-formats">Filesize Formats<a class="headerlink" href="#filesize-formats" title="Permanent link">¶</a></h4>
-<p>This allows an filesize value to be displayed in a Human Readable format</p>
+<p>This allows an filesize value to be displayed in a human readable format</p>
 <table>
 <thead>
 <tr>
@@ -6463,8 +6586,8 @@
 </tr>
 </tbody>
 </table>
-<h4 id="filesize-formats_1">Filesize Formats<a class="headerlink" href="#filesize-formats_1" title="Permanent link">¶</a></h4>
-<p>This allows an filesize value to be displayed in a Human Readable format, converting between units if required</p>
+<h4 id="temperature-formats">Temperature Formats<a class="headerlink" href="#temperature-formats" title="Permanent link">¶</a></h4>
+<p>This allows a temperature to be displayed in a human readable format, converting between units if required</p>
 <table>
 <thead>
 <tr>
@@ -6477,17 +6600,42 @@
 <tr>
 <td>Default temperature</td>
 <td>Use default temperature attributes - see Sample --&gt;</td>
-<td>23.5° C</td>
+<td>23.5Â° C</td>
 </tr>
 <tr>
 <td>Custom temperature</td>
 <td>Customize variable attributes</td>
-<td>23,54° C</td>
+<td>23,54Â° C</td>
 </tr>
 </tbody>
 </table>
+<h4 id="pressure-formats">Pressure Formats<a class="headerlink" href="#pressure-formats" title="Permanent link">¶</a></h4>
+<p>This allows a pressure to be displayed in hPa, inches of mercury or millimetres of mercury. Allsky's pressures, e.g. from a BME280 sensor or OpenWeatherMap, are in hPa.</p>
+<table>
+<thead>
+<tr>
+<th>Format</th>
+<th>Description</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Default pressure</td>
+<td>Pressure in hPa without decimal places</td>
+<td>1013 hPa</td>
+</tr>
+<tr>
+<td>Custom pressure</td>
+<td>Pick the unit (hPa, inHg, mmHg), the decimal places and whether to add the unit</td>
+<td>29.92 inHg</td>
+</tr>
+</tbody>
+</table>
+<p>For example, <em>Custom pressure</em> with the unit <strong>inHg</strong>, <strong>2</strong> decimal places and <strong>Add unit</strong> shows 1013 hPa as <code>29.92 inHg</code>.</p>
+<p>The conversion assumes the value is in hPa. If your pressure already comes in another unit, e.g. from Home Assistant or an Ecowitt gateway set to inHg, keep the unit at <strong>hPa</strong> and only use the decimal places; without a format the value is shown as it is.</p>
 <h4 id="gpio-formats">GPIO Formats<a class="headerlink" href="#gpio-formats" title="Permanent link">¶</a></h4>
-<p>This allows the state of a GPIO pin to be displayed in a more Human Readable format</p>
+<p>This allows the state of a GPIO pin to be displayed in a more human readable format</p>
 <table>
 <thead>
 <tr>
@@ -6650,13 +6798,13 @@
         
         
           
-          <a href="tips.html" class="md-footer__link md-footer__link--next" aria-label="Next: Tips">
+          <a href="conditions.html" class="md-footer__link md-footer__link--next" aria-label="Next: Conditional Styles">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Tips
+                Conditional Styles
               </div>
             </div>
             <div class="md-footer__button md-icon">
@@ -6693,10 +6841,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.expand", "toc.integrate", "content.code.annotate", "header.autohide", "navigation.footer", "search.suggest"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": {"API Required": "api", "Data Capture": "data", "Experimental": "experimental", "Extra Module": "extra", "Hardware": "hw", "Hardware Required": "hardware", "Image Adjustments": "image", "MQTT": "mqtt", "Modules": "module", "Networking": "network", "Overlay Data": "overlay", "Overlays": "overlay", "Pipeline Day": "day", "Pipeline Night": "night", "Pipeline Periodic": "clock", "Power": "power", "Sensors": "sensor", "Software": "sw", "Weather": "weather"}, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.expand", "toc.integrate", "content.code.annotate", "header.autohide", "navigation.footer", "search.suggest"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": {"API Required": "api", "Data Capture": "data", "Experimental": "experimental", "Extra Module": "extra", "Hardware": "hw", "Hardware Required": "hardware", "Image Adjustments": "image", "MQTT": "mqtt", "Modules": "module", "Networking": "network", "Overlay Data": "overlay", "Overlays": "overlay", "Pipeline Day": "day", "Pipeline Night": "night", "Pipeline Periodic": "clock", "Power": "power", "Sensors": "sensor", "Software": "sw", "Weather": "weather"}, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../../assets/javascripts/bundle.c21346df.min.js"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

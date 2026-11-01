@@ -159,9 +159,12 @@ function collect_support_info()
 	### File system information
 	FILE_SYSTEMS="$( df -h )"
 
-	activate_python_venv
-	PYTHON_VERSION="$( python3 -V )"
-	PYTHON_VERSION="${PYTHON_VERSION:-unknown}"
+	if activate_python_venv; then
+		PYTHON_VERSION="$( python3 -V )"
+		PYTHON_VERSION="${PYTHON_VERSION:-unknown}"
+	else
+		PYTHON_VERSION="venv not installed yet"
+	fi
 
 	### Devices
 	DEV_DEVICES="$( sudo ls -alh  /dev )"

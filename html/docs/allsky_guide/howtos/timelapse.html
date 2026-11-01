@@ -5,7 +5,7 @@
       
       
       
-        <link rel="canonical" href="https://docs.allsky.local/allsky_guide/howtos/timelapse.html">
+        <link rel="canonical" href="https://allskyteam.github.io/allsky/allsky_guide/howtos/timelapse.html">
       
       
         <link rel="prev" href="startrails.html">
@@ -18,7 +18,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
     
     
       
@@ -26,10 +26,10 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
       
       
 
@@ -422,7 +422,7 @@
     
     
       <li class="md-tabs__item md-tabs__item--active">
-        <a href="../allsky.html" class="md-tabs__link">
+        <a href="../preparation.html" class="md-tabs__link">
           
   
   
@@ -684,6 +684,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../preparation.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preparation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../allsky.html" class="md-nav__link">
         
   
@@ -836,6 +864,34 @@
     
   
     Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../upgrade/v2026.10.01_01.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v2026.10.01_01
   
 
     
@@ -3560,6 +3616,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../overlays/conditions.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Conditional Styles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../overlays/tips.html" class="md-nav__link">
         
   
@@ -4467,6 +4551,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../allsky_modules/extra/meteor.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Meteor Detection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../allsky_modules/extra/adsb.html" class="md-nav__link">
         
   
@@ -5152,10 +5264,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_5_27">
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_5_28">
         
           
-          <label class="md-nav__link" for="__nav_4_5_27" id="__nav_4_5_27_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_4_5_28" id="__nav_4_5_28_label" tabindex="0">
             
   
   
@@ -5173,8 +5285,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_5_27_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4_5_27">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_5_28_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5_28">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -6249,6 +6361,16 @@ generateForDay.sh --upload --timelapse 20260710
 <p class="admonition-title">Note</p>
 <p>You may wish to manually create a timelapse if you changed the settings (e.g., FPS), or if a timelapse wasn't automatically created, possibly due to Allsky not running at the night-to-day transition time.</p>
 </div>
+<p>To only use part of the day, set the timelapse <strong>Start Time</strong> and <strong>End Time</strong> settings, or override them on the command line, for example for just the night or from 22:00 to 04:00:</p>
+<div class="highlight"><pre><span></span><code>generateForDay.sh --timelapse --start nighttime_start --end nighttime_end 20260710
+generateForDay.sh --timelapse --start 22:00 --end 04:00 20260710
+</code></pre></div>
+<p><code>--start</code> and <code>--end</code> also work with <code>--keogram</code> and <code>--startrails</code>.</p>
+<p>If the <strong>Keolapse</strong> module is installed and in the <strong>Night to Day</strong> flow, <code>--keolapse</code> creates or uploads its keolapse the same way, with the module's settings:</p>
+<div class="highlight"><pre><span></span><code>generateForDay.sh --keolapse 20260710
+generateForDay.sh --upload --keolapse 20260710
+</code></pre></div>
+<p>When the <strong>Keolapse</strong> module is enabled in the <strong>Night to Day</strong> flow, the keolapse is also part of the default set, so <code>generateForDay.sh 20260710</code> creates the keogram, startrails, timelapse, and keolapse. It's left out of the default set when you use <code>--images</code>, <code>--start</code>, <code>--end</code>, <code>--output-dir</code>, or <code>--thumbnail-only</code>, because the module always uses its own settings for the whole day.</p>
 <p>If your camera has a lot of pixels you may need to resize the timelapse in order to decrease the processing power needed to create it and to reduce the file size. If so, update the timelapse <strong>Width</strong> and <strong>Height</strong> settings. Cutting each size in half is a good starting point.</p>
 <h2 id="mini-timelapse">Mini Timelapse<a class="headerlink" href="#mini-timelapse" title="Permanent link">¶</a></h2>
 <p>A mini timelapse contains a limited number of images and is constantly recreated throughout the day. For example, you can have a mini timelapse that shows the last 50 images, and is recreated every 5 images. Note that every new mini timelapse <strong>replaces</strong> the prior one, so there is ever only one mini timelapse.</p>
@@ -6418,10 +6540,10 @@ A new mini timelapse will be created after the number of images you specify in <
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.expand", "toc.integrate", "content.code.annotate", "header.autohide", "navigation.footer", "search.suggest"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": {"API Required": "api", "Data Capture": "data", "Experimental": "experimental", "Extra Module": "extra", "Hardware": "hw", "Hardware Required": "hardware", "Image Adjustments": "image", "MQTT": "mqtt", "Modules": "module", "Networking": "network", "Overlay Data": "overlay", "Overlays": "overlay", "Pipeline Day": "day", "Pipeline Night": "night", "Pipeline Periodic": "clock", "Power": "power", "Sensors": "sensor", "Software": "sw", "Weather": "weather"}, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.expand", "toc.integrate", "content.code.annotate", "header.autohide", "navigation.footer", "search.suggest"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": {"API Required": "api", "Data Capture": "data", "Experimental": "experimental", "Extra Module": "extra", "Hardware": "hw", "Hardware Required": "hardware", "Image Adjustments": "image", "MQTT": "mqtt", "Modules": "module", "Networking": "network", "Overlay Data": "overlay", "Overlays": "overlay", "Pipeline Day": "day", "Pipeline Night": "night", "Pipeline Periodic": "clock", "Power": "power", "Sensors": "sensor", "Software": "sw", "Weather": "weather"}, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../../assets/javascripts/bundle.c21346df.min.js"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

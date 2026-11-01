@@ -32,6 +32,24 @@ generateForDay.sh --upload --timelapse 20260710
 !!! note
 	You may wish to manually create a timelapse if you changed the settings (e.g., FPS), or if a timelapse wasn't automatically created, possibly due to Allsky not running at the night-to-day transition time.
 
+To only use part of the day, set the timelapse **Start Time** and **End Time** settings, or override them on the command line, for example for just the night or from 22:00 to 04:00:
+
+```
+generateForDay.sh --timelapse --start nighttime_start --end nighttime_end 20260710
+generateForDay.sh --timelapse --start 22:00 --end 04:00 20260710
+```
+
+`--start` and `--end` also work with `--keogram` and `--startrails`.
+
+If the **Keolapse** module is installed and in the **Night to Day** flow, `--keolapse` creates or uploads its keolapse the same way, with the module's settings:
+
+```
+generateForDay.sh --keolapse 20260710
+generateForDay.sh --upload --keolapse 20260710
+```
+
+When the **Keolapse** module is enabled in the **Night to Day** flow, the keolapse is also part of the default set, so `generateForDay.sh 20260710` creates the keogram, startrails, timelapse, and keolapse. It's left out of the default set when you use `--images`, `--start`, `--end`, `--output-dir`, or `--thumbnail-only`, because the module always uses its own settings for the whole day.
+
 If your camera has a lot of pixels you may need to resize the timelapse in order to decrease the processing power needed to create it and to reduce the file size. If so, update the timelapse **Width** and **Height** settings. Cutting each size in half is a good starting point.
 
 ## Mini Timelapse { data-toc-label="Mini Timelapse" }

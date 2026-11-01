@@ -148,7 +148,7 @@ class HelperPageRenderer
 		global $pageHeaderTitle, $pageIcon;
 
 		return ''
-			. "<div class='panel panel-allsky'>"
+			. "<div class='panel panel-allsky allow-select'>"
 			. "<div class='panel-heading'><i class='" . $this->e($pageIcon) . "'></i> " . $this->e($pageHeaderTitle) . "</div>"
 			. "<div class='panel-body'>"
 			. $this->renderNotices()

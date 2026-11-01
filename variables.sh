@@ -133,8 +133,8 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" || ${1} == "--force" ]]; then
 	# Holds temporary messages to display in the WebUI.
 	ALLSKY_MESSAGES="${ALLSKY_CONFIG}/messages.txt"
 
-	# Holds a count of continuous "bad" images
-	ALLSKY_BAD_IMAGE_COUNT="${ALLSKY_TMP}/bad_images.txt"
+	# Holds a count of continuous "bad" images.
+	ALLSKY_BAD_IMAGE_COUNT="${ALLSKY_TMP}/bad_images_count.txt"
 
 	# Holds the number of images left until uploading.
 	ALLSKY_FREQUENCY_FILE="${ALLSKY_TMP}/IMG_UPLOAD_FREQUENCY.txt"
@@ -145,8 +145,8 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" || ${1} == "--force" ]]; then
 	# Camera information:
 	# List of ALL connected cameras.
 	ALLSKY_CONNECTED_CAMERAS_INFO="${ALLSKY_CONFIG}/connected_cameras.txt"
-	# Supported RPi cameras
-	ALLSKY_RPi_SUPPORTED_CAMERAS="${ALLSKY_CONFIG}/RPi_cameraInfo.txt"
+	# Known RPi cameras.
+	ALLSKY_RPi_CAMERA_INFO="${ALLSKY_CONFIG}/RPi_camera_info.txt"
 
 	# Log-related information.
 	ALLSKY_LOGS="${ALLSKY_CONFIG}/logs"
@@ -180,7 +180,10 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" || ${1} == "--force" ]]; then
 	ALLSKY_EXTRA_LEGACY="${ALLSKY_OVERLAY}/extra"
 	ALLSKY_EXTRA="${ALLSKY_TMP}/extra"
 	ALLSKY_MODULE_INSTALLER="${ALLSKY_SCRIPTS}/modules/allskymodulemanager/moduleinstaller.py"
-	
+
+	# Migration scripts
+	ALLSKY_MIGRATIONS_DIR="${ALLSKY_UTILITIES}/migrations"
+
 	# URL for the Allsky API.
 	ALLSKY_API_URL="http://localhost:8090"
 
@@ -209,6 +212,7 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" || ${1} == "--force" ]]; then
 	ALLSKY_WEBSITE_CONFIGURATION_FILE="${ALLSKY_WEBSITE}/${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
 	ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME="remote_${ALLSKY_WEBSITE_CONFIGURATION_NAME}"
 	ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE="${ALLSKY_CONFIG}/${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_NAME}"
+	ALLSKY_REMOTE_WEBSITE_COMMANDS_NAME="commands.txt"
 
 	# Holds all the Allsky documentation.
 	ALLSKY_DOCUMENTATION="${ALLSKY_WEBUI}/docs"

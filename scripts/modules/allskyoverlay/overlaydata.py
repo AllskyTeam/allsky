@@ -34,6 +34,11 @@ try:
 except:
 	pass
 
+try:
+	from allskyoverlay import conditions as overlay_conditions
+except ImportError:
+	import conditions as overlay_conditions		# when run from this folder
+
 class ALLSKYOVERLAYDATA:
     
 	extra_expiry_time = 0
@@ -63,8 +68,10 @@ class ALLSKYOVERLAYDATA:
 		'opacity': None,
 		'stroke': None,
 		'strokewidth': None,
+		'type': None,
 	}
 	variable_class = None
+	condition_sets = {}
  
  
 	def __init__(self, from_command_line, values_only, debug_mode, overlay_file):
@@ -135,6 +142,10 @@ class ALLSKYOVERLAYDATA:
 			field_data = copy.copy(self.extra_field_definition)
 
 		try:          
+			if not isinstance(raw_field_data, dict):
+				field_data['value'] = raw_field_data
+				return field_data
+
 			for field_key, field_value in field_data.items():
 				if field_key in raw_field_data:
 					field_data[field_key] = raw_field_data[field_key]
@@ -147,9 +158,6 @@ class ALLSKYOVERLAYDATA:
 
 				if 'value' in field_data['value']:
 					field_data['value'] = field_data['value']['value']
-			else:
-				if not isinstance(raw_field_data, dict):
-					field_data['value'] = raw_field_data
 		except Exception as e:
 			eType, eObject, eTraceback = sys.exc_info()
 			self._log(0, f'ERROR: _parse_extra_data_field failed on line {eTraceback.tb_lineno} - {e}')
@@ -269,6 +277,7 @@ class ALLSKYOVERLAYDATA:
 		else:
 			self._debug(f'INFO: No formats found')
 
+		condition_value = None
 		for variable_pos, raw_variable in enumerate(variable_matches):
 			variable = 'AS_' + raw_variable.replace('${','').replace('}', '')
 			value = ''
@@ -293,6 +302,7 @@ class ALLSKYOVERLAYDATA:
       
 			self._debug(f'INFO: Using Value "{value}"')
 			pre_formatted_value = value
+			condition_value = value
 
 			variable_definition = self.variable_class.get_variable(self.variables, variable)
 			if variable_definition is not None:
@@ -313,7 +323,10 @@ class ALLSKYOVERLAYDATA:
 					if variable_definition is not None:
 						variable_group = variable_definition['type']
 
-					if 'type' in field_data:
+					if variable in self.extra_fields and self.extra_fields[variable].get('type'):
+						variable_group = self.extra_fields[variable]['type']
+
+					if 'type' in field_data and field_data['type']:
 						variable_group = field_data['type']
           
 					#self._debug(f'INFO: Formatting variable {variable}, value {self.extra_fields[variable]["value"]}, using format "{formats}"')
@@ -335,6 +348,10 @@ class ALLSKYOVERLAYDATA:
 							value = getattr(allskyformatters.allsky_formatters, format_function)(value, variable, format, '', self.debug_mode)
 						except AllskyFormatError as e:
 							self._log(e.log_level, e.message, send_to_allsky=e.send_to_allsky)
+						except Exception as e:
+							# A value the formatter can't handle must not stop the whole overlay;
+							# show the unformatted value instead.
+							self._log(1, f'WARNING: Cannot use format "{format}" on {variable} (value "{value}"): {e}')
 					else:
 						self._log(4, f'Formatter {format_function} NOT found')	     
 	
@@ -385,6 +402,22 @@ class ALLSKYOVERLAYDATA:
 
 		field_data['label'] = field_label
 
+		# Conditional style: only for a label with a single variable, and after the
+		# module's own colour ("fill") above, so a matching rule overrides it.
+		if field_data.get('conditions') and len(variable_matches) == 1:
+			style = overlay_conditions.evaluate(field_data['conditions'], condition_value, self.condition_sets)
+			if style:
+				self._debug(f'INFO: Conditional style for value "{condition_value}": {style}')
+				style = dict(style)
+				text = style.pop('text', None)
+				if text is not None:
+					# Show this text instead of the value.  Fields with conditions normally
+					# contain only the variable; for older ones with other text, only the
+					# value is replaced.
+					shown = str(value)
+					field_label = field_label.replace(shown, str(text), 1) if shown and shown in field_label else str(text)
+				field_data.update(style)
+
 		self._debug(f'INFO: Final formatted label "{field_label}"')
 		self._debug('')
 
@@ -399,6 +432,7 @@ class ALLSKYOVERLAYDATA:
 				#try:
 				with open(self.overlay_file) as file:
 					json_overlay = json.load(file)
+					self.condition_sets = json_overlay.get('conditionsets', {})
 					self.variables = self.variable_class.get_variables()
 					for index,field_data in enumerate(json_overlay['fields']):
 						self._debug(f"INFO: Formatting field {field_data['label']}")

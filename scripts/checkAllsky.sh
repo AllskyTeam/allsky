@@ -13,7 +13,7 @@
 ME="$( basename "${BASH_ARGV0}" )"
 
 #shellcheck disable=SC1091 source-path=.
-source "${ALLSKY_HOME}/variables.sh"					|| exit "${ALLSKY_EXIT_ERROR_STOP}"
+source "${ALLSKY_HOME}/variables.sh" --force			|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/functions.sh" 				|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
@@ -859,7 +859,7 @@ NUM_FINDINGS=$((NUM_INFOS + NUM_WARNINGS + NUM_ERRORS))
 RET=0
 if [[ ${NUM_FINDINGS} -eq 0 ]]; then
 	echo -en "No issues found.${wBR}"
-else
+elif [[ ${FROM_WEBUI} == "false" ]]; then
 	# Don't display summary if only 1 item.
 	if [[ ${NUM_FINDINGS} -gt 1 ]]; then
 		echo

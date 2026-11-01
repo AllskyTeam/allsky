@@ -51,6 +51,16 @@ echo "* Updating config_repo files."
 update_repo_files
 
 
+# The Overlay Editor's list of formats comes from these files.  Users don't edit them,
+# so bring in new formats (e.g., for pressure) on "In Place" upgrades too.
+echo "* Updating the Overlay Editor's format lists."
+for F in formats.json format_attributes.json; do
+	if [[ -d ${ALLSKY_OVERLAY}/config ]] && ! cmp --silent "${ALLSKY_REPO}/overlay/config/${F}" "${ALLSKY_OVERLAY}/config/${F}" ; then
+		cp "${ALLSKY_REPO}/overlay/config/${F}" "${ALLSKY_OVERLAY}/config/${F}"
+	fi
+done
+
+
 echo "* Recreating links."
 create_links "allsky-config"
 
@@ -76,19 +86,6 @@ if [[ ! -s ${FILES_DOWNLOADED_FILE} ]] ||
 		# Starting it added an entry so truncate the file so it's 0-length.
 		truncate -s 0 "${LIGHTTPD_LOG_FILE}"
 	fi
-fi
-
-
-REPO="$( basename "${ALLSKY_REPO}" )/$( basename "${ALLSKY_RPi_SUPPORTED_CAMERAS}" )"
-if [[ ! -s ${FILES_DOWNLOADED_FILE} ]] ||
-		grep -m 1 --silent "${REPO}" "${FILES_DOWNLOADED_FILE}" ; then
-	echo "* Updating list of RPi supported cameras."
-	# true == ignore errors.  ${CMD} will be "" if no command found.
-	CMD="$( determineCommandToUse "false" "" "true" 2> /dev/null )"
-	RET=$?		# return of 2 means no command was found
-	[[ ${RET} -ne 0 ]] && CMD=""
-	# Will create full file is CMD == "".  "true" is to force creation.
-	setup_rpi_supported_cameras "${CMD}" "true" > /dev/null
 fi
 
 

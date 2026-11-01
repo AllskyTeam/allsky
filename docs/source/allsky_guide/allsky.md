@@ -30,7 +30,7 @@ For most users, the overall process is simple: prepare the Pi, make sure the cam
 
 Before you install Allsky for the first time, make sure the Pi itself is in a sensible starting state.
 
-The Raspberry Pi should already be running Raspberry Pi OS. The Desktop version is recommended because it tends to make general setup and troubleshooting easier, especially while you are still getting the system working.
+The Raspberry Pi should already be running a [supported Raspberry Pi OS release](preparation.md). For most dedicated Allsky systems, choose the 64-bit Lite edition. Choose Desktop if you want a local graphical interface or camera preview while setting up. The [preparation guide](preparation.md#choosing-an-image-64-bit-or-32-bit-lite-or-desktop) explains when to choose each image and [how to write it to a microSD card](preparation.md#writing-raspberry-pi-os-to-a-microsd-card).
 
 The Pi should also have a working Internet connection. A wired network connection is preferable if you can use one, because it is generally faster and more reliable than Wi-Fi during installation. This matters more than it may first appear. The installer may need to fetch packages, update components, and compile software, and that is all easier when the connection is stable. If you are using Power over Ethernet, that can make deployment especially neat because you only need one cable to the Pi.
 
@@ -153,7 +153,7 @@ The installer may offer to add swap space. This effectively gives the system mor
 
 #### Temporary directory in memory { data-toc-label="Temporary directory" }
 
-You may be asked whether `~/allsky/tmp` should be placed in memory rather than on the SD card. This directory is used heavily for temporary files, and keeping it in memory can significantly reduce SD card writes, improving card longevity.
+The installer places `~/allsky/tmp` in memory rather than on the SD card. This directory is used heavily for temporary files, and keeping it in memory can significantly reduce SD card writes, improving card longevity. Its size depends on your Pi's memory, from 75 MB on a Pi with 512 MB to 600 MB on a Pi with 8 GB or more. During an upgrade a smaller size from an earlier release is increased to that size. You can change the size, or move the directory back to the SD card, with `allsky-config recheck_tmp`. If Allsky is installed on an NVMe disk, `~/allsky/tmp` stays on the disk instead, since NVMe disks are fast and don't wear like SD cards; `allsky-config recheck_tmp` can still put it in memory.
 
 #### Latitude and longitude { data-toc-label="Latitude and longitude" }
 

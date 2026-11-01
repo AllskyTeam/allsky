@@ -262,13 +262,54 @@ class OEFIELD {
 		this.fieldData.tly = rotatedY | 0;
 	}
 
-	enableTestMode(value) {
+	// Style values the overlay module may set on a field, e.g. from its conditions, and
+	// the Konva setter for each.
+	static TEST_STYLE = {
+		fill: 'fill', stroke: 'stroke', strokewidth: 'strokeWidth',
+		opacity: 'opacity', font: 'fontFamily', fontsize: 'fontSize'
+	};
+
+	// "result" is the field as the overlay module formatted it: besides the label it holds
+	// the style a matching condition set, so the test shows what the image will show.
+	// Only the shape changes; the field's own settings stay as they are.
+	enableTestMode(value, result = null) {
 		if (this instanceof OETEXTFIELD) {
+			this.resetTestStyle();
+			if (result !== null) {
+				this.testStyle = this.testStyle || {};
+				for (const [key, setter] of Object.entries(OEFIELD.TEST_STYLE)) {
+					const v = result[key];
+					if (v === undefined || v === null || v === '' || v === this.fieldData[key]) {
+						continue;
+					}
+					if (!(setter in this.testStyle)) {
+						this.testStyle[setter] = this.shape[setter]();
+					}
+					this.shape[setter](v);
+				}
+			}
 			this.setLabel(value);
 		}
 	}
 
+	// Back to the field's own style: its current settings, or what the shape had before
+	// the test for a setting the field leaves to the overlay's default.
+	resetTestStyle() {
+		if (this.testStyle === undefined) {
+			return;
+		}
+		for (const [key, setter] of Object.entries(OEFIELD.TEST_STYLE)) {
+			if (!(setter in this.testStyle)) {
+				continue;
+			}
+			const own = this.fieldData[key];
+			this.shape[setter](own !== undefined && own !== null && own !== '' ? own : this.testStyle[setter]);
+		}
+		delete this.testStyle;
+	}
+
 	disableTestMode() {
+		this.resetTestStyle();
 		if ('label' in this.fieldData) {
 			this.label = this.label;
 		}

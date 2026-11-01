@@ -1,0 +1,7222 @@
+<!DOCTYPE html><html lang="en" class="no-js"><head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://allskyteam.github.io/allsky/allsky_modules/extra/meteor.html">
+      
+      
+        <link rel="prev" href="dew_heater.html">
+      
+      
+        <link rel="next" href="adsb.html">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
+    
+    
+      
+        <title>Meteor Detection - Allsky Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+  
+  
+    
+      
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+    
+      
+      
+        
+      
+      
+    
+  
+  
+  <style>:root{.md-tag{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M5.5%207A1.5%201.5%200%200%201%204%205.5%201.5%201.5%200%200%201%205.5%204%201.5%201.5%200%200%201%207%205.5%201.5%201.5%200%200%201%205.5%207m15.91%204.58-9-9C12.05%202.22%2011.55%202%2011%202H4c-1.11%200-2%20.89-2%202v7c0%20.55.22%201.05.59%201.41l8.99%209c.37.36.87.59%201.42.59s1.05-.23%201.41-.59l7-7c.37-.36.59-.86.59-1.41%200-.56-.23-1.06-.59-1.42%22/%3E%3C/svg%3E');}.md-tag.md-tag--hw{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M6%204h12v1h3v2h-3v2h3v2h-3v2h3v2h-3v2h3v2h-3v1H6v-1H3v-2h3v-2H3v-2h3v-2H3V9h3V7H3V5h3zm5%2011v3h1v-3zm2%200v3h1v-3zm2%200v3h1v-3z%22/%3E%3C/svg%3E');}.md-tag.md-tag--sw{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22m14.6%2016.6%204.6-4.6-4.6-4.6L16%206l6%206-6%206zm-5.2%200L4.8%2012l4.6-4.6L8%206l-6%206%206%206z%22/%3E%3C/svg%3E');}.md-tag.md-tag--overlay{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22m12%2016%207.36-5.73L21%209l-9-7-9%207%201.63%201.27M12%2018.54l-7.38-5.73L3%2014.07l9%207%209-7-1.63-1.27z%22/%3E%3C/svg%3E');}.md-tag.md-tag--module{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M20.5%2011H19V7a2%202%200%200%200-2-2h-4V3.5A2.5%202.5%200%200%200%2010.5%201%202.5%202.5%200%200%200%208%203.5V5H4a2%202%200%200%200-2%202v3.8h1.5c1.5%200%202.7%201.2%202.7%202.7S5%2016.2%203.5%2016.2H2V20a2%202%200%200%200%202%202h3.8v-1.5c0-1.5%201.2-2.7%202.7-2.7s2.7%201.2%202.7%202.7V22H17a2%202%200%200%200%202-2v-4h1.5a2.5%202.5%200%200%200%202.5-2.5%202.5%202.5%200%200%200-2.5-2.5%22/%3E%3C/svg%3E');}.md-tag.md-tag--sensor{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22m19.07%204.93-1.41%201.41A8.01%208.01%200%200%201%2020%2012a8%208%200%200%201-8%208%208%208%200%200%201-8-8c0-4.08%203.05-7.44%207-7.93v2.02C8.16%206.57%206%209.03%206%2012a6%206%200%200%200%206%206%206%206%200%200%200%206-6c0-1.66-.67-3.16-1.76-4.24l-1.41%201.41C15.55%209.9%2016%2010.9%2016%2012a4%204%200%200%201-4%204%204%204%200%200%201-4-4c0-1.86%201.28-3.41%203-3.86v2.14c-.6.35-1%20.98-1%201.72a2%202%200%200%200%202%202%202%202%200%200%200%202-2c0-.74-.4-1.38-1-1.72V2h-1A10%2010%200%200%200%202%2012a10%2010%200%200%200%2010%2010%2010%2010%200%200%200%2010-10c0-2.76-1.12-5.26-2.93-7.07%22/%3E%3C/svg%3E');}.md-tag.md-tag--mqtt{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M4.93%204.93A9.97%209.97%200%200%200%202%2012c0%202.76%201.12%205.26%202.93%207.07l1.41-1.41A7.94%207.94%200%200%201%204%2012c0-2.21.89-4.22%202.34-5.66zm14.14%200-1.41%201.41A7.96%207.96%200%200%201%2020%2012c0%202.22-.89%204.22-2.34%205.66l1.41%201.41A9.97%209.97%200%200%200%2022%2012c0-2.76-1.12-5.26-2.93-7.07M7.76%207.76A5.98%205.98%200%200%200%206%2012c0%201.65.67%203.15%201.76%204.24l1.41-1.41A4%204%200%200%201%208%2012c0-1.11.45-2.11%201.17-2.83zm8.48%200-1.41%201.41A4%204%200%200%201%2016%2012c0%201.11-.45%202.11-1.17%202.83l1.41%201.41A5.98%205.98%200%200%200%2018%2012c0-1.65-.67-3.15-1.76-4.24M12%2010a2%202%200%200%200-2%202%202%202%200%200%200%202%202%202%202%200%200%200%202-2%202%202%200%200%200-2-2%22/%3E%3C/svg%3E');}.md-tag.md-tag--weather{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M12.74%205.47c2.36%201.03%203.61%203.56%203.18%205.99A6%206%200%200%201%2018%2016v.17a3%203%200%200%201%201-.17%203%203%200%200%201%203%203%203%203%200%200%201-3%203H6a4%204%200%200%201-4-4%204%204%200%200%201%204-4h.27C5%2012.45%204.6%2010.24%205.5%208.26a5.49%205.49%200%200%201%207.24-2.79m-.81%201.83c-1.77-.8-3.84.01-4.62%201.77-.46%201.02-.38%202.15.1%203.06A5.99%205.99%200%200%201%2012%2010c.7%200%201.38.12%202%20.34a3.51%203.51%200%200%200-2.07-3.04m1.62-3.66c-.55-.24-1.1-.41-1.67-.52l2.49-1.3.9%202.89a7.7%207.7%200%200%200-1.72-1.07m-7.46.8c-.49.35-.92.75-1.29%201.19l.11-2.81%202.96.68c-.62.21-1.22.53-1.78.94M18%209.71c-.09-.59-.22-1.16-.41-1.71l2.38%201.5-2.05%202.23c.11-.65.13-1.33.08-2.02M3.04%2011.3c.07.6.2%201.17.39%201.7l-2.37-1.5L3.1%209.28c-.1.65-.13%201.33-.06%202.02M19%2018h-3v-2a4%204%200%200%200-4-4%204%204%200%200%200-4%204H6a2%202%200%200%200-2%202%202%202%200%200%200%202%202h13a1%201%200%200%200%201-1%201%201%200%200%200-1-1%22/%3E%3C/svg%3E');}.md-tag.md-tag--power{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M16%207V3h-2v4h-4V3H8v4C7%207%206%208%206%209v5.5L9.5%2018v3h5v-3l3.5-3.5V9c0-1-1-2-2-2%22/%3E%3C/svg%3E');}.md-tag.md-tag--network{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M10%202c-1.11%200-2%20.89-2%202v3c0%201.11.89%202%202%202h1v2H2v2h4v2H5c-1.11%200-2%20.89-2%202v3c0%201.11.89%202%202%202h4c1.11%200%202-.89%202-2v-3c0-1.11-.89-2-2-2H8v-2h8v2h-1c-1.11%200-2%20.89-2%202v3c0%201.11.89%202%202%202h4c1.11%200%202-.89%202-2v-3c0-1.11-.89-2-2-2h-1v-2h4v-2h-9V9h1c1.11%200%202-.89%202-2V4c0-1.11-.89-2-2-2zm0%202h4v3h-4zM5%2017h4v3H5zm10%200h4v3h-4z%22/%3E%3C/svg%3E');}.md-tag.md-tag--experimental{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M6%2022a3%203%200%200%201-3-3c0-.6.18-1.16.5-1.63L9%207.81V6a1%201%200%200%201-1-1V4a2%202%200%200%201%202-2h4a2%202%200%200%201%202%202v1a1%201%200%200%201-1%201v1.81l5.5%209.56c.32.47.5%201.03.5%201.63a3%203%200%200%201-3%203zm-1-3a1%201%200%200%200%201%201h12a1%201%200%200%200%201-1c0-.21-.07-.41-.18-.57l-2.29-3.96L14%2017l-5.07-5.07-3.75%206.5c-.11.16-.18.36-.18.57m8-9a1%201%200%200%200-1%201%201%201%200%200%200%201%201%201%201%200%200%200%201-1%201%201%200%200%200-1-1%22/%3E%3C/svg%3E');}.md-tag.md-tag--data{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M2%202v20h20v-2h-2v-2h2v-2h-2v-2h2v-2h-4v-2h-2v2h-2v-2h-2V8H8v4h4v4h-2v2h2v2h-2v-2H8v-2H6v-2H4v-2h2V6H4V2zm4%204h2V2H6zm2%2010h2v-2H8zm10-6h4V8h-4zm0-2V4h-2v2h-2v2zm-2-4V2h-2v2zm2%200h2V2h-2zm2%200v2h2V4zM10%202v4h2V2zm4%2012h2v2h2v4h-4zM4%2018h2v2H4z%22/%3E%3C/svg%3E');}.md-tag.md-tag--extra{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M19%203H5c-1.1%200-2%20.9-2%202v14c0%201.1.9%202%202%202h14c1.1%200%202-.9%202-2V5c0-1.1-.9-2-2-2m-8%205H9v2c0%201.1-.9%202-2%202%201.1%200%202%20.9%202%202v2h2v2H9c-1.1%200-2-.9-2-2v-1c0-1.1-.9-2-2-2v-2c1.1%200%202-.9%202-2V8c0-1.1.9-2%202-2h2zm8%205c-1.1%200-2%20.9-2%202v1c0%201.1-.9%202-2%202h-2v-2h2v-2c0-1.1.9-2%202-2-1.1%200-2-.9-2-2V8h-2V6h2c1.1%200%202%20.9%202%202v1c0%201.1.9%202%202%202z%22/%3E%3C/svg%3E');}.md-tag.md-tag--day{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M12%207a5%205%200%200%201%205%205%205%205%200%200%201-5%205%205%205%200%200%201-5-5%205%205%200%200%201%205-5m0%202a3%203%200%200%200-3%203%203%203%200%200%200%203%203%203%203%200%200%200%203-3%203%203%200%200%200-3-3m0-7%202.39%203.42C13.65%205.15%2012.84%205%2012%205s-1.65.15-2.39.42zM3.34%207l4.16-.35A7.2%207.2%200%200%200%205.94%208.5c-.44.74-.69%201.5-.83%202.29zm.02%2010%201.76-3.77a7.131%207.131%200%200%200%202.38%204.14zM20.65%207l-1.77%203.79a7.02%207.02%200%200%200-2.38-4.15zm-.01%2010-4.14.36c.59-.51%201.12-1.14%201.54-1.86.42-.73.69-1.5.83-2.29zM12%2022l-2.41-3.44c.74.27%201.55.44%202.41.44.82%200%201.63-.17%202.37-.44z%22/%3E%3C/svg%3E');}.md-tag.md-tag--night{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22m17.75%204.09-2.53%201.94.91%203.06-2.63-1.81-2.63%201.81.91-3.06-2.53-1.94L12.44%204l1.06-3%201.06%203zm3.5%206.91-1.64%201.25.59%201.98-1.7-1.17-1.7%201.17.59-1.98L15.75%2011l2.06-.05L18.5%209l.69%201.95zm-2.28%204.95c.83-.08%201.72%201.1%201.19%201.85-.32.45-.66.87-1.08%201.27C15.17%2023%208.84%2023%204.94%2019.07c-3.91-3.9-3.91-10.24%200-14.14.4-.4.82-.76%201.27-1.08.75-.53%201.93.36%201.85%201.19-.27%202.86.69%205.83%202.89%208.02a9.96%209.96%200%200%200%208.02%202.89m-1.64%202.02a12.08%2012.08%200%200%201-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81%203.14-2.7%207.96.31%2010.98%203.02%203.01%207.84%203.12%2010.98.31%22/%3E%3C/svg%3E');}.md-tag.md-tag--clock{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M12%2020a8%208%200%200%200%208-8%208%208%200%200%200-8-8%208%208%200%200%200-8%208%208%208%200%200%200%208%208m0-18a10%2010%200%200%201%2010%2010%2010%2010%200%200%201-10%2010C6.47%2022%202%2017.5%202%2012A10%2010%200%200%201%2012%202m.5%205v5.25l4.5%202.67-.75%201.23L11%2013V7z%22/%3E%3C/svg%3E');}.md-tag.md-tag--hardware{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M2%2019.63%2013.43%208.2l-.71-.7%201.42-1.43L12%203.89c1.2-1.19%203.09-1.19%204.27%200l3.6%203.61-1.42%201.41h2.84l.71.71-3.55%203.59-.71-.71V9.62l-1.47%201.42-.71-.71L4.13%2021.76z%22/%3E%3C/svg%3E');}.md-tag.md-tag--api{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M7%207H5a2%202%200%200%200-2%202v8h2v-4h2v4h2V9a2%202%200%200%200-2-2m0%204H5V9h2m7-2h-4v10h2v-4h2a2%202%200%200%200%202-2V9a2%202%200%200%200-2-2m0%204h-2V9h2m6%200v6h1v2h-4v-2h1V9h-1V7h4v2Z%22/%3E%3C/svg%3E');}.md-tag.md-tag--image{--md-tag-icon:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22m8.5%2013.5%202.5%203%203.5-4.5%204.5%206H5m16%201V5a2%202%200%200%200-2-2H5a2%202%200%200%200-2%202v14a2%202%200%200%200%202%202h14a2%202%200%200%200%202-2%22/%3E%3C/svg%3E');}}</style>
+
+    
+    
+      
+        <script src="https://unpkg.com/iframe-worker/shim"></script>
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../../assets/css/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  <link href="../../assets/stylesheets/glightbox.min.css" rel="stylesheet"><script src="../../assets/javascripts/glightbox.min.js"></script><style id="glightbox-style">
+            html.glightbox-open { overflow: initial; height: 100%; }
+            .gslide-title { margin-top: 0px; user-select: text; }
+            .gslide-desc { color: #666; user-select: text; }
+            .gslide-image img { background: white; }
+            .gscrollbar-fixer { padding-right: 15px; }
+            .gdesc-inner { font-size: 0.75rem; }
+            body[data-md-color-scheme="slate"] .gdesc-inner { background: var(--md-default-bg-color); }
+            body[data-md-color-scheme="slate"] .gslide-title { color: var(--md-default-fg-color); }
+            body[data-md-color-scheme="slate"] .gslide-desc { color: var(--md-default-fg-color); }
+        </style></head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#allsky_meteordetect" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../index.html" title="Allsky Documentation" class="md-header__button md-logo" aria-label="Allsky Documentation" data-md-component="logo">
+      
+  <img src="../../assets/images/logo.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"></path></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Allsky Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Meteor Detection
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo" aria-label="Switch to dark mode" type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden="">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"></path></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo" aria-label="Switch to light mode" type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden="">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"></path></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required="">
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"></path></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix="">
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/AllskyTeam/allsky" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"></path></svg>
+  </div>
+  <div class="md-source__repository">
+    Allsky
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../index.html" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../allsky_guide/preparation.html" class="md-tabs__link">
+          
+  
+  
+  Allsky Guide
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../allsky_guide/overlays/overview.html" class="md-tabs__link">
+          
+  
+  
+  Overlays
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../introduction.html" class="md-tabs__link">
+          
+  
+  
+  Modules
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../developer_guide/introduction.html" class="md-tabs__link">
+          
+  
+  
+  Developer Guide
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../index.html" title="Allsky Documentation" class="md-nav__button md-logo" aria-label="Allsky Documentation" data-md-component="logo">
+      
+  <img src="../../assets/images/logo.png" alt="logo">
+
+    </a>
+    Allsky Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/AllskyTeam/allsky" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"></path></svg>
+  </div>
+  <div class="md-source__repository">
+    Allsky
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix="">
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2">
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Allsky Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Allsky Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1">
+        
+          
+          <label class="md-nav__link" for="__nav_2_1" id="__nav_2_1_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Installation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/preparation.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preparation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/allsky.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Allsky
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/website.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Website
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/server.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Server
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_2">
+        
+          
+          <label class="md-nav__link" for="__nav_2_2" id="__nav_2_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Upgrade Notes
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Upgrade Notes
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/upgrade/introduction.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/upgrade/v2026.10.01_01.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v2026.10.01_01
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/upgrade/v2026.10.01.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v2026.10.01
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_3">
+        
+          
+          <label class="md-nav__link" for="__nav_2_3" id="__nav_2_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Settings
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Settings
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/settings/allsky.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Allsky
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/settings/website.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Website
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_4">
+        
+          
+          <label class="md-nav__link" for="__nav_2_4" id="__nav_2_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Using Allsky
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Using Allsky
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/using/access_control.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Access Control
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/using/webui.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    WebUI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/using/live_view.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Live View
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/using/images.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Images
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/overlays/overview.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overlays
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../introduction.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Modules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/using/charts.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Charts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/using/networking.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Networking
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_4_9">
+        
+          
+          <label class="md-nav__link" for="__nav_2_4_9" id="__nav_2_4_9_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    System
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_4_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_4_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    System
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/using/system/status.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Status
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/using/system/watchdog.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Watchdog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/using/system/logs.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Logs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/backup_restore/overview.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Backups
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/using/support.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Support
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_5">
+        
+          
+          <label class="md-nav__link" for="__nav_2_5" id="__nav_2_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Backup and Restore
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Backup and Restore
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/backup_restore/overview.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Backups
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/backup_restore/backup.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Backup
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/backup_restore/restore.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Restore
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_6">
+        
+          
+          <label class="md-nav__link" for="__nav_2_6" id="__nav_2_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Howtos
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Howtos
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/howtos/layout.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Allsky layout
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_6_2">
+        
+          
+          <label class="md-nav__link" for="__nav_2_6_2" id="__nav_2_6_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Helper Tools
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_6_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_6_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Helper Tools
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/howtos/helper_tools/startrails.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Startrails Helper Tool
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/howtos/helper_tools/image_stretch.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Image Stretch Helper Tool
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/howtos/helper_tools/timelapse.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Timelapse Helper Tool
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/howtos/helper_tools/constellation_overlay.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Constellation Overlay Helper Tool
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/howtos/constellation_overlay.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Constellation Overlay
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/howtos/dark_frames.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dark Frames
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/howtos/keograms.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Keograms
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/howtos/startrails.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Startrails
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/howtos/timelapse.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Timelapse
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/howtos/system_page.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    System Page Additions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/howtos/angle_sunrise_sunset.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Angle, Sunrise and Sunset
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/howtos/exposure_settings.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exposure Settings
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/howtos/ssl.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Using SSL
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/howtos/managing_files.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Managing Files
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/howtos/new_camera.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Support For A New Camers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/howtos/mapping_server_locations.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mapping Server Locations To URLs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/howtos/cleanup_website.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cleanup A Website
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/howtos/allsky_map.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The Allsky map
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_7">
+        
+          
+          <label class="md-nav__link" for="__nav_2_7" id="__nav_2_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshootings
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Troubleshootings
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/using/support.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Support
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/troubleshooting/tools.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tools
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/troubleshooting/uploads.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Uploads (ftp, scp etc)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/troubleshooting/startrails.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Startrails
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/troubleshooting/timelapse.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Timelapse
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/troubleshooting/flicker.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Image Flicker
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/troubleshooting/webui.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    WebUI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/troubleshooting/website.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Website
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/troubleshooting/swap.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Increase Swap Space
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/troubleshooting/zwo.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ZWO Cameras
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/troubleshooting/rpicam.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RPi Cameras
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/troubleshooting/hardware.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Other Hardware
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/troubleshooting/others.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Others
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/faq.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FAQ
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_9">
+        
+          
+          <label class="md-nav__link" for="__nav_2_9" id="__nav_2_9_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hardware
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Hardware
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/hardware/pi.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pi Options
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/hardware/camera.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Camera Options
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/hardware/lens.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lens Options
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/known_issues.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Known Issues
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/changelog.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ChangeLog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_12">
+        
+          
+          <label class="md-nav__link" for="__nav_2_12" id="__nav_2_12_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Things we love
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_12">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Things we love
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/things/things.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/things/esp32.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Round Displays
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/things/allskykamera.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Allskykamera
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/3d.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    3d Printables
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/alternatives.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Alternatives
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/glossary.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tags.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tags
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3">
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overlays
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Overlays
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/overlays/overview.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overlays
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/overlays/how.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    How They Work
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/overlays/fieldsandvariables.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fields And Variables
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/overlays/extra.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Extra Data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/overlays/interface.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Interface
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/overlays/formatting.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Formatting Variables
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/overlays/conditions.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Conditional Styles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/overlays/tips.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tips
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_guide/overlays/sunmoon.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sun and Moon
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked="">
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Modules
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Modules
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../introduction.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Modules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_2">
+        
+          
+          <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Interfaces
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Interfaces
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../interfaces/introduction.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../interfaces/i2c.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    I2C
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../interfaces/onewire.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    One Wire
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../interfaces/pwm.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PWM
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../manager.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Managing Modules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_4">
+        
+          
+          <label class="md-nav__link" for="__nav_4_4" id="__nav_4_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Core Modules
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Core Modules
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_4_1">
+        
+          
+          <label class="md-nav__link" for="__nav_4_4_1" id="__nav_4_4_1_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Modules
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_4_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_4_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Modules
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../core/load_image.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Load Image
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../core/save_image.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Save Image
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../core/mask_image.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mask Image
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../core/overlay.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overlay
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../core/exposure_rect.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exposure Rect
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../core/histogram.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Histogram
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../core/star_count.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Star Count
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../core/meteor_count.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Meteor Count
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../core/clear_sky.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Clear Sky
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../core/export.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Export
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../core/pi_status.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pi Status
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../core/intermediate_image.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Intermediate Image
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_5" checked="">
+        
+          
+          <label class="md-nav__link" for="__nav_4_5" id="__nav_4_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Extra Modules
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Extra Modules
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="environment.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Environment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="dew_heater.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dew Heater
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Meteor Detection
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="meteor.html" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Meteor Detection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+      
+        <li class="md-nav__item">
+  <a href="#why-another-meteor-module" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why another meteor module?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-it-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How it works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Requirements
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#installation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Installation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#building-a-detection-mask" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Building a detection mask
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fisheye-calibration-geometric-radiant-matching-optional" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fisheye calibration &amp; geometric radiant matching (optional)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#output" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Output
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Output">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#variables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Variables
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why-true-colour-matters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why true colour matters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#arming-the-fragmented-trail-veto" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Arming the fragmented-trail veto
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#arming-the-edge-glow-veto" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Arming the edge-glow veto
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#arming-the-great-circle-filter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Arming the great-circle filter
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#arming-the-traffic-filter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Arming the traffic filter
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#noisy-cameras-and-curved-streaks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Noisy cameras and curved streaks
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#testing-without-waiting-for-a-clear-night" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Testing without waiting for a clear night
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#aligning-the-websites-constellation-overlay" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Aligning the Website's constellation overlay
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#credits-inspiration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Credits &amp; inspiration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#license" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        License
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="adsb.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADSB
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="border.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Border
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="discord.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Discord
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="esp32round.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Round Displays
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="fans.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fans
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="gpio.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GPIO
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="hddtemp.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hard Disk Temp
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="image_tuning.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Image Tuning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="power.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Power
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="publish_data.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Publish Data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="json_import.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    JSON Import
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="light.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Light Meter
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="lightning.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lightning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="mlx90640.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MLX90640
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="owm.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Open Weather Map
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="gps.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GPS
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="air_quality.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Air Quality
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="rain.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Detect Rain
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="run_script.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Run Script
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="solar_system.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Solar System
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="sky_quality.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sky Quality
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="space_weather.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Space Weather
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="telescope_marker.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Telescope Marker
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="weather_underground.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Weather Underground
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_5_28">
+        
+          
+          <label class="md-nav__link" for="__nav_4_5_28" id="__nav_4_5_28_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Deprecated Modules
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_5_28_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5_28">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Deprecated Modules
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="ina3221.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    INA3221
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="mqtt_subscribe.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MQTT Subscribe
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="influxdb.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    InfluxDB
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="ltr390.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LTR390
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5">
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Developer Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer_guide/introduction.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer_guide/glossary.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer_guide/overview.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_4">
+        
+          
+          <label class="md-nav__link" for="__nav_5_4" id="__nav_5_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Modules
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Modules
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer_guide/module_workflow.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Module Workflow
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer_guide/folder_structure.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Folder Structure
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer_guide/module_structure.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Module Structure
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer_guide/meta_data_structure.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Meta Data Structure
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer_guide/meta_data_example.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Meta Data Example
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer_guide/available_fields.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Available Fields
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer_guide/shared_libraries.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Shared Libraries
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer_guide/database.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Allsky Database
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer_guide/charts.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Charts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer_guide/blocks.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Blocks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer_guide/dependencies.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dependencies
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_4_12">
+        
+          
+          <label class="md-nav__link" for="__nav_5_4_12" id="__nav_5_4_12_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Building a Module
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_4_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_4_12">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Building a Module
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer_guide/building_module/overview.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer_guide/building_module/simple_module.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Simple Module
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer_guide/building_module/accessing_sensor.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Accessing A sensor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer_guide/building_module/3rd_party_api.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    3rd Party API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer_guide/building_module/database.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The database
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_5">
+        
+          
+          <label class="md-nav__link" for="__nav_5_5" id="__nav_5_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    SDK Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    SDK Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_shared.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Shared Module
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_base.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Base Class
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../allsky_api.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Allsky Server API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer_guide/contributing.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="allsky_meteordetect">allsky_meteordetect<a class="headerlink" href="#allsky_meteordetect" title="Permanent link">¶</a></h1>
+<p>A <strong>temporal meteor detection</strong> module for <a href="https://github.com/AllskyTeam/allsky">Allsky</a>.</p>
+<p>Unlike single-frame streak detectors, this module tells meteors apart from
+aircraft and satellites — the thing single-frame detectors fundamentally cannot do.</p>
+<h2 id="why-another-meteor-module">Why another meteor module?<a class="headerlink" href="#why-another-meteor-module" title="Permanent link">¶</a></h2>
+<p>The detector, historically, bundled with Allsky — and the one in indi-allsky — look for straight
+lines in a <strong>single image</strong> (Canny → Hough). That approach cannot distinguish a
+meteor from an aircraft, a satellite, a cloud edge or a power line, because in one
+frame they all look like a bright streak. The result is either constant false
+alarms or a threshold so high that real meteors are missed.</p>
+<p>The physical thing that makes a meteor a meteor is <strong>transience</strong>: it is present in
+<em>one</em> frame. A satellite or aircraft moves across <em>several consecutive</em> frames.
+This module uses that.</p>
+<h2 id="how-it-works">How it works<a class="headerlink" href="#how-it-works" title="Permanent link">¶</a></h2>
+<div class="highlight"><pre><span></span><code>frame N-1, frame N ─► difference ─► threshold ─► soft mask
+      └► connected components + PCA ─► streaks (length + elongation)
+            │
+            ▼  classify against neighbouring frames
+   streak continues a PROGRESSING track   →  satellite / aircraft   (rejected)
+   streak repeats at the SAME location     →  disappearance of a meteor (de-duped)
+   isolated, transient streak              →  meteor candidate → confirmed next frame → saved
+</code></pre></div>
+<p>Key points:</p>
+<ul>
+<li><strong>Frame differencing</strong> removes stars and static clouds, so — unlike single-frame
+  detection — the sky background does not generate lines.</li>
+<li><strong>PCA streaks</strong> (connected components + principal-axis length/elongation) are
+  robust against gaps and reject blobby cloud brightening.</li>
+<li><strong>Deferred confirmation:</strong> a candidate is held for one frame and only saved if
+  the next frame shows no progressing continuation — so a satellite is rejected
+  even on its <em>first</em> appearance (a live detector has no future frames).</li>
+<li><strong>Soft, feathered mask edge</strong> (a trick borrowed from indi-allsky) so the mask
+  boundary itself is never detected as a streak.</li>
+<li><strong>Cloud and twilight gates</strong> skip frames that are too bright or changing too much.</li>
+</ul>
+<h2 id="requirements">Requirements<a class="headerlink" href="#requirements" title="Permanent link">¶</a></h2>
+<ul>
+<li>Allsky 2025 or later, installed with the <strong>Module Package Manager</strong>. (The module also
+  runs on Allsky 2024, copied in by hand — see the
+  <a href="https://github.com/benhartwich/allsky-meteordetect">module's own repository</a>.)</li>
+<li>Python packages already present in the Allsky virtualenv: <code>opencv-python</code>, <code>numpy</code>;
+  the calibration tool also uses <code>scipy</code>.</li>
+</ul>
+<h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">¶</a></h2>
+<p><strong>1. Install it</strong> from the WebUI's Module Package Manager (<em>Meteor Detection (temporal)</em>).
+It installs the module into <code>~/allsky/config/myFiles/modules/</code> and its bundled files —
+<code>allsky_fisheye.py</code>, <code>stars.json</code> and the tools below — into
+<code>~/allsky/config/myFiles/modules/moduledata/data/allsky_meteordetect/</code>.
+The tools run with Allsky's Python; the examples below use</p>
+<div class="highlight"><pre><span></span><code><span class="nv">PY</span><span class="o">=</span>~/allsky/venv/bin/python3
+<span class="nv">T</span><span class="o">=</span>~/allsky/config/myFiles/modules/moduledata/data/allsky_meteordetect/tools
+</code></pre></div>
+<p><strong>2. Add it to the night flow.</strong> Open the Module Manager in the WebUI and switch to the
+<strong>night</strong> flow — the module declares <code>"events": ["night"]</code>, so it deliberately does not
+appear under day. <strong>“Meteor Detection (temporal)”</strong> is then in the list of available modules.
+Allsky's own single-frame module is called plain <em>“Meteor Detection”</em> — that is not this
+one. Running both is possible but redundant; if you do, keep this one directly after
+<em>Load Image</em> so the other's debug annotations never end up in the saved meteor images.</p>
+<p><strong>3. Put it directly after <em>Load Image</em>.</strong> The module saves the frame as it stands at its
+position in the flow, so anything running before it — the overlay, for instance — ends
+up in the saved meteor images.</p>
+<h2 id="building-a-detection-mask">Building a detection mask<a class="headerlink" href="#building-a-detection-mask" title="Permanent link">¶</a></h2>
+<p>Trees, buildings and the lens vignette should be excluded, or wind-blown leaves
+produce endless false positives. <code>tools/build_mask.py</code> builds the mask
+automatically from your own daytime images:</p>
+<div class="highlight"><pre><span></span><code><span class="nv">$PY</span><span class="w"> </span><span class="nv">$T</span>/build_mask.py<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--images<span class="w"> </span>~/allsky/images<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--nights<span class="w"> </span><span class="m">20260703</span><span class="w"> </span><span class="m">20260704</span><span class="w"> </span><span class="m">20260705</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--out<span class="w"> </span>meteor_mask.png<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--preview<span class="w"> </span>preview.jpg
+</code></pre></div>
+<p>Copy <code>meteor_mask.png</code> into <code>~/allsky/config/overlay/images/</code> and select it as the
+module's <strong>Detection Mask</strong>.</p>
+<p>You can also build a mask manually using the built in <a href="../../allsky_guide/overlays/interface.html">mask editor</a></p>
+<div class="admonition warning">
+<p class="admonition-title">Auto created masks cannot be edited</p>
+<p>Unlke masks created in the mask editor auto generated masks cannot be edited</p>
+</div>
+<p><strong>A building as bright as the sky</strong> is found by its outline. Averaged over many
+frames the sky is smooth, while buildings, trees and poles keep sharp edges, so the
+tool fills the sky outward from the image centre without crossing such an edge.
+Whatever it can't reach, that rises from the edge of the image and has some area to
+it, is an obstruction, however bright. Overlay text isn't: it is only thin strokes.
+<code>--no-edges</code> turns this off. For anything it still misses, paint it black in the
+mask, for example with the <strong>Mask Editor</strong> in Allsky's Overlay Editor (Expert mode),
+or in any image editor.</p>
+<p><strong>Method.</strong> Obstructions are <em>persistently dark silhouettes</em>. For every pixel the
+tool measures, across many daytime frames, how often it is markedly darker than the
+sky (referenced to the bright image centre). Sky is rarely dark, trees almost
+always are — a far more robust separator than brightness or texture, both of which
+fail because tree interiors are smooth and averaging washes out their texture.</p>
+<h2 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permanent link">¶</a></h2>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Detection Mask</td>
+<td><code>meteor_mask.png</code></td>
+<td>White = sky to analyse, black = ignore</td>
+</tr>
+<tr>
+<td>Min Streak Length</td>
+<td><code>50</code> px</td>
+<td>Minimum streak length — the main lever against short star artifacts</td>
+</tr>
+<tr>
+<td>Difference Threshold</td>
+<td><code>22</code></td>
+<td>Brightness increase over previous frame to count as “new”</td>
+</tr>
+<tr>
+<td>Min Elongation</td>
+<td><code>5.0</code></td>
+<td>Length/width ratio (rejects round star blobs and clouds); real meteors here measured ≥7</td>
+</tr>
+<tr>
+<td>Max Streak Area</td>
+<td><code>6000</code> px</td>
+<td>Larger regions = cloud brightening</td>
+</tr>
+<tr>
+<td>Cloud Skip</td>
+<td><code>2.0</code> %</td>
+<td>Skip frame if more than this share of sky changed</td>
+</tr>
+<tr>
+<td>Mask Edge Feather</td>
+<td><code>35</code> px</td>
+<td>Soft mask fade so the edge is not detected</td>
+</tr>
+<tr>
+<td>Reject Dashed Trails</td>
+<td>on</td>
+<td>Reject a long streak broken into many bright/dark segments — a tumbling satellite or strobing aircraft</td>
+</tr>
+<tr>
+<td>Dash Segments</td>
+<td><code>10</code></td>
+<td>Segment count that marks a streak as dashed (real meteor ≤5, a dashed satellite scored 19)</td>
+</tr>
+<tr>
+<td>Dash Min Length</td>
+<td><code>120</code> px</td>
+<td>Only test streaks at least this long for a dashed pattern; short meteors are exempt</td>
+</tr>
+<tr>
+<td>Reject Fragmented Trails (arm)</td>
+<td>off</td>
+<td>Arm the fragmented-trail veto. <strong>Off = shadow mode</strong>: the collinear-fragment metric is measured and logged (<code>frag_n</code>/<code>frag_ext</code>, <code>frag-shadow</code>) but nothing is vetoed. Before arming, check what your real meteors score — see below</td>
+</tr>
+<tr>
+<td>Fragment Segments</td>
+<td><code>5</code></td>
+<td>Collinear diff fragments beyond a streak's ends that mark it as the head of a fragmented dashed trail. Real meteors are <strong>not</strong> always 0: here they reached 4, satellite trails 3–11 — see below</td>
+</tr>
+<tr>
+<td>Fragment Min Length</td>
+<td><code>120</code> px</td>
+<td>Only test streaks at least this long for a collinear fragmented tail</td>
+</tr>
+<tr>
+<td>Reject Edge Glow (arm)</td>
+<td>off</td>
+<td>Reject a long, fat streak with <strong>both</strong> ends on the mask border — horizon or lens-rim glow leaking through the feathered edge. <strong>Off = shadow mode</strong>: logged as <code>edge-shadow</code>, and every saved meteor records <code>edge_d</code>. See below</td>
+</tr>
+<tr>
+<td>Edge Margin</td>
+<td><code>50</code> px</td>
+<td>Both ends closer than this to the mask border count as "on the border"</td>
+</tr>
+<tr>
+<td>Edge Glow Max Elongation</td>
+<td><code>10</code></td>
+<td>Only fatter streaks can be edge glow (glow here 5–8, real streaks at the border over 10)</td>
+</tr>
+<tr>
+<td>Edge Glow Min Length</td>
+<td><code>80</code> px</td>
+<td>Only longer streaks; spares a short meteor vanishing behind a tree at the border</td>
+</tr>
+<tr>
+<td>Reject Satellites/Aircraft</td>
+<td>on</td>
+<td>Discard progressing tracks</td>
+</tr>
+<tr>
+<td>Scintillation Guard</td>
+<td>on</td>
+<td>On very clear nights, if a frame has more than <em>Scintillation Max</em> streaks keep only a clearly dominant one</td>
+</tr>
+<tr>
+<td>Scintillation Max</td>
+<td><code>8</code></td>
+<td>Streak count that marks a scintillation-dominated frame</td>
+</tr>
+<tr>
+<td>Reject Recurring Positions</td>
+<td>on</td>
+<td>Reject a spot that keeps firing across frames (scintillation/bloom/trailed star/reflection); a real meteor appears once</td>
+</tr>
+<tr>
+<td>Recurrence Frames</td>
+<td><code>3</code></td>
+<td>Earlier frames at the same spot (~55 px, ~25 min) needed to call it recurring — keep ≥3</td>
+</tr>
+<tr>
+<td>Reject Star-Trail Orientation</td>
+<td>on</td>
+<td>Reject a streak parallel to the local diurnal star-trail direction (needs the fisheye calibration); fireballs &gt;130 px exempt</td>
+</tr>
+<tr>
+<td>Star-Trail Tolerance</td>
+<td><code>12</code>°</td>
+<td>How close to the trail direction counts as a trailed star</td>
+</tr>
+<tr>
+<td>Reject Bright-Star Scintillation</td>
+<td>on</td>
+<td>Reject a short streak sitting on a catalogue bright star — a star twinkling brighter between frames makes a compact diff blob at its position that mimics a meteor. Needs the fisheye calibration + <code>stars.json</code>; fireballs &gt;130 px exempt</td>
+</tr>
+<tr>
+<td>Star-Match Radius</td>
+<td><code>16</code> px</td>
+<td>How close a streak's centre must be to a projected catalogue star to count as that star. Size it to the calibration RMS (~4–6 px) plus a few px of blob offset</td>
+</tr>
+<tr>
+<td>Star Magnitude Limit</td>
+<td><code>5.0</code></td>
+<td>Only stars brighter than this are used; fainter stars rarely brighten enough to trigger, and including them risks vetoing a real meteor</td>
+</tr>
+<tr>
+<td>Glare Spike Filter</td>
+<td>on</td>
+<td>Reject a streak that points straight away from a bright, saturated light (the Moon, a street light): its lens and dome spikes turn as it moves and show up in the frame difference</td>
+</tr>
+<tr>
+<td>Glare Reach</td>
+<td><code>5</code> radii</td>
+<td>How far from the light, in radii of its saturated disc, a streak can be a spike</td>
+</tr>
+<tr>
+<td>Glare Angle Tolerance</td>
+<td><code>6</code>°</td>
+<td>How close to the direction away from the light a streak must point</td>
+</tr>
+<tr>
+<td>Traffic Filter (arm)</td>
+<td>off</td>
+<td>Reject a streak that lies along the track a known satellite or aircraft took during that exposure. Needs the <strong>Sky Traffic</strong> module in the same flow. <strong>Off = shadow mode</strong>: logged as <code>traffic-shadow</code> with the name, and the saved meteor records <code>traffic</code>. See below</td>
+</tr>
+<tr>
+<td>Great-Circle Filter (arm)</td>
+<td>off</td>
+<td>Reject a streak that lies on one great circle with a streak in the image before or after, however far apart: a satellite or aircraft that crossed the highest part of its path between two exposures. Needs the fisheye calibration. <strong>Off = shadow mode</strong>: logged as <code>circle-shadow</code>, and the saved meteor records <code>circle</code>. See below</td>
+</tr>
+<tr>
+<td>Upload to Remote Website</td>
+<td>on</td>
+<td>Upload each hit via Allsky's <code>upload.sh</code></td>
+</tr>
+<tr>
+<td>Save Rejected-Candidate Crops</td>
+<td>on</td>
+<td>Save a labelling crop of every <em>rejected</em> streak (into <code>vetoed/</code>) as the negative examples for a future classifier</td>
+</tr>
+<tr>
+<td>Browse in the Allsky WebUI</td>
+<td>on</td>
+<td>Also file each meteor under <code>images/&lt;day&gt;/meteors/</code> so the WebUI's <strong>Meteors</strong> page can browse it day by day — see <a href="#output">Output</a></td>
+</tr>
+<tr>
+<td>Save Marked Copy</td>
+<td>on</td>
+<td>Extra copy with brackets <em>around</em> the streak, plus its thumbnail (the WebUI's <em>Use Marked Meteors</em> option needs both)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Clear nights are the hard case.</strong> Star scintillation and slight frame shake make
+bright stars flicker into short streaks that share a meteor's appear-then-disappear
+signature. The defenses are, in order of impact: geometry (a real meteor is long and
+thin — raise <em>Min Streak Length</em> / <em>Min Elongation</em> if a clear night still produces
+false positives), the scintillation guard, and same-location confirmation. There is
+no single perfect filter; tune the geometry to your sky. With a fisheye
+calibration, the <strong>bright-star scintillation veto</strong> adds a targeted defense: it
+rejects a short blob that sits exactly on a catalogue bright star, which is what a
+twinkling star produces — geometry alone can't tell that blob from a faint short
+meteor, but its position on a known star can.</p>
+<h2 id="fisheye-calibration-geometric-radiant-matching-optional">Fisheye calibration &amp; geometric radiant matching (optional)<a class="headerlink" href="#fisheye-calibration-geometric-radiant-matching-optional" title="Permanent link">¶</a></h2>
+<p>With a calibrated fisheye projection the module can attribute each meteor to the
+<strong>shower whose radiant its streak actually points back to</strong> — real geometry, not
+just "which showers are active tonight".</p>
+<p><code>tools/calibrate_fisheye.py</code> fits the camera model (optical centre, radial
+distortion, rotation, handedness) from clear night frames. It identifies the stars
+itself; give it two frames a few hours apart:</p>
+<div class="highlight"><pre><span></span><code><span class="nv">$PY</span><span class="w"> </span><span class="nv">$T</span>/calibrate_fisheye.py<span class="w"> </span>image-A.jpg<span class="w"> </span>image-B.jpg<span class="w"> </span>--out<span class="w"> </span>~/allsky/config/myFiles/modules/calibration.json<span class="w"> </span>--preview<span class="w"> </span>check.jpg
+</code></pre></div>
+<p>If it can't find a clear match (clouds, a short exposure, or two solutions that fit
+about equally well) it says so, writes nothing, and lists the bright stars that were
+up. Then identify <strong>two bright stars</strong> in the first frame and give their pixel positions:</p>
+<div class="highlight"><pre><span></span><code><span class="nv">$PY</span><span class="w"> </span><span class="nv">$T</span>/calibrate_fisheye.py<span class="w"> </span>image-A.jpg<span class="w"> </span>--list-stars<span class="w">      </span><span class="c1"># which bright stars were up, and where</span>
+<span class="nv">$PY</span><span class="w"> </span><span class="nv">$T</span>/calibrate_fisheye.py<span class="w"> </span>image-A.jpg<span class="w"> </span>image-B.jpg<span class="w"> </span>--star<span class="w"> </span>vega<span class="w"> </span><span class="m">2828</span><span class="w"> </span><span class="m">1213</span><span class="w"> </span>--star<span class="w"> </span>altair<span class="w"> </span><span class="m">2527</span><span class="w"> </span><span class="m">1976</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--out<span class="w"> </span>~/allsky/config/myFiles/modules/calibration.json<span class="w"> </span>--preview<span class="w"> </span>check.jpg
+</code></pre></div>
+<p>Read the two stars' pixel positions in any image viewer that shows the cursor position,
+on the full-size frame. Both tools only read Allsky's files; <code>calibrate_fisheye.py</code>
+writes nothing but <code>--out</code> and <code>--preview</code>, and <code>align_overlay.py</code> changes nothing
+without <code>--apply</code>. <code>align_overlay.py</code> uses an installed calibration or the one given
+with <code>--calibration</code>, and refuses a calibration made at another site.</p>
+<p>Two stars fix centre, scale and rotation. To find them without help the tool does what
+astrometry does: every pair of bright points in the frame against every pair of bright
+catalogue stars gives a guess, scored by how many other bright stars then land on a
+point. It refines the best guesses and accepts the winner only if it fits at least 12
+stars to better than 0.6° and no different solution comes within 70 % of its star
+count. It tries the frames in turn and starts from the first clear winner.</p>
+<p>From there the tool computes where every bright catalogue star (Vmag ≤ 3) stood at each
+frame's time and place, looks for it in a window around that prediction, and fits the
+lens by least squares — shrinking the window from 100 to 20 px as the model improves. A
+star is used only when the brightest point in its window clearly outshines everything
+else there, so it cannot be confused with a neighbour. Clicks 10 px off, or any of three
+different star pairs, all converge to the same solution. <code>--seed calibration.json</code>
+starts from an earlier calibration instead.</p>
+<p>On the author's camera, 21 night frames from 8 nights and one day frame: 10 night
+frames were identified automatically, some with the full Moon up or thin cirrus. From
+each single frame the lens came out within 0.3° of the calibration below over most of
+the sky. The other 11, overcast or only 2 s exposures, and the day frame were refused.
+None was identified wrongly. Run automatically on the two frames below, the tool gives
+the same calibration to 0.5 px.</p>
+<p>Here, from two frames four hours apart: <strong>77 bright stars, 0.28° RMS (5 px)</strong> from the
+zenith down to 15° altitude. Check <code>--preview</code>: every green circle should sit on a star.</p>
+<blockquote>
+<p><strong>Earlier calibrations were wrong away from the zenith.</strong> Until v0.5.8 the fit matched
+stars to their <em>nearest</em> detection in a deep catalogue. In a dense Milky Way field a
+wrong model still finds a neighbour within a few pixels for almost every star, so it
+reported 0.15° over 317 stars while placing stars at 30° altitude 470 px off. If you
+made a <code>calibration.json</code> with an earlier version, make it again.</p>
+</blockquote>
+<p><code>allsky_fisheye.py</code> then provides <code>pixel_to_altaz</code> / <code>altaz_to_pixel</code> and
+<code>match_radiant</code>: a meteor travels along a great circle whose backward extension
+passes through its radiant, so the module tests which active shower's radiant lies
+on that circle (and above the horizon).</p>
+<p>The same projection also drives the <strong>bright-star scintillation veto</strong>: a bundled
+Hipparcos subset (<code>stars.json</code>, Vmag &lt; 6) is projected to pixels for each frame's
+time, and a short candidate that lands within <em>Star-Match Radius</em> of a catalogue
+star brighter than <em>Star Magnitude Limit</em> is rejected as a twinkling star rather
+than a meteor. <code>stars.json</code> is bundled; without a calibration the veto is silently
+skipped. <strong>Accuracy matters:</strong> size the radius to
+your calibration RMS — regenerate <code>calibration.json</code> if bright stars drift off their
+catalogue positions, or the veto will either miss scintillation or clip real meteors.</p>
+<p>Put <code>calibration.json</code> beside the module, in <code>~/allsky/config/myFiles/modules/</code> —
+not in the data folder, which the package manager replaces on every update. Without it,
+radiant matching is silently skipped. <strong>The calibration is per-camera</strong> — make it for
+your own camera with <code>calibrate_fisheye.py</code>; the package does not ship one.</p>
+<h2 id="output">Output<a class="headerlink" href="#output" title="Permanent link">¶</a></h2>
+<p>Each hit is written to <strong>two</strong> places, because the website and the WebUI want
+different layouts.</p>
+<p><strong>Website folder</strong> (<code>meteors/</code>, the source for the remote upload and the per-night
+charts):</p>
+<ul>
+<li><strong><code>meteors-&lt;timestamp&gt;.jpg</code></strong>, named like the image it is in (<code>image-&lt;timestamp&gt;.jpg</code>, the start of the exposure), plus a thumbnail in <code>meteors/thumbnails/</code> —
+  picked up automatically by Allsky's meteor gallery page. <strong>The gallery image keeps
+  the meteor's true colours, untouched.</strong></li>
+<li><strong><code>marked/meteors-&lt;timestamp&gt;-marked.jpg</code></strong> and its thumbnail in
+  <code>marked/thumbnails/</code>, when <em>Save Marked Copy</em> is on. They are in a subfolder
+  so the Website's Meteors page, which lists every image in the folder, doesn't
+  show each meteor twice. Marked copies saved by earlier versions next to the
+  gallery images can be deleted:
+  <code>rm ~/allsky/html/allsky/meteors/*-marked.jpg ~/allsky/html/allsky/meteors/thumbnails/*-marked.jpg</code>
+  (the WebUI's copies under <code>images/&lt;day&gt;/</code> are separate and stay).</li>
+<li><strong><code>meteors.json</code></strong> — a rolling log of
+  <code>{time, file, length, angle, elong, peak, frag_n, frag_ext, showers, radiant}</code>
+  for later statistics (<code>showers</code> = active by date, <code>radiant</code> = geometric
+  attribution if calibrated, <code>frag_n</code> = collinear-fragment shadow metric).</li>
+<li>Optional remote-website upload of each hit.</li>
+</ul>
+<p><strong>Allsky WebUI folder</strong> (under <code>images/&lt;day&gt;/</code>, when <em>Browse in the Allsky WebUI</em>
+is on) — the layout the WebUI's <strong>Meteors</strong> page reads:</p>
+<div class="highlight"><pre><span></span><code>images/&lt;day&gt;/meteors/meteors-&lt;timestamp&gt;.jpg
+images/&lt;day&gt;/meteors/meteors-&lt;timestamp&gt;-marked.jpg     (Save Marked Copy)
+images/&lt;day&gt;/meteors/meteors-&lt;timestamp&gt;.json
+images/&lt;day&gt;/meteorsthumbnails/meteors-&lt;timestamp&gt;.jpg
+images/&lt;day&gt;/meteorsthumbnails/meteors-&lt;timestamp&gt;-marked.jpg
+</code></pre></div>
+<ul>
+<li><strong><code>meteors-&lt;timestamp&gt;.json</code></strong> — a sidecar holding <em>only that image's</em> streaks
+  (same fields as the rolling log). The WebUI reads one file per image rather than
+  scanning a rolling log, so the sidecar exists alongside it, not instead of it.</li>
+<li><strong>Thumbnails sit in the sibling <code>meteorsthumbnails/</code></strong>, not in a <code>thumbnails/</code>
+  subfolder of <code>meteors/</code> — that is where the WebUI's Meteors page reads them. The
+  website folder above keeps its own <code>meteors/thumbnails/</code>, which its gallery page
+  expects.</li>
+</ul>
+<p>The day folder follows Allsky's own convention: it is the night's <em>evening</em> date
+(<code>DATE_NAME</code>, 12-hour offset), while the file name carries the real timestamp. A
+meteor at 03:15 on the 19th therefore lands in <code>images/20260918/</code> as
+<code>meteors-20260919031514.jpg</code> — exactly like Allsky's own <code>image-*.jpg</code> files.</p>
+<h3 id="variables">Variables<a class="headerlink" href="#variables" title="Permanent link">¶</a></h3>
+<p>Each frame publishes its result as Allsky variables — in the WebUI's variable list,
+usable in overlays, and passed on by modules such as MQTT. The first four use <strong>the same
+names as Allsky's built-in meteor module</strong>, so an overlay or a Home Assistant feed built
+on those keeps working when you switch to this module:</p>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>AS_METEORCOUNT</code></td>
+<td>meteors confirmed on this frame</td>
+</tr>
+<tr>
+<td><code>AS_METEORIMAGE</code></td>
+<td>file name of the meteor image saved on this frame, empty if none</td>
+</tr>
+<tr>
+<td><code>AS_METEORIMAGEPATH</code></td>
+<td>full path of that image under <code>images/&lt;day&gt;/meteors/</code></td>
+</tr>
+<tr>
+<td><code>AS_METEORIMAGEURL</code></td>
+<td>WebUI URL of its thumbnail in <code>meteorsthumbnails/</code></td>
+</tr>
+<tr>
+<td><code>AS_METEORMOVING</code></td>
+<td>streaks rejected as satellites/aircraft on this frame</td>
+</tr>
+<tr>
+<td><code>AS_METEORVETOED</code></td>
+<td>streaks rejected by the other filters on this frame</td>
+</tr>
+</tbody>
+</table>
+<p>One difference to the built-in: its image values point at the frame it analysed. Here a
+meteor is only confirmed one frame later, so they point at the <strong>saved meteor image</strong>
+instead. With <em>Browse in the Allsky WebUI</em> off, the path points into the website folder
+and the URL stays empty.</p>
+<p>Run only one of the two meteor modules: both publish <code>AS_METEORCOUNT</code>, and whichever
+runs last wins.</p>
+<h3 id="why-true-colour-matters">Why true colour matters<a class="headerlink" href="#why-true-colour-matters" title="Permanent link">¶</a></h3>
+<p>Meteor colour encodes composition — green from magnesium/oxygen, yellow/orange from
+sodium/iron, blue-white for fast trails. The gallery image is therefore never
+painted over; the optional marked copy draws brackets <em>around</em> the streak, never on
+it.</p>
+<h3 id="arming-the-fragmented-trail-veto">Arming the fragmented-trail veto<a class="headerlink" href="#arming-the-fragmented-trail-veto" title="Permanent link">¶</a></h3>
+<p>The veto ships in shadow mode: it measures <code>frag_n</code> on every detection and writes it to
+<code>meteors.json</code>, but rejects nothing. That record is what tells you whether arming it is
+safe. On this camera, two months of saved detections (107) gave:</p>
+<table>
+<thead>
+<tr>
+<th>frag_n</th>
+<th>detections</th>
+<th>inspected by eye</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0–2</td>
+<td>96</td>
+<td>—</td>
+</tr>
+<tr>
+<td>3</td>
+<td>7</td>
+<td>4 satellite trails or artefacts, 1 unclear, <strong>2 real meteors</strong></td>
+</tr>
+<tr>
+<td>4</td>
+<td>2</td>
+<td>1 dawn contrail, <strong>1 real meteor</strong></td>
+</tr>
+<tr>
+<td>6, 11</td>
+<td>2</td>
+<td>both satellite trails</td>
+</tr>
+</tbody>
+</table>
+<p>So at the original threshold of 3 it would have removed seven false detections and three
+real meteors; the scores simply overlap. At <strong>5</strong> it removes the two clearest satellite
+trails and no meteor, which is why <code>frag_min</code> now defaults to 5. Check your own record
+before arming — this lists every long detection with its score:</p>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>-c<span class="w"> </span><span class="s1">'import json, os; [print(e["time"], "frag_n=%s" % e["frag_n"], "len=%d" % e["length"]) for e in json.load(open(os.path.expanduser("~/allsky/html/allsky/meteors/meteors.json"))) if e.get("frag_n", 0) &gt;= 3 and e["length"] &gt;= 120]'</span>
+</code></pre></div>
+<p>and <code>tools/replay_night.py &lt;night&gt; --set frag_filter=true</code> shows what it would have
+rejected on a saved night.</p>
+<h3 id="arming-the-edge-glow-veto">Arming the edge-glow veto<a class="headerlink" href="#arming-the-edge-glow-veto" title="Permanent link">¶</a></h3>
+<p>About a quarter of the detections saved here touched the border of the detection mask.
+Looking at them, two kinds were mixed together:</p>
+<ul>
+<li><strong>Real streaks</strong> — satellites and meteors — <em>cross</em> the border: one end sits at it, the
+  other points into the sky, and the trail visibly carries on behind the mask. They are
+  thin: elongation 10 to 47.</li>
+<li><strong>Edge glow</strong> — the brightening rim of the fisheye, horizon glow, a lit tree edge — lies
+  <em>along</em> the border as a diffuse band. Both ends sit on the border, and it is fat:
+  elongation 5 to 8.</li>
+</ul>
+<p>The veto rejects the second kind: at least 80 px long, elongation below 10, and both ends
+within 50 px of the border. Over two months of detections here that matched 9, all
+inspected and all edge glow, and not one real streak. The result did not change between
+50 and 60 px, or between 70 and 80 px minimum length. The length limit is there for one
+case in particular: a short, bright streak that disappears behind a tree right at the
+border, which may well be a meteor and is left alone.</p>
+<p>It ships in shadow mode, like the fragmented-trail veto. Every saved meteor records
+<code>edge_d</code>, the distance of its farther end from the border, so you can see what it would
+catch on your sky first — or replay a night with <code>--set edge_filter=true</code>.</p>
+<h3 id="arming-the-great-circle-filter">Arming the great-circle filter<a class="headerlink" href="#arming-the-great-circle-filter" title="Permanent link">¶</a></h3>
+<p>The moving-track filter connects a streak with one in the next or previous image only if
+the two are at most 400 px apart. A satellite or aircraft that passes high overhead can
+cross the highest part of its path in the pause between two exposures. It then leaves
+two streaks far apart, in different parts of the sky, and each looks like a meteor. A
+user's camera saved one this way: 26° in the north-west in one image, 24° in the east in
+the next, 66° apart.</p>
+<p>Seen from the camera, anything that moves in a straight line through space moves along a
+great circle. With a fisheye calibration the filter fits one great circle through both
+streaks together, through their ends and centres. It rejects the candidate when every
+point lies within 1.2° of that circle and the other streak lies further along it, at
+most 120° away. Both streaks must be at least 6° long. Two short streaks almost always
+fit some common circle: without that limit, 4 of 10 real meteors on one night matched a
+short streak in the next image.</p>
+<p>Replayed over 7 nights on the author's camera (14 to 27 September), the filter matched 8
+of the 26 streaks the module would have saved as meteors. All 8 were long, evenly bright
+satellite trails, including two pairs where the same object is in two images in a row.
+None of the other 18 was touched. On the user's two streaks it matches; with the second
+streak shifted sideways by 100 px (about 3°) it no longer does.</p>
+<p><strong>Short pieces.</strong> A camera that takes a 10 s exposure about once a minute sees an
+aircraft as short pieces of 3–5°, far apart. Those are too short for the circle alone.
+They still count when the gap between the two pieces matches the object's speed: the
+faster piece's length over its exposure, times the time between the two exposures,
+must give 0.5 to 2 times the gap. (The faster piece gives the speed, because a piece
+that fades or leaves the sky covers only part of its exposure.) The filter works out
+which image each piece is in from the two differences, and it takes the exposure
+start and length from Allsky (<code>AS_TIMESTAMP</code>, <code>AS_EXPOSURE_US</code>).</p>
+<p>Tested on a user's camera (6–15 s exposures every 66 s, frames before and after each
+saved meteor), it linked a short "meteor" to the bright dashed aircraft trail in the
+image before it (gap 0.9 times the expected distance), and a later piece of another
+aircraft. The two real meteors in those sequences were not linked; one sat on a common
+circle with an unrelated piece, but its gap was 3.5 times too large. On the author's 7
+nights it marked no additional streak and no real meteor.</p>
+<p>It ships in shadow mode like the others: check the <code>circle</code> entries of your saved
+meteors before you arm it.</p>
+<h3 id="arming-the-traffic-filter">Arming the traffic filter<a class="headerlink" href="#arming-the-traffic-filter" title="Permanent link">¶</a></h3>
+<p>The moving-track filter only catches a satellite or aircraft that leaves a streak in two
+frames in a row. A short glint of a satellite, a trail that ends in the Earth's shadow,
+or an aircraft whose lights don't blink appears in one frame only, like a meteor.</p>
+<p>The <strong>Sky Traffic</strong> module knows where every catalogued satellite, and with an ADS-B
+source every aircraft, was during each exposure. Put it in the same night flow. It
+writes the tracks of the last images to <code>allsky_skytraffic_tracks.json</code> in Allsky's tmp
+folder, and this filter checks every candidate against the tracks of the image it
+appeared in. A candidate is on a track when its centre lies within Sky Traffic's
+<strong>Match tolerance</strong> (0.6°) of the part the object covered while sunlit, it runs along
+it within 8°, and it is no longer than that part. Without Sky Traffic, or without a
+lens calibration, nothing happens.</p>
+<p>Tested on the author's camera, 25 meteors saved from 15 to 27 September and 216 rejected
+streaks:</p>
+<ul>
+<li>One "meteor", 61 px long at 05:37 on 27 September, lies 4.7 px from the track of the
+  weather satellite FENGYUN 3D and runs along it. The satellite's track in that exposure
+  was 257 px long, so the streak was a short glint.</li>
+<li>To see how often a streak lies on a track by chance, the same check ran with the
+  times shifted by ±5 to ±30 minutes (9 shifts). About 400 satellite tracks cross the
+  image in each exposure, and 3 of the 225 shifted meteor checks matched, each 1–9 px
+  from a Starlink or Qianfan track. One of them was a 214 px streak on a 150 px track,
+  which the length rule rejects; that leaves 2 of 225, <strong>about 1 in 110 meteors</strong>.</li>
+<li>A replay of that morning with Sky Traffic running rejects the glint as <code>satellite</code>,
+  <code>FENGYUN 3D</code>, and in shadow mode saves it with <code>"traffic": "FENGYUN 3D"</code>.</li>
+</ul>
+<p>So on this sky about 1 in 110 real meteors would also be rejected. That is why it ships
+in shadow mode: look at the <code>traffic</code> entries of your saved meteors, and at the crops in
+<code>vetoed/</code>, before you arm it.</p>
+<h3 id="noisy-cameras-and-curved-streaks">Noisy cameras and curved streaks<a class="headerlink" href="#noisy-cameras-and-curved-streaks" title="Permanent link">¶</a></h3>
+<p>Two fixes came from a user's RPi HQ camera in Australia (30 s at gain 16, a long
+fireball near the edge of a 1.56 mm lens):</p>
+<ul>
+<li><strong>Sensor noise.</strong> About 5.7 % of single pixels changed by more than the Difference
+  Threshold between any two frames. The cloud gate took that for cloud and skipped every
+  frame, and the noise merged with the fireball into a shapeless blob. When a 3×3 median
+  removes most of what is over the threshold (single pixels do, clouds, streaks and
+  twinkling stars don't), the frame is treated as noisy and analysed after the median:
+  5.7 % became 0.8 %, and the 563 px fireball was found with no noise streaks around it.
+  Other frames are analysed as before, so a 1 px meteor on a normal camera isn't thinned
+  out.</li>
+<li><strong>Curved streaks.</strong> The dash count sampled along the straight line between a streak's
+  ends. The fisheye bent the fireball up to 12 px away from that line in the middle, the
+  dip looked like a gap, and noise at its edges made 18 "dashes". The streak's bend is
+  now fitted from its pixels and followed.</li>
+</ul>
+<p>Replaying 7 of the author's nights gives exactly the same meteors and rejections as
+before. On the user's sequences, the fireball and a meteor from a second camera are
+saved; an aircraft, insects and moonlit cloud are not.</p>
+<h2 id="testing-without-waiting-for-a-clear-night">Testing without waiting for a clear night<a class="headerlink" href="#testing-without-waiting-for-a-clear-night" title="Permanent link">¶</a></h2>
+<p>Meteors are rare and clear nights rarer, so "is it working, are my settings right" can
+otherwise take weeks to answer. <code>tools/replay_night.py</code> runs the detector over a night
+Allsky has already saved and reports what it would have confirmed and rejected, and why:</p>
+<div class="highlight"><pre><span></span><code><span class="nv">$PY</span><span class="w"> </span><span class="nv">$T</span>/replay_night.py<span class="w"> </span><span class="m">20260917</span><span class="w">                      </span><span class="c1"># a night folder under images/</span>
+<span class="nv">$PY</span><span class="w"> </span><span class="nv">$T</span>/replay_night.py<span class="w"> </span><span class="m">20260917</span><span class="w"> </span>--compare<span class="w">            </span><span class="c1"># vs. what was saved live that night</span>
+<span class="nv">$PY</span><span class="w"> </span><span class="nv">$T</span>/replay_night.py<span class="w"> </span><span class="m">20260917</span><span class="w"> </span>--set<span class="w"> </span><span class="nv">min_length</span><span class="o">=</span><span class="m">60</span><span class="w">  </span><span class="c1"># try a setting without changing it</span>
+</code></pre></div>
+<p>It tests the <strong>installed</strong> module with the settings of your night flow — the same code and
+the same fisheye calibration that run live — and only the frames Allsky would have
+treated as night. Everything happens in a sandbox folder it prints at the start: no
+detector state, no settings, no website and no overlay variables are touched, and nothing
+is uploaded. The marked copies it saves show exactly what was detected.</p>
+<p><strong>How close it gets.</strong> On 2026-09-17 here, the replay found 4 of the 6 meteors the module
+saved live that night and reported 3 more, which on inspection were two satellite
+trails and a cloud wisp. So it is somewhat <em>more</em> eager than a live night, for two
+reasons:</p>
+<ul>
+<li>It replays the images Allsky <strong>saved</strong>, which have the overlay on them and have been
+  JPEG-compressed once more. Live, the module sees the frame before the overlay module
+  runs (with this module right after <em>Load Image</em>).</li>
+<li>The detector's memory of recurring hot spots starts empty, as on a new install.</li>
+</ul>
+<p>That makes it a good tool for <em>comparing</em> settings on the same night, and for checking
+that detection works at all — not an exact re-run of a live night.</p>
+<p>Use <code>--compare</code> to see which meteors were found live, in the replay, or both. Live stamps
+record when a frame was <em>processed</em>, replay stamps when it was <em>captured</em>, so the tool
+pairs a live stamp with the latest replayed meteor up to one maximum exposure plus a
+margin before it.</p>
+<h2 id="aligning-the-websites-constellation-overlay">Aligning the Website's constellation overlay<a class="headerlink" href="#aligning-the-websites-constellation-overlay" title="Permanent link">¶</a></h2>
+<p>Allsky's documentation calls aligning the constellation overlay "a trial-and-error effort
+that takes time": guess the overlay's size, nudge its offsets, rotate it, reload, repeat.
+With a fisheye calibration (see above) there is nothing left to guess.
+<code>tools/align_overlay.py</code> computes all five settings — and the projection that fits your
+lens best — from the plate solve:</p>
+<div class="highlight"><pre><span></span><code><span class="nv">$PY</span><span class="w"> </span><span class="nv">$T</span>/align_overlay.py<span class="w">                               </span><span class="c1"># print the settings, change nothing</span>
+<span class="nv">$PY</span><span class="w"> </span><span class="nv">$T</span>/align_overlay.py<span class="w"> </span>--preview<span class="w"> </span>image-XXXX.jpg<span class="w">      </span><span class="c1"># mark stars vs. overlay on a night frame</span>
+<span class="nv">$PY</span><span class="w"> </span><span class="nv">$T</span>/align_overlay.py<span class="w"> </span>--apply<span class="w">                       </span><span class="c1"># write them into the local Website</span>
+<span class="nv">$PY</span><span class="w"> </span><span class="nv">$T</span>/align_overlay.py<span class="w"> </span>--config<span class="w"> </span>~/allsky/config/remote_configuration.json<span class="w">   </span><span class="c1"># remote Website</span>
+</code></pre></div>
+<p><strong>How it works.</strong> The overlay is drawn by <em>virtualsky</em>, whose zenith-centred projections
+are <code>polar</code> (equidistant), <code>fisheye</code> (equisolid — Allsky's default) and <code>ortho</code>. The
+calibration's centre and rotation carry over exactly. Its radial law generally matches
+none of the three, so the tool fits the radius over the sky your camera actually sees,
+tries all three projections, and reports the error that remains.</p>
+<p><strong>How good it gets.</strong> Here the lens turns out to be close to equisolid, so Allsky's
+default <code>fisheye</code> projection fits best: <strong>0.30° RMS</strong> over the visible sky, under 0.7°
+over 95 % of it, 1.3° at worst near the edge (<code>polar</code> 1.2°, <code>ortho</code> 2.5°). So for this
+lens virtualsky needs no new projection, only the right size, offsets and rotation.</p>
+<p><strong>Verified in a browser, against real stars.</strong> The real <code>virtualsky.js</code>, run in headless
+Chromium with these settings, puts the bright stars of a frame from 2026-09-17 <strong>0.46°
+RMS</strong> from where they actually are in the image (measured star centres, not the model).</p>
+<p>One limit: virtualsky always draws east on the left. A calibration with east on the
+right (<code>flip: +1</code>) cannot be matched by any setting; the tool says so instead of
+writing something wrong.</p>
+<h2 id="credits-inspiration">Credits &amp; inspiration<a class="headerlink" href="#credits-inspiration" title="Permanent link">¶</a></h2>
+<ul>
+<li><a href="https://github.com/AllskyTeam/allsky">Allsky</a> by Thomas Jacquin and the Allsky team.</li>
+<li><a href="https://github.com/aaronwmorris/indi-allsky">indi-allsky</a> by Aaron Morris — the
+  feathered-mask trick and the SQM/chart approach on the roadmap are inspired by it.</li>
+<li>Built for <a href="https://astronomy.garden">astronomy.garden</a>.</li>
+</ul>
+<h2 id="license">License<a class="headerlink" href="#license" title="Permanent link">¶</a></h2>
+<p>MIT — see the <a href="https://github.com/benhartwich/allsky-meteordetect">module's repository</a>.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer">
+        
+          
+          <a href="dew_heater.html" class="md-footer__link md-footer__link--prev" aria-label="Previous: Dew Heater">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"></path></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Dew Heater
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="adsb.html" class="md-footer__link md-footer__link--next" aria-label="Next: ADSB">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                ADSB
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"></path></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.expand", "toc.integrate", "content.code.annotate", "header.autohide", "navigation.footer", "search.suggest"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": {"API Required": "api", "Data Capture": "data", "Experimental": "experimental", "Extra Module": "extra", "Hardware": "hw", "Hardware Required": "hardware", "Image Adjustments": "image", "MQTT": "mqtt", "Modules": "module", "Networking": "network", "Overlay Data": "overlay", "Overlays": "overlay", "Pipeline Day": "day", "Pipeline Night": "night", "Pipeline Periodic": "clock", "Power": "power", "Sensors": "sensor", "Software": "sw", "Weather": "weather"}, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.c21346df.min.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  
+<script id="init-glightbox">const lightbox = GLightbox({"touchNavigation": true, "loop": false, "zoomable": true, "draggable": true, "openEffect": "zoom", "closeEffect": "zoom", "slideEffect": "slide"});
+document$.subscribe(()=>{ lightbox.reload(); });
+</script></body></html>

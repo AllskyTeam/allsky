@@ -7,9 +7,33 @@ v2026.10.01 { data-toc-label="v2026.10.01" }
 ???+ "v2026.10.01"
     ### v2026.10.01
 
+    ???+ "v2026.10.01_02 - Point Release # 2"
+
+        <!-- ## **Changes that may require action (upgrades only)** -->
+
+        <!-- ## **Major New Features (described more below)** -->
+
+        ## **Enhancements / Changes**
+        - **feature 1**
+            - blah blah
+
+        - **feature 2**
+            - blah blah
+
+        ## **Bug Fixes**
+		- xxx
+
+        ## **Deleted Settings**
+		- xxx
+
+        ## **New Settings**
+		- xxx
+
+
     ???+ "v2026.10.01_01 - Point Release # 1"
 
         <!-- ## **Major New Features (described more below)** -->
+
         ## **Enhancements / Changes**
         - **Moon-dependent stretch**
             - The nighttime stretch can follow the moonlight: a strong stretch on dark, moonless nights and a weaker one when a bright Moon is high in the sky.
@@ -19,7 +43,7 @@ v2026.10.01 { data-toc-label="v2026.10.01" }
               See the [Allsky Settings](settings/allsky.html#Start-end-times) page for valid entries in these fields.
               The `generateForDay.sh` `--start` and `--end` arguments can be used to temporarily override the saved settings.
         - **Conditional overlay styles**
-            - A text field in the **Overlay Editor** can change its colour, stroke, opacity, and/or font depending on its value, e.g. having the temperature appear in blue if it's below freezing and red if it's hot. A rule can also show a text instead of the value, e.g. `DANGER` above 90°. Rules can be saved as rule sets and reused by other fields.
+            - A text field in the **Overlay Editor** can change its colour, stroke, opacity, and/or font depending on its value, e.g. having the temperature appear in blue if it's below freezing and red if it's hot. A rule can also show a text instead of the value, e.g. `DANGER` above 90 degrees. Rules can be saved as rule sets and reused by other fields.
 
 	    - **Keolapses**
             - If you're using the "Allsky Keolapse/Timelapse" module (available in the "Module package Manager" of the Module Manager), it will save the keolapse in `~/allsky/images/DAY/keolapse` as well as on the local and remote Websites (in `keolapses`) if they are enabled.
@@ -133,7 +157,7 @@ v2026.10.01 { data-toc-label="v2026.10.01" }
                 - Search and filter modules by type
                 - New configuration field types:
                     - Secret
-                    - I²C Input
+                    - I2C Input
                     - 1-Wire Input
                     - AJAX Select
                     - GPIO

@@ -1,40 +1,32 @@
-# Allsky Camera ![Release](https://img.shields.io/badge/Version-v2026.10.01_01-green.svg) [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=MEBU2KN75G2NG&source=url)
+# Allsky Camera ![Release](https://img.shields.io/badge/Version-v2026.10.01_02-green.svg) [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=MEBU2KN75G2NG&source=url)
 
 <br>
 
 ## Before installing or upgrading Allsky, please view the [installation instructions](https://allskyteam.github.io/allsky/allsky_guide/allsky.html).
 
-## Also view the [upgrade notes](https://allskyteam.github.io/allsky/allsky_guide/upgrade/v2026.10.01_01.html) for information about some of the changes.
+## Also view the [upgrade notes](https://allskyteam.github.io/allsky/allsky_guide/upgrade/v2026.10.01_02.html) for information about some of the changes.
 <br><br>
 
 ![](./assets/allsky_camera.png)
 
 Allsky transforms a camera into a tireless, intelligent observer of the night sky - an automated system that watches, records, and analyses everything that happens above you.
 
-Using a high-sensitivity camera, powerful Raspberry Pi-based software, and modular extensions, Allsky captures meteors, satellites, aurora, and passing cloud, 24 hours a day. Each frame is processed in real time to reveal events invisible to the naked eye - and every night becomes its own story told through data, images, and motion.
+Using a high-sensitivity camera, powerful Raspberry Pi-based software, and modular extensions, Allsky captures meteors, satellites, aurora, and passing clouds, 24 hours a day. Each frame is processed in real time to reveal events invisible to the naked eye - and every night becomes its own story told through data, images, and motion.
 
 But Allsky is more than just a camera - it's an ecosystem.
-The web-based interface lets you monitor your system live, review captured events, design custom overlays, visualise sensor data, and automate your setup with a flexible module system. From temperature and dew heater control to star detection and meteor analytics, every feature works together in a single, polished dashboard.
+The web-based WebUI interface lets you monitor your system live, review captured events, design custom overlays, visualise sensor data, and automate your setup with a flexible module system. From temperature and dew heater control to star detection and meteor analytics, every feature works together in a single, polished dashboard.
 
 Built by enthusiasts for enthusiasts, Allsky is open, extensible, and endlessly curious - a fusion of astrophotography, automation, and discovery.
 
+The Allsky camera software was originally created by Thomas Jacquin, a developer and astrophotography enthusiast based in Canada.  He released the first version of Allsky around 2018, designed to run on a Raspberry Pi with a ZWO ASI or Raspberry Pi HQ camera to capture images of the entire sky - automatically creating timelapses, keograms, and detecting meteors.
 
-> The Allsky Camera software was originally created by Thomas Jacquin, a developer and astrophotography  enthusiast based in Canada.
->
-> Thomas released the first version of Allsky around 2018, designed to run on a Raspberry Pi with a ZWO ASI or Raspberry Pi HQ camera to capture images of the entire sky - automatically creating timelapses, keograms, and detecting meteors.
->
->Since then, the project has grown into a large open-source community effort on GitHub under the Allsky Team organisation, with contributions from many developers and users:
->
->Thomas continues to be recognised as the founder and original author, while the Allsky Team now maintains and evolves the software collaboratively.
->
-> The current maintainers are
->  * Eric Claeys - @EricClaeys 
->  * Alex Greenland - @Alex-developer 
+Since then, the project has grown into a large open-source community effort on GitHub under the Allsky Team organisation, with contributions from many developers and users.  Thomas continues to be recognised as the founder and original author, while the Allsky Team now maintains and evolves the software collaboratively.
 
-<!--  Not sure what this is supposed to point to.
-### Ready to capture the sky?
-Skip the details and **[head straight to the setup guide](#requirements)** to begin installing Allsky.
--->
+The current maintainers are:
+  * Eric Claeys - @EricClaeys 
+  * Alex Greenland - @Alex-developer 
+
+
 ## Key Features Summary
 
 > <br>
@@ -42,7 +34,7 @@ Skip the details and **[head straight to the setup guide](#requirements)** to be
 > <br><br>
 
 * Runs on a variety of Raspberry Pi Single Board Computers (SBCs)
-* Web-based User Interface (WebUI)
+* Web-based User Interface (WebUI):
    * View captured images, timelapses, startrails and keograms
    * Control capture and image-processing settings
    * Manage Allsky services
@@ -51,25 +43,22 @@ Skip the details and **[head straight to the setup guide](#requirements)** to be
    * Get support
    * Access documentation
    * Light / Dark modes
-* Remote website / server for storing images
-   * Automatically upload capture images, timelapses, startrails and keograms
-   * Allows easier sharing of your data with others
+* Remote website / server for storing images:
+   * Automatically upload capture images, timelapses, startrails, keograms, and meteors
+   * Allows easy sharing of your data with others
 * Timelapse creation
-* Mini-timelapse
-   * Create a mini timelapse from the last X captured images
+* Mini-timelapse creation using the last X captured images
 * Keogram creation
 * Keolapse creation
 * Startrails creation
-* Allsky Map
-   * A global map of Allsky cameras
-   * Share your camera with others
-* Overlay System
+* Allsky Map - a global map of 600+ Allsky cameras
+* Overlay System:
    * Design fully custom overlays tailored to your setup
    * Use separate overlays for day and night captures
    * Enjoy an intuitive drag-and-drop interface for effortless layout editing
    * Choose exactly which data fields to display from a rich, dynamic list
    * Group related fields together for easier movement and organization
-   * Fine-tune layouts with precise alignment and spacing controls
+   * Fine-tune layouts with precise alignment and spacing controls:
       * Left align
       * Equal vertical spacing
       * Layering
@@ -77,7 +66,7 @@ Skip the details and **[head straight to the setup guide](#requirements)** to be
    * Use any font to style your overlays your way
    * Customize the format of every field for consistent presentation
    * Add your own images, logos, or icons to any overlay for a personal touch
-* Module System
+* Module System:
    * Modular architecture allowing you to add only the features you need
    * Developers can create new modules using the provided developer documentation
    * Developers can contribute modules to the main Allsky project for the community
@@ -107,7 +96,7 @@ Skip the details and **[head straight to the setup guide](#requirements)** to be
       * Power - Measures power consumption (e.g., dew-heater usage)
       * SQM - Sky Quality Meter reporting Lux and estimated Bortle class
       * GPS - Sets location and time from an external GPS receiver
-   * Supported Sensors / 3rd-Party Integrations
+   * Supported Sensors / 3rd-Party Integrations:
       | Integration / Sensor | Description |
       |:----------------------|:-------------|
       | **SHT31** | Temperature Sensor |
@@ -149,21 +138,22 @@ Skip the details and **[head straight to the setup guide](#requirements)** to be
       > <br>
       > If you have a sensor that isn't currently supported, please contact us.
       > <br><br>
-   * Charts System
+   * Charts System:
       * Display data from various sources such as:
          * Camera Sensor
          * Environment
          * Dew Heater
          * *And more...
       * Create your own custom charts
-   * Built in support system
-      * Creates data that can be submitted to the Allsky team to assist in diagnising issues
-   * Backup / Restore system
+   * Built in support system creates data that can be submitted to the Allsky team to assist in diagnosing problems
+   * Backup / Restore system:
       * Allows the Allksy configuration to be backed up, downloaded  and restored
       * Allows for image data to be backed up, downloaded and restored
-   * Helper tools
-      * Test Startrail generation using differing options
-      * Test Timelapse generation using different settings
+   * Helper tools:
+      * Test startrail generation using different settings
+      * Test timelapse generation using different settings
+      * Test image stretch using different settings
+      * Help determine settings for Allsky Website constellation overlay
       * Details of bad images
       * Allsky status suggestions
 
@@ -174,9 +164,11 @@ Skip the details and **[head straight to the setup guide](#requirements)** to be
 In order to run the Allsky software you need:
 
  * A Raspberry Pi Zero 2, Pi Zero 2 W, Pi 2, Pi 3, Pi 4, Pi 5, or Le Potato.
- * Raspberry Pi OS Bullseye, Bookworm or Pixie.  Non-Pi OS operating systems like Ubuntu are NOT supported.  If possible use the "Desktop" version of the Pi OS Bookworm 64-bit release.
+ * Raspberry Pi OS Pixie, Bookworm, or Bullseye.  Non-Pi OS operating systems like Ubuntu are NOT supported.  If possible use the "Desktop" version of the Pi OS Bookworm 64-bit release.
  * A camera:
-    * Any ZWO camera sold before August 21, 2025,
+    * Any ZWO camera sold before November 11, 2026,
+    * Any Raspberry Pi-compatible camera
+<!--
     * or one of the following cameras:
        * Raspberry Pi:
           * HQ (IMX477 sensor)
@@ -191,6 +183,7 @@ In order to run the Allsky software you need:
           * Waveshare imx219-d160 (IMX290 sensor)
           * OneInchEye IMX283 (IMX283 sensor)
           * IMX290 60.00 fps
+-->
 
  
 > __NOTES:__
@@ -202,12 +195,13 @@ In order to run the Allsky software you need:
 
 
 <!-- =============================================================================== --> 
+<!--
 ## Software Installation
 
 See the [detailed installation instructions](https://htmlpreview.github.io/?https://raw.githubusercontent.com/AllskyTeam/allsky/master/html/docs/allsky_guide/allsky.html).
 
 ---
-
+-->
 ## Web User Interface (WebUI)
 
 ![](./assets/webui.png)
@@ -422,6 +416,6 @@ for a list of changes in this release and all prior releases.
 
  
 ## Donation
-If you found this project useful, here's a link to send Thomas a cup of coffee :)
+If you find Allsky useful, here's a link to send Thomas a cup of coffee :)
 
 [![](https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=MEBU2KN75G2NG&source=url)

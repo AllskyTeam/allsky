@@ -1222,9 +1222,14 @@ function make_thumbnail()
 
 #####
 # Create the reboot-is-needed file.
+# It holds the kernel's boot ID, which is new on every boot.  "uptime --since" isn't
+# used since it's calculated from the clock, so it changes when the clock is set,
+# e.g., when NTP corrects a Pi without a real-time clock after booting.
+# ${ALLSKY_TMP} isn't always in memory (it stays on NVMe disks),
+# so a reboot doesn't always remove the file.
 function set_reboot_needed()
 {
-	uptime --since > "${ALLSKY_REBOOT_NEEDED}"
+	cat /proc/sys/kernel/random/boot_id > "${ALLSKY_REBOOT_NEEDED}"
 }
 
 #####
@@ -1234,18 +1239,19 @@ function reboot_needed()
 {
 	[[ ! -f ${ALLSKY_REBOOT_NEEDED} ]] && return 1
 
-	# The file exists and has the uptime as of when the file was created.
+	# The file exists and has the boot ID as of when the file was created.
 	# If the Pi has rebooted since the file was created,
-	# the current uptime and saved uptime will be different,
+	# the current and saved boot IDs will be different,
 	# so the file is outdated so delete it.
+	# A file from an older release has a time instead, so it's outdated, too.
 
-	local PRIOR_UPTIME="$( < "${ALLSKY_REBOOT_NEEDED}" )"
-	local CURRENT_UPTIME="$( uptime --since )"
-	if [[ ${PRIOR_UPTIME} == "${CURRENT_UPTIME}" ]]; then
+	local PRIOR_BOOT="$( < "${ALLSKY_REBOOT_NEEDED}" )"
+	local CURRENT_BOOT="$( < /proc/sys/kernel/random/boot_id )"
+	if [[ ${PRIOR_BOOT} == "${CURRENT_BOOT}" ]]; then
 		# No reboot; still need to reboot.
 		return 0
 	else
-		# Different uptimes so they rebooted.
+		# Different boot IDs so they rebooted.
 		rm -f "${ALLSKY_REBOOT_NEEDED}"
 		return 1
 	fi

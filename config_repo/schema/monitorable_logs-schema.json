@@ -30,6 +30,7 @@
           "location": {
             "type": "string",
             "title": "Log Location",
+            "description": "Absolute file path or journal:unit.service for a systemd journal unit.",
             "x-containerAttributes": {
               "class": "WebUISetting"
             }

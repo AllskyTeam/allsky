@@ -11,8 +11,6 @@ import logging
 import numpy as np
 import sys
 import time
-import traceback
-import logging
 
 __author__ = 'Steve Marple'
 __version__ = '0.2.0'
@@ -400,10 +398,9 @@ class Camera(object):
 
             _init_camera(id_)
         except Exception:
+            logger.exception('Could not open camera %s', id_)
             self.closed = True
             _close_camera(id_)
-            logger.error('could not open camera ' + str(id_))
-            logger.debug(traceback.format_exc())
             raise
             
     def __del__(self):
@@ -1043,4 +1040,4 @@ zwolib = None
 try:
     init() # Initialize library on import, will only run once.
 except ZWO_Error as e:
-    logger.warning(str(e))
+    logger.warning("ASI SDK initialization failed: %s", e, exc_info=True)

@@ -24,6 +24,12 @@ class ALLSKYMETEOR(ALLSKYMODULEBASE):
 		"centersettings": "false",
 		"extradatafilename": "allsky_meteor.json",
 		"group": "Image Analysis",
+		"deprecation": {
+			"fromversion": "v2026.10.01_02",
+			"notes": "This module has been deprecated. Please use the Temporal meteor detection module available in the module package manager",
+			"replacedby": "allsky-meteor.py",
+			"deprecated": "true"
+		},    
 		"extradata": {
 			"database": {
 				"enabled": "True",

@@ -170,6 +170,20 @@ If you are choosing between a larger SD card and an SSD, the practical trade-off
 
 For many people, the SD card is the simplest answer. For others, especially those using a Pi 5 or wanting a more durable storage setup, an SSD can be a better long-term choice.
 
+### Booting a Pi 5 from an NVMe SSD
+
+A Pi 5 can boot Raspberry Pi OS from an NVMe SSD connected through its PCIe connector. This is useful if you want the OS, Allsky, and captured images on the same faster, higher-capacity drive. You need an NVMe M.2 SSD and a compatible PCIe adapter, such as the [Raspberry Pi M.2 HAT+ or M.2 HAT+ Compact](https://www.raspberrypi.com/documentation/computers/raspberry-pi.html#nvme-ssd-boot). Check that the drive, adapter, power supply, and cooling fit your enclosure before buying them.
+
+For a **new installation**:
+
+1. [Download Raspberry Pi Imager](https://www.raspberrypi.com/software/) on another computer. Connect the NVMe drive to that computer with a USB NVMe enclosure or adapter, and write a supported Raspberry Pi OS image to the drive. For most new Allsky setups, choose **Trixie 64-bit Lite**. Imager will erase the selected drive, so check it carefully and set your username, network, and SSH options before writing.
+2. Install the SSD and HAT on the Pi 5 according to the adapter's instructions. If the Pi does not yet boot from NVMe, start it from a temporary Raspberry Pi OS microSD card, update the OS with `sudo apt update && sudo apt full-upgrade`, then run `sudo raspi-config`. Under **Advanced Options → Boot Order**, choose an option that includes NVMe, finish, and reboot.
+3. Remove the temporary microSD card and boot the Pi from the NVMe drive. Run `findmnt -n -o SOURCE /` to confirm that the root filesystem is on an NVMe partition, such as `/dev/nvme0n1p2`. Then [install Allsky](../allsky.md) on the running system.
+
+If you are moving an existing Allsky installation, make [configuration and image backups](../backup_restore/overview.md) before imaging the NVMe drive, then restore them after installing Allsky on the new OS. When Allsky runs from NVMe, its `~/allsky/tmp` directory stays on the SSD by default instead of being moved into RAM.
+
+The official [NVMe boot instructions](https://www.raspberrypi.com/documentation/computers/raspberry-pi.html#nvme-ssd-boot) cover boot order and troubleshooting. Leave the Pi 5 at its default PCIe Gen 2 speed unless you have tested your drive and adapter; Raspberry Pi does not certify Gen 3 operation.
+
 ## Recommended combinations { data-toc-label="Recommended Combinations" }
 
 If you want concrete starting points, these combinations are sensible:

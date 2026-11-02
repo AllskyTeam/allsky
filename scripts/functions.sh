@@ -363,8 +363,12 @@ function get_connected_cameras_info()
 # Get just the model name(s) of the specified camera type that are connected to the Pi.
 function get_connected_camera_models()
 {
-	if [[ ! -s ${ALLSKY_CONNECTED_CAMERAS_INFO} ]]; then
+	if [[ ! -f ${ALLSKY_CONNECTED_CAMERAS_INFO} ]]; then
 		echo "${FUNCNAME[0]}: File '${ALLSKY_CONNECTED_CAMERAS_INFO}' not found." >&2
+		return 1
+	fi
+	if [[ ! -s ${ALLSKY_CONNECTED_CAMERAS_INFO} ]]; then
+		echo "${FUNCNAME[0]}: File '${ALLSKY_CONNECTED_CAMERAS_INFO}' is empty." >&2
 		return 1
 	fi
 

@@ -3613,10 +3613,10 @@ exit_installation()
 			update_status_from_temp_file
 			echo -e "${STATUS_VARIABLES[@]}" >> "${STATUS_FILE}"
 
-			# If the user needs to reboot, save the current uptime-since
+			# If the user needs to reboot, save the current boot ID
 			# so we can check it when Allsky starts.  If it's the same value
 			# the user did not reboot.
-			# If the time is different the user rebooted.
+			# If the boot ID is different the user rebooted.
 			if [[ ${STATUS_CODE} == "${STATUS_NO_FINISH_REBOOT}" ||
 				  ${STATUS_CODE} == "${STATUS_NO_REBOOT}" ]]; then
 				set_reboot_needed

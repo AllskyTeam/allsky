@@ -11,7 +11,6 @@ server.tag                     = "Allsky"
 server.max-keep-alive-requests = 3000
 server.max-fds                 = 6000
 
-dir-listing.activate = "disable"
 setenv.add-response-header += ( "X-Content-Type-Options" => "nosniff" )
 
 setenv.add-environment = (

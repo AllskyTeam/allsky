@@ -1,7 +1,7 @@
 #!/bin/bash
 # shellcheck disable=SC2034	# "source"d by run_migrations()
 
-# System version 3 (v2026.10.01_01):
+# System version 3 (v2026.10.01_02):
 #	The Solar System module (v1.2.0 and newer) only runs in the Periodic flow.
 #	Running it for every image as well did the same work several times.
 #	Move it from the Daytime and Nighttime flows to the Periodic flow, keeping its

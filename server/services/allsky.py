@@ -1,6 +1,9 @@
 import os
 import json
 import sys
+import logging
+
+logger = logging.getLogger(__name__)
 
 def get_allsky_status():
     base_path = os.getenv('ALLSKY_HOME')
@@ -24,14 +27,24 @@ def get_allsky_status():
         sys.path.insert(1, '/home/pi/allsky/tmp')
         database = __import__('allskydb')
         status['modules'] = database.DataBase
-    except:
-        pass
+    except ModuleNotFoundError as exc:
+        if exc.name == 'allskydb':
+            logger.debug("Allsky module status database is absent", exc_info=True)
+        else:
+            logger.exception("Failed to load Allsky module status")
+    except Exception:
+        logger.exception("Failed to load Allsky module status")
   
     try:
         sys.path.insert(1, '/home/pi/allsky/tmp')
         database = __import__('allskydebugdb')
         status['debug'] = database.DataBase
-    except:
-        pass
+    except ModuleNotFoundError as exc:
+        if exc.name == 'allskydebugdb':
+            logger.debug("Allsky debug status database is absent", exc_info=True)
+        else:
+            logger.exception("Failed to load Allsky debug status")
+    except Exception:
+        logger.exception("Failed to load Allsky debug status")
     
     return status

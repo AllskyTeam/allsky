@@ -83,6 +83,7 @@ class UTILBASE
 
         $hdr = $_SERVER['HTTP_X_REQUESTED_WITH'] ?? '';
         if ($hdr === '' || strcasecmp($hdr, 'xmlhttprequest') !== 0) {
+			error_log("checkXHRRequest(): HTTP_X_REQUESTED_WITH not found.\n");
             $this->sendHTTPResponse('Not found', 404);
         }
     }
@@ -90,7 +91,7 @@ class UTILBASE
     /**
      * Validate and normalize the incoming request:
      *  - Lowercase method
-     *  - Ensure `request` matches a safe identifier (A–Z, 0–9, _)
+     *  - Ensure `request` matches a safe identifier (A-Z, 0-9, _)
      *  - Decide JSON vs text responses from the Accept header
      */
     protected function sanitiseRequest(): void
@@ -98,8 +99,11 @@ class UTILBASE
         $this->method = strtolower($_SERVER['REQUEST_METHOD'] ?? 'GET');
 
         $raw = $_GET['request'] ?? '';
+		if ($raw === "") {
+            $this->sendHTTPResponse('"request" not given in URL.', 400);
+		}
         if (!preg_match('/^[A-Za-z][A-Za-z0-9_]*$/', $raw)) {
-            $this->sendHTTPResponse('Invalid request.', 400);
+            $this->sendHTTPResponse("Invalid request: $raw.", 400);
         }
         $this->request = $raw;
 
@@ -238,15 +242,35 @@ class UTILBASE
         header('Cache-Control: no-store,max-age=0,no-cache');
 
         // For non-200, we stop early: callers should have used sendHTTPResponse()
-        if ($httpCode !== 200) exit;
+		if ($httpCode !== 200) {
+			error_log("sendResponse() got httpCode=$httpCode\n");
+			exit;
+		}
 
         // If a string was passed and it looks like valid JSON, echo as-is
         if (is_string($payload)) {
-            json_decode($payload);
+            $p = json_decode($payload, true);
             if (json_last_error() === JSON_ERROR_NONE) {
                 echo $payload;
+/* DEBUGGING:
+foreach ($p as $key => $value) {
+	$t = gettype($value);
+	if ($t == "string")
+		error_log("============== string $key: $value\n");
+	elseif ($t == "integer")
+		error_log("============== int $key: $value\n");
+	elseif ($t == "boolean")
+		error_log("============== boolean $key: " . ($value ? "true" : "false") . "\n");
+	elseif ($t == "array") {
+		error_log("============== ARRAY for $key, count=" . count($value) . "\n");
+	} else
+		error_log("============== TYPE $t for $key\n");
+}
+ */
                 exit;
-            }
+			} else {
+				error_log("json_decode(payload) failed with code " . json_last_error() . "\n");
+			}
         }
 
         // Otherwise encode the payload
@@ -255,6 +279,7 @@ class UTILBASE
             JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE
         );
         if ($json === false) {
+			error_log("json_encode(payload) failed with code " . json_last_error() . "\n");
             echo json_encode(['error' => true, 'message' => 'Encoding failed'], JSON_UNESCAPED_SLASHES);
             exit;
         }

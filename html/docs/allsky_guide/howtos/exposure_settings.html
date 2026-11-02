@@ -5,7 +5,7 @@
       
       
       
-        <link rel="canonical" href="https://docs.allsky.local/allsky_guide/howtos/exposure_settings.html">
+        <link rel="canonical" href="https://allskyteam.github.io/allsky/allsky_guide/howtos/exposure_settings.html">
       
       
         <link rel="prev" href="angle_sunrise_sunset.html">
@@ -18,7 +18,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
     
     
       
@@ -26,10 +26,10 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
       
       
 
@@ -422,7 +422,7 @@
     
     
       <li class="md-tabs__item md-tabs__item--active">
-        <a href="../allsky.html" class="md-tabs__link">
+        <a href="../preparation.html" class="md-tabs__link">
           
   
   
@@ -684,6 +684,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../preparation.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preparation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../allsky.html" class="md-nav__link">
         
   
@@ -836,6 +864,34 @@
     
   
     Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../upgrade/v2026.10.01_01.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v2026.10.01_01
   
 
     
@@ -2185,6 +2241,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#moon-dependent-stretch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Moon-dependent stretch
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#sample-stretch-images" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3527,6 +3594,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../overlays/conditions.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Conditional Styles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../overlays/tips.html" class="md-nav__link">
         
   
@@ -4434,6 +4529,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../allsky_modules/extra/meteor.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Meteor Detection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../allsky_modules/extra/adsb.html" class="md-nav__link">
         
   
@@ -5119,10 +5242,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_5_27">
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_5_28">
         
           
-          <label class="md-nav__link" for="__nav_4_5_27" id="__nav_4_5_27_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_4_5_28" id="__nav_4_5_28_label" tabindex="0">
             
   
   
@@ -5140,8 +5263,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_5_27_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4_5_27">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_4_5_28_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5_28">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -6223,6 +6346,14 @@ The WebUI lets you manually set those settings, or have them automatically set b
 </li>
 </ul>
 <p>You may find that you can decrease the gain, and hence the noise, by increasing the stretch. Experiment with the settings to get the results you want.</p>
+<h3 id="moon-dependent-stretch">Moon-dependent stretch<a class="headerlink" href="#moon-dependent-stretch" title="Permanent link">¶</a></h3>
+<p>Moonlight brightens the sky, so a stretch that brings out faint stars on a moonless night can wash out the image under a bright Moon. With the nighttime setting <strong>Moon-dependent stretch</strong> on, Allsky changes the stretch with the moonlight:</p>
+<ul>
+<li>The regular <strong>Stretch Amount</strong> and <strong>Stretch mid point</strong> are used when there is no moonlight: around new Moon, or while the Moon is below the horizon.</li>
+<li><strong>Full Moon Stretch Amount</strong> and <strong>Full Moon Stretch mid point</strong> are used when a full Moon is high in the sky.</li>
+<li>In between, Allsky blends the two by how much of the Moon is lit and how high it is. The value it uses for each image is available to the overlay as <code>${MOONLIGHT}</code>, from 0 (none) to 1 (full Moon at the zenith), together with the stretch actually applied, <code>${STRETCH_AMOUNT}</code> and <code>${STRETCH_MIDPOINT}</code>.</li>
+</ul>
+<p>To find good values, use the <strong>Image Stretch Settings</strong> helper tool twice: with a moonless night image for the regular settings, and with an image taken under a full Moon for the Full Moon settings. The Full Moon amount is usually lower.</p>
 <h3 id="sample-stretch-images">Sample Stretch Images<a class="headerlink" href="#sample-stretch-images" title="Permanent link">¶</a></h3>
 <p>Stretch Amount: <code>0</code></p>
 <p>The exposure is 60 seconds; anything longer will produce streaks with most lenses. The gain is 250 which is near the maximum for the camera, and is already producing some noise.</p>
@@ -6325,10 +6456,10 @@ The WebUI lets you manually set those settings, or have them automatically set b
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.expand", "toc.integrate", "content.code.annotate", "header.autohide", "navigation.footer", "search.suggest"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": {"API Required": "api", "Data Capture": "data", "Experimental": "experimental", "Extra Module": "extra", "Hardware": "hw", "Hardware Required": "hardware", "Image Adjustments": "image", "MQTT": "mqtt", "Modules": "module", "Networking": "network", "Overlay Data": "overlay", "Overlays": "overlay", "Pipeline Day": "day", "Pipeline Night": "night", "Pipeline Periodic": "clock", "Power": "power", "Sensors": "sensor", "Software": "sw", "Weather": "weather"}, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.expand", "toc.integrate", "content.code.annotate", "header.autohide", "navigation.footer", "search.suggest"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": {"API Required": "api", "Data Capture": "data", "Experimental": "experimental", "Extra Module": "extra", "Hardware": "hw", "Hardware Required": "hardware", "Image Adjustments": "image", "MQTT": "mqtt", "Modules": "module", "Networking": "network", "Overlay Data": "overlay", "Overlays": "overlay", "Pipeline Day": "day", "Pipeline Night": "night", "Pipeline Periodic": "clock", "Power": "power", "Sensors": "sensor", "Software": "sw", "Weather": "weather"}, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../../assets/javascripts/bundle.c21346df.min.js"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

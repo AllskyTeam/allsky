@@ -36,6 +36,21 @@ It is expected that the 'user' supplied modules are searched first, and thus com
 This permits the user to copy and modify a distributed module, or create an entirely new replacement for a distributed
 module, thus giving the user total control.
 '''
+def day_or_night():
+    """ 'day' or 'night' now, using the same rule as capture: the Sun above the Angle setting
+    is day.  For the periodic flow, which has no image and so no DAY_OR_NIGHT. """
+    try:
+        from astral import Observer
+        from astral.sun import elevation
+        from datetime import timezone
+        lat, lon = shared.get_lat_lon()
+        angle = float(shared.getSetting("angle"))
+        sun = elevation(Observer(latitude=lat, longitude=lon), datetime.now(timezone.utc))
+        return "day" if sun > angle else "night"
+    except Exception as e:
+        shared.log(1, f"WARNING: Unable to work out if it's day or night, assuming day: {e}")
+        return "day"
+
 def signalHandler(sig, frame):
     if sig == signal.SIGTERM or sig == signal.SIGINT:
         try:
@@ -143,7 +158,11 @@ if __name__ == "__main__":
         shared.setupForCommandLine()
         shared.CURRENTIMAGEPATH  = None
         shared.LOGLEVEL = int(shared.getSetting("debuglevel"))
-        shared.args.tod = 'day'
+        if shared.args.event == "periodic":
+            shared.args.tod = day_or_night()
+            shared.TOD = shared.args.tod
+        else:
+            shared.args.tod = 'day'
         date = datetime.now()
         date = date + timedelta(hours=-12)
         dateString = date.strftime("%Y%m%d")

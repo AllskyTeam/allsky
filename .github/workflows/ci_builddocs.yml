@@ -1,0 +1,179 @@
+# Put the default branch's docs at the site root and the branch named by
+# version.json's next field at /next/. A push to either branch rebuilds both
+# when it changes docs/, the docs requirements, version.json or this workflow.
+# Without version.json or a next field, only a push to the default branch
+# publishes docs, and only the default branch is built. Pushes to other
+# branches are ignored. A manual run follows the same branch rules.
+name: Publish documentation
+
+# Keep unrelated code changes from starting a docs build. The manual trigger
+# is there for times when the site needs republishing without another push.
+on:
+  push:
+    paths:
+      - docs/**
+      - config_repo/requirements-dev.txt
+      - version.json
+      - .github/workflows/docs_pages.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Builds can take a while. Let one finish before starting the next, whether
+# the push came from the default branch or the next branch.
+concurrency:
+  group: allsky-documentation-pages
+  # GitHub normally replaces a waiting run when another push arrives. Keep up
+  # to 100 waiting runs instead; their order may differ from the push order.
+  queue: max
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: read
+    outputs:
+      publish: ${{ steps.branch.outputs.publish }}
+    steps:
+      # Allsky uses master, while a test repository might use main. GitHub tells
+      # us which is the default branch; stable is just its folder on the runner.
+      - name: Check out default branch
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          path: stable
+          persist-credentials: false
+
+      - name: Select the published branches
+        id: branch
+        env:
+          PUSHED_BRANCH: ${{ github.ref_name }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          # Read next from the default branch. No file or no next field means
+          # there is no /next/ site to build.
+          next=$(python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          version_path = Path("stable/version.json")
+          if version_path.is_file():
+              with version_path.open() as version_file:
+                  next_branch = json.load(version_file).get("next")
+          else:
+              next_branch = None
+          if next_branch is None:
+              next_branch = ""
+          if not isinstance(next_branch, str):
+              raise SystemExit("version.json next must be a branch name")
+          print(next_branch)
+          PY
+          )
+          # Catch a bad branch name here rather than failing at checkout. The
+          # next branch must also be different from the default branch.
+          if [[ -n "$next" ]]; then
+            git check-ref-format --branch "$next" >/dev/null
+            if [[ "$next" == "$DEFAULT_BRANCH" ]]; then
+              echo "version.json next must name a branch other than $DEFAULT_BRANCH" >&2
+              exit 1
+            fi
+          fi
+          echo "next=$next" >> "$GITHUB_OUTPUT"
+          # A run from either published branch builds the whole site. Ignore
+          # other branches so they cannot replace the live docs.
+          if [[ "$PUSHED_BRANCH" == "$DEFAULT_BRANCH" ]]; then
+            echo 'publish=true' >> "$GITHUB_OUTPUT"
+            if [[ -n "$next" ]]; then
+              echo 'build_next=true' >> "$GITHUB_OUTPUT"
+            else
+              echo 'build_next=false' >> "$GITHUB_OUTPUT"
+            fi
+          elif [[ -n "$next" && "$PUSHED_BRANCH" == "$next" ]]; then
+            echo 'publish=true' >> "$GITHUB_OUTPUT"
+            echo 'build_next=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'publish=false' >> "$GITHUB_OUTPUT"
+            echo "Skipping documentation push on $PUSHED_BRANCH"
+          fi
+
+      - name: Check out next branch
+        if: steps.branch.outputs.build_next == 'true'
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ steps.branch.outputs.next }}
+          path: next
+          persist-credentials: false
+
+      # Ask Pages for the site's URL and path. MkDocs needs these for links and
+      # assets, and they will differ in a test repository or with a custom domain.
+      - name: Configure GitHub Pages
+        if: steps.branch.outputs.publish == 'true'
+        id: pages
+        uses: actions/configure-pages@v6
+
+      # The branches may have different MkDocs requirements. Always install the
+      # default branch's set, then install the next branch's set if we build it.
+      - name: Set up Python
+        if: steps.branch.outputs.publish == 'true'
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: stable/config_repo/requirements-dev.txt
+
+      - name: Install documentation dependencies
+        if: steps.branch.outputs.publish == 'true'
+        run: python -m pip install -r stable/config_repo/requirements-dev.txt
+
+      - name: Install next branch documentation dependencies
+        if: steps.branch.outputs.build_next == 'true'
+        run: python -m pip install -r next/config_repo/requirements-dev.txt
+
+      # Put the default docs at the root of the site, using the URL and asset
+      # path returned by Pages above.
+      - name: Build default branch documentation
+        if: steps.branch.outputs.publish == 'true'
+        env:
+          ALLSKY_DOCS_SITE_URL: ${{ steps.pages.outputs.base_url }}/
+          ALLSKY_DOCS_ASSET_PATH: ${{ steps.pages.outputs.base_path }}/assets
+        run: bash stable/docs/allsky_docs.sh build "$GITHUB_WORKSPACE/site" "$ALLSKY_DOCS_ASSET_PATH"
+
+      # Put the next docs under /next/ so both versions go out in one deployment.
+      - name: Build next documentation
+        if: steps.branch.outputs.build_next == 'true'
+        env:
+          ALLSKY_DOCS_SITE_URL: ${{ steps.pages.outputs.base_url }}/next/
+          ALLSKY_DOCS_ASSET_PATH: ${{ steps.pages.outputs.base_path }}/next/assets
+        run: bash next/docs/allsky_docs.sh build "$GITHUB_WORKSPACE/site/next" "$ALLSKY_DOCS_ASSET_PATH"
+
+      - name: Disable Jekyll processing
+        if: steps.branch.outputs.publish == 'true'
+        run: touch site/.nojekyll
+
+      # Pages replaces the published site with this artefact, so it must contain
+      # both the root docs and /next/ whenever next is configured.
+      - name: Upload Pages artifact
+        if: steps.branch.outputs.publish == 'true'
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: site
+
+  # Skip deployment for pushes to other branches. The github-pages environment
+  # also applies its own branch rules before the uploaded site is published.
+  deploy:
+    if: needs.build.outputs.publish == 'true'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

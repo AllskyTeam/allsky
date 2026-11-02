@@ -971,6 +971,23 @@ do
 			unset 'KEYS["imagecropbottom"]';  unset 'KEYS["imagecropleft"]'
 			;;
 
+		"timelapsestart" | "timelapseend" | "keogramstart" | "keogramend" | \
+		"startrailsstart" | "startrailsend")
+			# selectImages.py uses these, so let it decide what's valid.
+			if ! ERR="$( "${ALLSKY_PYTHON_VENV}/bin/python3" \
+					"${ALLSKY_UTILITIES}/selectImages.py" --check "${NEW_VALUE}" 2>&1 )" ; then
+				# All six are labeled "Start Time" or "End Time", so say which one.
+				X="${KEY%start}";  X="${X%end}"
+				MSG="WARNING: ${WSNs}${X^} ${LABEL}${WSNe}: ${ERR}"
+				MSG+="${wBR}Resetting it to '${OLD_VALUE}'."
+				wW_ "${MSG}"
+
+				# Restore to old value
+				update_json_file ".${KEY}" "${OLD_VALUE}" "${ALLSKY_SETTINGS_FILE}" "text"
+				(( NUM_CHANGED-- ))
+			fi
+			;;
+
 		"timelapsevcodec")
 			if ! ffmpeg -encoders 2>/dev/null | awk -v codec="${NEW_VALUE}" '
 				BEGIN { exit_code = 1; }

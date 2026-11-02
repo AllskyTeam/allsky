@@ -268,7 +268,7 @@ else	# only 1 file so show it
 	BAD_COUNT="$( wc -l < "${ALLSKY_BAD_IMAGE_COUNT}" )"
 	if [[ $((BAD_COUNT % BAD_LIMIT)) -eq 0 ]]; then
 		MSG="Multiple consecutive bad images."
-		MSG+="\nClick <a external='true' href='/execute.php?ID=AM_ALLSKY_CONFIG bad_images_info --html'>here</a> to see a summary."
+		MSG+="Multiple consecutive bad images.<br>Visit the <a external='true' href='/index.php?page=helper&helper=bad_images&html=true'>Bad Images Info Help Tool</a> to see a summary."
 		"${ALLSKY_SCRIPTS}/addMessage.sh" --type warning --msg "${MSG}" >&2
 	fi
 	if [[ ${BAD_COUNT} -ge "${BAD_LIMIT}" ]]; then

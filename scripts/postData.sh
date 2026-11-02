@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2154		# referenced but not assigned
 
 # This script uploads a file to a Website to tell the Website when the user has defined
 # "sunrise" and "sunset".
@@ -96,20 +97,25 @@ done
 [[ ${HELP} == "true" ]] && usage_and_exit 0
 
 
+# This gets all settings and prefixes their names with "S_".
+# It's faster than calling "settings()" a bunch of times.
+#shellcheck disable=SC2119
+getAllSettings || exit 1
+
 # If there are no enabled Websites or an enabled remote server, then exit.
 WEBS=""
 WHERE_TO=""
-if [[ "$( settings ".uselocalwebsite" )" == "true" ]]; then
+if [[ ${S_uselocalwebsite} == "true" ]]; then
 	WEBS+=" --local-web"
 	[[ -n ${WHERE_TO} ]] && WHERE_TO+=", "
 	WHERE_TO+="local Website"
 fi
-if [[ "$( settings ".useremotewebsite" )" == "true" ]]; then
+if [[ ${S_useremotewebsite} == "true" ]]; then
 	WEBS+=" --remote-web"
 	[[ -n ${WHERE_TO} ]] && WHERE_TO+=", "
 	WHERE_TO+="remote Website"
 fi
-if [[ "$( settings ".useremoteserver" )" == "true" ]]; then
+if [[ ${S_useremoteserver} == "true" ]]; then
 	[[ -n ${WHERE_TO} ]] && WHERE_TO+=", "
 	WHERE_TO+="remote server"
 fi
@@ -133,14 +139,14 @@ fi
 
 if [[ ${SETTINGS_ONLY} == "false" ]]; then
 	OK="true"
-	if ! latitude="$( convertLatLong "$( settings ".latitude" )" "latitude" 2>&1 )" ; then
+	if ! latitude="$( convertLatLong "${S_latitude}" "latitude" 2>&1 )" ; then
 		OK="false"
 		E_ "${ME}: ERROR: ${latitude}" >&2
 		if [[ ${FROM} == "endofnight" ]]; then
 			"${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${latitude}"
 		fi
 	fi
-	if ! longitude="$( convertLatLong "$( settings ".longitude" )" "longitude" 2>&1 )" ; then
+	if ! longitude="$( convertLatLong "${S_longitude}" "longitude" 2>&1 )" ; then
 		OK="false"
 		E_ "${ME}: ERROR: ${longitude}" >&2
 		if [[ ${FROM} != "endofnight" ]]; then
@@ -149,14 +155,13 @@ if [[ ${SETTINGS_ONLY} == "false" ]]; then
 	fi
 	[[ ${OK} == "false" ]] && exit 1
 
-	angle="$( settings ".angle" )"
 	timezone="$( date "+%z" )"
 
 	# If nighttime happens after midnight, sunwait returns "--:-- (Midnight sun)"
 	# If nighttime happens before noon, sunwait returns "--:-- (Polar night)"
-	sunrise="$( sunwait list rise angle "${angle}" "${latitude}" "${longitude}" 2>&1 )"
+	sunrise="$( sunwait list rise angle "${S_angle}" "${latitude}" "${longitude}" 2>&1 )"
 	sunrise_hhmm="${sunrise:0:5}"
-	sunset="$( sunwait list set angle "${angle}" "${latitude}" "${longitude}" 2>&1 )"
+	sunset="$( sunwait list set angle "${S_angle}" "${latitude}" "${longitude}" 2>&1 )"
 	sunset_hhmm="${sunset:0:5}"
 
 	if [[ ${sunrise_hhmm} == "--:--" || ${sunset_hhmm} == "--:--" ]]; then
@@ -167,7 +172,7 @@ if [[ ${SETTINGS_ONLY} == "false" ]]; then
 		sunset_hhmm="00:00"
 		{
 			echo "***"
-			MSG="${ME}: WARNING: angle ${angle} caused sunwait to return"
+			MSG="${ME}: WARNING: angle ${S_angle} caused sunwait to return"
 			MSG+=" sunrise='${sunrise}' and sunset='${sunset}'."
 			W_ "${MSG}"
 			echo "Using tomorrow at '${sunrise_hhmm}' instead."
@@ -179,12 +184,12 @@ if [[ ${SETTINGS_ONLY} == "false" ]]; then
 
 	DATA_FILE="${ALLSKY_TMP}/data.json"
 	{
-		if [[ $( settings ".takedaytimeimages" ) == "true" ]]; then
+		if [[ ${S_takedaytimeimages} == "true" ]]; then
 			D="true"
 		else
 			D="false"
 		fi
-		if [[ $( settings ".takenighttimeimages" ) == "true" ]]; then
+		if [[ ${S_takenighttimeimages} == "true" ]]; then
 			N="true"
 		else
 			N="false"

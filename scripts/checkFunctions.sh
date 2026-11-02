@@ -150,6 +150,21 @@ function _check_immediate()
 	return 0
 }
 
+###
+# Check if the user specified --metadate; capture_RPi specifies it.
+function _check_metadata()
+{
+	local SETTING_NAME="${1}"
+	local SETTING_LABEL="${2}"
+
+	if [[ -n ${SETTING_NAME} && ${SETTING_NAME} =~ --metadata ]]; then
+		echo -n "${WSVs}--metadata${WSVe} is no longer needed in the ${WSNs}${SETTING_LABEL}${WSNe}"
+		echo " setting since Allsky uses that option by default."
+		return 1
+	fi
+	return 0
+}
+
 
 #####
 # Make sure the specified width and height are valid.

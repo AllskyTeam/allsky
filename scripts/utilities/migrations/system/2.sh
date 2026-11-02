@@ -1,7 +1,7 @@
 #!/bin/bash
 # shellcheck disable=SC2034	# "source"d by run_migrations()
 
-# System version 2 (v2026.10.01_01):
+# System version 2 (v2026.10.01_02):
 #	Allsky's venv also sees the system's Python packages.  On Bookworm, Debian's matplotlib
 #	is built for NumPy 1.x but the venv has NumPy 2, so importing it fails, and photutils
 #	(star counting) logs a long traceback every time.  Install a current matplotlib into

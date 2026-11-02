@@ -8,7 +8,7 @@ The default json path is ${ALLSKY_TMP}/allskydata.json but this can be changed i
 """
 import allsky_shared as allsky_shared
 from allsky_base import ALLSKYMODULEBASE
-from allskyvariables import allskyvariables
+from allskyvariables.allskyvariables import ALLSKYVARIABLES
 import os 
 import json
 import re
@@ -65,7 +65,8 @@ class ALLSKYEXPORT(ALLSKYMODULEBASE):
 		save_path = allsky_shared.convertPath(save_path_raw)
 
 		if save_path is not None:
-			variables = allskyvariables.get_variables(True, '', True)
+			variable_class = ALLSKYVARIABLES(self.debug_mode)
+			variables = variable_class.get_variables(True, '', True)
 			if len(extra_vars) > 0 :
 				extra_entries = extra_vars.split(',')
 				for variable_name in extra_entries:

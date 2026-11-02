@@ -40,11 +40,15 @@
                 </div>
 
 
-                {% if current_user.is_authenticated %}
+                {% if current_user.is_authenticated or request.remote_addr in ('127.0.0.1', '::1') %}
                 <ul class="list-unstyled components mb-5 mt-3">
                     <li class="">
                         <a href="{{ url_for('dashboard.allsky_dashboard') }}" class="text-decoration-none"><i
                                 class="fa-solid fa-chart-line"></i> Dashboard</a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('dashboard.server_logs') }}" class="text-decoration-none"><i
+                                class="fa-solid fa-file-lines"></i> Server Logs</a>
                     </li>
                 </ul>
                 {% endif %}

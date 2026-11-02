@@ -413,52 +413,55 @@ get_connected_cameras()
 	CMD="$( determineCommandToUse "false" "" "true" 2> /dev/null )"
 	CMD_RET=$?		# return of 2 means no command was found
 	[[ ${CMD_RET} -ne 0 ]] && CMD=""
-
-	setup_rpi_supported_cameras "${CMD}" "false"		# Will create full file is CMD == ""
+	display_msg --logonly info "determineCommandToUse() returned: ${CMD:-null}."
 
 	# RPi format:	RPi \t camera_number \t camera_sensor [\t optional_other_stuff]
 	# ZWO format:	ZWO \t camera_number \t camera_model
 	# "true" == ignore errors
 	get_connected_cameras_info --cmd "${CMD}" "true" > "${ALLSKY_CONNECTED_CAMERAS_INFO}" 2>/dev/null
 
-	# Get the RPi connected cameras, if any.
-	CC=""
-	if [[ -n ${CMD} ]]; then
-		local RPI_MODELS="$( get_connected_camera_models --full "RPi" )"
-		# Output from above is:
-		#	RPi \t camera_number \t camera_model \t camera_sensor
-		if [[ -n ${RPI_MODELS} ]]; then
-			CC="RPi"
-			local CT_ CN_ MODEL SENSOR
-   			# shellcheck disable=SC2034
-			while read -r CT_ CN_ MODEL SENSOR
-			do
-				MODEL="${MODEL//++/ }"
-				SENSOR="${SENSOR//++/ }"
-				local FULL_NAME="${MODEL}  (${SENSOR})"
-				[[ -z ${FUNCTION} ]] && display_msg --log progress "Found" " RPi ${FULL_NAME}"
-				CT+=("${NUM_RPI};RPi;${MODEL}" "RPi     ${FULL_NAME}")
-				((NUM_RPI++))
-			done <<<"${RPI_MODELS// /++}"		# replace any spaces
-		fi
-	fi
-
-	# Get the ZWO connected cameras, if any.
-	local ZWO_MODELS="$( get_connected_camera_models "ZWO" )"
-	if [[ -n ${ZWO_MODELS} ]]; then
-		[[ -n ${CC} ]] && CC+=" "
-		CC+="ZWO"
-		for X in ${ZWO_MODELS// /++}
-		do
-			MODEL="${X//++/ }"
-			[[ -z ${FUNCTION} ]] && display_msg --log progress "Found" " ZWO ${MODEL}"
-			if ! strings "${ZWO_FILE}" | grep --silent "${MODEL}" ; then
-				display_msg --log warning "ZWO ${MODEL} not supported; ignoring"
-			else
-				CT+=( "${NUM_ZWO};ZWO;${MODEL}" "ZWO     ${MODEL}" )
-				((NUM_ZWO++))
+	if [[ ! -s ${ALLSKY_CONNECTED_CAMERAS_INFO} ]]; then
+		display_msg --logonly info "get_connected_cameras_info() returned nothing."
+	else
+		# Get the RPi connected camera model(s), if any.
+		CC=""
+		if [[ -n ${CMD} ]]; then
+			local RPI_MODELS="$( get_connected_camera_models --full "RPi" )"
+			# Output from above is:
+			#	RPi \t camera_number \t camera_model \t camera_sensor
+			if [[ -n ${RPI_MODELS} ]]; then
+				CC="RPi"
+				local CT_ CN_ MODEL SENSOR
+   				# shellcheck disable=SC2034
+				while read -r CT_ CN_ MODEL SENSOR
+				do
+					MODEL="${MODEL//++/ }"
+					SENSOR="${SENSOR//++/ }"
+					local FULL_NAME="${MODEL}  (${SENSOR})"
+					[[ -z ${FUNCTION} ]] && display_msg --log progress "Found" " RPi ${FULL_NAME}"
+					CT+=("${NUM_RPI};RPi;${MODEL}" "RPi     ${FULL_NAME}")
+					((NUM_RPI++))
+				done <<<"${RPI_MODELS// /++}"		# replace any spaces
 			fi
-		done
+		fi
+
+		# Get the ZWO connected camera model(s), if any.
+		local ZWO_MODELS="$( get_connected_camera_models "ZWO" )"
+		if [[ -n ${ZWO_MODELS} ]]; then
+			[[ -n ${CC} ]] && CC+=" "
+			CC+="ZWO"
+			for X in ${ZWO_MODELS// /++}
+			do
+				MODEL="${X//++/ }"
+				[[ -z ${FUNCTION} ]] && display_msg --log progress "Found" " ZWO ${MODEL}"
+				if ! strings "${ZWO_FILE}" | grep --silent "${MODEL}" ; then
+					display_msg --log warning "ZWO ${MODEL} not supported; ignoring"
+				else
+					CT+=( "${NUM_ZWO};ZWO;${MODEL}" "ZWO     ${MODEL}" )
+					((NUM_ZWO++))
+				fi
+			done
+		fi
 	fi
 
 	NUM_CONNECTED_CAMERAS=$(( NUM_RPI + NUM_ZWO ))
@@ -692,6 +695,10 @@ get_count()
 {
 	local DIR="${1}"
 	local FILE="${2}"
+	if [[ ! -d "${DIR}" ]]; then
+		echo "get_count(): Directory '${DIR}' not found." >&2
+		return 0
+	fi
 	find "${DIR}" -maxdepth 1 -name "${FILE}" | wc -l
 }
 
@@ -1028,6 +1035,7 @@ set_permissions()
 	# These directories aren't in GitHub so need to be manually created.
 	mkdir -p \
 		"${ALLSKY_WEBSITE}/videos/thumbnails" \
+		"${ALLSKY_WEBSITE}/keolapses/thumbnails" \
 		"${ALLSKY_WEBSITE}/keograms/thumbnails" \
 		"${ALLSKY_WEBSITE}/startrails/thumbnails" \
 		"${ALLSKY_WEBSITE}/meteors/thumbnails"
@@ -1642,7 +1650,7 @@ create_allsky_logs()
 {
 	local DO_ALL="${1}"
 
-	display_msg --logonly progress "Setting permissions on ${ALLSKY_LOG} and ${ALLSKY_PERIODIC_LOG}."
+	display_msg --logonly info "Setting permissions on ${ALLSKY_LOG} and ${ALLSKY_PERIODIC_LOG}."
 
 	if [[ ${DO_ALL} == "true" && ${DO_UPGRADE} == "false" && ${SKIP} == "false" && ${SKIP2} == "false" ]]; then
 		sudo systemctl stop rsyslog 2> /dev/null
@@ -1689,7 +1697,7 @@ convert_settings_file()			# prior_file, new_file
 
 	DIR="${ALLSKY_LOGS}/converted_settings"
 	mkdir -p "${DIR}"
-	local TEMP_PRIOR="${DIR}/PRIOR-${PRIOR_CAMERA_TYPE}_${PRIOR_CAMERA_MODEL// /_}.json"
+	local TEMP_PRIOR="${DIR}/PRIOR-settings.json"
 	local DELETED_SETTINGS="${DIR}/deleted_settings.txt"
 	rm -f "${DELETED_SETTINGS}"
 
@@ -1710,6 +1718,47 @@ convert_settings_file()			# prior_file, new_file
 		MSG="Unable to convert old settings file: $( < "${TEMP_PRIOR}" )"
 		display_msg --log error "${MSG}"
 		exit_installation 1 "${STATUS_ERROR}" "${MSG}."
+	fi
+
+	# Starting in v2026.10.01_02, cameras whose cameramodel is "Module 3" may now have the full name,
+	# e.g., "Module 3 Wide NoIR".
+	# This means the settings file name must also change.
+	# We need to look in the cc file to determine what the new file name and setting value should be.
+	# Possibilities: "imx708", "imx708_wide", "imx708_noir", "imx708_wide_noir"
+	# The CC file may not exist yet so use the prior file.
+	NAME="$( basename "${NEW_FILE}" )"
+	OLD_FILE="${PRIOR_CONFIG_DIR}/${NAME}"
+	if [[ ${PRIOR_ALLSKY_VERSION} < "v2026.10.01_02" && ${NAME} == "settings_RPi_Module_3.json" ]]; then
+		local NEW
+		OLD_CC_FILE="${OLD_FILE/settings/cc}"
+		if [[ -f ${OLD_CC_FILE} ]]; then
+			NEW_MODEL_NAME=""
+			local SENSOR="$( settings ".sensor" "${OLD_CC_FILE}" )"
+			[[ ${SENSOR} =~ "wide" ]] && NEW_MODEL_NAME+=" Wide"
+			[[ ${SENSOR} =~ "noir" ]] && NEW_MODEL_NAME+=" NoIR"
+			if [[ -n ${NEW_MODEL_NAME} ]]; then
+				NEW_MODEL_NAME="Module 3${NEW_MODEL_NAME}"
+				display_msg --log progress "Updating camera model from 'Module 3' to '${NEW_MODEL_NAME}' in '${NEW_FILE}'."
+				update_json_file ".cameramodel" "${NEW_MODEL_NAME}" "${NEW_FILE}" "text"
+
+				NEW_MODEL_FILE_NAME="${NEW_MODEL_NAME// /_}"
+
+				NEW="${NEW_FILE/Module_3/${NEW_MODEL_FILE_NAME}}"
+				display_msg --log info "Renaming '${NEW_FILE}' to '${NEW}'."
+				mv "${NEW_FILE}" "${NEW}"
+				NEW_FILE="${NEW}"
+
+				NEW_CC_FILE="${ALLSKY_CONFIG}/${NAME/settings/cc}"
+				if [[ -f ${NEW_CC_FILE} ]]; then
+					display_msg --logonly info "Renaming '${NEW_CC_FILE}' to '${NEW}'."
+					NEW="${NEW_CC_FILE/Module_3/${NEW_MODEL_FILE_NAME}}"
+					mv "${NEW_CC_FILE}" "${NEW}"
+				fi
+			# else it's just a "Module 3" camera, so nothing to do.
+			fi
+		else
+			display_msg --logonly info "Prior CC file '${OLD_CC_FILE}' not found."
+		fi
 	fi
 
 	# For each field in prior file, update new file with old value.
@@ -1761,6 +1810,9 @@ convert_settings_file()			# prior_file, new_file
 					;;
 				"extraargs")
 					if ! MSG="$( _check_immediate "${VALUE}" "Extra Arguments" )" ; then
+						display_msg --log notice "${MSG}"
+					fi
+					if ! MSG="$( _check_metadata "${VALUE}" "Extra Arguments" )" ; then
 						display_msg --log notice "${MSG}"
 					fi
 					;;
@@ -2531,47 +2583,68 @@ restore_prior_website_files()
 	# Each data directory will have zero or more images/videos.
 	# Make sure we do NOT mv any .php files.
 
+	ROOT_DIR="videos"
 	ITEM="${SPACE}${SPACE}timelapse videos"
-	D="${PRIOR_WEBSITE_DIR}/videos/thumbnails"
-	[[ -d ${D} ]] && mv "${D}"   "${ALLSKY_WEBSITE}/videos"
-	count=$( get_count "${PRIOR_WEBSITE_DIR}/videos" 'allsky-*' )
+	D="${PRIOR_WEBSITE_DIR}/${ROOT_DIR}/thumbnails"
+	[[ -d ${D} ]] && mv "${D}"   "${ALLSKY_WEBSITE}/${ROOT_DIR}"
+	count=$( get_count "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}" 'allsky-*' )
 	if [[ ${count} -ge 1 ]]; then
 		display_msg --log progress "${ITEM} (moving)"
-		mv "${PRIOR_WEBSITE_DIR}"/videos/allsky-*   "${ALLSKY_WEBSITE}/videos"
+		mv "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"/allsky-*   "${ALLSKY_WEBSITE}/${ROOT_DIR}"
 	else
 		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 	fi
 
-	ITEM="${SPACE}${SPACE}keograms"
-	D="${PRIOR_WEBSITE_DIR}/keograms/thumbnails"
-	[[ -d ${D} ]] && mv "${D}"   "${ALLSKY_WEBSITE}/keograms"
-	count=$( get_count "${PRIOR_WEBSITE_DIR}/keograms" 'keogram-*' )
-	if [[ ${count} -ge 1 ]]; then
-		display_msg --log progress "${ITEM} (moving)"
-		mv "${PRIOR_WEBSITE_DIR}"/keograms/keogram-*   "${ALLSKY_WEBSITE}/keograms"
-	else
-		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
-	fi
-
-	ITEM="${SPACE}${SPACE}startrails"
-	D="${PRIOR_WEBSITE_DIR}/startrails/thumbnails"
-	[[ -d ${D} ]] && mv "${D}"   "${ALLSKY_WEBSITE}/startrails"
-	count=$( get_count "${PRIOR_WEBSITE_DIR}/startrails" 'startrails-*' )
-	if [[ ${count} -ge 1 ]]; then
-		display_msg --log progress "${ITEM} (moving)"
-		mv "${PRIOR_WEBSITE_DIR}"/startrails/startrails-*   "${ALLSKY_WEBSITE}/startrails"
-	else
-		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
-	fi
-
-	if [[ -d "${PRIOR_WEBSITE_DIR}/meteors" ]]; then
-		ITEM="${SPACE}${SPACE}meteors"
-		D="${PRIOR_WEBSITE_DIR}/meteors/thumbnails"
-		[[ -d ${D} ]] && mv "${D}"   "${ALLSKY_WEBSITE}/meteors"
-		count=$( get_count "${PRIOR_WEBSITE_DIR}/meteors" 'meteors-*' )
+	ROOT_DIR="keolapses"
+	ITEM="${SPACE}${SPACE}keolapse videos"
+	D="${PRIOR_WEBSITE_DIR}/${ROOT_DIR}/thumbnails"
+	[[ -d ${D} ]] && mv "${D}"   "${ALLSKY_WEBSITE}/${ROOT_DIR}"
+	local D2="${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"
+	if [[ -d ${D2} ]]; then
+		# keolapses are new in v2026.10.01_01 so may not exist in the prior version.
+		count=$( get_count "${D2}" 'keolapse-*' )
 		if [[ ${count} -ge 1 ]]; then
 			display_msg --log progress "${ITEM} (moving)"
-			mv "${PRIOR_WEBSITE_DIR}"/meteors/meteors-*   "${ALLSKY_WEBSITE}/meteors"
+			mv "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"/keolapse-*   "${ALLSKY_WEBSITE}/${ROOT_DIR}"
+		else
+			display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
+		fi
+	# else - don't output anything since the prior release didn't have keolapses.
+	fi
+
+	ROOT_DIR="keograms"
+	ITEM="${SPACE}${SPACE}keograms"
+	D="${PRIOR_WEBSITE_DIR}/${ROOT_DIR}/thumbnails"
+	[[ -d ${D} ]] && mv "${D}"   "${ALLSKY_WEBSITE}/${ROOT_DIR}"
+	count=$( get_count "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}" 'keogram-*' )
+	if [[ ${count} -ge 1 ]]; then
+		display_msg --log progress "${ITEM} (moving)"
+		mv "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"/keogram-*   "${ALLSKY_WEBSITE}/${ROOT_DIR}"
+	else
+		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
+	fi
+
+	ROOT_DIR="startrails"
+	ITEM="${SPACE}${SPACE}startrails"
+	D="${PRIOR_WEBSITE_DIR}/${ROOT_DIR}/thumbnails"
+	[[ -d ${D} ]] && mv "${D}"   "${ALLSKY_WEBSITE}/${ROOT_DIR}"
+	count=$( get_count "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}" 'startrails-*' )
+	if [[ ${count} -ge 1 ]]; then
+		display_msg --log progress "${ITEM} (moving)"
+		mv "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"/startrails-*   "${ALLSKY_WEBSITE}/${ROOT_DIR}"
+	else
+		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
+	fi
+
+	ROOT_DIR="meteors"
+	if [[ -d "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}" ]]; then
+		ITEM="${SPACE}${SPACE}meteors"
+		D="${PRIOR_WEBSITE_DIR}/${ROOT_DIR}/thumbnails"
+		[[ -d ${D} ]] && mv "${D}"   "${ALLSKY_WEBSITE}/${ROOT_DIR}"
+		count=$( get_count "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}" 'meteors-*' )
+		if [[ ${count} -ge 1 ]]; then
+			display_msg --log progress "${ITEM} (moving)"
+			mv "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"/meteors-*   "${ALLSKY_WEBSITE}/${ROOT_DIR}"
 		else
 			display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 		fi
@@ -2723,47 +2796,63 @@ do_restore()
 	if [[ -n ${PRIOR_WEBSITE_DIR} ]]; then
 		display_msg --log progress "${SPACE}Local Website files:"
 
+		ROOT_DIR="videos"
 		ITEM="${SPACE}${SPACE}timelapse videos"
-		D="${ALLSKY_WEBSITE}/videos/thumbnails"
-		[[ -d ${D} ]] && mv "${D}"   "${PRIOR_WEBSITE_DIR}/videos"
-		count=$( get_count "${ALLSKY_WEBSITE}/videos" 'allsky-*' )
+		D="${ALLSKY_WEBSITE}/${ROOT_DIR}/thumbnails"
+		[[ -d ${D} ]] && mv "${D}"   "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"
+		count=$( get_count "${ALLSKY_WEBSITE}/${ROOT_DIR}" 'allsky-*' )
 		if [[ ${count} -ge 1 ]]; then
 			display_msg --log progress "${ITEM} (moving back)"
-			mv "${ALLSKY_WEBSITE}"/videos/allsky-*   "${PRIOR_WEBSITE_DIR}/videos"
+			mv "${ALLSKY_WEBSITE}/${ROOT_DIR}"/allsky-*   "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"
 		else
 			display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 		fi
 
+		ROOT_DIR="keolapses"
+		ITEM="${SPACE}${SPACE}keolapse videos"
+		D="${ALLSKY_WEBSITE}/${ROOT_DIR}/thumbnails"
+		[[ -d ${D} ]] && mv "${D}"   "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"
+		count=$( get_count "${ALLSKY_WEBSITE}/${ROOT_DIR}" 'keolapse-*' )
+		if [[ ${count} -ge 1 ]]; then
+			display_msg --log progress "${ITEM} (moving back)"
+			mv "${ALLSKY_WEBSITE}/${ROOT_DIR}"/keolapse-*   "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"
+		else
+			display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
+		fi
+
+		ROOT_DIR="keograms"
 		ITEM="${SPACE}${SPACE}keograms"
-		D="${ALLSKY_WEBSITE}/keograms/thumbnails"
-		[[ -d ${D} ]] && mv "${D}"   "${PRIOR_WEBSITE_DIR}/keograms"
-		count=$( get_count "${ALLSKY_WEBSITE}/keograms" 'keogram-*' )
+		D="${ALLSKY_WEBSITE}/${ROOT_DIR}/thumbnails"
+		[[ -d ${D} ]] && mv "${D}"   "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"
+		count=$( get_count "${ALLSKY_WEBSITE}/${ROOT_DIR}" 'keogram-*' )
 		if [[ ${count} -ge 1 ]]; then
 			display_msg --log progress "${ITEM} (moving back)"
-			mv "${ALLSKY_WEBSITE}"/keograms/keogram-*   "${PRIOR_WEBSITE_DIR}/keograms"
+			mv "${ALLSKY_WEBSITE}/${ROOT_DIR}"/keogram-*   "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"
 		else
 			display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 		fi
 
+		ROOT_DIR="startrails"
 		ITEM="${SPACE}${SPACE}startrails"
-		D="${ALLSKY_WEBSITE}/startrails/thumbnails"
-		[[ -d ${D} ]] && mv "${D}"   "${PRIOR_WEBSITE_DIR}/startrails"
-		count=$( get_count "${ALLSKY_WEBSITE}/startrails" 'startrails-*' )
+		D="${ALLSKY_WEBSITE}/${ROOT_DIR}/thumbnails"
+		[[ -d ${D} ]] && mv "${D}"   "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"
+		count=$( get_count "${ALLSKY_WEBSITE}/${ROOT_DIR}" 'startrails-*' )
 		if [[ ${count} -ge 1 ]]; then
 			display_msg --log progress "${ITEM} (moving back)"
-			mv "${ALLSKY_WEBSITE}"/startrails/startrails-*   "${PRIOR_WEBSITE_DIR}/startrails"
+			mv "${ALLSKY_WEBSITE}/${ROOT_DIR}"/startrails-*   "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"
 		else
 			display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 		fi
 
-		if [[ -d "${PRIOR_WEBSITE_DIR}/meteors" ]]; then
+		ROOT_DIR="meteors"
+		if [[ -d "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}" ]]; then
 			ITEM="${SPACE}${SPACE}meteors"
-			D="${ALLSKY_WEBSITE}/meteors/thumbnails"
-			[[ -d ${D} ]] && mv "${D}"   "${PRIOR_WEBSITE_DIR}/meteors"
-			count=$( get_count "${ALLSKY_WEBSITE}/meteors" 'meteors-*' )
+			D="${ALLSKY_WEBSITE}/${ROOT_DIR}/thumbnails"
+			[[ -d ${D} ]] && mv "${D}"   "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"
+			count=$( get_count "${ALLSKY_WEBSITE}/${ROOT_DIR}" 'meteors-*' )
 			if [[ ${count} -ge 1 ]]; then
 				display_msg --log progress "${ITEM} (moving back)"
-				mv "${ALLSKY_WEBSITE}"/meteors/meteors-*   "${PRIOR_WEBSITE_DIR}/meteors"
+				mv "${ALLSKY_WEBSITE}/${ROOT_DIR}"/meteors-*   "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"
 			else
 				display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 			fi
@@ -2794,7 +2883,7 @@ display_msg --logonly info "${ITEM} contents: $( ls "${ALLSKY_WEBSITE_MYFILES_DI
 
 	# If ${ALLSKY_TMP} is a memory filesystem, unmount it.
 	if is_mounted "${ALLSKY_TMP}" ; then
-		display_msg --logonly progress "Unmounting '${ALLSKY_TMP}'."
+		display_msg --logonly info "Unmounting '${ALLSKY_TMP}'."
 		umount_dir "${ALLSKY_TMP}" "install"
 		WAS_MOUNTED="true"
 	else
@@ -2820,7 +2909,7 @@ display_msg --logonly info "${ITEM} contents: $( ls "${ALLSKY_WEBSITE_MYFILES_DI
 
 	if [[ ${WAS_MOUNTED} == "true" ]]; then
 		# Remounts ${ALLSKY_TMP}
-		display_msg --logonly progress "Re-mounting '${ALLSKY_TMP}'."
+		display_msg --logonly info "Re-mounting '${ALLSKY_TMP}'."
 		mount_dir "${ALLSKY_TMP}" "install"
 	fi
 
@@ -3024,7 +3113,7 @@ install_Python()
 
 	if [[ ${SKIP} == "false" && ${SKIP2} == "false" ]]; then
 		PKGs="python3-pip python3-full libgfortran5 libopenblas0-pthread"
-		display_msg --logonly progress "Installing ${PKGs}."
+		display_msg --logonly info "Installing ${PKGs}."
 		TMP="${ALLSKY_LOGS}/python3-full.log"
 		# shellcheck disable=SC2086
 		run_aptGet ${PKGs} > "${TMP}" 2>&1
@@ -3137,7 +3226,7 @@ install_overlay()
 
 copy_repo_files_to_config()
 {
-	display_msg --logonly progress "Copying static repo files to config."
+	display_msg --logonly info "Copying static repo files to config."
 	copy_repo_files		# is defined elsewhere
 }
 
@@ -3234,8 +3323,7 @@ display_image()
 		if [[ -f ${ALLSKY_POST_INSTALL_ACTIONS} ]]; then
 			# Add a message the user will see in the WebUI.
 			MSG="Actions needed.  Click for more information."
-			X="${ALLSKY_POST_INSTALL_ACTIONS/${ALLSKY_HOME}/}"
-			"${ALLSKY_SCRIPTS}/addMessage.sh" --type warning --ID AM_POST --msg "${MSG}" --url "${X}"
+			"${ALLSKY_SCRIPTS}/addMessage.sh" --type warning --ID AM_POST --msg "${MSG}" --url "${ALLSKY_POST_INSTALL_ACTIONS_URL}"
 
 			# This tells allsky.sh not to display a message about actions since we just did.
 			touch "${ALLSKY_POST_INSTALL_ACTIONS}_initial_message"
@@ -3893,6 +3981,10 @@ set_what_can_be_skipped "${PRIOR_ALLSKY_VERSION}" "${ALLSKY_VERSION}"
 ##### Stop Allsky
 stop_Allsky
 
+##### Copy some static files to config.
+# This should be done before looking for connected cameras.
+copy_repo_files_to_config
+
 ##### Determine what camera(s) are connected
 get_connected_cameras
 
@@ -3928,8 +4020,9 @@ prompt_for_hostname
 ##### Check for sufficient swap space
 check_swap "install" ""
 
-##### Optionally make ${ALLSKY_TMP} a memory filesystem
-check_tmp "install"
+##### Make ${ALLSKY_TMP} a memory filesystem unless Allsky is on an NVMe disk;
+##### "allsky-config recheck_tmp" can change that.
+check_tmp "install" "false"
 
 ##### Tell the user it may take a while
 display_wait_message
@@ -3964,9 +4057,6 @@ create_allsky_logs "true"			# "true" == do everything
 install_PHP_modules
 install_Python
 install_overlay
-
-##### Copy some files to config.
-copy_repo_files_to_config
 
 ##### Get Website checksums for optional remote Website.
 # Do this before we change the local Website files.

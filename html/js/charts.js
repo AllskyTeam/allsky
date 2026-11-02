@@ -999,26 +999,28 @@ class ASCHARTMANAGER {
       onDelete: () => this._saveDebounced()
     });
 
-    // After plugin mounts, complete configuration and wrap refresh
+    // The plugin registers instances synchronously. Attach request details before
+    // loadState() can apply the time range and immediately refresh these charts.
+    const newInsts = ($pane.data('allskyChart_instances') || []).slice(beforeLen);
+    newInsts.forEach((inst) => {
+      inst._gmGraphPostBody = postBody;
+      if (!inst._gmBaseConfigUrl) inst._gmBaseConfigUrl = baseUrl;
+
+      try { if (typeof inst.setGraphPostBody === 'function') inst.setGraphPostBody(postBody); } catch(_) {}
+      try { if (typeof inst.setConfigUrl === 'function') inst.setConfigUrl(baseUrl + qs); } catch(_) {}
+
+      this._wrapInstanceRefreshWithFreshRange(inst);
+      try {
+        if (typeof inst.setTimeRange === 'function') inst.setTimeRange(this._timeRange);
+        inst._gmLastTimeRangeSig = JSON.stringify(this._timeRange || {});
+      } catch (_) {}
+    });
+
+    // Defer layout adjustments until the next frame.
     requestAnimationFrame(() => {
-      const after = $pane.data('allskyChart_instances') || [];
-      const newInsts = after.slice(beforeLen);
       newInsts.forEach((inst) => {
         this._applyBounds(inst, nc);
         this._applyAutoRefresh(inst, seconds);
-
-        // Keep a manager copy and push into plugin via public setters (critical for future refreshes)
-        inst._gmGraphPostBody = postBody;
-        if (!inst._gmBaseConfigUrl) inst._gmBaseConfigUrl = baseUrl;
-
-        try { if (typeof inst.setGraphPostBody === 'function') inst.setGraphPostBody(postBody); } catch(_) {}
-        try { if (typeof inst.setConfigUrl === 'function') inst.setConfigUrl(baseUrl + qs); } catch(_) {}
-
-        this._wrapInstanceRefreshWithFreshRange(inst);
-        try {
-          if (typeof inst.setTimeRange === 'function') inst.setTimeRange(this._timeRange);
-          inst._gmLastTimeRangeSig = JSON.stringify(this._timeRange || {});
-        } catch (_) {}
       });
       this._applySnapToPane($pane);
     });

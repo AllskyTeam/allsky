@@ -422,6 +422,15 @@ get_connected_cameras()
 
 	if [[ ! -s ${ALLSKY_CONNECTED_CAMERAS_INFO} ]]; then
 		display_msg --logonly info "get_connected_cameras_info() returned nothing."
+		if [[ -n ${CMD} ]]; then
+			# get_connected_cameras_info() hides why no RPi camera was found,
+			# so run getRPiCameraInfo.sh again and log its error message.
+			local RPi_INFO   RPi_RET
+			RPi_INFO="$( "${ALLSKY_UTILITIES}/getRPiCameraInfo.sh" --info-only --cmd "${CMD}" 2>&1 )"
+			RPi_RET=$?
+			MSG="getRPiCameraInfo.sh returned ${RPi_RET}:\n$( indent "${RPi_INFO}" )"
+			display_msg --logonly info "${MSG}"
+		fi
 	else
 		# Get the RPi connected camera model(s), if any.
 		CC=""

@@ -25,13 +25,3 @@ This page lists known issues and limitations with the current Allsky release. Wo
 ## Charts
 
 - **Bullseye**: Charts will **NOT** work on Bullseye due to outdated system software. We strongly recommend that you upgrade from Bullseys
-
-
-## Other { data-toc-label="Other" }
-
-- **Limitation**: If you have three or more cameras connected to a single Pi (very rare except while testing) including at least one RPi and one ZWO, if you switch from the current camera type to the other type which has at least two cameras, which of those cameras is used is undefined.
-For example, assume you have one ZWO camera and two RPi cameras and the ZWO camera is the current one and you switch to the RPi Camera Type in the WebUI. Which RPi camera becomes current is undefined, and you'll likely see several errors about missing or empty fields.
-
-    **Workaround**: Click on the Allsky Settings link to refresh the page.
-
-    **Future Plans**: The Camera Type and Camera Model settings will be merged into one setting that contains both items. You will then be able to select exactly which camera to change to, which will eliminate this problem.

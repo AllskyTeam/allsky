@@ -7190,6 +7190,13 @@ of the current release.</p>
 <h2 id="enhancements-changes"><strong>Enhancements / Changes</strong><a class="headerlink" href="#enhancements-changes" title="Permanent link">Â¶</a></h2>
 <ul>
 <li>
+<p><strong>Allsky Map and privacy</strong></p>
+<ul>
+<li>If your camera isn't on the <a href="howtos/allsky_map.html">Allsky Map</a>, the installation asks if you want to add it. The answer defaults to <mark>No</mark>, and if you keep it you won't be asked again for a year.</li>
+<li>The new <mark>Hide Exact Location</mark> setting rounds the <mark>Latitude</mark> and <mark>Longitude</mark> on the Allsky Map and the local and remote Allsky Websites to the nearest 0.02 degrees, so they are at most about 1.3 km (0.8 miles) from your real location. Allsky itself still uses the exact values.</li>
+</ul>
+</li>
+<li>
 <p><strong>feature 1</strong></p>
 <ul>
 <li>blah blah</li>
@@ -7212,6 +7219,7 @@ of the current release.</p>
 </ul>
 <h2 id="new-settings"><strong>New Settings</strong><a class="headerlink" href="#new-settings" title="Permanent link">Â¶</a></h2>
 <ul>
+<li><mark>Hide Exact Location</mark> (right after <mark>Latitude</mark> and <mark>Longitude</mark>)</li>
 <li>xxx</li>
 </ul>
 </details>
@@ -7229,13 +7237,6 @@ of the current release.</p>
 <li>You can now specify what images to include in timelapse videos, keograms, and startrails. For example only the night images, or from 22:00 to 04:00. Times can also be <code>sunrise</code>, <code>sunset</code>, or the start or end of Allsky's daytime or nighttime.
   See the <a href="settings/allsky.html#Start-end-times">Allsky Settings</a> page for valid entries in these fields.
   The <code>generateForDay.sh</code> <code>--start</code> and <code>--end</code> arguments can be used to temporarily override the saved settings.</li>
-</ul>
-</li>
-<li>
-<p><strong>Allsky Map and privacy</strong></p>
-<ul>
-<li>If your camera isn't on the <a href="howtos/allsky_map.html">Allsky Map</a>, the installation asks if you want to add it. The answer defaults to <mark>No</mark>, and if you keep it you won't be asked again for a year.</li>
-<li>The new <mark>Hide Exact Location</mark> setting rounds the <mark>Latitude</mark> and <mark>Longitude</mark> on the Allsky Map and the local and remote Allsky Websites to the nearest 0.02 degrees, so they are at most about 1.3 km (0.8 miles) from your real location. Allsky itself still uses the exact values.</li>
 </ul>
 </li>
 <li>
@@ -7281,7 +7282,6 @@ of the current release.</p>
 <li><mark>Days To Keep on Remote Website</mark> - This is similar to <mark>Days To Keep on Pi Website</mark>, but for remote Websites.</li>
 <li><mark>Moon-dependent stretch</mark>, <mark>Full Moon Stretch Amount</mark>, and <mark>Full Moon Stretch mid point</mark> (Nighttime)</li>
 <li><mark>Start Time</mark> and <mark>End Time</mark> for Daily Timelapse, Keograms, and Startrails</li>
-<li><mark>Hide Exact Location</mark> (right after <mark>Latitude</mark> and <mark>Longitude</mark>)</li>
 </ul>
 </li>
 </ul>

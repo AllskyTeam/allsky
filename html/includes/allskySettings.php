@@ -828,7 +828,8 @@ CSRFToken();
 		$missingSettings = "";
 		$sourceFiles = array();
 		$sourceFilesContents = array();
-		echo "<table border='0' width='100%'>";
+		echo "<table border='0' width='100%' class='settings-table'>";
+		echo "<colgroup><col class='settings-label-column'><col class='settings-control-column'><col></colgroup>";
 			$inHeader = false;
 			$onHeader = 0;
 
@@ -841,7 +842,7 @@ CSRFToken();
 					show(headerNum, header, h);
 				}
 				function show(headerNum, header, h) {
-					header.style.display = "table-row";
+					header.style.removeProperty("display");
 					h.title = "Click to hide";
 					h.innerHTML = "<?php echo "$hideIcon" ?>";
 				}
@@ -1136,6 +1137,11 @@ if ($debug) { echo ": &nbsp; value=$value"; }
 
 					echo "\n\t<td $rspan valign='middle' style='padding: 2px 0px'>";
 						echo "<label class='WebUISetting' style='padding-right: 3px;'>$label</label>";
+						if ($description !== "") {
+							$helpLabel = htmlspecialchars(strip_tags($label), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+							$helpContent = htmlspecialchars($description, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+							echo "<button type='button' class='setting-help-button' aria-label='Help for $helpLabel' aria-haspopup='dialog' aria-expanded='false' data-help-title='$helpLabel' data-help-content='$helpContent'><i class='fa-solid fa-circle-question' aria-hidden='true'></i></button>";
+						}
 					echo "</td>";
 
 					if ($type == "widetext") {
@@ -1204,10 +1210,11 @@ if ($debug) { echo ": &nbsp; value=$value"; }
 
 					if ($type == "widetext") {
 						echo "\n</tr>";
-						echo "\n<tr class='rowSeparator'>";
+						echo "\n<tr class='rowSeparator setting-description-row'" . ($warning_msg !== "" ? " data-has-warning='true'" : "") . ">";
 							echo "\n\t<td></td>";
 					}
-					echo "\n\t<td style='padding-left: 10px;'>$warning_msg$description</td>";
+					$descriptionClass = $warning_msg !== "" ? " setting-description-warning" : "";
+					echo "\n\t<td class='setting-description-cell$descriptionClass' style='padding-left: 10px;'>$warning_msg<span class='setting-description-text'>$description</span></td>";
 
 					echo "\n</tr>";
 				}
@@ -1314,7 +1321,6 @@ if ($debug) { echo ": &nbsp; value=$value"; }
 
 
 <?php
-	if (! $formReadonly)
-		echo addAsset('js/settings.js');
+	echo addAsset('js/settings.js');
 }
 ?>

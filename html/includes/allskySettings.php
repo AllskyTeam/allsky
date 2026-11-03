@@ -171,9 +171,7 @@ function DisplayAllskyConfig() {
 	global $forceRestart;
 	global $pageHeaderTitle, $pageIcon, $pageHelp;
 
-	$cameraTypeName = "cameratype";			// json setting name
-	$cameraModelName = "cameramodel";		// json setting name
-	$cameraNumberName = "cameranumber";		// json setting name
+	$cameraInfoName = "camerainfo";			// json setting name
 	$debugLevelName = "debuglevel";			// json setting name
 	$debugArg = "";
 	$cmdDebugArg = "";		// set to --debug for runCommand() debugging
@@ -230,10 +228,8 @@ function DisplayAllskyConfig() {
 			$stopRequired = false;
 			$reReadSettings = false;
 			$cameraChanged = false;
-			$refreshingCameraType = false;
-			$newCameraType = "";
-			$newCameraModel = "";
-			$newCameraNumber = "";
+			$refreshingCamera = false;
+			$newCamera = "";
 			$twilightDataChanged = false;
 
 			$ok = true;
@@ -354,41 +350,14 @@ function DisplayAllskyConfig() {
 					if ($isSettingsField) $numSettingsChanges++;
 					else $numSourceChanges++;
 
-					if ($name === $cameraTypeName) {
+					if ($name === $cameraInfoName) {
 						if ($newValue === "Refresh") {
-							if ($cameraChanged) {
-								$msg = "If you selected <b>Refresh</b> for <b>$label</b>";
-								$msg .= " you cannot change anything else.";
-								$msg .= "<br>You also changed: ";
-								if ($newCameraModel !== "") $msg .= " <b>Camera Model</b>";
-								if ($newCameraNumber !== "") $msg .= " <b>Camera Number</b>";
-								$status->addMessage($msg, 'danger');
-								$ok = false;
-							} else {
-								// Refresh the same Camera Type
-								$refreshingCameraType = true;
-								$newCameraType = $oldValue;
-								$newValue = $oldValue;
-							}
-						} else {
-							$newCameraType = $newValue;
+							// Look for cameras again but keep the same camera.
+							$refreshingCamera = true;
+							$newValue = $oldValue;
 						}
+						$newCamera = $newValue;
 						$cameraChanged = true;
-
-					} elseif ($name === $cameraModelName || $name === $cameraNumberName) {
-						if ($refreshingCameraType) {
-							$msg = "If you selected <b>Refresh</b> for <b>Camera Type</b>";
-							$msg .= " you cannot change anything else.";
-							$msg .= "<br>You also changed: <b>$label</b>";
-							$status->addMessage($msg, 'danger');
-							$ok = false;
-						} else {
-							$cameraChanged = true;
-							if ($name === $cameraModelName)
-								$newCameraModel = $newValue;
-							else
-								$newCameraNumber = $newValue;
-						}
 
 					} else {
 						// want to know changes other than camera
@@ -456,7 +425,7 @@ if ($debug) {
 			if ( $ok && ($changesMade || $fromConfiguration) ) {
 				if ($nonCameraChanges !== "" || $fromConfiguration) {
 					if ($cameraChanged && $nonCameraChanges !== "") {
-						$msg = "If you change <b>Camera Type</b> or <b>Camera Model</b>";
+						$msg = "If you change the <b>Camera</b>";
 						$msg .= " you cannot change anything else.";
 						$msg .= "<br>You also changed: $nonCameraChanges.";
 						$status->addMessage($msg, 'danger');
@@ -531,20 +500,12 @@ if ($debug) {
 					}
 				} else {
 					$msg = "";
-					if ($newCameraType !== "") {
-						if ($msg !== "") $msg = "<br>$msg";
-						if ($refreshingCameraType)
-							$msg .= "<b>Camera Type</b> $newCameraType refreshed.";
+					if ($newCamera !== "") {
+						$c = camera_info_label($newCamera);
+						if ($refreshingCamera)
+							$msg .= "Looked for connected cameras again; the <b>Camera</b> is still <b>$c</b>.";
 						else
-							$msg .= "<b>Camera Type</b> changed to <b>$newCameraType</b>.";
-					}
-					if ($newCameraModel !== "") {
-						if ($msg !== "") $msg = "<br>$msg";
-						$msg .= "<b>Camera Model</b> changed to <b>$newCameraModel</b>.";
-					}
-					if ($newCameraNumber !== "") {
-						if ($msg !== "") $msg = "<br>$msg";
-						$msg .= "<b>Camera Number</b> changed to <b>$newCameraNumber</b>.";
+							$msg .= "<b>Camera</b> changed to <b>$c</b>.";
 					}
 
 					if ($msg !== "")
@@ -564,7 +525,7 @@ if ($debug) {
 					$msg = "";
 				} else if ($changes !== "") {
 					$moreArgs = "";
-					if ($newCameraType !== "") {
+					if ($newCamera !== "") {
 						$moreArgs .= " --cameraTypeOnly";
 					}
 
@@ -749,8 +710,9 @@ if ($debug) {
 		$settings_array = readSettingsFile();
 	}
 
-	$cameraType = getVariableOrDefault($settings_array, $cameraTypeName, "");
-	$cameraModel = getVariableOrDefault($settings_array, $cameraModelName, "");
+	$cameraInfo = getVariableOrDefault($settings_array, $cameraInfoName, "");
+	$cameraType = camera_info_part($cameraInfo, "type");
+	$cameraModel = camera_info_part($cameraInfo, "model");
 
 	check_if_configured($page, "settings");	// Calls addMessage() on error
 

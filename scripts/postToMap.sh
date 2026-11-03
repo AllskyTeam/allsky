@@ -391,124 +391,123 @@ if [[ ${UPLOAD} == "false" ]]; then
 	digit="${MACHINE_ID: -1}"
 	decimal=$(( 16#$digit ))
 	parity="$(( decimal % 2 ))"
-	(( $( date +%e ) % 2 == parity )) && UPLOAD="true"
+	if (( $( date +%e ) % 2 != parity )); then
+		if [[ ( ${ON_TTY} == "true" || ${ALLSKY_DEBUG_LEVEL} -ge 4) && ${ENDOFNIGHT} == "false"  ]]; then
+			echo "${ME}: Not time to upload - wait until tomorrow."
+		fi
+		exit 0
+	fi
 fi
 
 RETURN_CODE=0
-if [[ ${UPLOAD} == "true" ]]; then
-	if [[ ${DELETE} == "true" ]]; then
-		[[ ${WHISPER} == "false" ]] && echo "${ME}: Deleting Map data."
-	elif [[ ${ON_TTY} == "true" || ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
-		[[ ${WHISPER} == "false" ]] && echo "${ME}: Uploading Map data."
+if [[ ${DELETE} == "true" ]]; then
+	[[ ${WHISPER} == "false" ]] && echo "${ME}: Deleting Map data."
+elif [[ ${ON_TTY} == "true" || ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
+	[[ ${WHISPER} == "false" ]] && echo "${ME}: Uploading Map data."
+fi
+# shellcheck disable=SC2089
+CMD="curl --silent --show-error -i -H 'Accept: application/json' -H 'Content-Type:application/json'"
+# shellcheck disable=SC2089
+CMD2=" --data '$( generate_post_data )'"
+if [[ ${DEBUG} -gt 0 ]]; then
+	MSG="${CMD}"
+	# Not much data is returned by DELETE, so output it all.
+	if [[ ${DEBUG} -eq 1 && ${DELETE} == "false" ]]; then
+		MSG+=" --data '..DATA..'"
+	else
+		MSG+=" ${CMD2}"
 	fi
-	# shellcheck disable=SC2089
-	CMD="curl --silent --show-error -i -H 'Accept: application/json' -H 'Content-Type:application/json'"
-	# shellcheck disable=SC2089
-	CMD2=" --data '$( generate_post_data )'"
-	if [[ ${DEBUG} -gt 0 ]]; then
-		MSG="${CMD}"
-		# Not much data is returned by DELETE, so output it all.
-		if [[ ${DEBUG} -eq 1 && ${DELETE} == "false" ]]; then
-			MSG+=" --data '..DATA..'"
-		else
-			MSG+=" ${CMD2}"
-		fi
-		wD_ "Executing:\n$( indent --spaces "${MSG} ${MAP_COMMAND}" )\n"
+	wD_ "Executing:\n$( indent --spaces "${MSG} ${MAP_COMMAND}" )\n"
+fi
+CMD+=" ${CMD2} ${MAP_COMMAND}"
+
+# shellcheck disable=SC2090,SC2086
+RETURN_STRING="$( eval ${CMD} 2>&1 )"
+RETURN_CODE=$?
+if [[ ${DEBUG} -gt 0 ]]; then
+	MSG="Returned code ${RETURN_CODE}"
+	if [[ ${DEBUG} -gt 1 ]]; then
+		MSG+=":\n$( indent --spaces "${RETURN_STRING:-Nothing returned}" )"
 	fi
-	CMD+=" ${CMD2} ${MAP_COMMAND}"
+	wD_ "${MSG}" >&2
+fi
 
-	# shellcheck disable=SC2090,SC2086
-	RETURN="$( eval ${CMD} 2>&1 )"
-	RETURN_CODE=$?
-	if [[ ${DEBUG} -gt 0 ]]; then
-		MSG="Returned code ${RETURN_CODE}"
-		if [[ ${DEBUG} -gt 1 ]]; then
-			MSG+=":\n$( indent --spaces "${RETURN:-Nothing returned}" )"
-		fi
-		wD_ "${MSG}" >&2
+if [[ ${RETURN_CODE} -ne 0 ]]; then
+	E="ERROR while uploading Map data with curl: ${RETURN_STRING}, CMD=${CMD}."
+	if [[ ${ENDOFNIGHT} == "true" ]]; then
+		echo -e "${ME}: ${E}"		# goes in log file
+		"${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${E}"
+	else
+		wE_ "${ERROR_MSG_START}${E}" >&2
 	fi
+	exit "${RETURN_CODE}"
+fi
 
-	if [[ ${RETURN_CODE} -ne 0 ]]; then
-		E="ERROR while uploading Map data with curl: ${RETURN}, CMD=${CMD}."
-		if [[ ${ENDOFNIGHT} == "true" ]]; then
-			echo -e "${ME}: ${E}"		# goes in log file
-			"${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${E}"
-		else
-			wE_ "${ERROR_MSG_START}${E}" >&2
-		fi
-		exit "${RETURN_CODE}"
+# Check for server error.
+if HTTP="$( echo "${RETURN_STRING}" | grep HTTP )" ; then
+	if [[ ! ${HTTP} =~ 200 ]]; then
+		wW_ "Got server error ${HTTP}"
+		exit 1
 	fi
+fi
 
-	# Check for server error.
-	if HTTP="$( echo "${RETURN}" | grep HTTP )" ; then
-		if [[ ! ${HTTP} =~ 200 ]]; then
-			wW_ "Got server error ${HTTP}"
-			exit 1
-		fi
-	fi
+# Get the return string and other optional info from the server.
+# shellcheck disable=SC2034
+while read -r UNUSED STATUS MORE_INFO
+do
+	if [[ ${STATUS} == "INSERTED" || ${STATUS} == "DELETED" ]]; then
+		wO_ "${MSG_START}Map data ${STATUS}."
 
-	# Get the return string and other optional info from the server.
-	# shellcheck disable=SC2034
-	while read -r UNUSED STATUS MORE_INFO
-	do
-		if [[ ${STATUS} == "INSERTED" || ${STATUS} == "DELETED" ]]; then
-			wO_ "${MSG_START}Map data ${STATUS}."
-
-		elif [[ ${STATUS} == "UPDATED" ]]; then		# UPDATED num_updates  max_updates_allowed
-			MSG=""
-			if [[ -n ${MORE_INFO} ]]; then
-				NUM_UPDATES=${MORE_INFO% *}
-				MAX_UPDATES=${MORE_INFO##* }
-				NUM_LEFT=$((MAX_UPDATES - NUM_UPDATES))
-				if [[ ${NUM_LEFT} -eq 0 ]]; then
-					MSG="  This is your last update allowed today.  You made ${MAX_UPDATES}."
-				else
-					MSG="  You can make ${NUM_LEFT} more updates today."
-				fi
+	elif [[ ${STATUS} == "UPDATED" ]]; then		# UPDATED num_updates  max_updates_allowed
+		MSG=""
+		if [[ -n ${MORE_INFO} ]]; then
+			read -r NUM_UPDATES MAX_UPDATES <<< "${MORE_INFO}"
+			NUM_LEFT=$((MAX_UPDATES - NUM_UPDATES))
+			if [[ ${NUM_LEFT} -eq 0 ]]; then
+				MSG="  This is your last update allowed today.  You made ${MAX_UPDATES}."
+			else
+				MSG="  You can make ${NUM_LEFT} more updates today."
 			fi
-			[[ ${ENDOFNIGHT} == "false" ]] && wO_ "${MSG_START}Map data UPDATED.${MSG}"
+		fi
+		[[ ${ENDOFNIGHT} == "false" ]] && wO_ "${MSG_START}Map data UPDATED.${MSG}"
 
-		elif [[ -z ${STATUS} ]]; then
-			E="ERROR: No status returned from server: ${RETURN}."
-			wE_ "${ERROR_MSG_START}${E}"
-			[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${E}"
-			RETURN_CODE=2
+	elif [[ -z ${STATUS} ]]; then
+		E="ERROR: No status returned from server: ${RETURN_STRING}."
+		wE_ "${ERROR_MSG_START}${E}"
+		[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${E}"
+		RETURN_CODE=2
 
-		elif [[ ${STATUS} == "ERROR" ]]; then
-			E="ERROR returned while uploading Map data: ${MORE_INFO}."
-			wE_ "${ERROR_MSG_START}${E}"
-			[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${E}"
-			RETURN_CODE=2
+	elif [[ ${STATUS} == "ERROR" ]]; then
+		E="ERROR returned while uploading Map data: ${MORE_INFO}."
+		wE_ "${ERROR_MSG_START}${E}"
+		[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${E}"
+		RETURN_CODE=2
 
-		elif [[ ${STATUS} == "MESSAGE" ]]; then
-			I="Message from Map server: ${MORE_INFO}."
-			wI_ "${ERROR_MSG_START}${I}"
-			# Don't include our name in the message.  It's not an error.
-			[[ ${ENDOFNIGHT} != "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" --type info --msg "${I}"
+	elif [[ ${STATUS} == "MESSAGE" ]]; then
+		I="Message from Map server: ${MORE_INFO}."
+		wI_ "${ERROR_MSG_START}${I}"
+		# Don't include our name in the message.  It's not an error.
+		[[ ${ENDOFNIGHT} != "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" --type info --msg "${I}"
 
-		elif [[ ${STATUS} == "ALREADY_UPDATED" ]]; then
-			MAX_UPDATES="${MORE_INFO}"
-			MSG="NOTICE: You have already updated your Map data the maximum of ${MAX_UPDATES} times per day.  Try again tomorrow."
-			wW_ "${WARNING_MSG_START}${MSG}"
-			[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" --type warning --msg "${ME}: ${MSG}"
+	elif [[ ${STATUS} == "ALREADY_UPDATED" ]]; then
+		MAX_UPDATES="${MORE_INFO}"
+		MSG="NOTICE: You have already updated your Map data the maximum of ${MAX_UPDATES} times per day.  Try again tomorrow."
+		wW_ "${WARNING_MSG_START}${MSG}"
+		[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" --type warning --msg "${ME}: ${MSG}"
 
-		elif [[ -n ${STATUS} ]]; then
-			E="ERROR: Unknown status from server: [${STATUS}].  Contact the Allsky Team."
-			wE_ "${ERROR_MSG_START}${E}"
-			[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${E}"
-			RETURN_CODE=2
+	elif [[ -n ${STATUS} ]]; then
+		E="ERROR: Unknown status from server: [${STATUS}].  Contact the Allsky Team."
+		wE_ "${ERROR_MSG_START}${E}"
+		[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${E}"
+		RETURN_CODE=2
 
 # FIX: we should never get here because this loop only looks at lines that begin with "RETURN ".
-		else
-			E="ERROR Got unknown error while uploading Map data: ${STATUS:-No output}."
-			wE_ "${ERROR_MSG_START}${E}"
-			[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${E}"
-			RETURN_CODE=2
-		fi
-	done <<< "$( echo "${RETURN}" | grep "^RETURN " )"
-
-elif [[ ( ${ON_TTY} == "true" || ${ALLSKY_DEBUG_LEVEL} -ge 4) && ${ENDOFNIGHT} == "false"  ]]; then
-	echo "${ME}: Not time to upload - wait until tomorrow."
-fi
+	else
+		E="ERROR Got unknown error while uploading Map data: ${STATUS:-No output}."
+		wE_ "${ERROR_MSG_START}${E}"
+		[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${E}"
+		RETURN_CODE=2
+	fi
+done <<< "$( echo "${RETURN_STRING}" | grep "^RETURN " )"
 
 exit "${RETURN_CODE}"

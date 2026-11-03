@@ -112,6 +112,7 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" || ${1} == "--force" ]]; then
 	# Holds all the scripts.
 	ALLSKY_SCRIPTS="${ALLSKY_HOME}/scripts"
 	ALLSKY_UTILITIES="${ALLSKY_SCRIPTS}/utilities"
+	ALLSKY_MIGRATIONS_DIR="${ALLSKY_UTILITIES}/migrations"
 
 	# Holds all the binaries.
 	ALLSKY_BIN="${ALLSKY_HOME}/bin"

@@ -9,7 +9,8 @@ v2026.10.01 { data-toc-label="v2026.10.01" }
 
     ???+ "v2026.10.01_02 - Point Release # 2"
 
-        <!-- ## **Changes that may require action (upgrades only)** -->
+        ## **Changes that may require action (upgrades only)**
+        - The **Solar System** module now only runs in the **Periodic** flow. Running it for every image as well did the same work several times. Upgrading moves it from the Daytime and Nighttime flows to the Periodic flow with its settings. Its values, e.g. satellite positions, are now updated as often as the Periodic flow runs (every 60 seconds by default); lower the ==Periodic Timer== in the **Module Manager** settings if you need them more often.
 
         <!-- ## **Major New Features (described more below)** -->
 

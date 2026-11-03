@@ -1720,47 +1720,6 @@ convert_settings_file()			# prior_file, new_file
 		exit_installation 1 "${STATUS_ERROR}" "${MSG}."
 	fi
 
-	# Starting in v2026.10.01_02, cameras whose cameramodel is "Module 3" may now have the full name,
-	# e.g., "Module 3 Wide NoIR".
-	# This means the settings file name must also change.
-	# We need to look in the cc file to determine what the new file name and setting value should be.
-	# Possibilities: "imx708", "imx708_wide", "imx708_noir", "imx708_wide_noir"
-	# The CC file may not exist yet so use the prior file.
-	NAME="$( basename "${NEW_FILE}" )"
-	OLD_FILE="${PRIOR_CONFIG_DIR}/${NAME}"
-	if [[ ${PRIOR_ALLSKY_VERSION} < "v2026.10.01_02" && ${NAME} == "settings_RPi_Module_3.json" ]]; then
-		local NEW
-		OLD_CC_FILE="${OLD_FILE/settings/cc}"
-		if [[ -f ${OLD_CC_FILE} ]]; then
-			NEW_MODEL_NAME=""
-			local SENSOR="$( settings ".sensor" "${OLD_CC_FILE}" )"
-			[[ ${SENSOR} =~ "wide" ]] && NEW_MODEL_NAME+=" Wide"
-			[[ ${SENSOR} =~ "noir" ]] && NEW_MODEL_NAME+=" NoIR"
-			if [[ -n ${NEW_MODEL_NAME} ]]; then
-				NEW_MODEL_NAME="Module 3${NEW_MODEL_NAME}"
-				display_msg --log progress "Updating camera model from 'Module 3' to '${NEW_MODEL_NAME}' in '${NEW_FILE}'."
-				update_json_file ".cameramodel" "${NEW_MODEL_NAME}" "${NEW_FILE}" "text"
-
-				NEW_MODEL_FILE_NAME="${NEW_MODEL_NAME// /_}"
-
-				NEW="${NEW_FILE/Module_3/${NEW_MODEL_FILE_NAME}}"
-				display_msg --log info "Renaming '${NEW_FILE}' to '${NEW}'."
-				mv "${NEW_FILE}" "${NEW}"
-				NEW_FILE="${NEW}"
-
-				NEW_CC_FILE="${ALLSKY_CONFIG}/${NAME/settings/cc}"
-				if [[ -f ${NEW_CC_FILE} ]]; then
-					display_msg --logonly info "Renaming '${NEW_CC_FILE}' to '${NEW}'."
-					NEW="${NEW_CC_FILE/Module_3/${NEW_MODEL_FILE_NAME}}"
-					mv "${NEW_CC_FILE}" "${NEW}"
-				fi
-			# else it's just a "Module 3" camera, so nothing to do.
-			fi
-		else
-			display_msg --logonly info "Prior CC file '${OLD_CC_FILE}' not found."
-		fi
-	fi
-
 	# For each field in prior file, update new file with old value.
 	# Then handle fields that changed locations or names.
 	# We can't add new fields here since the settings file and the options file may
@@ -1922,7 +1881,6 @@ convert_settings_file()			# prior_file, new_file
 				*)
 					# Since we don't know the setting name, we don't know its type.
 					# Any setting that's not new, old, or changed (most of them), comes here.
-## [[ $FIELD == "cameramodel" ]] && echo "XXXX FIELD=$FIELD, VALUE=$VALUE, $NEW_FILE"
 					doV "${FIELD}" "VALUE" "${FIELD}" "" "${NEW_FILE}"
 					;;
 			esac
@@ -1983,7 +1941,6 @@ convert_settings_file()			# prior_file, new_file
 			display_msg --logonly info "Prior CC file '${OLD_CC_FILE}' not found."
 		fi
 	fi
-
 }
 
 
@@ -2665,6 +2622,7 @@ restore_prior_website_files()
 		else
 			display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
 		fi
+	else
 		display_msg --logonly info "${ITEM}: Directory '${D2}' does not exist."
 	fi
 

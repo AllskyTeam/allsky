@@ -161,7 +161,7 @@ class MODULEUTIL extends UTILBASE {
                                     $arrFiles[$entry]['metadata']->experimental = $experimental;
                                 }
                             } else {
-								error_log("ERROR: json_decode(metaData) failed: " . json_last_error_msg() . "\n");
+								error_log("ERROR: json_decode(metaData) for $entry failed: " . json_last_error_msg() . "\n");
                                 $arrFiles[$entry] = [
                                     'module' => $entry,
                                     'metadata' => (object)[],

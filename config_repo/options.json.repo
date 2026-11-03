@@ -2417,7 +2417,7 @@
 },
 {
 "name" : "cameratab========================================",
-"label" : "Camera Type",
+"label" : "Camera",
 "type" : "header-tab"
 },
 {
@@ -2426,39 +2426,14 @@
 "type" : "header"
 },
 {
-"name" : "cameratype",
+"name" : "camerainfo",
 "default" : "",
-"description" : "The type of camera you are using.<br>To change to a camera of a different type, select the new type then press the 'Save changes' button, THEN select the new <span class='WebUISetting'>Camera Model</span>.",
-"label" : "Camera Type",
+"description" : "The camera to use. All cameras connected to the Pi are listed; RPi cameras show their sensor in brackets.<br>Select <span class='WebUISetting'>Refresh</span> and save the settings to look for cameras again, for example after connecting a new one.<br>When you change the camera you can't change any other setting at the same time.",
+"label" : "Camera",
 "type" : "select_text",
 "options" : [
-	"cameratype_values"
+	"camerainfo_values"
 ],
-"checkchanges" : true,
-"action" : "restart"
-},
-{
-"name" : "cameramodel",
-"default" : "",
-"description" : "The model of camera you are using.",
-"label" : "Camera Model",
-"readonly" : true,
-"type" : "select_text",
-"options" : [
-	"cameramodel_values"
-],
-"usage" : "capture",
-"checkchanges" : true,
-"action" : "restart"
-},
-{
-"name" : "cameranumber",
-"settingsonly" : true,
-"default" : 0,
-"description" : "If multiple cameras are connected to the Pi, this is the camera number (starts at 0).",
-"label" : "Camera Number",
-"type" : "integer",
-"usage" : "capture",
 "checkchanges" : true,
 "action" : "restart"
 },

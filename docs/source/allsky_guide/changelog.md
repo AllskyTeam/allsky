@@ -1,34 +1,10 @@
-This page lists the major changes to all Allsky releases.
-You can also see the
-Known Issues and Limitations
-of the current release.
+This page lists the major changes to all Allsky releases up to and including v2026.10.01_01.
+To see changes to newer releases see the "Upgrade Notes" page for that release.
+
 ---
 v2026.10.01 { data-toc-label="v2026.10.01" }
 ???+ "v2026.10.01"
     ### v2026.10.01
-
-    ???+ "v2026.10.01_02 - Point Release # 2"
-
-        <!-- ## **Changes that may require action (upgrades only)** -->
-
-        <!-- ## **Major New Features (described more below)** -->
-
-        ## **Enhancements / Changes**
-        - **feature 1**
-            - blah blah
-
-        - **feature 2**
-            - blah blah
-
-        ## **Bug Fixes**
-		- xxx
-
-        ## **Deleted Settings**
-		- xxx
-
-        ## **New Settings**
-		- xxx
-
 
     ???+ "v2026.10.01_01 - Point Release # 1"
 

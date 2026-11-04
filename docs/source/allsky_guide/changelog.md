@@ -1,38 +1,10 @@
-This page lists the major changes to all Allsky releases.
-You can also see the
-Known Issues and Limitations
-of the current release.
+This page lists the major changes to all Allsky releases up to and including v2026.10.01_01.
+To see changes to newer releases see the "Upgrade Notes" page for that release.
+
 ---
 v2026.10.01 { data-toc-label="v2026.10.01" }
 ???+ "v2026.10.01"
     ### v2026.10.01
-
-    ???+ "v2026.10.01_02 - Point Release # 2"
-
-        <!-- ## **Changes that may require action (upgrades only)** -->
-
-        <!-- ## **Major New Features (described more below)** -->
-
-        ## **Enhancements / Changes**
-        - **Allsky Map and privacy**
-            - If your camera isn't on the [Allsky Map](howtos/allsky_map.html), the installation asks if you want to add it. The answer defaults to ==No==, and if you keep it you won't be asked again for a year.
-            - The new ==Hide Exact Location== setting rounds the ==Latitude== and ==Longitude== on the Allsky Map and the local and remote Allsky Websites to the nearest 0.02 degrees, so they are at most about 1.3 km (0.8 miles) from your real location. Allsky itself still uses the exact values.
-        - **feature 1**
-            - blah blah
-
-        - **feature 2**
-            - blah blah
-
-        ## **Bug Fixes**
-		- xxx
-
-        ## **Deleted Settings**
-		- xxx
-
-        ## **New Settings**
-        - ==Hide Exact Location== (right after ==Latitude== and ==Longitude==)
-		- xxx
-
 
     ???+ "v2026.10.01_01 - Point Release # 1"
 

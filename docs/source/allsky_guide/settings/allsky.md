@@ -20,7 +20,7 @@ AllskySettings
 
     If you are new to Allsky, this page can feel like far too much all at once. That is normal. The Allsky Settings page is a full operational control panel, not a small first-run wizard, and most users do **not** need to understand every setting before they can get good results.
 
-    In practical use, people usually begin by adjusting a smaller set of settings that has the biggest effect on everyday capture and publishing. The groups below are the settings that most often need attention first. They are not the only settings that matter, but they are the ones that usually make the biggest difference when you are moving from “it runs” to “it works well”.
+    In practical use, people usually begin by adjusting a smaller set of settings that has the biggest effect on everyday capture and publishing. The groups below are the settings that most often need attention first. They are not the only settings that matter, but they are the ones that usually make the biggest difference when you are moving from "it runs" to "it works well".
 
     ### Day capture
 
@@ -36,7 +36,7 @@ AllskySettings
     - **Delay**: this controls how often daytime frames are taken. Shorter delays mean more captures, which can also mean more disk usage if you are saving daytime images.
     - **Tuning File**: Raspberry Pi camera users sometimes revisit this if they are using a custom daytime tuning profile.
 
-    A sensible aim for daytime capture is not “the brightest possible image”. It is a reliable image that looks natural, updates at a sensible rate, and does not generate more stored data than you actually want to keep.
+    A sensible aim for daytime capture is not "the brightest possible image". It is a reliable image that looks natural, updates at a sensible rate, and does not generate more stored data than you actually want to keep.
 
     ### Night capture
 
@@ -346,7 +346,7 @@ AllskySettings
         |---|---:|---|
         | ==Number Of Images== | 0 | A "mini-timelapse" only includes the most recent images and is created often. It's a good way to see "recent" activity. This setting determines the number of images in the mini-timelapse. Keep in mind the more images you have the longer it'll take to create the video. 30 is a good starting point. `0` disables mini-timelapse creation.  <br><br>==Note that each mini-timelapse overwrites the prior one.==  <br><br>The following settings only apply if this setting is greater than 0. |
         | ==Force Creation== | No | Should a mini-timelapse be created even if ==Number Of Images== images haven't been taken yet? For example, you want 15 images in each mini-timelapse but only 5 have been taken; should a mini-timelapse still be created? |
-        | ==Frequency== | 5 | After how many images should the mini-timelapse be created? Slower machines and machines with slow networks should use higher numbers. 3–5 works well on a Pi 4 with 4 GB memory. Every ==Frequency== images a new mini-timelapse is created using the last ==Number Of Images== images.  <br><br> ⚠️ Be ==very== careful when setting ==Number Of Images== and ==Frequency==. If either or both numbers are too high, or the daytime/nighttime ==Delay== is too short, there may not be enough time to finish one mini timelapse creation before the next one starts. If this happens the second one will be aborted and you'll see a System Message in the WebUI. |
+        | ==Frequency== | 5 | After how many images should the mini-timelapse be created? Slower machines and machines with slow networks should use higher numbers. 3-5 works well on a Pi 4 with 4 GB memory. Every ==Frequency== images a new mini-timelapse is created using the last ==Number Of Images== images.  <br><br> ?? Be ==very== careful when setting ==Number Of Images== and ==Frequency==. If either or both numbers are too high, or the daytime/nighttime ==Delay== is too short, there may not be enough time to finish one mini timelapse creation before the next one starts. If this happens the second one will be aborted and you'll see a System Message in the WebUI. |
         | ==Width== | 0 |  |
         | ==Height== | 0 |  |
         | ==Bitrate== | 2000 | This is normally smaller than a full timelapse to save on processing time. |
@@ -372,7 +372,7 @@ AllskySettings
         | ==End Time== |  | Only use images taken at or before this time in the keogram. Empty uses the last image of the day. See [Start and End Times](#Start-end-times). |
         | ==Expand== | Yes | Enable to expand keograms to the image width. Same as the `--image-expand` and `-x` options. |
         | ==Font Name== | Simplex | Font name. |
-        | ==Font Color== | #ffffff (white) | Color of the date/time label on the keogram. Same as the `--font-color` and `-C` options.  <br><br>The color can be specified using one of the following:  <br>1. Three comma- or space-separated numbers between `0` and `255` in RGB order. Example: `0,255,0` (green), `255 0 1` (red with a tiny bit of blue).  <br>2. `#` followed by ==six== hex digits `00` to `ff` in RGB order. Example: `#00ff00` (green), `#ff0001` (red with a tiny bit of blue).  <br>3. `#` followed by ==three== hex digits `0` to `f` in RGB order. Example: `#0f0` == `#00ff00` (green), `#f00` == `#ff0011` (red with a little bit of blue).  <br><br>Hex digits include 0–9 and a–f, where hex `a` = decimal `10`, … hex `f` = decimal `15`. Hex `10` = decimal `16` and hex `ff` = decimal `255`.  <br><br>Larger values mean more of that color: `#000000` is black, `255 255 255` is white, `128,128,128` is middle gray. |
+        | ==Font Color== | #ffffff (white) | Color of the date/time label on the keogram. Same as the `--font-color` and `-C` options.  <br><br>The color can be specified using one of the following:  <br>1. Three comma- or space-separated numbers between `0` and `255` in RGB order. Example: `0,255,0` (green), `255 0 1` (red with a tiny bit of blue).  <br>2. `#` followed by ==six== hex digits `00` to `ff` in RGB order. Example: `#00ff00` (green), `#ff0001` (red with a tiny bit of blue).  <br>3. `#` followed by ==three== hex digits `0` to `f` in RGB order. Example: `#0f0` == `#00ff00` (green), `#f00` == `#ff0011` (red with a little bit of blue).  <br><br>Hex digits include 0-9 and a-f, where hex `a` = decimal `10`, ... hex `f` = decimal `15`. Hex `10` = decimal `16` and hex `ff` = decimal `255`.  <br><br>Larger values mean more of that color: `#000000` is black, `255 255 255` is white, `128,128,128` is middle gray. |
         | ==Font Size== | 2 | Font size. Same as the `--font-size` and `-S` options. |
         | ==Font Line Thickness== | 3 | Thickness of the font's line. Same as the `--font-line` and `-L` options. |
         | ==Extra Parameters== |  | Optional additional keogram creation parameters. Execute `~/allsky/bin/keogram --help` for a list of options. |
@@ -468,13 +468,13 @@ When you change one of these settings in the WebUI, Allsky checks the value. If 
         | WebUI Setting { .w-20p } | Default { .w-10p }  | Description |
         |---|---:|---|
         | ==Use Remote Website== | No | Enable to use a ==remote== Allsky Website. Enable the Website ==BEFORE== you [install](/docs/allsky_guide/website.html) it since the installation needs the settings below. |
-        | ==Image Directory== |  | Name of the directory the current image should be uploaded to.  <br><br> This setting is a major cause of confusion for many users. If you don't know what to enter, ask the person or company supporting the server or look in [Troubleshooting → Uploads](/docs/allsky_guide/troubleshooting/uploads.html) for more information. |
-        | ==Protocol== | ftps | Specifies how files should be uploaded to the remote Website.  <br><br>- `ftps`: secure FTP  <br>- `sftp`: SSH file transfer  <br>- `ftp`: insecure FTP *(not recommended)*  <br>- `scp`: secure copy  <br>- `rsync`: rsync copy  <br>- `s3`: Amazon Web Services  <br>- `gcs`: Google Cloud Storage  <br><br> ⚠️ `ftp` is unsecure; please use `ftps` or `sftp` instead.  <br><br>Some of the settings below only apply to certain protocols. |
+        | ==Image Directory== |  | Name of the directory the current image should be uploaded to.  <br><br> This setting is a major cause of confusion for many users. If you don't know what to enter, ask the person or company supporting the server or look in [Troubleshooting -> Uploads](/docs/allsky_guide/troubleshooting/uploads.html) for more information. |
+        | ==Protocol== | ftps | Specifies how files should be uploaded to the remote Website.  <br><br>- `ftps`: secure FTP  <br>- `sftp`: SSH file transfer  <br>- `ftp`: insecure FTP *(not recommended)*  <br>- `scp`: secure copy  <br>- `rsync`: rsync copy  <br>- `s3`: Amazon Web Services  <br>- `gcs`: Google Cloud Storage  <br><br> `ftp` is unsecure; please use `ftps` or `sftp` instead.  <br><br>Some of the settings below only apply to certain protocols. |
         | ==Server Name== |  | Name of the remote server. Note this is normally ==NOT== the same as the URL used to access the server. |
         | ==Port== |  | (ftp protocols only) Optional port required by the server. Rarely needed. |
         | ==User Name== |  | The username of the login on the remote Website. |
         | ==Password== |  | The password of the login on the remote Website. |
-        | ==FTP Commands== |  | (ftp protocols only) Optional command(s) to send to the ftp server prior to transferring files. If you need multiple commands, separate them with a semi-colon. See [Troubleshooting → Uploads](/docs/allsky_guide/troubleshooting/uploads.html). |
+        | ==FTP Commands== |  | (ftp protocols only) Optional command(s) to send to the ftp server prior to transferring files. If you need multiple commands, separate them with a semi-colon. See [Troubleshooting -> Uploads](/docs/allsky_guide/troubleshooting/uploads.html). |
         | ==SSH Public Key File== |  | (scp and rsync protocols only) Path to the SSH public key file.  <br><br>You need to set up SSH key authentication on your server. First generate a key on your Pi:  <br><br>`ssh-keygen -t rsa`<br><br>Leave the default filename and use an empty passphrase. Then copy the key to your server:  <br><br>`ssh-copy-id remote_username@remote_server`<br><br>Replace `remote_username` and `remote_server` appropriately. If prompted to continue connecting, enter `yes`.  <br><br>The private key will be stored in `~/.ssh/id_rsa`.  <br><br>If you are using SSH Key with Amazon Lightsail, copy `ssh-key.pem` to your Pi (e.g., in `~`), run:  <br><br>`chmod 400 ~/ssh-key.pem`<br><br>and set:  <br><br>- Protocol: `sftp`  <br>- Server Name: `remote host name`  <br>- User Name: `remote user name`  <br>- Password: `n/a`  <br>- FTP Commands: `set sftp:connect-program 'ssh -a -x -i /home/pi/ssh-key.pem'` |
         | ==AWS CLI Directory== |  | (s3 protocol only) Directory on the Pi where the AWS CLI tools are installed, typically `${HOME}/.local/bin`. Install and configure:  <br><br>`pip3 install awscli --upgrade --user`<br>`export PATH=\"${HOME}/.local/bin:${PATH}\"aws configure`<br><br>Enter a valid access key ID, Secret Access Key, Default region name (e.g., `us-west-2`), and set Default output format to `json`. |
         | ==S3 Bucket== |  | (s3 protocol only) Name of the S3 bucket where files will be uploaded to (must be in the Default region above). Suggested name: `allskybucket`. Consider turning off/limiting bucket versioning to avoid consuming lots of space with multiple versions of `image.jpg`. |
@@ -530,7 +530,7 @@ When you change one of these settings in the WebUI, Allsky checks the value. If 
 
     | WebUI Setting { .w-20p } | Default { .w-10p }  | Description |
     |---|---:|---|
-    | ==Images Sort Order== | Ascending | Determines how the images for a day in the WebUI's ==Images== page are displayed. ==Ascending== sorts oldest → newest. ==Descending== sorts newest → oldest. |
+    | ==Images Sort Order== | Ascending | Determines how the images for a day in the WebUI's ==Images== page are displayed. ==Ascending== sorts oldest -> newest. ==Descending== sorts newest -> oldest. |
     | ==Show Updated Message== | Yes | Determines whether the `Daytime images updated every...` message in the ==Live View== page is shown. |
     | ==Require WebUI Login== | Yes | Determines if you need to log into the WebUI. ==If your Pi is accessible on the Internet, do NOT disable this!!== |
     | ==System Page Additions== |  | One or more colon-separated full path names to text files that contain user-supplied data to display on the WebUI's ==System== page. See [System Page Additions](/docs/allsky_guide/howtos/system_page.html) for more information and an example. |
@@ -538,7 +538,7 @@ When you change one of these settings in the WebUI, Allsky checks the value. If 
 ## Database { data-toc-label="Database" id="Database-settings"}
 ???+ info "Settings"
 
-    > ⚠️ Only change the database settings if you know what you are doing.
+    > ?? Only change the database settings if you know what you are doing.
 
     | WebUI Setting { .w-20p } | Default { .w-10p }  | Description |
     |---|---:|---|
@@ -554,5 +554,5 @@ When you change one of these settings in the WebUI, Allsky checks the value. If 
 
     | WebUI Setting { .w-20p } | Default { .w-10p }  | Description |
     |---|---:|---|
-    | ==Camera Type== |  | The type of camera you are using: ZWO or RPi. To select a camera of a different ==Camera Type==:  <br>1. Select the Type.  <br>2. Save the change via the ==Save changes== button.  <br>3. Update the ==Camera Model== as desired.  <br><br>If you connect or disconnect a camera on the Pi, select ==Refresh== to update the list of camera types and models. |
-    | ==Camera Model== |  | The model of camera you are using. Note this list is only the models of the current ==Camera Type==. |
+    | ==Camera== |  | The camera to use. All cameras connected to the Pi are listed, RPi and ZWO, for example:  <br>`RPi  Module 3 Wide NoIR  [imx708_wide_noir]`  <br>`ZWO  ASI178MC`  <br>RPi cameras show their sensor in brackets.  <br><br>To use another camera, select it and save the change via the ==Save changes== button. You can't change any other setting at the same time.  <br><br>If you connect or disconnect a camera on the Pi, select ==Refresh== and save to look for cameras again; the current camera stays selected. A camera that's selected but no longer connected is shown as `(not connected)`. |
+

@@ -472,7 +472,9 @@
                             data: 'value',
                             render: function (data, type, row, meta) {
                                 let result = data
-                                if (result !== null && typeof result === 'object') {
+                                if (Array.isArray(data)) {
+                                    result = JSON.stringify(data)
+                                } else if (result !== null && typeof result === 'object') {
                                     let toolTip = ''
                                     Object.entries(result).forEach(([key, value]) => {
                                         toolTip += `${key} = ${value}, `
@@ -480,10 +482,8 @@
                                     toolTip = toolTip.slice(0, -2)
                                     result = data.value + '&nbsp;<a href="#" data-toggle="tooltip" title="' + toolTip + '">Options</a>'
                                 }
-                                if (data !== null) {
-                                    if (type === 'display' && data.length > 10) {
-                                        result = '<span data-toggle="tooltip" title="' + data + '">' + data.substr(0, 10) + '…</span>';
-                                    }
+                                if (type === 'display' && (typeof data === 'string' || Array.isArray(data)) && result.length > 10) {
+                                    result = '<span data-toggle="tooltip" title="' + result + '">' + result.substr(0, 10) + '…</span>';
                                 }
 
                                 return result

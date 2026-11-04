@@ -9,6 +9,9 @@ import subprocess
 # Ensure the script is running in the correct Python environment
 allsky_home = os.environ['ALLSKY_HOME']
 here = os.path.dirname(os.path.abspath(__file__))
+modules_dir = os.path.dirname(here)
+if modules_dir not in sys.path:
+	sys.path.insert(0, modules_dir)
 venv_dir = os.path.join(allsky_home, 'venv')
 venv_python = os.path.join(venv_dir, 'bin', 'python3')
 if sys.executable != venv_python:
@@ -24,6 +27,7 @@ import time
 import html
 from pathlib import Path
 from pprint import pprint
+from allskyvariables.extra_text import parse_extra_text_file
 
 
 try:
@@ -180,39 +184,20 @@ class ALLSKYOVERLAYDATA:
 	def _read_text_file(self, file_name):
 		entry = Path(file_name).name     
 		stem = Path(entry).stem
-		with open(file_name, 'r') as f:
-			data = {}
-			for line in f:
-				line = line.strip()
-				if not line or '=' not in line:
-					continue
-				key, value = line.split('=', 1)
-				key = key.strip()
-				value = value.strip()
-				out_key = key.upper()
-				type = 'string'
-				try:
-					value = int(value)
-					type = 'number'
-				except ValueError:
-					try:
-						value = float(value)
-						type = 'number'
-					except ValueError:
-						value = value
-						type = 'string'
-
-				data = {
-					"name": "${" + key + "}",
-					"format": "",
-					"sample": "",
-					"group": "User",
-					"description": "Allsky variable " + key,
-					"type": type,
-					"source": stem,
-					"value": value
-				}
-				self.extra_fields[out_key] = data
+		for key, value in parse_extra_text_file(file_name).items():
+			out_key = key.upper()
+			value_type = 'number' if isinstance(value, (int, float)) else 'string'
+			data = {
+				"name": "${" + key.upper() + "}",
+				"format": "",
+				"sample": "",
+				"group": "User",
+				"description": "Allsky variable " + key,
+				"type": value_type,
+				"source": stem,
+				"value": value
+			}
+			self.extra_fields[out_key] = data
 
 	def _read_data(self, file_name):
 		file_extension = Path(file_name).suffix

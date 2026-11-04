@@ -879,6 +879,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../upgrade/v2026.10.01_02.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v2026.10.01_02
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../upgrade/v2026.10.01_01.html" class="md-nav__link">
         
   
@@ -1826,7 +1854,7 @@
   <span class="md-ellipsis">
     
   
-    Startrails Helper Tool
+    Startrails
   
 
     
@@ -1854,7 +1882,7 @@
   <span class="md-ellipsis">
     
   
-    Image Stretch Helper Tool
+    Image Stretch
   
 
     
@@ -1882,7 +1910,7 @@
   <span class="md-ellipsis">
     
   
-    Timelapse Helper Tool
+    Timelapse
   
 
     
@@ -1910,7 +1938,7 @@
   <span class="md-ellipsis">
     
   
-    Constellation Overlay Helper Tool
+    Constellation Overlay
   
 
     
@@ -2934,62 +2962,6 @@
   
   
   
-    <li class="md-nav__item">
-      <a href="../known_issues.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Known Issues
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../changelog.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    ChangeLog
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
     
     
     
@@ -3004,10 +2976,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_12">
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_10">
         
           
-          <label class="md-nav__link" for="__nav_2_12" id="__nav_2_12_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_2_10" id="__nav_2_10_label" tabindex="0">
             
   
   
@@ -3025,8 +2997,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_12_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_12">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_10">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -6297,6 +6269,7 @@
 </tr>
 </tbody>
 </table>
+<p>Text files also accept <code>name:value</code> and quoted lines such as <code>"AG_TEMP":"14.3",</code> or <code>"AG_TEMP"="14.3"</code>. These can be mixed with <code>name=value</code> lines. Quoted colon lines can be a JSON fragment with no opening <code>{</code>; a final <code>}</code> is optional. Structured values such as arrays must use quoted lines. Variable names are converted to uppercase in the overlay editor.</p>
 <p>The data in these files could become old if the application creating them fails or is not running. To have Allsky detect this you tell it to ignore "extra" files when they are over a certain age. For .txt files there is a single value which is specified in the Overlay Editor settings dialog box. See the next section for how to specify the expiration time for .json files.</p>
 <h3 id="json-files">JSON Files<a class="headerlink" href="#json-files" title="Permanent link">¶</a></h3>
 <p>.json files are more complex in their structure but provide a lot more flexibility to add your own variables and even control the attributes of a field.</p>

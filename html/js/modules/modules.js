@@ -1199,7 +1199,7 @@ class MODULESEDITOR {
 					}
 
 					if (fieldType == 'variable') {
-						inputHTML = '<textarea rows=10 id="' + key + '" name="' + key + '" class="form-control" disabled="disabled" value="' + fieldValue + '"' + required + fieldDescription + '>' + fieldValue + '</textarea>';
+						inputHTML = '<textarea rows=1 id="' + key + '" name="' + key + '" class="form-control" disabled="disabled" value="' + fieldValue + '"' + required + fieldDescription + '>' + fieldValue + '</textarea>';
 						extraClass = 'input-group1';
 						let selectType = 'single';
 						if ('select' in fieldTypeData) {

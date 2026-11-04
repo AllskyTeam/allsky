@@ -173,6 +173,70 @@ function add_field($f, $v, $setting, $type=null) {	// field, value, setting_name
 	$options_str .= quote_value($v, null);
 }
 
+// The "camerainfo" setting: "type;number;model;sensor", the sensor only for RPi
+// and without a trailing ";" when there's none (see set_camera_info() in functions.sh).
+function camera_info($type, $number, $model, $sensor) {
+	$info = "$type;$number;$model";
+	if ($sensor !== "" && $sensor !== null) $info .= ";$sensor";
+	return $info;
+}
+
+// The choices for the "camerainfo" setting: every connected camera of every type,
+// from the connected cameras file, then "Refresh".
+// The current camera is always listed so the WebUI never changes it by accident,
+// even if it's no longer connected.
+function camera_info_options() {
+	global $cc_array;
+
+	$file = ALLSKY_CONNECTED_CAMERAS_INFO;
+
+	// Lines (tab-separated):
+	//		camera  RPi  number  sensor  module_len  model  <other info not used here>
+	//		camera  ZWO  number  model   0           model
+	$options = array();
+	$lines = @file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+	if ($lines === false) {
+		echo "WARNING: Unable to read '$file'; only the current camera is listed.\n";
+		$lines = array();
+	}
+	foreach ($lines as $line) {
+		$f = explode("\t", $line);
+		if ($f[0] !== "camera" || count($f) < 6) continue;
+		$type = $f[1];
+		$number = $f[2];
+		$model = $f[5];
+		if ($type === "RPi") {
+			$sensor = $f[3];
+			$label = "$type  $model  [$sensor]";
+		} else {
+			$sensor = "";
+			$label = "$type  $model";
+		}
+		$options[] = array("value" => camera_info($type, $number, $model, $sensor), "label" => $label);
+	}
+
+	$type = getVariableOrDefault($cc_array, "cameraType", "");
+	$number = getVariableOrDefault($cc_array, "cameraNumber", "0");
+	$model = getVariableOrDefault($cc_array, "cameraModel", "");
+	$sensor = ($type === "RPi") ? getVariableOrDefault($cc_array, "sensor", "") : "";
+	$current = camera_info($type, $number, $model, $sensor);
+	$found = false;
+	foreach ($options as $opt) {
+		if ($opt["value"] === $current) {
+			$found = true;
+			break;
+		}
+	}
+	if (! $found) {
+		$label = "$type  $model";
+		if ($sensor !== "") $label .= "  [$sensor]";
+		array_unshift($options, array("value" => $current, "label" => "$label  (not connected)"));
+	}
+
+	$options[] = array("value" => "Refresh", "label" => "Refresh");
+	return $options;
+}
+
 // Add the options for the specified field to the options string.
 // The cc_array entry for these fields are all at the top level.
 // The camera capabilities already has the list in json format.
@@ -181,11 +245,9 @@ function handle_options($f) {
 	global $options_str;
 	global $cc_array;
 
-	if ($f === "cameratype")
-		$cc_field = "cameraTypes";
-	elseif ($f === "cameramodel")
-		$cc_field = "cameraModels";
-	elseif ($f === "bin")
+	if ($f === "camerainfo") {
+		$cc_options = camera_info_options();
+	} elseif ($f === "bin")
 		$cc_field = "supportedBins";
 	elseif ($f === "type")
 		$cc_field = "supportedImageFormats";
@@ -195,10 +257,12 @@ function handle_options($f) {
 		echo "ERROR: '$f' does not have an 'options' field\n";
 		return;
 	}
-	$cc_options = getVariableOrDefault($cc_array, $cc_field, null);
-	if ($cc_options === null) {
-		echo "ERROR: Could not find '$cc_field' for field '$f'.\n";
-		return false;
+	if ($f !== "camerainfo") {
+		$cc_options = getVariableOrDefault($cc_array, $cc_field, null);
+		if ($cc_options === null) {
+			echo "ERROR: Could not find '$cc_field' for field '$f'.\n";
+			return false;
+		}
 	}
 
 	$num_options = count($cc_options);
@@ -444,12 +508,9 @@ foreach ($repo_array as $repo) {
 
 	// Have to handle camera type and model differently because the defaults
 	// might not be what we want.
-	if ($name === "cameratype") {
-			$repo["default"] = $cameraType;
-	} elseif ($name === "cameramodel") {
-			$repo["default"] = $cameraModel;
-	} elseif ($name === "cameranumber") {
-			$repo["default"] = "$cameraNumber";
+	if ($name === "camerainfo") {
+			$sensor = ($cameraType === "RPi") ? getVariableOrDefault($cc_array, "sensor", "") : "";
+			$repo["default"] = camera_info($cameraType, $cameraNumber, $cameraModel, $sensor);
 	} elseif ($name === "camera") {
 			$repo["default"] = "$cameraType $cameraModel";
 	}

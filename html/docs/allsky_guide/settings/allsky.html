@@ -884,6 +884,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../upgrade/v2026.10.01_02.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v2026.10.01_02
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../upgrade/v2026.10.01_01.html" class="md-nav__link">
         
   
@@ -2133,7 +2161,7 @@
   <span class="md-ellipsis">
     
   
-    Startrails Helper Tool
+    Startrails
   
 
     
@@ -2161,7 +2189,7 @@
   <span class="md-ellipsis">
     
   
-    Image Stretch Helper Tool
+    Image Stretch
   
 
     
@@ -2189,7 +2217,7 @@
   <span class="md-ellipsis">
     
   
-    Timelapse Helper Tool
+    Timelapse
   
 
     
@@ -2217,7 +2245,7 @@
   <span class="md-ellipsis">
     
   
-    Constellation Overlay Helper Tool
+    Constellation Overlay
   
 
     
@@ -3241,62 +3269,6 @@
   
   
   
-    <li class="md-nav__item">
-      <a href="../known_issues.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Known Issues
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../changelog.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    ChangeLog
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
     
     
     
@@ -3311,10 +3283,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_12">
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_10">
         
           
-          <label class="md-nav__link" for="__nav_2_12" id="__nav_2_12_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_2_10" id="__nav_2_10_label" tabindex="0">
             
   
   
@@ -3332,8 +3304,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_12_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_12">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_10">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -6520,7 +6492,7 @@
 <details class="info">
 <summary>Quick Start: the settings most people change first</summary>
 <p>If you are new to Allsky, this page can feel like far too much all at once. That is normal. The Allsky Settings page is a full operational control panel, not a small first-run wizard, and most users do <strong>not</strong> need to understand every setting before they can get good results.</p>
-<p>In practical use, people usually begin by adjusting a smaller set of settings that has the biggest effect on everyday capture and publishing. The groups below are the settings that most often need attention first. They are not the only settings that matter, but they are the ones that usually make the biggest difference when you are moving from “it runs” to “it works well”.</p>
+<p>In practical use, people usually begin by adjusting a smaller set of settings that has the biggest effect on everyday capture and publishing. The groups below are the settings that most often need attention first. They are not the only settings that matter, but they are the ones that usually make the biggest difference when you are moving from "it runs" to "it works well".</p>
 <h3 id="day-capture">Day capture<a class="headerlink" href="#day-capture" title="Permanent link">¶</a></h3>
 <p>Daytime capture is usually about getting a clean, stable image without blown highlights, washed-out skies, or strange colour. It is also where many people decide whether they want to save daytime images at all, since saving them continuously will increase disk usage over time.</p>
 <p>The settings people most often revisit are:</p>
@@ -6533,7 +6505,7 @@
 <li><strong>Delay</strong>: this controls how often daytime frames are taken. Shorter delays mean more captures, which can also mean more disk usage if you are saving daytime images.</li>
 <li><strong>Tuning File</strong>: Raspberry Pi camera users sometimes revisit this if they are using a custom daytime tuning profile.</li>
 </ul>
-<p>A sensible aim for daytime capture is not “the brightest possible image”. It is a reliable image that looks natural, updates at a sensible rate, and does not generate more stored data than you actually want to keep.</p>
+<p>A sensible aim for daytime capture is not "the brightest possible image". It is a reliable image that looks natural, updates at a sensible rate, and does not generate more stored data than you actually want to keep.</p>
 <h3 id="night-capture">Night capture<a class="headerlink" href="#night-capture" title="Permanent link">¶</a></h3>
 <p>Night capture is where Allsky usually needs the most care. This is the part of the system most people are ultimately interested in, and small changes in settings can make a surprisingly large difference to stars, cloud structure, noise, and overall image character.</p>
 <p>The settings users most often revisit are:</p>
@@ -7254,7 +7226,7 @@
 <tr>
 <td><mark>Frequency</mark></td>
 <td style="text-align: right;">5</td>
-<td>After how many images should the mini-timelapse be created? Slower machines and machines with slow networks should use higher numbers. 3–5 works well on a Pi 4 with 4 GB memory. Every <mark>Frequency</mark> images a new mini-timelapse is created using the last <mark>Number Of Images</mark> images.  <br><br> ⚠️ Be <mark>very</mark> careful when setting <mark>Number Of Images</mark> and <mark>Frequency</mark>. If either or both numbers are too high, or the daytime/nighttime <mark>Delay</mark> is too short, there may not be enough time to finish one mini timelapse creation before the next one starts. If this happens the second one will be aborted and you'll see a System Message in the WebUI.</td>
+<td>After how many images should the mini-timelapse be created? Slower machines and machines with slow networks should use higher numbers. 3-5 works well on a Pi 4 with 4 GB memory. Every <mark>Frequency</mark> images a new mini-timelapse is created using the last <mark>Number Of Images</mark> images.  <br><br> ?? Be <mark>very</mark> careful when setting <mark>Number Of Images</mark> and <mark>Frequency</mark>. If either or both numbers are too high, or the daytime/nighttime <mark>Delay</mark> is too short, there may not be enough time to finish one mini timelapse creation before the next one starts. If this happens the second one will be aborted and you'll see a System Message in the WebUI.</td>
 </tr>
 <tr>
 <td><mark>Width</mark></td>
@@ -7351,7 +7323,7 @@
 <tr>
 <td><mark>Font Color</mark></td>
 <td style="text-align: right;">#ffffff (white)</td>
-<td>Color of the date/time label on the keogram. Same as the <code>--font-color</code> and <code>-C</code> options.  <br><br>The color can be specified using one of the following:  <br>1. Three comma- or space-separated numbers between <code>0</code> and <code>255</code> in RGB order. Example: <code>0,255,0</code> (green), <code>255 0 1</code> (red with a tiny bit of blue).  <br>2. <code>#</code> followed by <mark>six</mark> hex digits <code>00</code> to <code>ff</code> in RGB order. Example: <code>#00ff00</code> (green), <code>#ff0001</code> (red with a tiny bit of blue).  <br>3. <code>#</code> followed by <mark>three</mark> hex digits <code>0</code> to <code>f</code> in RGB order. Example: <code>#0f0</code> == <code>#00ff00</code> (green), <code>#f00</code> == <code>#ff0011</code> (red with a little bit of blue).  <br><br>Hex digits include 0–9 and a–f, where hex <code>a</code> = decimal <code>10</code>, … hex <code>f</code> = decimal <code>15</code>. Hex <code>10</code> = decimal <code>16</code> and hex <code>ff</code> = decimal <code>255</code>.  <br><br>Larger values mean more of that color: <code>#000000</code> is black, <code>255 255 255</code> is white, <code>128,128,128</code> is middle gray.</td>
+<td>Color of the date/time label on the keogram. Same as the <code>--font-color</code> and <code>-C</code> options.  <br><br>The color can be specified using one of the following:  <br>1. Three comma- or space-separated numbers between <code>0</code> and <code>255</code> in RGB order. Example: <code>0,255,0</code> (green), <code>255 0 1</code> (red with a tiny bit of blue).  <br>2. <code>#</code> followed by <mark>six</mark> hex digits <code>00</code> to <code>ff</code> in RGB order. Example: <code>#00ff00</code> (green), <code>#ff0001</code> (red with a tiny bit of blue).  <br>3. <code>#</code> followed by <mark>three</mark> hex digits <code>0</code> to <code>f</code> in RGB order. Example: <code>#0f0</code> == <code>#00ff00</code> (green), <code>#f00</code> == <code>#ff0011</code> (red with a little bit of blue).  <br><br>Hex digits include 0-9 and a-f, where hex <code>a</code> = decimal <code>10</code>, ... hex <code>f</code> = decimal <code>15</code>. Hex <code>10</code> = decimal <code>16</code> and hex <code>ff</code> = decimal <code>255</code>.  <br><br>Larger values mean more of that color: <code>#000000</code> is black, <code>255 255 255</code> is white, <code>128,128,128</code> is middle gray.</td>
 </tr>
 <tr>
 <td><mark>Font Size</mark></td>
@@ -7617,12 +7589,12 @@
 <tr>
 <td><mark>Image Directory</mark></td>
 <td style="text-align: right;"></td>
-<td>Name of the directory the current image should be uploaded to.  <br><br> This setting is a major cause of confusion for many users. If you don't know what to enter, ask the person or company supporting the server or look in <a href="/docs/allsky_guide/troubleshooting/uploads.html">Troubleshooting → Uploads</a> for more information.</td>
+<td>Name of the directory the current image should be uploaded to.  <br><br> This setting is a major cause of confusion for many users. If you don't know what to enter, ask the person or company supporting the server or look in <a href="/docs/allsky_guide/troubleshooting/uploads.html">Troubleshooting -&gt; Uploads</a> for more information.</td>
 </tr>
 <tr>
 <td><mark>Protocol</mark></td>
 <td style="text-align: right;">ftps</td>
-<td>Specifies how files should be uploaded to the remote Website.  <br><br>- <code>ftps</code>: secure FTP  <br>- <code>sftp</code>: SSH file transfer  <br>- <code>ftp</code>: insecure FTP <em>(not recommended)</em>  <br>- <code>scp</code>: secure copy  <br>- <code>rsync</code>: rsync copy  <br>- <code>s3</code>: Amazon Web Services  <br>- <code>gcs</code>: Google Cloud Storage  <br><br> ⚠️ <code>ftp</code> is unsecure; please use <code>ftps</code> or <code>sftp</code> instead.  <br><br>Some of the settings below only apply to certain protocols.</td>
+<td>Specifies how files should be uploaded to the remote Website.  <br><br>- <code>ftps</code>: secure FTP  <br>- <code>sftp</code>: SSH file transfer  <br>- <code>ftp</code>: insecure FTP <em>(not recommended)</em>  <br>- <code>scp</code>: secure copy  <br>- <code>rsync</code>: rsync copy  <br>- <code>s3</code>: Amazon Web Services  <br>- <code>gcs</code>: Google Cloud Storage  <br><br> <code>ftp</code> is unsecure; please use <code>ftps</code> or <code>sftp</code> instead.  <br><br>Some of the settings below only apply to certain protocols.</td>
 </tr>
 <tr>
 <td><mark>Server Name</mark></td>
@@ -7647,7 +7619,7 @@
 <tr>
 <td><mark>FTP Commands</mark></td>
 <td style="text-align: right;"></td>
-<td>(ftp protocols only) Optional command(s) to send to the ftp server prior to transferring files. If you need multiple commands, separate them with a semi-colon. See <a href="/docs/allsky_guide/troubleshooting/uploads.html">Troubleshooting → Uploads</a>.</td>
+<td>(ftp protocols only) Optional command(s) to send to the ftp server prior to transferring files. If you need multiple commands, separate them with a semi-colon. See <a href="/docs/allsky_guide/troubleshooting/uploads.html">Troubleshooting -&gt; Uploads</a>.</td>
 </tr>
 <tr>
 <td><mark>SSH Public Key File</mark></td>
@@ -7897,7 +7869,7 @@
 <tr>
 <td><mark>Images Sort Order</mark></td>
 <td style="text-align: right;">Ascending</td>
-<td>Determines how the images for a day in the WebUI's <mark>Images</mark> page are displayed. <mark>Ascending</mark> sorts oldest → newest. <mark>Descending</mark> sorts newest → oldest.</td>
+<td>Determines how the images for a day in the WebUI's <mark>Images</mark> page are displayed. <mark>Ascending</mark> sorts oldest -&gt; newest. <mark>Descending</mark> sorts newest -&gt; oldest.</td>
 </tr>
 <tr>
 <td><mark>Show Updated Message</mark></td>
@@ -7921,7 +7893,7 @@
 <details class="info" open="open">
 <summary>Settings</summary>
 <blockquote>
-<p>⚠️ Only change the database settings if you know what you are doing.</p>
+<p>?? Only change the database settings if you know what you are doing.</p>
 </blockquote>
 <table>
 <thead>
@@ -7978,14 +7950,9 @@
 </thead>
 <tbody>
 <tr>
-<td><mark>Camera Type</mark></td>
+<td><mark>Camera</mark></td>
 <td style="text-align: right;"></td>
-<td>The type of camera you are using: ZWO or RPi. To select a camera of a different <mark>Camera Type</mark>:  <br>1. Select the Type.  <br>2. Save the change via the <mark>Save changes</mark> button.  <br>3. Update the <mark>Camera Model</mark> as desired.  <br><br>If you connect or disconnect a camera on the Pi, select <mark>Refresh</mark> to update the list of camera types and models.</td>
-</tr>
-<tr>
-<td><mark>Camera Model</mark></td>
-<td style="text-align: right;"></td>
-<td>The model of camera you are using. Note this list is only the models of the current <mark>Camera Type</mark>.</td>
+<td>The camera to use. All cameras connected to the Pi are listed, RPi and ZWO, for example:  <br><code>RPi  Module 3 Wide NoIR  [imx708_wide_noir]</code>  <br><code>ZWO  ASI178MC</code>  <br>RPi cameras show their sensor in brackets.  <br><br>To use another camera, select it and save the change via the <mark>Save changes</mark> button. You can't change any other setting at the same time.  <br><br>If you connect or disconnect a camera on the Pi, select <mark>Refresh</mark> and save to look for cameras again; the current camera stays selected. A camera that's selected but no longer connected is shown as <code>(not connected)</code>.</td>
 </tr>
 </tbody>
 </table>

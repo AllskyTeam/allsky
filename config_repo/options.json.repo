@@ -2153,15 +2153,6 @@
 "booldependson" : "uselocalwebsite OR useremotewebsite"
 },
 {
-"name" : "showonmapdeclined",
-"settingsonly" : true,
-"default" : "",
-"description" : "The date (YYYY-MM-DD) the user last declined the installer's request to add the camera to the Allsky Map. Set automatically.",
-"label" : "NOT DISPLAYED IN WebUI",
-"type" : "text",
-"carryforward" : true
-},
-{
 "name" : "location",
 "default" : "",
 "description" : "The location of your camera, for example: Whitehorse, YT.<br>This setting and the remaining ones also appear on the Allsky Website, if installed.",

@@ -1834,6 +1834,17 @@ convert_settings_file()			# prior_file, new_file
 					fi
 					;;
 
+				# ===== Replaced by mapsharing after v2026.10.01.
+				"showonmap")
+					echo "${FIELD} ${FIELD} --delete" >> "${DELETED_SETTINGS}"
+					if [[ ${VALUE} == "true" || ${VALUE} == "1" ]]; then
+						VALUE="map"
+					else
+						VALUE="none"
+					fi
+					doV "${FIELD}" "VALUE" "mapsharing" "text" "${NEW_FILE}"
+					;;
+
 				# ===== Combined into camerainfo after v2026.10.01; it's added below.
 				"cameratype" | "cameramodel" | "cameranumber")
 					echo "${FIELD} ${FIELD} --delete" >> "${DELETED_SETTINGS}"
@@ -3786,15 +3797,23 @@ display_wait_message()
 # Request that the user add their camera to the Allsky Map.
 request_map()
 {
-	[[ "$( settings ".showonmap" )" == "true" ]] && return
+	[[ "$( settings ".mapsharing" )" == "map" ]] && return
 
-	local MSG
+	local MSG  VERSION
 
-	MSG+="\nPlease consider adding your camera to the Allsky Map."
-	if [[ "$( settings ".useremotewebsite" )" == "false" ]]; then
-		MSG+="\nYou don't need to have a remote Website to do this."
+	VERSION="$( settings ".privacyversion" )"
+	[[ ! ${VERSION} =~ ^[0-9]+$ ]] && VERSION=0
+	if [[ ${VERSION} -lt ${ALLSKY_PRIVACY_VERSION} ]]; then
+		# The WebUI asks before showing any other page.
+		MSG="\nThe WebUI will ask what, if anything, you want to share with the Allsky Team,"
+		MSG+="\nincluding whether to add your camera to the Allsky Map."
+	else
+		MSG+="\nPlease consider adding your camera to the Allsky Map."
+		if [[ "$( settings ".useremotewebsite" )" == "false" ]]; then
+			MSG+="\nYou don't need to have a remote Website to do this."
+		fi
+		MSG+="\nSee the 'Allsky Map' section of the WebUI's 'Privacy & Sharing' settings."
 	fi
-	MSG+="\nSee the 'Allsky Map' section of the WebUI's 'Privacy & Sharing' settings."
 	display_msg notice "${MSG}"
 
 	add_to_post_actions "${MSG}"

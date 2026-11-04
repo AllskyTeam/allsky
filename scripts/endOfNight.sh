@@ -57,7 +57,7 @@ getAllSettings --var "keogramgenerate keogramupload \
 	daystokeep \
 	daystokeeplocalwebsite uselocalwebsite \
 	daystokeepremotewebsite useremotewebsite \
-	showonmap shareusagedata contactemail usedarkframes" || exit 1
+	mapsharing shareusagedata contactemail usedarkframes" || exit 1
 
 
 # Generate keogram from collected images
@@ -248,15 +248,10 @@ if [[ ${S_daystokeepremotewebsite} -gt 0 && ${S_useremotewebsite} == "true" ]]; 
 	fi
 fi
 
-if [[ ${S_showonmap} == "true" ]]; then
-	echo -e "${ME}: ===== Posting camera details to Allsky map."
+# Only what the user chose in the "Privacy & Sharing" settings is sent.
+if [[ ${S_mapsharing:-none} != "none" || ${S_shareusagedata} == "true" || -n ${S_contactemail} ]]; then
+	echo -e "${ME}: ===== Posting camera details to the Allsky Map server."
 	"${ALLSKY_SCRIPTS}/postToMap.sh" --endofnight
-fi
-
-# Only what the user enabled is sent, at most once a week.
-if [[ ${S_shareusagedata} == "true" || -n ${S_contactemail} ]]; then
-	echo -e "${ME}: ===== Sending Usage Data and Contact Email to the Allsky Team."
-	"${ALLSKY_SCRIPTS}/postToData.sh" --endofnight
 fi
 
 activate_python_venv

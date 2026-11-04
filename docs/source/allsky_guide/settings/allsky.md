@@ -522,7 +522,7 @@ See [Privacy & Sharing](/docs/allsky_guide/settings/privacy.html) for what is se
 
     | WebUI Setting { .w-20p } | Default { .w-10p }  | Description |
     |---|---:|---|
-    | ==Show on Map== | No | Enable to have your camera appear on the [Allsky map](https://www.thomasjacquin.com/allsky-map). ==If off, the following settings are ignored.== |
+    | ==Map Sharing== | Don't send | What to do with your camera's information for the [Allsky map](https://www.thomasjacquin.com/allsky-map): ==Don't send== it, send it to the ==Allsky Team only==, or send it and ==show it on the Map==. Sending your Map data, even without showing it, helps the Allsky Team decide where to spend development time. ==If set to "Don't send", the following settings are only used by the Allsky Websites and remote server.== <br><br>The WebUI's **Privacy** page shows what is sent and has a button to delete it from the server. |
     | ==Hide Exact Location== <span class="red">AW</span> | No | Enable to round the ==Latitude== and ==Longitude== to the nearest 0.02 degrees on the [Allsky Map](/docs/allsky_guide/howtos/allsky_map.html) and the local and remote Allsky Websites, so they are at most about 1.3 km (0.8 miles) from your real location. The settings file keeps the exact values and Allsky itself still uses them, for example to determine when daytime and nighttime begin. <br><br>Text overlays that show the latitude or longitude are not changed. |
     | ==Location== <span class="red">AW</span> |  | The location of your camera. You can put any level of detail you want. |
     | ==Owner== <span class="red">AW</span> |  | The owner of the camera - your name, an association name, an observatory, etc. |
@@ -534,7 +534,7 @@ See [Privacy & Sharing](/docs/allsky_guide/settings/privacy.html) for what is se
 
     | WebUI Setting { .w-20p } | Default { .w-10p }  | Description |
     |---|---:|---|
-    | ==Share Usage Data== | No | Enable to send the Allsky Team, once a week, how Allsky is used on this Pi: the Pi OS, the Pi model, the camera, how many cameras are connected, the enabled modules, and how often Allsky was started, the camera was changed, and the WebUI was used. See [Usage Data](/docs/allsky_guide/settings/privacy.html#Usage-data) for exactly what is sent. Disabling it deletes the data from the server. |
+    | ==Share Usage Data== | No | Enable to send the Allsky Team how Allsky is used on this Pi: the Pi OS, the Pi model, the camera, how many cameras are connected, the enabled modules, and how often Allsky was started, the camera was changed, and the WebUI was used. See [Usage Data](/docs/allsky_guide/settings/privacy.html#Usage-data) for exactly what is sent. Disabling it deletes the Usage Data from the server; the counts on the Pi are kept. |
     | ==Contact Email== |  | Optional email address the Allsky Team can use to contact you, for example about a problem with the data your Pi sends or about a security issue in Allsky. It isn't shown publicly or shared outside the Allsky Team. See [Contact Email](/docs/allsky_guide/settings/privacy.html#Contact-email). Clearing it deletes the address from the server. |
 
 ## WebUI { data-toc-label="WebUI" id="WebUI-settings"}

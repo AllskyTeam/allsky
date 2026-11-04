@@ -106,12 +106,10 @@ else
 fi
 
 RUN_POSTTOMAP="false"
-POSTTOMAP_ACTION=""
-POSTTODATA_ACTIONS=()		# arguments for each run of postToData.sh
+SHARING_CHANGED="false"		# a "Privacy & Sharing" choice changed
 WEBSITE_CONFIG=()
 WEBSITE_VALUE_CHANGED="false"
 GOT_WARNING="false"
-SHOW_ON_MAP=""
 CHECK_REMOTE_WEBSITE_ACCESS="false"		# check URL
 CHECK_REMOTE_WEBSITE_UPLOAD="false"		# check upload to host name
 CHECK_REMOTE_SERVER_UPLOAD="false"		# check upload to host name
@@ -780,22 +778,23 @@ do
 			fi
 			;;
 
-		"showonmap")
-			# The same for every camera.
-			update_all_settings_files ".${KEY}" "${NEW_VALUE}" "boolean"
-			SHOW_ON_MAP="true"
-			[[ ${NEW_VALUE} == "false" ]] && POSTTOMAP_ACTION="--delete"
+		"mapsharing")
+			# The same for every camera.  Remember when the user agreed to send the data.
+			# "Don't send" also removes the camera from the map.
+			update_all_settings_files ".${KEY}" "${NEW_VALUE}" "text"
+			[[ ${NEW_VALUE} != "none" ]] && CONSENT="$( date -u '+%F %T' )" || CONSENT=""
+			update_all_settings_files ".mapsharingconsent" "${CONSENT}" "text"
+			SHARING_CHANGED="true"
 			RUN_POSTTOMAP="true"
 			;;
 
 		"shareusagedata")
 			# The same for every camera.  Disabling it deletes the data from the server.
 			update_all_settings_files ".${KEY}" "${NEW_VALUE}" "boolean"
-			if [[ ${NEW_VALUE} == "true" ]]; then
-				POSTTODATA_ACTIONS+=( "--force" )
-			else
-				POSTTODATA_ACTIONS+=( "--delete usage" )
-			fi
+			[[ ${NEW_VALUE} == "true" ]] && CONSENT="$( date -u '+%F %T' )" || CONSENT=""
+			update_all_settings_files ".usagedataconsent" "${CONSENT}" "text"
+			SHARING_CHANGED="true"
+			RUN_POSTTOMAP="true"
 			;;
 
 		"contactemail")
@@ -808,11 +807,10 @@ do
 			fi
 			# The same for every camera.  Clearing it deletes the address from the server.
 			update_all_settings_files ".${KEY}" "${NEW_VALUE}" "string"
-			if [[ -n ${NEW_VALUE} ]]; then
-				POSTTODATA_ACTIONS+=( "--force" )
-			else
-				POSTTODATA_ACTIONS+=( "--delete email" )
-			fi
+			[[ -n ${NEW_VALUE} ]] && CONSENT="$( date -u '+%F %T' )" || CONSENT=""
+			update_all_settings_files ".contactemailconsent" "${CONSENT}" "text"
+			SHARING_CHANGED="true"
+			RUN_POSTTOMAP="true"
 			;;
 
 		"latitude" | "longitude")
@@ -1295,25 +1293,19 @@ if [[ ${WEBSITE_VALUE_CHANGED} == "true" ]]; then
 fi
 
 if [[ ${RUN_POSTTOMAP} == "true" ]]; then
-	# Only run postToMap.sh if: 1) we turned off showonmap,  2) showonmap is on
-	[[ -z ${SHOW_ON_MAP} ]] && SHOW_ON_MAP="${S_showonmap}"
-	if [[ ${SHOW_ON_MAP} == "true" ]]; then
+	# The settings files are already updated so postToMap.sh sends what is now chosen.
+	# Only run it if something is shared or a "Privacy & Sharing" choice changed,
+	# e.g., to tell the server to delete what's no longer shared.
+	S_mapsharing="$( settings ".mapsharing" )"
+	S_shareusagedata="$( settings ".shareusagedata" )"
+	S_contactemail="$( settings ".contactemail" )"
+	if [[ ${SHARING_CHANGED} == "true" || ${S_mapsharing:-none} != "none" ||
+			${S_shareusagedata} == "true" || -n ${S_contactemail} ]]; then
 		debug && wD_ "Executing postToMap.sh"
 		# shellcheck disable=SC2086
-		"${ALLSKY_SCRIPTS}/postToMap.sh" --whisper --force ${DEBUG_ARG} --from "${FROM}" ${POSTTOMAP_ACTION}
+		"${ALLSKY_SCRIPTS}/postToMap.sh" --whisper --force ${DEBUG_ARG} --from "${FROM}"
 	fi
 fi
-
-# The settings files are already updated so each run sends what is now enabled.
-# Sending once is enough even if both settings were enabled or changed.
-SENT_DATA="false"
-for ACTION in "${POSTTODATA_ACTIONS[@]}"; do
-	[[ ${ACTION} == "--force" && ${SENT_DATA} == "true" ]] && continue
-	[[ ${ACTION} == "--force" ]] && SENT_DATA="true"
-	debug && wD_ "Executing postToData.sh ${ACTION}"
-	# shellcheck disable=SC2086
-	"${ALLSKY_SCRIPTS}/postToData.sh" --whisper ${DEBUG_ARG} --from "${FROM}" ${ACTION}
-done
 
 if [[ ${GOT_WARNING} == "true" ]]; then
 	exit 255

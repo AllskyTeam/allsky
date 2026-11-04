@@ -1162,10 +1162,32 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#Pi-id" class="md-nav__link">
+  <a href="#Consent" class="md-nav__link">
     <span class="md-ellipsis">
       
-        ID of your Pi
+        When you agreed
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#Delete" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deleting your data
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#Show" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Seeing what is sent
       
     </span>
   </a>
@@ -6248,10 +6270,14 @@
   <h1>Privacy &amp; Sharing</h1>
 
 <p>This page lists what Allsky sends to anyone other than the services you set up yourself, why, and how to stop it.</p>
-<p>Nothing is sent unless you turn it on.
-The installation asks about the Allsky Map with <mark>No</mark> as the default answer, and if you keep <mark>No</mark> you won't be asked again for a year.
-All these settings are in the <strong>Privacy &amp; Sharing</strong> tab of the WebUI's <strong>Allsky Settings</strong> page, and you can turn any of them off at any time.</p>
-<p>The data go to the Allsky Team, the core developers of Allsky.
+<p>Nothing is sent unless you choose it.
+The first time you open the WebUI after installing or upgrading, its <strong>Privacy</strong> page asks what, if anything, you want to share, before it shows any other page.
+Nothing is pre-selected and every choice is optional.
+It asks again only when what Allsky can send changes.</p>
+<p>You can change your choices at any time on the WebUI's <strong>Privacy</strong> page or in the <strong>Privacy &amp; Sharing</strong> tab of the WebUI's <strong>Allsky Settings</strong> page.
+The <strong>Privacy</strong> page also shows exactly what your Pi sends, and has a button to delete everything the Allsky server has from your Pi.</p>
+<p>The data go to the Allsky Team, the core developers of Allsky, at the Allsky Map server (<code>www.thomasjacquin.com</code>).
+Everything is sent in one upload: when you change a choice, and then at the end of every other night.
 If you have a question about your data, ask in the <a class="external" href="https://github.com/AllskyTeam/allsky/discussions" rel="noopener" target="_blank">Allsky Discussions</a>.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -6259,7 +6285,13 @@ If you have a question about your data, ask in the <a class="external" href="htt
 Those are services you choose and set up yourself, so they aren't covered here.</p>
 </div>
 <h2 id="Allsky-map">Allsky Map<a class="headerlink" href="#Allsky-map" title="Permanent link">¶</a></h2>
-<p>When <mark>Show on Map</mark> is enabled your camera appears on the public <a class="external" href="https://www.thomasjacquin.com/allsky-map/" rel="noopener" target="_blank">Allsky Map</a>.
+<p>The <mark>Map Sharing</mark> setting has three choices:</p>
+<ul>
+<li><mark>Don't send</mark> (the default): nothing about your camera is sent.</li>
+<li><mark>Send to the Allsky Team only</mark>: your camera's information is sent, but it doesn't appear on the map.</li>
+<li><mark>Send and show on the Map</mark>: your camera also appears on the public <a class="external" href="https://www.thomasjacquin.com/allsky-map/" rel="noopener" target="_blank">Allsky Map</a>.</li>
+</ul>
+<p>Sending your Map data, even without showing it, helps the Allsky Team decide where to spend development time.
 See <a href="/docs/allsky_guide/howtos/allsky_map.html">The Allsky Map</a> for how to set it up.</p>
 <table>
 <thead>
@@ -6271,27 +6303,19 @@ See <a href="/docs/allsky_guide/howtos/allsky_map.html">The Allsky Map</a> for h
 <tbody>
 <tr>
 <td><strong>What is sent</strong></td>
-<td>Your <mark>Latitude</mark> and <mark>Longitude</mark>, the <mark>Location</mark>, <mark>Owner</mark>, <mark>Lens</mark>, and <mark>Equipment Info</mark> settings, your remote Website's <mark>Website URL</mark> and <mark>Image URL</mark> if set, the camera and computer model, the Allsky version, your Pi's machine ID, and a copy of your Allsky settings and Website configuration. Passwords, user names, and tokens aren't in those files and aren't sent.</td>
+<td>Your <mark>Latitude</mark> and <mark>Longitude</mark>, the <mark>Location</mark>, <mark>Owner</mark>, <mark>Lens</mark>, and <mark>Equipment Info</mark> settings, your remote Website's <mark>Website URL</mark> and <mark>Image URL</mark> if set, the camera and computer model, the Allsky version, your Pi's machine ID, and a copy of your Allsky settings and Website configuration. Passwords, user names, and tokens aren't in those files and aren't sent, and neither is your <mark>Contact Email</mark>.</td>
 </tr>
 <tr>
 <td><strong>What is public</strong></td>
-<td>The location, owner, camera, lens, computer, equipment information, your Website's link, and its latest image. The other data is only used by the Allsky team.</td>
-</tr>
-<tr>
-<td><strong>Where it goes</strong></td>
-<td>The Allsky Map server at <code>www.thomasjacquin.com</code>.</td>
+<td>Only with <mark>Send and show on the Map</mark>: the location, owner, camera, lens, computer, equipment information, your Website's link, and its latest image. The other data is only used by the Allsky Team.</td>
 </tr>
 <tr>
 <td><strong>Why</strong></td>
-<td>To show your camera on the map, and so the Allsky team knows how many cameras use Allsky and with which cameras and Pi models, so they know where to concentrate development.</td>
+<td>To show your camera on the map, and so the Allsky Team knows how many cameras use Allsky and with which cameras and Pi models, so they know where to concentrate development.</td>
 </tr>
 <tr>
-<td><strong>When</strong></td>
-<td>Whenever you change one of the map settings, and at the end of every other night.</td>
-</tr>
-<tr>
-<td><strong>How to remove it</strong></td>
-<td>Turn <mark>Show on Map</mark> off. Allsky then tells the map server to delete your camera's entry.</td>
+<td><strong>How to stop it</strong></td>
+<td>Change <mark>Map Sharing</mark>. <mark>Send to the Allsky Team only</mark> removes your camera from the map. <mark>Don't send</mark> also stops sending the data. To delete the data from the server, use the button on the WebUI's <strong>Privacy</strong> page.</td>
 </tr>
 </tbody>
 </table>
@@ -6313,33 +6337,24 @@ Allsky itself keeps using the exact values, which stay on your Pi.</p>
 <tbody>
 <tr>
 <td><strong>What is sent</strong></td>
-<td>The Pi OS version, the Pi model, the camera model, how many cameras are connected, the names of the enabled modules, how many times Allsky was started and the camera was changed, and on how many days the WebUI was used, all since the last upload. Also the Allsky version and an ID made from your Pi's machine ID (see below). No location, no images, no settings, and nothing about what you do in the WebUI.</td>
+<td>The Pi OS version, the Pi model, the camera model, how many cameras are connected, the names of the enabled modules, how many times Allsky was started and the camera was changed, and on how many days the WebUI was used, all since the last upload. Also the Allsky version and your Pi's machine ID. No location, no images, no settings, and nothing about what you do in the WebUI.</td>
 </tr>
 <tr>
 <td><strong>What is public</strong></td>
 <td>Nothing.</td>
 </tr>
 <tr>
-<td><strong>Where it goes</strong></td>
-<td>The Allsky Map server at <code>www.thomasjacquin.com</code>.</td>
-</tr>
-<tr>
 <td><strong>Why</strong></td>
 <td>To know which Pi models, OS versions, cameras, and modules are in use, so the Allsky Team knows what to test and improve. A very high number of starts can also point to a problem.</td>
 </tr>
 <tr>
-<td><strong>When</strong></td>
-<td>When you enable it, and then at the end of night once a week. Allsky only counts while the setting is enabled.</td>
-</tr>
-<tr>
-<td><strong>How to remove it</strong></td>
-<td>Turn <mark>Share Usage Data</mark> off. Allsky then tells the server to delete your Usage Data and deletes its own counts.</td>
+<td><strong>How to stop it</strong></td>
+<td>Turn <mark>Share Usage Data</mark> off. Allsky then tells the server to delete your Usage Data.</td>
 </tr>
 </tbody>
 </table>
-<p>To see exactly what your Pi would send, run:</p>
-<div class="highlight"><pre><span></span><code>~/allsky/scripts/postToData.sh --show
-</code></pre></div>
+<p>Allsky keeps the counts on your Pi even when <mark>Share Usage Data</mark> is off, so a future version can use them, for example to spot a problem.
+They never leave your Pi unless you share them.</p>
 <h2 id="Contact-email">Contact Email<a class="headerlink" href="#Contact-email" title="Permanent link">¶</a></h2>
 <p>If you enter a <mark>Contact Email</mark> the Allsky Team can contact you.</p>
 <table>
@@ -6352,34 +6367,34 @@ Allsky itself keeps using the exact values, which stay on your Pi.</p>
 <tbody>
 <tr>
 <td><strong>What is sent</strong></td>
-<td>The email address, the Allsky version, and an ID made from your Pi's machine ID (see below).</td>
+<td>The email address, the Allsky version, and your Pi's machine ID.</td>
 </tr>
 <tr>
 <td><strong>What is public</strong></td>
 <td>Nothing. The address isn't shown anywhere and isn't shared outside the Allsky Team.</td>
 </tr>
 <tr>
-<td><strong>Where it goes</strong></td>
-<td>The Allsky Map server at <code>www.thomasjacquin.com</code>.</td>
-</tr>
-<tr>
 <td><strong>Why</strong></td>
 <td>So the Allsky Team can contact you when something looks wrong with the data your Pi sends, about a security problem in Allsky, or rarely to ask for help testing a new release. It isn't used for advertising or for anything else.</td>
 </tr>
 <tr>
-<td><strong>When</strong></td>
-<td>When you enter or change it, and then at the end of night once a week.</td>
-</tr>
-<tr>
-<td><strong>How to remove it</strong></td>
+<td><strong>How to stop it</strong></td>
 <td>Clear <mark>Contact Email</mark>. Allsky then tells the server to delete the address.</td>
 </tr>
 </tbody>
 </table>
-<h2 id="Pi-id">The ID of your Pi<a class="headerlink" href="#Pi-id" title="Permanent link">¶</a></h2>
-<p>Usage Data and the Contact Email are stored under an ID so a later upload replaces the earlier one and the data can be deleted.
-The ID is a hash of your Pi's machine ID (<code>/etc/machine-id</code>), not the machine ID itself, so it can't be used to find your Pi's machine ID.
-The Allsky Map still uses the machine ID itself.</p>
+<h2 id="Consent">When you agreed<a class="headerlink" href="#Consent" title="Permanent link">¶</a></h2>
+<p>Each upload also says when you chose to share each item, and which version of these questions you answered.
+That way the Allsky Team can show what you agreed to and when.</p>
+<h2 id="Delete">Deleting your data<a class="headerlink" href="#Delete" title="Permanent link">¶</a></h2>
+<p>The <strong>Delete my data from the Allsky server</strong> button on the WebUI's <strong>Privacy</strong> page deletes everything the server has from your Pi: the Map data, the Usage Data, and the email address.
+It also sets <mark>Map Sharing</mark> to <mark>Don't send</mark>, turns <mark>Share Usage Data</mark> off, and clears <mark>Contact Email</mark>.</p>
+<p>Data from a Pi that hasn't sent anything for 12 months is deleted automatically.</p>
+<h2 id="Show">Seeing what is sent<a class="headerlink" href="#Show" title="Permanent link">¶</a></h2>
+<p>The WebUI's <strong>Privacy</strong> page shows the data your Pi sends.
+You can also see it by running:</p>
+<div class="highlight"><pre><span></span><code>~/allsky/scripts/postToMap.sh --show
+</code></pre></div>
 
 
 

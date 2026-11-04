@@ -253,12 +253,16 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" || ${1} == "--force" ]]; then
 	ALLSKY_GITHUB_ALLSKY_REPO="allsky"
 	ALLSKY_GITHUB_ALLSKY_MODULES_REPO="allsky-modules"
 
-	# Allsky Map server.  postToMap.sh and postToData.sh append their PHP script names.
+	# Allsky Map server.  postToMap.sh appends the PHP script name.
 	ALLSKY_MAP_URL="https://www.thomasjacquin.com/allsky-map/"
-	# Usage Data counters (see postToData.sh), only kept if "Share Usage Data" is enabled.
+	# Usage Data counters.  They stay on the Pi and are only sent by postToMap.sh
+	# if "Share Usage Data" is enabled.
 	# The WebUI keeps its own file so it doesn't need write access to Allsky's.
 	ALLSKY_USAGE_DATA_FILE="${ALLSKY_CONFIG}/usage_data.json"
 	ALLSKY_WEBUI_USAGE_DATA_FILE="${ALLSKY_CONFIG}/usage_data_webui.json"
+	# Version of the WebUI's Privacy & Sharing questions.  Increase it when what is sent changes;
+	# the WebUI then asks everyone again.
+	ALLSKY_PRIVACY_VERSION=1
 
 	# NAMEs of some configuration files:
 	#	Camera Capabilities - specific to a camera type and model (cc.json)

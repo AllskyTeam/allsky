@@ -754,13 +754,11 @@ function convertLatLong()
 
 #####
 # Count one use of something for the Usage Data, e.g., "allsky_starts".
-# Nothing is counted unless "Share Usage Data" is enabled.  postToData.sh sends the
-# counts and starts over after a successful upload.
+# The counts stay on the Pi.  Only if "Share Usage Data" is enabled does postToMap.sh
+# send them, and it starts the counts over after a successful upload.
 function count_usage()
 {
 	local NAME="${1}"
-	[[ "$( settings ".shareusagedata" 2>/dev/null )" != "true" ]] && return 0
-
 	local FILE="${ALLSKY_USAGE_DATA_FILE}"
 	if [[ ! -s ${FILE} ]]; then
 		echo "{ \"since\": \"$( date +%F )\", \"counts\": { } }" > "${FILE}" || return 1

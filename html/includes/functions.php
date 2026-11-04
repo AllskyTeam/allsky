@@ -1778,14 +1778,12 @@ function getDayNightStatus(): array {
 	return $result;
 }
 
-// Count the days the WebUI is used, for the Usage Data (see postToData.sh).
-// Only if "Share Usage Data" is enabled.  The file is written at most once a day.
+// Count the days the WebUI is used, for the Usage Data.  The count stays on the Pi
+// and is only sent by postToMap.sh if "Share Usage Data" is enabled.
+// The file is written at most once a day.
 function countWebUIUse()
 {
-	global $settings_array;
-
 	if (! defined('ALLSKY_WEBUI_USAGE_DATA_FILE')) return;
-	if (! toBool(getVariableOrDefault($settings_array, 'shareusagedata', "false"))) return;
 
 	$file = ALLSKY_WEBUI_USAGE_DATA_FILE;
 	$today = date("Y-m-d");

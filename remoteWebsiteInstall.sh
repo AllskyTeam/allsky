@@ -468,7 +468,7 @@ function display_complete()
 		EXTRA_TEXT+="${E}"
 	fi
 
-	if [[ "$( settings ".showonmap" )" != "true" ]]; then
+	if [[ "$( settings ".mapsharing" )" != "map" ]]; then
 		local X="***************************************************************"
 		EXTRA_TEXT+="\n\n\n${INDENT}${X}"
 		EXTRA_TEXT+="$( dE_ "\n${INDENT}Please consider adding your camera to the Allsky Map." )"

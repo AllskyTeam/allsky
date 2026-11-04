@@ -28,9 +28,10 @@ The most common way to have a camera appear on the Allsky Map is to use a remote
 If you are using your Pi as a remote Website (not common), click [here](#Pi-as-Website) for special instructions.
 
 
-To add your camera to the map, enable ==Show on Map==. If your camera is already on the map you can remove it by turning the setting off. You can also update your information by changing any of the map-related settings.
+To add your camera to the map, set ==Map Sharing== in the **Allsky Map** section of the WebUI's **Privacy & Sharing** settings to ==Send and show on the Map==. If your camera is already on the map you can remove it by changing the setting to ==Send to the Allsky Team only== or ==Don't send==. You can also update your information by changing any of the map-related settings.
 
-Once you've enabled ==Show On Map==, your map information will be automatically sent to the map server whenever you change it, as well as every other day so it can distinguish current data from old, expired data.
+Once ==Map Sharing== is set to send the data, your map information will be automatically sent to the map server whenever you change it, as well as every other day so it can distinguish current data from old, expired data.
+The WebUI's **Privacy** page shows exactly what is sent and has a button to delete your data from the map server.
 
 All these changes take effect immediately - no human intervention required!
 
@@ -40,7 +41,7 @@ If you don't want to show its exact location, enable ==Hide Exact Location== in 
 The Allsky Map and your local and remote Allsky Websites then only get the ==Latitude== and ==Longitude== rounded to the nearest 0.02 degrees, so the location they show is at most about 1.3 km (0.8 miles) from your real one.
 Allsky itself still uses the exact values.
 
-See the [Allsky Settings documentation](/allsky_guide/settings/allsky.html#Allsky-map-settings){target="_blank" DOES_NOT_WORK_external="true"} page for a description of the map-related settings.
+See the [Allsky Settings documentation](/allsky_guide/settings/allsky.html#Allsky-map-settings){target="_blank" DOES_NOT_WORK_external="true"} page for a description of the map-related settings, and [Privacy & Sharing](/docs/allsky_guide/settings/privacy.html) for what is sent and why.
 
 
 ### My Image Doesn't Appear on the Map{style="border: 1px solid red"}

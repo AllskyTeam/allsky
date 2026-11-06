@@ -61,7 +61,6 @@ function check_URL()
 	local URL_TYPE="${2}"
 	local FIELD_NAME="${3}"
 
-	local TIMEOUT=30		# seconds to wait when trying to reach a URL
 	local E=""				# holds error message
 
 	local D="$( get_domain "${URL}" )"
@@ -84,7 +83,7 @@ function check_URL()
 
 	else
 		# Make sure it's a valid URL.  Some servers don't return anything if the user agent is "curl".
-		local CONTENT="$( curl --user-agent Allsky --location --head --silent --show-error --connect-timeout "${TIMEOUT}" "${URL}" 2>&1 )"
+		local CONTENT="$( curl --user-agent Allsky --location --head --silent --show-error --connect-timeout "${ALLSKY_CURL_TIMEOUT}" "${URL}" 2>&1 )"
 		local RET=$?
 		if [[ ${DEBUG} -gt 0 ]]; then
 			local MSG="check_URL(${URL}, ${URL_TYPE}), RET=${RET}"
@@ -97,7 +96,7 @@ function check_URL()
 		if [[ ${RET} -eq 6 ]]; then
 			E+="ERROR: ${FIELD_NAME} '${URL}' not found - check spelling and network connectivity.${BR}"
 		elif [[ ${RET} -eq 28 ]]; then
-			E+="ERROR: Could not connect to ${FIELD_NAME} '${URL}' after ${TIMEOUT} seconds.${BR}"
+			E+="ERROR: Could not connect to ${FIELD_NAME} '${URL}' after ${ALLSKY_CURL_TIMEOUT} seconds.${BR}"
 		elif [[ ${RET} -ne 0 ]]; then
 				E+="ERROR: ${FIELD_NAME} '${URL}' cannot be reached (${CONTENT}).${BR}"
 		else
@@ -304,10 +303,7 @@ else
 
 	# website_url and image_url are optional
 
-	if [[ (-n ${WEBSITE_URL} && -z ${IMAGE_URL}) || (-z ${WEBSITE_URL} && -n ${IMAGE_URL}) ]]; then
-		E+="ERROR: If you specify the Website URL or Image URL, you must specify both URLs.${BR}"
-
-	elif [[ -n ${WEBSITE_URL} ]]; then		# they specified both
+	if [[ -n ${WEBSITE_URL} && -n ${IMAGE_URL} ]]; then		# they specified both
 		# The domain names (or IP addresses) must be the same.
 		Wurl="$( get_domain "${WEBSITE_URL}" )"
 		Iurl="$( get_domain "${IMAGE_URL}" )"
@@ -333,6 +329,10 @@ else
 		# Without a trailing "/" we may get a "Moved permanently" message.
 		# This check needs to come after check_URL() above.
 		[[ -n ${E} && -n ${WEBSITE_URL} && ${WEBSITE_URL: -1:1} != "/" ]] && WEBSITE_URL+="/"
+
+	elif [[ -n ${WEBSITE_URL} && -z ${IMAGE_URL} ]]; then
+		E+="ERROR: If you specify the Website URL you must also specify the Image URL.${BR}"
+
 	fi
 
 	if [[ -n ${W} ]]; then
@@ -406,7 +406,7 @@ elif [[ ${ON_TTY} == "true" || ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
 	[[ ${WHISPER} == "false" ]] && echo "${ME}: Uploading Map data."
 fi
 # shellcheck disable=SC2089
-CMD="curl --silent --show-error -i -H 'Accept: application/json' -H 'Content-Type:application/json'"
+CMD="curl --connect-timeout ${ALLSKY_CURL_TIMEOUT} --silent --show-error -i -H 'Accept: application/json' -H 'Content-Type:application/json'"
 # shellcheck disable=SC2089
 CMD2=" --data '$( generate_post_data )'"
 if [[ ${DEBUG} -gt 0 ]]; then

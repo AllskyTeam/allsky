@@ -23,6 +23,8 @@ Text files must end with a .txt extension. The format is a simple **name=value**
 |AG_LOCATION=South Pole	|${AG_LOCATION}|
 |AG_HUMIDITY=67.2	|${AG_HUMIDITY}|
 
+Text files also accept `name:value` and quoted lines such as `"AG_TEMP":"14.3",` or `"AG_TEMP"="14.3"`. These can be mixed with `name=value` lines. Quoted colon lines can be a JSON fragment with no opening `{`; a final `}` is optional. Structured values such as arrays must use quoted lines. Variable names are converted to uppercase in the overlay editor.
+
 The data in these files could become old if the application creating them fails or is not running. To have Allsky detect this you tell it to ignore "extra" files when they are over a certain age. For .txt files there is a single value which is specified in the Overlay Editor settings dialog box. See the next section for how to specify the expiration time for .json files.
 
 ### JSON Files { data-toc-label="JSON Files" }

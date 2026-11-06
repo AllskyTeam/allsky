@@ -12,3 +12,4 @@ arducam-pivariety	0	Arducam 462	2.9	0	ASI_FALSE
 imx219	0	Waveshare imx219-d160	1.12	0	ASI_FALSE
 ov64a40	0	Arducam 64MP Owlsight	1.008	0	ASI_FALSE
 imx283	0	OneInchEye IMX283	2.4	0	ASI_FALSE
+imx415	0	inno-maker CAM-IMX415-8MP	1.45	0	ASI_FALSE

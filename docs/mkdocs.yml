@@ -179,10 +179,10 @@ nav:
     - Howtos:
       - Allsky layout: allsky_guide/howtos/layout.md
       - Helper Tools: 
-        - Startrails Helper Tool: allsky_guide/howtos/helper_tools/startrails.md
-        - Image Stretch Helper Tool: allsky_guide/howtos/helper_tools/image_stretch.md
-        - Timelapse Helper Tool: allsky_guide/howtos/helper_tools/timelapse.md
-        - Constellation Overlay Helper Tool: allsky_guide/howtos/helper_tools/constellation_overlay.md
+        - Startrails: allsky_guide/howtos/helper_tools/startrails.md
+        - Image Stretch: allsky_guide/howtos/helper_tools/image_stretch.md
+        - Timelapse: allsky_guide/howtos/helper_tools/timelapse.md
+        - Constellation Overlay: allsky_guide/howtos/helper_tools/constellation_overlay.md
       - Constellation Overlay: allsky_guide/howtos/constellation_overlay.md
       - Dark Frames: allsky_guide/howtos/dark_frames.md
       - Keograms: allsky_guide/howtos/keograms.md
@@ -216,8 +216,6 @@ nav:
       - Pi Options: allsky_guide/hardware/pi.md
       - Camera Options: allsky_guide/hardware/camera.md
       - Lens Options: allsky_guide/hardware/lens.md
-    - Known Issues: allsky_guide/known_issues.md
-    - ChangeLog: allsky_guide/changelog.md
     - Things we love:
       - Introduction: allsky_guide/things/things.md
       - Round Displays: allsky_guide/things/esp32.md

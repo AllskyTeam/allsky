@@ -989,10 +989,32 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Settings
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#image-processing" class="md-nav__link">
     <span class="md-ellipsis">
       
         Image processing
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#webui" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        WebUI
       
     </span>
   </a>
@@ -1033,17 +1055,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#webui" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        WebUI
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#core-scripts" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1059,6 +1070,17 @@
     <span class="md-ellipsis">
       
         Documentation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#known-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Known issues
       
     </span>
   </a>
@@ -2033,7 +2055,7 @@
   <span class="md-ellipsis">
     
   
-    Startrails Helper Tool
+    Startrails
   
 
     
@@ -2061,7 +2083,7 @@
   <span class="md-ellipsis">
     
   
-    Image Stretch Helper Tool
+    Image Stretch
   
 
     
@@ -2089,7 +2111,7 @@
   <span class="md-ellipsis">
     
   
-    Timelapse Helper Tool
+    Timelapse
   
 
     
@@ -2117,7 +2139,7 @@
   <span class="md-ellipsis">
     
   
-    Constellation Overlay Helper Tool
+    Constellation Overlay
   
 
     
@@ -3141,62 +3163,6 @@
   
   
   
-    <li class="md-nav__item">
-      <a href="../known_issues.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Known Issues
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../changelog.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    ChangeLog
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
     
     
     
@@ -3211,10 +3177,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_12">
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_10">
         
           
-          <label class="md-nav__link" for="__nav_2_12" id="__nav_2_12_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_2_10" id="__nav_2_10_label" tabindex="0">
             
   
   
@@ -3232,8 +3198,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_12_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_12">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_10">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -6422,6 +6388,29 @@
 <p>blah blah</p>
 </details>
 <h2 id="changelog">Changelog<a class="headerlink" href="#changelog" title="Permanent link">¶</a></h2>
+<h3 id="settings">Settings<a class="headerlink" href="#settings" title="Permanent link">¶</a></h3>
+<div class="release-notes-panel">
+  <article class="release-note release-note--new">
+    <div class="release-note-badges">
+      <span class="release-note-badge">DELETED</span>
+      <span class="release-note-area">Settings</span>
+    </div>
+    <p class="release-note-title">"Camera Type" and "Camera Model"</p>
+    <p class="release-note-summary">These settings are replaced by the new "Camera" setting.  Upgrades convert them automatically.</p>
+  </article>
+</div>
+
+<div class="release-notes-panel">
+  <article class="release-note release-note--new">
+    <div class="release-note-badges">
+      <span class="release-note-badge">NEW</span>
+      <span class="release-note-area">Settings</span>
+    </div>
+    <p class="release-note-title">"Camera"</p>
+    <p class="release-note-summary">This is camera to use and contains the camera type and camera model.</p>
+  </article>
+</div>
+
 <h3 id="image-processing">Image processing<a class="headerlink" href="#image-processing" title="Permanent link">¶</a></h3>
 <div class="release-notes-panel">
   <article class="release-note release-note--new">
@@ -6431,12 +6420,11 @@
     </div>
     <p class="release-note-title">New change 1 title</p>
     <p class="release-note-summary">New change 1 summary</p>
-    <p class="release-note-source"><a href="https://github.com/AllskyTeam/allsky/pull/5302">PR #xxx</a></p>
   </article>
   <article class="release-note release-note--fixed">
     <div class="release-note-badges">
       <span class="release-note-badge">FIXED</span>
-      <span class="release-note-area">Area 2</span>
+      <span class="release-note-area">Image processing</span>
     </div>
     <p class="release-note-title">Fixed change 1 title</p>
     <p class="release-note-summary">Fixed change 1 summary</p>
@@ -6444,11 +6432,30 @@
   <article class="release-note release-note--improved">
     <div class="release-note-badges">
       <span class="release-note-badge">IMPROVED</span>
-      <span class="release-note-area">Area 3</span>
+      <span class="release-note-area">Image processing</span>
     </div>
-    <p class="release-note-title">Improved change 1 title</p>
-    <p class="release-note-summary">Improved change 1 summary</p>
-    <p class="release-note-source"><a href="https://github.com/AllskyTeam/allsky/pull/5317" target="_blank">PR #xxxx</a></p>
+    <p class="release-note-title">Upgraded to ZWO driver 1.41</p>
+    <p class="release-note-summary">All ZWO cameras as of January 6, 2026 are supported.</p>
+  </article>
+</div>
+
+<h3 id="webui">WebUI<a class="headerlink" href="#webui" title="Permanent link">¶</a></h3>
+<div class="release-notes-panel">
+  <article class="release-note release-note--new">
+    <div class="release-note-badges">
+      <span class="release-note-badge">NEW</span>
+      <span class="release-note-area">WebUI</span>
+    </div>
+    <p class="release-note-title">new 1 title</p>
+    <p class="release-note-summary">new 1 summary</p>
+  </article>
+  <article class="release-note release-note--improved">
+    <div class="release-note-badges">
+      <span class="release-note-badge">IMPROVED</span>
+      <span class="release-note-area">WebUI</span>
+    </div>
+    <p class="release-note-title">One Camera setting</p>
+    <p class="release-note-summary">The "Camera Type" and "Camera Model" settings are replaced by one "Camera" setting that lists every camera connected to the Pi, e.g., `RPi  Module 3 Wide NoIR  [imx708_wide_noir]` or `ZWO  ASI178MC`. You can now switch directly to any connected camera.  "Refresh" looks for cameras again.</p>
   </article>
 </div>
 
@@ -6457,20 +6464,19 @@
   <article class="release-note release-note--new">
     <div class="release-note-badges">
       <span class="release-note-badge">NEW</span>
-      <span class="release-note-area">Area goes here</span>
+      <span class="release-note-area">Modules and Overlays</span>
     </div>
     <p class="release-note-title">title goes here</p>
     <p class="release-note-summary">summary goes here</p>
       <li class="release-note-summary">bullet 1</li>
       <li class="release-note-summary">bullet 2</li>
     <p></p>
-    <p class="release-note-source"><a href="https://github.com/AllskyTeam/allsky/issues/5443" target="_blank">Issue #xxxx</a></p>
   </article>
   
   <article class="release-note release-note--fixed">
     <div class="release-note-badges">
       <span class="release-note-badge">FIXED</span>
-      <span class="release-note-area">Area goes here</span>
+      <span class="release-note-area">Modules and Overlays</span>
     </div>
     <p class="release-note-title">Fix 1 title</p>
     <p class="release-note-summary">Fix 1 summary</p>
@@ -6478,11 +6484,10 @@
   <article class="release-note release-note--improved">
     <div class="release-note-badges">
       <span class="release-note-badge">IMPROVED</span>
-      <span class="release-note-area">Area goes here</span>
+      <span class="release-note-area">Modules and Overlays</span>
     </div>
     <p class="release-note-title">improvement 1 title</p>
     <p class="release-note-summary">improvement 1 summary</p>
-    <p class="release-note-source"><a href="https://github.com/AllskyTeam/allsky/issues/5418" target="_blank">Issue #xxxx</a></p>
   </article>
 </div>
 
@@ -6495,7 +6500,6 @@
     </div>
     <p class="release-note-title">title 1</p>
     <p class="release-note-summary">summary 1</p>
-    <p class="release-note-source"><a href="https://github.com/AllskyTeam/allsky/issues/5391" target="_blank">Issue #xxxx</a></p>
   </article>
 </div>
 
@@ -6508,7 +6512,6 @@
     </div>
     <p class="release-note-title">title 1</p>
     <p class="release-note-summary">summary 1</p>
-    <p class="release-note-source"><a href="https://github.com/AllskyTeam/allsky/pull/5415" target="_blank">&gt;PR #xxxx</a></p>
   </article>
 
   <article class="release-note release-note--fixed">
@@ -6518,7 +6521,6 @@
     </div>
     <p class="release-note-title">fix 1 title</p>
     <p class="release-note-summary">fix 1 summary</p>
-    <p class="release-note-source"><a href="https://github.com/AllskyTeam/allsky/pull/5306" target="_blank">PR #xxxx</a></p>
   </article>
   <article class="release-note release-note--improved">
     <div class="release-note-badges">
@@ -6527,47 +6529,6 @@
     </div>
     <p class="release-note-title">improvement 1 title</p>
     <p class="release-note-summary">improvement 1 summary</p>
-    <p class="release-note-source"><a href="https://github.com/AllskyTeam/allsky/pull/5295" target="_blank">PR #xxxx</a></p>
-  </article>
-</div>
-
-<h3 id="webui">WebUI<a class="headerlink" href="#webui" title="Permanent link">¶</a></h3>
-<div class="release-notes-panel">
-  <article class="release-note release-note--new">
-    <div class="release-note-badges">
-      <span class="release-note-badge">NEW</span>
-      <span class="release-note-area">Images</span>
-    </div>
-    <p class="release-note-title">new 1 title</p>
-    <p class="release-note-summary">new 1 summary</p>
-    <p class="release-note-source"><a href="https://github.com/AllskyTeam/allsky/pull/5390" target="_blank">PR #xxxx</a></p>
-  </article>
-  <article class="release-note release-note--new">
-    <div class="release-note-badges">
-      <span class="release-note-badge">NEW</span>
-      <span class="release-note-area">WebUI</span>
-    </div>
-    <p class="release-note-title">new 2 title</p>
-    <p class="release-note-summary">new 2 summary</p>
-    <p class="release-note-source"><a href="https://github.com/AllskyTeam/allsky/pull/5360" target="_blank">PR #xxxx</a></p>
-  </article>
-
-  <article class="release-note release-note--fixed">
-    <div class="release-note-badges">
-      <span class="release-note-badge">FIXED</span>
-      <span class="release-note-area">WebUI</span>
-    </div>
-    <p class="release-note-title">Fix module manager on iPad and other touch devices</p>
-    <p class="release-note-summary">When clicking on the module gear icon on iPad the settings now open up</p>
-    <p class="release-note-source"><a href="https://github.com/AllskyTeam/allsky/issues/5394" target="_blank">Issue #5394</a></p>
-  </article>
-  <article class="release-note release-note--improved">
-    <div class="release-note-badges">
-      <span class="release-note-badge">IMPROVED</span>
-      <span class="release-note-area">WebUI</span>
-    </div>
-    <p class="release-note-title">improved 1 title</p>
-    <p class="release-note-summary">improved 1 summary</p>
   </article>
 </div>
 
@@ -6576,7 +6537,7 @@
   <article class="release-note release-note--fixed">
     <div class="release-note-badges">
       <span class="release-note-badge">FIXED</span>
-      <span class="release-note-area">Core</span>
+      <span class="release-note-area">Core scripts</span>
     </div>
     <p class="release-note-title">core 1 title</p>
     <p class="release-note-summary">core 1 summary</p>
@@ -6600,6 +6561,43 @@
     </div>
     <p class="release-note-title">documentation change 1 title</p>
     <li class="release-note-summary">documentation change 1 summary</li>
+  </article>
+</div>
+
+<h3 id="known-issues">Known issues<a class="headerlink" href="#known-issues" title="Permanent link">¶</a></h3>
+<div class="release-notes-panel">
+  <article class="release-note release-note--issue"><!-- TODO: FIX: what class to use? -->
+    <div class="release-note-badges">
+      <span class="release-note-badge">ISSUE</span>
+      <span class="release-note-area">Image Capture</span>
+    </div>
+    <p class="release-note-title">Limitation (ZWO only): When using the default ZWO Exposure Method of Snapshot, Auto Gain and Auto White Balance do not work.</p>
+    <li class="release-note-summary">Workaround: Auto Gain should normally not be used since it conflicts with the Allsky Auto Exposure algorithm.  If you need Auto White Balance, try a different ZWO Exposure Method.</li>
+    <li class="release-note-summary">Future Plans: None.</li>
+  </article>
+</div>
+
+<div class="release-notes-panel">
+  <article class="release-note release-note--issue">
+    <div class="release-note-badges">
+      <span class="release-note-badge">ISSUE</span>
+      <span class="release-note-area">Modules</span>
+    </div>
+    <p class="release-note-title">Limitation: Modules can only run once per flow, e.g., once per image, once per day/night transition, etc.</p>
+    <li class="release-note-summary">None</li>
+    <li class="release-note-summary">Will change in a future release.</li>
+  </article>
+</div>
+
+<div class="release-notes-panel">
+  <article class="release-note release-note--issue">
+    <div class="release-note-badges">
+      <span class="release-note-badge">ISSUE</span>
+      <span class="release-note-area">Charts</span>
+    </div>
+    <p class="release-note-title">Charts will **NOT** work on Bullseye due to outdated system software.</p>
+    <li class="release-note-summary">Workaround: Upgrade to Trixie.</li>
+    <li class="release-note-summary">Future Plans: None.</li>
   </article>
 </div>
 

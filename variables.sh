@@ -289,6 +289,7 @@ if [[ -z "${ALLSKY_VARIABLE_SET}" || ${1} == "--force" ]]; then
 		ALLSKY_DEBUG_LEVEL=1
 	fi
 	ALLSKY_ENV="${ALLSKY_HOME}/env.json"	# holds private info like passwords
+	ALLSKY_CURL_TIMEOUT="20"				# Timeout for curl
 
 	# Where "current" image and mini-timelapse files are:
 	ALLSKY_IMG_DIR="current"							# URL alias for web server

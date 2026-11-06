@@ -1025,6 +1025,17 @@
   <a href="#modules-and-overlays" class="md-nav__link">
     <span class="md-ellipsis">
       
+        WebUI
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#modules-and-overlays" class="md-nav__link">
+    <span class="md-ellipsis">
+      
         Modules and Overlays
       
     </span>
@@ -1037,17 +1048,6 @@
     <span class="md-ellipsis">
       
         Charts
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#install-and-upgrade" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Install and upgrade
       
     </span>
   </a>
@@ -1070,6 +1070,17 @@
     <span class="md-ellipsis">
       
         Documentation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#known-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Known issues
       
     </span>
   </a>
@@ -6462,8 +6473,28 @@ In practice hit means if you want to run the dew heater module then you will nee
       <span class="release-note-badge">IMPROVED</span>
       <span class="release-note-area">Image processing</span>
     </div>
-    <p class="release-note-title">Improved change 1 title</p>
-    <p class="release-note-summary">Improved change 1 summary</p>
+    <p class="release-note-title">Upgraded to ZWO driver 1.41</p>
+    <p class="release-note-summary">All ZWO cameras as of January 6, 2026 are supported.</p>
+  </article>
+</div>
+
+<h3 id="webui">WebUI<a class="headerlink" href="#webui" title="Permanent link">¶</a></h3>
+<div class="release-notes-panel">
+  <article class="release-note release-note--new">
+    <div class="release-note-badges">
+      <span class="release-note-badge">NEW</span>
+      <span class="release-note-area">WebUI</span>
+    </div>
+    <p class="release-note-title">new 1 title</p>
+    <p class="release-note-summary">new 1 summary</p>
+  </article>
+  <article class="release-note release-note--improved">
+    <div class="release-note-badges">
+      <span class="release-note-badge">IMPROVED</span>
+      <span class="release-note-area">WebUI</span>
+    </div>
+    <p class="release-note-title">One Camera setting</p>
+    <p class="release-note-summary">The "Camera Type" and "Camera Model" settings are replaced by one "Camera" setting that lists every camera connected to the Pi, e.g., `RPi  Module 3 Wide NoIR  [imx708_wide_noir]` or `ZWO  ASI178MC`. You can now switch directly to any connected camera.  "Refresh" looks for cameras again.</p>
   </article>
 </div>
 
@@ -6597,6 +6628,43 @@ In practice hit means if you want to run the dew heater module then you will nee
     </div>
     <p class="release-note-title">documentation change 1 title</p>
     <li class="release-note-summary">documentation change 1 summary</li>
+  </article>
+</div>
+
+<h3 id="known-issues">Known issues<a class="headerlink" href="#known-issues" title="Permanent link">¶</a></h3>
+<div class="release-notes-panel">
+  <article class="release-note release-note--issue"><!-- TODO: FIX: what class to use? -->
+    <div class="release-note-badges">
+      <span class="release-note-badge">ISSUE</span>
+      <span class="release-note-area">Image Capture</span>
+    </div>
+    <p class="release-note-title">Limitation (ZWO only): When using the default ZWO Exposure Method of Snapshot, Auto Gain and Auto White Balance do not work.</p>
+    <li class="release-note-summary">Workaround: Auto Gain should normally not be used since it conflicts with the Allsky Auto Exposure algorithm.  If you need Auto White Balance, try a different ZWO Exposure Method.</li>
+    <li class="release-note-summary">Future Plans: None.</li>
+  </article>
+</div>
+
+<div class="release-notes-panel">
+  <article class="release-note release-note--issue">
+    <div class="release-note-badges">
+      <span class="release-note-badge">ISSUE</span>
+      <span class="release-note-area">Modules</span>
+    </div>
+    <p class="release-note-title">Limitation: Modules can only run once per flow, e.g., once per image, once per day/night transition, etc.</p>
+    <li class="release-note-summary">None</li>
+    <li class="release-note-summary">Will change in a future release.</li>
+  </article>
+</div>
+
+<div class="release-notes-panel">
+  <article class="release-note release-note--issue">
+    <div class="release-note-badges">
+      <span class="release-note-badge">ISSUE</span>
+      <span class="release-note-area">Charts</span>
+    </div>
+    <p class="release-note-title">Charts will **NOT** work on Bullseye due to outdated system software.</p>
+    <li class="release-note-summary">Workaround: Upgrade to Trixie.</li>
+    <li class="release-note-summary">Future Plans: None.</li>
   </article>
 </div>
 

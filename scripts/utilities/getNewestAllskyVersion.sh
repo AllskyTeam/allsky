@@ -31,7 +31,7 @@ done
 
 GIT_FILE="${ALLSKY_GITHUB_RAW_ROOT}/${ALLSKY_GITHUB_ALLSKY_REPO}/${BRANCH}/version"
 # The WebUI runs this while a page loads, so don't wait long for GitHub.
-NEWEST_VERSION_FILE="$( curl --show-error --silent --connect-timeout 5 --max-time 10 "${GIT_FILE}" 2>&1 )"
+NEWEST_VERSION_FILE="$( curl --show-error --silent --connect-timeout "${ALLSKY_CURL_TIMEOUT}" --max-time 10 "${GIT_FILE}" 2>&1 )"
 RET=$?
 if [[ ${RET} -ne 0 ]]; then
 	echo "${ME}: ERROR: Unable to get newest Allsky version, RET=${RET}: ${NEWEST_VERSION_FILE}."

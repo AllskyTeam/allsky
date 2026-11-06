@@ -39,13 +39,15 @@ Allsky should now recognize your camera.
     Either way, after a few seconds you'll see something like:
 
     ```
-    Maximum exposure time for sensor 'imx708_wide_noir' is 220.5 seconds.
+    This sensor, imx708_wide_noir, is not known by Allsky, but should work.
+	Its maximum exposure time is 220.5 seconds.
     >>> This will make a good allsky camera. <<<
 
     ************************
-    When requesting support for this camera, please attach
+    Please let the Allsky team know about this sensor so it can
+	be added to the list of known sensors.  Please attach
         /home/pi/allsky/tmp/camera_data.txt
-    to your request.
+    to your GitHub Discussion.
     ************************
     ```
 

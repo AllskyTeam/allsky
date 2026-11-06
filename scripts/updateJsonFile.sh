@@ -145,7 +145,7 @@ if ! NEW="$( jq "${S}" "${FILE}" 2>&1 )" ; then
 	exit 1
 fi
 
-if ! RET="$( echo -e "${NEW}" > "${FILE}" 2>&1 )" ; then
+if ! RET="$( echo -e "${NEW}" 2>&1 > "${FILE}" )" ; then
 	E_ "ERROR: unable to overwrite '${FILE}':" >&2
 	echo "   ${RET}" >&2
 	exit 1

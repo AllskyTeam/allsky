@@ -468,11 +468,11 @@ function display_complete()
 		EXTRA_TEXT+="${E}"
 	fi
 
-	if [[ "$( settings ".showonmap" )" != "true" ]]; then
+	if [[ "$( settings ".mapsharing" )" != "map" ]]; then
 		local X="***************************************************************"
 		EXTRA_TEXT+="\n\n\n${INDENT}${X}"
 		EXTRA_TEXT+="$( dE_ "\n${INDENT}Please consider adding your camera to the Allsky Map." )"
-		EXTRA_TEXT+="\n${INDENT}See the 'Allsky Map Settings' in the WebUI's 'Allsky Settings' page."
+		EXTRA_TEXT+="\n${INDENT}See the 'Allsky Map' section of the WebUI's 'Privacy & Sharing' settings."
 		EXTRA_TEXT+="\n${INDENT}${X}"
 	fi
 

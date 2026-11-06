@@ -753,6 +753,46 @@ function convertLatLong()
 
 
 #####
+# Count one use of something for the Usage Data, e.g., "allsky_starts".
+# The counts stay on the Pi.  Only if "Share Usage Data" is enabled does postToMap.sh
+# send them, and it starts the counts over after a successful upload.
+function count_usage()
+{
+	local NAME="${1}"
+	local FILE="${ALLSKY_USAGE_DATA_FILE}"
+	if [[ ! -s ${FILE} ]]; then
+		echo "{ \"since\": \"$( date +%F )\", \"counts\": { } }" > "${FILE}" || return 1
+	fi
+	local TEMP="${FILE}.tmp"
+	jq --arg n "${NAME}" '.counts[$n] = ((.counts[$n] // 0) + 1)' "${FILE}" > "${TEMP}" &&
+		mv "${TEMP}" "${FILE}"
+}
+
+
+#####
+# Return the latitude or longitude in NSEW format the way the public sees it,
+# i.e., on the Allsky Map and on the local and remote Allsky Websites.
+# If "Hide Exact Location" is enabled the value is rounded to the nearest 0.02 degrees
+# (at most about 1.3 km off); everything else in Allsky keeps using the exact value.
+# The value and the "Hide Exact Location" setting default to what's in the settings file.
+function getPublicLatLong()
+{
+	local TYPE="${1}"						# "latitude" or "longitude"
+	local LATLONG="${2:-$( settings ".${TYPE}" )}"
+	local HIDE="${3:-$( settings ".hideexactlocation" )}"
+
+	LATLONG="$( convertLatLong "${LATLONG}" "${TYPE}" )" || return 1
+	if [[ ${HIDE} == "true" ]]; then
+		local NUMBER="${LATLONG%[NSEW]}"
+		local DIRECTION="${LATLONG: -1}"
+		# NUMBER is never negative in NSEW format.
+		LATLONG="$( LC_ALL=C awk -v N="${NUMBER/,/.}" 'BEGIN { printf("%.2f", int(N / 0.02 + 0.5) * 0.02) }' )${DIRECTION}"
+	fi
+	echo "${LATLONG}"
+}
+
+
+#####
 # Get the sunrise and sunset times.
 # The angle, latitude, and/or longitude can optionally be passed in
 # to allow testing various configurations.

@@ -5,22 +5,29 @@
 [[ -z ${ALLSKY_HOME} ]] && export ALLSKY_HOME="$( realpath "$( dirname "${BASH_ARGV0}" )/.." )"
 ME="$( basename "${BASH_ARGV0}" )"
 
-# This script uploads various information relative to the camera setup to the Allsky Map.
+# This script uploads what the user chose in the "Privacy & Sharing" settings
+# to the Allsky Map server, in one upload:
+#	- the Map data, if "Map Sharing" isn't "Don't send"; it's only shown on the map
+#	  if "Map Sharing" is "Send and show on the Map",
+#	- the Usage Data, if "Share Usage Data" is enabled,
+#	- the "Contact Email", if set,
+#	- when the user agreed to each of them.
 # Information is gathered automatically from the settings file.
 # The script can be called manually, via endOfNight.sh, or via the WebUI.
-
-MAP_COMMAND="https://www.thomasjacquin.com/allsky-map/postToMap.php"
+# See the "Privacy & Sharing" documentation page for what is sent and why.
 
 #shellcheck source-path=.
 source "${ALLSKY_HOME}/variables.sh"		|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 #shellcheck source-path=scripts
 source "${ALLSKY_SCRIPTS}/functions.sh"		|| exit "${ALLSKY_EXIT_ERROR_STOP}"
 
+MAP_COMMAND="${ALLSKY_MAP_URL}postToMap.php"
+
 function usage_and_exit()
 {
 	local RET=${1}
 	exec >&2
-	local MSG="Usage: ${ME} [--help] [--whisper] [--delete] [--force] [--debug] [--machineid id] [--endofnight] [--from f]"
+	local MSG="Usage: ${ME} [--help] [--whisper] [--show] [--delete] [--delete-all] [--force] [--debug] [--machineid id] [--endofnight] [--from f]"
 	echo
 	if [[ ${RET} -eq 0 ]]; then
 		echo -e "${MSG}"
@@ -30,7 +37,10 @@ function usage_and_exit()
 	echo "Arguments:"
 	echo "   --help        Print this usage message and exit immediately."
 	echo "   --whisper     Be quiet with non-error related output - only display results."
-	echo "   --delete      Delete Map data; all fields except machine_id are ignored."
+	echo "   --show        Print the data that would be sent, then exit without sending it."
+	echo "   --delete      Remove the camera from the map; all fields except machine_id are ignored."
+	echo "   --delete-all  Delete all data of this Pi from the server (Map data, Usage Data,"
+	echo "                 and Contact Email) and turn off sharing them."
 	echo "   --force       Force updates, even if not scheduled automatically for today."
 	echo "   --debug       Output debugging statements.  Can specify more than once for additional info."
 	echo "   --endofnight  ${ME} was called from endOfNight.sh."
@@ -125,7 +135,9 @@ function check_URL()
 }
 
 DEBUG="0"
+SHOW="false"
 DELETE="false"
+DELETE_ALL="false"
 UPLOAD="false"
 WHISPER="false"
 ENDOFNIGHT="false"
@@ -137,9 +149,16 @@ while [[ $# -ne 0 ]]; do
 		--help)
 			usage_and_exit 0;
 			;;
+		--show)
+			SHOW="true"
+			;;
 		--delete)
 			DELETE="true"
 			UPLOAD="true"		# always upload DELETEs
+			;;
+		--delete-all)
+			DELETE_ALL="true"
+			UPLOAD="true"
 			;;
 		--debug)
 			(( DEBUG++ ))
@@ -213,42 +232,126 @@ fi
 #shellcheck disable=SC2119
 getAllSettings || exit 1
 
-E=""
-LATITUDE="${S_latitude}"
-if [[ -z ${LATITUDE} ]]; then
-	E+="ERROR: 'Latitude' is required.${BR}"
-fi
-LONGITUDE="${S_longitude}"
-if [[ -z ${LONGITUDE} ]]; then
-	E+="ERROR: 'Longitude' is required.${BR}"
-fi
-if [[ -n ${E} ]]; then
-	wE_ "${ERROR_MSG_START}${E}"
-	[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${E}"
-	exit 1
-fi
+MAP_SHARING="${S_mapsharing:-none}"		# none, team, or map
+SHARE_USAGE="${S_shareusagedata:-false}"
+EMAIL="${S_contactemail}"
 
-# Check for errors.  convertLatLong outputs error message.
-ERR_MSG=""
-if ! LATITUDE="$( convertLatLong "${LATITUDE}" "latitude" 2>&1 )" ; then
-	ERR_MSG+="\n${LATITUDE}"
+# With nothing to share, the only thing left to do is remove the camera from the map.
+if [[ ${DELETE_ALL} == "false" && ${MAP_SHARING} == "none" &&
+		${SHARE_USAGE} != "true" && -z ${EMAIL} ]]; then
+	DELETE="true"
+	UPLOAD="true"
 fi
-if ! LONGITUDE="$( convertLatLong "${LONGITUDE}" "longitude" 2>&1 )" ; then
-	ERR_MSG+="\n${LONGITUDE}"
-fi
-F="${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
-if [[ ${S_uselocalwebsite} == "true" && ! -s ${F} ]]; then
-	ERR_MSG+="\nLocal Website configuration file '${F}' not found."
-fi
-F="${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
-if [[ ${S_useremotewebsite} == "true" && ! -s ${F} ]]; then
-	ERR_MSG+="\nRemote Website configuration file '${F}' not found."
-fi
-if [[ -n ${ERR_MSG} ]]; then
-	ERR_MSG+="\n\nDid not upload data to Allsky Map."
-	echo -e "${ME}: ${ERR_MSG}" >&2
-	"${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${ERR_MSG}"
-	exit 1
+SEND_MAP="false"
+[[ ${DELETE} == "false" && ${DELETE_ALL} == "false" && ${MAP_SHARING} != "none" ]] && SEND_MAP="true"
+
+function show_error()
+{
+	local E="${1}"
+	wE_ "${ERROR_MSG_START}${E}" >&2
+	[[ ${ENDOFNIGHT} == "true" ]] && "${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${E}"
+}
+
+# Print the Usage Data as JSON.
+function usage_data()
+{
+	local FILE="${ALLSKY_USAGE_DATA_FILE}"
+	local WEBUI_FILE="${ALLSKY_WEBUI_USAGE_DATA_FILE}"
+	local COUNTS="{ }"  WEBUI_DAYS=0  SINCE=""  WEBUI_SINCE=""
+	if [[ -s ${FILE} ]]; then
+		COUNTS="$( jq -c '.counts // { }' "${FILE}" 2>/dev/null )" || COUNTS="{ }"
+		SINCE="$( jq -r '.since // ""' "${FILE}" 2>/dev/null )"
+	fi
+	if [[ -s ${WEBUI_FILE} ]]; then
+		WEBUI_DAYS="$( jq -r '.days // 0' "${WEBUI_FILE}" 2>/dev/null )" || WEBUI_DAYS=0
+		WEBUI_SINCE="$( jq -r '.since // ""' "${WEBUI_FILE}" 2>/dev/null )"
+	fi
+	# The earlier of the two dates; dates in YYYY-MM-DD format sort as strings.
+	if [[ -z ${SINCE} || ( -n ${WEBUI_SINCE} && ${WEBUI_SINCE} < "${SINCE}" ) ]]; then
+		SINCE="${WEBUI_SINCE}"
+	fi
+
+	local OS  NUM_CAMERAS
+	OS="$( . /etc/os-release 2>/dev/null && echo "${PRETTY_NAME}" )"
+	NUM_CAMERAS="$( grep --count "^camera"$'\t' "${ALLSKY_CONNECTED_CAMERAS_INFO}" 2>/dev/null )"
+
+	# The names of the enabled modules in each flow.
+	local MODULES="{ }"  FLOW  F  NAMES
+	for FLOW in day night daynight nightday periodic ; do
+		F="${ALLSKY_MODULES}/postprocessing_${FLOW}.json"
+		[[ ! -s ${F} ]] && continue
+		NAMES="$( jq -c '[ .[] | select(.enabled == true) | .module | sub("\\.py$"; "") ]' "${F}" 2>/dev/null )" || continue
+		MODULES="$( jq -c --arg f "${FLOW}" --argjson n "${NAMES}" '.[$f] = $n' <<< "${MODULES}" )"
+	done
+
+	jq -n \
+		--arg since "${SINCE:-$( date +%F )}" \
+		--arg os "${OS}" \
+		--arg computer "${S_computer}" \
+		--arg camera "${S_camera}" \
+		--argjson cameras "${NUM_CAMERAS:-0}" \
+		--argjson counts "${COUNTS}" \
+		--argjson webui "${WEBUI_DAYS:-0}" \
+		--argjson modules "${MODULES}" \
+		'{
+			since: $since,
+			os: $os,
+			computer: $computer,
+			camera: $camera,
+			cameras_connected: $cameras,
+			allsky_starts: ($counts.allsky_starts // 0),
+			camera_changes: ($counts.camera_changes // 0),
+			webui_days: $webui,
+			modules: $modules
+		}'
+}
+
+# Start the counts over after they were sent.  The WebUI's file belongs to the
+# web server; it's removed here and recreated by the WebUI.
+function reset_usage_data()
+{
+	rm -f "${ALLSKY_WEBUI_USAGE_DATA_FILE}"
+	echo "{ \"since\": \"$( date +%F )\", \"counts\": { } }" > "${ALLSKY_USAGE_DATA_FILE}"
+}
+
+if [[ ${SEND_MAP} == "true" ]]; then
+	E=""
+	LATITUDE="${S_latitude}"
+	if [[ -z ${LATITUDE} ]]; then
+		E+="ERROR: 'Latitude' is required.${BR}"
+	fi
+	LONGITUDE="${S_longitude}"
+	if [[ -z ${LONGITUDE} ]]; then
+		E+="ERROR: 'Longitude' is required.${BR}"
+	fi
+	if [[ -n ${E} ]]; then
+		show_error "${E}"
+		exit 1
+	fi
+
+	# Check for errors.  getPublicLatLong outputs error message.
+	# The map gets the rounded values if "Hide Exact Location" is enabled.
+	ERR_MSG=""
+	if ! LATITUDE="$( getPublicLatLong "latitude" "${LATITUDE}" "${S_hideexactlocation}" 2>&1 )" ; then
+		ERR_MSG+="\n${LATITUDE}"
+	fi
+	if ! LONGITUDE="$( getPublicLatLong "longitude" "${LONGITUDE}" "${S_hideexactlocation}" 2>&1 )" ; then
+		ERR_MSG+="\n${LONGITUDE}"
+	fi
+	F="${ALLSKY_WEBSITE_CONFIGURATION_FILE}"
+	if [[ ${S_uselocalwebsite} == "true" && ! -s ${F} ]]; then
+		ERR_MSG+="\nLocal Website configuration file '${F}' not found."
+	fi
+	F="${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}"
+	if [[ ${S_useremotewebsite} == "true" && ! -s ${F} ]]; then
+		ERR_MSG+="\nRemote Website configuration file '${F}' not found."
+	fi
+	if [[ -n ${ERR_MSG} ]]; then
+		ERR_MSG+="\n\nDid not upload data to Allsky Map."
+		echo -e "${ME}: ${ERR_MSG}" >&2
+		"${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${ERR_MSG}"
+		exit 1
+	fi
 fi
 
 
@@ -260,82 +363,86 @@ if false; then
 	MACHINE_ID="${LA:0:2}${LO:0:2}${MACHINE_ID:4}"
 fi
 
-if [[ ${DELETE} == "true" ]]; then
+if [[ ${DELETE_ALL} == "true" ]]; then
 	generate_post_data()
 	{
-		cat <<-EOF
-		{
-		"machine_id": "${MACHINE_ID}",
-		"website_url": "DELETE"
-		}
-		EOF
+		jq -n --arg id "${MACHINE_ID}" '{ machine_id: $id, delete_all: true }'
+	}
+
+elif [[ ${DELETE} == "true" ]]; then
+	generate_post_data()
+	{
+		jq -n --arg id "${MACHINE_ID}" --arg s "${MAP_SHARING}" \
+			'{ machine_id: $id, website_url: "DELETE", map_sharing: $s }'
 	}
 
 else
-	LOCATION="${S_location}"
-	OWNER="${S_owner}"
-	WEBSITE_URL="${S_remotewebsiteurl}"
-	IMAGE_URL="${S_remotewebsiteimageurl}"
-	CAMERA="${S_camera}"
-	LENS="${S_lens}"
-	COMPUTER="${S_computer}"
-	EQUIPMENT="${S_equipmentinfo}"
-
 	E=""
 	W=""
-	# Check for required fields
-	if [[ -z ${CAMERA} ]]; then
-		E+="ERROR: 'Camera' is required for the Allsky Map.${BR}"
-	fi
-	if [[ -z ${COMPUTER} ]]; then
-		E+="ERROR: 'Computer' is required for the Allsky Map.${BR}"
-	fi
+	if [[ ${SEND_MAP} == "true" ]]; then
+		LOCATION="${S_location}"
+		OWNER="${S_owner}"
+		WEBSITE_URL="${S_remotewebsiteurl}"
+		IMAGE_URL="${S_remotewebsiteimageurl}"
+		CAMERA="${S_camera}"
+		LENS="${S_lens}"
+		COMPUTER="${S_computer}"
+		EQUIPMENT="${S_equipmentinfo}"
 
-	# Check for optional, but suggested fields
-	if [[ -z ${LOCATION} ]]; then
-		W+="WARNING: 'Location' not set for the Allsky Map; continuing.${BR}"
-	fi
-	if [[ -z ${OWNER} ]]; then
-		W+="WARNING: 'Owner' not set for the Allsky Map; continuing.${BR}"
-	fi
-	if [[ -z ${LENS} ]]; then
-		W+="WARNING: 'Lens' not set for the Allsky Map; continuing.${BR}"
-	fi
-
-	# website_url and image_url are optional
-
-	if [[ (-n ${WEBSITE_URL} && -z ${IMAGE_URL}) || (-z ${WEBSITE_URL} && -n ${IMAGE_URL}) ]]; then
-		E+="ERROR: If you specify the Website URL or Image URL, you must specify both URLs.${BR}"
-
-	elif [[ -n ${WEBSITE_URL} ]]; then		# they specified both
-		# The domain names (or IP addresses) must be the same.
-		Wurl="$( get_domain "${WEBSITE_URL}" )"
-		Iurl="$( get_domain "${IMAGE_URL}" )"
-		if [[ ${Wurl} != "${Iurl}" ]]; then
-			E+="ERROR: The Website and Image URLs must have the same domain name or IP address.${BR}"
+		# Check for required fields
+		if [[ -z ${CAMERA} ]]; then
+			E+="ERROR: 'Camera' is required for the Allsky Map.${BR}"
+		fi
+		if [[ -z ${COMPUTER} ]]; then
+			E+="ERROR: 'Computer' is required for the Allsky Map.${BR}"
 		fi
 
-		ERR="$( check_URL "${WEBSITE_URL}" "remotewebsiteurl" "Website URL" )"  || E+="${ERR}"
-		function C()
-		{
-			check_URL "${IMAGE_URL}" "remotewebsiteimageurl" "Image URL"
-		}
-		if ! ERR="$( C )" ; then
-			# If the web server is updating the image when we check, it may not be there so wait
-			# a little and try again.
-			if [[ ${DEBUG} -gt 0 ]]; then
-				wD_ "First check of valid image failed; trying again." >&2
+		# Check for optional, but suggested fields
+		if [[ -z ${LOCATION} ]]; then
+			W+="WARNING: 'Location' not set for the Allsky Map; continuing.${BR}"
+		fi
+		if [[ -z ${OWNER} ]]; then
+			W+="WARNING: 'Owner' not set for the Allsky Map; continuing.${BR}"
+		fi
+		if [[ -z ${LENS} ]]; then
+			W+="WARNING: 'Lens' not set for the Allsky Map; continuing.${BR}"
+		fi
+
+		# website_url and image_url are optional
+
+		if [[ (-n ${WEBSITE_URL} && -z ${IMAGE_URL}) || (-z ${WEBSITE_URL} && -n ${IMAGE_URL}) ]]; then
+			E+="ERROR: If you specify the Website URL or Image URL, you must specify both URLs.${BR}"
+
+		elif [[ -n ${WEBSITE_URL} && ${SHOW} == "false" ]]; then		# they specified both
+			# The domain names (or IP addresses) must be the same.
+			Wurl="$( get_domain "${WEBSITE_URL}" )"
+			Iurl="$( get_domain "${IMAGE_URL}" )"
+			if [[ ${Wurl} != "${Iurl}" ]]; then
+				E+="ERROR: The Website and Image URLs must have the same domain name or IP address.${BR}"
 			fi
-			sleep 10
-			ERR="$( C )" || E+="${ERR}"
-		fi
 
-		# Without a trailing "/" we may get a "Moved permanently" message.
-		# This check needs to come after check_URL() above.
-		[[ -n ${E} && -n ${WEBSITE_URL} && ${WEBSITE_URL: -1:1} != "/" ]] && WEBSITE_URL+="/"
+			ERR="$( check_URL "${WEBSITE_URL}" "remotewebsiteurl" "Website URL" )"  || E+="${ERR}"
+			function C()
+			{
+				check_URL "${IMAGE_URL}" "remotewebsiteimageurl" "Image URL"
+			}
+			if ! ERR="$( C )" ; then
+				# If the web server is updating the image when we check, it may not be there so wait
+				# a little and try again.
+				if [[ ${DEBUG} -gt 0 ]]; then
+					wD_ "First check of valid image failed; trying again." >&2
+				fi
+				sleep 10
+				ERR="$( C )" || E+="${ERR}"
+			fi
+
+			# Without a trailing "/" we may get a "Moved permanently" message.
+			# This check needs to come after check_URL() above.
+			[[ -n ${E} && -n ${WEBSITE_URL} && ${WEBSITE_URL: -1:1} != "/" ]] && WEBSITE_URL+="/"
+		fi
 	fi
 
-	if [[ -n ${W} ]]; then
+	if [[ -n ${W} && ${SHOW} == "false" ]]; then
 		wW_ "${WARNING_MSG_START}${W%%"${BR}"}" >&2
 		if [[ ${ENDOFNIGHT} == "true" ]]; then
 			"${ALLSKY_SCRIPTS}/addMessage.sh" --type warning --msg "${ME}: ${W}"
@@ -349,40 +456,112 @@ else
 		exit 2
 	fi
 
-	generate_post_data()
+	# Output the json file ${2} and, if "Hide Exact Location" is enabled,
+	# the latitude and longitude under the ${1} object replaced by the rounded values.
+	public_location()
 	{
-		# Need to escape single quotes.
-		local ALLSKY_SETTINGS="$( sed -e "s/'/'\"'\"'/g" "${ALLSKY_SETTINGS_FILE}" )"
+		local PARENT="${1}"
+		local FILE="${2}"
+		if [[ ${S_hideexactlocation} == "true" ]]; then
+			jq --arg lat "${LATITUDE}" --arg lon "${LONGITUDE}" \
+				"(${PARENT}) |= (if type == \"object\" then .latitude = \$lat | .longitude = \$lon else . end)" \
+				"${FILE}"
+		else
+			cat "${FILE}"
+		fi
+	}
+
+	# The Map data, or null if it's not sent.
+	map_data()
+	{
+		if [[ ${SEND_MAP} == "false" ]]; then
+			echo "null"
+			return
+		fi
+
+		# Both files contain the location so make it match what's sent below.
+		# The Contact Email is only sent on its own, if set.
+		local ALLSKY_SETTINGS="$( public_location "." "${ALLSKY_SETTINGS_FILE}" | jq 'del(.contactemail)' )"
 
 		local WEBSITE_SETTINGS=""
 		if [[ ${S_uselocalwebsite} == "true" ]]; then
-			WEBSITE_SETTINGS="$( sed -e "s/'/'\"'\"'/g" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}" )"
+			WEBSITE_SETTINGS="$( public_location ".config" "${ALLSKY_WEBSITE_CONFIGURATION_FILE}" )"
 		elif [[ ${S_useremotewebsite} == "true" ]]; then
-			WEBSITE_SETTINGS="$( sed -e "s/'/'\"'\"'/g" "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" )"
+			WEBSITE_SETTINGS="$( public_location ".config" "${ALLSKY_REMOTE_WEBSITE_CONFIGURATION_FILE}" )"
 		fi
 		[[ -z ${WEBSITE_SETTINGS} ]] && WEBSITE_SETTINGS="{ }"
 
-		# Handle double quotes in fields that may have them.
-		cat <<-EOF
-		{
-		"force": ${FORCE},
-		"machine_id": "${MACHINE_ID}",
-		"location": "${LOCATION//\"/\\\"}",
-		"owner": "${OWNER//\"/\\\"}",
-		"latitude": "${LATITUDE}",
-		"longitude": "${LONGITUDE}",
-		"website_url": "${WEBSITE_URL}",
-		"image_url": "${IMAGE_URL}",
-		"camera": "${CAMERA//\"/\\\"}",
-		"lens": "${LENS//\"/\\\"}",
-		"computer": "${COMPUTER//\"/\\\"}",
-		"equipmentinfo": "${EQUIPMENT//\"/\\\"}",
-		"allsky_version": "${ALLSKY_VERSION}",
-		"website_settings" : ${WEBSITE_SETTINGS},
-		"allsky_settings" : ${ALLSKY_SETTINGS}
-		}
-		EOF
+		jq -n \
+			--arg location "${LOCATION}" \
+			--arg owner "${OWNER}" \
+			--arg latitude "${LATITUDE}" \
+			--arg longitude "${LONGITUDE}" \
+			--arg website_url "${WEBSITE_URL}" \
+			--arg image_url "${IMAGE_URL}" \
+			--arg camera "${CAMERA}" \
+			--arg lens "${LENS}" \
+			--arg computer "${COMPUTER}" \
+			--arg equipmentinfo "${EQUIPMENT}" \
+			--argjson website_settings "${WEBSITE_SETTINGS}" \
+			--argjson allsky_settings "${ALLSKY_SETTINGS}" \
+			'{
+				location: $location,
+				owner: $owner,
+				latitude: $latitude,
+				longitude: $longitude,
+				website_url: $website_url,
+				image_url: $image_url,
+				camera: $camera,
+				lens: $lens,
+				computer: $computer,
+				equipmentinfo: $equipmentinfo,
+				website_settings: $website_settings,
+				allsky_settings: $allsky_settings
+			}'
 	}
+
+	# The Map data keep their old place at the top level.
+	# "usage" and "email" are null when they aren't shared (any more),
+	# so the server removes them.
+	generate_post_data()
+	{
+		local USAGE="null"
+		[[ ${SHARE_USAGE} == "true" ]] && USAGE="$( usage_data )"
+		jq -n \
+			--argjson force "${FORCE}" \
+			--arg id "${MACHINE_ID}" \
+			--arg version "${ALLSKY_VERSION}" \
+			--arg sharing "${MAP_SHARING}" \
+			--argjson map "$( map_data )" \
+			--argjson usage "${USAGE}" \
+			--arg email "${EMAIL}" \
+			--argjson privacy_version "${S_privacyversion:-0}" \
+			--arg map_consent "${S_mapsharingconsent}" \
+			--arg usage_consent "${S_usagedataconsent}" \
+			--arg email_consent "${S_contactemailconsent}" \
+			'{
+				force: $force,
+				machine_id: $id,
+				allsky_version: $version,
+				map_sharing: $sharing
+			}
+			+ ($map // { })
+			+ {
+				usage: $usage,
+				email: (if $email == "" then null else $email end),
+				consent: {
+					privacy_version: $privacy_version,
+					map: (if $sharing == "none" or $map_consent == "" then null else $map_consent end),
+					usage: (if $usage == null or $usage_consent == "" then null else $usage_consent end),
+					email: (if $email == "" or $email_consent == "" then null else $email_consent end)
+				}
+			}'
+	}
+fi
+
+if [[ ${SHOW} == "true" ]]; then
+	generate_post_data
+	exit $?
 fi
 
 if [[ ${UPLOAD} == "false" ]]; then
@@ -400,30 +579,34 @@ if [[ ${UPLOAD} == "false" ]]; then
 fi
 
 RETURN_CODE=0
-if [[ ${DELETE} == "true" ]]; then
+if [[ ${DELETE_ALL} == "true" ]]; then
+	[[ ${WHISPER} == "false" ]] && echo "${ME}: Deleting all data of this Pi from the Allsky Map server."
+elif [[ ${DELETE} == "true" ]]; then
 	[[ ${WHISPER} == "false" ]] && echo "${ME}: Deleting Map data."
 elif [[ ${ON_TTY} == "true" || ${ALLSKY_DEBUG_LEVEL} -ge 3 ]]; then
 	[[ ${WHISPER} == "false" ]] && echo "${ME}: Uploading Map data."
 fi
-# shellcheck disable=SC2089
-CMD="curl --silent --show-error -i -H 'Accept: application/json' -H 'Content-Type:application/json'"
-# shellcheck disable=SC2089
-CMD2=" --data '$( generate_post_data )'"
-if [[ ${DEBUG} -gt 0 ]]; then
-	MSG="${CMD}"
-	# Not much data is returned by DELETE, so output it all.
-	if [[ ${DEBUG} -eq 1 && ${DELETE} == "false" ]]; then
-		MSG+=" --data '..DATA..'"
-	else
-		MSG+=" ${CMD2}"
-	fi
-	wD_ "Executing:\n$( indent --spaces "${MSG} ${MAP_COMMAND}" )\n"
-fi
-CMD+=" ${CMD2} ${MAP_COMMAND}"
 
-# shellcheck disable=SC2090,SC2086
-RETURN_STRING="$( eval ${CMD} 2>&1 )"
+POST_DATA="${ALLSKY_TMP}/${ME/.sh/}-data.json"
+if ! generate_post_data > "${POST_DATA}" ; then
+	show_error "ERROR: Unable to create the data to upload."
+	rm -f "${POST_DATA}"
+	exit 2
+fi
+CMD=( curl --silent --show-error -i -H 'Accept: application/json' -H 'Content-Type:application/json'
+	--data-binary "@${POST_DATA}" "${MAP_COMMAND}" )
+if [[ ${DEBUG} -gt 0 ]]; then
+	MSG="${CMD[*]}"
+	# Not much data is sent by DELETEs, so output it all.
+	if [[ ${DEBUG} -gt 1 || ${DELETE} == "true" || ${DELETE_ALL} == "true" ]]; then
+		MSG+="\n$( < "${POST_DATA}" )"
+	fi
+	wD_ "Executing:\n$( indent --spaces "${MSG}" )\n"
+fi
+
+RETURN_STRING="$( "${CMD[@]}" 2>&1 )"
 RETURN_CODE=$?
+rm -f "${POST_DATA}"
 if [[ ${DEBUG} -gt 0 ]]; then
 	MSG="Returned code ${RETURN_CODE}"
 	if [[ ${DEBUG} -gt 1 ]]; then
@@ -433,7 +616,7 @@ if [[ ${DEBUG} -gt 0 ]]; then
 fi
 
 if [[ ${RETURN_CODE} -ne 0 ]]; then
-	E="ERROR while uploading Map data with curl: ${RETURN_STRING}, CMD=${CMD}."
+	E="ERROR while uploading Map data with curl: ${RETURN_STRING}."
 	if [[ ${ENDOFNIGHT} == "true" ]]; then
 		echo -e "${ME}: ${E}"		# goes in log file
 		"${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${ME}: ${E}"
@@ -451,14 +634,17 @@ if HTTP="$( echo "${RETURN_STRING}" | grep HTTP )" ; then
 	fi
 fi
 
+GOT_OK="false"
 # Get the return string and other optional info from the server.
 # shellcheck disable=SC2034
 while read -r UNUSED STATUS MORE_INFO
 do
 	if [[ ${STATUS} == "INSERTED" || ${STATUS} == "DELETED" ]]; then
+		GOT_OK="true"
 		wO_ "${MSG_START}Map data ${STATUS}."
 
 	elif [[ ${STATUS} == "UPDATED" ]]; then		# UPDATED num_updates  max_updates_allowed
+		GOT_OK="true"
 		MSG=""
 		if [[ -n ${MORE_INFO} ]]; then
 			read -r NUM_UPDATES MAX_UPDATES <<< "${MORE_INFO}"
@@ -509,5 +695,21 @@ do
 		RETURN_CODE=2
 	fi
 done <<< "$( echo "${RETURN_STRING}" | grep "^RETURN " )"
+
+if [[ ${GOT_OK} == "true" ]]; then
+	if [[ ${DELETE_ALL} == "true" ]]; then
+		# Nothing is shared any more.  The counts on the Pi are kept.
+		#shellcheck source-path=scripts
+		source "${ALLSKY_SCRIPTS}/installUpgradeFunctions.sh" || exit "${ALLSKY_EXIT_ERROR_STOP}"
+		update_all_settings_files ".mapsharing" "none" "text"
+		update_all_settings_files ".shareusagedata" "false" "boolean"
+		for X in "contactemail" "mapsharingconsent" "usagedataconsent" "contactemailconsent" ; do
+			update_all_settings_files ".${X}" "" "text"
+		done
+		[[ ${WHISPER} == "false" ]] && wO_ "${MSG_START}'Map Sharing', 'Share Usage Data', and 'Contact Email' were turned off."
+	elif [[ ${DELETE} == "false" && ${SHARE_USAGE} == "true" ]]; then
+		reset_usage_data
+	fi
+fi
 
 exit "${RETURN_CODE}"

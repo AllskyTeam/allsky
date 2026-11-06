@@ -1694,7 +1694,7 @@
 "type" : "widetext",
 "carryforward" : true,
 "checkchanges" : true,
-"booldependson" : "showonmap OR useremotewebsite OR remotewebsiteimageurl",
+"booldependson" : "mapsharing OR useremotewebsite OR remotewebsiteimageurl",
 "optional" : true
 },
 {
@@ -1706,7 +1706,7 @@
 "type" : "widetext",
 "carryforward" : true,
 "checkchanges" : true,
-"booldependson" : "showonmap OR useremotewebsite OR remotewebsiteurl",
+"booldependson" : "mapsharing OR useremotewebsite OR remotewebsiteurl",
 "optional" : true
 },
 {
@@ -2124,24 +2124,42 @@
 },
 
 {
-"name" : "allskymaptab========================================",
-"label" : "Map",
+"name" : "privacytab========================================",
+"label" : "Privacy & Sharing",
 "type" : "header-tab"
 },
 {
-"name" : "allskymapheader",
-"label" : "Allsky Map Settings",
+"name" : "privacyheader",
+"label" : "Privacy & Sharing Settings",
 "type" : "header"
 },
 {
-"name" : "showonmap",
-"default" : false,
-"description" : "Enable to have your camera appear on the <a href='https://www.thomasjacquin.com/allsky-map/' target='_blank' title='Opens in new tab/window'><span class='WebUISetting'>Allsky Map <i class='fa fa-external-link-alt fa-fw'></i></span></a>.",
-"label" : "Show on Map",
-"type" : "boolean",
+"name" : "allskymapsubheader",
+"label" : "Allsky Map",
+"type" : "header-sub"
+},
+{
+"name" : "mapsharing",
+"default" : "none",
+"description" : "What to do with your camera's information for the <a href='https://www.thomasjacquin.com/allsky-map/' target='_blank' title='Opens in new tab/window'><span class='WebUISetting'>Allsky Map <i class='fa fa-external-link-alt fa-fw'></i></span></a>: <span class='WebUIValue'>Don't send</span> it, send it to the <span class='WebUIValue'>Allsky Team only</span>, or send it and <span class='WebUIValue'>show it on the Map</span>.<br>Sending your Map data, even without showing it, helps the Allsky Team decide where to spend development time.<br>See <a external='true' href='/docs/allsky_guide/settings/privacy.html'>Privacy &amp; Sharing</a> for what is sent and why, and the WebUI's <a href='index.php?page=privacy'>Privacy</a> page to see it or delete it from the server.",
+"label" : "Map Sharing",
+"type" : "select_text",
 "carryforward" : true,
 "checkchanges" : true,
-"booldependson" : "uselocalwebsite OR useremotewebsite"
+"options" : [
+	{"value" : "none", "label" : "Don't send"},
+	{"value" : "team", "label" : "Send to the Allsky Team only"},
+	{"value" : "map", "label" : "Send and show on the Map"}
+]
+},
+{
+"name" : "hideexactlocation",
+"default" : false,
+"description" : "Enable to round the <span class='WebUISetting'>Latitude</span> and <span class='WebUISetting'>Longitude</span> to the nearest 0.02 degrees on the Allsky Map and the local and remote Allsky Websites, so they are at most about 1.3 km (0.8 miles) from your real location. Allsky itself still uses the exact values.",
+"label" : "Hide Exact Location",
+"type" : "boolean",
+"carryforward" : true,
+"checkchanges" : true
 },
 {
 "name" : "location",
@@ -2152,7 +2170,7 @@
 "carryforward" : true,
 "checkchanges" : true,
 "optional" : true,
-"booldependson" : "showonmap OR useremotewebsite OR useremoteserver"
+"booldependson" : "mapsharing OR useremotewebsite OR useremoteserver"
 },
 {
 "name" : "owner",
@@ -2163,7 +2181,7 @@
 "carryforward" : true,
 "checkchanges" : true,
 "optional" : true,
-"booldependson" : "showonmap OR useremotewebsite OR useremoteserver"
+"booldependson" : "mapsharing OR useremotewebsite OR useremoteserver"
 },
 {
 "name" : "camera",
@@ -2181,7 +2199,7 @@
 "type" : "text",
 "checkchanges" : true,
 "optional" : true,
-"booldependson" : "showonmap OR useremotewebsite OR useremoteserver"
+"booldependson" : "mapsharing OR useremotewebsite OR useremoteserver"
 },
 {
 "name" : "computer",
@@ -2200,6 +2218,71 @@
 "type" : "widetext",
 "checkchanges" : true,
 "optional" : true
+},
+{
+"name" : "usagedatasubheader",
+"label" : "Usage Data",
+"type" : "header-sub"
+},
+{
+"name" : "shareusagedata",
+"default" : false,
+"description" : "Enable to send the Allsky Team how Allsky is used on this Pi: the Pi OS, the Pi model, the camera, how many cameras are connected, the enabled modules, and how often Allsky was started, the camera was changed, and the WebUI was used. Nothing else is sent, and the data are not shared with anyone else. They help decide what to improve and test.<br>See <a external='true' href='/docs/allsky_guide/settings/privacy.html'>Privacy &amp; Sharing</a> for exactly what is sent. Disabling this deletes the Usage Data from the server; the counts on this Pi are kept.",
+"label" : "Share Usage Data",
+"type" : "boolean",
+"carryforward" : true,
+"checkchanges" : true
+},
+{
+"name" : "contactsubheader",
+"label" : "Contact",
+"type" : "header-sub"
+},
+{
+"name" : "contactemail",
+"default" : "",
+"description" : "Optional email address the Allsky Team can use to contact you, for example about a problem with the data your Pi sends or about a security issue in Allsky. It is not used for anything else, not shown publicly, and not shared outside the Allsky Team.<br>See <a external='true' href='/docs/allsky_guide/settings/privacy.html'>Privacy &amp; Sharing</a>. Clearing this deletes the address from the server.",
+"label" : "Contact Email",
+"type" : "text",
+"carryforward" : true,
+"checkchanges" : true,
+"optional" : true
+},
+{
+"name" : "mapsharingconsent",
+"settingsonly" : true,
+"default" : "",
+"description" : "When Map Sharing was last set to send data (YYYY-MM-DD HH:MM:SS UTC). Set automatically.",
+"label" : "NOT DISPLAYED IN WebUI",
+"type" : "text",
+"carryforward" : true
+},
+{
+"name" : "usagedataconsent",
+"settingsonly" : true,
+"default" : "",
+"description" : "When Share Usage Data was last enabled (YYYY-MM-DD HH:MM:SS UTC). Set automatically.",
+"label" : "NOT DISPLAYED IN WebUI",
+"type" : "text",
+"carryforward" : true
+},
+{
+"name" : "contactemailconsent",
+"settingsonly" : true,
+"default" : "",
+"description" : "When the Contact Email was last entered or changed (YYYY-MM-DD HH:MM:SS UTC). Set automatically.",
+"label" : "NOT DISPLAYED IN WebUI",
+"type" : "text",
+"carryforward" : true
+},
+{
+"name" : "privacyversion",
+"settingsonly" : true,
+"default" : 0,
+"description" : "The version of the Privacy & Sharing questions the user last answered in the WebUI. Set automatically.",
+"label" : "NOT DISPLAYED IN WebUI",
+"type" : "integer",
+"carryforward" : true
 },
 
 {

@@ -2404,6 +2404,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#hiding-your-exact-location" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hiding your exact location
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#my-image-doesnt-appear-on-the-mapstyleborder-1px-solid-red" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6280,10 +6291,16 @@ Just make sure the <mark>Website URL</mark> and <mark>Image URL</mark> fields of
 </div>
 <p>The most common way to have a camera appear on the Allsky Map is to use a remote Allsky Website. The Map server then grabs the image from that Website and when users click on the image in the Allsky Map, they are directed to the URL for the remote Website.</p>
 <p>If you are using your Pi as a remote Website (not common), click <a href="#Pi-as-Website">here</a> for special instructions.</p>
-<p>To add your camera to the map, enable <mark>Show on Map</mark>. If your camera is already on the map you can remove it by turning the setting off. You can also update your information by changing any of the map-related settings.</p>
-<p>Once you've enabled <mark>Show On Map</mark>, your map information will be automatically sent to the map server whenever you change it, as well as every other day so it can distinguish current data from old, expired data.</p>
+<p>To add your camera to the map, set <mark>Map Sharing</mark> in the <strong>Allsky Map</strong> section of the WebUI's <strong>Privacy &amp; Sharing</strong> settings to <mark>Send and show on the Map</mark>. If your camera is already on the map you can remove it by changing the setting to <mark>Send to the Allsky Team only</mark> or <mark>Don't send</mark>. You can also update your information by changing any of the map-related settings.</p>
+<p>Once <mark>Map Sharing</mark> is set to send the data, your map information will be automatically sent to the map server whenever you change it, as well as every other day so it can distinguish current data from old, expired data.
+The WebUI's <strong>Privacy</strong> page shows exactly what is sent and has a button to delete your data from the map server.</p>
 <p>All these changes take effect immediately - no human intervention required!</p>
-<p>See the <a does_not_work_external="true" href="/allsky_guide/settings/allsky.html#Allsky-map-settings" target="_blank">Allsky Settings documentation</a> page for a description of the map-related settings.</p>
+<h3 id="hiding-your-exact-location">Hiding your exact location<a class="headerlink" href="#hiding-your-exact-location" title="Permanent link">¶</a></h3>
+<p>Users of the Allsky Map can zoom in to see where your camera is.
+If you don't want to show its exact location, enable <mark>Hide Exact Location</mark> in the <strong>Allsky Map</strong> section of the WebUI's <strong>Privacy &amp; Sharing</strong> settings.
+The Allsky Map and your local and remote Allsky Websites then only get the <mark>Latitude</mark> and <mark>Longitude</mark> rounded to the nearest 0.02 degrees, so the location they show is at most about 1.3 km (0.8 miles) from your real one.
+Allsky itself still uses the exact values.</p>
+<p>See the <a does_not_work_external="true" href="/allsky_guide/settings/allsky.html#Allsky-map-settings" target="_blank">Allsky Settings documentation</a> page for a description of the map-related settings, and <a href="/docs/allsky_guide/settings/privacy.html">Privacy &amp; Sharing</a> for what is sent and why.</p>
 <h3 id="my-image-doesnt-appear-on-the-mapstyleborder-1px-solid-red">My Image Doesn't Appear on the Map{style="border: 1px solid red"}<a class="headerlink" href="#my-image-doesnt-appear-on-the-mapstyleborder-1px-solid-red" title="Permanent link">¶</a></h3>
 <p>The Map server uses <strong>https</strong> and if the URL to your server uses <strong>http</strong> then your image won't appear.  For security reasons, most browsers won't follow an <strong>http</strong> link that's on an <strong>https</strong> page.
 The fix is to use <strong>https</strong>.  If you are using a hosted service, talk to the hosting company.  Nowadays, almost all commercial services provide <strong>https</strong>, although you may need to pay for it.</p>

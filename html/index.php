@@ -37,6 +37,15 @@ $status = new StatusMessages();
 define('DHCP_ENABLED', false);
 
 checkClearingMessages();
+countWebUIUse();
+
+// Until the user answered the current Privacy & Sharing questions, show them before any other page.
+// Not before Allsky is configured, since that's needed first.
+if ($lastChanged !== "" && $page !== "privacy" && $page !== "login" &&
+		intval(getVariableOrDefault($settings_array, 'privacyversion', 0)) < ALLSKY_PRIVACY_VERSION) {
+	$_REQUEST['return_page'] = $page;
+	$page = "privacy";
+}
 
 function getRemoteWebsiteVersion()
 {
@@ -142,6 +151,11 @@ $pageInfo = [
 		"title" => "Allsky Settings",
 		"icon" => "fa fa-camera fa-fw",
 		"help" => "docs/allsky_guide/settings/allsky.html"
+	],
+	"privacy" => [
+		"title" => "Privacy",
+		"icon" => "fa fa-user-shield fa-fw",
+		"help" => "docs/allsky_guide/settings/privacy.html"
 	],
 	"editor" => [
 		"title" => "Editor",
@@ -459,6 +473,10 @@ function insertPage($p)
 		case "editor":
 			include_once("includes/$p.php");
 			DisplayEditor();
+			break;
+		case "privacy":
+			include_once("includes/$p.php");
+			DisplayPrivacy();
 			break;
 		case "overlay":
 			include_once("includes/$p.php");
@@ -882,6 +900,7 @@ if ($page == "login") {
 								<ul class="dropdown-menu">
 									<?php
 									insertMenuItem('configuration', "", "dropdown");
+									insertMenuItem('privacy', "", "dropdown");
 									insertMenuItem('editor', "", "dropdown");
 									?>
 								</ul>

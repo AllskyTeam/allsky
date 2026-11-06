@@ -433,6 +433,7 @@ function catch_signal() { return 0; }
 trap "catch_signal" SIGTERM SIGINT SIGHUP
 
 set_allsky_status "${ALLSKY_STATUS_STARTING}"
+count_usage "allsky_starts"		# kept on the Pi; see postToMap.sh
 
 # Run the camera-specific capture program - this is the main attraction...
 # shellcheck disable=SC2086

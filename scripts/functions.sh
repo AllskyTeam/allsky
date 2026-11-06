@@ -860,7 +860,7 @@ function checkAndGetNewerFile()
 	local GIT_FILE="${ALLSKY_GITHUB_RAW_ROOT}/${ALLSKY_GITHUB_ALLSKY_REPO}/${BRANCH}/${2}"
 	local DOWNLOADED_FILE="${3}"
 	# Download the file and put in DOWNLOADED_FILE
-	X="$( curl --show-error --silent --connect-timeout 20 --max-time 10 "${GIT_FILE}" )"
+	X="$( curl --show-error --silent --connect-timeout "${ALLSKY_CURL_TIMEOUT}"  --max-time 10 "${GIT_FILE}" )"
 	RET=$?
 	if [[ ${RET} -eq 0 && ${X} != "400: Invalid request" && ${X} != "404: Not Found" ]]; then
 		# We really just check if the files are different.
@@ -1522,7 +1522,7 @@ function execute_web_commands()
 {
 	local URL="${1}"
 
-	curl --user-agent Allsky --silent --show-error --connect-timeout 20 --max-time 10 --location "${URL}/runCommands.php"
+	curl --user-agent Allsky --silent --show-error --connect-timeout "${ALLSKY_CURL_TIMEOUT}"  --max-time 10 --location "${URL}/runCommands.php"
 }
 
 ####

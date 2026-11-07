@@ -745,37 +745,37 @@ Log(6, "  NEW TYPE FOUND [%s], num_connectedCameraTypes now = %d\n", cC->Type, n
 			Log(1, "%s: WARNING: skipping invalid line line %d in '%s': %s",
 				CG.ME, on_line, basename(CG.connectedCamerasFile), full_line);
 		}
+	}
 
 #ifdef IS_ZWO
-		int  ZWOnum = ASIGetNumOfConnectedCameras();
-		if (ZWOnum != numThisType)
+	int  ZWOnum = ASIGetNumOfConnectedCameras();
+	if (ZWOnum != numThisType)
+	{
+		Log(0, "%s: ERROR: mismatch with number of ZWO cameras connected: per ZWO SDK: %d, per %s: %d\n",
+			CG.ME, ZWOnum, CG.connectedCamerasFile, numThisType);
+
+		Log(1, "Attached Cameras:\n");
+		ASI_CAMERA_INFO info;
+		for (int i=0; i < ZWOnum; i++)
 		{
-			Log(0, "%s: ERROR: mismatch with number of ZWO cameras connected: per ZWO SDK: %d, per %s: %d\n",
-				CG.ME, ZWOnum, CG.connectedCamerasFile, numThisType);
-
-			Log(1, "Attached Cameras:\n");
-			ASI_CAMERA_INFO info;
-			for (int i=0; i < ZWOnum; i++)
+			Log(1, "    Camera # %d: ", i);
+			ASI_ERROR_CODE ret = ASIGetCameraProperty(&info, i);
+			if (ret != ASI_SUCCESS)
 			{
-				Log(1, "    Camera # %d: ", i);
-				ASI_ERROR_CODE ret = ASIGetCameraProperty(&info, i);
-				if (ret != ASI_SUCCESS)
-				{
-					char *getRetCode(ASI_ERROR_CODE code);
-					Log(1, "ERROR: cannot get information: %s.\n", getRetCode(ret));
-				}
-				else
-				{
-					Log(1, "Name: %s, CameraID: %d, MaxHeight: %ld, MaxWidth: %ld\n",
-						info.Name, info.CameraID, info.MaxHeight, info.MaxWidth);
-				}
+				char *getRetCode(ASI_ERROR_CODE code);
+				Log(1, "ERROR: cannot get information: %s.\n", getRetCode(ret));
 			}
-
-			closeUp(EXIT_ERROR_STOP);
+			else
+			{
+				Log(1, "Name: %s, CameraID: %d, MaxHeight: %ld, MaxWidth: %ld\n",
+					info.Name, info.CameraID, info.MaxHeight, info.MaxWidth);
+			}
 		}
+
+		closeUp(EXIT_ERROR_STOP);
+	}
 #endif
 
-	}
 
 	// These checks should "never" fail since allsky.sh created the input file
 	// based on what's connected.
@@ -2241,3 +2241,5 @@ bool validateSettings(config *cg, ASI_CAMERA_INFO ci)
 
 	return(ok);
 }
+
+

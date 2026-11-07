@@ -1992,7 +1992,7 @@ function get_RAM()
 		# Input example: total_mem=4096
 		# Pi's have either 0.5 GB or an integer number of GB.
 		RAM="$( sudo vcgencmd get_config total_mem | sed 's/=/ /' | parse_RAM "${UNITS}" )"
-		if [[ ${RAM} != "unknown" ]]; then
+		if [[ ${RAM} != "unknown" && ${RAM} != "0" ]]; then
 			echo "${RAM}"
 			return
 		fi

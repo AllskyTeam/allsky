@@ -190,6 +190,7 @@ struct config {			// for configuration variables
 	char const *extraArgs				= "";			// Optional extra arguments passed on
 	bool focusMode						= false;
 	bool determineFocus					= false;
+	bool refreshMode					= false;		// True if use selected "Refresh" for camera list
 
 	// To make the code cleaner, comments are only given for daytime variables.
 

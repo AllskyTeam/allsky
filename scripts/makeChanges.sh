@@ -407,7 +407,8 @@ do
 
 				# Can't quote items in ${CMD} or else they get double quoted when executed.
 				CMD="capture_${CAMERA_TYPE}"
-				OTHER_ARGS+=" -debuglevel 3 ${CAMERA_NUMBER_ARG}"
+				# -refreshmode doesn't error out if there's a mismatch in the number of cameras.
+				OTHER_ARGS+=" -debuglevel 3 ${CAMERA_NUMBER_ARG} -refreshmode"
 				if [[ -n ${CAMERA_MODEL} ]]; then
 					CAMERA_MODEL_ARG="-cameramodel '${CAMERA_MODEL}'"
 				else

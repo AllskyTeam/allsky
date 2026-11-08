@@ -1772,7 +1772,11 @@
         }
 
         handlePostSaveSettingUpdate(path) {
-            const configuredPath = this.configuredFiles.length > 0 ? $.trim(this.configuredFiles[0] || "") : "";
+            const settingInput = this.$trigger.attr("data-setting-input");
+            const $input = settingInput ? $(settingInput) : $();
+            const configuredPath = $input.length
+                ? $.trim($input.val() || "")
+                : (this.configuredFiles.length > 0 ? $.trim(this.configuredFiles[0] || "") : "");
             let shouldUpdateSetting = false;
 
             if (configuredPath === "") {
@@ -1782,6 +1786,11 @@
             }
 
             if (shouldUpdateSetting) {
+                if ($input.length) {
+                    $input.val(path).trigger("input").trigger("change");
+                    this.finishSuccessfulSave();
+                    return;
+                }
                 this.updateWebUiDataFileSetting(path);
                 return;
             }

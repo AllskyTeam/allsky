@@ -1,0 +1,7 @@
+<div class="settings-daystokeep-picker">
+    {% include 'controls/text-input.html.twig' with {
+        row: row, input_class: 'settingInput settingInputTextNumber settingInputNumber js-daystokeep-input',
+        input_type: 'number', autocomplete: 'off'
+    } only %}
+    <button class="btn btn-default js-daystokeep-open" type="button" aria-label="Choose {{ row.label }} using storage figures" title="Estimate days to keep"{% if row.dependency.disabled or row.dependency.readonly %} disabled{% endif %}><i class="fa-solid fa-hard-drive" aria-hidden="true"></i></button>
+</div>

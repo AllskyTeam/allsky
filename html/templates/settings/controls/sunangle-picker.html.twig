@@ -1,0 +1,7 @@
+<div class="settings-sunangle-picker" data-latitude-field="{{ row.latitude_id }}" data-longitude-field="{{ row.longitude_id }}">
+    {% include 'controls/text-input.html.twig' with {
+        row: row, input_class: 'settingInput settingInputTextNumber js-sunangle-input',
+        input_type: 'number', autocomplete: 'off'
+    } only %}
+    <button class="btn btn-default js-sunangle-open" type="button" aria-label="Choose {{ row.label }} graphically" title="Choose sun angle"{% if row.dependency.disabled or row.dependency.readonly %} disabled{% endif %}><i class="fa-solid fa-sun" aria-hidden="true"></i></button>
+</div>

@@ -1,660 +1,621 @@
 #!/usr/bin/php
 <?php
 
-// Create a camera type/model-specific "options" file for the new camera.
+require_once __DIR__ . '/functions.php';
 
-if (! include_once('functions.php')) {
-	echo "\nERROR during 'include_once(functions.php)\n";
-	exit(1);
+/**
+ * Build the options document and settings file for one camera.
+ *
+ * The source configuration file is a tree of named sections. Each section may
+ * have a label, warning, settings keyed by setting name, and further sections.
+ * A setting has a type and may supply a default, bounds, choices, display rule, source file,
+ * and presentation metadata. The builder retains that tree and its order.
+ *
+ * Camera controls in cc.json provide the values behind `_min`, `_max`,
+ * `_default`, and their day/night variants. Camera-level choice lists provide
+ * `bin_values`, `type_values`, and `rotation_values`. Missing controls remain in
+ * the options document with display=false so the settings page can still see
+ * their definitions, but they are omitted from newly created settings files.
+ *
+ * The source configuration file and generated document share the same shape:
+ * `sections` is a map keyed by stable identifiers. A section may contain a
+ * `label`, a `warning`, a `settings` map keyed by saved setting name, and another `sections`
+ * map. The builder resolves placeholders in setting definitions but keeps the
+ * tree and its presentation metadata. The separate settings.json file is a
+ * flat map of setting name to saved value; it has no section or display data.
+ *
+ * @phpstan-type CameraControl array{argumentName?: string, MinValue?: int|float|string|null, MaxValue?: int|float|string|null, DefaultValue?: int|float|string|bool|null}
+ * @phpstan-type CameraChoice array{value: int|string, label: string}
+ * @phpstan-type CameraCapabilities array{cameraType: string, cameraModel: string, cameraNumber: int|string, sensor?: string, controls?: list<CameraControl>, supportedBins?: list<CameraChoice>, supportedImageFormats?: list<CameraChoice>, supportedRotations?: list<CameraChoice>}
+ * @phpstan-type SettingDefinition array{type: string, label?: string, description?: string, display?: bool|string, default?: mixed, minimum?: int|float|string, maximum?: int|float|string, options?: list<array<string, mixed>|string>, source?: string, metadata?: array<string, mixed>, step?: int|float|string, unit?: string, settingsonly?: bool, carryforward?: bool, usage?: string, action?: string, ...<string, mixed>}
+ * @phpstan-type OptionSection array{label?: string, warning?: string, settings?: array<string, SettingDefinition>, sections?: array<string, OptionSection>, ...<string, mixed>}
+ * @phpstan-type OptionsDocument array{sections: array<string, OptionSection>}
+ */
+final class AllskyOptionsBuilder
+{
+    /** @var CameraCapabilities Decoded cc.json for the selected camera. */
+    private array $camera;
+    /** @var array<string, CameraControl> Controls indexed by argumentName. */
+    private array $controls = [];
+    private string $connectedCamerasFile;
+    private int $debug;
+    /** @var array<string, true> Names already encountered in the current build. */
+    private array $seen = [];
+    /** @var list<string> Messages deferred until the matching field trace is printed. */
+    private array $pendingMessages = [];
+
+    /**
+     * Index camera controls once so field resolution does not scan cc.json for
+     * every setting. The camera number may be a string or integer in cc.json.
+     *
+     * `cameraType`, `cameraModel`, and `cameraNumber` identify the camera and
+     * are required by the CLI. `sensor` distinguishes Raspberry Pi variants.
+     * Each `controls` entry names a capture argument and supplies its bounds
+     * and default. The three supported-choice lists use value/label pairs for
+     * the bin, image format, and rotation selectors respectively.
+     *
+     * @param CameraCapabilities $camera Capabilities supplied by the capture program.
+     * @param string|null $connectedCamerasFile Tab-separated camera inventory;
+     *        null selects the installation's standard file.
+     * @param int $debug Zero for normal output, one for file actions, two for
+     *        the field-by-field trace used by the release script.
+     */
+    public function __construct(array $camera, ?string $connectedCamerasFile = null, int $debug = 0)
+    {
+        $this->camera = $camera;
+        foreach ($camera['controls'] ?? [] as $control) {
+            if (isset($control['argumentName'])) {
+                $this->controls[$control['argumentName']] = $control;
+            }
+        }
+        $this->connectedCamerasFile = $connectedCamerasFile
+            ?? dirname(__DIR__) . '/config/connected_cameras.txt';
+        $this->debug = $debug;
+    }
+
+    /**
+     * Resolve the source configuration against this camera without flattening sections.
+     *
+     * Each section is keyed by a stable identifier and may contain `label`,
+     * `warning`, `settings`, and nested `sections`. Settings are keyed by their
+     * saved name. Each definition must have a `type`; optional keys include
+     * `display`, `default`, `minimum`, `maximum`, `options`, `source`, and
+     * `metadata`. The output keeps the same tree, resolves camera placeholders,
+     * and adds inferred `step` and `unit` values where appropriate.
+     *
+     * `default`, `minimum`, and `maximum` may contain camera placeholders.
+     * `options` may mix fixed choices with a camera choice token. `source`
+     * identifies a setting stored outside settings.json; `settingsonly` marks a
+     * setting used by the internal settings tools. Other keys, including
+     * `carryforward` and `metadata`, pass through unchanged.
+     *
+     * @param OptionsDocument $sourceConfig Decoded options.json.repo document.
+     * @return OptionsDocument Resolved document, ready for options.json.
+     * @throws RuntimeException If the tree or a setting definition is invalid.
+     */
+    public function build(array $sourceConfig): array
+    {
+        if (!isset($sourceConfig['sections'])) {
+            throw new RuntimeException('Repository must contain a sections object.');
+        }
+        if (!is_array($sourceConfig['sections'])) {
+            throw new RuntimeException('Repository sections must be an object.');
+        }
+        $this->seen = [];
+        $this->pendingMessages = [];
+        return ['sections' => $this->enrichSections($sourceConfig['sections'])];
+    }
+
+    /**
+     * Walk a section map in source file order, resolving its settings in place.
+     * The depth and path are used only for the legacy debug trace; neither is
+     * written into the options document.
+     *
+     * @param array<string, OptionSection> $sections Named source configuration sections.
+     * @param int $depth Zero for a top-level category.
+     * @param string $path Dot-separated parent section identifiers.
+     * @return array<string, OptionSection> Resolved sections in the same order.
+     */
+    private function enrichSections(array $sections, int $depth = 0, string $path = ''): array
+    {
+        $result = [];
+        foreach ($sections as $key => $section) {
+            if (!is_array($section)) {
+                throw new RuntimeException("Invalid repository section '$key'.");
+            }
+            $sectionPath = $path === '' ? (string)$key : "$path.$key";
+            $label = $section['label'] ?? $key;
+            $headingType = $depth === 0 ? 'header-tab' : ($depth === 1 ? 'header' : 'header-sub');
+            $this->logHeading("section:$sectionPath", $label, $headingType);
+            $built = [];
+            foreach ($section as $field => $value) {
+                if ($field === 'sections') {
+                    if (!is_array($value)) throw new RuntimeException("Invalid subsections in '$key'.");
+                    $built[$field] = $this->enrichSections($value, $depth + 1, $sectionPath);
+                } elseif ($field === 'settings') {
+                    if (!is_array($value)) throw new RuntimeException("Invalid settings in '$key'.");
+                    if ($depth === 0) {
+                        $this->logHeading("section:$sectionPath:fields", $label, 'header');
+                    }
+                    if (!empty($section['warning'])) {
+                        $warning = htmlspecialchars((string)$section['warning'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+                        $warningHtml = "<div class='panel panel-danger' style='margin-bottom: 0'><div class='panel-heading'>$warning</div></div>";
+                        $this->logHeading("section:$sectionPath:warning", $warningHtml, 'header-sub');
+                    }
+                    $built[$field] = [];
+                    foreach ($value as $name => $definition) {
+                        $built[$field][$name] = $this->enrichSetting($name, $definition);
+                    }
+                } else {
+                    $built[$field] = $value;
+                }
+            }
+            $result[$key] = $built;
+        }
+        return $result;
+    }
+
+    /**
+     * Log a section heading without adding a synthetic field to the document.
+     *
+     * @param mixed $label Section label; warning headings contain escaped HTML.
+     */
+    private function logHeading(string $name, $label, string $type): void
+    {
+        $heading = ['name' => $name, 'label' => $label, 'type' => $type];
+        $this->logField($heading, $heading);
+    }
+
+    /**
+     * Resolve one setting and add the step and unit hints used by the WebUI.
+     *
+     * The setting name comes from the key in `settings`, not from a `name`
+     * property. Duplicate names are rejected across the whole source file.
+     * Metadata is kept last to retain the generated file's established order.
+     *
+     * @param string|int $name Key from a section's settings map.
+     * @param SettingDefinition $definition Definition with at least `type`.
+     * @return SettingDefinition Definition without a redundant `name` field.
+     */
+    private function enrichSetting($name, $definition): array
+    {
+        if (!is_string($name) || $name === '' || !is_array($definition)
+            || isset($definition['name']) || isset($this->seen[$name])) {
+            throw new RuntimeException("Invalid repository setting '$name'.");
+        }
+        $this->seen[$name] = true;
+        $raw = ['name' => $name] + $definition;
+        $option = $this->resolveCameraOption($raw);
+        $this->logField($raw, $option);
+        unset($option['name']);
+
+        if (!isset($option['step'])) {
+            $step = self::numericStep($option);
+            if ($step !== null) $option['step'] = $step;
+        }
+        if (isset($option['step']) && !isset($option['unit'])) {
+            $unit = self::numericUnit($name);
+            if ($unit !== null) $option['unit'] = $unit;
+        }
+        if (array_key_exists('metadata', $option)) {
+            $metadata = $option['metadata'];
+            unset($option['metadata']);
+            $option['metadata'] = $metadata;
+        }
+        return $option;
+    }
+
+    /**
+     * Reproduce the release generator's field trace and flush queued messages.
+     *
+     * Warnings from choice resolution are queued so they appear at the point
+     * where the former flat generator printed its `options` field.
+     *
+     * @param SettingDefinition&array{name: string} $raw Source definition with its key attached.
+     * @param SettingDefinition&array{name: string} $resolved Camera-specific definition.
+     */
+    private function logField(array $raw, array $resolved): void
+    {
+        if ($this->debug < 2) {
+            $this->flushMessages();
+            return;
+        }
+        $name = $raw['name'];
+        echo "Processing setting [$name]: ";
+        if (($raw['display'] ?? null) === false
+            || (($raw['display'] ?? null) === '_display' && ($resolved['display'] ?? true) === false)) {
+            if (($raw['display'] ?? null) === false) {
+                echo "    'display' field is false; skipping\n";
+            } else {
+                echo "\n$name: <<<<< NOT SUPPORTED >>>>>\n";
+            }
+            $this->flushMessages();
+            return;
+        }
+        echo "\n";
+        $fields = str_starts_with((string)($raw['type'] ?? ''), 'header')
+            ? ['label', 'type']
+            : (($raw['settingsonly'] ?? false) === true
+                ? ['label', 'label_prefix', 'default', 'type']
+                : ['minimum', 'maximum', 'default', 'description', 'label', 'label_prefix',
+                    'type', 'usage', 'carryforward', 'options', 'source', 'action']);
+        foreach ($fields as $field) {
+            if ($field === 'options') {
+                $this->flushMessages();
+                continue;
+            }
+            if (!array_key_exists($field, $raw)) continue;
+            if ($field === 'default' && ($raw['type'] ?? '') === 'boolean') continue;
+            $value = in_array($name, ['camera', 'camerainfo'], true) && $field === 'default'
+                ? ($resolved[$field] ?? $raw[$field]) : $raw[$field];
+            if (!is_string($value) || is_numeric($value)) continue;
+            $shown = strlen($value) > 50 ? substr($value, 0, 50) . '...' : $value;
+            echo "    $field: $shown";
+            if (isset($resolved[$field]) && $resolved[$field] !== $value
+                && preg_match('/^(?:_|day_|night_)(?:min|max|default)$/', $value)) {
+                echo ", RESET v='{$resolved[$field]}'";
+            }
+            echo "\n";
+        }
+        $this->flushMessages();
+    }
+
+    /** Emit queued choice and camera inventory messages in insertion order. */
+    private function flushMessages(): void
+    {
+        foreach ($this->pendingMessages as $message) echo $message;
+        $this->pendingMessages = [];
+    }
+
+    /**
+     * Infer a spinner increment without discarding precision in camera bounds.
+     *
+     * @param array{type?: string, minimum?: mixed, maximum?: mixed, default?: mixed} $option
+     */
+    private static function numericStep(array $option): ?string
+    {
+        $type = $option['type'] ?? '';
+        if ($type === 'integer') {
+            return '1';
+        }
+        if ($type !== 'float' && $type !== 'percent') {
+            return null;
+        }
+
+        $precision = 1;
+        if (isset($option['minimum'], $option['maximum'])
+            && is_numeric($option['minimum']) && is_numeric($option['maximum'])
+            && (float)$option['maximum'] - (float)$option['minimum'] <= 1) {
+            $precision = 2;
+        }
+        foreach (['minimum', 'maximum', 'default'] as $key) {
+            if (!isset($option[$key]) || !is_numeric($option[$key])) {
+                continue;
+            }
+            if (preg_match('/\.([0-9]+)/', (string)$option[$key], $matches)) {
+                $precision = max($precision, strlen(rtrim($matches[1], '0')));
+            }
+        }
+        return '0.' . str_repeat('0', $precision - 1) . '1';
+    }
+
+    /** Return a display unit only for setting names with an unambiguous meaning. */
+    private static function numericUnit(string $name): ?string
+    {
+        if (preg_match('/(?:exposure|delay)$/', $name) || $name === 'fieldhelpdelay') {
+            return 'ms';
+        }
+        if ($name === 'angle') {
+            return '°';
+        }
+        if (preg_match('/^(?:thumbnailsize|imageresize|imagecrop|timelapse(?:width|height)|minitimelapse(?:width|height)|keogramfontsize|keogramlinethickness)/', $name)) {
+            return 'px';
+        }
+        if (preg_match('/bitrate$/', $name)) return 'kbit/s';
+        if (preg_match('/fps$/', $name)) return 'fps';
+        if (preg_match('/^daystokeep/', $name)) return 'days';
+        if (preg_match('/skipframes$/', $name)) return 'frames';
+        if (preg_match('/(?:numimages|frequency|uploadfrequency)$/', $name)) return 'images';
+        return null;
+    }
+
+    /**
+     * Replace camera placeholders and expand camera-specific choice lists.
+     *
+     * Generic placeholders such as `_min` use the control name without a
+     * `day` or `night` prefix. Day/night placeholders use the full setting
+     * name. If a required capability is absent, the setting remains in the
+     * document with `display=false` and the unresolved bound is removed.
+     *
+     * @param SettingDefinition&array{name: string} $option Source definition with its key attached.
+     * @return SettingDefinition&array{name: string} Resolved definition, still including `name`.
+     */
+    private function resolveCameraOption(array $option): array
+    {
+        $name = $option['name'];
+        $generic = preg_replace('/^(day|night)/', '', $name);
+        if (($option['display'] ?? null) === '_display') {
+            $option['display'] = isset($this->controls[$generic]);
+        }
+
+        foreach (['minimum' => 'MinValue', 'maximum' => 'MaxValue', 'default' => 'DefaultValue'] as $field => $cameraField) {
+            $value = $option[$field] ?? null;
+            if (!is_string($value) || !preg_match('/^(?:_|day_|night_)(?:min|max|default)$/', $value)) continue;
+            $controlName = str_starts_with($value, '_') ? $generic : $name;
+            if (array_key_exists($cameraField, $this->controls[$controlName] ?? [])) {
+                $option[$field] = $this->controls[$controlName][$cameraField];
+            } else {
+                unset($option[$field]);
+                $option['display'] = false;
+            }
+        }
+
+        if ($name === 'camera' || $name === 'camerainfo') {
+            $type = $this->camera['cameraType'] ?? '';
+            $model = $this->camera['cameraModel'] ?? '';
+            $option['default'] = $name === 'camera'
+                ? trim("$type $model")
+                : $this->cameraInfo($type, $this->camera['cameraNumber'] ?? 0, $model,
+                    $type === 'RPi' ? ($this->camera['sensor'] ?? '') : '');
+        }
+
+        if (isset($option['options']) && is_array($option['options'])) {
+            $resolved = [];
+            foreach ($option['options'] as $choice) {
+                if (!is_string($choice) || !str_ends_with($choice, '_values')) {
+                    $resolved[] = $choice;
+                    continue;
+                }
+                $choices = $this->cameraChoices($choice);
+                if ($choices === null) {
+                    $option['display'] = false;
+                    continue;
+                }
+                array_push($resolved, ...$choices);
+            }
+            $option['options'] = $resolved;
+        }
+        return $option;
+    }
+
+    /**
+     * Return choices for a camera list token such as `bin_values`.
+     *
+     * Missing lists return null, which makes the setting unavailable. Invalid
+     * entries are omitted and reported using the release script's wording.
+     *
+     * @return list<array<string, mixed>>|null Null when the camera has no such list.
+     */
+    private function cameraChoices(string $placeholder): ?array
+    {
+        $field = [
+            'bin_values' => 'supportedBins',
+            'type_values' => 'supportedImageFormats',
+            'rotation_values' => 'supportedRotations',
+        ][$placeholder] ?? null;
+        if ($placeholder === 'camerainfo_values') return $this->cameraInfoChoices();
+        if ($field === null) throw new RuntimeException("Unknown options placeholder '$placeholder'.");
+        $name = substr($placeholder, 0, -7);
+        $choices = $this->camera[$field] ?? null;
+        if ($choices === null) {
+            $this->pendingMessages[] = "ERROR: Could not find '$field' for field '$name'.\n";
+            return null;
+        }
+        if (!is_array($choices)) return null;
+        $valid = [];
+        foreach ($choices as $choice) {
+            if (!is_array($choice)) {
+                $this->pendingMessages[] = "ERROR: Field '$name': '$field' not an array, is '$choice'.";
+                continue;
+            }
+            $valid[] = $choice;
+        }
+        return $valid;
+    }
+
+    /**
+     * Build the camera selector from connected_cameras.txt.
+     *
+     * Each inventory row is tab separated: marker, type, number, sensor,
+     * module length, and model. The current camera is inserted if the inventory
+     * omits it, followed by the Refresh choice.
+     *
+     * @return list<array{value: string, label: string}>
+     */
+    private function cameraInfoChoices(): array
+    {
+        $choices = [];
+        $lines = @file($this->connectedCamerasFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        if ($lines === false) {
+            $this->pendingMessages[] = "WARNING: Unable to read '{$this->connectedCamerasFile}'; only the current camera is listed.\n";
+            $lines = [];
+        }
+        foreach ($lines as $line) {
+            $parts = explode("\t", $line);
+            if (count($parts) < 6 || $parts[0] !== 'camera') continue;
+            [$type, $number, $sensor, , $model] = array_slice($parts, 1, 5);
+            $sensor = $type === 'RPi' ? $sensor : '';
+            $choices[] = [
+                'value' => $this->cameraInfo($type, $number, $model, $sensor),
+                'label' => trim("$type  $model" . ($sensor !== '' ? "  [$sensor]" : '')),
+            ];
+        }
+        $type = $this->camera['cameraType'] ?? '';
+        $model = $this->camera['cameraModel'] ?? '';
+        $sensor = $type === 'RPi' ? ($this->camera['sensor'] ?? '') : '';
+        $current = $this->cameraInfo($type, $this->camera['cameraNumber'] ?? 0, $model, $sensor);
+        if (!in_array($current, array_column($choices, 'value'), true)) {
+            array_unshift($choices, [
+                'value' => $current,
+                'label' => trim("$type  $model" . ($sensor !== '' ? "  [$sensor]" : '')) . '  (not connected)',
+            ]);
+        }
+        $choices[] = ['value' => 'Refresh', 'label' => 'Refresh'];
+        return $choices;
+    }
+
+    /** Format the camera identifier stored by the `camerainfo` setting. */
+    private function cameraInfo(string $type, string|int $number, string $model, string $sensor): string
+    {
+        return "$type;$number;$model" . ($sensor !== '' ? ";$sensor" : '');
+    }
+
+    /**
+     * Collect settings stored in settings.json, in section order.
+     *
+     * Settings with `display=false` or a separate `source` file are excluded.
+     * When a prior settings file is supplied, its values take precedence over
+     * defaults for matching names. The result is a flat name-to-value map.
+     *
+     * @param array<string, OptionSection> $sections Resolved options sections.
+     * @param array<string, mixed>|null $previous Values from the prior settings file.
+     * @param array<string, mixed> $settings Collected values, updated in place.
+     */
+    private static function appendSettings(array $sections, $previous, array &$settings): void
+    {
+        foreach ($sections as $section) {
+            foreach ($section['settings'] ?? [] as $name => $option) {
+                if (!empty($option['source']) || ($option['display'] ?? true) === false) continue;
+                $value = $previous !== null ? ($previous[$name] ?? null) : ($option['default'] ?? '');
+                if (($option['type'] ?? '') === 'boolean') $value = $value == 'true';
+                $settings[$name] = $value;
+            }
+            self::appendSettings($section['sections'] ?? [], $previous, $settings);
+        }
+    }
+
+    /**
+     * Create or reuse camera settings, then link the generic settings path to them.
+     *
+     * A camera-specific file is reused unless `force` is set. If it exists and
+     * regeneration is forced, values from the current generic settings file
+     * take precedence over defaults. A new camera file starts from defaults.
+     * Fields stored in separate source files and unavailable camera controls
+     * are omitted. No end marker is added to new settings files.
+     *
+     * @param string $settingsFile Generic settings path, normally settings.json.
+     * @param OptionsDocument $options Document returned by build().
+     * @param bool $force Regenerate an existing camera-specific file.
+     * @throws RuntimeException With the release script's exit code on a file error.
+     */
+    public function updateCameraSettings(string $settingsFile, array $options, bool $force): void
+    {
+        $parts = explode('.', basename($settingsFile));
+        if (count($parts) !== 2) throw new RuntimeException("invalid name: '$settingsFile'", 7);
+
+        $cameraType = (string)$this->camera['cameraType'];
+        $cameraModel = str_replace(' ', '_', (string)$this->camera['cameraModel']);
+        $specificName = "{$parts[0]}_{$cameraType}_{$cameraModel}.{$parts[1]}";
+        $specificFile = dirname($settingsFile) . '/' . $specificName;
+        $specificExists = file_exists($specificFile);
+        $previous = null;
+        if ($this->debug > 0) {
+            if ($this->debug > 1) echo "\n";
+            echo 'Camera-specific settings file exists (' . ($specificExists ? 'yes' : 'no') . "): $specificFile.\n";
+        }
+
+        if (file_exists($settingsFile)) {
+            if ($specificExists) {
+                $previous = get_decoded_json_file($settingsFile, true,
+                    "ERROR: Unable to process prior settings file '$settingsFile'.");
+            }
+            if ($this->debug > 0) echo "Removing $settingsFile.\n";
+            if (!unlink($settingsFile)) throw new RuntimeException("Unable to delete $settingsFile.", 8);
+        }
+
+        if ($force || !$specificExists) {
+            $settings = [];
+            self::appendSettings($options['sections'], $previous, $settings);
+            $json = json_encode($settings, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES
+                | JSON_NUMERIC_CHECK | JSON_PRESERVE_ZERO_FRACTION | JSON_THROW_ON_ERROR);
+            if ($this->debug > 0) echo "Creating camera-specific settings file: $specificFile.\n";
+            $error = updateFile($specificFile, $json, $specificName, true);
+            if ($error !== '') throw new RuntimeException("Unable to create $specificFile.", 9);
+        } elseif ($this->debug > 0) {
+            echo "Using existing $specificFile.\n";
+        }
+
+        if ($this->debug > 0) echo "Linking $specificFile to $settingsFile.\n";
+        if (!link($specificFile, $settingsFile)) {
+            throw new RuntimeException("Unable to link $specificFile to $settingsFile.", 10);
+        }
+    }
+
+    /**
+     * Write the hierarchical options document at the caller's chosen path.
+     *
+     * The existing updateFile() helper preserves the WebUI permissions fallback.
+     * Its error message is converted to the release script's exit code 6.
+     *
+     * @param string $path Destination supplied by --options-file.
+     * @param OptionsDocument $contents Document returned by build().
+     * @throws RuntimeException If the file cannot be encoded or written.
+     */
+    public function writeGeneratedOptions(string $path, array $contents): void
+    {
+        $json = json_encode($contents, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES
+            | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION | JSON_THROW_ON_ERROR) . "\n";
+        $error = updateFile($path, $json, basename($path), true);
+        if ($error !== '') throw new RuntimeException("Unable to create $path.", 6);
+    }
 }
 
-$q = '"';	// This make it easier than escaping all the quotes in output.
-
-// Get the "generic" name for a setting that has either "day" or "night" in the name.
-// Camera capabilities don't care if it's day or night so there's only one value.
-function get_generic_name($s) {
-	if ($s === null) return $s;
-
-	if (substr($s, 0, 3) === "day")
-		return substr($s, 3);
-	if (substr($s, 0, 5) === "night")
-		return substr($s, 5);
-	return $s;
+/**
+ * CLI entry point. Shell callers consume stdout and the exit status, so keep
+ * diagnostic wording and exit codes aligned with the release generator.
+ * The options path comes from --options-file; settings creation is optional.
+ */
+if (realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === __FILE__) {
+    try {
+        $args = getopt('', ['cc-file:', 'repo-file:', 'options-file:', 'settings-file:',
+            'connected-cameras-file:', 'force', 'debug', 'debug2', 'help']);
+        $debug = 0;
+        foreach ($args as $name => $value) {
+            if ($debug > 1) echo "   Argument $name $value\n";
+            if ($name === 'debug') $debug++;
+            elseif ($name === 'debug2') $debug = 2;
+        }
+        if (isset($args['help']) || !isset($args['cc-file'], $args['options-file'])) {
+            echo "\nUsage: " . basename($argv[0])
+                . " [--debug] [--debug2] [--help] [--settings-file file] --cc-file file --options-file file\n";
+            exit(1);
+        }
+        $root = dirname(__DIR__);
+        $cameraFile = $args['cc-file'];
+        $optionsFile = $args['options-file'];
+        $repoFile = $args['repo-file'] ?? "$root/config_repo/" . basename($optionsFile) . '.repo';
+        if (!file_exists($cameraFile)) {
+            echo "ERROR: Camera capabilities file $cameraFile does not exist!\n";
+            echo "Run 'install.sh --update' to create it.\n";
+            exit(2);
+        }
+        if (!file_exists($repoFile)) {
+            echo "ERROR: Template options file $repoFile does not exist!\n";
+            exit(3);
+        }
+        $camera = get_decoded_json_file($cameraFile, true,
+            "ERROR: Unable to process cc file '$cameraFile'.");
+        if ($camera === null) exit(4);
+        $validCamera = true;
+        foreach (['cameraType', 'cameraModel', 'cameraNumber'] as $required) {
+            if (!isset($camera[$required]) || $camera[$required] === '') {
+                echo "ERROR: $required empty in cc_array!\n";
+                $validCamera = false;
+            }
+        }
+        if (!$validCamera) exit(5);
+        if ($debug > 0) echo "cameraType={$camera['cameraType']}, cameraModel={$camera['cameraModel']}\n";
+        $sourceConfig = get_decoded_json_file($repoFile, true,
+            "ERROR: Unable to process template options file '$repoFile'.");
+        if ($sourceConfig === null) exit(5);
+        $builder = new AllskyOptionsBuilder($camera, $args['connected-cameras-file'] ?? null, $debug);
+        $options = $builder->build($sourceConfig);
+        $builder->writeGeneratedOptions($optionsFile, $options);
+        if (!empty($args['settings-file'])) {
+            $builder->updateCameraSettings($args['settings-file'], $options, isset($args['force']));
+        }
+    } catch (Throwable $error) {
+        echo "ERROR: {$error->getMessage()}\n";
+        exit($error->getCode() ?: 5);
+    }
 }
-// These values need to be looked up in the CC file using their generic name.
-function is_generic_value($v) {
-	if ($v === null) return false;
-
-	if (substr($v, 0, 1) === "_")
-		return true;
-
-	return false;
-}
-// These values need to be looked up in the CC file using their full name.
-function is_specific_value($v) {
-	if ($v === null) return false;
-
-	if (substr($v, 0, 4) === "day_" || substr($v, 0, 6) === "night_")
-		return true;
-
-	return false;
-}
-
-// Get a camera control.  Return true if it exists, false if it doesn't.
-// If it exists, set the min, max, and default.
-function get_control($array, $setting, &$min, &$max, &$default) {
-	foreach ($array as $cc) {
-		if ($cc["argumentName"] === $setting) {
-			$min = getVariableOrDefault($cc, "MinValue", null);
-			$max = getVariableOrDefault($cc, "MaxValue", null);
-			$default = getVariableOrDefault($cc, "DefaultValue", null);
-			return true;
-		}
-	}
-	return false;
-}
-
-// If a field is null that means it wasn't in the repo file,
-// so don't add it to the options string.
-// We need this because we look for all fields in a setting.
-function add_non_null_field($a, $f, $setting, $type=null) {	// array, field name, setting_name, type
-	global $options_str;
-	global $num_fields_this_setting;
-
-	$value = getVariableOrDefault($a, $f, null);
-	if ($value === null) return;
-
-	// Add command and newline to prior line starting with 2nd field.
-	if ($num_fields_this_setting++ > 0) {
-		$options_str .= ",\n";
-	}
-
-	if ($f === "options")
-		add_options_field($f, $value, $setting);
-	else
-		add_field($f, $value, $setting, $type);
-}
-
-// Format the given argument with or without quotes, depending on the argument type.
-// If a type is specified, use it.
-function quote_value($v, $type=null) {
-	global $q;
-
-	if ($type === null)
-		$type = gettype($v);
-
-	if ($type == "boolean") {
-		if ($v === 0 || $v === "0" || $v === "false" || $v === false || ! $v)
-			return("false");
-		else
-			return("true");
-	} else if (is_numeric($v)) {
-		return($v);
-	} else {
-		return("$q$v$q");
-	}
-}
-
-
-// Return $v if it's not a string, and optionally if $return_string is set.
-// This is needed because we never need to look in non-string values for "_min", "_max", etc.
-function add_value($v, $return_string, $type=null) {
-	$newV = quote_value($v, $type);
-	if (! $return_string && substr($newV, 0, 1) == '"')
-		return(null);		// Is a string so dont' return it.
-	else
-		return($newV);
-}
-
-// Add a field to the options string.
-// Adding the field name is simple.
-// For the value, we first need to check if it's a placeholder value,
-// and if so, replace the placeholder with the actual value from the camera capabilities file.
-// If it's not a placeholder value we just add it.
-function add_field($f, $v, $setting, $type=null) {	// field, value, setting_name, type
-	global $q;
-	global $debug;
-	global $cc_controls;
-	global $options_str;
-	$options_str .= "$q$f$q : ";				// field name
-
-	// Do not add value if it's a string since we need to check if it needs to be replaced
-	$newV = add_value($v, false, $type);
-	if ($newV !== null) {
-		$options_str .= $newV;
-		return;
-	}
-
-	if ($debug > 1 && $f !== "name") {
-		// The "name" was already displayed.
-		// It's hard to read the output with really long strings.
-		if (strlen($v) > 50) $vv = substr($v, 0, 50) . "...";
-		else $vv = $v;
-		echo "    $f: $vv";
-	}
-
-	// Check if the value is a generic placeholder, like "_min".
-	// The "options" field is handled in add_options_field() since it's value is an array.
-	// The "display" field was handled earlier.
-	if (is_generic_value($v) || is_specific_value($v)) {
-		$searchCC = true;
-	} else {
-		$searchCC = false;
-	}
-
-	if ($searchCC) {
-		// For generic values, if the setting is a day/night one, e.g., "dayexposure",
-		// get just the "exposure" portion.
-		// For specific values e.g., "daymean" : "day_default",
-		// need to look up "daymean" in the CC file,
-		// not "mean" like we do for generic values
-
-		if (is_generic_value($v)) {
-			$setting = get_generic_name($setting);
-		}
-		if (get_control($cc_controls, $setting, $min, $max, $default)) {
-			$vReset = false;
-			if ($f === "minimum") {
-				$v = $min;
-				$vReset = true;
-			} else if ($f === "maximum") {
-				$v = $max;
-				$vReset = true;
-			} else if ($f === "default") {
-				$v = $default;
-				$vReset = true;
-			}
-			if ($debug > 1) {
-				if ($vReset) echo ", RESET v='$v'";
-			}
-		}
-	}
-	if ($debug > 1 && $f !== "name") echo "\n";
-	$options_str .= quote_value($v, null);
-}
-
-// The "camerainfo" setting: "type;number;model;sensor", the sensor only for RPi
-// and without a trailing ";" when there's none (see set_camera_info() in functions.sh).
-function camera_info($type, $number, $model, $sensor) {
-	$info = "$type;$number;$model";
-	if ($sensor !== "" && $sensor !== null) $info .= ";$sensor";
-	return $info;
-}
-
-// The choices for the "camerainfo" setting: every connected camera of every type,
-// from the connected cameras file, then "Refresh".
-// The current camera is always listed so the WebUI never changes it by accident,
-// even if it's no longer connected.
-function camera_info_options() {
-	global $cc_array;
-
-	$file = ALLSKY_CONNECTED_CAMERAS_INFO;
-
-	// Lines (tab-separated):
-	//		camera  RPi  number  sensor  module_len  model  <other info not used here>
-	//		camera  ZWO  number  model   0           model
-	$options = array();
-	$lines = @file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-	if ($lines === false) {
-		echo "WARNING: Unable to read '$file'; only the current camera is listed.\n";
-		$lines = array();
-	}
-	foreach ($lines as $line) {
-		$f = explode("\t", $line);
-		if ($f[0] !== "camera" || count($f) < 6) continue;
-		$type = $f[1];
-		$number = $f[2];
-		$model = $f[5];
-		if ($type === "RPi") {
-			$sensor = $f[3];
-			$label = "$type  $model  [$sensor]";
-		} else {
-			$sensor = "";
-			$label = "$type  $model";
-		}
-		$options[] = array("value" => camera_info($type, $number, $model, $sensor), "label" => $label);
-	}
-
-	$type = getVariableOrDefault($cc_array, "cameraType", "");
-	$number = getVariableOrDefault($cc_array, "cameraNumber", "0");
-	$model = getVariableOrDefault($cc_array, "cameraModel", "");
-	$sensor = ($type === "RPi") ? getVariableOrDefault($cc_array, "sensor", "") : "";
-	$current = camera_info($type, $number, $model, $sensor);
-	$found = false;
-	foreach ($options as $opt) {
-		if ($opt["value"] === $current) {
-			$found = true;
-			break;
-		}
-	}
-	if (! $found) {
-		$label = "$type  $model";
-		if ($sensor !== "") $label .= "  [$sensor]";
-		array_unshift($options, array("value" => $current, "label" => "$label  (not connected)"));
-	}
-
-	$options[] = array("value" => "Refresh", "label" => "Refresh");
-	return $options;
-}
-
-// Add the options for the specified field to the options string.
-// The cc_array entry for these fields are all at the top level.
-// The camera capabilities already has the list in json format.
-function handle_options($f) {
-	global $q;
-	global $options_str;
-	global $cc_array;
-
-	if ($f === "camerainfo") {
-		$cc_options = camera_info_options();
-	} elseif ($f === "bin")
-		$cc_field = "supportedBins";
-	elseif ($f === "type")
-		$cc_field = "supportedImageFormats";
-	elseif ($f === "rotation")
-		$cc_field = "supportedRotations";
-	else {
-		echo "ERROR: '$f' does not have an 'options' field\n";
-		return;
-	}
-	if ($f !== "camerainfo") {
-		$cc_options = getVariableOrDefault($cc_array, $cc_field, null);
-		if ($cc_options === null) {
-			echo "ERROR: Could not find '$cc_field' for field '$f'.\n";
-			return false;
-		}
-	}
-
-	$num_options = count($cc_options);
-	foreach ($cc_options as $opt) {
-		if (is_array($opt)) {
-			$options_str .= "\t{";
-			$num = count($opt);
-			foreach ($opt as $f => $v) {
-				// output if string or not
-				$options_str .= "$q$f$q : " . add_value($v, true, null);
-				$num--;
-				if ($num > 0)
-					$options_str .= ", ";
-			}
-			$options_str .= '}';
-			$num_options--;
-			if ($num_options > 0) $options_str .= ",";
-			$options_str .= "\n";
-		} else {
-			echo "ERROR: Field '$f': '$cc_field' not an array, is '$opt'.";
-		}
-	}
-}
-
-// This is the 'options' field in a setting, which is an array.
-// Add it to the options string.
-function add_options_field($field, $options, $setting) {
-	global $q;
-	global $options_str;
-
-	$options_str .= "$q$field$q : [\n";		// field name
-
-	$setting = get_generic_name($setting);
-
-	// Loop through each entry of the array looking for values to replace.
-	$num_options = count($options);
-	foreach ($options as $opt) {
-		if (is_array($opt)) {
-			$options_str .= "\t{";
-			$num = count($opt);
-			foreach ($opt as $f => $v) {
-				// output if string or not
-				$options_str .= "$q$f$q : " . add_value($v, true, null);
-				$num--;
-				if ($num > 0)
-					$options_str .= ", ";
-			}
-			$options_str .= '}';
-			$num_options--;
-			if ($num_options > 0) $options_str .= ",";
-			$options_str .= "\n";
-
-		} else {	// single value - check it for _values, etc.
-			if ($opt === "{$setting}_values") {
-				handle_options($setting);
-			}
-		}
-	}
-	$options_str .= "]";
-}
-
-$rest_index;
-$longopts = array(
-	"debug",		// no arguments
-	"debug2",		// no arguments
-	"help",			// no arguments
-	"cc-file:",
-	"options-file:",
-	"settings-file:",
-	"force",		// no arguments
-);
-$options = getopt("", $longopts, $rest_index);
-
-$debug = 0;			// Can be specified mutliple time
-$help = false;
-$cc_file = "";
-$options_file = "";
-$settings_file = "";
-$force = false;		// force creation of settings file even if it already exists?
-
-foreach ($options as $opt => $val) {
-	// if ($debug > 1 || $opt === "debug" || $opt === "debug2") echo "   Argument $opt $val\n";
-	if ($debug > 1) echo "   Argument $opt $val\n";
-
-	if ($opt === "debug")
-		$debug++;
-	else if ($opt === "debug2")
-		$debug = 2;
-	else if ($opt === "help")
-		$help = true;
-	else if ($opt === "cc-file")
-		$cc_file = $val;
-	else if ($opt === "options-file")
-		$options_file = $val;
-	else if ($opt === "settings-file")
-		$settings_file = $val;
-	else if ($opt === "force")
-		$force = true;
-	else
-		echo "WARNING: Ignoring unknown argument: $opt\n";
-}
-
-if ($help || $cc_file === "" || $options_file === "") {
-	echo "\nUsage: " . basename($argv[0]) . " [--debug] [--debug2] [--help] [--settings-file file] --cc-file file --options-file file\n";
-	exit(1);
-}
-
-if (! file_exists($cc_file)) {
-	echo "ERROR: Camera capabilities file $cc_file does not exist!\n";
-	echo "Run 'install.sh --update' to create it.\n";
-	exit(2);
-}
-$repo_file = ALLSKY_REPO . "/" . basename($options_file) . ".repo";
-if (! file_exists($repo_file)) {
-	echo "ERROR: Template options file $repo_file does not exist!\n";
-	exit(3);
-}
-
-// Read $cc_file
-$errorMsg = "ERROR: Unable to process cc file '$cc_file'.";
-$cc_array = get_decoded_json_file($cc_file, true, $errorMsg);
-if ($cc_array === null) {
-	exit(4);
-}
-$cc_controls = $cc_array["controls"];
-$ok = true;
-$cameraType = getVariableOrDefault($cc_array, "cameraType", "");
-if ($cameraType === "") {
-	echo "ERROR: cameraType empty in cc_array!\n";
-	$ok = false;
-}
-$cameraModel = getVariableOrDefault($cc_array, "cameraModel", "");
-if ($cameraModel === "") {
-	echo "ERROR: cameraModel empty in cc_array!\n";
-	$ok = false;
-}
-$cameraNumber = getVariableOrDefault($cc_array, "cameraNumber", "");
-if ($cameraNumber === "") {
-	echo "ERROR: cameraNumber empty in cc_array!\n";
-	$ok = false;
-}
-if (! $ok) exit(5);
-
-if ($debug > 0) echo "cameraType=$cameraType, cameraModel=$cameraModel\n";
-
-// Read $repo_file
-$errorMsg = "ERROR: Unable to process template options file '$repo_file'.";
-$repo_array = get_decoded_json_file($repo_file, true, $errorMsg);
-if ($repo_array === null) {
-	exit(5);
-}
-
-// All entries except the last "$endSetting" name have a "type". 
-// All entries but type=="header*" have a "name".
-// Out of convention, the order of the fields is (a setting may not have all fields):
-	// name					[string]
-	// display				[boolean]	# must be 2nd if present
-	// settingsonly			[boolean]	# must be 3rd if present
-	// minimum				[number]
-	// maximum				[number]
-	// default				[string, but usually a number]
-	// description			[string]
-	// label				[string]
-	// label_prefix			[string]
-	// type					[string]
-	// usage				[string]
-	// carryforward			[boolean]
-	// options				[array with 1 or more entries] (only if "type" == "select_*")
-	// checkchanges			[boolean]
-	// source				[string]
-	// booldependson		[string]	("name" of other setting)
-	// booldependsoff		[string]	("name" of other setting)
-	// popup-yesno			[string]
-	// popup-yesno-value	[number or string]
-	// optional				[boolean]
-	// action				[string]
-
-
-// ==================   Create options file
-
-// A "generic" value is one that's the same for day and night, e.g., the minimum value
-// for the "dayexposure" and "nightexposure".
-// These are often specified by the camera and have an "argumentName" in the CC
-// file without the "day" or "night", e.g., "exposure".
-
-// Field values that begin with "_", e.g., "_default" are generic placeholders; their
-// actual values need to be determined by looking in the CC file for the generic name.
-// The repo options file will typically have "_" followed by the field name,
-// e.g., "_default" for the "default" field, but we only check if the first char is "_".
-
-// Field values that being with "day_" or "night_", e.g., "day_default" have
-// different values for day and night in the CC file, e.g., default value for day
-// and night exposure.
-
-// How many fields for this setting have we output?
-// Used to add commas to all but the last field.
-$num_fields_this_setting = 0;
-
-$options_str = "[\n";
-foreach ($repo_array as $repo) {
-	global $debug;
-	global $cc_controls;
-	global $endSetting;
-	global $num_fields_this_setting;
-	$num_fields_this_setting = 0;
-
-	$name = getVariableOrDefault($repo, "name", null);
-	$type = getVariableOrDefault($repo, "type", null);
-	if ($name === $endSetting) {
-		$options_str .= "{\n";
-		$options_str .= "{$q}name{$q} : {$q}$name{$q},\n";
-		$options_str .= "{$q}type{$q} : {$q}$type{$q},\n";
-		$options_str .= "{$q}display{$q} : false\n";
-		$options_str .= "}\n";
-		break;		// hit the end
-	}
-
-	if ($debug > 1) echo "Processing setting [$name]: ";
-
-	// Before adding the setting, make sure the "display" field says we can.
-	// The value will be true (can display) or false (don't display), or a placeholder.
-
-	$display = getVariableOrDefault($repo, "display", null);
-	if ($display === null) {
-		$display = "true";		// default
-	} else if ($display === "false") {
-		if ($debug > 1) echo "    'display' field is false; skipping\n";
-		continue;
-	}
-
-	if (is_generic_value($display)) {
-		// Is a placeholder - need to check if the setting is in the CC file.
-		// If not, don't output this setting.
-		if (! get_control($cc_controls, get_generic_name($name), $min, $max, $default)) {
-			if ($debug > 1) {
-				echo "\n$name: <<<<< NOT SUPPORTED >>>>>\n";
-			}
-			// Not an error - just means this isn't supported.
-			continue;
-		}
-	}
-	if ($debug > 1) echo "\n";
-
-	// Have to handle camera type and model differently because the defaults
-	// might not be what we want.
-	if ($name === "camerainfo") {
-			$sensor = ($cameraType === "RPi") ? getVariableOrDefault($cc_array, "sensor", "") : "";
-			$repo["default"] = camera_info($cameraType, $cameraNumber, $cameraModel, $sensor);
-	} elseif ($name === "camera") {
-			$repo["default"] = "$cameraType $cameraModel";
-	}
-
-	$options_str .= "{\n";
-		add_non_null_field($repo, "name", $name);
-
-		// Only get here if display is true so no need to add "display" field.
-
-		if (getVariableOrDefault($repo, "settingsonly", "false") === "true") {
-			add_non_null_field($repo, "settingsonly", $name, "boolean");
-			add_non_null_field($repo, "label", $name);
-			add_non_null_field($repo, "label_prefix", $name);
-			add_non_null_field($repo, "default", $name, $type);
-			add_non_null_field($repo, "type", $name);
-		} else {
-			add_non_null_field($repo, "minimum", $name);
-			add_non_null_field($repo, "maximum", $name);
-			add_non_null_field($repo, "default", $name, $type);
-			add_non_null_field($repo, "description", $name);
-			add_non_null_field($repo, "label", $name);
-			add_non_null_field($repo, "label_prefix", $name);
-			add_non_null_field($repo, "type", $name);
-			add_non_null_field($repo, "usage", $name);
-			add_non_null_field($repo, "carryforward", $name, "boolean");
-			add_non_null_field($repo, "options", $name);
-			add_non_null_field($repo, "checkchanges", $name, "boolean");
-			add_non_null_field($repo, "optional", $name, "boolean");
-			add_non_null_field($repo, "source", $name);
-			add_non_null_field($repo, "action", $name);
-		}
-	$options_str .= "\n},\n";
-}
-$options_str .= "]\n\n";
-
-// Save the options file.
-$results = updateFile($options_file, $options_str, "options", true);
-if ($results != "") {
-	echo "ERROR: Unable to create $options_file.\n";
-	exit(6);
-}
-
-
-// ==================   Create settings file
-
-// If a $settings_file was passed in, create a "settings" file.
-// If this camera type/model is already known, use that file,
-// otherwise create a "settings" file with defaults for this camera.
-// However, if there's an old settings file port its generic fields to the new file.
-
-if ($settings_file !== "") {
-	// Determine the name of the camera type/model-specific file.
-	$pieces = explode(".", basename($settings_file));		// e.g., "settings.json"
-	if (count($pieces) !== 2) {
-		echo "ERROR: invalid name: '$settings_file'\n";
-		exit(7);
-	}
-	$FileName = $pieces[0];		// e.g., "settings"
-	$FileExt = $pieces[1];		// e.g., "json"
-
-	// The camera model may have spaces which is a hassle in file names,
-	// so convert to underscores.
-	$cameraModel = str_replace(" ", "_", $cameraModel);
-
-	// e.g., "settings_ZWO_ASI123.json"
-	$cameraSpecificSettingsName = "{$FileName}_{$cameraType}_{$cameraModel}.{$FileExt}";
-
-	$fullSpecificFileName = dirname($settings_file) . "/$cameraSpecificSettingsName";
-	$specificFileExists =  file_exists($fullSpecificFileName);
-	if ($debug > 0) {
-		$e =  $specificFileExists ? "yes" : "no";
-		if ($debug > 1) echo "\n";
-		echo "Camera-specific settings file exists ($e): $fullSpecificFileName.\n";
-	}
-
-	// If the settings file exists, it's a generic link to a camera-specific named file.
-	// Remove the link because it points to a prior camera.
-	$settings_array = null;
-	if (file_exists($settings_file)) {
-		if ($specificFileExists) {
-			$errorMsg = "ERROR: Unable to process prior settings file '$settings_file'.";
-			$settings_array = get_decoded_json_file($settings_file, true, $errorMsg);
-		}
-
-		if ($debug > 0) echo "Removing $settings_file.\n";
-		if (! unlink($settings_file)) {
-			echo "ERROR: Unable to delete $settings_file.\n";
-			exit(8);
-		}
-	}
-
-	// If there isn't a camera-specific file, create one.
-	if ($force || ! $specificFileExists) {
-		// For each item in the options file, write the name and a value.
-		$new_settings = Array();
-		$options_array = json_decode($options_str, true);
-		foreach ($options_array as $option) {
-			$type = getVariableOrDefault($option, 'type', "");
-
-			if (substr($type, 0, 6) == "header" ||
-					getVariableOrDefault($option, 'source', null) !== null ||
-					getVariableOrDefault($option, 'display', "true") == "false") {
-				continue;	// don't put in settings file
-			}
-
-			$name = $option['name'];
-
-			// If there's a previous value, use it, else use the default.
-			if ($settings_array !== null) {
-				$val = getVariableOrDefault($settings_array, $name, null);
-			} else {
-				$val = getVariableOrDefault($option, 'default', "");
-			}
-			if ($type == "boolean") {
-				if ($val == "true") $val = true;
-				else $val = false;
-			}
-			$new_settings[$name] = $val;
-		}
-		$new_settings[$endSetting] = true;
-
-		$mode = JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_NUMERIC_CHECK|JSON_PRESERVE_ZERO_FRACTION;
-		$contents = json_encode($new_settings, $mode);
-
-		if ($debug > 0) echo "Creating camera-specific settings file: $fullSpecificFileName.\n";
-		$results = updateFile($fullSpecificFileName, $contents, $cameraSpecificSettingsName, true);
-		if ($results != "") {
-			echo "ERROR: Unable to create $fullSpecificFileName.\n";
-			exit(9);
-		}
-
-	} else if ($debug > 0) {
-		// There IS a camera-specific file for the new camera type so we
-		// don't need to do anything special.
-		// The generic name will be linked to the specific name below.
-		echo "Using existing $fullSpecificFileName.\n";
-	}
-
-	if ($debug > 0) echo "Linking $fullSpecificFileName to $settings_file.\n";
-	if (! link($fullSpecificFileName, $settings_file)) {
-		echo "ERROR: Unable to link $fullSpecificFileName to $settings_file.\n";
-		exit(10);
-	}
-}
-
-exit(0);
-?>

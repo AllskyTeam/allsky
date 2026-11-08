@@ -135,6 +135,67 @@ a[external="true"]::after {
   font-weight: bolder;
 }
 
+/* Settings reference tables favour scanning by name and default value. */
+.md-typeset .settings-table-wrap,
+.md-typeset .settings-table-wrap .md-typeset__table {
+  width: 100%;
+}
+
+.md-typeset .settings-table-wrap .md-typeset__table {
+  overflow-x: auto;
+}
+
+.md-typeset .settings-table-wrap table:not([class]) {
+  display: table;
+  width: 100%;
+  min-width: 640px;
+  table-layout: fixed;
+  border-collapse: collapse;
+  font-size: .72rem;
+  line-height: 1.5;
+}
+
+.md-typeset .settings-table-wrap table:not([class]) th,
+.md-typeset .settings-table-wrap table:not([class]) td {
+  padding: .62rem .7rem !important;
+  border-bottom: 1px solid var(--md-default-fg-color--lighter);
+  vertical-align: top;
+  white-space: normal;
+}
+
+.md-typeset .settings-table-wrap table:not([class]) th {
+  background: var(--md-code-bg-color);
+  font-weight: 700;
+  text-align: left;
+}
+
+.md-typeset .settings-table-wrap table:not([class]) th:first-child,
+.md-typeset .settings-table-wrap table:not([class]) td:first-child {
+  width: 24%;
+  font-style: normal;
+  font-weight: 600;
+}
+
+.md-typeset .settings-table-wrap table:not([class]) th:nth-child(2),
+.md-typeset .settings-table-wrap table:not([class]) td:nth-child(2) {
+  width: 13%;
+  text-align: right;
+}
+
+.md-typeset .settings-table-wrap table:not([class]) td:first-child mark {
+  color: var(--md-default-fg-color) !important;
+}
+
+.md-typeset .settings-table-wrap table:not([class]) tbody tr:nth-child(even) {
+  background: color-mix(in srgb, var(--md-default-bg-color) 84%, var(--md-code-bg-color));
+}
+
+@media (max-width: 45em) {
+  .md-typeset .settings-table-wrap table:not([class]) {
+    min-width: 600px;
+  }
+}
+
 .web-ui-setting {
   font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
   color: #00009b;

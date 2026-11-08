@@ -214,6 +214,33 @@ if ($options_array === null) {
 	exit(3);
 }
 
+// The generated options file is hierarchical. These commands work on a flat
+// list of fields, so visit settings in document order and omit hidden fields.
+if (isset($options_array['sections'])) {
+	$flatOptions = [];
+	$collectOptions = static function (array $sections) use (&$collectOptions, &$flatOptions): void {
+		foreach ($sections as $section) {
+			foreach ($section['settings'] ?? [] as $name => $definition) {
+				if (($definition['display'] ?? true) === false) continue;
+				if (($definition['settingsonly'] ?? false) === true) {
+					$definition = array_intersect_key($definition, array_flip([
+						'settingsonly', 'label', 'label_prefix', 'default', 'type', 'metadata',
+					]));
+				}
+				$flatOptions[] = ['name' => $name] + $definition;
+			}
+			$collectOptions($section['sections'] ?? []);
+		}
+	};
+	$collectOptions($options_array['sections']);
+	$options_array = $flatOptions;
+} else {
+	// Legacy flat files may include entries marked as unavailable.
+	$options_array = array_values(array_filter($options_array, static function ($option) {
+		return ($option['display'] ?? true) !== false;
+	}));
+}
+
 if ($shell) $label_array = Array();
 
 $type_array = Array();
@@ -225,7 +252,8 @@ foreach ($options_array as $option) {
 	}
 
 	$name = $option['name'];
-	if ($carryforward && getVariableOrDefault($option, 'carryforward', "false") === "true") {
+	$shouldCarryForward = getVariableOrDefault($option, 'carryforward', false);
+	if ($carryforward && ($shouldCarryForward === true || $shouldCarryForward === "true")) {
 		$value = getVariableOrDefault($settings_array, $name, $default_setting_value);
 		echo "$prefix$name\t$type\t$value\n";
 		continue;
@@ -248,8 +276,7 @@ if ($carryforward) {
 
 if ($type_to_output !== "") {
 	foreach ($type_array as $name => $type) {
-		if ($name !== $endSetting)
-			echo "$prefix$name\n";
+		echo "$prefix$name\n";
 	}
 	exit(0);
 }
@@ -368,9 +395,6 @@ if ($convert || $order) {
 } else if ($options_only) {
 	foreach ($options_array as $option) {
 		$name = $option['name'];
-		if ($name === $endSetting) {
-			continue;
-		}
 		if (getVariableOrDefault($option, "source", null) !== null) {
 			continue;	// this setting isn't stored in the settings file.
 		}

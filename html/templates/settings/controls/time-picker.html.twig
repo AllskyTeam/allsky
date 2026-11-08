@@ -1,0 +1,7 @@
+<div class="settings-time-picker" data-related-field="{{ row.related_field }}" data-time-position="{{ row.time_position }}">
+    {% include 'controls/text-input.html.twig' with {
+        row: row, input_class: 'settingInput settingInputTextNumber js-time-input',
+        input_type: 'text', autocomplete: 'off'
+    } only %}
+    <button class="btn btn-default js-time-open" type="button" aria-label="Choose {{ row.label }}" title="Choose {{ row.label }}"{% if row.dependency.disabled or row.dependency.readonly %} disabled{% endif %}><i class="fa-regular fa-clock" aria-hidden="true"></i></button>
+</div>

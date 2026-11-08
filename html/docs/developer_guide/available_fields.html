@@ -5404,6 +5404,34 @@
                 
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="options_file.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Options File
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
     
   
   
@@ -5420,10 +5448,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_4" checked="">
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_5" checked="">
         
           
-          <label class="md-nav__link" for="__nav_5_4" id="__nav_5_4_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_5_5" id="__nav_5_5_label" tabindex="0">
             
   
   
@@ -5441,8 +5469,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_4_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_5_4">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5_5">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -5791,6 +5819,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#latitude-and-longitude-fields" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Latitude and longitude fields
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#position-field" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6025,10 +6064,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_4_12">
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_5_12">
         
           
-          <label class="md-nav__link" for="__nav_5_4_12" id="__nav_5_4_12_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_5_5_12" id="__nav_5_5_12_label" tabindex="0">
             
   
   
@@ -6046,8 +6085,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_4_12_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_4_12">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_5_12_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_5_12">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -6233,10 +6272,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_5">
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_6">
         
           
-          <label class="md-nav__link" for="__nav_5_5" id="__nav_5_5_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_5_6" id="__nav_5_6_label" tabindex="0">
             
   
   
@@ -6254,8 +6293,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_5">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_6">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -6603,6 +6642,24 @@ The ‘selectmode’ option has to options ‘single’ or ‘multi’. This con
 <p>The Variable selection dialog</p>
 </figcaption>
 </figure>
+<h2 id="latitude-and-longitude-fields">Latitude and longitude fields<a class="headerlink" href="#latitude-and-longitude-fields" title="Permanent link">¶</a></h2>
+<p>Use these field types when latitude and longitude are separate module arguments. Each field has a map button. Set <code>type.longitudefield</code> on the latitude field to the longitude argument's ID, and <code>type.latitudefield</code> on the longitude field to the latitude argument's ID. Either button opens the same map picker and saves both values.</p>
+<div class="highlight"><pre><span></span><code>"observer_lat": {
+    "description": "Latitude",
+    "type": {
+        "fieldtype": "latitude",
+        "longitudefield": "observer_lon"
+    }
+},
+"observer_lon": {
+    "description": "Longitude",
+    "type": {
+        "fieldtype": "longitude",
+        "latitudefield": "observer_lat"
+    }
+}
+</code></pre></div>
+<p>The IDs must match the keys in <code>argumentdetails</code> and <code>arguments</code>. The map picker stores four decimal places with direction suffixes, such as <code>52.3996N</code> and <code>1.2345W</code>.</p>
 <h2 id="position-field">Position Field<a class="headerlink" href="#position-field" title="Permanent link">¶</a></h2>
 <p>This field allows the user to select a position from a map. There are three additional parameters required for this field, all refer to the name of the value in the arguments section.</p>
 <p><strong>lat</strong> – The name of the argument to store the latitude in<br>

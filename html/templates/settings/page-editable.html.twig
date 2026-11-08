@@ -1,0 +1,29 @@
+{% extends 'page.html.twig' %}
+
+{% block heading_prefix %}<i class="{{ icon }}"></i>{% endblock %}
+
+{% block panel_body %}
+    <div id="messages">{{ messages|raw }}</div>
+    <form method="POST" action="{{ action }}" name="conf_form" novalidate>
+        {{ csrf_token|raw }}
+        <input type="hidden" name="page" value="{{ page }}">
+        <input type="hidden" name="settings_active_category" id="settingsActiveCategory">
+        <input type="hidden" name="settings_active_section" id="settingsActiveSection">
+        <input type="hidden" name="settings_mobile_detail" id="settingsMobileDetail">
+        {% if needs_configuration %}<input type="hidden" name="fromConfiguration" value="true">{% endif %}
+        <div class="settings-error-summary" id="settingsErrorSummary" role="region" aria-labelledby="settingsErrorHeading" tabindex="-1" hidden>
+            <h2 id="settingsErrorHeading">There is a problem</h2>
+            <ul></ul>
+        </div>
+        <div class="settings-search">
+            {% if show_view_toggle %}<button type="button" class="btn btn-default settings-view-toggle" data-settings-toggle-all aria-pressed="false">Show all settings</button>{% endif %}
+            <div class="settings-search-field">
+                <input id="settingsSearch" type="search" class="form-control" placeholder="Find a setting" aria-label="Search settings" autocomplete="off">
+                <span class="settings-search-icon" aria-hidden="true"><i class="fa-solid fa-magnifying-glass"></i></span>
+            </div>
+        </div>
+        <div class="settings-search-results" id="settingsSearchResults" hidden aria-live="polite"></div>
+        <div class="settings-sections container-fluid">{% include 'tabs.html.twig' %}</div>
+        {% include 'actions.html.twig' %}
+    </form>
+{% endblock %}

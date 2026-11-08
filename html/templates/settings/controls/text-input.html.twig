@@ -1,0 +1,16 @@
+<input
+    class="form-control {{ input_class }}"
+    id="setting-{{ row.name }}"
+    type="{{ input_type }}"
+    name="{{ row.name }}"
+    value="{{ row.value }}"
+    {% if input_type == 'number' %}step="{{ row.layout.step }}"{% endif %}
+    {% if input_type == 'number' and row.validation.minimum is not null %}min="{{ row.validation.minimum }}"{% endif %}
+    {% if input_type == 'number' and row.validation.maximum is not null %}max="{{ row.validation.maximum }}"{% endif %}
+    {% if autocomplete is defined %}autocomplete="{{ autocomplete }}"{% endif %}
+    {% if spellcheck is defined %}spellcheck="{{ spellcheck }}"{% endif %}
+    {% if row.validation.described_by %}aria-describedby="{{ row.validation.described_by }}"{% endif %}
+    {% if row.validation.error %}aria-invalid="true"{% endif %}
+    {% if row.dependency.disabled %}disabled{% endif %}
+    {% if row.dependency.readonly %}readonly{% endif %}
+>

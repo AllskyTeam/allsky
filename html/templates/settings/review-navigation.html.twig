@@ -1,0 +1,8 @@
+<nav class="settings-category-rail settings-review-nav" aria-labelledby="settings-review-nav-heading">
+    <h2 class="settings-category-heading" id="settings-review-nav-heading">Categories</h2>
+    <ul>
+        {% for group in groups %}
+            <li><button type="button" class="{{ group.errors ? 'has-error' : '' }}" data-settings-review-open="settings-review-group-{{ group.index }}"{% if loop.first %} aria-current="location"{% endif %}>{{ group.label }} <span class="settings-change-count" hidden></span></button></li>
+        {% endfor %}
+    </ul>
+</nav>

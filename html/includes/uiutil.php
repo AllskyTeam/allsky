@@ -17,6 +17,11 @@ include_once('utilbase.php');
  *   GET  CPUTemp               -> CPU temperature as a progress bar with status colour
  *   GET  DayNightStatus        -> current capture mode and transition times
  *   GET  DirectoryBrowserList  -> one directory level for helper directory browsers
+ *   GET  VideoEncoders         -> available FFmpeg video encoders
+ *   GET  PixelFormats          -> FFmpeg output pixel formats
+ *   GET  AvailableLocales      -> supported locales and their installed state
+ *   GET  ImageStorage          -> image day sizes and free disk space
+ *   GET  TimeFormatPreview     -> current date and time in a strftime format
  *   GET  EditorFiles           -> list WebUI editor files by key
  *   GET  EditorFile            -> read a WebUI editor file by key
  *   POST EditorFile            -> save a WebUI editor file by key
@@ -57,6 +62,11 @@ class UIUTIL extends UTILBASE {
 	            'DayNightStatus' => ['get'],
 	            'BrowseCommandFiles' => ['get'],
 	            'DirectoryBrowserList' => ['get'],
+	            'VideoEncoders'  => ['get'],
+	            'PixelFormats'   => ['get'],
+	            'AvailableLocales' => ['get'],
+	            'ImageStorage' => ['get'],
+	            'TimeFormatPreview' => ['get'],
 	            'EditorFile'     => ['get', 'post'],
 	            'EditorFiles'    => ['get'],
 	            'ListFileTypeContent' => ['get'],
@@ -78,6 +88,137 @@ class UIUTIL extends UTILBASE {
 	    {
 	        $this->jsonResponse = false;
 	    }
+
+    /** Return storage figures for the local days-to-keep picker. */
+    public function getImageStorage(): void
+    {
+        require_once __DIR__ . '/imageStorageStats.php';
+        $now = new DateTimeImmutable('now', new DateTimeZone(getAllskyChartTimezone()));
+        $this->sendResponse(['ok' => true, 'storage' => ImageStorageStats::collect(ALLSKY_IMAGES, $now)]);
+    }
+
+    /**
+     * Preview a strftime(3) format in the camera's time zone.
+     *
+     * GNU date uses the same conversion codes as the capture process. Arguments
+     * are passed without a shell, and output is capped for an interactive preview.
+     */
+    public function getTimeFormatPreview(): void
+    {
+        $format = $_GET['format'] ?? '';
+        if (!is_string($format) || $format === '' || strlen($format) > 200
+            || preg_match('/[\x00-\x1f\x7f]/', $format)) {
+            $this->sendResponse(['ok' => false, 'error' => 'Enter a format of up to 200 characters.']);
+        }
+
+        $process = proc_open(
+            ['/usr/bin/env', 'TZ=' . getAllskyChartTimezone(), '/usr/bin/date', '+' . $format],
+            [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
+            $pipes
+        );
+        if (!is_resource($process)) {
+            $this->send500('Unable to preview the time format.');
+        }
+        fclose($pipes[0]);
+        $preview = stream_get_contents($pipes[1], 4097);
+        fclose($pipes[1]);
+        fclose($pipes[2]);
+        $status = proc_close($process);
+        if ($preview === false || strlen($preview) > 4096 || $status !== 0) {
+            $this->sendResponse(['ok' => false, 'error' => 'This format could not be previewed.']);
+        }
+        $this->sendResponse(['ok' => true, 'preview' => rtrim($preview, "\r\n")]);
+    }
+
+    /** List the video encoders registered by FFmpeg on this Pi. */
+    public function getVideoEncoders(): void
+    {
+        $lines = [];
+        $status = 0;
+        exec('ffmpeg -hide_banner -encoders 2>&1', $lines, $status);
+        if ($status !== 0) {
+            $this->send500('Unable to list video encoders.');
+        }
+
+        $encoders = [];
+        foreach ($lines as $line) {
+            if (preg_match('/^\s*V[A-Z.]{5}\s+([A-Za-z0-9_.-]+)\s+(.+)$/', $line, $matches)) {
+                $encoders[] = ['name' => $matches[1], 'description' => trim($matches[2])];
+            }
+        }
+        $this->sendResponse(['ok' => true, 'encoders' => $encoders]);
+    }
+
+    /** List pixel formats FFmpeg can use as output for encoding. */
+    public function getPixelFormats(): void
+    {
+        $lines = [];
+        $status = 0;
+        exec('ffmpeg -hide_banner -pix_fmts 2>&1', $lines, $status);
+        if ($status !== 0) {
+            $this->send500('Unable to list pixel formats.');
+        }
+
+        $formats = [];
+        foreach ($lines as $line) {
+            if (!preg_match('/^\s*([IO.HPB]{5})\s+([A-Za-z0-9_.-]+)\s+(\d+)\s+(\d+)\s+([\d-]+)\s*$/', $line, $matches)
+                || $matches[1][1] !== 'O') {
+                continue;
+            }
+            $formats[] = [
+                'name' => $matches[2],
+                'description' => $matches[3] . ' components · ' . $matches[4] . ' bits/pixel · depth ' . $matches[5],
+            ];
+        }
+        $this->sendResponse(['ok' => true, 'formats' => $formats]);
+    }
+
+    /** List locales the Pi can generate, alongside those already installed. */
+    public function getAvailableLocales(): void
+    {
+        $lines = [];
+        $status = 0;
+        exec('locale -a 2>/dev/null', $lines, $status);
+        if ($status !== 0) $this->send500('Unable to list installed locales.');
+
+        $installed = [];
+        foreach ($lines as $line) {
+            $name = trim($line);
+            if ($name === '' || $name === 'C' || strpos($name, ':') !== false) continue;
+            $installed[self::localeKey($name)] = $name;
+        }
+        $locales = [];
+        foreach (['/usr/share/i18n/SUPPORTED', '/usr/local/share/i18n/SUPPORTED'] as $file) {
+            if (!is_readable($file)) continue;
+            foreach (file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
+                if (!preg_match('/^\s*([^#\s]+)\s+([^\s#]+)/', $line, $parts)) continue;
+                $base = $parts[1];
+                $modifier = '';
+                if (strpos($base, '@') !== false) {
+                    [$base, $suffix] = explode('@', $base, 2);
+                    $modifier = '@' . $suffix;
+                }
+                $name = $base . (strpos($base, '.') === false ? '.' . $parts[2] : '') . $modifier;
+                $key = self::localeKey($name);
+                $locales[$key] = ['name' => $name, 'installed' => isset($installed[$key])];
+            }
+        }
+        // Keep installed system aliases, such as POSIX, visible too.
+        foreach ($installed as $key => $name) {
+            if (!isset($locales[$key])) {
+                $locales[$key] = ['name' => preg_replace('/\.utf8(?=@|$)/i', '.UTF-8', $name), 'installed' => true];
+            }
+        }
+        uasort($locales, static fn($a, $b) => ($b['installed'] <=> $a['installed'])
+            ?: strnatcasecmp($a['name'], $b['name']));
+        $this->sendResponse(['ok' => true, 'locales' => array_values($locales)]);
+    }
+
+    private static function localeKey(string $name): string
+    {
+        return strtolower(preg_replace_callback('/\.([^@]+)(?=@|$)/',
+            static fn($match) => '.' . preg_replace('/[^a-z0-9]/i', '', $match[1]), $name));
+    }
 
 	    /**
 	     * Get the WebUI editor file registry path.

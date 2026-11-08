@@ -1,0 +1,11 @@
+<div class="settings-category-rail">
+    <h2 class="settings-category-heading" id="settings-category-heading">Categories</h2>
+    <ul class="settings-tabs settings-category-nav" role="tablist" aria-labelledby="settings-category-heading" data-settings-tabs="top">
+        {% for group in groups %}
+            <li role="presentation"><button type="button" role="tab" class="{{ group.errors ? 'has-error' : '' }}" id="settings-top-tab-{{ group.index }}"
+                data-label="{{ group.label }}"
+                aria-controls="settings-top-panel-{{ group.index }}" aria-selected="{{ group.active ? 'true' : 'false' }}"
+                tabindex="{{ group.active ? '0' : '-1' }}">{{ group.label }} <span class="settings-change-count" hidden></span></button></li>
+        {% endfor %}
+    </ul>
+</div>

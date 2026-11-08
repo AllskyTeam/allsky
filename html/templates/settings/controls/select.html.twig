@@ -1,0 +1,3 @@
+<select class="form-control settingInput settingInputSelect" id="setting-{{ row.name }}" name="{{ row.name }}"{% if row.validation.described_by %} aria-describedby="{{ row.validation.described_by }}"{% endif %}{% if row.validation.error %} aria-invalid="true"{% endif %} {% if row.dependency.disabled %}disabled{% endif %}>
+    {% for choice in row.choices %}<option value="{{ choice.value }}" {% if choice.selected %}selected{% endif %}>{{ choice.label }}</option>{% endfor %}
+</select>

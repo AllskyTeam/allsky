@@ -293,6 +293,7 @@ nav:
     - Introduction: developer_guide/introduction.md
     - Glossary: developer_guide/glossary.md
     - Overview: developer_guide/overview.md
+    - Options File: developer_guide/options_file.md
     - Modules:
       - Module Workflow: developer_guide/module_workflow.md
       - Folder Structure: developer_guide/folder_structure.md

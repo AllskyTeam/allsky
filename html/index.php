@@ -1,5 +1,11 @@
 <?php
 
+// Settings saves may redirect after processing; keep headers available until then.
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST'
+	&& ($_POST['page'] ?? '') === 'configuration1') {
+	ob_start();
+}
+
 /**
  * AllSky Web User Interface (WebUI)
  *
@@ -26,6 +32,7 @@ include_once('includes/functions.php');
 initialize_variables();		// sets some variables
 $csrf_token = useLogin();
 $page = getVariableOrDefault($_REQUEST, 'page', "live_view");
+if ($page === 'configuration1') startAllskySession();
 include_once('includes/authenticate.php');
 include_once('includes/status_messages.php');
 $status = new StatusMessages();
@@ -453,7 +460,7 @@ function insertPage($p)
 			ListMeteors($day);
 			break;
 		case "configuration":
-			include_once("includes/allskySettings.php");
+			include_once("includes/settings.php");
 			DisplayAllskyConfig();
 			break;
 		case "editor":
@@ -806,7 +813,7 @@ if ($page == "login") {
     
 		redirect("index.php?page=login");
 	}
-	if ($page == "editor") {
+	if ($page == "editor" || $page == "configuration") {
 		header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 		header('Pragma: no-cache');
 		header('Expires: 0');

@@ -1,0 +1,16 @@
+<div
+    class="row form-group setting-row {{ row.layout.row_class }}{{ row.layout.single_row ? ' settings-single-row' : '' }}{{ row.layout.new_line ? ' settings-newline' : '' }}{{ row.dependency.disabled and not row.dependency.base_disabled ? ' settings-row-disabled' : '' }}"
+    id="setting-row-{{ row.name }}"
+    {% include 'rows/field-attributes.html.twig' with {row: row} only %}
+>
+    <div class="col-xs-12 col-sm-5 col-md-4 setting-label">
+        <label class="WebUISetting" id="setting-label-{{ row.name }}"{% if row.control != 'boolean' %} for="setting-{{ row.name }}"{% endif %}>{{ row.label }}</label>
+        <button type="button" class="btn btn-link btn-xs settings-help" title="{{ row.label }}"
+            data-help-html="{{ row.help_content }}" aria-label="Help for {{ row.label }}"><i class="fa-solid fa-circle-question" aria-hidden="true"></i></button>
+    </div>
+    <div class="col-xs-12 col-sm-7 col-md-8 setting-control {{ row.layout.input_type == 'number' ? 'settings-number-control' : '' }}">
+        <span>{% include row.control_template %}</span>
+        {% if row.layout.input_type == 'number' and row.layout.has_hint %}<div class="settings-input-hint" id="setting-hint-{{ row.name }}">{{ row.layout.unit }}</div>{% endif %}
+        {% if row.validation.warning is not empty %}<div class="setting-feedback" id="setting-feedback-{{ row.name }}"><span class="errorMsg">{{ row.validation.warning }}</span></div>{% endif %}
+    </div>
+</div>

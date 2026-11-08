@@ -1,0 +1,24 @@
+<div class="settings-actions">
+    <div class="settings-actions-secondary">
+        <button id="backToTopBtn" type="button" title="Go to top of settings">Top</button>
+        <button type="submit" class="btn btn-link settings-reset" id="settings-reset" name="reset_settings" title="Reset all settings to their default values"><i class="fa-solid fa-rotate-left"></i> Reset to defaults</button>
+    </div>
+    <div class="settings-actions-main">
+        <button type="button" class="btn btn-default settings-review-changes is-empty" id="settingsReviewChanges" disabled><span class="settings-review-long">Review changes</span><span class="settings-review-short">Review</span></button>
+        <div class="settings-restart" title="Turn off to save without restarting Allsky">
+            <span>Restart<span class="settings-action-long"> if needed</span></span>
+            <div class="vc-toggle-container">
+                <label class="vc-switch">
+                    <input class="vc-switch-input" type="checkbox" name="restart" value="true" role="switch" aria-label="Restart Allsky if needed" checked>
+                    <span class="vc-switch-label" data-on="On" data-off="Off" aria-hidden="true"></span>
+                    <span class="vc-handle" aria-hidden="true"></span>
+                </label>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary" id="save_settings" name="save_settings" title="Save changes"><i class="fa-solid fa-floppy-disk"></i> <span class="settings-save-desktop">{{ save_label }}</span><span class="settings-save-mobile">Save</span></button>
+    </div>
+    <p class="settings-save-impact" id="settingsSaveImpact" role="status" hidden></p>
+</div>
+<div class="settings-reset-mobile-wrap">
+    <button type="submit" class="btn btn-link settings-reset" name="reset_settings" title="Reset all settings to their default values"><i class="fa-solid fa-rotate-left"></i> Reset all settings to defaults</button>
+</div>

@@ -1,0 +1,7 @@
+<div class="settings-colour-picker">
+    {% include 'controls/text-input.html.twig' with {
+        row: row, input_class: 'settingInput settingInputTextNumber js-colour-value',
+        input_type: 'text', autocomplete: 'off', spellcheck: 'false'
+    } only %}
+    <input class="js-colour-picker" type="color" value="{{ row.colour_picker_value }}" aria-label="Choose {{ row.label }} colour" title="Choose {{ row.label }} colour"{% if row.dependency.disabled or row.dependency.readonly %} disabled{% endif %}>
+</div>

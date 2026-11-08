@@ -234,6 +234,29 @@ The ‘selectmode’ option has to options ‘single’ or ‘multi’. This con
 The Variable selection dialog
 ///
 
+## Latitude and longitude fields { data-toc-label="Latitude and longitude fields" }
+
+Use these field types when latitude and longitude are separate module arguments. Each field has a map button. Set `type.longitudefield` on the latitude field to the longitude argument's ID, and `type.latitudefield` on the longitude field to the latitude argument's ID. Either button opens the same map picker and saves both values.
+
+```
+"observer_lat": {
+    "description": "Latitude",
+    "type": {
+        "fieldtype": "latitude",
+        "longitudefield": "observer_lon"
+    }
+},
+"observer_lon": {
+    "description": "Longitude",
+    "type": {
+        "fieldtype": "longitude",
+        "latitudefield": "observer_lat"
+    }
+}
+```
+
+The IDs must match the keys in `argumentdetails` and `arguments`. The map picker stores four decimal places with direction suffixes, such as `52.3996N` and `1.2345W`.
+
 ## Position Field { data-toc-label="Position Field" }
 This field allows the user to select a position from a map. There are three additional parameters required for this field, all refer to the name of the value in the arguments section.
 

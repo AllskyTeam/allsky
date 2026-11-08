@@ -1,0 +1,4 @@
+<div class="settings-field-group" data-settings-group-id="{{ row.group_id }}" data-settings-order="{{ row.order }}"{% if groups_enabled %} role="group" aria-label="{{ row.label }}"{% endif %}{% if row.hidden %} hidden{% endif %}>
+    <span class="settings-field-group-label" aria-hidden="true">{{ row.label }}</span>
+    {% for field in row.fields %}{% include 'rows/field.html.twig' with {'row': field} %}{% endfor %}
+</div>

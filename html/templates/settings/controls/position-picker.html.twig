@@ -1,0 +1,7 @@
+<div class="settings-position-picker">
+    {% include 'controls/text-input.html.twig' with {
+        row: row, input_class: 'settingInput settingInputTextNumber',
+        input_type: 'text', autocomplete: 'off'
+    } only %}
+    {% if row.latitude_id and row.longitude_id %}<button class="btn btn-default allsky-position" id="setting-{{ row.name }}-position" type="button" data-lat="setting-{{ row.latitude_id }}" data-lon="setting-{{ row.longitude_id }}" data-format="cardinal" aria-label="Choose latitude and longitude on a map" title="Choose location on a map"{% if row.dependency.disabled or row.dependency.readonly %} disabled{% endif %}><i class="fa-solid fa-map-location-dot" aria-hidden="true"></i></button>{% endif %}
+</div>

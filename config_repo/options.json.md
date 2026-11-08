@@ -121,16 +121,12 @@ Other than the first few fields, fields can be in any order but are usually in t
     * Type: boolean
     * Default: false
     * Notes: Optional.  Some settings in the settings file are calculated hence have no default and should NOT be reset.  If the "overlay" fields are cleared the user will get errors about not finding an overlay file, so don't reset them.
-* __booldependson__
-    * Lists which boolean setting(s) that when "true" (a.k.a., "on") will cause this setting to be displayed.
-    * Type: list of one or more setting __name__'s.
-    * Default: none
-    * Notes: __This field will be replaced when the "new WebUI" is available.__  It currently only exists to indicate which settings have a dependency and what those dependencies are.
-* __booldependsoff__
-    * Lists which boolean setting(s) that when "false" (a.k.a., "off") will cause this setting to be displayed.
-    * Type: list of one or more setting __name__'s.
-    * Default: none
-    * Notes: __This field will be replaced when the "new WebUI" is available.__  It currently only exists to indicate which settings have a dependency and what those dependencies are.
+* __metadata__
+    * Optional object at the end of a field. Contains `layout` and/or `depends`.
+    * `layout.group` places fields with the same group name in one panel. `layout.groupname`, when present on any grouped field, sets the panel label.
+    * `layout.singlerow` makes the field occupy a full row; `layout.newline` starts it on the next row.
+    * `depends.booldependson` enables the field when named settings are on; `depends.booldependsoff` enables it when named settings are off. Names can be joined with `AND` or `OR`.
+    * `depends.valuedependson` shows the field when another setting's value matches `setting_name=pattern`. `*` matches any text, `|` separates alternatives, and ranges such as `[1-9]` are supported.
 * __popup-yesno__
     * Text to display in a popup when the setting's value changes to the value specified in __popup-yesno-value__.
     * Type: text

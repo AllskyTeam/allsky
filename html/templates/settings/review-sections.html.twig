@@ -1,0 +1,13 @@
+<div class="settings-review-list" aria-label="All settings">
+    {% for group in groups %}
+        <section class="settings-review-group" id="settings-review-group-{{ group.index }}" data-label="{{ group.label }}">
+            <h2 tabindex="-1">{{ group.label }}</h2>
+            {% for section in group.sections %}
+                <div class="settings-review-section" data-label="{{ group.single ? '' : section.label|striptags }}">
+                    {% if not group.single %}<h3>{{ section.label }}</h3>{% endif %}
+                    <div class="settings-review-fields">{% include 'section-rows.html.twig' %}</div>
+                </div>
+            {% endfor %}
+        </section>
+    {% endfor %}
+</div>

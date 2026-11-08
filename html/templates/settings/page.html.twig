@@ -1,0 +1,12 @@
+{{ css_asset|raw }}
+<div class="panel panel-allsky allow-select settings-grid{{ review_mode ? ' settings-review-mode' : '' }}{{ popup_buttons_enabled ? '' : ' settings-popup-buttons-off' }}{{ groups_enabled ? '' : ' settings-groups-off' }}" id="settingsPanel" data-open-error-on-mobile="{{ open_error_on_mobile ? 'true' : 'false' }}" data-start-all-mode="{{ start_all_mode ? 'true' : 'false' }}" data-restore-category="{{ restore_category }}" data-restore-section="{{ restore_section }}" data-restore-detail="{{ restore_detail ? 'true' : 'false' }}" data-dependency-data="{{ dependency_data|json_encode }}" data-camera-timezone="{{ camera_timezone }}" data-settings-level="{{ settings_level }}">
+    <div class="panel-heading clearfix">
+        <span>{% block heading_prefix %}{% endblock %} {{ title }} for &nbsp;<b>{{ camera_type }} {{ camera_model }}</b></span>
+        {{ help_link|raw }}
+    </div>
+    <div class="panel-body">
+        {% block panel_body %}{% endblock %}
+    </div>
+</div>
+<script>allskystatus_interval = {{ status_interval }} * 1000;</script>
+{{ js_asset|raw }}

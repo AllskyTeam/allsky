@@ -273,6 +273,7 @@ class ALLSKY {
 		var $activeFlyout = null;
 		var flyoutOwner = null; // the <li.sidebar-dropdown> that owns current flyout
 		var SIDEBAR_COLLAPSED_KEY = 'sidebarCollapsed';
+		var settingsSidebarOverride = null;
 
 		function getSidebarCollapsedPreference() {
 			return localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === 'true';
@@ -290,6 +291,8 @@ class ALLSKY {
 		function applySidebarState() {
 			if (window.innerWidth < 768) {
 				$sidebar.addClass('collapsed');
+			} else if (allskyPage === 'configuration') {
+				$sidebar.toggleClass('collapsed', settingsSidebarOverride === null ? true : settingsSidebarOverride);
 			} else {
 				$sidebar.toggleClass('collapsed', getSidebarCollapsedPreference());
 			}
@@ -298,7 +301,11 @@ class ALLSKY {
 
 		function toggleSidebar() {
 			$sidebar.toggleClass('collapsed');
-			setSidebarCollapsedPreference($sidebar.hasClass('collapsed'));
+			if (allskyPage === 'configuration') {
+				settingsSidebarOverride = $sidebar.hasClass('collapsed');
+			} else {
+				setSidebarCollapsedPreference($sidebar.hasClass('collapsed'));
+			}
 			updateSidebarCollapseIcon();
 		}
 

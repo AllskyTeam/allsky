@@ -25,11 +25,12 @@
 
             plugin.settings.latData = el.data('lat');
             plugin.settings.lonData = el.data('lon');
+            plugin.settings.format = el.data('format') || 'decimal';
 
             let latData = processLatLon($('#' + plugin.settings.latData).val(), $('#' + plugin.settings.lonData).val());
 
-            plugin.settings.lat = latData.lat;
-            plugin.settings.lon = latData.lon;
+            plugin.settings.lat = Number.isFinite(latData.lat) ? latData.lat : defaults.lat;
+            plugin.settings.lon = Number.isFinite(latData.lon) ? latData.lon : defaults.lon;
 
             let mapHTML = '\
                 <div class="modal" tabindex="-1" id="' + plugin.modalid + '">\
@@ -58,13 +59,17 @@
             $(document.body).append(mapHTML);
 
             $(document).on('click', '#' + plugin.modalid + '-save', (event) => {
-                latlon = marker.getLatLng();
+                let latlon = marker.getLatLng();
                 
-                lat = setPrecision(latlon.lat, plugin.settings.latPrecision);
-                lon = setPrecision(latlon.lng, plugin.settings.lonPrecision);
+                let lat = plugin.settings.format === 'cardinal'
+                    ? Math.abs(latlon.lat).toFixed(plugin.settings.latPrecision) + (latlon.lat < 0 ? 'S' : 'N')
+                    : setPrecision(latlon.lat, plugin.settings.latPrecision);
+                let lon = plugin.settings.format === 'cardinal'
+                    ? Math.abs(latlon.lng).toFixed(plugin.settings.lonPrecision) + (latlon.lng < 0 ? 'W' : 'E')
+                    : setPrecision(latlon.lng, plugin.settings.lonPrecision);
 
-                $('#' + plugin.settings.latData).val(lat);
-                $('#' + plugin.settings.lonData).val(lon);
+                $('#' + plugin.settings.latData).val(lat).trigger('change');
+                $('#' + plugin.settings.lonData).val(lon).trigger('change');
 
                 plugin.settings.onClick.call(plugin.settings.onClick);
                 $('#' + plugin.modalid).modal('hide');
@@ -91,26 +96,25 @@
 
             $(el).on("click", (event) => {
 
-                plugin.settings.lat = $('#' + plugin.settings.latData).val();
-                plugin.settings.lon = $('#' + plugin.settings.lonData).val();
+                const latitudeValue = $('#' + plugin.settings.latData).val();
+                const longitudeValue = $('#' + plugin.settings.lonData).val();
 
-                plugin.settings.latPrecision = $("#latitude").data('precision');
+                plugin.settings.latPrecision = $('#' + plugin.settings.latData).data('precision');
                 if (plugin.settings.latPrecision == undefined) {
                     plugin.settings.latPrecision = plugin.settings.defaultprecision;
                 }
-                plugin.settings.lonPrecision = $("#latitude").data('precision');
+                plugin.settings.lonPrecision = $('#' + plugin.settings.lonData).data('precision');
                 if (plugin.settings.lonPrecision == undefined) {
                     plugin.settings.lonPrecision = plugin.settings.defaultprecision;
                 }
 
-                lat = setPrecision(plugin.settings.lat, plugin.settings.latPrecision);
-                lon = setPrecision(plugin.settings.lon, plugin.settings.lonPrecision);
+                let lat = setPrecision(latitudeValue, plugin.settings.latPrecision);
+                let lon = setPrecision(longitudeValue, plugin.settings.lonPrecision);
 
                 let latlon = processLatLon(lat, lon);
 
-                let latlng = L.latLng(latlon.lat, latlon.lon);
-
-                if (latlon.lat != -1 && latlon.lon != -1) {
+                if (Number.isFinite(latlon.lat) && Number.isFinite(latlon.lon)) {
+                    let latlng = L.latLng(latlon.lat, latlon.lon);
                     marker.setLatLng(latlng);
                     map.setView(latlng);
                     $('#' + plugin.modalid).modal({
@@ -171,17 +175,17 @@
                         }
                         
                     } else {
-                        lat = -1;
+                        lat = NaN;
                     }
                 }
                 if (!isNaN(lat)) {
                     lat = parseFloat(lat);
 
                     if (lat < -90 || lat > 90) {
-                        lat = -1;
+                        lat = NaN;
                     }
                 } else {
-                    lat = -1;
+                    lat = NaN;
                 }
             } else {
                 lat = plugin.settings.lat;
@@ -198,17 +202,17 @@
                         }
                         
                     } else {
-                        lon = -1;
+                        lon = NaN;
                     }
                 } 
                 if (!isNaN(lon)) {
                     lon = parseFloat(lon);
 
                     if (lon < -180 || lon > 180) {
-                        lon = -1;
+                        lon = NaN;
                     }
                 } else {
-                    lon = -1;
+                    lon = NaN;
                 }
             } else {
                 lon = plugin.settings.lon;

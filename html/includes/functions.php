@@ -218,7 +218,6 @@ $useLocalWebsite = false;
 $useRemoteWebsite = false;
 $hasLocalWebsite = false;
 $hasRemoteWebsite = false;
-$endSetting = "XX_END_XX";
 $saveChangesLabel = "Save changes";		// May be overwritten
 $forceRestart = false;					// Restart even if no changes?
 $hostname = null;

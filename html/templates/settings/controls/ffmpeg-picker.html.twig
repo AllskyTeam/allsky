@@ -1,0 +1,7 @@
+<div class="settings-ffmpeg-picker" data-picker="{{ row.control }}">
+    {% include 'controls/text-input.html.twig' with {
+        row: row, input_class: 'settingInput settingInputTextNumber js-ffmpeg-input',
+        input_type: 'text', autocomplete: 'off'
+    } only %}
+    <button class="btn btn-default js-ffmpeg-open" type="button" aria-label="Choose a {{ row.control == 'pixfmt' ? 'pixel format' : 'video encoder' }}" title="Choose a {{ row.control == 'pixfmt' ? 'pixel format' : 'video encoder' }}"{% if row.dependency.disabled or row.dependency.readonly %} disabled{% endif %}><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></button>
+</div>

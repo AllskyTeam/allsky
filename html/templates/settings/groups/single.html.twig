@@ -1,0 +1,5 @@
+<div id="settings-top-panel-{{ group.index }}" class="settings-top-panel is-single" role="tabpanel" aria-labelledby="settings-top-tab-{{ group.index }}" tabindex="0" {% if not group.active %}hidden{% endif %}>
+    {% include 'groups/heading.html.twig' %}
+    <h2 class="settings-single-heading">{{ group.single_heading }}</h2>
+    {% for section in group.sections %}{% include 'section-rows.html.twig' %}{% endfor %}
+</div>

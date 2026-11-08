@@ -1,0 +1,8 @@
+<div class="settings-locale-picker">
+    {% include 'controls/text-input.html.twig' with {
+        row: row, input_class: 'settingInput settingInputTextNumber js-locale-input',
+        input_type: 'text', autocomplete: 'off'
+    } only %}
+    <button class="btn btn-default js-locale-open" type="button" aria-label="Choose {{ row.label }}" title="Choose {{ row.label }}"{% if row.dependency.disabled or row.dependency.readonly %} disabled{% endif %}><i class="fa-solid fa-globe" aria-hidden="true"></i></button>
+    <p class="settings-locale-notice js-locale-notice" role="status"></p>
+</div>

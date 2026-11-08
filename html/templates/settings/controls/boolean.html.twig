@@ -1,0 +1,8 @@
+<div class="vc-toggle-container settingInputBoolean">
+    <input type="hidden" name="{{ row.name }}" value="false"{% if row.dependency.disabled %} disabled{% endif %}>
+    <label class="vc-switch">
+        <input id="setting-{{ row.name }}" class="vc-switch-input" type="checkbox" name="{{ row.name }}" value="true" role="switch" aria-labelledby="setting-label-{{ row.name }}"{% if row.validation.described_by %} aria-describedby="{{ row.validation.described_by }}"{% endif %}{% if row.validation.error %} aria-invalid="true"{% endif %}{% if row.dependency.disabled %} disabled{% endif %}{% if row.yes %} checked{% endif %}>
+        <span class="vc-switch-label" data-on="Yes" data-off="No" aria-hidden="true"></span>
+        <span class="vc-handle" aria-hidden="true"></span>
+    </label>
+</div>

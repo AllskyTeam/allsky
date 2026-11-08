@@ -1,0 +1,7 @@
+<div class="settings-systemadditions-picker">
+    {% include 'controls/text-input.html.twig' with {
+        row: row, input_class: 'settingInput settingInputTextNumber',
+        input_type: 'text', autocomplete: 'off', spellcheck: 'false'
+    } only %}
+    <button class="btn btn-default js-systemadditions-open" type="button" data-setting-input="#setting-{{ row.name }}" aria-label="Edit {{ row.label }}" title="Edit System Page Additions"{% if row.dependency.disabled or row.dependency.readonly %} disabled{% endif %}><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i></button>
+</div>

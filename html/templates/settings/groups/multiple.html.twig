@@ -1,0 +1,19 @@
+<div id="settings-top-panel-{{ group.index }}" class="settings-top-panel" role="tabpanel" aria-labelledby="settings-top-tab-{{ group.index }}" tabindex="0" {% if not group.active %}hidden{% endif %}>
+    {% include 'groups/heading.html.twig' %}
+    <ul class="settings-tabs settings-subtabs" role="tablist" aria-label="{{ group.label }} sections" data-settings-tabs="sub-{{ group.index }}">
+        {% for section in group.sections %}
+            <li role="presentation"><button type="button" role="tab" class="{{ section.errors ? 'has-error' : '' }}" id="settings-sub-tab-{{ group.index }}-{{ section.index }}"
+                data-label="{{ section.label }}"
+                aria-controls="settings-sub-panel-{{ group.index }}-{{ section.index }}"
+                aria-selected="{{ section.active ? 'true' : 'false' }}"
+                tabindex="{{ section.active ? '0' : '-1' }}">{{ section.label }} <span class="settings-change-count" hidden></span></button></li>
+        {% endfor %}
+    </ul>
+    {% for section in group.sections %}
+        <div id="settings-sub-panel-{{ group.index }}-{{ section.index }}" class="settings-sub-panel" role="tabpanel"
+            aria-labelledby="settings-sub-tab-{{ group.index }}-{{ section.index }}" tabindex="0" {% if not section.active %}hidden{% endif %}>
+            <h3 class="settings-all-section-heading">{{ section.label }}</h3>
+            {% include 'section-rows.html.twig' %}
+        </div>
+    {% endfor %}
+</div>

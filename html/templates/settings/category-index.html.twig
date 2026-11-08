@@ -1,0 +1,10 @@
+<div class="settings-mobile-index" aria-label="Settings categories">
+    <h2>Choose a category</h2>
+    {% for group in groups %}
+        <button type="button" class="settings-mobile-category {{ group.errors ? 'has-error' : '' }}"
+            data-settings-open="settings-top-tab-{{ group.index }}">
+            <span>{{ group.label }}<small class="settings-category-error"{% if not group.errors %} hidden{% endif %}>Needs attention</small><small class="settings-change-count" hidden></small></span>
+            <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+        </button>
+    {% endfor %}
+</div>

@@ -1,0 +1,8 @@
+{% if review_mode %}
+    {% include 'review-navigation.html.twig' %}
+    {% include 'review-sections.html.twig' %}
+{% else %}
+    {% include 'category-index.html.twig' %}
+    {% include 'category-nav.html.twig' %}
+    {% for group in groups %}{% include group.template %}{% endfor %}
+{% endif %}

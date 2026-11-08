@@ -441,7 +441,7 @@ get_connected_cameras()
 			if [[ -n ${RPI_MODELS} ]]; then
 				CC="RPi"
 				local CT_ CN_ MODEL SENSOR
-   				# shellcheck disable=SC2034
+				# shellcheck disable=SC2034
 				while read -r CT_ CN_ MODEL SENSOR
 				do
 					MODEL="${MODEL//++/ }"
@@ -1756,7 +1756,7 @@ convert_settings_file()			# prior_file, new_file
 					doV "${FIELD}" "VALUE" "${FIELD}" "text" "${NEW_FILE}"
 					;;
 
-				# Don't carry this forward:
+				# Drop the end marker from settings created by older releases.
 				"XX_END_XX")
 					echo -e "\t${FIELD}=${VALUE}" >> "${DELETED_SETTINGS}"
 					;;
@@ -3014,9 +3014,11 @@ install_PHP_modules()
 
 	display_msg --log progress "Installing PHP modules and dependencies."
 	TMP="${ALLSKY_LOGS}/PHP_modules.log"
-	run_aptGet php-zip php-sqlite3 libatlas-base-dev > "${TMP}" 2>&1
+	run_aptGet php-zip php-sqlite3 libatlas-base-dev composer > "${TMP}" 2>&1
 	check_success $? "PHP module installation failed" "${TMP}" "${DEBUG}" ||
 		exit_with_image 1 "${STATUS_ERROR}" "PHP module install failed."
+
+	composer require "twig/twig:^3.0"
 
 	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
 }

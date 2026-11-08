@@ -2,7 +2,7 @@
 
 // Settings saves may redirect after processing; keep headers available until then.
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST'
-	&& ($_POST['page'] ?? '') === 'configuration1') {
+	&& ($_POST['page'] ?? '') === 'configuration') {
 	ob_start();
 }
 

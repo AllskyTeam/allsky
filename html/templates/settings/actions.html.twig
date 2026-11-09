@@ -1,8 +1,5 @@
 <div class="settings-actions">
-    <div class="settings-actions-secondary">
-        <button id="backToTopBtn" type="button" title="Go to top of settings">Top</button>
-        <button type="submit" class="btn btn-link settings-reset" id="settings-reset" name="reset_settings" title="Reset all settings to their default values"><i class="fa-solid fa-rotate-left"></i> Reset to defaults</button>
-    </div>
+    {# Save comes first in document order so Enter submits settings rather than resetting them. #}
     <div class="settings-actions-main">
         <button type="button" class="btn btn-default settings-review-changes is-empty" id="settingsReviewChanges" disabled><span class="settings-review-long">Review changes</span><span class="settings-review-short">Review</span></button>
         <div class="settings-restart" title="Turn off to save without restarting Allsky">
@@ -16,6 +13,10 @@
             </div>
         </div>
         <button type="submit" class="btn btn-primary" id="save_settings" name="save_settings" title="Save changes"><i class="fa-solid fa-floppy-disk"></i> <span class="settings-save-desktop">{{ save_label }}</span><span class="settings-save-mobile">Save</span></button>
+    </div>
+    <div class="settings-actions-secondary">
+        <button id="backToTopBtn" type="button" title="Go to top of settings">Top</button>
+        <button type="submit" class="btn btn-link settings-reset" id="settings-reset" name="reset_settings" title="Reset all settings to their default values"><i class="fa-solid fa-rotate-left"></i> Reset to defaults</button>
     </div>
     <p class="settings-save-impact" id="settingsSaveImpact" role="status" hidden></p>
 </div>

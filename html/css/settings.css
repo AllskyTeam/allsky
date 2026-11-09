@@ -704,6 +704,12 @@ body.dark .settings-grid .settings-help:focus { color: #b88700; }
 .settings-changes-modal .modal-footer { display: flex; gap: 8px; }
 .settings-changes-modal .modal-footer { background: var(--bs3-modal-footer-bg, #f7f7f7); border-color: var(--bs3-modal-footer-border, #ccc); }
 .settings-changes-modal .modal-footer .btn { flex: 1 1 0; min-height: 44px; margin: 0; }
+.settings-changes-modal .js-settings-changes-errors { margin: 0 0 12px; padding: 8px 10px; border-left: 3px solid var(--color-danger-fg, #cf222e); border-radius: 4px; background: var(--bs3-alert-danger-bg, #f8e9ec); color: var(--color-danger-fg, #a94442); font-size: 13px; }
+.settings-changes-modal .js-settings-changes-errors[hidden] { display: none; }
+.settings-changes-modal .js-settings-changes-errors ul { margin: 5px 0 0; padding: 0; list-style: none; }
+.settings-changes-modal .js-settings-changes-errors li + li { margin-top: 3px; }
+.settings-changes-modal .js-settings-changes-errors button { padding: 0; border: 0; background: transparent; color: inherit; text-align: left; text-decoration: underline; }
+.settings-changes-modal .js-settings-changes-errors button:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
 .settings-changes-modal .settings-changes-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
 .settings-changes-modal .settings-changes-table thead th:first-child { width: 40%; }
 .settings-changes-modal .settings-changes-table thead th:nth-child(2),
@@ -716,6 +722,8 @@ body.dark .settings-grid .settings-help:focus { color: #b88700; }
 .settings-changes-modal .settings-change-item td { padding: 5px 8px; border-bottom: 1px solid var(--bs3-border-soft, #ddd); font-size: 13px; line-height: 1.4; text-align: left; vertical-align: top; overflow-wrap: anywhere; white-space: pre-wrap; }
 .settings-changes-modal .settings-change-item th { font-weight: 400; }
 .settings-changes-modal .settings-change-new { font-weight: 700; }
+.settings-changes-modal .settings-change-item.is-invalid .settings-change-new { color: var(--color-danger-fg, #a94442); }
+.settings-changes-modal .settings-change-error { display: block; margin-top: 3px; color: var(--color-danger-fg, #a94442); font-size: 12px; font-weight: 600; }
 .settings-changes-modal .settings-change-link { padding: 0; border: 0; background: transparent; color: var(--bs3-link, #337ab7); text-align: left; font-weight: 600; }
 .settings-changes-modal .settings-change-link:hover, .settings-changes-modal .settings-change-link:focus-visible { text-decoration: underline; }
 .settings-changes-modal .settings-change-revert { min-height: 32px; padding: 3px 5px; border: 1px solid var(--bs3-border-soft, #ddd); border-radius: 4px; background: var(--bs3-surface-2, #f7f7f7); color: var(--bs3-link, #337ab7); font-size: 12px; white-space: nowrap; }

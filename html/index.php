@@ -32,7 +32,9 @@ include_once('includes/functions.php');
 initialize_variables();		// sets some variables
 $csrf_token = useLogin();
 $page = getVariableOrDefault($_REQUEST, 'page', "live_view");
-if ($page === 'configuration1') startAllskySession();
+// Settings uses a session to carry validation errors across its POST redirect,
+// including when login is disabled and useLogin() has not started one.
+if ($page === 'configuration' || $page === 'configuration1') startAllskySession();
 include_once('includes/authenticate.php');
 include_once('includes/status_messages.php');
 $status = new StatusMessages();

@@ -303,6 +303,20 @@ final class SettingsSchema
                 ? null : 'This field cannot be empty.';
         }
         $type = $this->logicalType($option);
+        if (in_array($option['type'] ?? '', ['latitude', 'longitude'], true)) {
+            $coordinateType = $option['type'];
+            $limit = $coordinateType === 'latitude' ? 90 : 180;
+            $directions = $coordinateType === 'latitude' ? ['N', 'S'] : ['E', 'W'];
+            $valid = preg_match('/^([+-]?)([0-9]+(?:[.,][0-9]*)?|[.,][0-9]+)([A-Za-z]?)$/',
+                (string)$value, $parts);
+            if (!$valid || ($parts[1] !== '' && $parts[3] !== '')
+                || ($parts[3] !== '' && !in_array(strtoupper($parts[3]), $directions, true))
+                || (float)str_replace(',', '.', $parts[2]) > $limit) {
+                return $coordinateType === 'latitude'
+                    ? 'Enter a latitude from -90 to 90, optionally ending in N or S.'
+                    : 'Enter a longitude from -180 to 180, optionally ending in E or W.';
+            }
+        }
         if ($type === 'time' && !preg_match('/^(?:(?:[01][0-9]|2[0-3]):[0-5][0-9]|sunrise|sunset|daytime_start|daytime_end|nighttime_start|nighttime_end)$/', (string)$value)) {
             return 'Enter a time in HH:MM format or a listed sun event.';
         }
@@ -783,7 +797,42 @@ final class SettingsSubmission
             return;
         }
         if (isset($post['reset_settings'])) {
-            $this->store->reset($this->schema->all(), $this->schema);
+            $options = $this->schema->all();
+            $defaults = [];
+            foreach ($options as $option) {
+                if (array_key_exists('default', $option)) {
+                    $defaults[$option['name']] = $option['default'];
+                }
+            }
+            // On failure, show the proposed reset values alongside their field errors.
+            $this->posted = $defaults;
+            $dependencies = new SettingsDependencies($this->schema, $this->store, $defaults);
+            $hiddenErrors = [];
+            foreach ($options as $option) {
+                if ($this->schema->isIgnored($option)) continue;
+                $name = $option['name'];
+                $hasDefault = array_key_exists('default', $option);
+                $canEdit = $this->schema->isEditable($option) && $dependencies->allows($option);
+                if (!$hasDefault && !$canEdit) continue;
+                $value = $hasDefault ? $option['default'] : $this->store->value($option);
+                $error = $this->schema->validate($option, $value);
+                if ($error === null) continue;
+                if ($canEdit) {
+                    $this->errors[$name] = $error;
+                    if ($hasDefault) $this->posted[$name] = $value;
+                } else {
+                    $label = htmlspecialchars((string)($option['label'] ?? $name), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+                    $hiddenErrors[] = "$label: " . htmlspecialchars($error, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+                }
+            }
+            if ($this->errors || $hiddenErrors) {
+                if ($hiddenErrors) {
+                    $this->status->addMessage('Reset not saved. Invalid defaults in options.json: '
+                        . implode('; ', $hiddenErrors), 'danger');
+                }
+                return;
+            }
+            $this->store->reset($options, $this->schema);
             if ($this->store->save($this->status)) {
                 $this->status->addMessage('Settings reset to default', 'info');
                 $this->store->replaceSettings(readSettingsFile());
@@ -793,6 +842,7 @@ final class SettingsSubmission
         }
 
         $changes = [];
+        $uneditableField = false;
         $dependencies = new SettingsDependencies($this->schema, $this->store, $post);
         foreach ($post as $name => $value) {
             if (in_array($name, ['csrf_token', 'save_settings', 'reset_settings', 'restart',
@@ -802,6 +852,7 @@ final class SettingsSubmission
             if ($option !== null && $this->schema->isIgnored($option)) continue;
             if ($option === null || !$this->schema->isEditable($option)) {
                 $this->errors[$name] = 'Unknown or read-only setting.';
+                $uneditableField = true;
                 continue;
             }
             if (!$dependencies->allows($option)) continue;
@@ -817,7 +868,9 @@ final class SettingsSubmission
             }
         }
         if ($this->errors) {
-            $this->status->addMessage('Settings NOT saved due to invalid fields.', 'danger');
+            if ($uneditableField) {
+                $this->status->addMessage('Settings not saved: the request includes an unknown or read-only field.', 'danger');
+            }
             return;
         }
         if (!$this->validateCameraChanges($changes)) return;
@@ -1128,7 +1181,7 @@ final class SettingsView
                     $defaultEmpty = false;
                     if ($dependencyEnabled && ($value === null || $value === '')
                         && !SettingsSchema::bool($option['optional'] ?? false)) {
-                        if (array_key_exists('default', $option)) {
+                        if (array_key_exists('default', $option) && $error === null) {
                             $value = $option['default'];
                             $defaultedField = true;
                             $defaultEmpty = $value === null || $value === '';

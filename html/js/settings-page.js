@@ -58,9 +58,6 @@
             this.updateGroups();
             this.updateLevel();
             this.updateDirty();
-            if (panel.attr('data-open-error-on-mobile') === 'true' && !this.errorSummary.prop('hidden')) {
-                window.requestAnimationFrame(() => this.errorSummary.trigger('focus'));
-            }
         }
 
         byId(id) {
@@ -148,7 +145,18 @@
                     this.validateRow(row);
                 }
             });
-            this.form.on('submit.settingsPage', () => {
+            this.form.on('submit.settingsPage', event => {
+                const nativeEvent = event.originalEvent;
+                const submitter = (nativeEvent && nativeEvent.submitter) || document.activeElement;
+                if (!submitter || submitter.name !== 'reset_settings') {
+                    const invalidRows = this.validateSettings();
+                    if (invalidRows.length) {
+                        event.preventDefault();
+                        this.submitting = false;
+                        this.jumpToSetting(invalidRows.first().attr('data-setting-name'));
+                        return;
+                    }
+                }
                 this.captureSelection();
                 this.submitting = true;
             });
@@ -659,7 +667,8 @@
                         '<div class="modal-dialog" role="document"><div class="modal-content">' +
                             '<div class="modal-header"><button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
                                 '<h4 class="modal-title" id="settingsChangesTitle" tabindex="-1">Review changes</h4></div>' +
-                            '<div class="modal-body"><div class="js-settings-changes-list"></div>' +
+                            '<div class="modal-body"><div class="js-settings-changes-errors" role="alert" hidden></div>' +
+                                '<div class="js-settings-changes-list"></div>' +
                                 '<p class="js-settings-changes-impact"></p></div>' +
                             '<div class="modal-footer"><button type="button" class="btn btn-default" data-dismiss="modal">Keep editing</button>' +
                                 '<button type="button" class="btn btn-primary js-settings-save-reviewed">Save changes</button></div>' +
@@ -675,6 +684,7 @@
                     this.changesModal.modal('hide');
                 });
                 this.changesModal.find('.js-settings-save-reviewed').on('click.settingsPage', () => {
+                    if (this.changesModal.find('.js-settings-save-reviewed').prop('disabled')) return;
                     this.changesModal.modal('hide');
                     this.form.find('#save_settings').trigger('click');
                 });
@@ -687,7 +697,39 @@
             this.changesModal.modal('show');
         }
 
+        validateSettings() {
+            // Refresh field errors in one pass before review or submission.
+            this.rows.each((_, element) => this.validateRow(jQuery(element), false));
+            this.updateErrorIndicators();
+            return this.rows.filter((_, element) => {
+                const row = jQuery(element);
+                return row.hasClass('alert-danger') && !row.prop('hidden') && this.activeControl(row).length > 0;
+            });
+        }
+
         renderChanges() {
+            const invalidRows = this.validateSettings();
+            const invalidCount = invalidRows.length;
+            const errors = this.changesModal.find('.js-settings-changes-errors').empty();
+            if (invalidCount) {
+                errors.append(jQuery('<strong></strong>').text('Fix ' + invalidCount
+                    + (invalidCount === 1 ? ' invalid setting' : ' invalid settings') + ' before saving.'));
+                const otherErrors = invalidRows.filter((_, element) => !jQuery(element).hasClass('settings-row-changed'));
+                if (otherErrors.length) {
+                    const links = jQuery('<ul></ul>');
+                    otherErrors.each((_, element) => {
+                        const row = jQuery(element);
+                        const location = this.settingLocation(row).filter(Boolean).join(' › ');
+                        const label = row.find('.setting-label label').first().text().trim();
+                        const detail = row.find('.setting-feedback .errorMsg').first().text().trim();
+                        links.append(jQuery('<li></li>').append(jQuery('<button type="button" data-settings-jump></button>')
+                            .attr('data-settings-jump', row.attr('data-setting-name'))
+                            .text([location, label, detail].filter(Boolean).join(' · '))));
+                    });
+                    errors.append(links);
+                }
+            }
+            errors.prop('hidden', invalidCount === 0);
             const list = this.changesModal.find('.js-settings-changes-list').empty();
             const table = jQuery('<table class="settings-changes-table"><thead><tr><th scope="col">Setting</th><th scope="col">Current</th><th scope="col">New</th><th scope="col">Action</th></tr></thead></table>');
             const groups = new Map();
@@ -707,10 +749,16 @@
                 body.append(heading);
                 changes.forEach(({ row, control, name }) => {
                     const item = jQuery('<tr class="settings-change-item"></tr>');
+                    const invalid = row.hasClass('alert-danger');
+                    item.toggleClass('is-invalid', invalid);
                     item.append(jQuery('<th scope="row"></th>').append(jQuery('<button type="button" class="settings-change-link"></button>')
                         .attr('data-settings-jump', name).text(row.find('.setting-label label').first().text().trim())));
                     item.append(jQuery('<td></td>').text(this.displayValue(row, row.attr('data-saved-value') || '')));
-                    item.append(jQuery('<td class="settings-change-new"></td>').text(this.displayValue(row, this.controlValue(control))));
+                    const newValue = jQuery('<td class="settings-change-new"></td>')
+                        .text(this.displayValue(row, this.controlValue(control)));
+                    if (invalid) newValue.append(jQuery('<small class="settings-change-error"></small>')
+                        .text(row.find('.setting-feedback .errorMsg').first().text().trim() || 'Check this setting.'));
+                    item.append(newValue);
                     item.append(jQuery('<td></td>').append(jQuery('<button type="button" class="settings-change-revert"></button>')
                         .attr('data-settings-revert', name)
                         .attr('aria-label', 'Revert ' + location + ' ' + row.find('.setting-label label').first().text().trim())
@@ -721,8 +769,11 @@
                 table.append(body);
             });
             list.append(table);
-            this.changesModal.find('.js-settings-changes-impact').text(this.saveImpact.text());
-            this.changesModal.find('.js-settings-save-reviewed').prop('disabled', this.dirtyCount === 0);
+            const impact = this.saveImpact.text();
+            this.changesModal.find('.js-settings-changes-impact')
+                .text(impact).prop('hidden', invalidCount > 0 || !impact);
+            this.changesModal.find('.js-settings-save-reviewed')
+                .prop('disabled', this.dirtyCount === 0 || invalidCount > 0);
         }
 
         revertSetting(name, position) {
@@ -798,7 +849,7 @@
             else if (this.issuesOnly) this.updateLevel();
         }
 
-        validateRow(row) {
+        validateRow(row, updateIndicators = true) {
             var control = this.activeControl(row);
             if (!control.length || control.prop('disabled') || control.prop('readOnly')) return;
             var target = control;
@@ -809,8 +860,23 @@
 
             if (control[0].validity && control[0].validity.badInput) {
                 message = type === 'integer' ? 'Enter a whole number.' : 'Enter a number.';
+            } else if (row.attr('data-control-type') === 'timeformat'
+                && (!value.trim() || new Blob([value]).size > 200 || /[\x00-\x1f\x7f]/.test(value))) {
+                message = 'Enter a date and time format of up to 200 characters.';
             } else if (value === '') {
                 if (row.attr('data-required') === 'true') message = 'This field cannot be empty.';
+            } else if (['latitude', 'longitude'].includes(row.attr('data-control-type'))) {
+                const coordinateType = row.attr('data-control-type');
+                const coordinate = /^([+-]?)([0-9]+(?:[.,][0-9]*)?|[.,][0-9]+)([A-Za-z]?)$/.exec(value);
+                const directions = coordinateType === 'latitude' ? ['N', 'S'] : ['E', 'W'];
+                const limit = coordinateType === 'latitude' ? 90 : 180;
+                if (!coordinate || (coordinate[1] && coordinate[3])
+                    || (coordinate[3] && !directions.includes(coordinate[3].toUpperCase()))
+                    || Number(coordinate[2].replace(',', '.')) > limit) {
+                    message = coordinateType === 'latitude'
+                        ? 'Enter a latitude from -90 to 90, optionally ending in N or S.'
+                        : 'Enter a longitude from -180 to 180, optionally ending in E or W.';
+                }
             } else if (type === 'integer' && !/^[+-]?[0-9]+$/.test(value)) {
                 message = 'Enter a whole number.';
             } else if (type === 'float' && !numeric.test(value)) {
@@ -869,7 +935,7 @@
                 else target.removeAttr('aria-describedby');
             }
             row.attr('data-validated', 'true');
-            this.updateErrorIndicators();
+            if (updateIndicators) this.updateErrorIndicators();
         }
 
         onPanelClick(event) {

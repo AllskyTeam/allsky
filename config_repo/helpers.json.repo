@@ -304,7 +304,7 @@
       "outputFormat": "text",
       "showResultsTabs": true,
       "command": [
-        "compare_timelapse",
+        "compare_timelapses",
         "--html"
       ],
       "messages": {

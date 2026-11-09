@@ -91,7 +91,7 @@ Every field in `options.json.repo` should declare its `type`, and a displayed fi
 | Member | Meaning |
 | --- | --- |
 | `type` | Required control type. It determines the editor, validation and conversion of the submitted value. The supported types are described below. |
-| `default` | Value used when the setting has no saved value and when defaults are restored. It can be a literal of the appropriate type or a camera placeholder. The generator supplies the defaults for `camera` and `camerainfo`. |
+| `default` | Value used when the setting has no saved value and when defaults are restored. It can be a literal of the appropriate type, a camera placeholder, or `"_locale"` for the system's current numeric locale. The generator supplies the defaults for `camera` and `camerainfo`. |
 | `minimum`, `maximum` | Numeric limits used by validation and field help. Each may be a literal number or a camera placeholder. Do not put an unresolved placeholder into a generated file. |
 | `step` | Increment used by numeric controls. Store it as a numeric string, such as `"0.01"`, where precision matters. Generation infers an increment if one is omitted. |
 | `unit` | Short display suffix, such as `ms`, `px`, `fps` or `days`. It helps the reader interpret a number; it is not part of the stored value. Generation can infer it for recognised settings. |

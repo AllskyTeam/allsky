@@ -32,6 +32,10 @@ It needs to know three things about your images: where the zenith (the point str
 
 With **Update the Website** on, the box above the tabs says which Websites were updated; reload the Website to see the new overlay. With it off, nothing is changed: to use the settings, edit the Website's `configuration.json` in the WebUI's **Editor** page and enter the suggested `projection`, `overlayWidth`, `overlayHeight`, `overlayOffsetLeft`, `overlayOffsetTop`, `az`, `overlayLean` and `overlayLeanAz`.
 
+!!! info  "With the SharedSky module"
+
+    If the [SharedSky](https://github.com/benhartwich/allskyhub/tree/main/integrations/allsky_sharedsky) module runs on your Pi, its hub has already worked out your camera's orientation from the stars and saved it in `~/allsky/config/sharedsky/orientation.json`. The tool then starts from that instead of searching, and still fits it to the stars in your image, so a camera that was bumped since is caught. If it doesn't fit your image, or is for images of another shape, the tool says so and searches as usual. You don't need to set anything; from a terminal, `--no-sharedsky` makes the tool search anyway.
+
 !!! info  "A camera that isn't level"
 
     The tool also works out how far the camera leans and which way, and sets the overlay to lean the same way (`overlayLean` and `overlayLeanAz`), so the constellations still sit on the stars. A camera leaning 11 degrees, for example, is matched to about 1 degree.

@@ -39,7 +39,7 @@ Other than the first few fields, fields can be in any order but are usually in t
     * The setting's default value, if any.
     * Type: same as the setting's __type__.
     * Default: none
-    * Notes: Optional.  Values that contain a "&lowbar;" e.g., "&lowbar;default" or "night&lowbar;default" are placeholders.
+    * Notes: Optional.  Values such as "&lowbar;default" and "night&lowbar;default" are camera placeholders.  "&lowbar;locale" uses the system's current numeric locale when the options file is generated.
 * __description__
     * A description of the settings.
     * Type: text

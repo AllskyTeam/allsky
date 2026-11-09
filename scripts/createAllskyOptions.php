@@ -12,7 +12,8 @@ require_once __DIR__ . '/functions.php';
  * and presentation metadata. The builder retains that tree and its order.
  *
  * Camera controls in cc.json provide the values behind `_min`, `_max`,
- * `_default`, and their day/night variants. Camera-level choice lists provide
+ * `_default`, and their day/night variants. The `_locale` default uses the
+ * system's current numeric locale. Camera-level choice lists provide
  * `bin_values`, `type_values`, and `rotation_values`. Missing controls remain in
  * the options document with display=false so the settings page can still see
  * their definitions, but they are omitted from newly created settings files.
@@ -83,7 +84,8 @@ final class AllskyOptionsBuilder
      * `metadata`. The output keeps the same tree, resolves camera placeholders,
      * and adds inferred `step` and `unit` values where appropriate.
      *
-     * `default`, `minimum`, and `maximum` may contain camera placeholders.
+     * `default`, `minimum`, and `maximum` may contain camera placeholders;
+     * `_locale` in a default is resolved from the system's numeric locale.
      * `options` may mix fixed choices with a camera choice token. `source`
      * identifies a setting stored outside settings.json; `settingsonly` marks a
      * setting used by the internal settings tools. Other keys, including
@@ -252,7 +254,7 @@ final class AllskyOptionsBuilder
             $shown = strlen($value) > 50 ? substr($value, 0, 50) . '...' : $value;
             echo "    $field: $shown";
             if (isset($resolved[$field]) && $resolved[$field] !== $value
-                && preg_match('/^(?:_|day_|night_)(?:min|max|default)$/', $value)) {
+                && preg_match('/^(?:(?:_|day_|night_)(?:min|max|default)|_locale)$/', $value)) {
                 echo ", RESET v='{$resolved[$field]}'";
             }
             echo "\n";
@@ -326,6 +328,7 @@ final class AllskyOptionsBuilder
      * `day` or `night` prefix. Day/night placeholders use the full setting
      * name. If a required capability is absent, the setting remains in the
      * document with `display=false` and the unresolved bound is removed.
+     * The `_locale` default is independent of camera capabilities.
      *
      * @param SettingDefinition&array{name: string} $option Source definition with its key attached.
      * @return SettingDefinition&array{name: string} Resolved definition, still including `name`.
@@ -336,6 +339,10 @@ final class AllskyOptionsBuilder
         $generic = preg_replace('/^(day|night)/', '', $name);
         if (($option['display'] ?? null) === '_display') {
             $option['display'] = isset($this->controls[$generic]);
+        }
+
+        if (($option['default'] ?? null) === '_locale') {
+            $option['default'] = self::currentNumericLocale();
         }
 
         foreach (['minimum' => 'MinValue', 'maximum' => 'MaxValue', 'default' => 'DefaultValue'] as $field => $cameraField) {
@@ -376,6 +383,19 @@ final class AllskyOptionsBuilder
             $option['options'] = $resolved;
         }
         return $option;
+    }
+
+    /**
+     * Read the locale selected by LC_ALL, LC_NUMERIC or LANG without changing
+     * the locale used by the rest of this PHP process. If the environment
+     * names an unavailable locale, retain the process's current one.
+     */
+    private static function currentNumericLocale(): string
+    {
+        $previous = setlocale(LC_NUMERIC, 0);
+        $current = setlocale(LC_NUMERIC, '');
+        if ($previous !== false) setlocale(LC_NUMERIC, $previous);
+        return $current !== false ? $current : ($previous !== false ? $previous : 'C');
     }
 
     /**

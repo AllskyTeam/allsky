@@ -255,6 +255,47 @@ function readOptionsFile() {
 	return($contents);
 }
 
+/**
+ * Build the camera selector from the cached, tab-separated hardware inventory.
+ * Each camera row supplies its type, number, sensor and model. RPi identifiers
+ * retain the sensor; other camera identifiers use the type, number and model.
+ * The saved camera remains selectable if it has been disconnected.
+ *
+ * @param string $inventoryFile Path to connected_cameras.txt.
+ * @param string $currentCamera Identifier stored in the settings file.
+ * @return list<array{value: string, label: string}>
+ */
+function connectedCameraChoices(string $inventoryFile, string $currentCamera): array
+{
+    $choices = [];
+    $lines = @file($inventoryFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines === false ? [] : $lines as $line) {
+        $parts = explode("\t", $line);
+        if (count($parts) < 6 || $parts[0] !== 'camera') continue;
+        [$type, $number, $sensor, , $model] = array_slice($parts, 1, 5);
+        $sensor = $type === 'RPi' ? $sensor : '';
+        $choices[] = [
+            'value' => "$type;$number;$model" . ($sensor !== '' ? ";$sensor" : ''),
+            'label' => trim("$type  $model" . ($sensor !== '' ? "  [$sensor]" : '')),
+        ];
+    }
+
+    if ($currentCamera !== '' && $currentCamera !== 'Refresh'
+        && !in_array($currentCamera, array_column($choices, 'value'), true)) {
+        $parts = explode(';', $currentCamera);
+        $type = $parts[0] ?? '';
+        $model = $parts[2] ?? '';
+        $sensor = $type === 'RPi' ? ($parts[3] ?? '') : '';
+        array_unshift($choices, [
+            'value' => $currentCamera,
+            'label' => trim("$type  $model" . ($sensor !== '' ? "  [$sensor]" : ''))
+                . '  (not connected)',
+        ]);
+    }
+
+    return $choices;
+}
+
 $allsky_status = null;
 $allsky_status_timestamp = null;
 

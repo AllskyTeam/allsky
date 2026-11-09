@@ -3,6 +3,9 @@ data-setting-level="{{ row.level }}"
 data-settings-order="{{ row.order }}"
 {% if row.group_id is defined %}data-settings-group-id="{{ row.group_id }}"{% endif %}
 data-saved-value="{{ row.saved_value }}"
+data-defaulted="{{ row.defaulted ? 'true' : 'false' }}"
+data-default-empty="{{ row.default_empty ? 'true' : 'false' }}"
+{% if row.defaulted %}data-default-value="{{ row.default_value }}"{% endif %}
 data-search-text="{{ row.search_text }}"
 data-validation-type="{{ row.validation.type }}"
 data-control-type="{{ row.control }}"
@@ -12,6 +15,6 @@ data-base-disabled="{{ row.dependency.base_disabled ? 'true' : 'false' }}"
 data-bool-depends-on="{{ row.dependency.bool_on }}"
 data-bool-depends-off="{{ row.dependency.bool_off }}"
 data-value-depends-on="{{ row.dependency.value_on }}"
-{% if row.dependency.hidden_by_value %}hidden{% endif %}
+{% if row.dependency.hidden_by_dependency %}hidden{% endif %}
 {% if row.validation.minimum is not null %}data-minimum="{{ row.validation.minimum }}"{% endif %}
 {% if row.validation.maximum is not null %}data-maximum="{{ row.validation.maximum }}"{% endif %}

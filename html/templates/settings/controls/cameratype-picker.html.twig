@@ -1,0 +1,4 @@
+<div class="settings-cameratype-picker">
+    {% include 'controls/select.html.twig' with {row: row} only %}
+    <button class="btn btn-default js-cameratype-open" type="button" aria-label="Scan for connected cameras" title="Scan for connected cameras"{% if row.dependency.disabled or row.dependency.readonly %} disabled{% endif %}><i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i><span>Scan</span></button>
+</div>

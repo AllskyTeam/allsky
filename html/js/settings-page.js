@@ -34,12 +34,14 @@
             panel.find('.settings-sunangle-picker').allskySunAnglePicker();
             panel.find('.settings-daystokeep-picker').allskyDaysToKeepPicker();
             panel.find('.settings-timeformat-picker').allskyTimeFormatPicker();
+            panel.find('.settings-cameratype-picker').allskyCameraTypePicker();
             panel.find('.js-systemadditions-open').systemPageButtons();
             panel.find('.settings-position-picker .allsky-position').allskyPOSITION();
             panel.find('.settings-locale-picker').allskyLocalePicker();
             this.dirtyCount = 0;
             this.submitting = false;
             this.allMode = false;
+            this.issuesOnly = false;
 
             jQuery('body').addClass('settings-page');
             this.content.addClass('settings-content-locked');
@@ -141,7 +143,10 @@
             });
             this.form.on('input.settingsPage change.settingsPage', event => {
                 var row = jQuery(event.target).closest('.setting-row[data-setting-name]');
-                if (row.attr('data-validated') === 'true') this.validateRow(row);
+                if (event.type === 'input' && this.issuesOnly) return;
+                if (row.attr('data-validated') === 'true' || row.attr('data-defaulted') === 'true') {
+                    this.validateRow(row);
+                }
             });
             this.form.on('submit.settingsPage', () => {
                 this.captureSelection();
@@ -210,6 +215,20 @@
             this.updateLevel();
         }
 
+        setIssuesOnly(enabled) {
+            if (this.issuesOnly === enabled) return;
+            const reviewMode = this.panel.hasClass('settings-review-mode');
+            if (enabled && !reviewMode) this.setAllMode(true);
+            this.issuesOnly = enabled;
+            this.panel.toggleClass('settings-issues-only', enabled);
+            this.errorSummary.find('[data-settings-toggle-issues]')
+                .attr('aria-pressed', enabled ? 'true' : 'false')
+                .text(enabled ? 'Show full settings list' : 'Show affected fields');
+            this.panel.find('[data-settings-toggle-all]').prop('hidden', enabled);
+            this.updateLevel();
+            this.panel.find('.settings-sections, .settings-review-list').scrollTop(0);
+        }
+
         updateLevel() {
             const selected = this.level in levelRank ? this.level : 'advanced';
             this.level = selected;
@@ -219,10 +238,12 @@
                 const fieldLevel = row.attr('data-setting-level') || 'advanced';
                 const rank = fieldLevel in levelRank ? levelRank[fieldLevel] : levelRank.advanced;
                 row.toggleClass('settings-level-hidden', rank > levelRank[selected]
-                    && !row.hasClass('alert-danger') && !row.hasClass('settings-level-revealed'));
+                    && !row.hasClass('alert-danger') && !row.hasClass('settings-issue-row')
+                    && !row.hasClass('settings-level-revealed'));
             });
 
-            const available = target => target.find('.setting-row:not([hidden]):not(.settings-level-hidden)').length > 0;
+            const issueSelector = this.issuesOnly ? '.settings-issue-row' : '';
+            const available = target => target.find('.setting-row:not([hidden]):not(.settings-level-hidden)' + issueSelector).length > 0;
             this.panel.find('.settings-field-group').each((_, element) => {
                 jQuery(element).prop('hidden', !available(jQuery(element)));
             });
@@ -326,7 +347,7 @@
             var terms = query.split(/\s+/);
             var matches = this.rows.filter((_, element) => {
                 var row = jQuery(element);
-                if (row.prop('hidden')) return false;
+                if (row.prop('hidden') || (this.issuesOnly && !row.hasClass('settings-issue-row'))) return false;
                 var location = this.settingLocation(row);
                 var text = [row.find('.setting-label label').text(), row.attr('data-search-text') || '',
                     location[0], location[1]].join(' ').toLocaleLowerCase();
@@ -491,12 +512,12 @@
                 var row = jQuery(element);
                 var name = row.attr('data-setting-name');
                 var baseDisabled = row.attr('data-base-disabled') === 'true';
-                var valueAllowed = !useDependencies || this.valueDependencyAllowed(name);
-                var enabled = !baseDisabled && (!useDependencies || this.boolDependencyAllowed(name) && valueAllowed);
+                var dependencyAllowed = !useDependencies || this.dependencyAllowed(name);
+                var enabled = !baseDisabled && dependencyAllowed;
                 var controls = row.find('.setting-control :input');
                 var wasDisabled = controls.first().prop('disabled');
                 controls.prop('disabled', !enabled);
-                row.prop('hidden', !valueAllowed);
+                row.prop('hidden', !dependencyAllowed);
                 row.toggleClass('settings-row-disabled', !enabled && !baseDisabled);
                 row.attr('aria-disabled', enabled ? 'false' : 'true');
                 const explanation = !enabled && !baseDisabled && useDependencies ? this.disabledReason(name) : '';
@@ -745,19 +766,36 @@
 
         updateErrorSummary() {
             if (!this.errorSummary.length) return;
-            const list = this.errorSummary.find('ul').empty();
-            this.rows.filter('.alert-danger').each((_, element) => {
+            const list = this.errorSummary.find('.settings-issues-list').empty();
+            let count = 0;
+            this.rows.each((_, element) => {
                 const row = jQuery(element);
-                if (row.prop('hidden')) return;
+                const hasError = row.hasClass('alert-danger');
+                const isDefaulted = row.attr('data-defaulted') === 'true'
+                    && row.attr('data-default-resolved') !== 'true';
+                const affected = !row.prop('hidden') && (hasError || isDefaulted);
+                row.toggleClass('settings-issue-row', affected);
+                if (!affected) return;
                 const label = row.find('.setting-label label').first().text().trim();
-                const location = this.settingLocation(row).filter(Boolean).join(' › ');
-                const error = row.find('.setting-feedback .errorMsg').first().text().trim() || 'Check this setting.';
+                const [category, section] = this.settingLocation(row);
+                const detail = hasError
+                    ? (row.find('.setting-feedback .errorMsg').first().text().trim() || 'Check this setting.')
+                    : (row.attr('data-default-empty') === 'true' ? 'Enter a value' : 'Using default');
+                const field = [category, section, label].filter(Boolean).join(' › ');
                 const button = jQuery('<button type="button" data-settings-jump></button>')
                     .attr('data-settings-jump', row.attr('data-setting-name'))
-                    .text([location, label].filter(Boolean).join(' › ') + ': ' + error);
-                list.append(jQuery('<li></li>').append(button));
+                    .attr('aria-label', [field, detail].filter(Boolean).join(' · '))
+                    .append(jQuery('<span class="settings-issue-field"></span>').text(field))
+                    .append(jQuery('<small class="settings-issue-detail"></small>').text(detail));
+                list.append(jQuery('<li></li>').addClass(hasError ? 'is-error' : 'is-default').append(button));
+                count++;
             });
-            this.errorSummary.prop('hidden', list.children().length === 0);
+            this.errorSummary.find('.settings-error-heading-text').text(count === 1
+                ? '1 setting needs attention' : count + ' settings need attention');
+            this.errorSummary.toggleClass('has-errors', list.find('.is-error').length > 0);
+            this.errorSummary.prop('hidden', count === 0);
+            if (count === 0 && this.issuesOnly) this.setIssuesOnly(false);
+            else if (this.issuesOnly) this.updateLevel();
         }
 
         validateRow(row) {
@@ -797,6 +835,10 @@
             var feedbackId = 'setting-feedback-' + row.attr('data-setting-name');
             var feedback = row.find('.setting-feedback').first();
             var describedBy = (target.attr('aria-describedby') || '').split(/\s+/).filter(id => id && id !== feedbackId);
+            var defaulted = row.attr('data-defaulted') === 'true';
+            var defaultValue = row.attr('data-default-value') || '';
+            var defaultUnresolved = defaulted && (value === '' || value === defaultValue);
+            if (defaulted) row.attr('data-default-resolved', !message && !defaultUnresolved ? 'true' : 'false');
             if (message) {
                 if (!feedback.length) {
                     feedback = jQuery('<div class="setting-feedback"></div>').attr('id', feedbackId)
@@ -807,8 +849,20 @@
                 target.attr('aria-invalid', 'true');
                 describedBy.push(feedbackId);
                 target.attr('aria-describedby', describedBy.join(' '));
-            } else if (row.hasClass('alert-danger')) {
-                row.removeClass('alert-danger');
+            } else if (defaultUnresolved) {
+                if (!feedback.length) {
+                    feedback = jQuery('<div class="setting-feedback"></div>').attr('id', feedbackId)
+                        .appendTo(row.find('.setting-control'));
+                }
+                const warning = value === '' && defaultValue === ''
+                    ? 'Enter a value.' : 'Using the default value.';
+                feedback.empty().append(jQuery('<span class="errorMsg"></span>').text(warning));
+                row.removeClass('alert-danger').addClass('alert-warning');
+                target.removeAttr('aria-invalid');
+                describedBy.push(feedbackId);
+                target.attr('aria-describedby', describedBy.join(' '));
+            } else if (row.hasClass('alert-danger') || defaulted) {
+                row.removeClass('alert-danger alert-warning');
                 feedback.remove();
                 target.removeAttr('aria-invalid');
                 if (describedBy.length) target.attr('aria-describedby', describedBy.join(' '));
@@ -820,6 +874,10 @@
 
         onPanelClick(event) {
             var target = jQuery(event.target);
+            if (target.closest('[data-settings-toggle-issues]').length) {
+                this.setIssuesOnly(!this.issuesOnly);
+                return;
+            }
             if (target.closest('[data-settings-toggle-all]').length) {
                 this.setAllMode(!this.allMode);
                 return;

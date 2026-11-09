@@ -236,7 +236,7 @@ MAX_EXPOSURE="$( sed -e 's/://' -e 's/\.\./ /' -e 's/\[//' -e 's/]//' "${CAMERA_
 				high = camera_cc[cam_num, "gain_high"];
 				# Either gain is set or the user specifies the values, so there is no default.
 				do_cc(cam_num, out_file, "Gain", "Gain", high, low, "NOT_SET", "NOT_SET", "ASI_TRUE", "ASI_TRUE", "ASI_GAIN", "float");
-				do_cc(cam_num, out_file, "AutoExpMaxGain", "Auto exposure maximum gain value", high, low, "NOT_SET", "NOT_SET", "ASI_FALSE", "ASI_TRUE", "ASI_AUTO_MAX_GAIN", "float");
+				do_cc(cam_num, out_file, "AutoExpMaxGain", "Auto exposure maximum gain value", high, low, low, "NOT_SET", "ASI_FALSE", "ASI_TRUE", "ASI_AUTO_MAX_GAIN", "float");
 			}
 
 			low = camera_cc[cam_num, "exposure_low"];

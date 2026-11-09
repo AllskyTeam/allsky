@@ -21,6 +21,7 @@ include_once('utilbase.php');
  *   GET  PixelFormats          -> FFmpeg output pixel formats
  *   GET  AvailableLocales      -> supported locales and their installed state
  *   GET  ImageStorage          -> image day sizes and free disk space
+ *   POST ScanCameras           -> refresh the connected camera inventory
  *   GET  TimeFormatPreview     -> current date and time in a strftime format
  *   GET  EditorFiles           -> list WebUI editor files by key
  *   GET  EditorFile            -> read a WebUI editor file by key
@@ -66,6 +67,7 @@ class UIUTIL extends UTILBASE {
 	            'PixelFormats'   => ['get'],
 	            'AvailableLocales' => ['get'],
 	            'ImageStorage' => ['get'],
+	            'ScanCameras' => ['post'],
 	            'TimeFormatPreview' => ['get'],
 	            'EditorFile'     => ['get', 'post'],
 	            'EditorFiles'    => ['get'],
@@ -95,6 +97,31 @@ class UIUTIL extends UTILBASE {
         require_once __DIR__ . '/imageStorageStats.php';
         $now = new DateTimeImmutable('now', new DateTimeZone(getAllskyChartTimezone()));
         $this->sendResponse(['ok' => true, 'storage' => ImageStorageStats::collect(ALLSKY_IMAGES, $now)]);
+    }
+
+    /**
+     * Scan the hardware as the Allsky owner, then return the new camera choices.
+     * The scan updates connected_cameras.txt; the generated options file is left
+     * alone because the settings page resolves this particular list at runtime.
+     */
+    public function postScanCameras(): void
+    {
+        $result = $this->runProcess([
+            '/usr/bin/sudo', '-n', '--user=' . ALLSKY_OWNER,
+            ALLSKY_SCRIPTS . '/allsky-config', 'show_connected_cameras',
+        ]);
+        if ($result['error']) {
+            error_log('Camera scan failed: ' . trim($result['message']));
+            $this->send500('Unable to scan connected cameras.');
+        }
+        if (!is_readable(ALLSKY_CONNECTED_CAMERAS_INFO)) {
+            $this->send500('Unable to read the connected camera inventory.');
+        }
+
+        $settings = readSettingsFile();
+        $choices = connectedCameraChoices(ALLSKY_CONNECTED_CAMERAS_INFO,
+            (string)($settings['camerainfo'] ?? ''));
+        $this->sendResponse(['ok' => true, 'choices' => $choices]);
     }
 
     /**

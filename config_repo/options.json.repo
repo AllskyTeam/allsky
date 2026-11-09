@@ -43,8 +43,8 @@
                             "action": "reload",
                             "metadata": {
                                 "layout": {
-                                    "group": "dayauto",
-                                    "groupname": "Daytime Auto Exposure",
+                                    "group": "dayexposure",
+                                    "groupname": "Daytime Exposure",
                                     "singlerow": true
                                 },
                                 "depends": {
@@ -67,7 +67,7 @@
                             "unit": "ms",
                             "metadata": {
                                 "layout": {
-                                    "group": "dayauto"
+                                    "group": "dayexposure"
                                 },
                                 "depends": {
                                     "booldependson": "takedaytimeimages AND dayautoexposure"
@@ -89,7 +89,7 @@
                             "unit": "ms",
                             "metadata": {
                                 "layout": {
-                                    "group": "dayauto"
+                                    "group": "dayexposure"
                                 },
                                 "depends": {
                                     "booldependson": "takedaytimeimages"
@@ -172,7 +172,8 @@
                             "step": "0.01",
                             "metadata": {
                                 "layout": {
-                                    "group": "daygain"
+                                    "group": "daymean",
+                                    "groupname": "Daytime Mean"
                                 },
                                 "depends": {
                                     "booldependson": "takedaytimeimages"
@@ -193,7 +194,7 @@
                             "step": "0.01",
                             "metadata": {
                                 "layout": {
-                                    "group": "daygain"
+                                    "group": "daymean"
                                 },
                                 "depends": {
                                     "booldependson": "takedaytimeimages AND daymean"
@@ -459,8 +460,8 @@
                             "action": "reload",
                             "metadata": {
                                 "layout": {
-                                    "group": "nightauto",
-                                    "groupname": "Nighttime Auto Exposure",
+                                    "group": "nightexposure",
+                                    "groupname": "Nighttime Exposure",
                                     "singlerow": true
                                 },
                                 "depends": {
@@ -483,7 +484,7 @@
                             "unit": "ms",
                             "metadata": {
                                 "layout": {
-                                    "group": "nightauto"
+                                    "group": "nightexposure"
                                 },
                                 "depends": {
                                     "booldependson": "takenighttimeimages AND nightautoexposure"
@@ -505,7 +506,7 @@
                             "unit": "ms",
                             "metadata": {
                                 "layout": {
-                                    "group": "nightauto"
+                                    "group": "nightexposure"
                                 },
                                 "depends": {
                                     "booldependson": "takenighttimeimages"
@@ -570,7 +571,7 @@
                                     "group": "nightgain"
                                 },
                                 "depends": {
-                                    "booldependson": "takenighttimeimages AND nightautogain"
+                                    "booldependson": "takenighttimeimages"
                                 },
                                 "level": "beginner"
                             }
@@ -588,7 +589,8 @@
                             "step": "0.01",
                             "metadata": {
                                 "layout": {
-                                    "group": "nightgain"
+                                    "group": "nightmean",
+                                    "groupname": "Nighttime Mean"
                                 },
                                 "depends": {
                                     "booldependson": "takenighttimeimages"
@@ -609,7 +611,7 @@
                             "step": "0.01",
                             "metadata": {
                                 "layout": {
-                                    "group": "nightgain"
+                                    "group": "nightmean"
                                 },
                                 "depends": {
                                     "booldependson": "takenighttimeimages AND nightmean"
@@ -896,6 +898,120 @@
                 "dayandnight": {
                     "label": "Both",
                     "settings": {
+                        "latitude": {
+                            "description": "Camera latitude: a signed number from <span class='WebUIValue'>-90</span> to <span class='WebUIValue'>+90</span>, or an unsigned number with direction (N or S), for example: <span class='WebUIValue'>60.7N</span>.",
+                            "label": "Latitude",
+                            "type": "latitude",
+                            "longitudefield": "longitude",
+                            "usage": "capture",
+                            "carryforward": true,
+                            "checkchanges": true,
+                            "action": "reload",
+                            "metadata": {
+                                "layout": {
+                                    "group": "observer",
+                                    "groupname": "Observer"
+                                },                                 
+                                "level": "beginner"
+                            }
+                        },
+                        "longitude": {
+                            "description": "Camera longitude: a signed number from <span class='WebUIValue'>-180</span> to <span class='WebUIValue'>+180</span>, or an unsigned number with a direction (E or W), for example: <span class='WebUIValue'>135.05W</span>.",
+                            "label": "Longitude",
+                            "type": "longitude",
+                            "latitudefield": "latitude",
+                            "usage": "capture",
+                            "carryforward": true,
+                            "checkchanges": true,
+                            "action": "reload",
+                            "metadata": {
+                                "layout": {
+                                    "group": "observer"
+                                },                                 
+                                "level": "beginner"
+                            }
+                        },
+                        "angle": {
+                            "default": -6.0,
+                            "description": "Altitude of the Sun in degrees relative to the horizon at which to switch between day and night.",
+                            "label": "Angle",
+                            "type": "sunangle",
+                            "usage": "capture",
+                            "carryforward": true,
+                            "checkchanges": true,
+                            "action": "reload",
+                            "minimum": -90.0,
+                            "maximum": 90.0,
+                            "step": "0.01",
+                            "unit": "°",
+                            "metadata": {
+                                "layout": {
+                                    "group": "observer"
+                                },                                
+                                "level": "advanced"
+                            }
+                        },
+                        "locale": {
+                            "default": "_locale",
+                            "description": "Your locale, used to determine what the thousands and decimal separators are.<br>Choose from the locales available on your Pi. Saving an uninstalled locale enables it; reboot the Pi afterwards.",
+                            "label": "Locale",
+                            "type": "locale",
+                            "usage": "capture",
+                            "carryforward": true,
+                            "checkchanges": true,
+                            "action": "reload",
+                            "metadata": {
+                                "layout": {
+                                    "group": "observer"
+                                },                                
+                                "level": "advanced"
+                            }
+                        },
+                        "timeformat": {
+                            "default": "%Y%m%d %H:%M:%S",
+                            "description": "Determines the format of the displayed date and time. Run <code>man 3 strftime</code> to see the options.",
+                            "label": "Time Format",
+                            "type": "timeformat",
+                            "usage": "capture",
+                            "carryforward": true,
+                            "action": "reload",
+                            "metadata": {
+                                "layout": {
+                                    "group": "units",
+                                    "groupname": "Units"
+                                },                                
+                                "level": "advanced"
+                            }
+                        },
+                        "temptype": {
+                            "default": "C",
+                            "description": "Unit(s) to display temperature in.",
+                            "label": "Temperature Units",
+                            "type": "select_text",
+                            "usage": "capture",
+                            "carryforward": true,
+                            "options": [
+                                {
+                                    "value": "C",
+                                    "label": "Celsius"
+                                },
+                                {
+                                    "value": "F",
+                                    "label": "Fahrenheit"
+                                },
+                                {
+                                    "value": "B",
+                                    "label": "Both"
+                                }
+                            ],
+                            "action": "reload",
+                            "metadata": {
+                                "layout": {
+                                    "group": "units"
+                                },                                 
+                                "level": "advanced"
+                            }
+                        },                                                              
                         "daystokeep": {
                             "minimum": 0,
                             "maximum": 9999,
@@ -940,6 +1056,19 @@
                                 "level": "advanced"
                             }
                         },
+                        "filename": {
+                            "default": "image.jpg",
+                            "description": "Extensions allowed: .jpg or .png.<br><b>WARNING</b>: saving a .png file can take 10 or more seconds so be sure the time between successive images is long enough.  To measure how long it takes your Pi to save a .png file, set the <span class='WebUISetting'>Debug Level</span> to 4 and look in the log file.",
+                            "label": "Filename",
+                            "type": "text",
+                            "usage": "capture",
+                            "carryforward": true,
+                            "checkchanges": true,
+                            "action": "reload",
+                            "metadata": {
+                                "level": "beginner"
+                            }
+                        },                        
                         "saturation": {
                             "display": "_display",
                             "minimum": "_min",
@@ -952,6 +1081,10 @@
                             "action": "reload",
                             "step": "0.1",
                             "metadata": {
+                                "layout": {
+                                    "group": "imagequality",
+                                    "groupname": "Image Quality"
+                                },                                
                                 "level": "advanced"
                             }
                         },
@@ -967,6 +1100,9 @@
                             "action": "reload",
                             "step": "0.1",
                             "metadata": {
+                                "layout": {
+                                    "group": "imagequality"
+                                },                                
                                 "level": "advanced"
                             }
                         },
@@ -982,9 +1118,48 @@
                             "action": "reload",
                             "step": "0.1",
                             "metadata": {
+                                "layout": {
+                                    "group": "imagequality"
+                                },                                
                                 "level": "advanced"
                             }
                         },
+                        "type": {
+                            "default": 99,
+                            "description": "'auto' uses color if possible, otherwise the best mono mode supported.<br>RAW16 only works with PNG extension.",
+                            "label": "Image Type",
+                            "type": "select_integer",
+                            "usage": "capture",
+                            "options": [
+                                "type_values"
+                            ],
+                            "checkchanges": true,
+                            "action": "reload",
+                            "metadata": {
+                                "layout": {
+                                    "group": "imagequality"
+                                },
+                                "level": "advanced"
+                            }
+                        },
+                        "quality": {
+                            "minimum": 1,
+                            "maximum": 100,
+                            "default": 95,
+                            "description": "JPG quality: 0-100. Higher numbers produce larger, clearer files.<br>PNG compression: 0-9. Higher numbers produce smaller files but take longer to save.",
+                            "label": "Quality / Compression",
+                            "type": "integer",
+                            "usage": "capture",
+                            "carryforward": true,
+                            "action": "reload",
+                            "step": "1",
+                            "metadata": {
+                                "layout": {
+                                    "group": "imagequality"
+                                },
+                                "level": "advanced"
+                            }
+                        },                        
                         "aggression": {
                             "display": "_display",
                             "description": "How much of a calculated exposure change should be made during auto-exposure?<br>Lower numbers smooth out changes but take longer to react to brightness changes.",
@@ -1021,36 +1196,6 @@
                             },
                             "default": "_default"
                         },
-                        "type": {
-                            "default": 99,
-                            "description": "'auto' uses color if possible, otherwise the best mono mode supported.<br>RAW16 only works with PNG extension.",
-                            "label": "Image Type",
-                            "type": "select_integer",
-                            "usage": "capture",
-                            "options": [
-                                "type_values"
-                            ],
-                            "checkchanges": true,
-                            "action": "reload",
-                            "metadata": {
-                                "level": "advanced"
-                            }
-                        },
-                        "quality": {
-                            "minimum": 1,
-                            "maximum": 100,
-                            "default": 95,
-                            "description": "JPG quality: 0-100. Higher numbers produce larger, clearer files.<br>PNG compression: 0-9. Higher numbers produce smaller files but take longer to save.",
-                            "label": "Quality / Compression",
-                            "type": "integer",
-                            "usage": "capture",
-                            "carryforward": true,
-                            "action": "reload",
-                            "step": "1",
-                            "metadata": {
-                                "level": "advanced"
-                            }
-                        },
                         "autousb": {
                             "display": "_display",
                             "default": true,
@@ -1081,19 +1226,6 @@
                             "default": "_default",
                             "minimum": "_min"
                         },
-                        "filename": {
-                            "default": "image.jpg",
-                            "description": "Extensions allowed: .jpg or .png.<br><b>WARNING</b>: saving a .png file can take 10 or more seconds so be sure the time between successive images is long enough.  To measure how long it takes your Pi to save a .png file, set the <span class='WebUISetting'>Debug Level</span> to 4 and look in the log file.",
-                            "label": "Filename",
-                            "type": "text",
-                            "usage": "capture",
-                            "carryforward": true,
-                            "checkchanges": true,
-                            "action": "reload",
-                            "metadata": {
-                                "level": "beginner"
-                            }
-                        },
                         "rotation": {
                             "display": "_display",
                             "default": 0,
@@ -1106,6 +1238,10 @@
                             ],
                             "action": "reload",
                             "metadata": {
+                                "layout": {
+                                    "group": "imageorientation",
+                                    "groupname": "Image Orientation"
+                                },                                 
                                 "level": "advanced"
                             }
                         },
@@ -1135,6 +1271,9 @@
                             ],
                             "action": "reload",
                             "metadata": {
+                                "layout": {
+                                    "group": "imageorientation"
+                                },
                                 "level": "advanced"
                             }
                         },
@@ -1146,6 +1285,10 @@
                             "usage": "capture",
                             "action": "reload",
                             "metadata": {
+                                "layout": {
+                                    "group": "focus",
+                                    "groupname": "Focus"
+                                },                                
                                 "level": "advanced"
                             }
                         },
@@ -1158,6 +1301,9 @@
                             "checkchanges": true,
                             "action": "reload",
                             "metadata": {
+                                "layout": {
+                                    "group": "focus"
+                                },                                
                                 "level": "advanced"
                             }
                         },
@@ -1169,89 +1315,6 @@
                             "usage": "capture",
                             "carryforward": true,
                             "action": "reload",
-                            "metadata": {
-                                "level": "advanced"
-                            }
-                        },
-                        "timeformat": {
-                            "default": "%Y%m%d %H:%M:%S",
-                            "description": "Determines the format of the displayed date and time. Run <code>man 3 strftime</code> to see the options.",
-                            "label": "Time Format",
-                            "type": "timeformat",
-                            "usage": "capture",
-                            "carryforward": true,
-                            "action": "reload",
-                            "metadata": {
-                                "level": "advanced"
-                            }
-                        },
-                        "temptype": {
-                            "default": "C",
-                            "description": "Unit(s) to display temperature in.",
-                            "label": "Temperature Units",
-                            "type": "select_text",
-                            "usage": "capture",
-                            "carryforward": true,
-                            "options": [
-                                {
-                                    "value": "C",
-                                    "label": "Celsius"
-                                },
-                                {
-                                    "value": "F",
-                                    "label": "Fahrenheit"
-                                },
-                                {
-                                    "value": "B",
-                                    "label": "Both"
-                                }
-                            ],
-                            "action": "reload",
-                            "metadata": {
-                                "level": "advanced"
-                            }
-                        },
-                        "latitude": {
-                            "default": "",
-                            "description": "Camera latitude: a signed number from <span class='WebUIValue'>-90</span> to <span class='WebUIValue'>+90</span>, or an unsigned number with direction (N or S), for example: <span class='WebUIValue'>60.7N</span>.",
-                            "label": "Latitude",
-                            "type": "latitude",
-                            "longitudefield": "longitude",
-                            "usage": "capture",
-                            "carryforward": true,
-                            "checkchanges": true,
-                            "action": "reload",
-                            "metadata": {
-                                "level": "beginner"
-                            }
-                        },
-                        "longitude": {
-                            "default": "",
-                            "description": "Camera longitude: a signed number from <span class='WebUIValue'>-180</span> to <span class='WebUIValue'>+180</span>, or an unsigned number with a direction (E or W), for example: <span class='WebUIValue'>135.05W</span>.",
-                            "label": "Longitude",
-                            "type": "longitude",
-                            "latitudefield": "latitude",
-                            "usage": "capture",
-                            "carryforward": true,
-                            "checkchanges": true,
-                            "action": "reload",
-                            "metadata": {
-                                "level": "beginner"
-                            }
-                        },
-                        "angle": {
-                            "default": -6.0,
-                            "description": "Altitude of the Sun in degrees relative to the horizon at which to switch between day and night.",
-                            "label": "Angle",
-                            "type": "sunangle",
-                            "usage": "capture",
-                            "carryforward": true,
-                            "checkchanges": true,
-                            "action": "reload",
-                            "minimum": -90.0,
-                            "maximum": 90.0,
-                            "step": "0.01",
-                            "unit": "°",
                             "metadata": {
                                 "level": "advanced"
                             }
@@ -1286,19 +1349,6 @@
                             "label": "Use Dark Frames",
                             "type": "boolean",
                             "checkchanges": true,
-                            "metadata": {
-                                "level": "advanced"
-                            }
-                        },
-                        "locale": {
-                            "default": "",
-                            "description": "Your locale, used to determine what the thousands and decimal separators are.<br>Choose from the locales available on your Pi. Saving an uninstalled locale enables it; reboot the Pi afterwards.",
-                            "label": "Locale",
-                            "type": "locale",
-                            "usage": "capture",
-                            "carryforward": true,
-                            "checkchanges": true,
-                            "action": "reload",
                             "metadata": {
                                 "level": "advanced"
                             }
@@ -2457,7 +2507,7 @@
                     }
                 },
                 "localwebsite": {
-                    "label": "Local Website",
+                    "label": "Local",
                     "settings": {
                         "uselocalwebsite": {
                             "description": "Enable to use the local Allsky Website.<br>You should configure it in the <span class='WebUILink'>Editor</span> page first.",
@@ -2496,7 +2546,7 @@
                     }
                 },
                 "remotewebsite": {
-                    "label": "Remote Website",
+                    "label": "Website",
                     "settings": {
                         "useremotewebsite": {
                             "default": false,
@@ -2843,7 +2893,7 @@
                             "carryforward": true,
                             "metadata": {
                                 "depends": {
-                                    "valuedependson": "imageuploadfrequency=[1-9]*"
+                                    "booldependson": "useremotewebsite"
                                 },
                                 "level": "beginner"
                             }
@@ -3201,7 +3251,7 @@
                             "carryforward": true,
                             "metadata": {
                                 "depends": {
-                                    "valuedependson": "imageuploadfrequency=[1-9]*"
+                                    "booldependson": "useremotewebsite"
                                 },
                                 "level": "advanced"
                             }
@@ -3741,9 +3791,9 @@
             "settings": {
                 "camerainfo": {
                     "default": "",
-                    "description": "The camera to use. All cameras connected to the Pi are listed; RPi cameras show their sensor in brackets.<br>Select <span class='WebUISetting'>Refresh</span> and save the settings to look for cameras again, for example after connecting a new one.<br>When you change the camera you can't change any other setting at the same time.",
+                    "description": "The camera to use. All cameras connected to the Pi are listed; RPi cameras show their sensor in brackets.<br>Use the scan button to look for cameras after connecting a new one.<br>When you change the camera you can't change any other setting at the same time.",
                     "label": "Camera",
-                    "type": "select_text",
+                    "type": "cameratype",
                     "options": [
                         "camerainfo_values"
                     ],

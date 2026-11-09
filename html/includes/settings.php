@@ -13,6 +13,36 @@ if (basename(__FILE__) === basename($_SERVER['SCRIPT_FILENAME'] ?? '')) {
 }
 
 /**
+ * Replace the camera choices in the in-memory options document.
+ *
+ * The generated file describes the selected camera's settings, but its camera
+ * list can become stale when the inventory is refreshed later. Read the cached
+ * inventory on each settings request so display and validation use the same
+ * choices. Keep the saved camera in the list if it has been disconnected.
+ *
+ * @param array<string, mixed> $options Decoded options document.
+ * @param string $inventoryFile Tab-separated connected camera inventory.
+ * @param string $currentCamera Camera identifier stored in settings.json.
+ * @return array<string, mixed> Options with current camera choices.
+ */
+function injectConnectedCameraOptions(array $options, string $inventoryFile,
+                                      string $currentCamera): array
+{
+    if (!isset($options['sections']['camera']['settings']['camerainfo'])) return $options;
+
+    // Older generated files may still describe the camera as select_text.
+    $options['sections']['camera']['settings']['camerainfo']['type'] = 'cameratype';
+    $options['sections']['camera']['settings']['camerainfo']['description'] = str_replace(
+        "Select <span class='WebUISetting'>Refresh</span> and save the settings to look for cameras again, for example after connecting a new one.",
+        'Use the scan button to look for cameras after connecting a new one.',
+        (string)($options['sections']['camera']['settings']['camerainfo']['description'] ?? '')
+    );
+    $options['sections']['camera']['settings']['camerainfo']['options'] =
+        connectedCameraChoices($inventoryFile, $currentCamera);
+    return $options;
+}
+
+/**
  * Reads the options document and exposes settings in display order.
  */
 final class SettingsSchema
@@ -197,7 +227,7 @@ final class SettingsSchema
     public function control(array $option): string
     {
         $type = $option['type'] ?? 'text';
-        return strpos($type, 'select_') === 0 ? 'select' : $type;
+        return strpos($type, 'select_') === 0 || $type === 'cameratype' ? 'select' : $type;
     }
 
     /**
@@ -215,7 +245,7 @@ final class SettingsSchema
             return 'text';
         }
         if (strpos($type, 'text') !== false || $type === 'password'
-            || in_array($type, ['vcodec', 'pixfmt', 'timeformat', 'systemadditions'], true)) {
+            || in_array($type, ['vcodec', 'pixfmt', 'timeformat', 'systemadditions', 'cameratype'], true)) {
             return 'text';
         }
         if (strpos($type, 'integer') !== false || $type === 'daystokeep') {
@@ -806,8 +836,8 @@ final class SettingsSubmission
         foreach ($changes as $name => $change) {
             $option = $change['option'];
             $new = $change['new'];
-            if ($name === 'cameratype' && $new === 'Refresh') $new = $change['old'];
-            $cameraField = in_array($name, ['cameratype', 'cameramodel', 'cameranumber'], true);
+            if ($name === 'camerainfo' && $new === 'Refresh') $new = $change['old'];
+            $cameraField = $name === 'camerainfo';
             // makeChanges.sh owns camera selection and its settings file.
             if (!$cameraField) $this->store->set($option, $new);
             $action = $option['action'] ?? 'none';
@@ -837,7 +867,7 @@ final class SettingsSubmission
                     $args[] = escapeshellarg(is_bool($part) ? ($part ? 'true' : 'false') : (string)$part);
                 }
             }
-            $cameraOnly = isset($changes['cameratype']) ? ' --cameraTypeOnly' : '';
+            $cameraOnly = isset($changes['camerainfo']) ? ' --cameraTypeOnly' : '';
             $cmd = 'sudo --user=' . escapeshellarg(ALLSKY_OWNER) . ' '
                 . escapeshellarg(ALLSKY_SCRIPTS . '/makeChanges.sh')
                 . ' --from WebUI' . $cameraOnly . ' ' . implode(' ', $args);
@@ -866,7 +896,7 @@ final class SettingsSubmission
     private function hasSettingsChange(array $changes): bool
     {
         foreach ($changes as $name => $change) {
-            if (in_array($name, ['cameratype', 'cameramodel', 'cameranumber'], true)) continue;
+            if ($name === 'camerainfo') continue;
             if (empty($change['option']['source'])) return true;
         }
         return false;
@@ -879,15 +909,11 @@ final class SettingsSubmission
      */
     private function validateCameraChanges(array $changes): bool
     {
-        $cameraNames = ['cameratype', 'cameramodel', 'cameranumber'];
+        $cameraNames = ['camerainfo'];
         $camera = array_intersect(array_keys($changes), $cameraNames);
         $others = array_diff(array_keys($changes), $cameraNames);
         if ($camera && $others) {
             $this->status->addMessage('Camera changes must be saved separately from other settings.', 'danger');
-            return false;
-        }
-        if (isset($changes['cameratype']) && $changes['cameratype']['new'] === 'Refresh' && count($camera) > 1) {
-            $this->status->addMessage('Camera Type Refresh must be saved by itself.', 'danger');
             return false;
         }
         return true;
@@ -1019,6 +1045,7 @@ final class SettingsView
     {
         $templates = [
             'select' => 'controls/select.html.twig',
+            'cameratype' => 'controls/cameratype-picker.html.twig',
             'boolean' => 'controls/boolean.html.twig',
             'vcodec' => 'controls/ffmpeg-picker.html.twig',
             'pixfmt' => 'controls/ffmpeg-picker.html.twig',
@@ -1097,11 +1124,15 @@ final class SettingsView
                     $error = $dependencyEnabled
                         ? ($this->submission->errors[$name] ?? $this->schema->validate($option, $value)) : null;
                     $warning = '';
+                    $defaultedField = false;
+                    $defaultEmpty = false;
                     if ($dependencyEnabled && ($value === null || $value === '')
                         && !SettingsSchema::bool($option['optional'] ?? false)) {
                         if (array_key_exists('default', $option)) {
                             $value = $option['default'];
-                            $warning = 'This field was empty but set to the default.';
+                            $defaultedField = true;
+                            $defaultEmpty = $value === null || $value === '';
+                            $warning = $defaultEmpty ? 'Enter a value.' : 'Using the default value.';
                             $defaulted[] = $option['label'] ?? $name;
                             $error = null;
                         } else {
@@ -1112,6 +1143,7 @@ final class SettingsView
                     $preparedRows[] = [
                         'kind' => 'field', 'option' => $option, 'value' => $value,
                         'saved_value' => $savedValue, 'warning' => $warning, 'error' => $error,
+                        'defaulted' => $defaultedField, 'default_empty' => $defaultEmpty,
                     ];
                     if ($error !== null) $section['errors']++;
                 }
@@ -1120,15 +1152,7 @@ final class SettingsView
             unset($section);
         }
         unset($group);
-        if ($missing) {
-            $this->status->addMessage('Required settings are missing: ' .
-                self::escape(implode(', ', $missing)), 'danger');
-        }
-        if ($defaulted) {
-            $this->needsConfiguration = true;
-            $this->status->addMessage('Required settings are using defaults: ' .
-                self::escape(implode(', ', $defaulted)), 'warning');
-        }
+        if ($missing || $defaulted) $this->needsConfiguration = true;
     }
 
     /**
@@ -1185,8 +1209,8 @@ final class SettingsView
             'action' => $action . '?_ts=' . time() . ($this->reviewRequested ? '&review=1' : ''),
             'title' => $title,
             'icon' => $icon,
-            'camera_type' => $settings['cameratype'] ?? '',
-            'camera_model' => $settings['cameramodel'] ?? '',
+            'camera_type' => camera_info_part($settings['camerainfo'] ?? '', 'type'),
+            'camera_model' => camera_info_part($settings['camerainfo'] ?? '', 'model'),
             'save_label' => $saveLabel,
             'readonly' => $this->readonly,
             'needs_configuration' => $this->needsConfiguration,
@@ -1215,6 +1239,7 @@ final class SettingsView
                 '/js/jquery-daystokeep-picker/estimate.js',
                 '/js/jquery-daystokeep-picker/jquery-daystokeep-picker.js',
                 '/js/jquery-timeformat-picker/jquery-timeformat-picker.js',
+                '/js/jquery-cameratype-picker/jquery-cameratype-picker.js',
                 '/js/jquery-filebrowser/jquery-filebrowser.js',
                 '/js/jquery-systempagebuttons/jquery-systempagebuttons.js',
                 '/js/settings-page.js']),
@@ -1322,7 +1347,7 @@ final class SettingsView
                 $namedGroups[$name] = true;
             }
             $result[$position]['fields'][] = $row;
-            if (!$row['dependency']['hidden_by_value']) $result[$position]['hidden'] = false;
+            if (!$row['dependency']['hidden_by_dependency']) $result[$position]['hidden'] = false;
         }
         return $result;
     }
@@ -1375,7 +1400,8 @@ final class SettingsView
             return [
                 'kind' => 'field',
                 'template' => 'rows/field.html.twig',
-                'control_template' => $this->controlTemplate($type),
+                'control_template' => $this->controlTemplate(($option['type'] ?? '') === 'cameratype'
+                    ? 'cameratype' : $type),
                 'name' => $name,
                 'level' => in_array($option['metadata']['level'] ?? '', ['beginner', 'intermediate', 'advanced'], true)
                     ? $option['metadata']['level'] : 'advanced',
@@ -1394,6 +1420,10 @@ final class SettingsView
                 'colour_picker_value' => $type === 'color' ? self::colourPickerValue($value) : '',
                 'saved_value' => is_bool($row['saved_value']) ? ($row['saved_value'] ? 'true' : 'false')
                     : (is_scalar($row['saved_value']) ? (string)$row['saved_value'] : ''),
+                'defaulted' => !empty($row['defaulted']),
+                'default_empty' => !empty($row['default_empty']),
+                'default_value' => is_bool($value) ? ($value ? 'true' : 'false')
+                    : (is_scalar($value) ? (string)$value : ''),
                 'yes' => SettingsSchema::bool($value),
                 'choices' => $choices,
                 'search_text' => trim(preg_replace('/\s+/', ' ', strip_tags(preg_replace('/<[^>]*>/', ' ',
@@ -1413,7 +1443,7 @@ final class SettingsView
                 'dependency' => [
                     'base_disabled' => $baseDisabled,
                     'disabled' => $baseDisabled || !$this->dependencies->allows($option),
-                    'hidden_by_value' => !$this->dependencies->valueAllows($option),
+                    'hidden_by_dependency' => !$this->dependencies->allows($option),
                     'bool_on' => (string)($option['metadata']['depends']['booldependson'] ?? ''),
                     'bool_off' => (string)($option['metadata']['depends']['booldependsoff'] ?? ''),
                     'value_on' => (string)($option['metadata']['depends']['valuedependson'] ?? ''),
@@ -1505,6 +1535,8 @@ function DisplayAllskyConfig(): void
     $options = get_decoded_json_file($optionsFile, true, $message);
     if (!is_array($options)) return;
     if ($settings_array === null) $settings_array = readSettingsFile();
+    $options = injectConnectedCameraOptions($options, ALLSKY_CONNECTED_CAMERAS_INFO,
+        (string)($settings_array['camerainfo'] ?? ''));
 
     $schema = new SettingsSchema($options);
     $store = new SettingsStore(getSettingsFile(), $settings_array);

@@ -54,7 +54,9 @@ function ListDays()
 	foreach ($days as $day) {
 		// See if this day has ANY valid images or videos.
 		$i = getValidImageNames(ALLSKY_IMAGES . "/$day", true);	// true == stop after 1
-		if (count($i) > 0) {
+		if (count($i) === 0) {
+			$day_has_images[$day] = false;
+		} else {
 			$day_has_images[$day] = true;
 			$are_images = true;
 		}

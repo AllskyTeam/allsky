@@ -1,35 +1,10 @@
-This page lists the major changes to all Allsky releases.
-You can also see the
-Known Issues and Limitations
-of the current release.
+This page lists the major changes to all Allsky releases up to and including v2026.10.01_01.
+To see changes to newer releases see the "Upgrade Notes" page for that release.
+
 ---
 v2026.10.01 { data-toc-label="v2026.10.01" }
 ???+ "v2026.10.01"
     ### v2026.10.01
-
-    ???+ "v2026.10.01_02 - Point Release # 2"
-
-        ## **Changes that may require action (upgrades only)**
-        - The **Solar System** module now only runs in the **Periodic** flow. Running it for every image as well did the same work several times. Upgrading moves it from the Daytime and Nighttime flows to the Periodic flow with its settings. Its values, e.g. satellite positions, are now updated as often as the Periodic flow runs (every 60 seconds by default); lower the ==Periodic Timer== in the **Module Manager** settings if you need them more often.
-
-        <!-- ## **Major New Features (described more below)** -->
-
-        ## **Enhancements / Changes**
-        - **feature 1**
-            - blah blah
-
-        - **feature 2**
-            - blah blah
-
-        ## **Bug Fixes**
-		- xxx
-
-        ## **Deleted Settings**
-		- xxx
-
-        ## **New Settings**
-		- xxx
-
 
     ???+ "v2026.10.01_01 - Point Release # 1"
 

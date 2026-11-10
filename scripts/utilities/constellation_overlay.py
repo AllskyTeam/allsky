@@ -34,6 +34,9 @@ Options:
                        time zone nearest to the camera's location.
     --update           write the settings into the enabled Websites' configuration
                        (and upload the remote one)
+    --no-sharedsky     search for the stars even if the SharedSky module has worked out the
+                       camera's orientation (${ALLSKY_CONFIG}/sharedsky/orientation.json);
+                       by default that is the starting point, refitted to the image's stars
     --html             output for the WebUI helper page
     --directory DIR    where to put the check images
                        (default: ${ALLSKY_CURRENT_DIR}/constellation_overlay, in Allsky's
@@ -739,6 +742,50 @@ def _identify(prep, cat, quick=False):
     return p, pairs, flip, rms_px, rms_deg
 
 
+# --- SharedSky's orientation ---------------------------------------------------------
+
+def _sharedskyFile():
+    config = os.environ.get("ALLSKY_CONFIG") or os.path.join(ALLSKY_HOME, "config")
+    return os.path.join(config, "sharedsky", "orientation.json")
+
+
+def _sharedsky(W, H):
+    """The lens the SharedSky module's hub worked out from the stars, for this image:
+    (p, flip, why) with p as _project takes it, or (None, None, why) when there is none
+    or it is for an image of another shape.  The module keeps it in orientation.json;
+    the hub fits the same lens as this tool (r = a1*t + a3*t^3, then the tilt)."""
+    path = _sharedskyFile()
+    if not os.path.isfile(path):
+        return None, None, None
+    try:
+        o = json.load(open(path))
+        lens = o["lens"]
+        w, h = float(lens["width"]), float(lens["height"])
+        p = [float(lens[k]) for k in ("cx", "cy", "a1", "a3")] + [float(o["north_deg"])] + \
+            [float(lens["tilt_east_deg"]), float(lens["tilt_north_deg"])]
+    except Exception as ex:
+        return None, None, f"SharedSky's orientation ({path}) couldn't be read: {ex}."
+    if abs(w / h - W / float(H)) > 0.005 * W / float(H):
+        return None, None, (f"SharedSky's orientation is for {w:.0f} x {h:.0f} images, not {W} x {H}, "
+                            "so the stars were searched for instead.")
+    s = W / w                                     # a resized copy of the same image
+    p[:4] = [v * s for v in p[:4]]
+    # The hub's "mirrored" is a camera looking up: east to the left of north.
+    return p, (-1.0 if o.get("mirrored", True) else 1.0), None
+
+
+def _fromSharedsky(prep, cat, p, flip):
+    """Start from SharedSky's orientation instead of searching, and refit it to this
+    image's stars, so it is checked and follows any change since.  Accepted like _identify."""
+    p, pairs = _refine(cat, prep["stars"], prep["sky"], p, flip, prep["W"])
+    if p is None:
+        return None
+    rms_px, rms_deg = _residuals(pairs, p, flip)
+    if len(pairs) < 12 or rms_deg > 0.6:
+        return None
+    return p, pairs, flip, rms_px, rms_deg
+
+
 # --- a camera that leans ------------------------------------------------------------
 
 # Where to start from for a camera that leans a lot: 6, 12 and 18 degrees in 8 directions.
@@ -1048,6 +1095,8 @@ def main():
     ap.add_argument("--timezone", metavar="ZONE",
                     help="time zone of the image's file name, e.g. America/Chicago (default: this computer's)")
     ap.add_argument("--directory", help="where to put the check images")
+    ap.add_argument("--no-sharedsky", action="store_true",
+                    help="search for the stars even if the SharedSky module has the camera's orientation")
     ap.add_argument("--update", action="store_true",
                     help="write the settings into the enabled Websites' configuration and upload the remote one")
     ap.add_argument("--html", action="store_true", help="HTML output for the WebUI")
@@ -1093,10 +1142,25 @@ def run(args, out):
 
     if args.list_stars or not args.star:
         best = None
+        shared = False
         if not args.list_stars:
-            prep = _prepare(gray, args.image)
             cats = [(_catalogue(_toUtc(local, zone), lat, lon, min_alt=15.0), zone) for zone in zones]
-            found = [(b, c, zone) for c, zone in cats for b in [_identify(prep, c)] if b is not None]
+            found = []
+            if not args.no_sharedsky:
+                sp, sflip, why = _sharedsky(W, H)
+                if why:
+                    out.para(why)
+                if sp is not None:
+                    prep = {"W": W, "H": H, "stars": _starMap(gray), "sky": _skyRegion(gray)}
+                    found = [(b, c, zone) for c, zone in cats
+                             for b in [_fromSharedsky(prep, c, sp, sflip)] if b is not None]
+                    shared = bool(found)
+                    if not found:
+                        out.para("SharedSky's orientation doesn't fit the stars in this image, "
+                                 "so they were searched for instead.")
+            if not found:
+                prep = _prepare(gray, args.image)
+                found = [(b, c, zone) for c, zone in cats for b in [_identify(prep, c)] if b is not None]
             if not found:
                 found = [(b, c, zone) for c, zone in cats
                          for b in [_leaning(prep, c, lambda cc, tilt: _identifyLeaning(prep, cc, tilt))] if b is not None]
@@ -1107,6 +1171,9 @@ def run(args, out):
             out.heading("Stars found automatically")
             if used != zones[0]:
                 _reportZone(out, used, name)
+            if shared:
+                out.para("The SharedSky module's orientation was the starting point, so no search was needed; "
+                         "it was then fitted to the stars in this image.")
             out.para("The stars were identified without your help. Check the labelled image in the Images tab: "
                      "if the names sit on the right stars, the settings below are ready to use. If they don't, "
                      "enter two stars yourself.")

@@ -1662,21 +1662,6 @@ pre {
 
 /* Allsky Specific */
 
-ht1ml, b1ody, * {
-  -webkit-user-select: none; /* Safari */
-  -moz-user-select: none;    /* Old Firefox */
-  -ms-user-select: none;     /* Old IE/Edge */
-  user-select: none;         /* Standard */
-  -webkit-touch-callout: none; /* iOS long-press menu */
-}
-
-input, textarea, [contenteditable="true"], .allow-select, .allow-select * {
-  -webkit-user-select: text !important;
-  -moz-user-select: text !important;
-  -ms-user-select: text !important;
-  user-select: text !important;
-}
-
 a[external="true"]::after {
     font-family: "Font Awesome 6 Free";
     content: "\f35d";

@@ -878,6 +878,7 @@ void displayHelp(config cg)
 	printf(" -%-*s - Where to save 'filename' [%s].\n", n, "save_dir s", cg.saveDir);
 	printf(" -%-*s - 'true' previews the captured images [%s].\n", n, "preview", yesNo(cg.preview));
 	printf("  %-*s   Only works with a Desktop Environment.\n", n, "");
+	printf(" -%-*s - When specified, does not produce error if number of cameras changed [%s].\n", n, "refreshmode", yesNo(cg.refreshMode));
 	printf(" -%-*s - Outputs the camera's capabilities to the specified file and exits.\n", n, "cc_file s");
 	if (cg.ct == ctRPi) {
 		printf(" -%-*s - Command to take pictures [\"\"]:\n", n, "cmd s");
@@ -1007,6 +1008,7 @@ void displaySettings(config cg)
 		printf("   ZWO Exposure Type: %s\n", getZWOexposureType(cg.ZWOexposureType));
 	}
 	printf("   Preview: %s\n", yesNo(cg.preview));
+	printf("   Refresh mode: %s\n", yesNo(cg.refreshMode));
 	if (cg.maxImages != 0) {
 		printf("   Maximum images to take before exiting: %d\n", cg.maxImages);
 	}
@@ -1345,6 +1347,10 @@ bool getCommandLineArguments(config *cg, int argc, char *argv[], bool readConfig
 		else if (strcmp(a, "preview") == 0)
 		{
 			cg->preview = getBoolean(argv[++i]);
+		}
+		else if (strcmp(a, "refreshmode") == 0)
+		{
+			cg->refreshMode = true;
 		}
 		else if (strcmp(a, "maximages") == 0)
 		{

@@ -151,6 +151,90 @@ function doExit()
 
 
 #####
+# The "camerainfo" setting holds everything about the camera in one field, separated by ";":
+#	type;number;model;sensor
+# for example "RPi;0;Module 3 Wide NoIR;imx708_wide_noir" or "ZWO;0;ASI178MC".
+# The sensor is only set for RPi cameras; without one there's no trailing ";".
+# Not tabs: some scripts write JSON files with "echo -e", which turns "\t" into a tab
+# and makes the file invalid.  The number is per camera type.
+# Use these functions rather than splitting the field yourself.
+
+# Return one part of a camerainfo value:
+#	get_camera_info --type | --number | --model | --sensor  camerainfo
+function get_camera_info()
+{
+	local PART="${1}"
+	local INFO="${2}"
+	local TYPE  NUMBER  MODEL  SENSOR
+
+	IFS=";" read -r TYPE NUMBER MODEL SENSOR <<< "${INFO}"
+	case "${PART}" in
+		"--type")		echo "${TYPE}" ;;
+		"--number")		echo "${NUMBER}" ;;
+		"--model")		echo "${MODEL}" ;;
+		"--sensor")		echo "${SENSOR}" ;;
+		*)
+			echo "Usage: ${FUNCNAME[0]} --type | --number | --model | --sensor  camerainfo" >&2
+			return 2
+			;;
+	esac
+}
+
+# Return a camerainfo value:
+#	set_camera_info --type TYPE --number NUMBER --model MODEL [--sensor SENSOR]
+function set_camera_info()
+{
+	local TYPE=""  NUMBER="0"  MODEL=""  SENSOR=""
+
+	while [[ $# -gt 0 ]]
+	do
+		case "${1}" in
+			"--type")		TYPE="${2}" ;;
+			"--number")		NUMBER="${2:-0}" ;;
+			"--model")		MODEL="${2}" ;;
+			"--sensor")		SENSOR="${2}" ;;
+			*)
+				echo "Usage: ${FUNCNAME[0]} --type TYPE --number NUMBER --model MODEL [--sensor SENSOR]" >&2
+				return 2
+				;;
+		esac
+		shift 2
+	done
+	if [[ -n ${SENSOR} ]]; then
+		echo "${TYPE};${NUMBER};${MODEL};${SENSOR}"
+	else
+		echo "${TYPE};${NUMBER};${MODEL}"
+	fi
+}
+
+# Return the camerainfo of a settings file, also of one from before "camerainfo" existed:
+#	get_settings_camera_info [settings_file]
+function get_settings_camera_info()
+{
+	local FILE="${1:-${ALLSKY_SETTINGS_FILE}}"
+	local INFO  TYPE  MODEL  NUMBER
+
+	INFO="$( settings ".camerainfo" "${FILE}" )"
+	if [[ -n ${INFO} ]]; then
+		echo "${INFO}"
+		return 0
+	fi
+
+	TYPE="$( settings ".cameratype" "${FILE}" )"
+	if [[ -n ${TYPE} ]]; then
+		MODEL="$( settings ".cameramodel" "${FILE}" )"
+		NUMBER="$( settings ".cameranumber" "${FILE}" )"
+	else
+		# Before v2024.12.06 setting names had uppercase letters.
+		TYPE="$( settings ".cameraType" "${FILE}" )"
+		MODEL="$( settings ".cameraModel" "${FILE}" )"
+		NUMBER="$( settings ".cameraNumber" "${FILE}" )"
+	fi
+	[[ -z ${TYPE} ]] && return 1
+	set_camera_info --type "${TYPE}" --number "${NUMBER}" --model "${MODEL}"
+}
+
+#####
 # This allows testing from the command line without "return" or doExit() killing the shell.
 function test_verify_CAMERA_TYPE()
 {
@@ -171,13 +255,13 @@ function verify_CAMERA_TYPE()
 	OK="true"
 	if [[ -z ${CT} ]]; then
 		OK="false"
-		MSG="'Camera Type' not set in WebUI."
-		IMAGE_MSG="${ERROR_MSG_PREFIX}\nCamera Type\nnot specified."
+		MSG="'Camera' not set in WebUI."
+		IMAGE_MSG="${ERROR_MSG_PREFIX}\nCamera\nnot specified."
 
 	elif [[ ${CT} != "RPi" && ${CT} != "ZWO" ]]; then
 		OK="false"
-		MSG="Unknown Camera Type: ${CT}."
-		IMAGE_MSG="${ERROR_MSG_PREFIX}\nCamera Type\nnot specified."
+		MSG="Unknown camera type: ${CT}."
+		IMAGE_MSG="${ERROR_MSG_PREFIX}\nCamera\nnot specified."
 	fi
 
 	if [[ ${OK} == "false" ]]; then
@@ -311,6 +395,7 @@ function get_connected_cameras_info()
 	# output it here; otherwise the ZWO lines would overwrite the start of the file.
 	# When ignoring errors, e.g., on a Pi with only ZWO cameras, don't show the
 	# RPi software's "no cameras available" message.
+
 	if RPi_INFO="$( "${ALLSKY_UTILITIES}/getRPiCameraInfo.sh" --info-only \
 			--ignore-errors "${IGNORE_ERRORS}" \
 			--cmd "${RPi_CMD_TO_USE_}" 2>&1 )" ; then
@@ -409,7 +494,7 @@ function get_connected_camera_models()
 			if (camera_type == "ZWO") {
 				model = $4;
 				if (FULL == "true") {
-					printf("%s\t%d\t%s\n", camera_type, camera_type, model);
+					printf("%s\t%d\t%s\t%s\n", camera_type, camera_number, model, "");
 				} else {
 					print model;
 				}
@@ -498,37 +583,25 @@ function validate_camera()
 	local MSG  URL  RET
 
 	# Compare the specified camera to what's in the settings file.
-	SETTINGS_CT="$( settings ".cameratype" )"
-	SETTINGS_CM="$( settings ".cameramodel" )"
-	SETTINGS_CN="$( settings ".cameranumber" )"
+	local SETTINGS_CI  SETTINGS_CT  SETTINGS_CM  SETTINGS_CN  WHAT=""
+	SETTINGS_CI="$( get_settings_camera_info )"
+	SETTINGS_CT="$( get_camera_info --type "${SETTINGS_CI}" )"
+	SETTINGS_CM="$( get_camera_info --model "${SETTINGS_CI}" )"
+	SETTINGS_CN="$( get_camera_info --number "${SETTINGS_CI}" )"
 
 	RET=0
 	if [[ ${SETTINGS_CT} != "${CT}" ]]; then
-		MSG="The Camera Type unexpectedly changed from '${SETTINGS_CT}' to '${CT}'."
-		MSG+="\nGo to the 'Allsky Settings' page of the WebUI and"
-		MSG+=" change the 'Camera Type' to 'Refresh' then save the settings."
-		if [[ ${ON_TTY} == "true" ]]; then
-			E_ "\n${MSG}\n"
-		else
-			URL="/index.php?page=configuration"
-			"${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${MSG}" --url "${URL}"
-		fi
-		RET=1
+		WHAT="type changed from '${SETTINGS_CT}' to '${CT}'"
 	elif [[ ${SETTINGS_CM} != "${CM}" ]]; then
-		MSG="The Camera Model unexpectedly changed from '${SETTINGS_CM}' to '${CM}'."
-		MSG+="\nGo to the 'Allsky Settings' page of the WebUI and"
-		MSG+=" change the 'Camera Model' to '${CM}' then save the settings."
-		if [[ ${ON_TTY} == "true" ]]; then
-			E_ "\n${MSG}\n"
-		else
-			URL="/index.php?page=configuration"
-			"${ALLSKY_SCRIPTS}/addMessage.sh" --type error --msg "${MSG}" --url "${URL}"
-		fi
-		RET=1
+		WHAT="model changed from '${SETTINGS_CM}' to '${CM}'"
 	elif [[ ${SETTINGS_CN} != "${CN}" ]]; then
-		MSG="The camera's number unexpectedly changed from '${SETTINGS_CN}' to '${CN}'."
-		MSG+="\nGo to the 'Allsky Settings' page of the WebUI and"
-		MSG+=" change the 'Camera Type' to 'Refresh' then save the settings."
+		WHAT="number changed from '${SETTINGS_CN}' to '${CN}'"
+	fi
+	if [[ -n ${WHAT} ]]; then
+		MSG="The camera's ${WHAT} unexpectedly."
+		MSG+="\nGo to the 'Allsky Settings' page of the WebUI,"
+		MSG+=" select 'Refresh' for the 'Camera' setting and save the settings,"
+		MSG+=" then select the camera to use."
 		if [[ ${ON_TTY} == "true" ]]; then
 			E_ "\n${MSG}\n"
 		else
@@ -787,7 +860,7 @@ function checkAndGetNewerFile()
 	local GIT_FILE="${ALLSKY_GITHUB_RAW_ROOT}/${ALLSKY_GITHUB_ALLSKY_REPO}/${BRANCH}/${2}"
 	local DOWNLOADED_FILE="${3}"
 	# Download the file and put in DOWNLOADED_FILE
-	X="$( curl --show-error --silent --connect-timeout 5 --max-time 10 "${GIT_FILE}" )"
+	X="$( curl --show-error --silent --connect-timeout "${ALLSKY_CURL_TIMEOUT}"  --max-time 10 "${GIT_FILE}" )"
 	RET=$?
 	if [[ ${RET} -eq 0 && ${X} != "400: Invalid request" && ${X} != "404: Not Found" ]]; then
 		# We really just check if the files are different.
@@ -978,14 +1051,10 @@ function get_links()
 # Return 0 code and no message if successful, else 1 and return a message.
 function check_settings_link()
 {
-	local FULL_FILE FILE DIRNAME SETTINGS_LINK RET MSG F E CORRECT_NAME
-	local CT="cameratype"
-	local CM="cameramodel"
-	if [[ ${1} == "--uppercase" ]]; then
-		CT="cameraType"
-		CM="cameraModel"
-		shift
-	fi
+	local FULL_FILE FILE DIRNAME SETTINGS_LINK RET MSG F E CORRECT_NAME INFO
+	# --uppercase was for setting names before v2024.12.06;
+	# get_settings_camera_info() handles those itself.
+	[[ ${1} == "--uppercase" ]] && shift
 
 	FULL_FILE="${1}"
 	if [[ -z ${FULL_FILE} ]]; then
@@ -996,13 +1065,11 @@ function check_settings_link()
 		echo "${FUNCNAME[0]}(): File '${FULL_FILE}' not found."
 		return 1
 	fi
-	if [[ -z ${CAMERA_TYPE} ]]; then
-		CAMERA_TYPE="$( settings ".${CT}"  "${FULL_FILE}" )"
-		[[ $? -ne 0 || -z ${CAMERA_TYPE} ]] && return "${ALLSKY_EXIT_ERROR_STOP}"
-	fi
-	if [[ -z ${CAMERA_MODEL} ]]; then
-		CAMERA_MODEL="$( settings ".${CM}"  "${FULL_FILE}" )"
-		[[ $? -ne 0 || -z ${CAMERA_MODEL} ]] && return "${ALLSKY_EXIT_ERROR_STOP}"
+	if [[ -z ${CAMERA_TYPE} || -z ${CAMERA_MODEL} ]]; then
+		INFO="$( get_settings_camera_info "${FULL_FILE}" )" || return "${ALLSKY_EXIT_ERROR_STOP}"
+		[[ -z ${CAMERA_TYPE} ]] && CAMERA_TYPE="$( get_camera_info --type "${INFO}" )"
+		[[ -z ${CAMERA_MODEL} ]] && CAMERA_MODEL="$( get_camera_info --model "${INFO}" )"
+		[[ -z ${CAMERA_TYPE} || -z ${CAMERA_MODEL} ]] && return "${ALLSKY_EXIT_ERROR_STOP}"
 	fi
 
 	DIRNAME="$( dirname "${FULL_FILE}" )"
@@ -1222,9 +1289,14 @@ function make_thumbnail()
 
 #####
 # Create the reboot-is-needed file.
+# It holds the kernel's boot ID, which is new on every boot.  "uptime --since" isn't
+# used since it's calculated from the clock, so it changes when the clock is set,
+# e.g., when NTP corrects a Pi without a real-time clock after booting.
+# ${ALLSKY_TMP} isn't always in memory (it stays on NVMe disks),
+# so a reboot doesn't always remove the file.
 function set_reboot_needed()
 {
-	uptime --since > "${ALLSKY_REBOOT_NEEDED}"
+	cat /proc/sys/kernel/random/boot_id > "${ALLSKY_REBOOT_NEEDED}"
 }
 
 #####
@@ -1234,18 +1306,19 @@ function reboot_needed()
 {
 	[[ ! -f ${ALLSKY_REBOOT_NEEDED} ]] && return 1
 
-	# The file exists and has the uptime as of when the file was created.
+	# The file exists and has the boot ID as of when the file was created.
 	# If the Pi has rebooted since the file was created,
-	# the current uptime and saved uptime will be different,
+	# the current and saved boot IDs will be different,
 	# so the file is outdated so delete it.
+	# A file from an older release has a time instead, so it's outdated, too.
 
-	local PRIOR_UPTIME="$( < "${ALLSKY_REBOOT_NEEDED}" )"
-	local CURRENT_UPTIME="$( uptime --since )"
-	if [[ ${PRIOR_UPTIME} == "${CURRENT_UPTIME}" ]]; then
+	local PRIOR_BOOT="$( < "${ALLSKY_REBOOT_NEEDED}" )"
+	local CURRENT_BOOT="$( < /proc/sys/kernel/random/boot_id )"
+	if [[ ${PRIOR_BOOT} == "${CURRENT_BOOT}" ]]; then
 		# No reboot; still need to reboot.
 		return 0
 	else
-		# Different uptimes so they rebooted.
+		# Different boot IDs so they rebooted.
 		rm -f "${ALLSKY_REBOOT_NEEDED}"
 		return 1
 	fi
@@ -1449,7 +1522,7 @@ function execute_web_commands()
 {
 	local URL="${1}"
 
-	curl --user-agent Allsky --silent --show-error --connect-timeout 5 --max-time 10 --location "${URL}/runCommands.php"
+	curl --user-agent Allsky --silent --show-error --connect-timeout "${ALLSKY_CURL_TIMEOUT}"  --max-time 10 --location "${URL}/runCommands.php"
 }
 
 ####

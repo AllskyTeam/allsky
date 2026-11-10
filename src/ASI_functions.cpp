@@ -223,8 +223,11 @@ void showConnectedCameras()
 		if (i>0) printf("\n");
 
 		CONNECTED_CAMERAS *cC = &connectedCameras[i];
-		printf("Attached camera %d of %d", i+1, totalNum_connectedCameras);
-		if (i == CG.cameraNumber) printf(" (selected)");
+		printf("Camera %d of %d", i+1, totalNum_connectedCameras);
+		if (cC->cameraID == CG.cameraNumber && strcmp(cC->Type, CAMERA_TYPE) == 0)
+		{
+			printf(" (selected)");
+		}
 		printf(":\n");
 		printf("     Type = %s\n", cC->Type);
 		printf("     cameraID = %d\n", cC->cameraID);
@@ -582,9 +585,6 @@ Log(6, "  NEW TYPE FOUND [%s], num_connectedCameraTypes now = %d\n", cC->Type, n
 
 			want_cc = true;
 
-			Log(5, "=========== cameraNum=%d, CG.cameraNumber=%d, CG.cm=%s, cameraName=%s, cameraModule=%s\n",
-				cameraNum, CG.cameraNumber, CG.cm, cameraName, cameraModule);
-
 			if (CG.cameraNumber == NOT_SET || cameraNum == CG.cameraNumber)
 			{
 				cameraMatch_onNumber = cameraNum;
@@ -745,37 +745,47 @@ Log(6, "  NEW TYPE FOUND [%s], num_connectedCameraTypes now = %d\n", cC->Type, n
 			Log(1, "%s: WARNING: skipping invalid line line %d in '%s': %s",
 				CG.ME, on_line, basename(CG.connectedCamerasFile), full_line);
 		}
+	}
 
 #ifdef IS_ZWO
-		int  ZWOnum = ASIGetNumOfConnectedCameras();
-		if (ZWOnum != numThisType)
+	int  ZWOnum = ASIGetNumOfConnectedCameras();
+	if (ZWOnum != numThisType)
+	{
+		const char *t = "ERROR";
+		int logLevel = 0;
+		if (CG.refreshMode)
 		{
-			Log(0, "%s: ERROR: mismatch with number of ZWO cameras connected: per ZWO SDK: %d, per %s: %d\n",
-				CG.ME, ZWOnum, CG.connectedCamerasFile, numThisType);
+			t = "WARNING";
+			logLevel = 1;	// doesn't add message to WebUI
+		}
+		Log(logLevel, "%s: %s: mismatch with number of ZWO cameras connected: per ZWO SDK: %d, per %s: %d\n",
+			CG.ME, t, ZWOnum, CG.connectedCamerasFile, numThisType);
 
-			Log(1, "Attached Cameras:\n");
-			ASI_CAMERA_INFO info;
-			for (int i=0; i < ZWOnum; i++)
+		Log(1, "Physically Attached Cameras:\n");
+		ASI_CAMERA_INFO info;
+		for (int i=0; i < ZWOnum; i++)
+		{
+			Log(1, "    Camera # %d: ", i);
+			ASI_ERROR_CODE ret = ASIGetCameraProperty(&info, i);
+			if (ret != ASI_SUCCESS)
 			{
-				Log(1, "    Camera # %d: ", i);
-				ASI_ERROR_CODE ret = ASIGetCameraProperty(&info, i);
-				if (ret != ASI_SUCCESS)
-				{
-					char *getRetCode(ASI_ERROR_CODE code);
-					Log(1, "ERROR: cannot get information: %s.\n", getRetCode(ret));
-				}
-				else
-				{
-					Log(1, "Name: %s, CameraID: %d, MaxHeight: %ld, MaxWidth: %ld\n",
-						info.Name, info.CameraID, info.MaxHeight, info.MaxWidth);
-				}
+				char *getRetCode(ASI_ERROR_CODE code);
+				Log(1, "%s: cannot get information: %s.\n", t, getRetCode(ret));
 			}
+			else
+			{
+				Log(1, "Name: %s, CameraID: %d, MaxHeight: %ld, MaxWidth: %ld\n",
+					info.Name, info.CameraID, info.MaxHeight, info.MaxWidth);
+			}
+		}
 
+		if (! CG.refreshMode)
+		{
 			closeUp(EXIT_ERROR_STOP);
 		}
+	}
 #endif
 
-	}
 
 	// These checks should "never" fail since allsky.sh created the input file
 	// based on what's connected.
@@ -803,16 +813,6 @@ Log(6, "  NEW TYPE FOUND [%s], num_connectedCameraTypes now = %d\n", cC->Type, n
 		}
 		closeUp(EXIT_NO_CAMERA);
 	}
-
-#ifdef IS_ZWO
-	// Compare what we found to what the driver says.
-	int n = ASIGetNumOfConnectedCameras();
-	if (n != numThisType)
-	{
-		Log(0, "%s: ERROR: We found %d ZWO cameras but driver found %d\n", CG.ME, numThisType, n);
-		closeUp(EXIT_NO_CAMERA);
-	}
-#endif
 
 	return(numThisType);	// Number of cameras
 }
@@ -985,29 +985,44 @@ void processConnectedCameras()
 	Log(4, "\nAttached %s Cameras:\n", CAMERA_TYPE);
 	ASI_CAMERA_INFO info;
 	int cam_num = 0;
-	for (int cc=0; cc < CG.numCameras; cc++)
+	// NOTE: CG.numCameras is the number of cameras of the current type, but
+	// connectedCameras[] is for all types so may be larger than CG.numCameras.
+
+//x	for (int cc=0; cc < CG.numCameras; cc++)
+	for (int cc=0; cc < totalNum_connectedCameras; cc++)
 	{
-		if (ASIGetCameraProperty(&info, cam_num) != ASI_SUCCESS)
+		CONNECTED_CAMERAS *cC = &connectedCameras[cc];
+
+		// Ignore any cameras not of our type.
+		if (strcmp(cC->Type, CAMERA_TYPE) != 0)
+			continue;
+
+		if (CG.numCameras >= 1 && CG.debugLevel >= 4)
+			printf("  - %d", cam_num);
+
+
+		ASI_ERROR_CODE e = ASIGetCameraProperty(&info, cam_num);
+		if (e != ASI_SUCCESS)
 		{
 #ifdef IS_ZWO	// RPi version already displayed message.
-			Log(0, "ERROR: cannot get information for camera number %d.\n", cam_num);
+			int logLevel = CG.refreshMode ? 1 : 0;
+			Log(logLevel, " %s %s - WARNING: cannot get information for camera: %s\n", cC->Type, cC->Name, getRetCode(e));
 #endif
 			cam_num++;
 			continue;
 		}
-		if (CG.numCameras >= 1 && CG.debugLevel >= 4)
-			printf("  - %d", cam_num);
 
-		char *cm;
 #ifdef IS_RPi
-		CONNECTED_CAMERAS *cC = &connectedCameras[cc];
 		snprintf(cC->Sensor, FULL_SENSOR_SIZE, "%s [%s]", info.Name, info.Sensor);
-		cm = cC->Sensor;
-#else
-		cm = info.Name;
 #endif
 		if (CG.numCameras >= 1 && CG.debugLevel >= 4)
 		{
+			char *cm;
+#ifdef IS_RPi
+			cm = cC->Sensor;
+#else
+			cm = info.Name;
+#endif
 			printf(" %s ", cm);
 			printf(" %s\n", cam_num == CG.cameraNumber ? " (selected)" : "");
 		}
@@ -1158,7 +1173,7 @@ void saveCameraInfo(
 				fprintf(f, "\n");
 			}
 			char *cm = getCameraModel(cC->Name);
-			Log(4, "cC->Name=%s, cm=%s, camModel=%s\n", cC->Name, cm, camModel);
+			Log(4, "cC->Name=%s, cm=%s\n", cC->Name, cm);
 			if (strcmp(cm, camModel) == 0)
 			{
 				foundThisModel = true;
@@ -1202,10 +1217,7 @@ void saveCameraInfo(
 		{
 			CONNECTED_CAMERAS *cC = &connectedCameras[cc];
 			if (strcmp(cC->Type, CAMERA_TYPE) != 0)
-			{
-// printf("skipping cC->Type = %s, cc=%d\n", cC->Type, cc);
 				continue;
-			}
 
 			if (num > 0)
 			{

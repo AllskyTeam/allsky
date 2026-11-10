@@ -99,7 +99,7 @@ function get_Git_version()
 	local BRANCH="${1}"
 	local PACKAGE="${2}"
 	local VF="$( basename "${ALLSKY_VERSION_FILE}" )"
-	local V="$( curl --show-error --silent --connect-timeout 5 --max-time 10 "${ALLSKY_GITHUB_RAW_ROOT}/${PACKAGE}/${BRANCH}/${VF}" | tr -d '\n\r' )"
+	local V="$( curl --show-error --silent --connect-timeout "${ALLSKY_CURL_TIMEOUT}" --max-time 10 "${ALLSKY_GITHUB_RAW_ROOT}/${PACKAGE}/${BRANCH}/${VF}" | tr -d '\n\r' )"
 	# "404" means the branch isn't found since all new branches have a version file.
 	[[ ${V} != "404: Not Found" ]] && echo -n "${V}"
 }
@@ -1841,7 +1841,7 @@ function get_RAM()
 		# Input example: total_mem=4096
 		# Pi's have either 0.5 GB or an integer number of GB.
 		RAM="$( sudo vcgencmd get_config total_mem | sed 's/=/ /' | parse_RAM "${UNITS}" )"
-		if [[ ${RAM} != "unknown" ]]; then
+		if [[ ${RAM} != "unknown" && ${RAM} != "0" ]]; then
 			echo "${RAM}"
 			return
 		fi

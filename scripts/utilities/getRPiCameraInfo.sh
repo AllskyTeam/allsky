@@ -250,8 +250,9 @@ MAX_EXPOSURE="$( sed -e 's/://' -e 's/\.\./ /' -e 's/\[//' -e 's/]//' "${CAMERA_
 			if (low != "") {
 				high = camera_cc[cam_num, "WB_high"];
 				# Either auto white balance is set or the user specifies the values, so there is no default.
-				do_cc(cam_num, out_file, "WB_R", "White balance: Red component", high, low, 0.0, "NOT_SET", "ASI_TRUE", "ASI_TRUE", "ASI_WB_R", "float");
-				do_cc(cam_num, out_file, "WB_B", "White balance: Blue component", high, low, 0.0, "NOT_SET", "ASI_TRUE", "ASI_TRUE", "ASI_WB_B", "float");
+				# Cannot use 0.0 since that turns AWB on.
+				do_cc(cam_num, out_file, "WB_R", "White balance: Red component", high, low, 1.0, "NOT_SET", "ASI_TRUE", "ASI_TRUE", "ASI_WB_R", "float");
+				do_cc(cam_num, out_file, "WB_B", "White balance: Blue component", high, low, 1.0, "NOT_SET", "ASI_TRUE", "ASI_TRUE", "ASI_WB_B", "float");
 			}
 
 			# Per the RPi developers, "All cameras will always support flips..."

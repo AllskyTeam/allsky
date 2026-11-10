@@ -345,7 +345,7 @@ AllskySettings
         |---|---:|---|
         | ==Number Of Images== | 0 | A "mini-timelapse" only includes the most recent images and is created often. It's a good way to see "recent" activity. This setting determines the number of images in the mini-timelapse. Keep in mind the more images you have the longer it'll take to create the video. 30 is a good starting point. `0` disables mini-timelapse creation.  <br><br>==Note that each mini-timelapse overwrites the prior one.==  <br><br>The following settings only apply if this setting is greater than 0. |
         | ==Force Creation== | No | Should a mini-timelapse be created even if ==Number Of Images== images haven't been taken yet? For example, you want 15 images in each mini-timelapse but only 5 have been taken; should a mini-timelapse still be created? |
-        | ==Frequency== | 5 | After how many images should the mini-timelapse be created? Slower machines and machines with slow networks should use higher numbers. 3-5 works well on a Pi 4 with 4 GB memory. Every ==Frequency== images a new mini-timelapse is created using the last ==Number Of Images== images.  <br><br> ?? Be ==very== careful when setting ==Number Of Images== and ==Frequency==. If either or both numbers are too high, or the daytime/nighttime ==Delay== is too short, there may not be enough time to finish one mini timelapse creation before the next one starts. If this happens the second one will be aborted and you'll see a System Message in the WebUI. |
+        | ==Frequency== | 5 | After how many images should the mini-timelapse be created? Slower machines and machines with slow networks should use higher numbers. 3-5 works well on a Pi 4 with 4 GB memory. Every ==Frequency== images a new mini-timelapse is created using the last ==Number Of Images== images.  <br><br> ⚠️ Be ==very== careful when setting ==Number Of Images== and ==Frequency==. If either or both numbers are too high, or the daytime/nighttime ==Delay== is too short, there may not be enough time to finish one mini timelapse creation before the next one starts. If this happens the second one will be aborted and you'll see a System Message in the WebUI. |
         | ==Width== | 0 |  |
         | ==Height== | 0 |  |
         | ==Bitrate== | 2000 | This is normally smaller than a full timelapse to save on processing time. |
@@ -468,7 +468,7 @@ When you change one of these settings in the WebUI, Allsky checks the value. If 
         |---|---:|---|
         | ==Use Remote Website== | No | Enable to use a ==remote== Allsky Website. Enable the Website ==BEFORE== you [install](/docs/allsky_guide/website.html) it since the installation needs the settings below. |
         | ==Image Directory== |  | Name of the directory the current image should be uploaded to.  <br><br> This setting is a major cause of confusion for many users. If you don't know what to enter, ask the person or company supporting the server or look in [Troubleshooting -> Uploads](/docs/allsky_guide/troubleshooting/uploads.html) for more information. |
-        | ==Protocol== | ftps | Specifies how files should be uploaded to the remote Website.  <br><br>- `ftps`: secure FTP  <br>- `sftp`: SSH file transfer  <br>- `ftp`: insecure FTP *(not recommended)*  <br>- `scp`: secure copy  <br>- `rsync`: rsync copy  <br>- `s3`: Amazon Web Services  <br>- `gcs`: Google Cloud Storage  <br><br> `ftp` is unsecure; please use `ftps` or `sftp` instead.  <br><br>Some of the settings below only apply to certain protocols. |
+        | ==Protocol== | ftps | Specifies how files should be uploaded to the remote Website.  <br><br>- `ftps`: secure FTP  <br>- `sftp`: SSH file transfer  <br>- `ftp`: insecure FTP *(not recommended)*  <br>- `scp`: secure copy  <br>- `rsync`: rsync copy  <br>- `s3`: Amazon Web Services  <br>- `gcs`: Google Cloud Storage  <br><br> ⚠️ `ftp` is unsecure; please use `ftps` or `sftp` instead.  <br><br>Some of the settings below only apply to certain protocols. |
         | ==Server Name== |  | Name of the remote server. Note this is normally ==NOT== the same as the URL used to access the server. |
         | ==Port== |  | (ftp protocols only) Optional port required by the server. Rarely needed. |
         | ==User Name== |  | The username of the login on the remote Website. |
@@ -537,7 +537,7 @@ When you change one of these settings in the WebUI, Allsky checks the value. If 
 ## Database { data-toc-label="Database" id="Database-settings"}
 ???+ info "Settings"
 
-    > ?? Only change the database settings if you know what you are doing.
+    > ⚠️ Only change the database settings if you know what you are doing.
 
     | WebUI Setting { .w-20p } | Default { .w-10p }  | Description |
     |---|---:|---|

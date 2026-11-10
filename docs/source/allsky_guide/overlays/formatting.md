@@ -1,8 +1,8 @@
 # Formatting Fields
 
-All data within Allsky is stored in consistent internal formats, so for example ALL temperatures are stored in Degreed Centigrade. Yo will therfore probably want to format data to improve its visual appearance, typical formatting options are:
+All data within Allsky is stored in consistent internal formats, so for example ALL temperatures are stored in degrees Centigrade. You will therfore probably want to format data to improve its visual appearance, typical formatting options are:
 
-- Changing Unit i.e. Degrees Centigrade to Degrees Fahrenheit
+- Changing Unit i.e. degrees Centigrade to degrees Fahrenheit
 - Setting the number of decimal places
 - Converting an internal format, i.e. decimal degrees to DDD MM SS
 

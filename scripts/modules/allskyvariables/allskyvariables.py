@@ -10,11 +10,19 @@ import sys
 import argparse
 import re
 import math
-from pathlib import Path
+import logging
 try:
-    from allskyvariables.extra_text import parse_extra_text_file
+    from allskyvariables.extra_data import read_extra_data_file
 except ModuleNotFoundError:
-    from extra_text import parse_extra_text_file  # direct script invocation
+    from extra_data import read_extra_data_file  # direct script invocation
+
+logger = logging.getLogger('allskyvariables')
+if not logger.handlers:
+    handler = logging.StreamHandler(sys.stderr)
+    handler.setFormatter(logging.Formatter('%(message)s'))
+    logger.addHandler(handler)
+logger.setLevel(logging.WARNING)
+logger.propagate = False
 
 def json_safe(value):
     if isinstance(value, float) and not math.isfinite(value):
@@ -132,28 +140,12 @@ class ALLSKYVARIABLES:
                 if isExtra:
                     if entry not in ['.', '..']:
                         file_name = os.path.join(folder, entry)
-                        ext = Path(entry).suffix.lower()
-                        if ext == '.json':
-                            with open(file_name, 'r') as f:
-                                data = json.load(f)
-                            variables.update(data)
-                        if ext == '.txt':
-                            stem = Path(entry).stem
-                            data = {}
-                            for key, value in parse_extra_text_file(file_name).items():
-                                out_key = key.upper()
-                                value_type = 'number' if isinstance(value, (int, float)) else 'string'
-                                data[out_key] = {
-                                    "name": "${" + key.upper() + "}",
-                                    "format": "",
-                                    "sample": "",
-                                    "group": "User",
-                                    "description": "Allsky variable " + key,
-                                    "type": value_type,
-                                    "source": stem,
-                                    "value": value
-                                }
-                            variables.update(data)                                 
+                        try:
+                            _, data = read_extra_data_file(file_name)
+                        except (OSError, UnicodeError, ValueError) as error:
+                            logger.warning('Error reading %s: %s - IGNORING.', file_name, error)
+                            continue
+                        variables.update(data)
                 else:
                     if entry.startswith('allsky_') and entry != 'allsky_shared.py' and entry != 'allsky_base.py':
                         include = True

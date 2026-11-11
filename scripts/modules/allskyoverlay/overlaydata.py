@@ -25,9 +25,8 @@ import shlex
 import re
 import time
 import html
-from pathlib import Path
 from pprint import pprint
-from allskyvariables.extra_text import parse_extra_text_file
+from allskyvariables.extra_data import read_extra_data_file
 
 
 try:
@@ -168,46 +167,17 @@ class ALLSKYOVERLAYDATA:
 
 		return field_data
 
-	def _read_json_file(self, file_name):
-		if shared.isFileReadable(file_name):
-			file_modified_time = int(os.path.getmtime(file_name))
-			try:
-				with open(file_name) as file:
-					json_data = json.load(file)
-					for (field_name, field_data) in json_data.items():
-						self.extra_fields[field_name] = self._parse_extra_data_field(field_data)
-			except:
-				self._log(0, f'WARNING: Data File {os.path.basename(file_name)} is invalid - IGNORING.')
-		else:
-			self._log(0, f'ERROR: Data File {os.path.basename(file_name)} is not accessible - IGNORING.')
- 
-	def _read_text_file(self, file_name):
-		entry = Path(file_name).name     
-		stem = Path(entry).stem
-		for key, value in parse_extra_text_file(file_name).items():
-			out_key = key.upper()
-			value_type = 'number' if isinstance(value, (int, float)) else 'string'
-			data = {
-				"name": "${" + key.upper() + "}",
-				"format": "",
-				"sample": "",
-				"group": "User",
-				"description": "Allsky variable " + key,
-				"type": value_type,
-				"source": stem,
-				"value": value
-			}
-			self.extra_fields[out_key] = data
-
 	def _read_data(self, file_name):
-		file_extension = Path(file_name).suffix
-		if file_extension == '.json':
-			self._read_json_file(file_name)
+		try:
+			data_format, data = read_extra_data_file(file_name)
+		except (OSError, UnicodeError, ValueError) as error:
+			self._log(0, f'WARNING: Error reading {os.path.basename(file_name)}: {error} - IGNORING.')
 		else:
-			if file_extension == '.txt':
-				self._read_text_file(file_name)
+			if data_format == 'json':
+				for field_name, field_data in data.items():
+					self.extra_fields[field_name] = self._parse_extra_data_field(field_data)
 			else:
-				self._log(4, f'INFO: Unknown file {os.path.basename(file_name)}')
+				self.extra_fields.update(data)
 
 		self._remove_expired_fields()
     

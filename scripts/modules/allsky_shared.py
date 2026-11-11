@@ -3561,8 +3561,8 @@ def cleanup_extra_data():
         with os.scandir(extra_data_path) as entries:
             for entry in entries:
                 if entry.is_file():
-                    # delete_age = _get_expiry_time_for_module(flows, entry.name, module_settings, tod)
-                    delete_age = 600
+                    delete_age = _get_expiry_time_for_module(flows, entry.name, module_settings, tod)
+                    #print(f"DEBUG: Checking extra-data file {entry.path} with delete_age={delete_age}")
                     cleanup_extra_data_file(entry.path, delete_age)
 
 

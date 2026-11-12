@@ -3163,8 +3163,16 @@ def scan_flow_module_dependencies(flows_folder: Union[str, Path, None] = None,
         'modules_checked': 0,
         'modules_with_dependencies': 0,
         'issues': [],
+        'missing_modules': [],
         'valid': True
     }
+
+    # Where flow-runner.py looks for a module; one in none of these is skipped every
+    # time the flow runs ("Failed to import module ...; ignoring.").
+    search_folders = [modules_folder, system_modules_folder]
+    legacy_location = os.environ.get('ALLSKY_MODULE_LOCATION')
+    if legacy_location:
+        search_folders.append(Path(legacy_location) / 'modules')
 
     module_metadata = {}
     module_sources = [system_modules_folder, modules_folder]
@@ -3244,6 +3252,18 @@ def scan_flow_module_dependencies(flows_folder: Union[str, Path, None] = None,
             metadata = _resolve_flow_module_metadata(module_key, module_config)
             if metadata is None:
                 _debug(f"ERROR: No metadata found for flow module {module_key}")
+                module_file_name = module_config.get('module') if isinstance(module_config, dict) else None
+                if isinstance(module_file_name, str) and module_file_name != '' and \
+                        not any((folder / module_file_name).exists() for folder in search_folders):
+                    result['valid'] = False
+                    name = (module_config.get('metadata') or {}).get('name') or module_key
+                    result['missing_modules'].append({
+                        'flow': flow_name,
+                        'module': module_file_name,
+                        'module_key': module_key,
+                        'name': name
+                    })
+                    _debug(f"ERROR: Module {module_file_name} in flow {flow_name} is not installed")
                 continue
 
             result['modules_checked'] += 1
@@ -3300,7 +3320,22 @@ def format_flow_dependency_issues_human(result: dict) -> str:
             f"checked {result.get('modules_checked', 0)} module instance(s)."
         )
 
-    lines = [
+    lines = []
+    for missing in result.get('missing_modules', []):
+        pipeline_name = _pipeline_display_name(missing['flow'])
+        lines.append(f"Pipeline: {pipeline_name}")
+        lines.append(
+            f"Problem: The '{missing['name']}' module ({missing['module']}) is in this pipeline but isn't installed, so it is skipped every time the pipeline runs."
+        )
+        lines.append(
+            f"Fix: Install it with the Module Manager, or remove it from the {pipeline_name} pipeline."
+        )
+        lines.append("")
+
+    if not result.get('issues'):
+        return "\n".join(lines).rstrip()
+
+    lines += [
         "Dependency problems were found in the configured pipelines.",
         "To fix them, use Module Manager to add the missing module to the same pipeline as the module that requires it.",
         ""

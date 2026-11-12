@@ -365,11 +365,17 @@ function generate_support_info()
 	if [[ -d ${ALLSKY_TMP} ]]; then
 		mkdir "${TEMP_DIR}/tmp"
 		find "${ALLSKY_TMP}" -maxdepth 1 \
-			! \( -path "${ALLSKY_TMP}" -o -name "sequence-timelapse*" -o -name __pycache__ \) \
+			! \( -path "${ALLSKY_TMP}" \
+				-o -name "sequence-timelapse*" -o -name "__pycache__" \
+				-o -name "allsky_meteordetect_prev.png*" \
+			\) \
 			-exec cp -ar {} "${TEMP_DIR}/tmp" \;
 	fi
-	# The mini-timelapse can be several MB and we don't need it.
-	rm -f "${TEMP_DIR}/tmp/current_images/mini-timelapse.mp4"
+	# These files can be several MB and we don't need them.
+	# We can't include them in the "!" list above since they are in subdirectories.
+	rm -f \
+		"${TEMP_DIR}/tmp/current_images/mini-timelapse.mp4" \
+		"${TEMP_DIR}/tmp/current_images/image-2*"
 
 	# Copy ${ALLSKY_CONFIG} directory, then truncate and delete files we don't want.
 	# The directory should exists unless installation failed.
@@ -386,12 +392,15 @@ function generate_support_info()
 		"${TEMP_MY_MODULES}/moduledata/data/allsky_adsb/adsb_data" \
 		"${TEMP_MY_MODULES}/__pycache__"
 
-	for i in "${TEMP_DIR_OVERLAY}/system_fonts" \
-			 "${TEMP_DIR_OVERLAY}/fonts" ; do
-		[[ -d ${i} ]] && find "${i}" -type f -exec truncate -s 0 {} + 2> /dev/null
-	done
+	# Create a list of fonts rather than a bazillion files.
+	find   "${TEMP_DIR_OVERLAY}/system_fonts" "${TEMP_DIR_OVERLAY}/fonts" > "${TEMP_DIR_OVERLAY}/fonts.txt"
+	rm -fr "${TEMP_DIR_OVERLAY}/system_fonts" "${TEMP_DIR_OVERLAY}/fonts"
+	rm -f "${TEMP_DIR_OVERLAY}/images/compass-"*".png"
+
 	for i in "${TEMP_DIR}/config/myFiles/allsky.db" \
-			 "${TEMP_DIR}/config/myFiles/secrets.db" ; do
+			 "${TEMP_DIR}/config/myFiles/secrets.db" \
+			 "${TEMP_DIR}/config/myFiles/notificationImages/"*
+	do
 		[[ -f ${i} ]] && truncate -s 0 "${i}"
 	done
 

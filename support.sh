@@ -49,10 +49,11 @@ function set_messages()
 	DIALOG_COMPLETE_MESSAGE+="\n"
 	DIALOG_COMPLETE_MESSAGE+="    ${DIALOG_BLUE}${ALLSKY_SUPPORT_DIR}/XX_ZIPNAME_XX${DIALOG_NC}\n"
 	DIALOG_COMPLETE_MESSAGE+="\n"
-	DIALOG_COMPLETE_MESSAGE+="This file should be attached to the relevant Discussion or Issue in Github.\n"
-	DIALOG_COMPLETE_MESSAGE+="\n"
-	DIALOG_COMPLETE_MESSAGE+="If your WebUI is functioning, the file can be downloaded using the"
-	DIALOG_COMPLETE_MESSAGE+=" '${DIALOG_BLUE}Getting Support${DIALOG_NC}' page."
+
+	DIALOG_COMPLETE_MESSAGE2+="This file should be attached to the relevant Discussion or Issue in Github.\n"
+	DIALOG_COMPLETE_MESSAGE2+="\n"
+	DIALOG_COMPLETE_MESSAGE2+="If your WebUI is functioning, the file can be downloaded using the"
+	DIALOG_COMPLETE_MESSAGE2+=" '${DIALOG_BLUE}Getting Support${DIALOG_NC}' page."
 
 	GITHUB_ERROR="${DIALOG_ERROR}\nERROR: The Discussion / Issue number must be numeric.${DIALOG_NC}\n"
 	GITHUB_ERROR+="\n"
@@ -439,12 +440,13 @@ function generate_support_info()
 	# It's not unusual for the allsky logs to be bigger than that; if so,
 	# first drop the ".1" log.  If it's STILL to large, do a "tail" on the files.
 
-	# We'd really like to know the actual zipped size of each log file, but that's somewhat time
-	# consuming to calculate, so initially just check if a somewhat compressed version of the files
-	# is over the limit.  If so, get the actual compressed size.
+	# We'd really like to know the actual zipped size of each log file, but that's
+	# somewhat time consuming to calculate, so initially just check if a somewhat
+	# compressed version of the files is over the limit.
+	# If so, get the actual compressed size.
 
 	local GIT_HUB_LIMIT_MB=25
-	(( GIT_HUB_LIMIT_MB -= 3 ))		# Add a cushion in case our numbers are off a little
+	(( GIT_HUB_LIMIT_MB -= 2 ))		# Add a cushion in case our numbers are off a little
 	local COMPRESSION_RATIO=0.3		# Normally the logs compress to around 10%, but be very conservative
 	declare -a ALL_LOGS=()
 	local INDEX=-1
@@ -543,6 +545,17 @@ function generate_support_info()
 	cp "${DISPLAY_MSG_LOG}" "${TEMP_DIR}/config/logs/"
 
 	zip -r "${TEMP_DIR}/${ZIP_NAME}" ./* > /dev/null 2>&1
+	FINAL_SIZE="$( get_mb "${ZIP_NAME}" )"
+	if [[ ${FINAL_SIZE} -le "${GIT_HUB_LIMIT_MB}" ]]; then
+		echo "${DIALOG_COMPLETE_MESSAGE2}"
+	else
+		SIZE_FILE="${ALLSKY_SUPPORT_DIR}/${ZIP_NAME}-sizes.txt"
+		unzip -l "${ZIP_NAME}" | grep -v "/$" > "${SIZE_FILE}"
+		echo "However, the support log is too large to upload to GitHub."
+		echo "\nPlease upload\n"
+		echo "${DIALOG_BLUE}${SIZE_FILE}${DIALOG_NC}"
+		echo "\nto a new GitHub Discussion so the Allsky Team can investigate."
+	fi
 	sudo mv "${ZIP_NAME}" "${ALLSKY_SUPPORT_DIR}"
 	sudo chown "${ALLSKY_OWNER}:${ALLSKY_WEBSERVER_OWNER}" "${ALLSKY_SUPPORT_DIR}/${ZIP_NAME}"
 	sudo chmod 664 "${ALLSKY_SUPPORT_DIR}/${ZIP_NAME}"

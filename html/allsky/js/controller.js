@@ -340,6 +340,9 @@ function AppCtrl($scope, $timeout, $http, _) {
 	$scope.getImage = function () {
 		var url= "";
 		var imageClass= "";
+		// Not before the "sunData" file was read: reading it calls getImage() itself.
+		if ($scope.sunset === undefined) return;
+
 		// Go through the loop occassionally even when hidden so we re-read the sunData file
 		// if needed.
 		if (! isHidden() || ++numCalls % 5 == 0) {
@@ -682,6 +685,12 @@ function AppCtrl($scope, $timeout, $http, _) {
 		}, intervalTimer)
 	};
 	$scope.intervalFunction();
+
+	// A page loaded while hidden (a background tab, or preloaded by the browser) skips the
+	// image, and the next one could be a minute away, so get it as soon as it's shown.
+	document.addEventListener("visibilitychange", function () {
+		if (! isHidden()) $timeout($scope.getImage);
+	});
 
 	$scope.toggleInfo = function () {
 		$scope.showInfo = !$scope.showInfo;

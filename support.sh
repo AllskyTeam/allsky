@@ -551,10 +551,11 @@ function generate_support_info()
 	else
 		SIZE_FILE="${ALLSKY_SUPPORT_DIR}/${ZIP_NAME}-sizes.txt"
 		unzip -l "${ZIP_NAME}" | grep -v "/$" > "${SIZE_FILE}"
-		echo "However, the support log is too large to upload to GitHub."
-		echo "\nPlease upload\n"
-		echo "${DIALOG_BLUE}${SIZE_FILE}${DIALOG_NC}"
-		echo "\nto a new GitHub Discussion so the Allsky Team can investigate."
+		MSG="However, it is too large to upload to GitHub."
+		MSG+="\nPlease upload:\n\n"
+		MSG+="${DIALOG_BLUE}${SIZE_FILE}${DIALOG_NC}"
+		MSG+="\n\nto a new GitHub Discussion so the Allsky Team can investigate."
+		echo "${MSG}"
 	fi
 	sudo mv "${ZIP_NAME}" "${ALLSKY_SUPPORT_DIR}"
 	sudo chown "${ALLSKY_OWNER}:${ALLSKY_WEBSERVER_OWNER}" "${ALLSKY_SUPPORT_DIR}/${ZIP_NAME}"

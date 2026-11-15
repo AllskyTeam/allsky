@@ -116,6 +116,7 @@ class LgpioBackend:
 
     def stop_pwm(self, pin_num):
         self.lgpio.tx_pwm(self._handle(), pin_num, 0, 0)
+        self.lgpio.gpio_write(self._handle(), pin_num, 0)        
 
     def _line_flags(self, pull=None):
         if pull == "up":

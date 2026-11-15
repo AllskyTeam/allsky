@@ -6,6 +6,7 @@
             this.$trigger = $(element);
             this.files = [];
             this.configuredFiles = [];
+            this.invalidConfiguredFiles = [];
             this.configDir = "";
             this.activePath = "";
             this.editIndex = -1;
@@ -17,6 +18,7 @@
             this.$tableBody = null;
             this.$empty = null;
             this.$message = null;
+            this.$configuredFileWarning = null;
             this.$currentFile = null;
             this.$browserList = null;
             this.$entryType = null;
@@ -426,6 +428,7 @@
                                 <h4 class="modal-title" id="as-system-entries-editor-title">System Page Additions Editor</h4>
                             </div>
                             <div class="modal-body">
+                                <div class="alert alert-warning" id="as-system-entries-configured-file-warning" style="display:none; white-space: pre-wrap;"></div>
                                 <nav class="navbar navbar-default">
                                     <div class="collapse navbar-collapse in">
                                         <div class="navbar-form">
@@ -492,6 +495,7 @@
             this.$tableBody = this.$modal.find("#as-system-entries-table-body");
             this.$empty = this.$modal.find("#as-system-entries-empty");
             this.$message = this.$modal.find("#as-system-entries-message");
+            this.$configuredFileWarning = this.$modal.find("#as-system-entries-configured-file-warning");
             this.$currentFile = this.$modal.find("#as-system-entries-current-file");
             this.$entryType = this.$entryModal.find("#as-system-entry-type");
 
@@ -904,7 +908,17 @@
             }).done((result) => {
                 this.files = Array.isArray(result.files) ? result.files : [];
                 this.configuredFiles = Array.isArray(result.configuredFiles) ? result.configuredFiles : [];
+                this.invalidConfiguredFiles = Array.isArray(result.invalidConfiguredFiles) ? result.invalidConfiguredFiles : [];
                 this.configDir = $.trim(result.configDir || this.configDir);
+                if (this.invalidConfiguredFiles.length > 0) {
+                    this.$configuredFileWarning.text(
+                        "The configured System Page Additions file must be in " + this.configDir + ".\n" +
+                        "Invalid setting: " + this.invalidConfiguredFiles.join(", ") + "\n" +
+                        "Use Open or New to select a file in that folder, then save it to update the setting."
+                    ).show();
+                } else {
+                    this.$configuredFileWarning.hide().text("");
+                }
                 if (this.files.length > 0) {
                     this.activePath = this.files[0].path;
                 } else {
@@ -916,6 +930,8 @@
             }).fail((xhr) => {
                 this.files = [];
                 this.configuredFiles = [];
+                this.invalidConfiguredFiles = [];
+                this.$configuredFileWarning.hide().text("");
                 this.renderConfiguredFileList();
                 this.renderTable();
                 this.showError(xhr.responseJSON?.message || "Unable to load configured files.");
@@ -1775,7 +1791,7 @@
             const configuredPath = this.configuredFiles.length > 0 ? $.trim(this.configuredFiles[0] || "") : "";
             let shouldUpdateSetting = false;
 
-            if (configuredPath === "") {
+            if (configuredPath === "" || this.invalidConfiguredFiles.includes(configuredPath)) {
                 shouldUpdateSetting = true;
             } else if (configuredPath !== path) {
                 shouldUpdateSetting = window.confirm("This file is different from the current System Page Additions file in settings.\n\nDo you want to update the setting to use:\n" + path);

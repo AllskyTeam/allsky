@@ -1527,18 +1527,21 @@ prompt_for_prior_Allsky()
 	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
 
 	if [[ ${WILL_USE_PRIOR} == "true" ]]; then
-		local MSG  M
+		local MSG  M  M2
 
 		if [[ ${USE_PRIOR_ALLSKY} == "true" ]]; then
 			if [[ ${DO_UPGRADE} == "false" ]]; then
 				MSG="You have a prior version of Allsky in ${ALLSKY_PRIOR_DIR}."
 				if [[ ${ALLSKY_IMAGES_MOVED} == "true" ]]; then
 					M=""
+					M2=""
 				else
-					M=" images and other "
+					M="images and other "
+					M2="\n\nNOTE:\nYour prior images will be MOVED to the new location."
 				fi
 				MSG+="\n\nDo you want to restore the prior ${M}files you've changed?"
 				MSG+="\nIf so, your prior settings will be restored as well."
+				MSG+="${M2}"
 			fi
 
 			if [[ ${DO_UPGRADE} == "true" ]] ||

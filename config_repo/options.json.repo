@@ -2283,7 +2283,7 @@
 {
 "name" : "daytimeoverlay",
 "settingsonly" : true,
-"default" : "",
+"default" : "overlay-RPi.json",
 "description" : "The overlay file to use during daytime",
 "label" : "NOT DISPLAYED IN WebUI",
 "type" : "text"
@@ -2291,7 +2291,7 @@
 {
 "name" : "nighttimeoverlay",
 "settingsonly" : true,
-"default" : "",
+"default" : "overlay-RPi.json",
 "description" : "The overlay file to use during nighttime",
 "label" : "NOT DISPLAYED IN WebUI",
 "type" : "text"
@@ -2464,7 +2464,6 @@
 "type" : "widetext",
 "optional" : true
 },
-{
 "name" : "developermodulerepobranch",
 "default" : "",
 "description" : "The default github repository branch for modules",

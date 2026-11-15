@@ -122,6 +122,44 @@ class OVERLAYUTIL extends UTILBASE {
         return rtrim($dir, '/') . '/' . ltrim($file, '/');
     }
 
+    /** Return a usable template without allowing a setting to name an arbitrary path. */
+    private function overlayTemplate($name): ?array
+    {
+        if (!is_string($name) || $name === '' || $name !== basename($name) ||
+            strpos($name, '\\') !== false || strpos($name, "\0") !== false ||
+            strtolower(pathinfo($name, PATHINFO_EXTENSION)) !== 'json') {
+            return null;
+        }
+
+        foreach ([$this->overlayConfigPath, $this->allskyOverlays] as $directory) {
+            $path = $this->joinPath($directory, $name);
+            if (!is_file($path) || !is_readable($path)) continue;
+            $template = json_decode(file_get_contents($path) ?: '');
+            if (is_object($template) && isset($template->fields) && is_array($template->fields)) {
+                return ['name' => $name, 'template' => $template];
+            }
+        }
+        return null;
+    }
+
+    /** Pick a template for the editor when a day/night setting is unset or stale. */
+    private function activeOverlay($configured, $other): ?array
+    {
+        $brand = camera_info_part($this->getSetting('camerainfo', '', ''), 'type');
+        foreach ([$configured, $other, 'overlay-' . $brand . '.json', 'overlay-RPi.json', 'overlay-ZWO.json'] as $name) {
+            $template = $this->overlayTemplate($name);
+            if ($template !== null) return $template;
+        }
+
+        foreach ([$this->overlayConfigPath, $this->allskyOverlays] as $directory) {
+            foreach (glob($this->joinPath($directory, 'overlay*.json')) ?: [] as $path) {
+                $template = $this->overlayTemplate(basename($path));
+                if ($template !== null) return $template;
+            }
+        }
+        return null;
+    }
+
     /* =============================== Imaging =============================== */
 
     /**
@@ -1185,20 +1223,13 @@ class OVERLAYUTIL extends UTILBASE {
     {
         $result = [];
 
-        $tod   = getenv('DAY_OR_NIGHT') ?: 'night';
-        $fname = ($tod === 'day') ? $this->getSetting('daytimeoverlay') : $this->getSetting('nighttimeoverlay');
+        $tod = function_exists('getTOD') ? getTOD() : 'night';
+        $day = $this->getSetting('daytimeoverlay', '', '');
+        $night = $this->getSetting('nighttimeoverlay', '', '');
+        $selected = ($tod === 'day') ? $this->activeOverlay($day, $night) : $this->activeOverlay($night, $day);
+        if ($selected === null) $this->sendHTTPResponse('No usable overlay templates found.', 503);
 
-        // Prefer core overlay; fall back to user overlay folder
-        $overlay = null;
-        $core    = $this->joinPath($this->overlayConfigPath, $this->safeFileName((string)$fname, ['json']));
-        if (is_file($core)) {
-            $overlay = file_get_contents($core);
-        } else {
-            $user = $this->joinPath($this->allskyOverlays, $this->safeFileName((string)$fname, ['json']));
-            if (is_file($user)) $overlay = file_get_contents($user);
-        }
-
-        $template = json_decode($overlay ?: '{}');
+        $template = $selected['template'];
         $this->fixMetaData($template);
         $result['config']      = $template;
         $result['data']        = $this->getData(true);
@@ -1231,8 +1262,9 @@ class OVERLAYUTIL extends UTILBASE {
 
         $raw = null;
         foreach ($paths as $p) {
-            if (is_file($p) && is_readable($p)) { 
-                $obj = json_decode(file_get_contents($p) ?: '{}') ?: (object)[];
+            if (is_file($p) && is_readable($p)) {
+                $obj = json_decode(file_get_contents($p) ?: '');
+                if (!is_object($obj) || !isset($obj->fields) || !is_array($obj->fields)) continue;
                 $this->fixMetaData($obj);
                 $raw = json_encode($obj, JSON_UNESCAPED_SLASHES);
                 break;
@@ -1270,8 +1302,8 @@ class OVERLAYUTIL extends UTILBASE {
             'coreoverlays' => [],
             'useroverlays' => [],
             'config'       => [
-                'daytime'   => $this->getSetting('daytimeoverlay'),
-                'nighttime' => $this->getSetting('nighttimeoverlay'),
+                'daytime'   => $this->getSetting('daytimeoverlay', '', ''),
+                'nighttime' => $this->getSetting('nighttimeoverlay', '', ''),
             ],
             'brands'       => ['RPi', 'ZWO', 'Arducam'],
             'brand'        => camera_info_part($this->getSetting('camerainfo', '', ''), 'type'),
@@ -1281,7 +1313,12 @@ class OVERLAYUTIL extends UTILBASE {
         ];
 
         $tod = function_exists('getTOD') ? getTOD() : 'night';
-        $data['current'] = ($tod === 'day') ? $data['config']['daytime'] : $data['config']['nighttime'];
+        $day = $this->activeOverlay($data['config']['daytime'], $data['config']['nighttime']);
+        $night = $this->activeOverlay($data['config']['nighttime'], $data['config']['daytime']);
+        if ($day === null || $night === null) $this->sendHTTPResponse('No usable overlay templates found.', 503);
+        $data['current'] = ($tod === 'day') ? $day['name'] : $night['name'];
+        $data['config']['daytime'] = $day['name'];
+        $data['config']['nighttime'] = $night['name'];
 
         // Core overlays
         foreach (scandir($this->overlayConfigPath) ?: [] as $entry) {
@@ -1289,7 +1326,8 @@ class OVERLAYUTIL extends UTILBASE {
             $path = $this->joinPath($this->overlayConfigPath, $entry);
             if (!is_file($path)) continue;
 
-            $obj = json_decode(file_get_contents($path) ?: '{}') ?: (object)[];
+            $obj = json_decode(file_get_contents($path) ?: '');
+            if (!is_object($obj) || !isset($obj->fields) || !is_array($obj->fields)) continue;
             $this->fixMetaData($obj);
 
             if (!isset($obj->metadata)) {
@@ -1309,7 +1347,8 @@ class OVERLAYUTIL extends UTILBASE {
                 $path = $this->joinPath($this->allskyOverlays, $entry);
                 if (!is_file($path)) continue;
 
-                $obj = json_decode(file_get_contents($path) ?: '{}') ?: (object)[];
+                $obj = json_decode(file_get_contents($path) ?: '');
+                if (!is_object($obj) || !isset($obj->fields) || !is_array($obj->fields)) continue;
                 $this->fixMetaData($obj);
                 $data['useroverlays'][$entry] = $obj;
             }
@@ -1428,6 +1467,9 @@ class OVERLAYUTIL extends UTILBASE {
         $day   = (string)($_POST['daytime']   ?? '');
         $night = (string)($_POST['nighttime'] ?? '');
         if ($day === '' || $night === '') $this->sendHTTPResponse('Missing settings.', 400);
+        if ($this->overlayTemplate($day) === null || $this->overlayTemplate($night) === null) {
+            $this->sendHTTPResponse('Overlay template not found or invalid.', 400);
+        }
 
         $file = getSettingsFile();
         if (!is_file($file) || !is_readable($file)) $this->sendHTTPResponse('Settings not readable.', 500);

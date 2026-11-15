@@ -128,17 +128,25 @@ class CHARTUTIL extends UTILBASE
         // JavaScript timestamps use milliseconds since epoch, not seconds
         $unit = 1000;
 
-        // If the input is numeric (already a UNIX timestamp in seconds)
-        // multiply by 1000 to convert seconds → milliseconds
+        // If the input is numeric, it is already a UNIX timestamp in seconds.
         if (is_numeric($dbTs)) {
-            return (int)$dbTs * $unit;
+            $seconds = (int)$dbTs;
+        } else {
+            // Otherwise, parse a date/time string as a UNIX timestamp.
+            $seconds = strtotime((string)$dbTs);
         }
 
-        // If the input is a string, try converting it to a UNIX timestamp using strtotime()
-        $t = strtotime((string)$dbTs);
+        if ($seconds === false) {
+            return 0;
+        }
 
-        // If successful, multiply by 1000 to get milliseconds; otherwise, return 0 for invalid date
-        return $t !== false ? (int)($t * $unit) : 0;
+        // PHP converts overflowing integer arithmetic to float, which cannot
+        // satisfy the int return type when strict_types is enabled.
+        if ($seconds > intdiv(PHP_INT_MAX, $unit) || $seconds < intdiv(PHP_INT_MIN, $unit)) {
+            return 0;
+        }
+
+        return $seconds * $unit;
     }
 
     /**
@@ -216,8 +224,8 @@ class CHARTUTIL extends UTILBASE
                         $value = round((float)$row[$variable], 2);
                     }
 
-                    // Convert database timestamp (usually 'id') to JavaScript millisecond epoch
-                    $timeStamp = $this->toMsTimestamp($row['id']);
+                    // The timestamp column contains UNIX seconds; id may be a custom key.
+                    $timeStamp = $this->toMsTimestamp($row['timestamp'] ?? $row['id']);
 
                     // If the variable has tooltip support, optionally attach an image thumbnail
                     if (isset($tooltips[$variable])) {
@@ -327,9 +335,9 @@ class CHARTUTIL extends UTILBASE
                 }
             }
 
-            // Convert the timestamp column to JavaScript milliseconds
+            // The timestamp column contains UNIX seconds; id may be a custom key.
             $out[$variable] = [
-                'ts_ms' => $this->toMsTimestamp($row[$tsCol]),
+                'ts_ms' => $this->toMsTimestamp($row['timestamp'] ?? $row[$tsCol]),
                 'value' => $value
             ];
         }

@@ -84,6 +84,26 @@ class SYSTEMBUTTONSUTIL extends UTILBASE
         return $normalizedPath;
     }
 
+    private function validConfiguredPath(string $path): ?string
+    {
+        if ($path === '' || $path[0] !== '/') {
+            return null;
+        }
+
+        $realPath = realpath($path);
+        if ($realPath !== false) {
+            return $this->isWithinConfigDirectory($realPath) ? $realPath : null;
+        }
+
+        $directory = realpath(dirname($path));
+        if ($directory === false) {
+            return null;
+        }
+
+        $normalizedPath = rtrim($directory, '/') . '/' . basename($path);
+        return $this->isWithinConfigDirectory($normalizedPath) ? $normalizedPath : null;
+    }
+
     private function normalizeDirectory(string $path): string
     {
         $path = trim($path);
@@ -741,9 +761,15 @@ class SYSTEMBUTTONSUTIL extends UTILBASE
     public function getEntries(): void
     {
         $result = [];
+        $invalidConfiguredFiles = [];
         $configuredFiles = $this->getConfiguredFiles();
         foreach ($configuredFiles as $file) {
-            $result[] = $this->readEntriesFile($this->normalizePath($file));
+            $path = $this->validConfiguredPath($file);
+            if ($path === null) {
+                $invalidConfiguredFiles[] = $file;
+                continue;
+            }
+            $result[] = $this->readEntriesFile($path);
         }
 
         $requestedPath = trim((string)($_GET['path'] ?? ''));
@@ -755,6 +781,7 @@ class SYSTEMBUTTONSUTIL extends UTILBASE
         $this->sendResponse([
             'files' => $result,
             'configuredFiles' => $configuredFiles,
+            'invalidConfiguredFiles' => $invalidConfiguredFiles,
             'file' => $requestedFile,
             'configDir' => ALLSKY_MYFILES_DIR,
         ]);

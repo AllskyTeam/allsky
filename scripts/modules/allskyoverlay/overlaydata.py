@@ -234,7 +234,7 @@ class ALLSKYOVERLAYDATA:
 
 		condition_value = None
 		for variable_pos, raw_variable in enumerate(variable_matches):
-			variable = 'AS_' + raw_variable.replace('${','').replace('}', '')
+			variable = raw_variable.replace('${','').replace('}', '')
 			value = ''
 			if variable in self.extra_fields:
 				value = self.extra_fields[variable]['value']

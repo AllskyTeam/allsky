@@ -269,7 +269,13 @@ foreach ($p as $key => $value) {
  */
                 exit;
 			} else {
-				error_log("json_decode(payload) failed with code " . json_last_error() . "\n");
+				$calls = array_map(
+					static fn(array $frame): string =>
+						($frame['class'] ?? '') . ($frame['type'] ?? '') . $frame['function'],
+					debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS)
+				);
+				error_log("json_decode(payload) failed with code " . json_last_error()
+					. "; calls: " . implode(' -> ', $calls) . "\n");
 			}
         }
 

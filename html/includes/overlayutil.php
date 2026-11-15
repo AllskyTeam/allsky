@@ -1509,6 +1509,10 @@ class OVERLAYUTIL extends UTILBASE {
      */
     private function fixFormats(object $overlay): object 
     {
+        if (!isset($overlay->fields) || !is_array($overlay->fields)) {
+            return $overlay;
+        }
+
         foreach ($overlay->fields as &$field) {
             if (is_object($field)) {
 
@@ -1709,7 +1713,7 @@ class OVERLAYUTIL extends UTILBASE {
     {
         global $image_name;
 
-        $this->sendResponse($image_name);
+        $this->sendResponse(['imageName' => $image_name]);
     }
 
     /**

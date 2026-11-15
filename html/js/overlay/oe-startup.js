@@ -23,10 +23,10 @@ class OESTARTUP {
       async: true,
       context: this
     })
-      .done(function (imageUrl) {
+      .done(function (result) {
 
         // Store the returned image path
-        this.#backgroundSrc = imageUrl;
+        this.#backgroundSrc = result.imageName;
 
         // Dynamically create the background <img> element
         this.#backgroundImage = document.createElement("img");

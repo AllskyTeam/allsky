@@ -455,8 +455,14 @@ Would you like to review and install any available modules now?\
                 shared.log_exception("auto_upgrade_modules") 
         
         self._log(False, "INFO: Auto upgrade modules completed\n\n")
-    
+
         self.cleanup_opt(args)
+
+        # After cleanup_opt(), which moves the modules left in the legacy folder.
+        try:
+            self.report_missing_flow_modules(args)
+        except Exception as e:
+            shared.log_exception("report_missing_flow_modules")
         
     def cleanup_opt(self, args):
         
@@ -622,6 +628,47 @@ Would you like to review and install any available modules now?\
                 f"({issue['module']}) is missing dependency "
                 f"{issue['dependency_key']} ({issue['dependency']})"
             )
+
+        for missing in result['missing_modules']:
+            self._log(
+                False,
+                f"ERROR: Flow {missing['flow']} module {missing['module_key']} "
+                f"({missing['module']}) is not installed"
+            )
+
+    def report_missing_flow_modules(self, args):
+        """After an upgrade the restored flows may still list modules that aren't installed
+        (e.g., ones that were in ~/allsky/scripts/modules before v2025).  The flows skip them
+        silently, so tell the user in the WebUI which ones, in which flows, and whether the
+        Module Manager has them.  Nothing is installed without the user knowing."""
+        result = shared.scan_flow_module_dependencies(
+            debug=self._debug_mode,
+            logger=lambda message: self._log(True, message)
+        )
+
+        flows_by_module = {}
+        for missing in result['missing_modules']:
+            entry = flows_by_module.setdefault(missing['module'], {'name': missing['name'], 'flows': []})
+            flow = missing['flow'].replace('postprocessing_', '').replace('.json', '')
+            entry['flows'].append(flow)
+
+        if not flows_by_module:
+            self._log(False, "INFO: Every module in the flows is installed")
+            return
+
+        for module_file, entry in flows_by_module.items():
+            names = entry['flows']
+            flows = names[0] if len(names) == 1 else ", ".join(names[:-1]) + " and " + names[-1]
+            where = "flow" if len(names) == 1 else "flows"
+            message = f"The '{entry['name']}' module ({module_file}) is in the {flows} {where} but isn't installed, so it is skipped."
+            available = self._find_module(Path(module_file).stem)
+            if available is not None:
+                message += f" Install it with the Module Manager, or remove it from the {where}."
+            else:
+                message += f" It isn't in the Module Manager: copy it to ~/allsky/config/myFiles/modules, or remove it from the {where}."
+            self._log(False, f"WARNING: {message}")
+            if not args.dryrun:
+                shared.add_message(message, "warning")
 
     def check_module_dependencies_human(self):
         result = shared.scan_flow_module_dependencies(

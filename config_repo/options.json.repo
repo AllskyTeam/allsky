@@ -2464,6 +2464,7 @@
 "type" : "widetext",
 "optional" : true
 },
+{
 "name" : "developermodulerepobranch",
 "default" : "",
 "description" : "The default github repository branch for modules",

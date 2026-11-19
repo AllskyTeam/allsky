@@ -3163,16 +3163,8 @@ def scan_flow_module_dependencies(flows_folder: Union[str, Path, None] = None,
         'modules_checked': 0,
         'modules_with_dependencies': 0,
         'issues': [],
-        'missing_modules': [],
         'valid': True
     }
-
-    # Where flow-runner.py looks for a module; one in none of these is skipped every
-    # time the flow runs ("Failed to import module ...; ignoring.").
-    search_folders = [modules_folder, system_modules_folder]
-    legacy_location = os.environ.get('ALLSKY_MODULE_LOCATION')
-    if legacy_location:
-        search_folders.append(Path(legacy_location) / 'modules')
 
     module_metadata = {}
     module_sources = [system_modules_folder, modules_folder]
@@ -3252,18 +3244,6 @@ def scan_flow_module_dependencies(flows_folder: Union[str, Path, None] = None,
             metadata = _resolve_flow_module_metadata(module_key, module_config)
             if metadata is None:
                 _debug(f"ERROR: No metadata found for flow module {module_key}")
-                module_file_name = module_config.get('module') if isinstance(module_config, dict) else None
-                if isinstance(module_file_name, str) and module_file_name != '' and \
-                        not any((folder / module_file_name).exists() for folder in search_folders):
-                    result['valid'] = False
-                    name = (module_config.get('metadata') or {}).get('name') or module_key
-                    result['missing_modules'].append({
-                        'flow': flow_name,
-                        'module': module_file_name,
-                        'module_key': module_key,
-                        'name': name
-                    })
-                    _debug(f"ERROR: Module {module_file_name} in flow {flow_name} is not installed")
                 continue
 
             result['modules_checked'] += 1
@@ -3320,22 +3300,7 @@ def format_flow_dependency_issues_human(result: dict) -> str:
             f"checked {result.get('modules_checked', 0)} module instance(s)."
         )
 
-    lines = []
-    for missing in result.get('missing_modules', []):
-        pipeline_name = _pipeline_display_name(missing['flow'])
-        lines.append(f"Pipeline: {pipeline_name}")
-        lines.append(
-            f"Problem: The '{missing['name']}' module ({missing['module']}) is in this pipeline but isn't installed, so it is skipped every time the pipeline runs."
-        )
-        lines.append(
-            f"Fix: Install it with the Module Manager, or remove it from the {pipeline_name} pipeline."
-        )
-        lines.append("")
-
-    if not result.get('issues'):
-        return "\n".join(lines).rstrip()
-
-    lines += [
+    lines = [
         "Dependency problems were found in the configured pipelines.",
         "To fix them, use Module Manager to add the missing module to the same pipeline as the module that requires it.",
         ""
@@ -3516,18 +3481,82 @@ def _get_dict_path(data, keys):
         return None
 
 
+def _to_expiry_seconds(value):
+    """
+    Convert a ``dataage`` or ``expiryage`` setting to whole seconds.
+
+    These settings are stored as numbers or as strings: the module metadata
+    default is the string ``"0"`` and the module editor saves spinner values
+    as strings.
+
+    Args:
+        value (Any):
+            The setting as read from a flow file or from module-settings.json.
+
+    Returns:
+        int | None:
+            The age in seconds, or None if the value is missing, is not a
+            finite number, or is negative.
+    """
+    if value is None or isinstance(value, bool):
+        return None
+    try:
+        seconds = round(float(value))
+    except (TypeError, ValueError, OverflowError):
+        return None
+    if seconds < 0:
+        return None
+    return seconds
+
+
+def _get_custom_expiry_time(flows, flow, module_name):
+    """
+    Get the custom data expiry a module has in one flow.
+
+    A flow's ``dataage`` only counts when ``enabledataage`` is on in the same
+    flow. ``enabledataage`` is stored as a boolean once the module has been
+    saved in the module editor, and as the string ``"false"`` or ``"true"``
+    when it still holds the module's metadata default.
+
+    Args:
+        flows (dict):
+            Flow configuration loaded by :func:`_load_flows_for_cleanup`.
+        flow (str):
+            Name of the flow to look in.
+        module_name (str):
+            Name of the module as used for the key in the flow.
+
+    Returns:
+        int | None:
+            The age in seconds, or None if the module is not in the flow, its
+            custom expiry is not enabled, or its ``dataage`` is not usable.
+    """
+    arguments = _get_dict_path(flows, [flow, module_name, 'metadata', 'arguments'])
+    if not isinstance(arguments, dict):
+        return None
+    if not to_bool(arguments.get('enabledataage')):
+        return None
+    return _to_expiry_seconds(arguments.get('dataage'))
+
+
 def _get_expiry_time_for_module(flows, module_name, module_settings, tod):
     """
     Determine how long extra data for a given module should be kept.
 
     The expiry time (in seconds) is resolved by checking:
 
-      1. Flow-specific ``dataage`` and ``enabledataage`` settings for the
-         current time of day (``tod``).
-      2. The maximum ``dataage`` across other flows if no explicit override
-         is enabled.
-      3. A per-module ``expiryage`` in module settings.
+      1. The module's ``dataage`` in the flow for the current time of day
+         (``tod``), if ``enabledataage`` is on in that flow.
+      2. The maximum ``dataage`` across the other flows that have
+         ``enabledataage`` on. This covers modules that run in another flow,
+         for example the periodic flow.
+      3. The ``expiryage`` in module settings ("Data Expiry" in the Module
+         Manager settings), which applies to all modules.
       4. A default of 600 seconds if nothing else is defined.
+
+    A value that is missing, not a number, or negative is treated as not
+    defined, so this function always returns an int and never raises because
+    of the contents of the flows or the module settings.
 
     Args:
         flows (dict):
@@ -3535,7 +3564,7 @@ def _get_expiry_time_for_module(flows, module_name, module_settings, tod):
         module_name (str):
             Name of the module (JSON filename or base name).
         module_settings (dict):
-            Per-module settings loaded by :func:`_load_module_settings`.
+            Module settings loaded by :func:`_load_module_settings`.
         tod (str):
             Time-of-day flow name (e.g. ``"day"`` or ``"night"``).
 
@@ -3543,35 +3572,26 @@ def _get_expiry_time_for_module(flows, module_name, module_settings, tod):
         int:
             Expiry age in seconds for this module.
     """
-    delete_age = 0
+    if not isinstance(flows, dict):
+        flows = {}
 
     module_name = module_name.replace('.json', '').replace('allsky_', '')
 
-    delete_age = _get_dict_path(flows, [tod, module_name, 'metadata', 'arguments', 'dataage'])
-    enable_delete_age = _get_dict_path(flows, [tod, module_name, 'metadata', 'arguments', 'enabledataage'])
+    delete_age = _get_custom_expiry_time(flows, tod, module_name)
 
-    use_custom_delete_age = False
-    if enable_delete_age is not None:
-        if enable_delete_age:
-            if delete_age is not None:
-                use_custom_delete_age = True
-
-    if not use_custom_delete_age:
+    if delete_age is None:
         for flow in flows:
             if flow != tod:
-                delete_age_tmp = _get_dict_path(flows, [flow, module_name, 'metadata', 'arguments', 'dataage'])
+                delete_age_tmp = _get_custom_expiry_time(flows, flow, module_name)
                 if delete_age_tmp is not None:
-                    delete_age_tmp = round(float(delete_age_tmp))
-                    if delete_age_tmp > delete_age:
+                    if delete_age is None or delete_age_tmp > delete_age:
                         delete_age = delete_age_tmp
 
-    if delete_age is not None:
-        delete_age = round(float(delete_age))
+    if delete_age is None:
+        delete_age = _to_expiry_seconds(_get_dict_path(module_settings, ['expiryage']))
 
     if delete_age is None:
         delete_age = 600
-        if 'expiryage' in module_settings:
-            delete_age = round(module_settings['expiryage'])
 
     return delete_age
 
@@ -3581,9 +3601,11 @@ def cleanup_extra_data():
     Remove stale extra-data files from all ALLSKY_EXTRA directories.
 
     For each extra-data file found, the function determines whether it should
-    be deleted based on its age. At the moment the retention period is fixed
-    to 600 seconds (10 minutes); the plumbing is in place to compute a
-    per-module age via :func:`_get_expiry_time_for_module`.
+    be deleted based on its age. The retention period for each file comes
+    from :func:`_get_expiry_time_for_module`.
+
+    A failure on one file is logged with the name of the file and does not
+    stop the cleanup of the other files.
 
     Logging at level 4 is used to indicate which files are deleted or kept.
     """
@@ -3595,10 +3617,13 @@ def cleanup_extra_data():
     for extra_data_path in extra_data_paths:
         with os.scandir(extra_data_path) as entries:
             for entry in entries:
-                if entry.is_file():
-                    delete_age = _get_expiry_time_for_module(flows, entry.name, module_settings, tod)
-                    #print(f"DEBUG: Checking extra-data file {entry.path} with delete_age={delete_age}")
-                    cleanup_extra_data_file(entry.path, delete_age)
+                try:
+                    if entry.is_file():
+                        delete_age = _get_expiry_time_for_module(flows, entry.name, module_settings, tod)
+                        #print(f"DEBUG: Checking extra-data file {entry.path} with delete_age={delete_age}")
+                        cleanup_extra_data_file(entry.path, delete_age)
+                except Exception as e:
+                    log(0, f'ERROR: Cannot cleanup extra data file {entry.path}: {e}')
 
 
 def cleanup_extra_data_file(file_name, delete_age=600):

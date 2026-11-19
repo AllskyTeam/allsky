@@ -1197,6 +1197,15 @@ select_swap_mechanism()
 
 }
 
+#####
+# Add a variable and its value to the list of things to save in the installation status file.
+# install.sh later runs that file with "source" and "eval", so quote the value.
+# "printf %q" writes any text as one shell word on one line.
+function add_status_variable()
+{
+	STATUS_VARIABLES+=( "${1}=$( printf '%q' "${2}" )" )
+}
+
 ####
 # Allow the user to change the amount of swap space used.
 function check_swap()

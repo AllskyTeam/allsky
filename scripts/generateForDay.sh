@@ -133,7 +133,8 @@ usage_and_exit()
 	local USAGE="Usage: ${ME} [--help] [--silent] [--debug] [--nice n] [--upload] \\ \n"
 	USAGE+="    [--keogram [--keogram-params 'params']] \\ \n"
 	USAGE+="    [--startrails] [--startrails-params 'params']] \\ \n"
-	USAGE+="    [--timelapse [--timelapse-params 'params']] [--keolapse] \\ \n"
+	USAGE+="    [--timelapse [--timelapse-params 'params']] \\ \n"
+	USAGE+="    [--keolapse] \\ \n"
 	USAGE+="    [--start time] [--end time] \\ \n"
 	USAGE+="    [--thumbnail-only] [--output-dir <OUTPUT_DIR>] {--images file | <INPUT_DIR>}"
 	echo
@@ -158,9 +159,9 @@ usage_and_exit()
 	echo "                                   The module must be installed and in the Night to Day flow."
 	echo "   --start time                    Only use images taken at or after 'time'."
 	echo "   --end time                      Only use images taken at or before 'time'."
-	echo "                                   'time' is HH:MM, HH:MM:SS, sunrise, sunset, daytime_start,"
-	echo "                                   daytime_end, nighttime_start, or nighttime_end."
-	echo "                                   These override the start and end time settings."
+	echo "                                   'time' is HH:MM, HH:MM:SS, 'sunrise', 'sunset', 'daytime_start',"
+	echo "                                   'daytime_end', 'nighttime_start', or 'nighttime_end'."
+	echo "                                   These override the start and end time settings in the WebUI."
 	echo "   --output-dir dir                Put the output file in 'dir'."
 	echo "   INPUT_DIR                       Is the day in '${ALLSKY_IMAGES}' to process."
 	echo
@@ -210,7 +211,7 @@ fi
 #shellcheck disable=SC2119
 getAllSettings --var "uselocalwebsite \
 	useremotewebsite remotewebsiteimagedir \
-	useremoteserver remoteserverimagedir \
+	useremoteserver remoteserverimagedir remoteserverimageuploadoriginalname \
 	remoteserverkeogramdestinationname remoteserverstartrailsdestinationname remoteservervideodestinationname \
 	keogramextraparameters keogramexpand keogramfontname keogramfontcolor keogramfontsize keogramlinethickness \
 	startrailsbrightnessthreshold startrailsextraparameters startrailsnightonly \
@@ -315,39 +316,37 @@ if [[ ${TYPE} == "GENERATE" ]]; then
 	}
 
 else
-	L_WEB_USE="${S_uselocalwebsite}"
-	R_WEB_USE="${S_useremotewebsite}"
-	R_SERVER_USE="${S_useremoteserver}"
-	if [[ ${L_WEB_USE} == "false" &&
-		  ${R_WEB_USE} == "false" &&
-		  ${R_SERVER_USE} == "false" ]]; then
+	if [[ ${S_uselocalwebsite} == "false" &&
+		  ${S_useremotewebsite} == "false" &&
+		  ${S_useremoteserver} == "false" ]]; then
 		E_ "*** ${ME} ERROR: '--upload' specified but nowhere to upload!" >&2
 		exit 5
 	fi
 
 	# Local Websites don't have directory or file name choices.
 
-	if [[ ${R_WEB_USE} == "true" ]]; then
+	if [[ ${S_useremotewebsite} == "true" ]]; then
 		R_WEB_DEST_DIR="${S_remotewebsiteimagedir}"
 		if [[ -n ${R_WEB_DEST_DIR} && ${R_WEB_DEST_DIR: -1:1} != "/" ]]; then
 			R_WEB_DEST_DIR+="/"
 		fi
 	fi
 
-	if [[ ${R_SERVER_USE} == "true" ]]; then
+	if [[ ${S_useremoteserver} == "true" ]]; then
 		R_SERVER_DEST_DIR="${S_remoteserverimagedir}"
 		if [[ -n ${R_SERVER_DEST_DIR} && ${R_SERVER_DEST_DIR: -1:1} != "/" ]]; then
 			R_SERVER_DEST_DIR+="/"
 		fi
 
-		if [[ ${DO_KEOGRAM} == "true" ]]; then
-			R_SERVER_KEOGRAM_NAME="${S_remoteserverkeogramdestinationname}"
-		fi
-		if [[ ${DO_STARTRAILS} == "true" ]]; then
-			R_SERVER_STARTRAILS_NAME="${S_remoteserverstartrailsdestinationname}"
-		fi
-		if [[ ${DO_TIMELAPSE} == "true" ]]; then
-			R_SERVER_VIDEO_NAME="${S_remoteservervideodestinationname}"
+		if [[ ${S_remoteserverimageuploadoriginalname} == "true" ]]; then
+			# Leaving blank will cause existing (i.e., "original") names to be used.
+			[[ ${DO_KEOGRAM} == "true" ]]    && R_SERVER_KEOGRAM_NAME=""
+			[[ ${DO_STARTRAILS} == "true" ]] && R_SERVER_STARTRAILS_NAME=""
+			[[ ${DO_TIMELAPSE} == "true" ]]  && R_SERVER_VIDEO_NAME=""
+		else
+			[[ ${DO_KEOGRAM} == "true" ]]    && R_SERVER_KEOGRAM_NAME="${S_remoteserverkeogramdestinationname}"
+			[[ ${DO_STARTRAILS} == "true" ]] && R_SERVER_STARTRAILS_NAME="${S_remoteserverstartrailsdestinationname}"
+			[[ ${DO_TIMELAPSE} == "true" ]]  && R_SERVER_VIDEO_NAME="${S_remoteservervideodestinationname}"
 		fi
 	fi
 fi
@@ -358,7 +357,9 @@ NUM_SUCCESS=0
 # TODO: Remove this check in major release after v2026.10.01.  Ditto for scripts/utilities/compareStartrails.sh.
 # Images are only used between a start and an end time if either is set.
 # The command-line arguments override the settings.
-if [[ ${GOT_TIME} == "false" && -z ${S_startrailsstart} && -z ${S_startrailsend} &&
+if [[ ${GOT_TIME} == "false" &&
+		-z ${S_startrailsstart} &&
+		-z ${S_startrailsend} &&
 		${S_startrailsnightonly} == "true" ]]; then
 	# Settings files that haven't been converted from "Startrails Night images only" yet.
 	S_startrailsstart="nighttime_start"
@@ -382,8 +383,9 @@ first_last_image_times()
 		date --date="${T:0:4}-${T:4:2}-${T:6:2} ${T:8:2}:${T:10:2}:${T:12:2}" '+%s' 2>/dev/null || return 1
 	done | tr '\n' ' '
 }
+
 # Create a file with the names of the images between the start and end times for ${1}
-# and set WINDOW_FILE to it.  WINDOW_FILE is "" if all images should be used.
+# and set WINDOW_FILE to the file name.  WINDOW_FILE is "" if all images should be used.
 # Return 1 if there are no images to use.
 get_window_images()
 {
@@ -391,11 +393,13 @@ get_window_images()
 	local START="${2}"
 	local END="${3}"
 
-	WINDOW_FILE=""
-	if [[ ${GOT_TIME} == "true" ]]; then
-		START="${START_TIME}"
-		END="${END_TIME}"
-	fi
+	WINDOW_FILE=""		# global
+
+	# Time specified on the command-line override the WebUI settings,
+	# which were passed into use in ${START} and ${END}.
+	[[ -n ${START_TIME} ]] && START="${START_TIME}"
+	[[ -n ${END_TIME} ]] && END="${END_TIME}"
+
 	[[ -n ${IMAGES_FILE} || ( -z ${START} && -z ${END} ) ]] && return 0
 
 	if [[ -z ${DAYNIGHT_FILE} ]]; then
@@ -507,19 +511,19 @@ if [[ ${DO_KEOGRAM} == "true" ]]; then
 			DEST_DIR="keograms"
 			DEST_NAME="${KEOGRAM_FILE}"
 
-			if [[ ${L_WEB_USE} == "true" ]]; then
+			if [[ ${S_uselocalwebsite} == "true" ]]; then
 				#shellcheck disable=SC2086
 				"${ALLSKY_SCRIPTS}/upload.sh" ${UPLOAD_SILENT} ${DEBUG_ARG} "--local-web" \
 					"${UPLOAD_FILE}" "${DEST_DIR}" "${DEST_NAME}"
 				((EXIT_CODE+=$?))
 			fi
-			if [[ ${R_WEB_USE} == "true" ]]; then
+			if [[ ${S_useremotewebsite} == "true" ]]; then
 				#shellcheck disable=SC2086
 				"${ALLSKY_SCRIPTS}/upload.sh" ${UPLOAD_SILENT} ${DEBUG_ARG} "--remote-web" \
 					"${UPLOAD_FILE}" "${R_WEB_DEST_DIR}${DEST_DIR}" "${DEST_NAME}" "Keogram"
 				((EXIT_CODE+=$?))
 			fi
-			if [[ ${R_SERVER_USE} == "true" ]]; then
+			if [[ ${S_useremoteserver} == "true" ]]; then
 				if [[ -n ${R_SERVER_KEOGRAM_NAME} ]]; then
 					DEST_NAME="${R_SERVER_KEOGRAM_NAME}"
 				fi
@@ -644,19 +648,19 @@ if [[ ${DO_STARTRAILS} == "true" ]]; then
 			DEST_DIR="startrails"
 			DEST_NAME="${STARTRAILS_FILE}"
 
-			if [[ ${L_WEB_USE} == "true" ]]; then
+			if [[ ${S_uselocalwebsite} == "true" ]]; then
 				#shellcheck disable=SC2086
 				"${ALLSKY_SCRIPTS}/upload.sh" ${UPLOAD_SILENT} ${DEBUG_ARG} "--local-web" \
 					"${UPLOAD_FILE}" "${DEST_DIR}" "${DEST_NAME}"
 				((EXIT_CODE+=$?))
 			fi
-			if [[ ${R_WEB_USE} == "true" ]]; then
+			if [[ ${S_useremotewebsite} == "true" ]]; then
 				#shellcheck disable=SC2086
 				"${ALLSKY_SCRIPTS}/upload.sh" ${UPLOAD_SILENT} ${DEBUG_ARG} "--remote-web" \
 					"${UPLOAD_FILE}" "${R_WEB_DEST_DIR}${DEST_DIR}" "${DEST_NAME}" "Startrails"
 				((EXIT_CODE+=$?))
 			fi
-			if [[ ${R_SERVER_USE} == "true" ]]; then
+			if [[ ${S_useremoteserver} == "true" ]]; then
 				if [[ -n ${R_SERVER_STARTRAILS_NAME} ]]; then
 					DEST_NAME="${R_SERVER_STARTRAILS_NAME}"
 				fi
@@ -728,7 +732,7 @@ if [[ ${DO_TIMELAPSE} == "true" ]]; then
 		DEST_DIR="videos"
 		DEST_NAME="${VIDEO_FILE}"
 
-		if [[ ${L_WEB_USE} == "true" ]]; then
+		if [[ ${S_uselocalwebsite} == "true" ]]; then
 			D="${DEST_DIR}"
 			if [[ ${THUMBNAIL_ONLY} != "true" ]]; then
 				#shellcheck disable=SC2086
@@ -745,7 +749,7 @@ if [[ ${DO_TIMELAPSE} == "true" ]]; then
 					"${UPLOAD_THUMBNAIL}" "${D}/thumbnails" "${DEST_NAME/mp4/jpg}"
 			fi
 		fi
-		if [[ ${R_WEB_USE} == "true" ]]; then
+		if [[ ${S_useremotewebsite} == "true" ]]; then
 			D="${R_WEB_DEST_DIR}${DEST_DIR}"
 			if [[ ${THUMBNAIL_ONLY} != "true" ]]; then
 				#shellcheck disable=SC2086
@@ -762,7 +766,7 @@ if [[ ${DO_TIMELAPSE} == "true" ]]; then
 					"${UPLOAD_THUMBNAIL}" "${D}/thumbnails" "${DEST_NAME/mp4/jpg}" "TimelapseThumbnail"
 			fi
 		fi
-		if [[ ${R_SERVER_USE} == "true" ]]; then
+		if [[ ${S_useremoteserver} == "true" ]]; then
 			if [[ -n ${R_SERVER_VIDEO_NAME} ]]; then
 				DEST_NAME="${R_SERVER_VIDEO_NAME}"
 			fi

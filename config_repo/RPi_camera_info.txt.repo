@@ -6,7 +6,7 @@ imx708_noir	0	Module 3 NoIR	1.4	0	ASI_FALSE
 imx708_wide_noir	0	Module 3 Wide NoIR	1.4	0	ASI_FALSE
 ov5647	0	Version 1	1.4	0	ASI_FALSE
 imx290	0	imx290 60.00 fps	2.9	0	ASI_FALSE
-imx519	0	Arducam 16 MP	0	1.22	0	ASI_FALSE
+imx519	0	Arducam 16 MP	1.22	0	ASI_FALSE
 arducam_64mp	0	Arducam 64 MP	0.8	0	ASI_FALSE
 arducam-pivariety	0	Arducam 462	2.9	0	ASI_FALSE
 imx219	0	Waveshare imx219-d160	1.12	0	ASI_FALSE

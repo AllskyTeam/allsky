@@ -5390,6 +5390,45 @@ blockquote footer {
     text-align: center;
 }
 
+.images-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.images-toolbar-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-left: auto;
+}
+
+/* On a phone the buttons wrap. Let them flow from the left with the Back button. */
+@media (max-width: 767px) {
+    .images-toolbar-actions {
+        display: contents;
+    }
+}
+
+.images-selecting .images-grid-item {
+    cursor: pointer;
+    user-select: none;
+}
+
+.images-grid-item.images-selected {
+    outline: 3px solid var(--as-text-danger-plain);
+    outline-offset: -3px;
+}
+
+.images-grid-item.images-selected img {
+    opacity: 0.45;
+}
+
+.lg-toolbar .lg-delete:hover {
+    color: var(--as-text-danger-plain);
+}
+
 .as-wifi-table {
     margin-bottom: 0;
     border: var(--as-border-width) solid var(--bs3-border-soft);

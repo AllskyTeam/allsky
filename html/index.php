@@ -806,7 +806,9 @@ if ($page == "login") {
     
 		redirect("index.php?page=login");
 	}
-	if ($page == "editor") {
+	// The list of a day's images changes when images are taken or deleted,
+	// so the browser must not show an old copy of that page.
+	if ($page == "editor" || $page == "list_images") {
 		header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 		header('Pragma: no-cache');
 		header('Expires: 0');

@@ -302,14 +302,7 @@ function output_allsky_status($versionHtml = "", $websiteHtml = "") {
 				$now = new DateTimeImmutable('now', $timezone);
 				if ($now >= $dt) {
 					$seconds = $now->getTimestamp() - $dt->getTimestamp();
-					$minutes = intdiv($seconds, 60);
-					$secs = $seconds % 60;
-					$parts = [];
-					if ($minutes > 0) {
-						$parts[] = sprintf('%d Mins', $minutes);
-					}
-					$parts[] = sprintf('%d Secs', $secs);
-					$uptimeText = implode(', ', $parts);
+					$uptimeText = formatDurationForUptime($seconds);
 				}
 			}
 		} catch (Throwable $e) {
@@ -365,7 +358,7 @@ function output_allsky_status($versionHtml = "", $websiteHtml = "") {
 		$statusActionsHtml .= "<li><button type='button' class='btn $buttonClass btn-block header-status-action' data-action='" . strtolower($actionEscaped) . "'>$actionEscaped</button></li>";
 	}
 
-	$sinceHtml = "<li><div class='header-status-menu-card'><div class='header-status-menu-card-row'><span>Uptime</span><strong>$uptimeText</strong></div><div class='header-status-menu-card-row'><span>Last Restart</span><strong>$timestampText</strong></div></div></li><li role='separator' class='divider'></li>";
+	$sinceHtml = "<li><div class='header-status-menu-card'><div class='header-status-menu-card-row'><span>Allsky Uptime</span><strong>$uptimeText</strong></div><div class='header-status-menu-card-row'><span>Last Restart</span><strong>$timestampText</strong></div></div></li><li role='separator' class='divider'></li>";
 	$statusDropdownHtml = "<div class='dropdown header-status-dropdown'><button type='button' class='btn btn-default btn-xs header-status-toggle' aria-expanded='false'><i class='fa-solid fa-chevron-down'></i></button><ul class='dropdown-menu dropdown-menu-right header-status-menu'>$sinceHtml<li class='dropdown-header'>Manage Allsky</li>$statusActionsHtml</ul></div>";
 
 	return("<div class='header-status-card'><div class='header-status-heading'><span class='header-status-title'>Status</span><span class='label $class' $title>$allsky_status</span><span class='header-status-inline'><span class='header-status-inline-value'>$versionHtml</span></span>$statusDropdownHtml</div>$websiteHtml</div>");
@@ -1939,11 +1932,11 @@ function getMemoryUsed()
 
 function getThrottleStatus() 
 {
-	$x = exec("sudo vcgencmd get_throttled 2>&1");	// Output: throttled=0x12345...
+	$x = exec("sudo vcgencmd get_throttled 2>&1", $output);	// Output: throttled=0x12345...
 	if (preg_match("/^throttled=/", $x) == false) {
 			$throttle_status = "danger";
-			$throttle = "<span class='errorMsgBig'>";
-			$throttle .= "Not able to get throttle status:<br>$x";
+			$throttle = "<span style='color: white'>";
+			$throttle .= "Unable to get throttle status: " . implode(" ", $output);
 			$throttle .= "</span>";
 	} else {
 		$x = explode("x", $x);	// Output: throttled=0x12345...

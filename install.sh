@@ -159,8 +159,7 @@ last_installation_needed_reboot()
 
 		# Update status
 		sed -i \
-			-e "s/${STATUS_NO_FINISH_REBOOT}/${STATUS_OK}/" \
-			-e "s/MORE_STATUS.*//" \
+			-e "s/^STATUS_INSTALLATION=.*/STATUS_INSTALLATION=${STATUS_OK}/" \
 				"${STATUS_FILE}"
 	else
 		display_msg --log info "\nPlease perform the following steps:${MSG2}\n"
@@ -189,7 +188,7 @@ last_installation_unknown_status()
 		source "${STATUS_FILE}" || exit 1
 		# Put all but the status variable in the list so we save them next time.
 		STATUS_VARIABLES=( "$( grep -v STATUS_INSTALLATION "${STATUS_FILE}" )" )
-		STATUS_VARIABLES+=("\n#### Prior variables above, new below.\n")
+		STATUS_VARIABLES+=("#### Prior variables above, new below.")
 
 		# If returning from a reboot for local,
 		# prompt for locale again to make sure it's there and still what they want.
@@ -199,22 +198,70 @@ last_installation_unknown_status()
 		fi
 
 	else
-		MSG="Do you want to restart the installation from the beginning?"
-		MSG+="\n\nSelecting <No> will exit the installation without making any changes."
-		if whiptail --title "${TITLE}" --yesno "${MSG}" 15 "${WT_WIDTH}"  \
-				3>&1 1>&2 2>&3; then
-			display_msg --log progress "Restarting installation."
-		else
-			display_msg --log progress "Not continuing after prior partial installation."
-			exit_installation 0 ""
-		fi
+		restart_installation_or_exit ""
 	fi
+}
+
+####
+# Ask the user if they want to restart the installation from the beginning.
+# Exit if they do not.  ${1} is optional text to display before the question.
+restart_installation_or_exit()
+{
+	local MSG="${1}Do you want to restart the installation from the beginning?"
+	MSG+="\n\nSelecting <No> will exit the installation without making any changes."
+	if whiptail --title "${TITLE}" --yesno "${MSG}" 15 "${WT_WIDTH}"  \
+			3>&1 1>&2 2>&3; then
+		display_msg --log progress "Restarting installation."
+	else
+		display_msg --log progress "Not continuing after prior partial installation."
+		exit_installation 0 ""
+	fi
+}
+
+####
+# Return 0 if the status file can be used.
+# The file is run with "source" and "eval", so every line must be an assignment
+# of a literal value, a comment, or blank.  Then no command in it can run.
+# A value is what "printf %q" writes, or a simple '...' string from older versions.
+# Which variables are assigned is not restricted.
+status_file_is_valid()
+{
+	local FILE="${1}"
+	local Q="'"
+	local NAME="[A-Za-z_][A-Za-z0-9_]*"
+	# A word whose special characters are all escaped with a backslash:
+	local VALUE="([^[:space:]${Q}\"\\\\|&;()<>\$\`]|\\\\.)*"
+	VALUE+="|\\\$${Q}([^${Q}\\\\]|\\\\.)*${Q}"		# or $'...'
+	VALUE+="|${Q}[^${Q}\\\\]*${Q}"						# or '...'
+	local LINE="^ *${NAME}=(${VALUE})(; ${NAME}=(${VALUE}))? *\$"
+
+	[[ -s ${FILE} ]] || return 1
+	# A carriage return would become part of a value.
+	[[ "$( < "${FILE}" )" == *$'\r'* ]] && return 1
+	grep --quiet --invert-match -E -e "${LINE}" -e "^#" -e "^ *\$" "${FILE}" && return 1
+
+	# No command can run, so read the file where it cannot change anything.
+	# That fails if, for example, it assigns to a read-only variable.
+	#shellcheck disable=SC1090		# file doesn't exist in GitHub
+	( source "${FILE}" ) > /dev/null 2>&1
 }
 
 ####
 handle_prior_installation()
 {
 	local MSG  MSG2
+
+	# The status file is run below, so do not use one that has anything other
+	# than variable assignments in it, for example, one that was damaged
+	# or was written by a version that did not quote the values correctly.
+	if ! status_file_is_valid "${STATUS_FILE}" ; then
+		MSG="The status of the prior installation in '${STATUS_FILE}' is not usable"
+		MSG+=" so the installation cannot continue where it left off."
+		display_msg --log warning "${MSG}"
+		restart_installation_or_exit "${MSG}\n\n"
+		return
+	fi
+
 	# Initially just get the STATUS and MORE_STATUS.
 	# After that we may clear the file or get all the variables.
 	eval "$( grep "^STATUS_INSTALLATION" "${STATUS_FILE}" )"
@@ -284,7 +331,7 @@ do_initial_heading()
 
 		display_header "Welcome to the ${SHORT_TITLE}"
 	fi
-	declare -n v="${FUNCNAME[0]}"; [[ ${v} != "true" ]] && STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
+	declare -n v="${FUNCNAME[0]}"; [[ ${v} != "true" ]] && add_status_variable "${FUNCNAME[0]}" "true"
 }
 
 ####
@@ -334,8 +381,8 @@ get_this_branch()
 		display_msg --logonly info "Using the '${BRANCH}' branch."
 	fi
 
-	STATUS_VARIABLES+=("BRANCH='${BRANCH}'\n")
-	STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
+	add_status_variable "BRANCH" "${BRANCH}"
+	add_status_variable "${FUNCNAME[0]}" "true"
 }
 
 
@@ -496,7 +543,7 @@ get_connected_cameras()
 	fi
 
 	declare -n v="${FUNCNAME[0]}";
-	[[ ${v} != "true" ]] && STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
+	[[ ${v} != "true" ]] && add_status_variable "${FUNCNAME[0]}" "true"
 
 	# CONNECTED_CAMERAS_MODELS was set from a prior installation, if any.
 	# If it was set, warn the user if the prior models is different than
@@ -506,7 +553,7 @@ get_connected_cameras()
 			MSG="Connected cameras were '${CONNECTED_CAMERA_MODELS}' during last installation"
 			MSG+=" but are '${CC}' now."
 			display_msg --log info "${MSG}"
-			STATUS_VARIABLES+=("CONNECTED_CAMERA_MODELS='${CC}'\n")
+			add_status_variable "CONNECTED_CAMERA_MODELS" "${CC}"
 			CONNECTED_CAMERA_MODELS="${CC}"
 		fi
 		return
@@ -530,14 +577,14 @@ select_camera_type()
 		if [[ -n ${CAMERA_TYPE} ]]; then
 			MSG="Using Camera Type '${CAMERA_TYPE}' from prior Allsky; not prompting user."
 			display_msg --logonly info "${MSG}"
-			STATUS_VARIABLES+=("CAMERA_TYPE='${CAMERA_TYPE}'\n")
+			add_status_variable "CAMERA_TYPE" "${CAMERA_TYPE}"
 			if [[ -n ${CAMERA_MODEL} ]]; then
-				STATUS_VARIABLES+=("CAMERA_MODEL='${CAMERA_MODEL}'\n")
+				add_status_variable "CAMERA_MODEL" "${CAMERA_MODEL}"
 			fi
 			if [[ -n ${CAMERA_NUMBER} ]]; then
-				STATUS_VARIABLES+=("CAMERA_NUMBER='${CAMERA_NUMBER}'\n")
+				add_status_variable "CAMERA_NUMBER" "${CAMERA_NUMBER}"
 			fi
-			STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
+			add_status_variable "${FUNCNAME[0]}" "true"
 			return
 		else
 			MSG="Camera Type not in prior settings file."
@@ -565,11 +612,11 @@ select_camera_type()
 	CAMERA_TYPE="${CAMERA_INFO%;*}"					# before ";"
 
 	display_msg --log progress "Using user-selected ${CAMERA_TYPE} ${CAMERA_MODEL} camera."
-	STATUS_VARIABLES+=("CAMERA_TYPE='${CAMERA_TYPE}'\n")
-	STATUS_VARIABLES+=("CAMERA_MODEL='${CAMERA_MODEL}'\n")
-	STATUS_VARIABLES+=("CAMERA_NUMBER='${CAMERA_NUMBER}'\n")
+	add_status_variable "CAMERA_TYPE" "${CAMERA_TYPE}"
+	add_status_variable "CAMERA_MODEL" "${CAMERA_MODEL}"
+	add_status_variable "CAMERA_NUMBER" "${CAMERA_NUMBER}"
 
-	STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
+	add_status_variable "${FUNCNAME[0]}" "true"
 }
 
 ####
@@ -581,7 +628,7 @@ save_camera_capabilities()
 	do_save_camera_capabilities "${1}"
 	[[ $? -ne 0 ]] && exit_with_image 1 "${STATUS_ERROR}" "${FUNCNAME[0]} failed."
 
-	STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
+	add_status_variable "${FUNCNAME[0]}" "true"
 }
 
 ####
@@ -734,7 +781,7 @@ do_sudoers()
 	display_msg --logonly info "Creating/updating sudoers file."
 	create_sudoers
 
-	STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
+	add_status_variable "${FUNCNAME[0]}" "true"
 }
 
 
@@ -875,7 +922,7 @@ get_checksums()
 	[[ -s ${ALLSKY_WEBSITE_CHECKSUM_FILE} ]] && return
 	get_website_checksums > "${ALLSKY_WEBSITE_CHECKSUM_FILE}"
 
-	STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
+	add_status_variable "${FUNCNAME[0]}" "true"
 }
 
 
@@ -920,7 +967,7 @@ install_webserver_et_al()
 
 	create_lighttpd_log_file		# Creates 0-length file with permissions so we can modify it.
 
-	STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
+	add_status_variable "${FUNCNAME[0]}" "true"
 }
 
 
@@ -940,8 +987,8 @@ prompt_for_hostname()
 		display_msg --logonly info "Using current hostname of '${CURRENT_HOSTNAME}'."
 		NEW_HOST_NAME="${CURRENT_HOSTNAME}"
 
-		STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
-		STATUS_VARIABLES+=("NEW_HOST_NAME='${NEW_HOST_NAME}'\n")
+		add_status_variable "${FUNCNAME[0]}" "true"
+		add_status_variable "NEW_HOST_NAME" "${NEW_HOST_NAME}"
 		return
 	fi
 
@@ -957,7 +1004,7 @@ prompt_for_hostname()
 		exit_installation 2 "No host name selected"
 	fi
 
-	STATUS_VARIABLES+=("NEW_HOST_NAME='${NEW_HOST_NAME}'\n")
+	add_status_variable "NEW_HOST_NAME" "${NEW_HOST_NAME}"
 
 	if [[ ${CURRENT_HOSTNAME} != "${NEW_HOST_NAME}" ]]; then
 		echo "${NEW_HOST_NAME}" | sudo tee /etc/hostname > /dev/null
@@ -978,7 +1025,7 @@ prompt_for_hostname()
 		sudo install -m 0644 "${TMP_FILE}" "${FINAL_AVAHI_FILE}" && rm -f "${TMP_FILE}"
 	fi
 
-	STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
+	add_status_variable "${FUNCNAME[0]}" "true"
 }
 
 
@@ -1127,7 +1174,7 @@ check_old_WebUI_files()
 	display_msg --log notice "${MSG}"
 	add_to_post_actions "${MSG}"
 
-	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
+	add_status_variable "${FUNCNAME[0]}" "true"
 }
 
 
@@ -1193,7 +1240,7 @@ get_desired_locale()
 	MSG="CURRENT_LOCALE=${CURRENT_LOCALE}, DESIRED_LOCAL=${DESIRED_LOCALE}, TEMP_LOCALE=[[$( echo "${TEMP_LOCALE}" | tr '\n' ' ' )]]"
 	display_msg --logonly info "${MSG}"
 
-	STATUS_VARIABLES+=("CURRENT_LOCALE='${CURRENT_LOCALE}'\n")
+	add_status_variable "CURRENT_LOCALE" "${CURRENT_LOCALE}"
 
 	# If they had a locale from the prior Allsky and it's still here, use it; no need to prompt.
 	# Ditto if the prior locale == current locale.
@@ -1201,8 +1248,8 @@ get_desired_locale()
 		echo "${INSTALLED_LOCALES}" | grep -m 1 --silent "${DESIRED_LOCALE}"
 		local STILL_HERE=$?
 		if [[ ( ${DESIRED_LOCALE} == "${CURRENT_LOCALE}" ) || ${STILL_HERE} -eq 0 ]]; then
-			STATUS_VARIABLES+=("DESIRED_LOCALE='${DESIRED_LOCALE}'\n")
-			STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
+			add_status_variable "DESIRED_LOCALE" "${DESIRED_LOCALE}"
+			add_status_variable "${FUNCNAME[0]}" "true"
 			display_msg --logonly info "Using prior locale of ${DESIRED_LOCALE}."
 			return
 		fi
@@ -1250,8 +1297,8 @@ get_desired_locale()
 		exit_installation 1 "${STATUS_ERROR}" "Got usage message from whitail."
 	fi
 
-	STATUS_VARIABLES+=("DESIRED_LOCALE='${DESIRED_LOCALE}'\n")
-	STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
+	add_status_variable "DESIRED_LOCALE" "${DESIRED_LOCALE}"
+	add_status_variable "${FUNCNAME[0]}" "true"
 }
 
 
@@ -1283,7 +1330,7 @@ set_locale()
 			MSG+=" CONTAINED .locale:  ${L}"
 			display_msg --logonly info "${MSG}"
 		fi
-		STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
+		add_status_variable "${FUNCNAME[0]}" "true"
 		return
 	fi
 
@@ -1550,9 +1597,9 @@ prompt_for_prior_Allsky()
 				CAMERA_TYPE="${PRIOR_CAMERA_TYPE}"
 				CAMERA_MODEL="${PRIOR_CAMERA_MODEL}"
 				CAMERA_NUMBER="${PRIOR_CAMERA_NUMBER}"
-				STATUS_VARIABLES+=("CAMERA_TYPE='${CAMERA_TYPE}'\n")
-				STATUS_VARIABLES+=("CAMERA_MODEL='${CAMERA_MODEL}'\n")
-				STATUS_VARIABLES+=("CAMERA_NUMBER='${CAMERA_NUMBER}'\n")
+				add_status_variable "CAMERA_TYPE" "${CAMERA_TYPE}"
+				add_status_variable "CAMERA_MODEL" "${CAMERA_MODEL}"
+				add_status_variable "CAMERA_NUMBER" "${CAMERA_NUMBER}"
 				display_msg --logonly info "Will restore from prior version of Allsky."
 			else
 				USE_PRIOR_ALLSKY="false"
@@ -1593,12 +1640,12 @@ prompt_for_prior_Allsky()
 		# No prior Allsky (or the user doesn't want to use it),
 		# so force creating a default settings file.
 		FORCE_CREATING_DEFAULT_SETTINGS_FILE="true"
-		STATUS_VARIABLES+=("FORCE_CREATING_DEFAULT_SETTINGS_FILE='true'\n")
-		STATUS_VARIABLES+=("USE_PRIOR_ALLSKY='${USE_PRIOR_ALLSKY}'\n")
+		add_status_variable "FORCE_CREATING_DEFAULT_SETTINGS_FILE" "true"
+		add_status_variable "USE_PRIOR_ALLSKY" "${USE_PRIOR_ALLSKY}"
 	fi
 
-	STATUS_VARIABLES+=("WILL_USE_PRIOR='${WILL_USE_PRIOR}'\n")
-	STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
+	add_status_variable "WILL_USE_PRIOR" "${WILL_USE_PRIOR}"
+	add_status_variable "${FUNCNAME[0]}" "true"
 }
 
 
@@ -1651,7 +1698,7 @@ install_dependencies_etc()
 			exit_with_image 1 "${STATUS_ERROR}" "make install failed"
 	fi
 
-	STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
+	add_status_variable "${FUNCNAME[0]}" "true"
 }
 
 
@@ -2139,7 +2186,7 @@ convert_config_sh()
 	) || return 1
 
 	if [[ ${CALLED_FROM} == "install" ]]; then
-		STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
+		add_status_variable "${FUNCNAME[0]}" "true"
 	fi
 
 	return 0
@@ -2257,7 +2304,7 @@ convert_ftp_sh()
 		X="false"; doV "NEW" "X" "remoteserverimageuploadoriginalname" "boolean" "${NEW_FILE}"
 	)
 
-	[[ ${CALLED_FROM} == "install" ]] && STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
+	[[ ${CALLED_FROM} == "install" ]] && add_status_variable "${FUNCNAME[0]}" "true"
 
 	return 0
 }
@@ -2366,7 +2413,7 @@ restore_prior_settings_file()
 		display_msg --logonly info "${MSG}"
 	fi
 
-	STATUS_VARIABLES+=( "RESTORED_PRIOR_SETTINGS_FILE='${RESTORED_PRIOR_SETTINGS_FILE}'\n" )
+	add_status_variable "RESTORED_PRIOR_SETTINGS_FILE" "${RESTORED_PRIOR_SETTINGS_FILE}"
 }
 
 
@@ -2530,7 +2577,7 @@ restore_prior_files()
 			convert_config_sh "${PRIOR_CONFIG_FILE}" "${ALLSKY_SETTINGS_FILE}" "install" ||
 				COPIED_PRIOR_CONFIG_SH="false"
 		fi
-		STATUS_VARIABLES+=( "COPIED_PRIOR_CONFIG_SH='${COPIED_PRIOR_CONFIG_SH}'\n" )
+		add_status_variable "COPIED_PRIOR_CONFIG_SH" "${COPIED_PRIOR_CONFIG_SH}"
 
 # TODO: Remove when LAST_SUPPORTED_UPGRADE_VERSION is v2024.12.06
 		# ftp-settings.sh no longer exists, but if a PRIOR one exists copy its contents to the settings file.
@@ -2550,7 +2597,7 @@ restore_prior_files()
 			convert_ftp_sh "${PRIOR_FTP_FILE}" "${ALLSKY_SETTINGS_FILE}" "install" ||
 				COPIED_PRIOR_FTP_SH="false"
 		fi
-		STATUS_VARIABLES+=( "COPIED_PRIOR_FTP_SH='${COPIED_PRIOR_FTP_SH}'\n" )
+		add_status_variable "COPIED_PRIOR_FTP_SH" "${COPIED_PRIOR_FTP_SH}"
 
 
 		if [[ ${COPIED_PRIOR_CONFIG_SH} == "true" && ${COPIED_PRIOR_FTP_SH} == "true" ]]; then
@@ -2725,7 +2772,7 @@ display_msg --logonly info "${ITEM} contents: $( ls "${D}"/* 2>/dev/null )"		# F
 
 	# data.json was updated above so don't copy it.
 
-	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
+	add_status_variable "${FUNCNAME[0]}" "true"
 }
 
 
@@ -3021,7 +3068,7 @@ install_PHP_modules()
 	check_success $? "PHP module installation failed" "${TMP}" "${DEBUG}" ||
 		exit_with_image 1 "${STATUS_ERROR}" "PHP module install failed."
 
-	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
+	add_status_variable "${FUNCNAME[0]}" "true"
 }
 
 
@@ -3206,7 +3253,7 @@ install_Python()
 		fi
 	fi
 
-	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
+	add_status_variable "${FUNCNAME[0]}" "true"
 }
 
 
@@ -3246,7 +3293,7 @@ install_overlay()
 		done
 	fi
 
-	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
+	add_status_variable "${FUNCNAME[0]}" "true"
 }
 
 
@@ -3270,7 +3317,7 @@ log_info()
 	display_msg --logonly info "uname = $( uname -a )"
 	display_msg --logonly info "id = $( id )"
 
-	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
+	add_status_variable "${FUNCNAME[0]}" "true"
 }
 
 
@@ -3300,7 +3347,7 @@ check_if_supported_OS()
 	MSG="Unsupported OS: ${ALLSKY_PI_OS}."
 	display_msg --logonly info "${MSG}  Exiting."
 
-	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
+	add_status_variable "${FUNCNAME[0]}" "true"
 	exit_installation 0 "${STATUS_NOT_CONTINUE}" "${MSG}"
 }
 
@@ -3415,7 +3462,7 @@ check_restored_settings()
 		CONFIGURATION_NEEDED="false"
 		MSG="Re-installed same version; no configuration or reboot needed."
 		display_msg --logonly info "${MSG}"
-		STATUS_VARIABLES+=("CONFIGURATION_NEEDED='${CONFIGURATION_NEEDED}'\n")
+		add_status_variable "CONFIGURATION_NEEDED" "${CONFIGURATION_NEEDED}"
 		return
 	fi
 
@@ -3438,7 +3485,7 @@ check_restored_settings()
 			IMG=""					# Blank name removes existing image
 		fi
 		display_image "${IMG}"
-		STATUS_VARIABLES+=("CONFIGURATION_NEEDED='${CONFIGURATION_NEEDED}'\n")
+		add_status_variable "CONFIGURATION_NEEDED" "${CONFIGURATION_NEEDED}"
 		return
 	fi
 
@@ -3455,7 +3502,7 @@ check_restored_settings()
 	fi
 
 	CONFIGURATION_NEEDED="true"
-	STATUS_VARIABLES+=("CONFIGURATION_NEEDED='${CONFIGURATION_NEEDED}'\n")
+	add_status_variable "CONFIGURATION_NEEDED" "${CONFIGURATION_NEEDED}"
 }
 
 
@@ -3574,7 +3621,7 @@ update_modules()
 		rm -rf "${MODULES_DIR}" >> "${TMP}" 2>&1
 	fi
 
-	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
+	add_status_variable "${FUNCNAME[0]}" "true"
 }
 
 migrate_overlays()
@@ -3606,7 +3653,6 @@ update_status_from_temp_file()
 {
 	if [[ -s ${STATUS_FILE_TEMP} ]]; then
 		STATUS_VARIABLES+=( "$( < "${STATUS_FILE_TEMP}" )" )
-		STATUS_VARIABLES+=("\n")
 		rm -f "${STATUS_FILE_TEMP}"
 	fi
 }
@@ -3617,7 +3663,7 @@ exit_installation()
 	local RET="${1}"
 	local STATUS_CODE="${2}"
 	local MORE_STATUS="${3}"
-	local MORE  S  Q
+	local MORE  S
 
 	# If STATUS_CODE is set, add it and all STATUS_VARIABLES to the status file.
 	if [[ -n ${STATUS_CODE} ]]; then
@@ -3625,8 +3671,7 @@ exit_installation()
 			clear_status
 		else
 			if [[ -n ${MORE_STATUS} && ${MORE_STATUS} != "${STATUS_CODE}" ]]; then
-				Q="'"	# single quote.  Escape it:
-				MORE="; MORE_STATUS='${MORE_STATUS//${Q}/\\${Q}}'"
+				MORE="; MORE_STATUS=$( printf '%q' "${MORE_STATUS}" )"
 			else
 				MORE=""
 			fi
@@ -3635,9 +3680,9 @@ exit_installation()
 			else
 				S="INSTALLATION"
 			fi
-			echo -e "STATUS_${S}='${STATUS_CODE}'${MORE}" > "${STATUS_FILE}"
+			echo "STATUS_${S}=$( printf '%q' "${STATUS_CODE}" )${MORE}" > "${STATUS_FILE}"
 			update_status_from_temp_file
-			echo -e "${STATUS_VARIABLES[@]}" >> "${STATUS_FILE}"
+			printf '%s\n' "${STATUS_VARIABLES[@]}" >> "${STATUS_FILE}"
 
 			# If the user needs to reboot, save the current boot ID
 			# so we can check it when Allsky starts.  If it's the same value
@@ -3724,7 +3769,7 @@ install_installer_dependencies()
 		display_msg --logonly info "Initial dependencies already installed."
 	fi
 
-	STATUS_VARIABLES+=( "${FUNCNAME[0]}='true'\n" )
+	add_status_variable "${FUNCNAME[0]}" "true"
 }
 
 

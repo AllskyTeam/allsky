@@ -1199,7 +1199,7 @@ select_swap_mechanism()
 
 #####
 # Add a variable and its value to the list of things to save in the installation status file.
-# install.sh later runs that file with "source" and "eval", so quote the value.
+# install.sh later runs that file with "source" and "eval", so quote the value:
 # "printf %q" writes any text as one shell word on one line.
 function add_status_variable()
 {
@@ -1342,7 +1342,7 @@ function check_swap()
 	fi
 
 	if [[ ${CALLED_FROM} == "install" ]]; then
-		STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
+		add_status_variable "${FUNCNAME[0]}" "true"
 	fi
 }
 
@@ -1526,7 +1526,7 @@ function check_tmp()
 				fi
 			fi
 
-			STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
+			add_status_variable "${FUNCNAME[0]}" "true"
 
 			# If the new Allsky's ${ALLSKY_TMP} is already mounted, don't do anything.
 			# This would be the case during an upgrade.
@@ -1550,7 +1550,7 @@ function check_tmp()
 	if [[ -n ${CURRENT_STRING} ]]; then
 		if [[ ${PROMPT} != "true" ]]; then
 			if [[ ${CALLED_FROM} == "install" ]]; then
-				STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
+				add_status_variable "${FUNCNAME[0]}" "true"
 			fi
 			return 0	# Not prompting, so leave as is.
 		fi
@@ -1603,7 +1603,7 @@ function check_tmp()
 	if [[ ${QUIT} == "true" ]]; then
 		m "${MSG}" "" "--logonly" "info" "${CALLED_FROM}"
 		if [[ ${CALLED_FROM} == "install" ]]; then
-			STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
+			add_status_variable "${FUNCNAME[0]}" "true"
 		fi
 		return 0
 	fi
@@ -1675,7 +1675,7 @@ function check_tmp()
 	fi
 
 	if [[ ${CALLED_FROM} == "install" ]]; then
-		STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
+		add_status_variable "${FUNCNAME[0]}" "true"
 	fi
 
 	return 0
@@ -2214,7 +2214,7 @@ function create_variables_json()
 	} > "${ALLSKY_VARIABLES_JSON_FILE}"
 
 	if [[ ${CALLED_FROM} == "install" ]]; then
-		STATUS_VARIABLES+=("${FUNCNAME[0]}='true'\n")
+		add_status_variable "${FUNCNAME[0]}" "true"
 	fi
 }
 

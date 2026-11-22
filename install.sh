@@ -2643,7 +2643,7 @@ move_website_data()
 restore_prior_website_files()
 {
 	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
-	local ITEM  D  count  MSG
+	local ITEM  D  MSG
 
 	# Do this even if we're not restoring Website files.
 	if [[ ! -f ${ALLSKY_ENV} ]]; then

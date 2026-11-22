@@ -179,8 +179,8 @@ last_installation_unknown_status()
 	MSG+="\n\nDo you want to continue where you left off?"
 	if whiptail --title "${TITLE}" --yesno "${MSG}" 15 "${WT_WIDTH}"  3>&1 1>&2 2>&3; then
 		MSG="Continuing installation.  Steps already performed will be skipped."
-		MSG+="\n  The last status was: ${STATUS_INSTALLATION}${MORE_STATUS}"
-		display_msg --log progress "${MSG}"
+		MSG+="\n  The last status was:"
+		display_msg --log progress "${MSG}" "${STATUS_INSTALLATION}${MORE_STATUS}"
 
 		#shellcheck disable=SC1090		# file doesn't exist in GitHub
 		source "${STATUS_FILE}" || exit 1
@@ -661,8 +661,6 @@ do_save_camera_capabilities()
 	# the appropriate one can be used by makeChanges.sh.
 	[[ -n ${PRIOR_SETTINGS_FILE} ]] && restore_prior_settings_file
 
-	display_msg --logonly info "Making new settings file '${ALLSKY_SETTINGS_FILE}'."
-
 	local PRIOR_INFO=""  INFO
 	if [[ -n ${PRIOR_CAMERA_TYPE} ]]; then
 		PRIOR_INFO="$( set_camera_info --type "${PRIOR_CAMERA_TYPE}" \
@@ -670,6 +668,8 @@ do_save_camera_capabilities()
 	fi
 	INFO="$( set_camera_info --type "${CAMERA_TYPE}" --number "${CAMERA_NUMBER}" \
 		--model "${CAMERA_MODEL}" )"
+
+	display_msg --logonly info "Making new settings file for camera ${INFO}."
 
 	CMD="makeChanges.sh${FORCE}${OPTIONSONLY}"
 	CMD+=" --cameraTypeOnly --from install --addNewSettings ${DEBUG_ARG}"
@@ -687,6 +687,10 @@ do_save_camera_capabilities()
 		if [[ ${RET} -eq ${ALLSKY_EXIT_NO_CAMERA} ]]; then
 			MSG="No camera was found or the camera software was unable to open the camera;"
 			MSG+=" if your camera is not connected the installation will fail.\n"
+			if [[ ${INFO} != "${PRIOR_INFO}" ]]; then
+				MSG+="\nThe current camera ($( get_camera_info --model "${INFO}" ))"
+				MSG+=" is different than the prior one ($( get_camera_info --model "${PRIOR_INFO}" )).\n\n"
+			fi
 			MSG+="After connecting your camera, re-run the installation."
 			if [[ -n ${M} ]]; then
 				display_msg --log info "makeChanges.sh output: ${M}"
@@ -699,6 +703,7 @@ do_save_camera_capabilities()
 			display_msg --log error "Unable to open camera - installation aborted."
 			[[ -s ${TMP} ]] && display_msg --log error "$( < "${TMP}" )"
 			exit_with_image 1 "${STATUS_ERROR}" "Unable to open camera"
+
 		elif [[ ${OPTIONSFILEONLY} == "false" ]]; then
 			display_msg --log error "Unable to save camera capabilities."
 			[[ -s ${TMP} ]] && display_msg --log info "TMP=$( < "${TMP}" )"
@@ -1647,13 +1652,13 @@ install_dependencies_etc()
 	if [[ ${SKIP} != "true" ]]; then
 		TMP="${ALLSKY_LOGS}/allsky_dependencies.log"
 		run_aptGet ffmpeg lftp imagemagick sqlite3 bc swig > "${TMP}" 2>&1
-		check_success $? "Allsky dependency installation failed" "${TMP}" "${DEBUG}" ||
-			exit_with_image 1 "${STATUS_ERROR}" "dependency installation failed"
+		check_success $? "Allsky dependency installation 1 failed" "${TMP}" "${DEBUG}" ||
+			exit_with_image 1 "${STATUS_ERROR}" "dependency installation 1 failed"
 
 		TMP="${ALLSKY_LOGS}/allsky_deps.log"
 		run_aptGet libopencv-dev libusb-dev libusb-1.0-0-dev liblgpio-dev > "${TMP}" 2>&1
-		check_success $? "Allsky deps installation failed" "${TMP}" "${DEBUG}" ||
-			exit_with_image 1 "${STATUS_ERROR}" "dependency installation failed"
+		check_success $? "Allsky deps installation 2 failed" "${TMP}" "${DEBUG}" ||
+			exit_with_image 1 "${STATUS_ERROR}" "dependency installation 2 failed"
 	fi
 
 	update_allsky_common ""
@@ -2474,9 +2479,14 @@ restore_prior_files()
 
 	ITEM="${SPACE}support files"
 	PRIOR_SUPPORT_DIR="${ALLSKY_SUPPORT_DIR/${ALLSKY_HOME}/${ALLSKY_PRIOR_DIR}}"
-	FILES="$( find "${PRIOR_SUPPORT_DIR}" -type f -name '*.zip' 2>/dev/null )"
+	if [[ -d ${PRIOR_SUPPORT_DIR} ]]; then
+		FILES="$( find "${PRIOR_SUPPORT_DIR}" -type f -name '*.zip' 2>/dev/null )"
+	else
+		FILES=""
+	fi
 	if [[ -n ${FILES} ]]; then
 		display_msg --log progress "${ITEM} (moving)"
+		[[ ! -d ${ALLSKY_SUPPORT_DIR} ]] && mkdir -p "${ALLSKY_SUPPORT_DIR}"
 		# shellcheck disable=SC2086
 		mv ${FILES} "${ALLSKY_SUPPORT_DIR}"
 	else
@@ -2606,11 +2616,34 @@ restore_prior_files()
 
 
 ####
+# Move all data in a Website data directory except .php files.
+move_website_data()
+{
+	local ITEM="${1}"
+	local FROM="${2}"
+	local TO="${3}"
+	local DIRECTION="${4}"
+	[[ -d ${FROM} ]] || return 1
+
+	local FILES="/tmp/mv_files.txt"
+	# -print0 to handle file names with spaces.
+	find "${FROM}" -mindepth 1 -maxdepth 1 -print0 ! -name '*.php' > "${FILES}"
+	if [[ -s ${FILES} ]]; then
+		display_msg --log progress "${ITEM} (${DIRECTION})"
+		local MV="$( xargs --null mv --target-directory "${TO}" < "${FILES}" 2>&1 )"
+		[[ -n ${MV} ]] && display_msg --log error "${ITEM}: ${MV}"
+	else
+		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
+	fi
+}
+
+
+####
 # If a prior local Website exists move its data to the new location.
 restore_prior_website_files()
 {
 	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
-	local ITEM  D  count  MSG
+	local ITEM  D  MSG
 
 	# Do this even if we're not restoring Website files.
 	if [[ ! -f ${ALLSKY_ENV} ]]; then
@@ -2636,71 +2669,76 @@ restore_prior_website_files()
 
 	ROOT_DIR="videos"
 	ITEM="${SPACE}${SPACE}timelapse videos"
-	D="${PRIOR_WEBSITE_DIR}/${ROOT_DIR}/thumbnails"
-	[[ -d ${D} ]] && mv "${D}"   "${ALLSKY_WEBSITE}/${ROOT_DIR}"
-	count=$( get_count "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}" 'allsky-*' )
-	if [[ ${count} -ge 1 ]]; then
-		display_msg --log progress "${ITEM} (moving)"
-		mv "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"/allsky-*   "${ALLSKY_WEBSITE}/${ROOT_DIR}"
-	else
-		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
-	fi
+	move_website_data "${ITEM}" "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}" "${ALLSKY_WEBSITE}/${ROOT_DIR}" "moving"
+#	D="${PRIOR_WEBSITE_DIR}/${ROOT_DIR}/thumbnails"
+#	[[ -d ${D} ]] && mv "${D}"   "${ALLSKY_WEBSITE}/${ROOT_DIR}"
+#	count=$( get_count "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}" 'allsky-*' )
+#	if [[ ${count} -ge 1 ]]; then
+#		display_msg --log progress "${ITEM} (moving)"
+#		mv "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"/allsky-*   "${ALLSKY_WEBSITE}/${ROOT_DIR}"
+#	else
+#		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
+#	fi
 
 	ROOT_DIR="keolapses"
 	ITEM="${SPACE}${SPACE}keolapse videos"
-	D="${PRIOR_WEBSITE_DIR}/${ROOT_DIR}/thumbnails"
-	[[ -d ${D} ]] && mv "${D}"   "${ALLSKY_WEBSITE}/${ROOT_DIR}"
-	local D2="${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"
-	if [[ -d ${D2} ]]; then
-		# keolapses are new in v2026.10.01_01 so may not exist in the prior version.
-		count=$( get_count "${D2}" 'keolapse-*' )
-		if [[ ${count} -ge 1 ]]; then
-			display_msg --log progress "${ITEM} (moving)"
-			mv "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"/keolapse-*   "${ALLSKY_WEBSITE}/${ROOT_DIR}"
-		else
-			display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
-		fi
-	else
-		display_msg --logonly info "${ITEM}: Directory '${D2}' does not exist."
-	fi
+	move_website_data "${ITEM}" "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}" "${ALLSKY_WEBSITE}/${ROOT_DIR}" "moving"
+#	D="${PRIOR_WEBSITE_DIR}/${ROOT_DIR}/thumbnails"
+#	[[ -d ${D} ]] && mv "${D}"   "${ALLSKY_WEBSITE}/${ROOT_DIR}"
+#	local D2="${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"
+#	if [[ -d ${D2} ]]; then
+#		# keolapses are new in v2026.10.01_01 so may not exist in the prior version.
+#		count=$( get_count "${D2}" 'keolapse-*' )
+#		if [[ ${count} -ge 1 ]]; then
+#			display_msg --log progress "${ITEM} (moving)"
+#			mv "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"/keolapse-*   "${ALLSKY_WEBSITE}/${ROOT_DIR}"
+#		else
+#			display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
+#		fi
+#	else
+#		display_msg --logonly info "${ITEM}: Directory '${D2}' does not exist."
+#	fi
 
 	ROOT_DIR="keograms"
 	ITEM="${SPACE}${SPACE}keograms"
-	D="${PRIOR_WEBSITE_DIR}/${ROOT_DIR}/thumbnails"
-	[[ -d ${D} ]] && mv "${D}"   "${ALLSKY_WEBSITE}/${ROOT_DIR}"
-	count=$( get_count "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}" 'keogram-*' )
-	if [[ ${count} -ge 1 ]]; then
-		display_msg --log progress "${ITEM} (moving)"
-		mv "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"/keogram-*   "${ALLSKY_WEBSITE}/${ROOT_DIR}"
-	else
-		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
-	fi
+	move_website_data "${ITEM}" "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}" "${ALLSKY_WEBSITE}/${ROOT_DIR}" "moving"
+#	D="${PRIOR_WEBSITE_DIR}/${ROOT_DIR}/thumbnails"
+#	[[ -d ${D} ]] && mv "${D}"   "${ALLSKY_WEBSITE}/${ROOT_DIR}"
+#	count=$( get_count "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}" 'keogram-*' )
+#	if [[ ${count} -ge 1 ]]; then
+#		display_msg --log progress "${ITEM} (moving)"
+#		mv "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"/keogram-*   "${ALLSKY_WEBSITE}/${ROOT_DIR}"
+#	else
+#		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
+#	fi
 
 	ROOT_DIR="startrails"
 	ITEM="${SPACE}${SPACE}startrails"
-	D="${PRIOR_WEBSITE_DIR}/${ROOT_DIR}/thumbnails"
-	[[ -d ${D} ]] && mv "${D}"   "${ALLSKY_WEBSITE}/${ROOT_DIR}"
-	count=$( get_count "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}" 'startrails-*' )
-	if [[ ${count} -ge 1 ]]; then
-		display_msg --log progress "${ITEM} (moving)"
-		mv "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"/startrails-*   "${ALLSKY_WEBSITE}/${ROOT_DIR}"
-	else
-		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
-	fi
+	move_website_data "${ITEM}" "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}" "${ALLSKY_WEBSITE}/${ROOT_DIR}" "moving"
+#	D="${PRIOR_WEBSITE_DIR}/${ROOT_DIR}/thumbnails"
+#	[[ -d ${D} ]] && mv "${D}"   "${ALLSKY_WEBSITE}/${ROOT_DIR}"
+#	count=$( get_count "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}" 'startrails-*' )
+#	if [[ ${count} -ge 1 ]]; then
+#		display_msg --log progress "${ITEM} (moving)"
+#		mv "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"/startrails-*   "${ALLSKY_WEBSITE}/${ROOT_DIR}"
+#	else
+#		display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
+#	fi
 
 	ROOT_DIR="meteors"
-	if [[ -d "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}" ]]; then
-		ITEM="${SPACE}${SPACE}meteors"
-		D="${PRIOR_WEBSITE_DIR}/${ROOT_DIR}/thumbnails"
-		[[ -d ${D} ]] && mv "${D}"   "${ALLSKY_WEBSITE}/${ROOT_DIR}"
-		count=$( get_count "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}" 'meteors-*' )
-		if [[ ${count} -ge 1 ]]; then
-			display_msg --log progress "${ITEM} (moving)"
-			mv "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"/meteors-*   "${ALLSKY_WEBSITE}/${ROOT_DIR}"
-		else
-			display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
-		fi
-	fi
+	ITEM="${SPACE}${SPACE}meteors"
+	move_website_data "${ITEM}" "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}" "${ALLSKY_WEBSITE}/${ROOT_DIR}" "moving"
+#	if [[ -d "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}" ]]; then
+#		D="${PRIOR_WEBSITE_DIR}/${ROOT_DIR}/thumbnails"
+#		[[ -d ${D} ]] && mv "${D}"   "${ALLSKY_WEBSITE}/${ROOT_DIR}"
+#		count=$( get_count "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}" 'meteors-*' )
+#		if [[ ${count} -ge 1 ]]; then
+#			display_msg --log progress "${ITEM} (moving)"
+#			mv "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"/meteors-*   "${ALLSKY_WEBSITE}/${ROOT_DIR}"
+#		else
+#			display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
+#		fi
+#	fi
 
 	ITEM="${SPACE}${SPACE}Website '${ALLSKY_MYFILES_NAME}' directory"
 	D="${PRIOR_WEBSITE_DIR}/${ALLSKY_MYFILES_NAME}"
@@ -2833,9 +2871,14 @@ do_restore()
 		# Few people have this directory, so don't show to user.
 		display_msg --logonly info "${ITEM}: ${NOT_RESTORED}"
 	fi
+
 	ITEM="${SPACE}support files"
 	PRIOR_SUPPORT_DIR="${ALLSKY_SUPPORT_DIR/${ALLSKY_HOME}/${ALLSKY_PRIOR_DIR}}"
-	FILES="$( find "${ALLSKY_SUPPORT_DIR}" -type f -name '*.zip' 2>/dev/null )"
+	if [[ -d ${ALLSKY_SUPPORT_DIR} ]]; then
+		FILES="$( find "${ALLSKY_SUPPORT_DIR}" -type f -name '*.zip' 2>/dev/null )"
+	else
+		FILES=""
+	fi
 	if [[ -n ${FILES} ]]; then
 		display_msg --log progress "${ITEM} (moving back)"
 		# shellcheck disable=SC2086
@@ -2850,65 +2893,70 @@ do_restore()
 
 		ROOT_DIR="videos"
 		ITEM="${SPACE}${SPACE}timelapse videos"
-		D="${ALLSKY_WEBSITE}/${ROOT_DIR}/thumbnails"
-		[[ -d ${D} ]] && mv "${D}"   "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"
-		count=$( get_count "${ALLSKY_WEBSITE}/${ROOT_DIR}" 'allsky-*' )
-		if [[ ${count} -ge 1 ]]; then
-			display_msg --log progress "${ITEM} (moving back)"
-			mv "${ALLSKY_WEBSITE}/${ROOT_DIR}"/allsky-*   "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"
-		else
-			display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
-		fi
+		move_website_data "${ITEM}" "${ALLSKY_WEBSITE}/${ROOT_DIR}" "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}" "moving back"
+#		D="${ALLSKY_WEBSITE}/${ROOT_DIR}/thumbnails"
+#		[[ -d ${D} ]] && mv "${D}"   "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"
+#		count=$( get_count "${ALLSKY_WEBSITE}/${ROOT_DIR}" 'allsky-*' )
+#		if [[ ${count} -ge 1 ]]; then
+#			display_msg --log progress "${ITEM} (moving back)"
+#			mv "${ALLSKY_WEBSITE}/${ROOT_DIR}"/allsky-*   "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"
+#		else
+#			display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
+#		fi
 
 		ROOT_DIR="keolapses"
 		ITEM="${SPACE}${SPACE}keolapse videos"
-		D="${ALLSKY_WEBSITE}/${ROOT_DIR}/thumbnails"
-		[[ -d ${D} ]] && mv "${D}"   "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"
-		count=$( get_count "${ALLSKY_WEBSITE}/${ROOT_DIR}" 'keolapse-*' )
-		if [[ ${count} -ge 1 ]]; then
-			display_msg --log progress "${ITEM} (moving back)"
-			mv "${ALLSKY_WEBSITE}/${ROOT_DIR}"/keolapse-*   "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"
-		else
-			display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
-		fi
+		move_website_data "${ITEM}" "${ALLSKY_WEBSITE}/${ROOT_DIR}" "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}" "moving back"
+#		D="${ALLSKY_WEBSITE}/${ROOT_DIR}/thumbnails"
+#		[[ -d ${D} ]] && mv "${D}"   "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"
+#		count=$( get_count "${ALLSKY_WEBSITE}/${ROOT_DIR}" 'keolapse-*' )
+#		if [[ ${count} -ge 1 ]]; then
+#			display_msg --log progress "${ITEM} (moving back)"
+#			mv "${ALLSKY_WEBSITE}/${ROOT_DIR}"/keolapse-*   "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"
+#		else
+#			display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
+#		fi
 
 		ROOT_DIR="keograms"
 		ITEM="${SPACE}${SPACE}keograms"
-		D="${ALLSKY_WEBSITE}/${ROOT_DIR}/thumbnails"
-		[[ -d ${D} ]] && mv "${D}"   "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"
-		count=$( get_count "${ALLSKY_WEBSITE}/${ROOT_DIR}" 'keogram-*' )
-		if [[ ${count} -ge 1 ]]; then
-			display_msg --log progress "${ITEM} (moving back)"
-			mv "${ALLSKY_WEBSITE}/${ROOT_DIR}"/keogram-*   "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"
-		else
-			display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
-		fi
+		move_website_data "${ITEM}" "${ALLSKY_WEBSITE}/${ROOT_DIR}" "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}" "moving back"
+#		D="${ALLSKY_WEBSITE}/${ROOT_DIR}/thumbnails"
+#		[[ -d ${D} ]] && mv "${D}"   "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"
+#		count=$( get_count "${ALLSKY_WEBSITE}/${ROOT_DIR}" 'keogram-*' )
+#		if [[ ${count} -ge 1 ]]; then
+#			display_msg --log progress "${ITEM} (moving back)"
+#			mv "${ALLSKY_WEBSITE}/${ROOT_DIR}"/keogram-*   "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"
+#		else
+#			display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
+#		fi
 
 		ROOT_DIR="startrails"
 		ITEM="${SPACE}${SPACE}startrails"
-		D="${ALLSKY_WEBSITE}/${ROOT_DIR}/thumbnails"
-		[[ -d ${D} ]] && mv "${D}"   "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"
-		count=$( get_count "${ALLSKY_WEBSITE}/${ROOT_DIR}" 'startrails-*' )
-		if [[ ${count} -ge 1 ]]; then
-			display_msg --log progress "${ITEM} (moving back)"
-			mv "${ALLSKY_WEBSITE}/${ROOT_DIR}"/startrails-*   "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"
-		else
-			display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
-		fi
+		move_website_data "${ITEM}" "${ALLSKY_WEBSITE}/${ROOT_DIR}" "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}" "moving back"
+#		D="${ALLSKY_WEBSITE}/${ROOT_DIR}/thumbnails"
+#		[[ -d ${D} ]] && mv "${D}"   "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"
+#		count=$( get_count "${ALLSKY_WEBSITE}/${ROOT_DIR}" 'startrails-*' )
+#		if [[ ${count} -ge 1 ]]; then
+#			display_msg --log progress "${ITEM} (moving back)"
+#			mv "${ALLSKY_WEBSITE}/${ROOT_DIR}"/startrails-*   "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"
+#		else
+#			display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
+#		fi
 
 		ROOT_DIR="meteors"
-		if [[ -d "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}" ]]; then
-			ITEM="${SPACE}${SPACE}meteors"
-			D="${ALLSKY_WEBSITE}/${ROOT_DIR}/thumbnails"
-			[[ -d ${D} ]] && mv "${D}"   "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"
-			count=$( get_count "${ALLSKY_WEBSITE}/${ROOT_DIR}" 'meteors-*' )
-			if [[ ${count} -ge 1 ]]; then
-				display_msg --log progress "${ITEM} (moving back)"
-				mv "${ALLSKY_WEBSITE}/${ROOT_DIR}"/meteors-*   "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"
-			else
-				display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
-			fi
-		fi
+		ITEM="${SPACE}${SPACE}meteors"
+		move_website_data "${ITEM}" "${ALLSKY_WEBSITE}/${ROOT_DIR}" "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}" "moving back"
+#		if [[ -d "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}" ]]; then
+#			D="${ALLSKY_WEBSITE}/${ROOT_DIR}/thumbnails"
+#			[[ -d ${D} ]] && mv "${D}"   "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"
+#			count=$( get_count "${ALLSKY_WEBSITE}/${ROOT_DIR}" 'meteors-*' )
+#			if [[ ${count} -ge 1 ]]; then
+#				display_msg --log progress "${ITEM} (moving back)"
+#				mv "${ALLSKY_WEBSITE}/${ROOT_DIR}"/meteors-*   "${PRIOR_WEBSITE_DIR}/${ROOT_DIR}"
+#			else
+#				display_msg --log progress "${ITEM}: ${NOT_RESTORED}"
+#			fi
+#		fi
 
 		ITEM="${SPACE}${SPACE}${ALLSKY_MYFILES_NAME}"
 		if [[ -d ${ALLSKY_WEBSITE_MYFILES_DIR} ]]; then
@@ -3633,7 +3681,7 @@ exit_installation()
 			else
 				MORE=""
 			fi
-			add_status_variable "STATUS_${IorR}" "$( printf '%q' "${STATUS_CODE}" )${MORE}"
+			STATUS_VARIABLES+=( "STATUS_${IorR}=$( printf '%q' "${STATUS_CODE}" )${MORE}" )
 			printf '%s\n' "${STATUS_VARIABLES[@]}" > "${STATUS_FILE}"
 
 			# If the user needs to reboot, save the current boot ID

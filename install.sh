@@ -84,7 +84,6 @@ PRIOR_CAMERA_NUMBER=""
 
 # Holds status of installation if we need to exit and get back in.
 STATUS_FILE="${ALLSKY_LOGS}/install_status.txt"
-declare -r STATUS_FILE_TEMP="${ALLSKY_TMP}/temp_status.txt"	# holds intermediate status
 declare -r STATUS_LOCALE_REBOOT="Rebooting to change locale"
 declare -r STATUS_FINISH_REBOOT="Rebooting to finish installation"
 declare -r STATUS_NO_FINISH_REBOOT="Did not reboot to finish installation"
@@ -147,6 +146,7 @@ last_installation_needed_reboot()
 	MSG+=" before Allsky is ready to run:"
 	MSG2="\n"
 	MSG2+="\n    1. Verify your settings in the WebUI's 'Allsky Settings' page."
+# TODO ?: if a reboot's been done since install.sh was last run, don't show # 2.
 	MSG2+="\n    2. Reboot the Pi."
 	MSG3="\n\nHave you already performed those steps?"
 	if whiptail --title "${TITLE}" --yesno "${MSG}${MSG2}${MSG3}" 15 "${WT_WIDTH}" \
@@ -157,10 +157,8 @@ last_installation_needed_reboot()
 		display_msg --log progress "${MSG}"
 		start_Allsky
 
-		# Update status
-		sed -i \
-			-e "s/^STATUS_INSTALLATION=.*/STATUS_INSTALLATION=${STATUS_OK}/" \
-				"${STATUS_FILE}"
+		# Update status.  This also replaces the "MORE_STATUS=" entry.
+		sed -i -e "s/^STATUS_INSTALLATION=.*/STATUS_INSTALLATION=${STATUS_OK}/" "${STATUS_FILE}"
 	else
 		display_msg --log info "\nPlease perform the following steps:${MSG2}\n"
 	fi
@@ -186,11 +184,11 @@ last_installation_unknown_status()
 
 		#shellcheck disable=SC1090		# file doesn't exist in GitHub
 		source "${STATUS_FILE}" || exit 1
-		# Put all but the status variable in the list so we save them next time.
+		# Put all but STATUS_INSTALLATION and MORE_STATUS in the list so we save them next time.
 		STATUS_VARIABLES=( "$( grep -v STATUS_INSTALLATION "${STATUS_FILE}" )" )
 		STATUS_VARIABLES+=("#### Prior variables above, new below.")
 
-		# If returning from a reboot for local,
+		# If returning from a reboot for a locale change,
 		# prompt for locale again to make sure it's there and still what they want.
 		if [[ ${STATUS_INSTALLATION} == "${STATUS_LOCALE_REBOOT}" ]]; then
 			unset get_desired_locale	# forces a re-prompt
@@ -262,9 +260,9 @@ handle_prior_installation()
 		return
 	fi
 
-	# Initially just get the STATUS and MORE_STATUS.
+	# Initially just get STATUS_INSTALLATION and MORE_STATUS (which are on the same line).
 	# After that we may clear the file or get all the variables.
-	eval "$( grep "^STATUS_INSTALLATION" "${STATUS_FILE}" )"
+	eval "$( grep "^STATUS_INSTALLATION=" "${STATUS_FILE}" )"
 	[[ $? -ne 0 ]] && exit_installation 1 ""	# "" means do NOT update the status file
 
 	if [[ ${STATUS_INSTALLATION} == "${STATUS_OK}" ]]; then
@@ -577,13 +575,11 @@ select_camera_type()
 		if [[ -n ${CAMERA_TYPE} ]]; then
 			MSG="Using Camera Type '${CAMERA_TYPE}' from prior Allsky; not prompting user."
 			display_msg --logonly info "${MSG}"
+
 			add_status_variable "CAMERA_TYPE" "${CAMERA_TYPE}"
-			if [[ -n ${CAMERA_MODEL} ]]; then
-				add_status_variable "CAMERA_MODEL" "${CAMERA_MODEL}"
-			fi
-			if [[ -n ${CAMERA_NUMBER} ]]; then
-				add_status_variable "CAMERA_NUMBER" "${CAMERA_NUMBER}"
-			fi
+			[[ -n ${CAMERA_MODEL} ]] &&  add_status_variable "CAMERA_MODEL"  "${CAMERA_MODEL}"
+			[[ -n ${CAMERA_NUMBER} ]] && add_status_variable "CAMERA_NUMBER" "${CAMERA_NUMBER}"
+
 			add_status_variable "${FUNCNAME[0]}" "true"
 			return
 		else
@@ -605,11 +601,9 @@ select_camera_type()
 		display_msg --log warning "${MSG}"
 		exit_installation 2 "${STATUS_NO_CAMERA}" "User did not select a camera."
 	fi
-	# CAMERA_INFO is:    number;type;model
-	CAMERA_NUMBER="${CAMERA_INFO%%;*}"				# before first ";"
-	CAMERA_MODEL="${CAMERA_INFO##*;}"				# after last ";"
-	CAMERA_INFO="${CAMERA_INFO/${CAMERA_NUMBER};/}"	# Now:  type;model
-	CAMERA_TYPE="${CAMERA_INFO%;*}"					# before ";"
+	CAMERA_TYPE="$( get_camera_info --type "${CAMERA_INFO}" )"
+	CAMERA_MODEL="$( get_camera_info --model "${CAMERA_INFO}" )"
+	CAMERA_NUMBER="$( get_camera_info --number "${CAMERA_INFO}" )"
 
 	display_msg --log progress "Using user-selected ${CAMERA_TYPE} ${CAMERA_MODEL} camera."
 	add_status_variable "CAMERA_TYPE" "${CAMERA_TYPE}"
@@ -1214,7 +1208,6 @@ get_desired_locale()
 	# This can happen if they use the settings file from a different Pi or different OS,
 	# or if this is the first install on a new operating system.
 	MSG2=""
-#XXX	if [[ -z ${DESIRED_LOCALE} && ${USE_PRIOR_ALLSKY} == "true" && -n ${PRIOR_SETTINGS_FILE} ]]; then
 	if [[ ${USE_PRIOR_ALLSKY} == "true" && -n ${PRIOR_SETTINGS_FILE} ]]; then
 		# People rarely change locale once set, so assume they still want the prior one.
 		DESIRED_LOCALE="$( settings ".locale" "${PRIOR_SETTINGS_FILE}" )"
@@ -1372,18 +1365,6 @@ set_what_can_be_skipped()
 		install_webserver_et_al="true"
 	fi
 
-if false; then
-# FIX: install_PHP_modules() checks if it's already been run, so we don't need to here.
-	if [[ ${install_PHP_modules} == "true" ]]; then
-		if [[ ${SKIPPING} == "true" ]]; then
-			MSG+=", "
-		else
-			SKIPPING="true"
-		fi
-		MSG+="PHP modules"
-	fi
-fi
-
 	[[ ${SKIPPING} == "true" ]] && display_msg --logonly info "${MSG}"
 }
 
@@ -1400,8 +1381,7 @@ is_reboot_needed()
 
 	if [[ ${NEW_BASE_VERSION} == "${OLD_BASE_VERSION}" ||
 		  ${OLD_BASE_VERSION} == "${NO_REBOOT_BASE_VERSION}" ]]; then
-		# Assume just bug fixes between point releases.
-# TODO: this is not always true.
+# TODO FIX: How do we know if a reboot is needed?  Perhaps put something in the "version" file ?
 		REBOOT_NEEDED="false"
 		display_msg --logonly info "No reboot is needed."
 	else
@@ -2599,7 +2579,6 @@ restore_prior_files()
 		fi
 		add_status_variable "COPIED_PRIOR_FTP_SH" "${COPIED_PRIOR_FTP_SH}"
 
-
 		if [[ ${COPIED_PRIOR_CONFIG_SH} == "true" && ${COPIED_PRIOR_FTP_SH} == "true" ]]; then
 			return 0
 		fi
@@ -3081,7 +3060,6 @@ install_dependencies()
 	TMP="${ALLSKY_LOGS}/${NAME}"
 	display_msg --log progress "Installing ${NAME}:"
 	COUNT=0
-	rm -f "${STATUS_FILE_TEMP}"
 	local CAN_SKIP="CAN_SKIP "		# CAN_SKIP isn't used, but leave the code in case
 	local LEN="${#CAN_SKIP}"
 	while read -r package
@@ -3124,17 +3102,11 @@ install_dependencies()
 		# These files are too big to display so pass in "0" instead of ${DEBUG}.
 		if ! check_success $? "${M}" "${L}" 0 ; then
 			rm -fr "${PIP3_BUILD}"
-
-			# Add current status
-			update_status_from_temp_file
-
 			exit_with_image 1 "${STATUS_ERROR}" "${M}."
 		fi
-		echo "${STATUS_NAME}='true'"  >> "${STATUS_FILE_TEMP}"
-	done < "${REQUIREMENTS_FILE}"
 
-	# Add the status back in.
-	update_status_from_temp_file
+		add_status_variable "${STATUS_NAME}" "true"
+	done < "${REQUIREMENTS_FILE}"
 }
 
 ####
@@ -3327,7 +3299,8 @@ check_if_supported_OS()
 	declare -n v="${FUNCNAME[0]}"; [[ ${v} == "true" ]] && return
 
 # TODO: Update list for every new/old OS supported.
-	local SUPPORTED_OSES="bullseye bookworm trixie"
+	local NEWEST_OS="trixie"
+	local SUPPORTED_OSES="bullseye bookworm ${NEWEST_OS}"
 	[[ ${SUPPORTED_OSES} =~ ${ALLSKY_PI_OS} ]] && return
 
 	local OS="${ALLSKY_PI_OS^}"		# uppercase 1st letter for looks
@@ -3336,12 +3309,12 @@ check_if_supported_OS()
 	for i in ${SUPPORTED_OSES}; do
 		MSG+="\n  ${i^}"
 	done
-	MSG+="\n\nIf you are running an operating system that is NEWER than Trixie,"
+	MSG+="\n\nIf you are running an operating system that is NEWER than ${NEWEST_OS^},"
 	MSG+=" please run 'cat /etc/os-release' and copy/paste the results into"
 	MSG+=" a new GitHub Discussion item."
 	MSG+="  The Allsky team will need to test Allsky with the new operating system."
 	MSG+="\n\nIf you are running an older operating system we recommend doing"
-	MSG+=" a fresh install of the Desktop version of Trixie 64-bit on a clean SD card."
+	MSG+=" a fresh install of the Desktop version of ${NEWEST_OS^} 64-bit on a clean SD card."
 	whiptail --title "${TITLE}" --msgbox --ok-button "Exit" "${MSG}" 20 "${WT_WIDTH}" 3>&1 1>&2 2>&3
 
 	MSG="Unsupported OS: ${ALLSKY_PI_OS}."
@@ -3396,7 +3369,8 @@ display_image()
 		if [[ -f ${ALLSKY_POST_INSTALL_ACTIONS} ]]; then
 			# Add a message the user will see in the WebUI.
 			MSG="Actions needed.  Click for more information."
-			"${ALLSKY_SCRIPTS}/addMessage.sh" --type warning --ID AM_POST --msg "${MSG}" --url "${ALLSKY_POST_INSTALL_ACTIONS_URL}"
+			"${ALLSKY_SCRIPTS}/addMessage.sh" \
+				--type warning --ID AM_POST --msg "${MSG}" --url "${ALLSKY_POST_INSTALL_ACTIONS_URL}"
 
 			# This tells allsky.sh not to display a message about actions since we just did.
 			touch "${ALLSKY_POST_INSTALL_ACTIONS}_initial_message"
@@ -3562,11 +3536,10 @@ show_documentation_message()
 # Manage installation and setup of the Allsky database
 setup_database()
 {
-	#
 	# Create the sqlite database to prevent permission errors
 	# Only create the database and ask the user what they want 
 	# to do for a new install.
-	#
+
 	if [ ! -f "${ALLSKY_DATABASE}" ]; then	
 		sqlite3 "${ALLSKY_DATABASE}" ".databases" > /dev/null 2>&1
 		sudo chown "${ALLSKY_OWNER}":"${ALLSKY_WEBSERVER_OWNER}" "${ALLSKY_DATABASE}"
@@ -3604,13 +3577,8 @@ update_modules()
 		--logfile "${TMP}"
 	)
 
-	if [ -n "${DEBUG_ARG}" ]; then
-		args+=("${DEBUG_ARG}")
-	fi
-
-	if [[ "${BRANCH}" != "${ALLSKY_GITHUB_MAIN_BRANCH}" ]]; then
-		args+=(--setbranch "${BRANCH}")
-	fi
+	[[ -n "${DEBUG_ARG}" ]] && args+=("${DEBUG_ARG}")
+	[[ "${BRANCH}" != "${ALLSKY_GITHUB_MAIN_BRANCH}" ]] && args+=(--setbranch "${BRANCH}")
 
 	"${ALLSKY_MODULE_INSTALLER}" "${args[@]}" > "${OUTPUT}" 2>&1
 
@@ -3647,23 +3615,13 @@ clear_status()
 }
 
 
-# Update the status from the specified file.
-# It's ok if the file doesn't exist.
-update_status_from_temp_file()
-{
-	if [[ -s ${STATUS_FILE_TEMP} ]]; then
-		STATUS_VARIABLES+=( "$( < "${STATUS_FILE_TEMP}" )" )
-		rm -f "${STATUS_FILE_TEMP}"
-	fi
-}
-
 ####
 exit_installation()
 {
 	local RET="${1}"
 	local STATUS_CODE="${2}"
 	local MORE_STATUS="${3}"
-	local MORE  S
+	local MORE
 
 	# If STATUS_CODE is set, add it and all STATUS_VARIABLES to the status file.
 	if [[ -n ${STATUS_CODE} ]]; then
@@ -3675,14 +3633,8 @@ exit_installation()
 			else
 				MORE=""
 			fi
-			if [[ ${RESTORE} == "true" ]]; then
-				S="RESTORATION"
-			else
-				S="INSTALLATION"
-			fi
-			echo "STATUS_${S}=$( printf '%q' "${STATUS_CODE}" )${MORE}" > "${STATUS_FILE}"
-			update_status_from_temp_file
-			printf '%s\n' "${STATUS_VARIABLES[@]}" >> "${STATUS_FILE}"
+			add_status_variable "STATUS_${IorR}" "$( printf '%q' "${STATUS_CODE}" )${MORE}"
+			printf '%s\n' "${STATUS_VARIABLES[@]}" > "${STATUS_FILE}"
 
 			# If the user needs to reboot, save the current boot ID
 			# so we can check it when Allsky starts.  If it's the same value
@@ -4002,15 +3954,14 @@ fi
 
 [[ ${FIX} == "true" ]] && do_fix				# does not return
 
-
 trap "handle_interrupts" SIGTERM SIGINT
-
-# Install packages that may be needed very early in installation.
-[[ -z ${FUNCTION} ]] && install_installer_dependencies
 
 if [[ -z ${FUNCTION} && ${RESTORE} == "false" ]]; then
 
-	check_if_supported_OS
+	check_if_supported_OS		# does not return if unsupported OS
+
+	# Install packages that may be needed very early in installation.
+	install_installer_dependencies
 
 	if [[ -s ${STATUS_FILE} ]]; then
 		# Since there's an installation STATUS_FILE that means this isn't

@@ -426,8 +426,14 @@ fi
 
 # Clear up any flow timings
 activate_python_venv
-python3 "${ALLSKY_SCRIPTS}/flow-runner.py" --cleartimings
+ERR="$( python3 "${ALLSKY_SCRIPTS}/flow-runner.py" --cleartimings 2>&1 )"
+RET=$?
 deactivate_python_venv
+if [[ ${RET} -ne 0 ]]; then
+	MSG="WARNING: flow-runner.py failed on startup: ${ERR}"
+	echo "${MSG}" >&2
+	"${ALLSKY_SCRIPTS}/addMessage.sh" --type warning --msg "${MSG}<br><br>Please contact Allsky support." > /dev/null 2>&1
+fi
 
 function catch_signal() { return 0; }
 trap "catch_signal" SIGTERM SIGINT SIGHUP

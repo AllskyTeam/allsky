@@ -328,7 +328,7 @@ function generate_support_info()
 	} > "${APT_FILE}"
 
 	local LIGHTTPD_ERROR_LOG_FILE="${TEMP_DIR}/lighttpd_error.txt"
-	if [[ -f ${LIGHTTPD_LOG_FILE} ]]; then
+	if [[ -s ${LIGHTTPD_LOG_FILE} ]]; then
 		# Don't include these - they aren't errors.
 		grep -E -v " server started | server stopped | logfiles cycled " \
 			"${LIGHTTPD_LOG_FILE}" > "${LIGHTTPD_ERROR_LOG_FILE}"
@@ -369,31 +369,38 @@ function generate_support_info()
 			-exec cp -ar {} "${TEMP_DIR}/tmp" \;
 	fi
 	# The mini-timelapse can be several MB and we don't need it.
-	rm -f "${TEMP_DIR}/tmp/current_images/mini-timelapse.mp4"
+	local MINI="${ALLSKY_MINITIMELAPSE_FILE/${ALLSKY_HOME}/${TEMP_DIR}}"
+	if [[ -f "${MINI}" ]]; then
+		ls -l "${MINI}" > "${MINI}_file.txt"
+		rm -f "${MINI}"
+	fi
 
 	# Copy ${ALLSKY_CONFIG} directory, then truncate and delete files we don't want.
 	# The directory should exists unless installation failed.
-	[[ -d ${ALLSKY_CONFIG} ]] && cp -ar "${ALLSKY_CONFIG}" "${TEMP_DIR}"
+	if [[ -d ${ALLSKY_CONFIG} ]]; then
+		cp -ar "${ALLSKY_CONFIG}" "${TEMP_DIR}"
 
-	local TEMP_DIR_OVERLAY="${TEMP_DIR}/${ALLSKY_OVERLAY/${ALLSKY_HOME}}"
-	local TEMP_MY_MODULES="${TEMP_DIR}/${ALLSKY_MY_MODULES/${ALLSKY_HOME}}"
-	display_msg --logonly info "TEMP_DIR_OVERLAY=${TEMP_DIR_OVERLAY}, TEMP_MY_MODULES=${TEMP_MY_MODULES}"
+		# Truncate or delete large files not needed for support.
+		local TEMP_DIR_OVERLAY="${TEMP_DIR}${ALLSKY_OVERLAY/${ALLSKY_HOME}}"
+		local TEMP_MY_MODULES="${TEMP_DIR}${ALLSKY_MY_MODULES/${ALLSKY_HOME}}"
+		rm -fr \
+			"${TEMP_DIR_OVERLAY}/tmp" \
+			"${TEMP_DIR_OVERLAY}/config/tmp" \
+			"${TEMP_MY_MODULES}/moduledata/data/allsky_adsb/adsb_data" \
+			"${TEMP_MY_MODULES}/__pycache__"
 
-	# Truncate or delete large files not needed for support.
-	rm -fr \
-		"${TEMP_DIR_OVERLAY}/tmp" \
-		"${TEMP_DIR_OVERLAY}/config/tmp" \
-		"${TEMP_MY_MODULES}/moduledata/data/allsky_adsb/adsb_data" \
-		"${TEMP_MY_MODULES}/__pycache__"
-
-	for i in "${TEMP_DIR_OVERLAY}/system_fonts" \
-			 "${TEMP_DIR_OVERLAY}/fonts" ; do
-		[[ -d ${i} ]] && find "${i}" -type f -exec truncate -s 0 {} + 2> /dev/null
-	done
-	for i in "${TEMP_DIR}/config/myFiles/allsky.db" \
-			 "${TEMP_DIR}/config/myFiles/secrets.db" ; do
-		[[ -f ${i} ]] && truncate -s 0 "${i}"
-	done
+		for i in "${TEMP_DIR_OVERLAY}/system_fonts" \
+				 "${TEMP_DIR_OVERLAY}/fonts" ; do
+			if [[ -d ${i} ]]; then
+				ls -lR "${i}" > "${i}_files.txt" 2>&1
+				rm -fr "${i}"
+			fi
+		done
+		for i in "${TEMP_DIR}/config/myFiles/allsky.db" \
+				 "${TEMP_DIR}/config/myFiles/secrets.db" ; do
+			[[ -f ${i} ]] && truncate -s 0 "${i}"
+		done
+	fi
 
 	cd "${TEMP_DIR}" || exit 1
 
@@ -517,6 +524,8 @@ function generate_support_info()
 			else
 				tail -n "${LOG_LINES_TEMP}" "${L}" > "${LOG_FILE}"
 			fi
+		else
+			display_msg --logonly info "Log '${L}' not found!"
 		fi
   	done
 

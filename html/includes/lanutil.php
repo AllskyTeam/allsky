@@ -24,7 +24,7 @@ class LANUTIL extends UTILBASE
             2 => ['pipe', 'w'],
         ];
 
-        $proc = @proc_open($argv, $descriptors, $pipes, null, []);
+        $proc = $this->openProcess($argv, $descriptors, $pipes);
         if (!is_resource($proc)) {
             return ['ok' => false, 'code' => 1, 'stdout' => '', 'stderr' => 'Unable to start process'];
         }

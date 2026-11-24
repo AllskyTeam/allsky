@@ -50,6 +50,15 @@ class UTILBASE
     protected array  $nonAjaxRequests = [];
 
     /**
+     * The environment of every external command: only PATH, never the web server's own.
+     * Not empty either: sudo 1.9.16p2-3+deb13u5 (Debian 13) crashes with an empty
+     * environment, so every WebUI command through sudo failed without output (#5668).
+     */
+    protected const PROCESS_ENV = [
+        'PATH' => '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
+    ];
+
+    /**
      * Entry point called by the concrete script.
      * 1) Parse/validate method, request, and Accept header
      * 2) Optionally require XHR
@@ -294,6 +303,31 @@ foreach ($p as $key => $value) {
     }
 
     /**
+     * proc_open() with PROCESS_ENV. Every external command of the WebUI starts here, so
+     * the environment is defined in one place.
+     *
+     * @param array<int,string> $command Command and arguments (no shell).
+     * @param array<int,mixed> $descriptors As for proc_open().
+     * @param mixed $pipes Receives the pipes, as for proc_open().
+     * @param string|null $cwd Working directory, or null for the current one.
+     *
+     * @return resource|false
+     */
+    protected function openProcess(array $command, array $descriptors, &$pipes, ?string $cwd = null)
+    {
+        return @proc_open($command, $descriptors, $pipes, $cwd, self::PROCESS_ENV);
+    }
+
+    /**
+     * The message for a command that failed without printing anything, so the cause is
+     * not hidden (a crash shows its signal, e.g. 11 for a segmentation fault).
+     */
+    protected function exitCodeMessage(int $code): string
+    {
+        return "Command failed with exit code $code.";
+    }
+
+    /**
      * Small wrapper around proc_open to execute external utilities safely.
      * - Accepts an argv array (no shell expansion; avoids injection).
      * - Captures stdout/stderr with short timeouts.
@@ -301,7 +335,7 @@ foreach ($p as $key => $value) {
      *   stdout on success, or stdout/stderr on failure.
      *
      * Caveats:
-     *  - Environment is cleared by default; pass through only what you need.
+     *  - The environment is PROCESS_ENV, not the web server's.
      *  - If a child expects stdin, this helper would need extending.
      */
     protected function runProcess(array $argv): array
@@ -311,11 +345,7 @@ foreach ($p as $key => $value) {
             2 => ['pipe', 'w'], // stderr
         ];
 
-        // Provide an empty env by default; call-site can pass a safe allow-list if needed.
-        $env = [];
-        $cwd = null;
-
-        $proc = @proc_open($argv, $descriptors, $pipes, $cwd, $env);
+        $proc = $this->openProcess($argv, $descriptors, $pipes);
         if (!is_resource($proc)) {
             return ['error' => true, 'message' => 'Unable to start process', 'code' => 1];
         }
@@ -334,7 +364,11 @@ foreach ($p as $key => $value) {
 
         if ($code !== 0) {
             // Prefer stdout if a tool prints errors there; otherwise stderr
-            return ['error' => true, 'message' => ($stdout !== '' ? $stdout : $stderr), 'code' => $code];
+            $message = $stdout !== '' ? $stdout : $stderr;
+            if (trim((string)$message) === '') {
+                $message = $this->exitCodeMessage($code);
+            }
+            return ['error' => true, 'message' => $message, 'code' => $code];
         }
         return ['error' => false, 'message' => (string)$stdout, 'code' => $code];
     }

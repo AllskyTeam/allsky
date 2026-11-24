@@ -2880,7 +2880,7 @@ class MODULEINSTALLERUTIL extends UTILBASE
             2 => ['pipe', 'w'],
         ];
 
-        $proc = @proc_open($argv, $descriptors, $pipes, $cwd, []);
+        $proc = $this->openProcess($argv, $descriptors, $pipes, $cwd);
         if (!is_resource($proc)) {
             return ['error' => true, 'message' => 'Unable to start process'];
         }
@@ -2896,6 +2896,9 @@ class MODULEINSTALLERUTIL extends UTILBASE
 
         $exitCode = proc_close($proc);
         $message = trim(((string)$stdout) . ((string)$stderr));
+        if ($exitCode !== 0 && $message === '') {
+            $message = $this->exitCodeMessage($exitCode);
+        }
 
         return [
             'error' => $exitCode !== 0,

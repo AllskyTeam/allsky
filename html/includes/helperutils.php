@@ -689,7 +689,7 @@ class HELPERSUTIL extends UTILBASE
 			2 => ['pipe', 'w'],
 		];
 
-		$proc = @proc_open($argv, $descriptors, $pipes, null, []);
+		$proc = $this->openProcess($argv, $descriptors, $pipes);
 		if (!is_resource($proc)) {
 			return ['error' => true, 'message' => 'Unable to start process.'];
 		}
@@ -709,6 +709,9 @@ class HELPERSUTIL extends UTILBASE
 
 		if ($errorOutput !== '') {
 			$message = $message === '' ? $errorOutput : $message . PHP_EOL . $errorOutput;
+		}
+		if ($code !== 0 && $message === '') {
+			$message = $this->exitCodeMessage($code);
 		}
 
 		return [

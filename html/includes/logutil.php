@@ -222,7 +222,7 @@ class LOGUTIL extends UTILBASE
             'sudo', '-n', '/bin/journalctl', '--quiet', '--no-pager', '--boot',
             '--unit=' . $unit, '--lines=300', '--output=short-iso', '--no-hostname',
         ];
-        $process = @proc_open($command, [
+        $process = $this->openProcess($command, [
             1 => ['pipe', 'w'],
             2 => ['pipe', 'w'],
         ], $pipes);

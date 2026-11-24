@@ -922,7 +922,7 @@ class MODULEUTIL extends UTILBASE {
             1 => ['pipe', 'w'],
             2 => ['pipe', 'w'],
         ];
-        $process = @proc_open(['/bin/sh', '-c', $backgroundCommand], $descriptors, $pipes, null, []);
+        $process = $this->openProcess(['/bin/sh', '-c', $backgroundCommand], $descriptors, $pipes);
         if (!is_resource($process)) {
             $this->sendHTTPResponse('Unable to start tool.', 500);
         }
@@ -934,7 +934,10 @@ class MODULEUTIL extends UTILBASE {
         $exitCode = proc_close($process);
 
         if ($exitCode !== 0 || $pid === '') {
-            $this->sendHTTPResponse($error !== '' ? $error : 'Unable to start tool.', 500);
+            if ($error === '') {
+                $error = $exitCode !== 0 ? $this->exitCodeMessage($exitCode) : 'Unable to start tool.';
+            }
+            $this->sendHTTPResponse($error, 500);
         }
 
         $this->sendResponse([
@@ -1094,7 +1097,7 @@ class MODULEUTIL extends UTILBASE {
             2 => ['pipe', 'w'],
         ];
 
-        $process = @proc_open($argv, $descriptors, $pipes, null, []);
+        $process = $this->openProcess($argv, $descriptors, $pipes);
         if (!is_resource($process)) {
             return;
         }
@@ -1123,7 +1126,7 @@ class MODULEUTIL extends UTILBASE {
             2 => ['pipe', 'w'],
         ];
 
-        $process = @proc_open($argv, $descriptors, $pipes, $cwd, []);
+        $process = $this->openProcess($argv, $descriptors, $pipes, $cwd);
         if (!is_resource($process)) {
             echo "Unable to start tool.\n";
             flush();

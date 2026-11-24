@@ -190,7 +190,7 @@ function DisplayModule()
                 </div>
                 <div class="modal-body">
                     <div class="form-group">
-                        <label for="oe-debug-dialog-overlay" class="col-sm-2 control-label">File</label>
+                        <label for="module-file" class="col-sm-2 control-label">File</label>
                         <div class="col-sm-10">
                             <div class="input-group">
                                 <input type="file" class="form-control" id="module-file" name="module-file" required />
@@ -241,7 +241,7 @@ function DisplayModule()
                         </div>
                     </div>
                     <div class="form-group">
-                        <label for="watchdog-timeout" class="col-sm-4 control-label">Periodic Timer</label>
+                        <label for="periodic-timer" class="col-sm-4 control-label">Periodic Timer</label>
                         <div class="col-sm-1">
                             <button type="button" class="btn btn-link btn-xs as-field-help-toggle" data-toggle="popover" data-container="body" data-trigger="focus click" data-placement="left" title="Periodic Timer" data-content="The delay between running periodic modules in seconds." aria-label="Show help for Periodic Timer"><i class="fa-solid fa-circle-info"></i></button>
                         </div>
@@ -252,7 +252,7 @@ function DisplayModule()
                         </div>
                     </div>
                     <div class="form-group">
-                        <label for="watchdog-timeout" class="col-sm-4 control-label">Data Expiry</label>
+                        <label for="expiry-age" class="col-sm-4 control-label">Data Expiry</label>
                         <div class="col-sm-1">
                             <button type="button" class="btn btn-link btn-xs as-field-help-toggle" data-toggle="popover" data-container="body" data-trigger="focus click" data-placement="left" title="Data Expiry" data-content="Max age extra data will be kept before being deleted." aria-label="Show help for Data Expiry"><i class="fa-solid fa-circle-info"></i></button>
                         </div>

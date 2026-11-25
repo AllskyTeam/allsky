@@ -61,18 +61,13 @@ $default_delimiter = "=";
 
 function quoteIt($string, $type)
 {
-	if ($type === "boolean" || $type === "float" ||
-		$type === "integer" || $type === "percent") {
-
-		return($string);
-	}
-
 	// Quote using single quotes so the shell doesn't expand anything.
 	// There's no way to quote a single quote so change:
 	//		how's
 	//	to
 	//		'how'"'"'s'
-	return("'" . str_replace("'", "'\"'\"'", $string) . "'");
+	// Always single-quote values consumed by shell eval in getAllSettings().
+	return("'" . str_replace("'", "'\"'\"'", (string)$string) . "'");
 }
 
 $debug = false;

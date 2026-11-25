@@ -461,10 +461,10 @@ function initialize_variables($website_only=false) {
 	}
 
 	// Determine if it's day or night so we know which delay to use.
-	$angle = getVariableOrDefault($settings_array, 'angle', -6);
-	$lat = getVariableOrDefault($settings_array, 'latitude', "");
-	$lon = getVariableOrDefault($settings_array, 'longitude', "");
+	$lat = escapeshellarg(getVariableOrDefault($settings_array, 'latitude', ""));
+	$lon = escapeshellarg(getVariableOrDefault($settings_array, 'longitude', ""));
 	if ($lat != "" && $lon != "") {
+		$angle = escapeshellarg(getVariableOrDefault($settings_array, 'angle', -6));
 		exec("sunwait poll exit set angle $angle $lat $lon", $return, $retval);
 		if ($retval == 2) {
 			$delay = $daydelay;
@@ -1610,12 +1610,12 @@ function haveMySQL($secretData) {
 function getTOD() {
 	global $settings_array;
 
-	$angle = getVariableOrDefault($settings_array, 'angle', -6);
-	$lat = getVariableOrDefault($settings_array, 'latitude', "");
-	$lon = getVariableOrDefault($settings_array, 'longitude', "");
+	$lat = escapeshellarg(getVariableOrDefault($settings_array, 'latitude', ""));
+	$lon = escapeshellarg(getVariableOrDefault($settings_array, 'longitude', ""));
 	$tod = 'Unknown';
 
 	if ($lat != "" && $lon != "") {
+		$angle = escapeshellarg(getVariableOrDefault($settings_array, 'angle', -6));
 		exec("sunwait poll exit set angle $angle $lat $lon", $return, $retval);
 		if ($retval == 2) {
 			$tod = 'day';
@@ -1630,9 +1630,9 @@ function getTOD() {
 function getDayNightStatus(): array {
 	global $settings_array;
 
-	$angle = getVariableOrDefault($settings_array, 'angle', -6);
-	$lat = getVariableOrDefault($settings_array, 'latitude', "");
-	$lon = getVariableOrDefault($settings_array, 'longitude', "");
+	$angle = escapeshellarg(getVariableOrDefault($settings_array, 'angle', -6));
+	$lat = escapeshellarg(getVariableOrDefault($settings_array, 'latitude', ""));
+	$lon = escapeshellarg(getVariableOrDefault($settings_array, 'longitude', ""));
 
 	$result = [
 		'state' => 'unknown',

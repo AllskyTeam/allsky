@@ -269,7 +269,10 @@ class MODULEUTIL extends UTILBASE {
         $result['filename'] = ALLSKY_IMG_DIR . '/' . $settings_array['filename'];
         $result['fieldhelpdelay'] = getVariableOrDefault($settings_array, 'fieldhelpdelay', 500);
 
-        exec("sunwait poll exit set angle $angle $lat $lon", $return, $retval);
+        $angleArg = escapeshellarg($angle);
+        $latArg = escapeshellarg($lat);
+        $lonArg = escapeshellarg($lon);
+        exec("sunwait poll exit set angle $angleArg $latArg $lonArg", $return, $retval);
         if ($retval == 2) {
             $result['tod'] = 'day';
         } else if ($retval == 3) {

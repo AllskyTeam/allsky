@@ -383,7 +383,10 @@ function DisplayAllskyConfig() {
 					}
 
 					if ($checkchanges) {		// Changes for makeChanges.sh to check
-						$changes .= "  '$name' '$label' '$oldValue' '$newValue'";
+						$changes .= "  " . escapeshellarg($name)
+								  . " " . escapeshellarg($label)
+								  . " " . escapeshellarg($oldValue)
+								  . " " . escapeshellarg($newValue);
 					}
 				}
 

@@ -277,13 +277,17 @@ foreach ($p as $key => $value) {
 }
  */
                 exit;
+			} else if ($payload === "ok") {
+				// The invoker passed "ok" and really should have passed a json string.
+				echo "['ok' => true]";
+                exit;
 			} else {
 				$calls = array_map(
 					static fn(array $frame): string =>
 						($frame['class'] ?? '') . ($frame['type'] ?? '') . $frame['function'],
 					debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS)
 				);
-				error_log("json_decode(payload) failed with code " . json_last_error()
+				error_log("json_decode($payload) failed: " . json_last_error_msg()
 					. "; calls: " . implode(' -> ', $calls) . "\n");
 			}
         }
@@ -294,7 +298,7 @@ foreach ($p as $key => $value) {
             JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE
         );
         if ($json === false) {
-			error_log("json_encode(payload) failed with code " . json_last_error() . "\n");
+			error_log("json_encode(" . print_r($payload, true) . ") failed: " . json_last_error_msg() . "\n");
             echo json_encode(['error' => true, 'message' => 'Encoding failed'], JSON_UNESCAPED_SLASHES);
             exit;
         }

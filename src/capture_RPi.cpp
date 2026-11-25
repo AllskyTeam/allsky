@@ -414,17 +414,18 @@ bool readMetadataFile(string file)
 		if (strcmp(name, "ExposureTime") == 0)
 		{
 			// integer
-			int ET = atoi(value);
+			int x = atoi(value);
 			// Times are almost never exactly the same, so go for "close enough".
-			float percent_diff = (float) abs(ET - myRaspistillSetting.shutter_us) / (float) ET;
+			float percent_diff = (float) abs(x - myRaspistillSetting.shutter_us) / (float) x;
 			if (percent_diff > 1.0)			// is 1% the right number?
 			{
-Log(5, "  ExposureTime (%d) !=  myRaspistillSetting.shutter_us (%d), percent_diff=%f\n", ET, myRaspistillSetting.shutter_us, percent_diff);
-// CG.lastExposure_us = myRaspistillSetting.shutter_us;		SHOULD be == auto/manual exposure algormithm value
+				Log(4, "  ExposureTime (%d) !=  myRaspistillSetting.shutter_us (%d), percent_diff=%f\n", x, myRaspistillSetting.shutter_us, percent_diff);
+				// CG.lastExposure_us = myRaspistillSetting.shutter_us;		SHOULD be == auto/manual exposure algormithm value
 			} else {
-Log(5, "  ExposureTime = %d ('%s'), myRaspistillSetting.shutter_us = %d, percent_diff=%f\n", ET, value, myRaspistillSetting.shutter_us, percent_diff);
+Log(5, "  ExposureTime = %d ('%s'), myRaspistillSetting.shutter_us = %d, percent_diff=%f\n", x, value, myRaspistillSetting.shutter_us, percent_diff);
 			}
 		}
+
 		else if (strcmp(name, "ColourGains") == 0)
 		{
 
@@ -432,29 +433,40 @@ Log(5, "  ExposureTime = %d ('%s'), myRaspistillSetting.shutter_us = %d, percent
 			int n = sscanf(value, "[ %lf, %lf ]", &CG.lastWBR, &CG.lastWBB);
 			if (n != 2)
 			{
-				Log(1, "*** %s: WARNING, WBR and WBB not on line: '%s=%s'; num matches: %d.\n", CG.ME, name,value, n);
-			}
-else
+				Log(1, "*** %s: WARNING, WBR and WBB not on ColourGains line: '%s=%s'; num matches: %d.\n", CG.ME, name,value, n);
+			} else {
 Log(5, "  ColourGains: Red: %lf, Blue: %lf\n", CG.lastWBR, CG.lastWBB);
+			}
 		}
+
+		else if (strcmp(name, "ColourTemperature") == 0)
+		{
+//x TODO
+//x			CG.lastColourTemperature = atoi(value);
+//x Log(5, "  ColourTemperature = %d ('%s')\n", CG.lastColourTemperature, value);
+		}
+
 		else if (strcmp(name, "SensorTemperature") == 0)
 		{
 			CG.lastSensorTemp = atof(value);
 Log(5, "  SensorTemperature = %f ('%s')\n", CG.lastSensorTemp, value);
-
 		}
+
 		else if (strcmp(name, "AnalogueGain") == 0)
 		{
 			// float
 			float x = atof(value);
-			if (x != myRaspistillSetting.analoggain)
+			// Values are almost never exactly the same, so go for "close enough".
+			float percent_diff = (float) abs(x - myRaspistillSetting.analoggain) / (float) x;
+			if (percent_diff > 1.0)			// is 1% the right number?
 			{
-Log(5, "  AnalogueGain %f !=  myRaspistillSetting.analoggain (%f)\n", x, myRaspistillSetting.analoggain);
+Log(5, "  AnalogueGain %f !=  myRaspistillSetting.analoggain (%f), percent_diff=%f\n", x, myRaspistillSetting.analoggain, percent_diff);
 // CG.lastGain =  myRaspistillSetting.analoggain; 		SHOULD be == auto/manual exposure algormithm value
 			}
 else Log(5, "  AnalogueGain = %f ('%s')\n", x, value);
 		}
 	}
+
 	return(true);
 }
 
@@ -891,12 +903,7 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 				// Don't use mask for dark frames.
 				CG.lastMean = aegCalcMean(pRgb, CG.takeDarkFrames ? false : true);
 
-// TODO: NEW: use current values if manual mode, otherwise use the value from metadata.
-				if (CG.currentAutoAWB)
-				{
-					CG.lastWBR = CG.currentWBR;
-					CG.lastWBB = CG.currentWBB;
-				}
+				// AWB values were read from metadata.
 
 				if (! CG.takeDarkFrames)
 				{

@@ -891,12 +891,7 @@ myModeMeanSetting.modeMean = CG.myModeMeanSetting.modeMean;
 				// Don't use mask for dark frames.
 				CG.lastMean = aegCalcMean(pRgb, CG.takeDarkFrames ? false : true);
 
-// TODO: NEW: use current values if manual mode, otherwise use the value from metadata.
-				if (CG.currentAutoAWB)
-				{
-					CG.lastWBR = CG.currentWBR;
-					CG.lastWBB = CG.currentWBB;
-				}
+				// AWB values were read from metadata.
 
 				if (! CG.takeDarkFrames)
 				{

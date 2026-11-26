@@ -15,7 +15,7 @@
 		magnitude (5) - the magnitude limit of displayed stars
 		longitude (53.0) - the longitude of the observer
 		latitude (-2.5) - the latitude of the observer
-		clock (now) - a Javascript Date() object with the starting date/time
+		clock (now) - a Javascript Date() object or string like "2026-05-11T03:32:29Z" with the starting date/time
 		background ('rgba(0,0,0,0)') - the background colour
 		transparent (false) - make the sky background transparent
 		color ('rgb(255,255,255)') - the text colour
@@ -3544,7 +3544,13 @@ VirtualSky.prototype.advanceTime = function(by,wait){
 };
 // Send a Javascript Date() object and update the clock
 VirtualSky.prototype.updateClock = function(d){
-	this.clock = d;
+	if (typeof d === "string") {
+		// Allow strings like "2026-05-11T03:32:29Z"
+		this.clock = new Date(d);
+	} else {
+		this.clock = d;
+	}
+//console.log("-------- this.clock = " + this.clock);
 	this.times = this.astronomicalTimes();
 };
 // Call any calendar-based events

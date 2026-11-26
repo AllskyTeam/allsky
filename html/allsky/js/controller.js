@@ -484,7 +484,7 @@ function AppCtrl($scope, $timeout, $http, _) {
 			}
 
 			var read_error_msg_1 = "<!-- error 1 -->";
-			var img = $("<img title='allsky image' />")
+			var img = $("<img />")
 				.addClass(imageClass)
 				.on('load', function() {
 					$("#live_container").empty().append(img);

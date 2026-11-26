@@ -76,6 +76,7 @@
 			// To avoid changing too much code, the "config" javascript variable is created
 			// here to replace the old config.js file that contained that variable.
 			$config = v("config", null, $webSettings_array);
+			$imageName = v("imageName", null, $config);
 			$imageWidth = v("imageWidth", null, $config);
 				echo "<script>config = {\n";
 				foreach ($config as $var => $val) {	// ok to have comma after last entry
@@ -217,9 +218,12 @@
 		<div id="starmap_container" ng-show="showOverlay==true">
 			<div id="starmap"></div>
 		</div>
-		<div id="live_container">
-			<img title="allsky image" alt="allsky image" id="current" class="current" src="<?php echo $loadingImage ?>">
-		</div>
+		<!-- The title doesn't go way and looks lousy on top of the image. -->
+		<a href="<?php echo $imageName ?>" xxx_title="Click for full-sized image.">
+			<div id="live_container">
+				<img title="allsky image" alt="allsky image" id="current" class="current" src="<?php echo $loadingImage ?>">
+			</div>
+		</a>
 	</div>
 <div>
 <?php

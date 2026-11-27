@@ -414,14 +414,14 @@
       "pageTitle": "Help Determine Manual White Balance Settings",
       "action": "HelperRun",
       "method": "POST",
-      "outputFormat": "text",
+      "outputFormat": "html",
       "showResultsTabs": true,
       "command": [
         "get_white_balances",
         "--html"
       ],
       "messages": {
-        "running": "Running white balance command...",
+        "running": "Running white balance calculations...",
         "working": "Generating white balance averages...",
         "runningButton": "Running..."
       },
@@ -447,7 +447,7 @@
           "default": {
             "type": "previousDay"
           },
-          "helpHtml": "Enter the directory on the Pi (typically in <span class=\"fileName\">{ALLSKY_IMAGES}</span>) where tool should BEGIN looking for data.",
+          "helpHtml": "Enter the date (YYYYMMDD) where the tool should BEGIN looking for data (this usually corresponds to a directory in <span class=\"fileName\">{ALLSKY_IMAGES}</span>).  The default is yesterday.",
           "args": [
             {
               "flag": "--from-date"
@@ -466,7 +466,7 @@
           "default": {
             "type": "previousDay"
           },
-          "helpHtml": "Enter the directory on the Pi where the tool should STOP looking for data.<br>The default is yesterday.",
+          "helpHtml": "Enter the date where the tool should STOP looking for data.<br>The default is today.",
           "args": [
             {
               "flag": "--to-date"

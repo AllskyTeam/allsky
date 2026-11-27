@@ -296,11 +296,14 @@ Currently supported:
 ```json
 "notices": [
   {"type": "stretchWarning"}
+  {"type": "awbMonoWarning"}
+  {"type": "awbZWOWarning"}
 ]
 ```
 
 `stretchWarning` is used by the stretch helper. It warns the user when current
 Allsky settings suggest that the chosen image may already be stretched.
+The `awb` warnings are used by the White Balance helper tool and warn the user if they are using a mono camera (with no AWB settings) or using a ZWO camera (which requires an extra step).
 
 ### `fields`
 
@@ -758,10 +761,10 @@ If `extensions` is omitted, the built-in image extensions are used.
 
 #### `default.type = "previousDay"`
 
-Returns the current capture day in `YYYYMMDD` format, based on Allsky’s helper
+Returns the current capture day in `YYYYMMDD` format, based on Allsky's helper
 logic.
 
-This uses the same “current time minus twelve hours” convention as other parts
+This uses the same "current time minus twelve hours" convention as other parts
 of Allsky so that dates line up with overnight capture behaviour.
 
 `yesterdayDay` is still accepted as a compatibility alias.
@@ -799,7 +802,7 @@ Defaults:
 
 #### `default.type = "timelapseInputDirectory"`
 
-Uses the helper’s timelapse-specific directory logic.
+Uses the helper's timelapse-specific directory logic.
 
 This prefers the previous capture day if it exists, otherwise it falls back to
 the most recent image directory and updates the explanatory help placeholder
@@ -834,8 +837,7 @@ Use `helpHtml` to explain:
 ### Type-Specific Options
 
 The following options are meaningful only for certain field types. New helper
-definitions should place them inside the `type` object, not at the field’s top
-level.
+definitions should place them inside the `type` object, not at the field's top level.
 
 #### `min`
 
@@ -844,7 +846,7 @@ Used by:
 - `number`
 - `numberseries`
 
-For `number`, this becomes the HTML input’s `min` attribute.
+For `number`, this becomes the HTML input's `min` attribute.
 
 For `numberseries`, this constrains the generated series in the modal and
 describes the intended lower limit for user input.
@@ -864,7 +866,7 @@ Used by:
 - `number`
 - `numberseries`
 
-For `number`, this becomes the HTML input’s `step` attribute.
+For `number`, this becomes the HTML input's `step` attribute.
 
 For `numberseries`, it is the increment used when generating the series.
 
@@ -1128,7 +1130,7 @@ Unknown placeholders are left unchanged.
 
 This renders:
 
-- a `Settings` tab containing a “no settings” message
+- a `Settings` tab containing a "no settings" message
 - a `Run` button
 - a `Show Command` button
 - an `Output` tab that receives the helper output after execution

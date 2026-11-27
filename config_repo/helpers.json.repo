@@ -66,7 +66,7 @@
         "--html"
       ],
       "messages": {
-        "running": "Running star trails command...",
+        "running": "Running startrails command...",
         "working": "Generating star trails...",
         "runningButton": "Running..."
       },
@@ -408,6 +408,95 @@
         "warningHtml": "WARNING: It may be a minute or more the results appear."
       }
     },
+    "whitebalance_settings": {
+      "title": "White Balance Settings",
+      "icon": "fa-solid fa-scale-balanced fa-fw",
+      "pageTitle": "Help Determine Manual White Balance Settings",
+      "action": "HelperRun",
+      "method": "POST",
+      "outputFormat": "text",
+      "showResultsTabs": true,
+      "command": [
+        "get_white_balances",
+        "--html"
+      ],
+      "messages": {
+        "running": "Running white balance command...",
+        "working": "Generating white balance averages...",
+        "runningButton": "Running..."
+      },
+      "contentHtml": [
+        "<p>This tool looks at data from recent daytime and/or nightime images taken with <span class=\"WebUISetting\">Auto White Balance</span> enabled, and determines the average red and blue balance values the camera used.  You can then use those number in the <span class=\"WebUISetting\">Red Balance</span> and <span class=\"WebUISetting\">Blue Balance</span> settings as starting points.</p>",
+		"<p>Separate averages for daytime and nighttime are provided.</p>",
+		"<br><p>Requirements:</p>",
+		"<ol>",
+		"<li>There must be some (ideally at least a dozen) daytime and nighttime images taken with <span class=\"WebUISetting\">Auto White Balance</span> enabled in order for averages to be calculated.  If no such images exist you'll be given a warning.</li>",
+		"<li>If you are using a ZWO camera you must first set <span class=\"WebUISetting\">ZWO Exposure Type</span> to <span class=\"WebUIValue\">Video Off</span> in order to enable <span class=\"WebUISetting\">Automatic White Balance</span>. After you have average balances, restore <span class=\"WebUISetting\">ZWO Exposure Type</span> to its prior value.</li>",
+		"</ol>"
+      ],
+      "fields": [
+        {
+          "name": "from-date",
+          "label": "Use images starting",
+          "type": {
+            "name": "directorybrowser",
+            "baseFolder": "{ALLSKY_IMAGES}",
+            "maxDepth": 1
+          },
+          "inputClass": "col-xs-8",
+          "default": {
+            "type": "previousDay"
+          },
+          "helpHtml": "Enter the directory on the Pi (typically in <span class=\"fileName\">{ALLSKY_IMAGES}</span>) where tool should BEGIN looking for data.",
+          "args": [
+            {
+              "flag": "--from-date"
+            }
+          ]
+        },
+        {
+          "name": "to-date",
+          "label": "Use images to",
+          "type": {
+            "name": "directorybrowser",
+            "baseFolder": "{ALLSKY_IMAGES}",
+            "maxDepth": 1
+          },
+          "inputClass": "col-xs-8",
+          "default": {
+            "type": "previousDay"
+          },
+          "helpHtml": "Enter the directory on the Pi where the tool should STOP looking for data.<br>The default is yesterday.",
+          "args": [
+            {
+              "flag": "--to-date"
+            }
+          ]
+        },
+        {
+          "name": "buffer",
+          "label": "Ignore images",
+          "type": {
+            "name": "number",
+            "min": 1,
+            "step": 1
+          },
+          "inputClass": "col-xs-2",
+          "default": 60,
+          "helpHtml": "Enter number of minutes past daytime begin and before end (and nighttime begin and nighttime end) to skip. This helps eliminate images with varying colors.",
+          "args": [
+            {
+              "flag": "--buffer"
+            }
+          ]
+        }
+      ],
+      "submit": {
+        "name": "whitebalance",
+        "label": "Calculate Averages"
+      }
+    },
+
     "constellation_overlay": {
       "title": "Constellation Overlay",
       "icon": "fa fa-star-half-stroke fa-fw",

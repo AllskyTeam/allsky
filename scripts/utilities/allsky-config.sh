@@ -67,6 +67,7 @@ function usage_and_exit()
 	echo "      compare_timelapses [see --help for arguments]"
 	echo "      compare_startrails [see --help for arguments]"
 	echo "      compare_stretches [see --help for arguments]"
+	echo "      get_white_balances [see --help for arguments]"
 	echo "      constellation_overlay [see --help for arguments]"
 
 	echo "      change_swap"
@@ -405,6 +406,15 @@ function compare_timelapses()
 {
 	# shellcheck disable=SC2068
 	compareTimelapse.sh "${@}"
+}
+
+
+#####
+# Help determine white balance settings.
+function get_white_balances()
+{
+	# shellcheck disable=SC2068
+	whiteBalance.sh "${@}"
 }
 
 
@@ -781,6 +791,9 @@ fi
 
 	((N++));	C="compare_stretches"
 	CMDS+=("${C}"	"$( L "Create multiple stretched images               (${C})" )")
+
+	((N++));	C="get_white_balances"
+	CMDS+=("${C}"	"$( L "Calculate average white balance values         (${C})" )")
 
 	((N++));	C="constellation_overlay"
 	CMDS+=("${C}"	"$( L "Work out constellation overlay settings        (${C})" )")

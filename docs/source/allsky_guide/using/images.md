@@ -7,6 +7,8 @@ From here you can:
 - open the saved images for a specific day
 - play that day’s timelapse video
 - view the keogram and startrails images
+- change the order a day’s saved images are shown in
+- delete individual saved images you do not want to keep
 - remove a day’s files if you no longer want to keep them
 
 Allsky organises the entries on this page by date, so the normal workflow is simple. You begin by choosing a day, then open whichever output you want to inspect more closely. That date-based layout keeps related files together and makes it easy to move between different views of the same capture period.
@@ -29,13 +31,25 @@ When you open a day’s saved images, you are looking at the individual frames A
 
 For example, this is where you might go to check whether focus was good, see when clouds started to move in, confirm the exact time of an aircraft or meteor, or look at how the sky appeared during a specific part of the night. If something in a timelapse catches your attention, the saved images are usually the next place to go.
 
-The image order can be changed in the WebUI settings, so you can view them oldest-first or newest-first.
+The image order can be changed, so you can view them oldest-first or newest-first. The **Images Sort Order** setting in the WebUI settings decides the order you see the first time you open the page. The sort button at the top of the page shows the current order, either **Newest first** or **Oldest first**, and clicking it switches to the other one. Your choice is remembered by the browser you made it in, so it applies each time you open a day’s images in that browser and does not change the WebUI setting or what other browsers show.
 
 ![](/assets/guide_images/images-list.png){ width="100%" }
 
 /// caption
 Saved images for a single day
 ///
+
+You can also delete saved images from this page. Clicking a thumbnail opens the image in a larger viewer, and the trash button in the toolbar at the top of that viewer deletes the image being shown. You are asked to confirm first, and once the image has been deleted the viewer moves on to the next one.
+
+To delete several images at once, click **Select**. While **Select** is on, clicking a thumbnail selects or deselects it instead of opening it. Holding Shift while you click applies the same change to every image between that thumbnail and the one you clicked before it, which is useful for marking a run of cloudy or overexposed frames. A red **Delete** button appears next to **Select** and shows how many images are selected, for example **Delete 12**. Clicking it asks you to confirm and then deletes all of the selected images. Clicking **Select** again turns selection off and clears anything you had selected.
+
+![](/assets/guide_images/images-select.png){ width="100%" }
+
+/// caption
+Images selected for deletion
+///
+
+Deleting an image is permanent. The image and its thumbnail are removed from the Pi and cannot be recovered. The image’s entry in the Allsky database is removed as well. If the database is disabled in the Allsky settings at that moment, the entry stays in the database. A timelapse, keogram, or startrails that already exists for that day was built before the images were deleted, so it still includes those frames until it is created again. Copies that were already uploaded to a remote Website or remote server are not removed.
 
 Timelapse videos are usually the fastest and most natural way to review a full day. Instead of stepping through individual images one by one, you can watch the sky change as a continuous sequence. This gives you a quick understanding of what happened over time and makes it much easier to recognise motion, transitions, and longer patterns.
 
@@ -68,7 +82,7 @@ Keeping everything grouped by date makes that process straightforward. You do no
 
 The Images page also helps with storage management. Over time, saved images and generated outputs can use a meaningful amount of disk space, especially on systems that run continuously. If you no longer want to keep a day’s files, you can delete that day from the list (or change the **Days To Keep** setting in the WebUI).
 
-This is useful when you want to remove unimportant captures, clear out bad or incomplete data, or recover storage space on the system. Managing files by day is usually the most practical approach because all of the related output for that capture period stays grouped together. In most cases, it is easier to decide whether you want to keep or remove an entire day than to manage the files one by one.
+This is useful when you want to remove unimportant captures, clear out bad or incomplete data, or recover storage space on the system. Managing files by day is usually the most practical approach because all of the related output for that capture period stays grouped together. In most cases, it is easier to decide whether you want to keep or remove an entire day than to manage the files one by one. When only a few frames in a day are unwanted, you can delete just those from that day’s saved images, as described above.
 
 ![](/assets/guide_images/images-timelapse.png){ width="100%" }
 

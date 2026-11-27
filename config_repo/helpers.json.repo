@@ -425,6 +425,14 @@
         "working": "Generating white balance averages...",
         "runningButton": "Running..."
       },
+      "notices": [
+        {
+          "type": "awbMonoWarning"
+        },
+        {
+          "type": "awbZWOWarning"
+        }
+      ],
       "contentHtml": [
         "<p>This tool looks at data from recent daytime and/or nightime images taken with <span class=\"WebUISetting\">Auto White Balance</span> enabled, and determines the average red and blue balance values the camera used.  You can then use those number in the <span class=\"WebUISetting\">Red Balance</span> and <span class=\"WebUISetting\">Blue Balance</span> settings as starting points.</p>",
 		"<p>Separate averages for daytime and nighttime are provided.</p>",

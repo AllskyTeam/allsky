@@ -27,7 +27,7 @@ class ALLSKYMETEOR(ALLSKYMODULEBASE):
 		"deprecation": {
 			"fromversion": "v2026.10.01_02",
 			"notes": "This module has been deprecated. Please use the Temporal meteor detection module available in the module package manager",
-			"replacedby": "allsky-meteor.py",
+			"replacedby": "Meteor Detection (temporal)",
 			"deprecated": "true"
 		},    
 		"extradata": {

@@ -807,18 +807,20 @@ class HelperPageRenderer
 
 		$html = '';
 		foreach (($this->helper['notices'] ?? []) as $notice) {
-			if (!is_array($notice) || ($notice['type'] ?? '') !== 'stretchWarning' || !$this->stretchingEnabled()) {
+			$t = $notice['type'] ?? '';
+			if (!is_array($notice)) {
 				continue;
 			}
-
-			$filename = $this->e((string) getVariableOrDefault($settings_array, 'filename', ''));
-			$html .= "<div class='markdown-body'>";
-			$html .= "<blockquote class='helper-notice-blockquote'>";
-			$html .= 'You appear to already be stretching images.';
-			$html .= '<br>Those settings will NOT be used while running these tests.';
-			$html .= "<br><strong>Do NOT use the current '{$filename}' image since it's already stretched</strong>";
-			$html .= '</blockquote>';
-			$html .= '</div><br>';
+		   	if ($t === 'stretchWarning' && $this->stretchingEnabled()) {
+				$filename = $this->e((string) getVariableOrDefault($settings_array, 'filename', ''));
+				$html .= "<div class='markdown-body'>";
+				$html .= "<blockquote class='helper-notice-blockquote'>";
+				$html .= 'You appear to already be stretching images.';
+				$html .= '<br>Those settings will NOT be used while running the tests below.';
+				$html .= "<br><br><strong>Do NOT use the current <span class='fileName'>{$filename}</span> image since it's already stretched.</strong>";
+				$html .= '</blockquote>';
+				$html .= '</div><br>';
+			}
 		}
 
 		return $html;

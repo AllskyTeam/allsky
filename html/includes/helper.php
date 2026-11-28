@@ -805,6 +805,19 @@ class HelperPageRenderer
 	{
 		global $settings_array;
 
+		function do_header($classes="") : string
+		{
+			$header  = "<div class='markdown-body'>";
+			$header .= "<blockquote class='helper-notice-blockquote $classes'>";
+			return($header);
+		}
+		function do_footer() : string
+		{
+			$footer  = '</blockquote>';
+			$footer .= '</div><br>';
+			return($footer);
+		}
+
 		$did_mono_warning = false;
 		$html = '';
 		foreach (($this->helper['notices'] ?? []) as $notice) {
@@ -813,36 +826,32 @@ class HelperPageRenderer
 				continue;
 			}
 
-		   	if ($t === 'stretchWarning' && $this->stretchingEnabled()) {
-				$filename = $this->e((string) getVariableOrDefault($settings_array, 'filename', ''));
-				$html .= "<div class='markdown-body'>";
-				$html .= "<blockquote class='helper-notice-blockquote'>";
-				$html .= 'You appear to already be stretching images.';
-				$html .= '<br>Those settings will NOT be used while running the tests below.';
-				$html .= "<br><br><strong>Do NOT use the current <span class='fileName'>{$filename}</span> image since it's already stretched.</strong>";
-				$html .= '</blockquote>';
-				$html .= '</div><br>';
+			if ($t === 'stretchWarning') {
+				if ($this->stretchingEnabled()) {
+					$filename = $this->e((string) getVariableOrDefault($settings_array, 'filename', ''));
+					$html .= do_header("");
+					$html .= 'You appear to already be stretching images.';
+					$html .= '<br>Those settings will NOT be used while running the tests below.';
+					$html .= "<br><br><strong>Do NOT use the current <span class='fileName'>{$filename}</span> image since it's already stretched.</strong>";
+					$html .= do_footer();
+				}
 
 			} else if ($t === 'awbMonoWarning') {
 				if (getVariableOrDefault($settings_array, 'dayawb', '') === '') {
 					$did_mono_warning = true;
 					$type = (camera_info_part(getVariableOrDefault($settings_array, 'camerainfo', ''), "type"));
 					$model = (camera_info_part(getVariableOrDefault($settings_array, 'camerainfo', ''), "model"));
-					$html .= "<div class='markdown-body'>";
-					$html .= "<blockquote class='helper-notice-blockquote'>";
-					$html .= "The $type $model camera is monochrome and does not have white balance settings,";
-					$html .= ' hence <strong>the calculations below will not work.</strong>';
-					$html .= '</blockquote>';
-					$html .= '</div><br>';
+					$html .= do_header("errorMsg");
+					$html .= "This Helper Tool only works with color cameras and your $type $model is monochrome.";
+					$html .= '<br><br><strong>The calculations below will not work.</strong>';
+					$html .= do_footer();
 				}
 
 			} else if ($t === 'awbZWOWarning') {
 				if (! $did_mono_warning && camera_info_part(getVariableOrDefault($settings_array, 'camerainfo', ''), "type") === "ZWO") {
-					$html .= "<div class='markdown-body'>";
-					$html .= "<blockquote class='helper-notice-blockquote'>";
+					$html .= do_header("");
 					$html .= "You are using a ZWO camera so must first set <span class=\"WebUISetting\">ZWO Exposure Type</span> to <span class=\"WebUIValue\">Video Off</span> in order to enable <span class=\"WebUISetting\">Automatic White Balance</span>. After you have average balances, restore <span class=\"WebUISetting\">ZWO Exposure Type</span> to its prior value.</li>";
-					$html .= '</blockquote>';
-					$html .= '</div><br>';
+					$html .= do_footer();
 				}
 			}
 		}

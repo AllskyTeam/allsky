@@ -11,6 +11,8 @@
 
 # Allow start/stop times (normally days).
 # --from-date,   --to-date
+
+# Prompt / command line argument to automatically update the settings file.
 #x#x#x#x#x#x#x#x#x#x#x#x#x#x#x#x#x#x#x#x#x#x#x#x
 
 # Determine the average daytime and nighttime Auto White Balance settings use,
@@ -59,6 +61,7 @@ HTML="false"
 FROM_DATE=""
 TO_DATE=""
 BUFFER_MIN="60"
+BUFFER_MIN="${BUFFER_MIN}"		#XXXXXXXX Keeps shellcheck quiet
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
 	case "${ARG,,}" in

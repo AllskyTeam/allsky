@@ -19,11 +19,11 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 	meta_data = {
 		"name": "Load the Current Image",
 		"description": "Load the last captured image.",
-		"version": "v1.0.0",  
+		"version": "v1.0.0",
 		"module": "allsky_loadimage",
 		"ignorewatchdog": "True",
 		"extradatafilename": "allsky_camera.json",
-  	"docs": "docs/allsky_modules/core/load_image.html",
+		"docs": "docs/allsky_modules/core/load_image.html",
 		"group": "Allsky Core",
 		"events": [
 			"day",
@@ -80,6 +80,30 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 					"description": "Autogain enabled?",
 					"type": "bool"
 				},
+				"AS_AUTOWB": {
+					"name": "${AUTOWB}",
+					"format": "",
+					"sample": "",
+					"group": "Image Data",
+					"description": "Auto white balance enabled?",
+					"type": "bool"
+				},
+				"AS_WBR": {
+					"name": "${WBR}",
+					"format": "",
+					"sample": "",
+					"group": "Image Data",
+					"description": "Red Balance",
+					"type": "number"
+				},
+				"AS_WBB": {
+					"name": "${WBB}",
+					"format": "",
+					"sample": "",
+					"group": "Image Data",
+					"description": "Blue Balance",
+					"type": "number"
+				},
 				"AS_RESOLUTION_X": {
 					"name": "${RESOLUTION_X}",
 					"format": "",
@@ -119,7 +143,7 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 					"group": "Image Data",
 					"description": "Exposure in seconds",
 					"type": "number"
-				},    
+				},
 				"AS_GAIN": {
 					"name": "${GAIN}",
 					"format": "",
@@ -139,12 +163,28 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 				"AS_MEAN": {
 					"name": "${MEAN}",
 					"format": "",
-					"sample": "",                
+					"sample": "",
 					"group": "Image Data",
 					"description": "Current Mean Pixel Value",
 					"type": "number"
-				}  
-			}                         
+				},
+				"AS_CAMERA_TYPE": {
+					"name": "${CAMERA_TYPE}",
+					"format": "",
+					"sample": "",
+					"group": "Image Data",
+					"description": "Camera Type",
+					"type": "string"
+				},
+				"AS_CAMERA_MODEL": {
+					"name": "${CAMERA_MODEL}",
+					"format": "",
+					"sample": "",
+					"group": "Image Data",
+					"description": "Camera Model",
+					"type": "string"
+				}
+			}
 		},
 		"changelog": {
 			"v1.0.0" : [
@@ -153,8 +193,15 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 					"authorurl": "https://github.com/allskyteam",
 					"changes": "Initial Release"
 				}
-			]   
-		}         
+			],
+			"v1.0.1" : [
+				{
+					"author": "Eric Claeys",
+					"authorurl": "https://github.com/allskyteam",
+					"changes": "Add camera type, camera model, and white balance settings to DB."
+				}
+			]
+		}
 	}
 
 	def update_allsky_sensor_server(self):
@@ -185,7 +232,7 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 			self.log(4, f"INFO: Debug information written to {debug_filename}")
 		except Exception as e:
 			eType, eObject, eTraceback = sys.exc_info()
-			self.log(0, f'ERROR: Unable to access {debug_filename} in allsky_loadimage.py on line {eTraceback.tb_lineno} - {e}')     
+			self.log(0, f'ERROR: Unable to access {debug_filename} in allsky_loadimage.py on line {eTraceback.tb_lineno} - {e}')
 
 	def run(self):
 		result = f'Image {allsky_shared.CURRENTIMAGEPATH} Loaded'
@@ -206,6 +253,9 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 		extra_data['AS_DAY_OR_NIGHT'] = allsky_shared.get_environment_variable('AS_DAY_OR_NIGHT')
 		extra_data['AS_AUTOEXPOSURE'] = allsky_shared.to_bool(allsky_shared.get_environment_variable('AS_AUTOEXPOSURE'))
 		extra_data['AS_AUTOGAIN'] = allsky_shared.to_bool(allsky_shared.get_environment_variable('AS_AUTOGAIN'))
+		extra_data['AS_AUTOWB'] = allsky_shared.to_bool(allsky_shared.get_environment_variable('AS_AUTOWB'))
+		extra_data['AS_WBR'] = allsky_shared.asfloat(allsky_shared.get_environment_variable('AS_WBR'))
+		extra_data['AS_WBB'] = allsky_shared.asfloat(allsky_shared.get_environment_variable('AS_WBB'))
 		extra_data['AS_RESOLUTION_X'] = int(allsky_shared.get_environment_variable('AS_RESOLUTION_X'))
 		extra_data['AS_RESOLUTION_Y'] = int(allsky_shared.get_environment_variable('AS_RESOLUTION_Y'))
 		extra_data['AS_EXPOSURE_US'] = int(allsky_shared.get_environment_variable('AS_EXPOSURE_US'))
@@ -214,6 +264,8 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 		extra_data['AS_GAIN'] = allsky_shared.get_camera_gain()
 		extra_data['AS_TEMPERATURE_C'] = allsky_shared.get_sensor_temperature()
 		extra_data['AS_MEAN'] = allsky_shared.asfloat(allsky_shared.get_environment_variable('AS_MEAN'))
+		extra_data['AS_CAMERA_TYPE'] = allsky_shared.get_environment_variable('AS_CAMERA_TYPE')
+		extra_data['AS_CAMERA_MODEL'] = allsky_shared.get_environment_variable('AS_CAMERA_MODEL')
 
 		allsky_shared.save_extra_data(self.meta_data['extradatafilename'], extra_data, self.meta_data['module'], self.meta_data['extradata'], event=self.event)
 
@@ -222,14 +274,14 @@ class ALLSKYLOADIMAGE(ALLSKYMODULEBASE):
 		except Exception as e:
 			eType, eObject, eTraceback = sys.exc_info()
 			result = f'Cannot cleanup extra module data in allsky_loadimage.py on line {eTraceback.tb_lineno} - {e}'
-			self.log(0,f'ERROR: {result}')  
+			self.log(0,f'ERROR: {result}')
 
 		self._dump_debug_data()
-  
+
 		self.update_allsky_sensor_server()
-  
+
 		self.log(4, f'INFO: {result}')
-		return result        
+		return result
 
 def loadimage(params, event):
 	allsky_load_image = ALLSKYLOADIMAGE(params, event)

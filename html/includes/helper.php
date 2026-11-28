@@ -192,7 +192,7 @@ class HelperPageRenderer
 	}
 
 	/**
-	 * Render helpers with Settings, Images, and Output as sibling tabs.
+	 * Render helpers with Settings, Results, Images, and Output as sibling tabs.
 	 */
 	private function renderTabbedToolPage(): string
 	{
@@ -201,18 +201,18 @@ class HelperPageRenderer
 		return ''
 			. "<div class='helper-summary-area js-helper-summary' id='{$id}-summary'></div>"
 			. "<ul class='nav nav-tabs helper-results-tabs js-helper-results-tabs' id='{$id}-tabs' role='tablist'>"
-			. "<li role='presentation' class='active js-helper-settings-tab-item' id='{$id}-settings-tab-item'>"
-			. "<a href='#{$id}-settings-pane' class='js-helper-settings-tab' id='{$id}-settings-tab' aria-controls='{$id}-settings-pane' role='tab' data-toggle='tab'>Settings</a>"
-			. '</li>'
-			. "<li role='presentation' class='js-helper-results-tab-item' id='{$id}-results-tab-item'>"
-			. "<a href='#{$id}-results-pane' class='js-helper-results-tab' id='{$id}-results-tab' aria-controls='{$id}-results-pane' role='tab' data-toggle='tab'>Results</a>"
-			. '</li>'
-			. "<li role='presentation' class='js-helper-images-tab-item' id='{$id}-images-tab-item'>"
-			. "<a href='#{$id}-images-pane' class='js-helper-images-tab' id='{$id}-images-tab' aria-controls='{$id}-images-pane' role='tab' data-toggle='tab'><span class='js-helper-images-tab-label'>Images</span></a>"
-			. '</li>'
-			. "<li role='presentation' class='js-helper-output-tab-item' id='{$id}-output-tab-item'>"
-			. "<a href='#{$id}-output-pane' class='js-helper-output-tab' id='{$id}-output-tab' aria-controls='{$id}-output-pane' role='tab' data-toggle='tab'><span class='js-helper-output-tab-label'>Output</span></a>"
-			. '</li>'
+				. "<li role='presentation' class='active js-helper-settings-tab-item' id='{$id}-settings-tab-item'>"
+					. "<a href='#{$id}-settings-pane' class='js-helper-settings-tab' id='{$id}-settings-tab' aria-controls='{$id}-settings-pane' role='tab' data-toggle='tab'>Settings</a>"
+				. '</li>'
+				. "<li role='presentation' class='js-helper-results-tab-item' id='{$id}-results-tab-item'>"
+					. "<a href='#{$id}-results-pane' class='js-helper-results-tab' id='{$id}-results-tab' aria-controls='{$id}-results-pane' role='tab' data-toggle='tab'>Results</a>"
+				. '</li>'
+				. "<li role='presentation' class='js-helper-images-tab-item' id='{$id}-images-tab-item'>"
+					. "<a href='#{$id}-images-pane' class='js-helper-images-tab' id='{$id}-images-tab' aria-controls='{$id}-images-pane' role='tab' data-toggle='tab'><span class='js-helper-images-tab-label'>Images</span></a>"
+				. '</li>'
+				. "<li role='presentation' class='js-helper-output-tab-item' id='{$id}-output-tab-item'>"
+					. "<a href='#{$id}-output-pane' class='js-helper-output-tab' id='{$id}-output-tab' aria-controls='{$id}-output-pane' role='tab' data-toggle='tab'><span class='js-helper-output-tab-label'>Output</span></a>"
+				. '</li>'
 			. '</ul>'
 			. "<div class='tab-content helper-results-content js-helper-results-content' id='{$id}-tab-content'>"
 			. "<div role='tabpanel' class='tab-pane active' id='{$id}-settings-pane'>" . $this->renderForm() . '</div>'
@@ -264,7 +264,7 @@ class HelperPageRenderer
 			return ''
 				. "<div class='helper-no-settings'>"
 				. "<div class='helper-no-settings-title'>No Settings</div>"
-				. "<div class='helper-no-settings-text'>This helper does not require any settings before it is run.</div>"
+				. "<div class='helper-no-settings-text'>This Helper Tool does not require any settings before it is run.</div>"
 				. '</div>';
 		}
 
@@ -695,9 +695,10 @@ class HelperPageRenderer
 			. ($warning !== '' ? '&nbsp; &nbsp; &nbsp;' . $warning : '')
 			. '</span>'
 			. '<button type="button" class="btn btn-default helper-show-command-button js-helper-show-command">'
-			. '<i class="fa fa-terminal"></i> Show Command'
+			. '<i class="fa-solid fa-desktop"></i> Show Command'
 			. '</button>'
 			. '</div>';
+//XXX			. '<i class="fa fa-terminal"></i> Show Command'
 	}
 
 	/**
@@ -1098,6 +1099,7 @@ class HelperPageRenderer
 	 *  - {"type": "path", "parts": [...]}
 	 *  - {"type": "latestImage", "root": "{ALLSKY_IMAGES}"}
 	 *  - {"type": "previousDay"}
+	 *  - {"type": "today"}
 	 *  - {"type": "sequence", "start": ..., "step": 0.03, "count": 8}
 	 *  - {"type": "timelapseInputDirectory"}
 	 */
@@ -1138,6 +1140,10 @@ class HelperPageRenderer
 				// convention used by the old pages: now minus twelve hours.
 				$datetime = new DateTime('now');
 				$datetime->modify('-12 hours');
+				return $datetime->format('Ymd');
+
+			case 'today':
+				$datetime = new DateTime('now');
 				return $datetime->format('Ymd');
 
 			case 'sequence':

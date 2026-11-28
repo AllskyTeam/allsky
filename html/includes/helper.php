@@ -823,7 +823,7 @@ class HelperPageRenderer
 				$html .= '</blockquote>';
 				$html .= '</div><br>';
 
-			} else if ($t === 'awbmonoWarning') {
+			} else if ($t === 'awbMonoWarning') {
 				if (getVariableOrDefault($settings_array, 'dayawb', '') === '') {
 					$did_mono_warning = true;
 					$type = (camera_info_part(getVariableOrDefault($settings_array, 'camerainfo', ''), "type"));

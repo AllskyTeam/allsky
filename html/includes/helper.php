@@ -153,6 +153,7 @@ class HelperPageRenderer
 			. "<div class='panel-body'>"
 			. $this->renderNotices()
 			. $this->renderContent()
+			. $this->renderNoticesBottom()
 			. "<br>"
 			. $this->renderToolPage()
 			. $this->renderAssets()
@@ -795,67 +796,82 @@ class HelperPageRenderer
 	}
 
 	/**
+	 * Helper functions for renderNotices() and renderNoticesBottom().
+	 */
+	private function do_header($classes="") : string
+	{
+		$header  = "<div class='markdown-body'>";
+		$header .= "<blockquote class='helper-notice-blockquote $classes'>";
+		return($header);
+	}
+	private function do_footer() : string
+	{
+		$footer  = '</blockquote>';
+		$footer .= '</div><br>';
+		return($footer);
+	}
+	/**
 	 * Render conditional notices.
 	 *
-	 * At present only the stretch warning is supported.  It is kept here rather
-	 * than in JSON because it depends on current Allsky settings and the current
-	 * image filename.
+	 * This code is kept here rather than in JSON because it depends on current Allsky settings.
 	 */
 	private function renderNotices(): string
 	{
 		global $settings_array;
 
-		function do_header($classes="") : string
-		{
-			$header  = "<div class='markdown-body'>";
-			$header .= "<blockquote class='helper-notice-blockquote $classes'>";
-			return($header);
-		}
-		function do_footer() : string
-		{
-			$footer  = '</blockquote>';
-			$footer .= '</div><br>';
-			return($footer);
-		}
-
-		$did_mono_warning = false;
 		$html = '';
 		foreach (($this->helper['notices'] ?? []) as $notice) {
-			$t = $notice['type'] ?? '';
 			if (!is_array($notice)) {
 				continue;
 			}
 
+			$t = $notice['type'] ?? '';
 			if ($t === 'stretchWarning') {
 				if ($this->stretchingEnabled()) {
 					$filename = $this->e((string) getVariableOrDefault($settings_array, 'filename', ''));
-					$html .= do_header("");
+					$html .= $this->do_header("");
 					$html .= 'You appear to already be stretching images.';
 					$html .= '<br>Those settings will NOT be used while running the tests below.';
 					$html .= "<br><br><strong>Do NOT use the current <span class='fileName'>{$filename}</span> image since it's already stretched.</strong>";
-					$html .= do_footer();
+					$html .= $this->do_footer();
 				}
 
 			} else if ($t === 'awbMonoWarning') {
 				if (getVariableOrDefault($settings_array, 'dayawb', '') === '') {
-					$did_mono_warning = true;
 					$type = (camera_info_part(getVariableOrDefault($settings_array, 'camerainfo', ''), "type"));
 					$model = (camera_info_part(getVariableOrDefault($settings_array, 'camerainfo', ''), "model"));
-					$html .= do_header("errorMsg");
+					$html .= $this->do_header("errorMsg");
 					$html .= "This Helper Tool only works with color cameras and your $type $model is monochrome.";
 					$html .= '<br><br><strong>The calculations below will not work.</strong>';
-					$html .= do_footer();
-				}
-
-			} else if ($t === 'awbZWOWarning') {
-				if (! $did_mono_warning && camera_info_part(getVariableOrDefault($settings_array, 'camerainfo', ''), "type") === "ZWO") {
-					$html .= do_header("");
-					$html .= "You are using a ZWO camera so must first set <span class=\"WebUISetting\">ZWO Exposure Type</span> to <span class=\"WebUIValue\">Video Off</span> in order to enable <span class=\"WebUISetting\">Automatic White Balance</span>. After you have average balances, restore <span class=\"WebUISetting\">ZWO Exposure Type</span> to its prior value.</li>";
-					$html .= do_footer();
+					$html .= $this->do_footer();
 				}
 			}
 		}
 
+		return $html;
+	}
+	/**
+	 * Render conditional notices that go after the main text.
+	 */
+	private function renderNoticesBottom(): string
+	{
+		global $settings_array;
+
+		$html = '';
+		foreach (($this->helper['noticesBottom'] ?? []) as $notice) {
+			if (!is_array($notice)) {
+				continue;
+			}
+
+			$t = $notice['type'] ?? '';
+			if ($t === 'awbZWOWarning') {
+				if (camera_info_part(getVariableOrDefault($settings_array, 'camerainfo', ''), "type") !== "ZWO") {
+					$html .= $this->do_header("");
+					$html .= "You are using a ZWO camera so must first set <span class=\"WebUISetting\">ZWO Exposure Type</span> to <span class=\"WebUIValue\">Video Off</span> in order to enable <span class=\"WebUISetting\">Automatic White Balance</span>. After you have average balances, restore <span class=\"WebUISetting\">ZWO Exposure Type</span> to its prior value.</li>";
+					$html .= $this->do_footer();
+				}
+			}
+		}
 		return $html;
 	}
 

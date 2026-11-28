@@ -1,8 +1,7 @@
 #!/bin/bash
 
 #x#x#x#x#x#x#x#x#x#x#x#x#x#x#x#x#x#x#x#x#x#x#x#x	TODO
-# Add CAMERA_TYPE, CAMERA_MODEL, AUTOWB, WBR, and WBB to the database (allsky_loadimage.py ?)
-#	Do a DB query, which replaces the "sed".
+# Do a DB query, which replaces the "sed".
 
 # Allow "buffer_minutes" value:
 #	For day, look at (day_start + buffer_minutes)  to (day_end - buffer_minutes).
@@ -31,7 +30,7 @@ usage_and_exit()
 	local RET=${1}
 	exec >&2
 	echo
-	local USAGE="Usage: ${ME} [--help] [--from-date d] [--to-date d] [--buffer b]"
+	local USAGE="Usage: ${ME} [--help] [--use-log] [--from-date d] [--to-date d] [--buffer b]"
 	if [[ ${RET} -ne 0 ]]; then
 		wE_ "${USAGE}"
 		[[ ${HTML} == "true" ]] && RET="${ALLSKY_EXIT_ERROR_STOP}"
@@ -41,6 +40,8 @@ usage_and_exit()
 
 	echo "Arguments:"
 	echo "   --help              Displays this message and exits."
+	echo "   --use-log           Look in ${ALLSKY_LOG} instead of the Allsky database for"
+	echo "                       white balance data."
 	echo "   --from-date d       Starts looking for images on date 'd'."
 	echo "   --to-date d         Stops looking for images on date 'd'."
 	echo "   --buffer b          Ignore the first 'b' minutes after daytime and nighttime start"
@@ -58,10 +59,10 @@ usage_and_exit()
 OK="true"
 DO_HELP="false"
 HTML="false"
+USE_LOG="false"
 FROM_DATE=""
 TO_DATE=""
 BUFFER_MIN="60"
-BUFFER_MIN="${BUFFER_MIN}"		#XXXXXXXX Keeps shellcheck quiet
 while [[ $# -gt 0 ]]; do
 	ARG="${1}"
 	case "${ARG,,}" in
@@ -70,6 +71,9 @@ while [[ $# -gt 0 ]]; do
 			;;
 		--html)
 			HTML="true"
+			;;
+		--use-log)
+			USE_LOG="true"
 			;;
 		--from-date)
 			FROM_DATE="${2}"
@@ -98,19 +102,43 @@ if [[ -n ${FROM_DATE} && -n ${TO_DATE} && ${FROM_DATE} > "${TO_DATE}" ]]; then
 fi
 
 if [[ -z ${FROM_DATE} ]]; then
-:
-		#XXXXXXXXX TODO: get yesterday's date
+		# get yesterday's date (or the day prior to the most recent one)
+		FROM_DATE="$( cd "${ALLSKY_IMAGES}"; ls -d -tr 20* | tail -2 | head -1)"
 fi
 if [[ -z ${TO_DATE} ]]; then
-:
-		#XXXXXXXXX TODO: get today's date
+		# get today's date (or the most recent date)
+		TO_DATE="$( cd "${ALLSKY_IMAGES}"; ls -d -tr 20* | tail -1)"
+fi
+if [[ ${FROM_DATE} != ${TO_DATE} ]]; then
+	DATE_RANGE="IN ('${FROM_DATE}', '${TO_DATE}')"
+else
+	DATE_RANGE="= '${FROM_DATE}'"
 fi
 
-# Typical log entry
-#	... saveImage.sh DAY .../image-20261124152126.jpg TIMESTAMP=1795555286 ... AUTOWB=1 sAUTOAWB= WBR=2.500000 WBB=2.12
+		BUFFER_MIN="${BUFFER_MIN}"		#XXXXXXXX Keeps shellcheck quiet
 
-sed --silent -e "/saveImage.sh.*TIMESTAMP.*AUTOWB=1/s/.*saveImage.sh //p" "${ALLSKY_LOG}" |
-	gawk -v HTML="${HTML}" '
+if [[ ${USE_LOG} == "true" ]]; then
+	# Typical log entry:
+	#	... saveImage.sh DAY .../image-xxx.jpg TIMESTAMP=1795555286 ...
+	#		AUTOWB=1 sAUTOAWB= WBR=2.500000 WBB=2.12
+	# Convert to:
+	#	DAY .../image-xxx.jpg TIMESTAMP=1795555286 ... AUTOWB=0 WBR=2.500000 WBB=2 
+	sed --silent -e "/saveImage.sh.*TIMESTAMP.*AUTOWB=1/s/.*saveImage.sh //p" "${ALLSKY_LOG}"
+
+	# TODO: filter based on FROM_DATE and TO_DATE
+else
+	# The gawk script assumes this order:
+	SQL="SELECT AS_DAY_OR_NIGHT, AS_WBR, AS_WBB"
+
+	SQL+=" FROM ${ALLSKY_IMAGES_TABLE} WHERE"
+	SQL+=" AS_AUTOWB=1"
+	SQL+=" AND AS_DATE_NAME ${DATE_RANGE}"
+	SQL+=" AND AS_CAMERA_TYPE='${CAMERA_TYPE}'"
+	SQL+=" AND AS_CAMERA_MODEL='${CAMERA_MODEL}'"
+# echo SQL=$SQL >&2
+	"${ALLSKY_DATABASE_COMMAND}" --run "${SQL}"
+fi |
+	gawk -v HTML="${HTML}" -v USE_LOG="${USE_LOG}" '
 	BEGIN {
 		numDayAutoWhiteBalanceFound = 0;
 		numNightAutoWhiteBalanceFound = 0;
@@ -144,7 +172,7 @@ sed --silent -e "/saveImage.sh.*TIMESTAMP.*AUTOWB=1/s/.*saveImage.sh //p" "${ALL
 
 	function no_images(day_night) {
 		printf("%s", bold_on);
-		printf("No NIGHT images were taken with %s turned on.\n", AWB_NAME);
+		printf("No %s images were taken with %s turned on.\n", day_night, AWB_NAME);
 		printf("%s", bold_off);
 	}
 	function no_images_color(day_night, color) {
@@ -165,21 +193,26 @@ sed --silent -e "/saveImage.sh.*TIMESTAMP.*AUTOWB=1/s/.*saveImage.sh //p" "${ALL
 		printf("Average %s %s value using %4d images = %s" f "%s\n", day_night, color, num, bold_on, ave, bold_off);
 	}
 
-	#	DAY .../image-20261124152126.jpg TIMESTAMP=1795555286 ... AUTOWB=0 WBR=2.500000 WBB=2 
 	{
 		onLine++;
 
 		DAY_or_NIGHT = $1;
-		WBR=0;	WBB=0;
-		for (i=3; i<=NF; i++) {
-			if ($i ~ /WBR=/) {
-				split($i, fields, "=")
-				WBR += fields[2];
-			} else if ($i ~ /WBB=/) {
-				split($i, fields, "=")
-				WBB += fields[2];
+		if (USE_LOG == "true") {
+			WBR=0;	WBB=0;
+			for (i=2; i<=NF; i++) {
+				if ($i ~ /WBR=/) {
+					split($i, fields, "=")
+					WBR = fields[2];
+				} else if ($i ~ /WBB=/) {
+					split($i, fields, "=")
+					WBB = fields[2];
+				}
 			}
+		} else {
+			WBR = $2;
+			WBB = $3;
 		}
+
 		if (DAY_or_NIGHT == "DAY") {
 			numDayAutoWhiteBalanceFound++;
 			if (WBR > 0) {
@@ -190,7 +223,8 @@ sed --silent -e "/saveImage.sh.*TIMESTAMP.*AUTOWB=1/s/.*saveImage.sh //p" "${ALL
 				numDayBlue++
 				totalDayBlue += WBB;
 			}
-		} else {
+
+		} else {	# NIGHT
 			numNightAutoWhiteBalanceFound++;
 			if (WBR > 0) {
 				numNightRed++
